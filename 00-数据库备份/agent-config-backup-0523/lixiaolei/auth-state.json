@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "lastGood": {
+    "aliyun-bailian": "aliyun:default"
+  },
+  "usageStats": {
+    "openai-codex:messi.lilei@gmail.com": {
+      "blockedUntil": 1779856988341,
+      "blockedReason": "subscription_limit",
+      "blockedSource": "wham",
+      "errorCount": 1,
+      "failureCounts": {
+        "rate_limit": 1
+      },
+      "lastFailureAt": 1779513160342
+    }
+  }
+}

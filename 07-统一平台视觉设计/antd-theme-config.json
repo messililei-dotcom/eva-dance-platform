@@ -1,0 +1,425 @@
+{
+  "// 说明": "伊娃东方舞 Ant Design 5.x 主题配置 — 直接用于 ConfigProvider theme 属性",
+  "// 版本": "v1.0",
+  "// 平台": "admin.dongfangwuquan.com",
+  "// 技术": "Ant Design 5.x + Tailwind CSS",
+
+  "token": {
+    "// 品牌主色 — 深红": "",
+    "colorPrimary": "#8B1A1A",
+    "colorPrimaryHover": "#6B1010",
+    "colorPrimaryActive": "#5C0E0E",
+    "colorPrimaryBg": "#F9EEEE",
+    "colorPrimaryBgHover": "#F3DCDC",
+    "colorPrimaryBorder": "#D4A5A5",
+    "colorPrimaryBorderHover": "#C08080",
+
+    "// 金色品牌色（非antd原生，添加于components定制）": "",
+    "colorLink": "#C8A96E",
+    "colorLinkHover": "#B8944E",
+
+    "// 成功 / 警告 / 错误": "",
+    "colorSuccess": "#22C55E",
+    "colorWarning": "#F59E0B",
+    "colorError": "#EF4444",
+    "colorInfo": "#3B82F6",
+
+    "// 文字色": "",
+    "colorText": "#4A4A4A",
+    "colorTextSecondary": "#7A7A7A",
+    "colorTextTertiary": "#9CA3AF",
+    "colorTextQuaternary": "#D9D9D9",
+    "colorTextHeading": "#1A1A1A",
+
+    "// 背景色": "",
+    "colorBgLayout": "#FAFAFA",
+    "colorBgContainer": "#FFFFFF",
+    "colorBgElevated": "#FFFFFF",
+    "colorBgSpotlight": "#8B1A1A",
+
+    "// 边框": "",
+    "colorBorder": "#D9D9D9",
+    "colorBorderSecondary": "#F0F0F0",
+
+    "// 圆角": "",
+    "borderRadius": 8,
+    "borderRadiusLG": 12,
+    "borderRadiusSM": 4,
+    "borderRadiusXS": 2,
+
+    "// 字体": "",
+    "fontFamily": "-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Source Han Sans SC', sans-serif",
+    "fontFamilyCode": "'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace",
+    "fontSize": 14,
+    "fontSizeSM": 12,
+    "fontSizeLG": 16,
+    "fontSizeXL": 20,
+    "fontSizeHeading1": 28,
+    "fontSizeHeading2": 24,
+    "fontSizeHeading3": 20,
+    "fontSizeHeading4": 18,
+    "fontSizeHeading5": 16,
+
+    "// 间距": "",
+    "marginXXS": 4,
+    "marginXS": 8,
+    "marginSM": 12,
+    "margin": 16,
+    "marginMD": 20,
+    "marginLG": 24,
+    "marginXL": 32,
+    "marginXXL": 48,
+
+    "// 内边距": "",
+    "paddingXXS": 4,
+    "paddingXS": 8,
+    "paddingSM": 12,
+    "padding": 16,
+    "paddingMD": 20,
+    "paddingLG": 24,
+    "paddingXL": 32,
+
+    "// 阴影": "",
+    "boxShadow": "0 1px 2px 0 rgba(0,0,0,0.03)",
+    "boxShadowSecondary": "0 6px 16px 0 rgba(0,0,0,0.08)",
+    "boxShadowTertiary": "0 1px 2px -2px rgba(0,0,0,0.16), 0 3px 6px 0 rgba(0,0,0,0.12)",
+
+    "// 控制组件高度": "",
+    "controlHeight": 36,
+    "controlHeightSM": 28,
+    "controlHeightLG": 44,
+
+    "// 动画": "",
+    "motionDurationFast": "0.1s",
+    "motionDurationMid": "0.2s",
+    "motionDurationSlow": "0.3s",
+
+    "// 滚动条": "",
+    "wireframe": false,
+
+    "// 线框模式": "",
+    "// colorSplit // 分割线，默认使用 colorBorderSecondary": ""
+  },
+
+  "// ============ 组件级定制 ============": "",
+  "components": {
+    "Button": {
+      "primaryColor": "#FFFFFF",
+      "primaryShadow": "none",
+      "defaultShadow": "none",
+      "dangerShadow": "none",
+      "fontWeight": 600,
+      "controlHeight": 36,
+      "controlHeightLG": 44,
+      "controlHeightSM": 28,
+      "borderRadius": 8
+    },
+
+    "Layout": {
+      "headerBg": "#FFFFFF",
+      "headerHeight": 64,
+      "headerPadding": "0 24px",
+      "siderBg": "#FFFFFF",
+      "bodyBg": "#FAFAFA",
+      "footerBg": "#FAFAFA",
+      "triggerBg": "#8B1A1A",
+      "triggerHeight": 48
+    },
+
+    "Menu": {
+      "itemBg": "#FFFFFF",
+      "subMenuItemBg": "#FFFFFF",
+      "itemColor": "#4A4A4A",
+      "itemHoverBg": "#F9EEEE",
+      "itemHoverColor": "#8B1A1A",
+      "itemSelectedBg": "#F9EEEE",
+      "itemSelectedColor": "#8B1A1A",
+      "itemActiveBg": "#F3DCDC",
+      "itemMarginInline": 8,
+      "itemBorderRadius": 6,
+      "iconSize": 18,
+      "collapsedIconSize": 18,
+      "itemHeight": 44,
+      "subMenuItemHeight": 40,
+      "iconMarginInlineEnd": 10,
+      "horizontalItemSelectedColor": "#8B1A1A",
+      "horizontalItemHoverColor": "#8B1A1A"
+    },
+
+    "Card": {
+      "paddingLG": 24,
+      "paddingSM": 16,
+      "paddingXS": 12,
+      "borderRadius": 8,
+      "colorBorderSecondary": "#F0F0F0",
+      "headerFontSize": 16,
+      "headerHeight": 48,
+      "actionsBg": "#FFFFFF",
+      "extraColor": "#7A7A7A"
+    },
+
+    "Table": {
+      "headerBg": "#FAFAFA",
+      "headerColor": "#4A4A4A",
+      "headerSortBg": "#F0F0F0",
+      "headerSortHoverBg": "#E8E8E8",
+      "bodySortBg": "#FAFAFA",
+      "rowHoverBg": "#F9EEEE",
+      "rowSelectedBg": "#F3DCDC",
+      "rowSelectedHoverBg": "#EEC8C8",
+      "borderColor": "#F0F0F0",
+      "cellPaddingBlock": 12,
+      "cellPaddingInline": 16,
+      "borderRadius": 8,
+      "fontSize": 14
+    },
+
+    "Form": {
+      "labelFontSize": 14,
+      "labelColor": "#1A1A1A",
+      "labelHeight": 36,
+      "labelColonMarginInline": 4,
+      "itemMarginBottom": 24,
+      "verticalLabelPadding": "0 0 4px",
+      "controlHeight": 36
+    },
+
+    "Input": {
+      "colorBgContainer": "#FFFFFF",
+      "colorBorder": "#D9D9D9",
+      "hoverBorderColor": "#C8A96E",
+      "activeBorderColor": "#8B1A1A",
+      "activeShadow": "0 0 0 2px rgba(139,26,26,0.1)",
+      "borderRadius": 8,
+      "controlHeight": 36,
+      "controlHeightLG": 44,
+      "controlHeightSM": 28,
+      "paddingInline": 12
+    },
+
+    "Select": {
+      "colorBgContainer": "#FFFFFF",
+      "hoverBorderColor": "#C8A96E",
+      "activeBorderColor": "#8B1A1A",
+      "activeShadow": "0 0 0 2px rgba(139,26,26,0.1)",
+      "borderRadius": 8,
+      "controlHeight": 36,
+      "optionSelectedBg": "#F9EEEE",
+      "optionActiveBg": "#F9EEEE"
+    },
+
+    "DatePicker": {
+      "colorBgContainer": "#FFFFFF",
+      "hoverBorderColor": "#C8A96E",
+      "activeBorderColor": "#8B1A1A",
+      "activeShadow": "0 0 0 2px rgba(139,26,26,0.1)",
+      "borderRadius": 8,
+      "controlHeight": 36
+    },
+
+    "Modal": {
+      "contentBg": "#FFFFFF",
+      "headerBg": "#FFFFFF",
+      "titleFontSize": 18,
+      "titleColor": "#1A1A1A",
+      "borderRadius": 12,
+      "borderRadiusLG": 12,
+      "padding": 24,
+      "paddingMD": 20,
+      "paddingLG": 24,
+      "boxShadowSecondary": "0 8px 24px rgba(0,0,0,0.12)"
+    },
+
+    "Drawer": {
+      "colorBgMask": "rgba(0,0,0,0.3)",
+      "padding": 24
+    },
+
+    "Tag": {
+      "borderRadius": 4,
+      "defaultBg": "#F9EEEE",
+      "defaultColor": "#8B1A1A"
+    },
+
+    "Badge": {
+      "colorBgContainer": "#F5222D",
+      "fontSize": 12,
+      "textFontSize": 12,
+      "statusSize": 8,
+      "dotSize": 8
+    },
+
+    "Steps": {
+      "customIconFontSize": 24,
+      "iconSize": 32,
+      "titleFontSize": 14,
+      "descriptionFontSize": 12,
+      "navArrowColor": "#8B1A1A"
+    },
+
+    "Tabs": {
+      "inkBarColor": "#8B1A1A",
+      "itemSelectedColor": "#8B1A1A",
+      "itemHoverColor": "#8B1A1A",
+      "itemColor": "#4A4A4A",
+      "titleFontSize": 14,
+      "horizontalMargin": "0 0 0 0"
+    },
+
+    "Breadcrumb": {
+      "fontSize": 13,
+      "separatorMargin": 8,
+      "lastItemColor": "#4A4A4A",
+      "linkColor": "#7A7A7A",
+      "linkHoverColor": "#8B1A1A"
+    },
+
+    "Dropdown": {
+      "borderRadius": 8,
+      "boxShadowSecondary": "0 6px 16px rgba(0,0,0,0.08)"
+    },
+
+    "Popover": {
+      "borderRadius": 8,
+      "colorBgElevated": "#FFFFFF"
+    },
+
+    "Tooltip": {
+      "colorBgSpotlight": "#1A1A1A",
+      "colorTextLightSolid": "#FFFFFF",
+      "borderRadius": 4
+    },
+
+    "Notification": {
+      "width": 384,
+      "padding": 16,
+      "marginSM": 16,
+      "borderRadius": 8
+    },
+
+    "Message": {
+      "top": 24,
+      "contentPadding": "10px 16px",
+      "borderRadius": 8
+    },
+
+    "Progress": {
+      "circleTextFontSize": 16,
+      "defaultColor": "#8B1A1A",
+      "remainingColor": "#F0F0F0",
+      "lineBorderRadius": 4
+    },
+
+    "Collapse": {
+      "headerBg": "#FFFFFF",
+      "contentBg": "#FFFFFF",
+      "headerPadding": "12px 16px",
+      "contentPadding": "16px",
+      "borderRadius": 8,
+      "colorBorder": "#F0F0F0"
+    },
+
+    "Switch": {
+      "colorPrimaryHover": "#6B1010"
+    },
+
+    "Checkbox": {
+      "colorPrimaryHover": "#8B1A1A"
+    },
+
+    "Radio": {
+      "colorPrimaryHover": "#8B1A1A"
+    },
+
+    "Pagination": {
+      "itemSize": 32,
+      "itemActiveBg": "#8B1A1A",
+      "colorPrimaryHover": "#8B1A1A",
+      "borderRadius": 6
+    },
+
+    "Spin": {
+      "colorPrimary": "#8B1A1A",
+      "dotSize": 32,
+      "dotSizeSM": 24
+    },
+
+    "Alert": {
+      "borderRadius": 8,
+      "withDescriptionPadding": "16px 20px",
+      "withDescriptionIconSize": 24
+    },
+
+    "Descriptions": {
+      "labelBg": "#FAFAFA",
+      "borderRadius": 8,
+      "cellPaddingBlock": 12,
+      "cellPaddingInline": 16
+    },
+
+    "Typography": {
+      "titleMarginTop": 0,
+      "titleMarginBottom": 8,
+      "linkColor": "#C8A96E",
+      "linkHoverColor": "#B8944E",
+      "linkActiveColor": "#A07E3E"
+    }
+  },
+
+  "// ============ 暗色主题 Override ============": "",
+  "// 使用方法：配合 algorithm: theme.darkAlgorithm 使用": "",
+  "darkAlgorithm": {
+    "token": {
+      "colorBgLayout": "#141414",
+      "colorBgContainer": "#1D1D1D",
+      "colorBgElevated": "#262626",
+      "colorBorder": "#424242",
+      "colorBorderSecondary": "#333333",
+      "colorText": "#E5E5E5",
+      "colorTextSecondary": "#A0A0A0",
+      "colorTextTertiary": "#707070",
+      "colorTextHeading": "#FFFFFF",
+      "colorPrimaryBg": "#2D1111",
+      "colorPrimaryBgHover": "#3D1A1A"
+    },
+    "components": {
+      "Layout": {
+        "headerBg": "#1D1D1D",
+        "siderBg": "#1D1D1D",
+        "bodyBg": "#141414",
+        "footerBg": "#141414"
+      },
+      "Menu": {
+        "itemBg": "#1D1D1D",
+        "subMenuItemBg": "#1D1D1D",
+        "itemColor": "#A0A0A0",
+        "itemHoverBg": "#2D1111",
+        "itemHoverColor": "#E5E5E5",
+        "itemSelectedBg": "#2D1111",
+        "itemSelectedColor": "#C8A96E"
+      },
+      "Table": {
+        "headerBg": "#262626",
+        "headerColor": "#A0A0A0",
+        "bodySortBg": "#262626",
+        "rowHoverBg": "#2D1111",
+        "rowSelectedBg": "#3D1A1A",
+        "borderColor": "#333333"
+      },
+      "Card": {
+        "colorBorderSecondary": "#333333"
+      },
+      "Input": {
+        "colorBgContainer": "#262626",
+        "colorBorder": "#424242"
+      },
+      "Select": {
+        "colorBgContainer": "#262626",
+        "colorBorder": "#424242"
+      }
+    }
+  },
+
+  "// ============ 使用示例 =============": "",
+  "usage_example": "import { ConfigProvider, theme } from 'antd'; import zhCN from 'antd/locale/zh_CN'; \n\n// 亮色模式\n<ConfigProvider locale={zhCN} theme={{ token: {...}, components: {...} }} />\n\n// 暗色模式\n<ConfigProvider locale={zhCN} theme={{ algorithm: theme.darkAlgorithm, token: {...darkTheme.token...}, components: {...darkTheme.components...} }} />"
+}

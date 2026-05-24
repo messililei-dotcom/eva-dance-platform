@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "profiles": {
+    "aliyun:default": {
+      "type": "api_key",
+      "provider": "aliyun-bailian",
+      "key": "sk-sp-7595d0eea8ab4969bebaac13d1a3edbb"
+    },
+    "openai-codex:messi.lilei@gmail.com": {
+      "type": "oauth",
+      "provider": "openai-codex",
+      "email": "messi.lilei@gmail.com",
+      "access": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjE5MzQ0ZTY1LWJiYzktNDRkMS1hOWQwLWY5NTdiMDc5YmQwZSIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsiaHR0cHM6Ly9hcGkub3BlbmFpLmNvbS92MSJdLCJjbGllbnRfaWQiOiJhcHBfRU1vYW1FRVo3M2YwQ2tYYVhwN2hyYW5uIiwiZXhwIjoxNzgwMzY4MzM1LCJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsiY2hhdGdwdF9hY2NvdW50X2lkIjoiMzRjOWUwNzItZDEyYy00ZWNiLTlhNTctOGFkMTc3MTVhMGNlIiwiY2hhdGdwdF9hY2NvdW50X3VzZXJfaWQiOiJ1c2VyLUduUUZmakN6eEJLaDhiaGJ5Skg2Slg3Z19fMzRjOWUwNzItZDEyYy00ZWNiLTlhNTctOGFkMTc3MTVhMGNlIiwiY2hhdGdwdF9jb21wdXRlX3Jlc2lkZW5jeSI6Im5vX2NvbnN0cmFpbnQiLCJjaGF0Z3B0X3BsYW5fdHlwZSI6InBsdXMiLCJjaGF0Z3B0X3VzZXJfaWQiOiJ1c2VyLUduUUZmakN6eEJLaDhiaGJ5Skg2Slg3ZyIsImxvY2FsaG9zdCI6dHJ1ZSwidXNlcl9pZCI6InVzZXItR25RRmZqQ3p4QktoOGJoYnlKSDZKWDdnIn0sImh0dHBzOi8vYXBpLm9wZW5haS5jb20vcHJvZmlsZSI6eyJlbWFpbCI6Im1lc3NpLmxpbGVpQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwiaWF0IjoxNzc5NTA0MzM0LCJpc3MiOiJodHRwczovL2F1dGgub3BlbmFpLmNvbSIsImp0aSI6IjNiNWQ0YzJkLTdjZTQtNDQ0My1iYjdiLWY1ZjNlOWM4MjAyNSIsIm5iZiI6MTc3OTUwNDMzNCwicHdkX2F1dGhfdGltZSI6MTc3OTUwNDMzMzA0OCwic2NwIjpbIm9wZW5pZCIsInByb2ZpbGUiLCJlbWFpbCIsIm9mZmxpbmVfYWNjZXNzIl0sInNlc3Npb25faWQiOiJhdXRoc2Vzc19JTVJhbUsyVG5TWnRvVVJ0TUJTUVNCaWwiLCJzbCI6dHJ1ZSwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMDE2MzY3OTcyNzkxMzQzNjA2NzIifQ.Pc0l7xTzglAOIakS2ChVVzKBzPPr0euYHjFOZ7Girq_sjVIsL2g12T7j5s2OrMBQMujawbaqhKAgjZSa44ZIaPK_L9-xeoLmssQxANDw-5WKmtrK258_XteNVQ3eQK8yl4IHZmYcycCUkiNWuA9_DmZ0xDhJoBg4Vll7u8gJ5tZ9CtnV3AbaWsRW-IFiUydLhwZSFTn0TG8HFDFrItjN-dh2UMR9vHZBKl5o4uq5l86z1bF-hpFzKVkQjh815Y5XbckWizHrGlWjgE_z_Csk5L9HROv8tukYLAxFdD17pkVv5NhhWcBGG13e-UXJDbxBmQKkoWLk8i_CUYp1dk-zWdUCkUj-eOxbr0U-xUaXoUKMDPbmCcO-xr0-jIkG8x2RZquxidoFiji2t9aUXHsj0qO70C_hjA-Z57QiRNCMXXfVwesLNlGNIyAP5MtLE25VMd8aI2gfWETNWhkIdlOezOw63-hfE5g3rHrLW1LYAVCS7QrNRhi-vGzElIHFYz67Q_CtstYy1X7BElqn2plF5VJ53iesyZtKG3u5WqBjqcid4enD60oGWmARJcrHrNNJZ3dL6JPAept1Jl9P69N72vOzqUg6iXLTCjj4Rpcg5OgtmowlbSU2JJms6nqujcWMTTfyYtTXfkazo7fk6gNzQICrMMgVNWdJLSALj1bdpak",
+      "refresh": "rt_ooeGTrHF7xRi0FQEAcezufXamwe0tLJ-hivq055p4Is.NJpFSgxCrHNm51WET54M7qPWT_IaTWcjoc3e80p3gf0",
+      "accountId": "34c9e072-d12c-4ecb-9a57-8ad17715a0ce",
+      "chatgptPlanType": "plus",
+      "expires": 1780368335045
+    }
+  }
+}

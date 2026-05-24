@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>伊娃东方舞财务系统</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section class="login-view" id="loginView">
+    <div class="login-panel">
+      <div class="brand-mark">EVA</div>
+      <h1>伊娃东方舞财务系统</h1>
+      <p>收入汇总、支出登记、盈亏分析与学员经营数据看板</p>
+      <form id="loginForm" class="login-form">
+        <label>账号<input id="username" autocomplete="username" required></label>
+        <label>密码<input id="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">登录系统</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="app-view hidden" id="appView">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark small">E</div>
+        <div>
+          <strong>财务经营中心</strong>
+          <span id="userLabel">已登录</span>
+        </div>
+      </div>
+      <nav>
+        <button class="nav active" data-view="dashboard">总览</button>
+        <button class="nav" data-view="finance">收支</button>
+        <button class="nav" data-view="students">学员</button>
+        <button class="nav" data-view="courses">课程</button>
+      </nav>
+      <div class="system-switch">
+        <button class="system-switch-btn" type="button" onclick="toggleSystemMenu()">切换系统</button>
+        <div class="system-switch-menu" id="systemSwitchMenu">
+          <a href="https://admin.dongfangwuquan.com/members" target="_blank"><span>会员中心</span><em>进入</em></a>
+          <a href="https://admin.dongfangwuquan.com/course" target="_blank"><span>课程管理</span><em>进入</em></a>
+          <a href="https://admin.dongfangwuquan.com/shop" target="_blank"><span>电商系统</span><em>进入</em></a>
+          <a class="active" href="#"><span>财务系统</span><em>当前</em></a>
+        </div>
+      </div>
+      <button class="logout" id="logoutBtn">退出</button>
+    </aside>
+
+    <main class="workspace">
+      <header class="toolbar">
+        <div>
+          <h2 id="pageTitle">总览</h2>
+          <p id="pageSubtitle">共享学员、课程、网课和电商数据</p>
+        </div>
+        <div class="toolbar-actions">
+          <label class="month-field">月份<input id="monthPicker" type="month"></label>
+          <button id="refreshBtn" class="secondary">刷新</button>
+          <button id="addIncomeBtn">登记收入</button>
+          <button id="addExpenseBtn" class="danger">登记支出</button>
+        </div>
+      </header>
+
+      <section class="view" id="dashboardView">
+        <div class="metrics" id="metrics"></div>
+        <div class="grid two">
+          <article class="panel wide">
+            <header><h3>近 12 个月盈亏趋势</h3><span>收入 / 支出 / 利润</span></header>
+            <div class="chart" id="trendChart"></div>
+          </article>
+          <article class="panel">
+            <header><h3>收入结构</h3><span>当前月份</span></header>
+            <div class="bars" id="incomeBars"></div>
+          </article>
+        </div>
+        <div class="grid three">
+          <article class="panel"><header><h3>支出结构</h3><span>本月</span></header><div class="bars" id="expenseBars"></div></article>
+          <article class="panel"><header><h3>关键运营</h3><span>本月</span></header><div class="quick-list" id="quickList"></div></article>
+          <article class="panel"><header><h3>同比环比</h3><span>自动计算</span></header><div class="delta-list" id="deltaList"></div></article>
+        </div>
+      </section>
+
+      <section class="view hidden" id="financeView">
+        <div class="grid two">
+          <article class="panel">
+            <header><h3>其他收入登记</h3><span>课程/电商外收入</span></header>
+            <div class="table-wrap"><table><thead><tr><th>日期</th><th>类别</th><th>金额</th><th>付款方</th><th>经办</th><th></th></tr></thead><tbody id="incomeTable"></tbody></table></div>
+          </article>
+          <article class="panel">
+            <header><h3>公司支出登记</h3><span>房租、薪酬、推广等</span></header>
+            <div class="table-wrap"><table><thead><tr><th>日期</th><th>类别</th><th>金额</th><th>收款方</th><th>状态</th><th></th></tr></thead><tbody id="expenseTable"></tbody></table></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view hidden" id="studentsView">
+        <div class="grid two">
+          <article class="panel">
+            <header><h3>学员消费排名</h3><span>按本月缴费</span></header>
+            <div class="table-wrap"><table><thead><tr><th>学员</th><th>电话</th><th>消费金额</th><th>订单</th></tr></thead><tbody id="studentSpendTable"></tbody></table></div>
+          </article>
+          <article class="panel">
+            <header><h3>学习排名</h3><span>按核销课次</span></header>
+            <div class="table-wrap"><table><thead><tr><th>学员</th><th>电话</th><th>课次</th><th>签到</th><th>最近学习</th></tr></thead><tbody id="learningTable"></tbody></table></div>
+          </article>
+        </div>
+        <div class="grid two">
+          <article class="panel">
+            <header><h3>学员增长</h3><span>近 12 个月</span></header>
+            <div class="mini-chart" id="memberGrowthChart"></div>
+          </article>
+          <article class="panel">
+            <header><h3>学习频率与积极性</h3><span>每周到课估算</span></header>
+            <div class="table-wrap"><table><thead><tr><th>学员</th><th>电话</th><th>签到</th><th>课次</th><th>周频率</th></tr></thead><tbody id="activityTable"></tbody></table></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view hidden" id="coursesView">
+        <div class="grid two">
+          <article class="panel">
+            <header><h3>课程收入排名</h3><span>按本月收入</span></header>
+            <div class="table-wrap"><table><thead><tr><th>课程</th><th>类型</th><th>收入</th><th>订单</th><th>学员</th></tr></thead><tbody id="courseRankTable"></tbody></table></div>
+          </article>
+          <article class="panel">
+            <header><h3>课程类型收入</h3><span>线下课程</span></header>
+            <div class="bars" id="courseTypeBars"></div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </section>
+
+  <dialog id="recordDialog">
+    <form method="dialog" id="recordForm" class="record-form">
+      <header>
+        <h3 id="dialogTitle">登记</h3>
+        <button type="button" id="closeDialog" class="icon-btn">×</button>
+      </header>
+      <input type="hidden" id="recordType">
+      <label>日期<input id="recordDate" type="date" required></label>
+      <label>类别<input id="recordCategory" required placeholder="如 房租 / 推广 / 其他收入"></label>
+      <label>金额<input id="recordAmount" type="number" min="0" step="0.01" required></label>
+      <label>账户<input id="recordAccount" list="accountList" placeholder="微信"></label>
+      <label id="counterpartyLabel">对象<input id="recordCounterparty" placeholder="收款方或付款方"></label>
+      <label>经办人<input id="recordHandler" placeholder="经办人"></label>
+      <label id="paidStatusLabel">状态<select id="recordPaidStatus"><option>已付款</option><option>待付款</option></select></label>
+      <label class="full">备注<textarea id="recordRemark" rows="3"></textarea></label>
+      <footer>
+        <button type="button" class="secondary" id="cancelDialog">取消</button>
+        <button type="submit">保存</button>
+      </footer>
+    </form>
+  </dialog>
+  <datalist id="accountList"></datalist>
+  <div class="toast hidden" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
