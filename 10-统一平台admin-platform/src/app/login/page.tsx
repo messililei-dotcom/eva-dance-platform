@@ -32,22 +32,21 @@ export default function LoginPage() {
     if (ssoToken) {
       setLoading(true);
       localStorage.setItem('admin_token', ssoToken);
-      localStorage.setItem('admin_user', JSON.stringify({ username: '管理员', name: '管理员', role: 'admin' }));
+      localStorage.setItem('token', ssoToken);
+      const fallbackUser = { username: '管理员', name: '管理员', role: 'admin' };
+      localStorage.setItem('admin_user', JSON.stringify(fallbackUser));
+      localStorage.setItem('userData', JSON.stringify(fallbackUser));
       // 验证token有效性
-      fetch('/api/validate-token', {
-        headers: { 'Authorization': `Bearer ${ssoToken}` }
-      }).then(res => {
-        if (res.ok) {
-          message.success('🎉 登录成功！');
-          router.push('/dashboard');
-        } else {
-          localStorage.removeItem('admin_token');
-          localStorage.removeItem('admin_user');
-          setLoading(false);
-          message.warning('令牌已过期，请重新登录');
-        }
+      authApi.validateToken().then(result => {
+        const user = result.user || fallbackUser;
+        localStorage.setItem('admin_user', JSON.stringify(user));
+        localStorage.setItem('userData', JSON.stringify(user));
+        message.success('登录成功');
+        router.push('/dashboard');
       }).catch(() => {
+        authApi.clearAuth();
         setLoading(false);
+        message.warning('令牌已过期，请重新登录');
       });
     }
   }, [form, router]);
@@ -91,7 +90,7 @@ export default function LoginPage() {
       }
 
       message.success({
-        content: '🎉 登录成功，欢迎回来！',
+        content: '登录成功，欢迎回来！',
         duration: 2,
       });
       router.push('/dashboard');

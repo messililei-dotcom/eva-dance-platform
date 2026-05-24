@@ -1,16 +1,17 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 // Token management
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('admin_token');
+  return localStorage.getItem('admin_token') || localStorage.getItem('token');
 }
 
 function setToken(token: string): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem('admin_token', token);
+  localStorage.setItem('token', token);
 }
 
 function getRefreshToken(): string | null {
@@ -21,7 +22,7 @@ function getRefreshToken(): string | null {
 function getUser(): any {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = localStorage.getItem('admin_user');
+    const raw = localStorage.getItem('admin_user') || localStorage.getItem('userData');
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -31,6 +32,7 @@ function getUser(): any {
 function setUser(user: any): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem('admin_user', JSON.stringify(user));
+  localStorage.setItem('userData', JSON.stringify(user));
 }
 
 function setRefreshToken(token: string): void {
@@ -43,6 +45,8 @@ function clearAuth(): void {
   localStorage.removeItem('admin_token');
   localStorage.removeItem('admin_refresh_token');
   localStorage.removeItem('admin_user');
+  localStorage.removeItem('token');
+  localStorage.removeItem('userData');
 }
 
 // Axios instance
