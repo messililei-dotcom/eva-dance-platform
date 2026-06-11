@@ -1,0 +1,111 @@
+<view class="page">
+  <view class="practice-hero">
+    <view class="hero-label">{{checkin.today ? '今日已记录' : '今日推荐'}}</view>
+    <view class="hero-title">今日内容</view>
+    <view class="hero-desc">根据近期播放记录推荐适合继续观看的东方舞内容。</view>
+    <view class="hero-stats">
+      <view>
+        <text>{{todayPlan ? todayPlan.minutes : 0}}</text>
+        <text>分钟</text>
+      </view>
+      <view>
+        <text>{{checkin.streak}}</text>
+        <text>累计打卡</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <view>今日推荐</view>
+      <text>{{todayPlan ? todayPlan.focus : '内容推荐'}}</text>
+  </view>
+  <view class="practice-card" wx:if="{{todayPlan}}">
+    <view class="practice-ring">
+      <text>{{todayPlan.minutes}}</text>
+      <text>min</text>
+    </view>
+    <view class="practice-main">
+      <view class="practice-tag">{{todayPlan.focus}}</view>
+      <view class="practice-title">{{todayPlan.title}}</view>
+      <view class="practice-desc">{{todayPlan.desc}}</view>
+      <view class="practice-steps">
+        <text wx:for="{{todayPlan.steps}}" wx:key="*this">{{item}}</text>
+      </view>
+      <view class="training-actions">
+        <button class="primary-btn" bindtap="startToday">开始播放</button>
+        <button class="ghost-btn" bindtap="checkIn">{{checkin.today ? '已打卡' : '打卡'}}</button>
+      </view>
+    </view>
+  </view>
+  <view wx:else class="assist-card card">
+    <view>
+      <view class="assist-title">暂无今日推荐</view>
+      <view class="assist-desc">登录后可根据播放记录生成继续入口。</view>
+    </view>
+    <view class="assist-action" bindtap="startToday">去选择</view>
+  </view>
+
+  <view class="section-head">
+    <view>本周节奏</view>
+    <text>轻量坚持</text>
+  </view>
+  <view class="week-card card">
+    <view class="week-item {{item.done ? 'done' : ''}}" wx:for="{{weekPlan}}" wx:key="day">
+      <view class="week-dot">{{item.done ? '✓' : item.day}}</view>
+      <view class="week-label">{{item.label}}</view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <view>继续播放</view>
+    <text>上次进度</text>
+  </view>
+  <view class="assist-list">
+    <view class="assist-card card" wx:if="{{recent}}" bindtap="goRecent">
+      <view>
+        <view class="assist-title">继续上次播放</view>
+        <view class="assist-desc">{{recent.course_name || recent.series_name}} · {{recent.percent}}%</view>
+      </view>
+      <view class="assist-action">续播</view>
+    </view>
+    <view class="assist-card card" wx:if="{{!recent}}">
+      <view>
+        <view class="assist-title">暂无播放记录</view>
+        <view class="assist-desc">播放内容后，这里会显示你的进度。</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-head">
+      <view>推荐内容</view>
+    <text>{{recommendHint}}</text>
+  </view>
+  <view class="recommend-list" wx:if="{{recommendedCourses.length}}">
+    <view
+      class="recommend-card card"
+      wx:for="{{recommendedCourses}}"
+      wx:key="id"
+      bindtap="goRecommend"
+      data-id="{{item.id}}"
+      data-source="{{item.source}}"
+    >
+      <view class="recommend-cover">
+        <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" binderror="onImageError" data-path="recommendedCourses[{{index}}].cover_image"></image>
+        <text wx:else>{{item.source === 'dance' ? '舞' : '训'}}</text>
+      </view>
+      <view class="recommend-main">
+        <view class="recommend-topline">
+          <text class="recommend-badge">{{item.badge}}</text>
+        </view>
+        <view class="recommend-title">{{item.title}}</view>
+        <view class="recommend-meta">{{item.meta}}</view>
+      </view>
+    </view>
+  </view>
+  <view wx:else class="assist-card card">
+    <view>
+      <view class="assist-title">暂无后台推荐</view>
+      <view class="assist-desc">推荐内容会从已上架内容和播放记录中实时生成。</view>
+    </view>
+  </view>
+</view>

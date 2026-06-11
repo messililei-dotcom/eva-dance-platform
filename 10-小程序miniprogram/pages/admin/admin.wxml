@@ -1,0 +1,78 @@
+<view class="page">
+  <view wx:if="{{!isAdmin}}" class="empty card">当前登录手机号不是管理员，请在后台“小程序配置”中添加管理员手机号。</view>
+
+  <view wx:else>
+    <view class="admin-hero">
+      <view class="admin-kicker">{{admin.roleLabel}}</view>
+      <view class="admin-title">小程序管理台</view>
+      <view class="admin-desc">可直接在小程序内管理内容、编辑展示内容和上下架项目。</view>
+    </view>
+
+    <view class="stats-grid">
+      <view class="stat-card">
+        <text class="stat-value">{{stats.published_series || 0}}</text>
+        <text class="stat-label">上架内容</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-value">{{stats.authorizations || 0}}</text>
+        <text class="stat-label">咨询记录</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-value">{{stats.orders || 0}}</text>
+        <text class="stat-label">记录</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-value">{{stats.authorizations || 0}}</text>
+        <text class="stat-label">确认</text>
+      </view>
+    </view>
+
+    <view class="section-title">内容编辑</view>
+    <view class="admin-form card">
+      <view class="field">
+        <text>内容名称</text>
+        <input value="{{form.name}}" data-key="name" bindinput="onFormInput" bindconfirm="saveSeries" confirm-type="done" placeholder="输入内容名称" />
+      </view>
+      <view class="field">
+        <text>分类</text>
+        <input value="{{form.category}}" data-key="category" bindinput="onFormInput" bindconfirm="saveSeries" confirm-type="done" placeholder="内容展示 / 经典成品舞" />
+      </view>
+      <view class="field">
+        <text>主图地址</text>
+        <input value="{{form.cover_image}}" data-key="cover_image" bindinput="onFormInput" bindconfirm="saveSeries" confirm-type="done" placeholder="/official-images/..." />
+      </view>
+      <view class="field">
+        <text>介绍</text>
+        <textarea value="{{form.description}}" data-key="description" bindinput="onFormInput" placeholder="内容详情页介绍" />
+      </view>
+      <view class="form-actions">
+        <button class="primary-btn" bindtap="saveSeries">{{form.id ? '保存修改' : '创建内容'}}</button>
+        <button class="ghost-btn" bindtap="resetForm">清空</button>
+      </view>
+    </view>
+
+    <view class="section-title">手机号登记</view>
+    <view class="auth-box card">
+      <picker mode="selector" range="{{seriesNames}}" bindchange="selectAuthSeries">
+        <view class="picker-row">{{authSeriesName || '选择内容'}}</view>
+      </picker>
+      <input value="{{authPhone}}" bindinput="onAuthPhone" bindconfirm="authorizePhone" confirm-type="done" placeholder="输入用户手机号" />
+      <button class="primary-btn" bindtap="authorizePhone">确认登记</button>
+    </view>
+
+    <view class="section-title">内容列表</view>
+    <view class="series-list">
+      <view class="series-card card" wx:for="{{series}}" wx:key="id">
+        <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" binderror="onImageError" data-path="series[{{index}}].cover_image"></image>
+        <view class="series-main">
+          <view class="series-title">{{item.name}}</view>
+          <view class="series-meta">{{item.category || '未分类'}} · {{item.statusText}}</view>
+          <view class="series-actions">
+            <button class="ghost-btn" bindtap="editSeries" data-id="{{item.id}}">编辑</button>
+            <button class="ghost-btn" bindtap="toggleSeries" data-id="{{item.id}}" data-status="{{item.status}}">{{item.status === 'published' ? '下架' : '上架'}}</button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

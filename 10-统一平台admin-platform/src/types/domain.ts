@@ -5,6 +5,7 @@ export interface Member {
   name: string;
   phone: string;
   level: string;
+  status: string;
   city: string;
   country: string;
   registerDate: string;
@@ -12,7 +13,30 @@ export interface Member {
   courseCount: number;
   growth: number;
   lastActiveAt: string;
+  avatar?: string;
   raw?: Record<string, unknown>;
+}
+
+export interface MemberProfile360 {
+  member: Record<string, any>;
+  summary: {
+    offlineIncome: number;
+    onlineIncome: number;
+    totalIncome: number;
+    consumeCount: number;
+    authorizationCount: number;
+    completedVideoCount: number;
+    financeIncome: number;
+    financeOrderAmount: number;
+  };
+  offlinePayments: Array<Record<string, any>>;
+  consumeRecords: Array<Record<string, any>>;
+  courseOrders: Array<Record<string, any>>;
+  authorizations: Array<Record<string, any>>;
+  progress: Array<Record<string, any>>;
+  financeIncomes: Array<Record<string, any>>;
+  financeOrders: Array<Record<string, any>>;
+  operationLogs: Array<Record<string, any>>;
 }
 
 export interface UnifiedOrder {
@@ -84,13 +108,40 @@ export interface Course {
 }
 
 export interface PermissionUser {
-  id: string;
+  id: string | number;
   username: string;
   name: string;
   role: string;
   status: string;
   permissionCount: number;
   permissions: string[];
+  // 权限字段
+  permCourseView?: number | boolean;
+  permCourseCreate?: number | boolean;
+  permCourseEdit?: number | boolean;
+  permCourseDelete?: number | boolean;
+  permMemberView?: number | boolean;
+  permMemberCreate?: number | boolean;
+  permMemberEdit?: number | boolean;
+  permMemberDelete?: number | boolean;
+  permTeacherView?: number | boolean;
+  permTeacherCreate?: number | boolean;
+  permTeacherEdit?: number | boolean;
+  permTeacherDelete?: number | boolean;
+  permPaymentView?: number | boolean;
+  permPaymentCreate?: number | boolean;
+  permPaymentEdit?: number | boolean;
+  permPaymentDelete?: number | boolean;
+  permConsumeView?: number | boolean;
+  permConsumeCreate?: number | boolean;
+  permConsumeEdit?: number | boolean;
+  permConsumeDelete?: number | boolean;
+  permLogView?: number | boolean;
+  bonusTraining?: number | boolean;
+  bonusCard?: number | boolean;
+  bonusYearly?: number | boolean;
+  bonusDisciple?: number | boolean;
+  password?: string;
   raw?: Record<string, unknown>;
 }
 
@@ -121,6 +172,47 @@ export interface DashboardData {
   recentMembers: Member[];
   recentOrders: UnifiedOrder[];
   orderSources: Array<{ label: string; value: number; count: number }>;
+}
+
+export interface DataAnalytics {
+  sales: {
+    monthIncome: number;
+    previousMonthIncome: number;
+    growthRate: number;
+    orderCount: number;
+    averageOrderAmount: number;
+    monthly: Array<{ month: string; revenue: number }>;
+  };
+  members: {
+    total: number;
+    newThisMonth: number;
+    active: number;
+    churnRate: number;
+    byLevel: Array<{ key: string; level: string; count: number; percent: number }>;
+    byCity: Array<{ key: string; city: string; count: number; percent: number }>;
+  };
+  courses: {
+    onlineCount: number;
+    offlineCount: number;
+    totalEnrollments: number;
+    completionRate: number;
+    hotCourses: Array<{
+      key: string;
+      rank: number;
+      name: string;
+      type: '线上' | '线下';
+      enrollments: number;
+      completion: number;
+      rating: number;
+    }>;
+  };
+  finance: {
+    income: number;
+    expense: number;
+    profit: number;
+    profitRate: number;
+    byType: Array<{ key: string; category: string; amount: number; percent: number; color: string }>;
+  };
 }
 
 export interface ApiEnvelope<T> {

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AiwaRaks赛事大屏</title>
+    <link rel="stylesheet" href="./bigscreen.css" />
+  </head>
+  <body>
+    <main class="screen">
+      <header class="screen-header">
+        <div class="screen-logo">
+          <strong>AiwaRaks</strong>
+          <span>DANCE</span>
+        </div>
+        <div class="screen-title">
+          <h1 id="screen-event-title">AiwaRaks东方舞公开赛</h1>
+          <p>自信 · 绽放 · 超越</p>
+        </div>
+        <div class="screen-clock">
+          <strong id="clock-time">--:--:--</strong>
+          <span id="clock-date">----</span>
+        </div>
+      </header>
+
+      <section class="screen-grid">
+        <aside class="left-stack">
+          <section class="screen-card">
+            <h2>赛事信息</h2>
+            <dl id="event-info"></dl>
+          </section>
+
+          <section class="screen-card">
+            <h2>赛事进度</h2>
+            <div class="progress-wrap">
+              <div class="progress-ring" id="event-progress-ring"><span>0%</span><small>进行中</small></div>
+              <div class="progress-list" id="event-progress-list"></div>
+            </div>
+          </section>
+
+          <section class="screen-card">
+            <h2>实时参赛统计</h2>
+            <div class="stats-four" id="live-stats"></div>
+          </section>
+        </aside>
+
+        <section class="rank-card screen-card">
+          <div class="rank-head">
+            <h2>实时成绩榜 <span id="rank-group-name">组别</span></h2>
+            <span>前10名</span>
+          </div>
+          <table class="rank-table">
+            <thead>
+              <tr>
+                <th>排名</th>
+                <th>选手编号</th>
+                <th>选手姓名</th>
+                <th>所属机构</th>
+                <th>总分</th>
+                <th>平均分</th>
+              </tr>
+            </thead>
+            <tbody id="rank-rows"></tbody>
+          </table>
+        </section>
+
+        <aside class="right-stack">
+          <section class="screen-card">
+            <h2>当前场次</h2>
+            <p id="current-session" class="session-name"></p>
+            <div class="current-count">
+              <div><strong id="current-count-main">0/0</strong><span>当前选手</span></div>
+              <ul id="session-status"></ul>
+            </div>
+          </section>
+
+          <section class="screen-card">
+            <h2>评委打分状态</h2>
+            <div class="judge-table" id="judge-status"></div>
+          </section>
+
+          <section class="screen-card">
+            <div class="card-head-link">
+              <h2>最新公告</h2>
+              <span>更多 ></span>
+            </div>
+            <div class="announcements" id="announcements"></div>
+          </section>
+        </aside>
+      </section>
+
+      <footer class="bottom-strip">
+        <div class="contestant-card" id="previous-player"></div>
+        <div class="contestant-card current" id="current-player"></div>
+        <div class="contestant-card" id="next-player"></div>
+        <div class="qr-card">
+          <div class="fake-qr" aria-label="二维码"></div>
+          <p>扫码查看<br />实时成绩 & 赛程</p>
+        </div>
+      </footer>
+    </main>
+
+    <script src="./public/legacy-data.js"></script>
+    <script src="./bigscreen.js"></script>
+  </body>
+</html>

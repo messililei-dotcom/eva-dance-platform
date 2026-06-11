@@ -1,0 +1,68 @@
+import { cleanText, hasAuth, jsonError, openTrainingDb, syncPaymentOrder, toNumber, today, unauthorized } from '../training-db';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: Request) {
+  if (!hasAuth(request)) return unauthorized();
+  const db = openTrainingDb();
+  try {
+    const rows = db.prepare(`
+      SELECT *
+      FROM Payment
+      ORDER BY COALESCE(NULLIF(date, ''), created_at) DESC, id DESC
+    `).all();
+    return Response.json(rows);
+  } finally {
+    db.close();
+  }
+}
+
+export async function POST(request: Request) {
+  if (!hasAuth(request)) return unauthorized();
+  const body = await request.json().catch(() => ({}));
+  const member = { id: toNumber(body.memberId), name: cleanText(body.memberName), phone: cleanText(body.memberPhone) };
+  const course = { id: toNumber(body.courseId), name: cleanText(body.courseName) };
+  if (!member.id || !course.id) return Response.json({ success: false, error: '请选择学员和课程' }, { status: 400 });
+
+  const db = openTrainingDb();
+  try {
+    const result = db.transaction(() => {
+      const dbMember = db.prepare('SELECT id, name, phone FROM Member WHERE id = ?').get(member.id);
+      const dbCourse = db.prepare('SELECT id, name, sessions, endDate FROM Course WHERE id = ?').get(course.id);
+      if (!dbMember) throw new Error('学员不存在');
+      if (!dbCourse) throw new Error('课程不存在');
+      const info = db.prepare(`
+        INSERT INTO Payment (
+          memberId, memberName, memberPhone, courseId, courseName, amount, date,
+          payment, sales, remark, expireDate, remainingSessions, paymentStatus,
+          voucherPath, voucherFilename, voucherUploadedAt
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        dbMember.id,
+        dbMember.name,
+        dbMember.phone || '',
+        dbCourse.id,
+        dbCourse.name,
+        toNumber(body.amount),
+        cleanText(body.date, today()),
+        cleanText(body.payment),
+        cleanText(body.sales),
+        cleanText(body.remark),
+        cleanText(body.expireDate, dbCourse.endDate || ''),
+        Math.max(0, toNumber(body.remainingSessions, toNumber(dbCourse.sessions))),
+        cleanText(body.paymentStatus, toNumber(body.amount) > 0 ? 'paid' : 'completed'),
+        cleanText(body.voucherPath),
+        cleanText(body.voucherFilename),
+        cleanText(body.voucherUploadedAt),
+      );
+      syncPaymentOrder(db, info.lastInsertRowid);
+      return info;
+    })();
+    return Response.json({ success: true, id: result.lastInsertRowid });
+  } catch (err: any) {
+    return jsonError(err?.message, 400, '新建缴费失败');
+  } finally {
+    db.close();
+  }
+}

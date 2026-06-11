@@ -1,28 +1,37 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Form, Input, Button, Checkbox, message, Typography } from 'antd';
+import { Alert, App, Input, Button, Checkbox, Typography } from 'antd';
 import { UserOutlined, LockOutlined, EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { authApi } from '@/lib/api';
+import { apiErrorMessage, isRecord } from '@/lib/data-shape';
 
 const { Title, Text } = Typography;
 
 const REMEMBER_USER_KEY = 'remembered_username';
 
+function mobileHomePath() {
+  if (typeof window === 'undefined') return '/dashboard';
+  return window.matchMedia('(max-width: 767px)').matches ? '/training' : '/dashboard';
+}
+
 export default function LoginPage() {
   const router = useRouter();
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
-  const [form] = Form.useForm();
-  const [rememberPassword, setRememberPassword] = useState(false);
+  const [rememberAccount, setRememberAccount] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
 
   // 加载记住的账号
   useEffect(() => {
     const saved = localStorage.getItem(REMEMBER_USER_KEY);
     if (saved) {
       try {
-        const { username, password } = JSON.parse(saved);
-        form.setFieldsValue({ username, password, remember: true });
-        setRememberPassword(true);
+        const { username } = JSON.parse(saved);
+        setUsername(username || '');
+        setRememberAccount(true);
       } catch {}
     }
 
@@ -31,33 +40,36 @@ export default function LoginPage() {
     const ssoToken = params.get('ssoToken');
     if (ssoToken) {
       setLoading(true);
+      setLoginError('');
+      // 先仅存储admin_token用于验证，不写入userData
       localStorage.setItem('admin_token', ssoToken);
-      localStorage.setItem('admin_user', JSON.stringify({ username: '管理员', name: '管理员', role: 'admin' }));
-      // 验证token有效性
-      fetch('/api/validate-token', {
-        headers: { 'Authorization': `Bearer ${ssoToken}` }
-      }).then(res => {
-        if (res.ok) {
-          message.success('🎉 登录成功！');
-          router.push('/dashboard');
-        } else {
-          localStorage.removeItem('admin_token');
-          localStorage.removeItem('admin_user');
-          setLoading(false);
-          message.warning('令牌已过期，请重新登录');
-        }
+      localStorage.setItem('token', ssoToken);
+      authApi.ensureMediaAuthCookie();
+      // 验证token有效性，验证成功后才存储用户信息
+      authApi.validateToken().then(result => {
+        const user = result.user || { username: '管理员', name: '管理员', role: 'admin' };
+        localStorage.setItem('admin_user', JSON.stringify(user));
+        localStorage.setItem('userData', JSON.stringify(user));
+        message.success('登录成功');
+        router.push(mobileHomePath());
       }).catch(() => {
+        // 验证失败则清除所有已存储的token
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('token');
         setLoading(false);
+        setLoginError('令牌已过期，请重新登录');
+        message.warning('令牌已过期，请重新登录');
       });
     }
-  }, [form, router]);
+  }, [router]);
 
   // 详细的错误消息映射
-  const getErrorMessage = (err: any): string => {
+  const getErrorMessage = (err: unknown): string => {
     if (!err) return '登录失败，请重试';
 
-    const status = err?.response?.status;
-    const serverMsg = err?.response?.data?.error || err?.response?.data?.message;
+    const response = isRecord(err) && isRecord(err.response) ? err.response : undefined;
+    const status = response?.status;
+    const serverMsg = apiErrorMessage(err, '');
 
     if (serverMsg) return serverMsg;
 
@@ -71,32 +83,47 @@ export default function LoginPage() {
       case 503: return '服务暂时不可用，请稍后重试';
     }
 
-    if (err?.message?.includes('Network Error') || err?.message?.includes('timeout')) {
+    const messageText = isRecord(err) && typeof err.message === 'string' ? err.message : '';
+    if (messageText.includes('Network Error') || messageText.includes('timeout')) {
       return '网络连接异常，请检查网络后重试';
     }
 
-    return err?.message || '登录失败，请重试';
+    return messageText || '登录失败，请重试';
   };
 
-  const onFinish = async (v: { username: string; password: string; remember?: boolean }) => {
-    setLoading(true);
-    try {
-      await authApi.login(v.username, v.password);
+  const handleLogin = async () => {
+    const loginUsername = username.trim();
 
-      // 记住密码
-      if (v.remember) {
-        localStorage.setItem(REMEMBER_USER_KEY, JSON.stringify({ username: v.username, password: v.password }));
+    if (!loginUsername) {
+      setLoginError('请输入账号');
+      message.warning('请输入账号');
+      return;
+    }
+    if (!password || password.length < 4) {
+      setLoginError('请输入正确密码（至少4位）');
+      message.warning('请输入正确密码（至少4位）');
+      return;
+    }
+
+    setLoading(true);
+    setLoginError('');
+    try {
+      await authApi.login(loginUsername, password);
+
+      if (rememberAccount) {
+        localStorage.setItem(REMEMBER_USER_KEY, JSON.stringify({ username: loginUsername }));
       } else {
         localStorage.removeItem(REMEMBER_USER_KEY);
       }
 
       message.success({
-        content: '🎉 登录成功，欢迎回来！',
+        content: '登录成功，欢迎回来！',
         duration: 2,
       });
-      router.push('/dashboard');
-    } catch (err: any) {
+      window.location.href = mobileHomePath();
+    } catch (err: unknown) {
       const errMsg = getErrorMessage(err);
+      setLoginError(errMsg);
       message.error({
         content: errMsg,
         duration: 4,
@@ -107,48 +134,41 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{
+    <div className="login-page" style={{
       minHeight: '100vh',
       display: 'flex',
-      background: 'linear-gradient(135deg, #FFF1F8 0%, #F6E9FF 46%, #EEF5FF 100%)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '32px 24px',
+      boxSizing: 'border-box',
+      background: '#FFFFFF',
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* 背景装饰 */}
-      <div style={{
-        position: 'absolute',
-        top: -100,
-        right: -100,
-        width: 400,
-        height: 400,
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(247,42,138,0.12) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: -80,
-        left: -80,
-        width: 300,
-        height: 300,
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(139,26,26,0.08) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
-
+      <div className="login-shell" style={{
+        width: '100%',
+        maxWidth: 1040,
+        display: 'grid',
+        gridTemplateColumns: 'minmax(360px, 1fr) 380px',
+        gap: 72,
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        zIndex: 1,
+      }}>
       {/* Left: Brand Side */}
-      <div style={{
-        flex: 1,
+      <div className="login-brand-panel" style={{
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 48,
+        minWidth: 0,
+        padding: 0,
         position: 'relative',
         zIndex: 1,
       }}>
-        <div style={{ textAlign: 'center', maxWidth: 500 }}>
-          <div style={{
+        <div style={{ textAlign: 'center', maxWidth: 520 }}>
+          <div className="login-feature-grid" style={{
             width: 88,
             height: 88,
             borderRadius: 24,
@@ -164,19 +184,19 @@ export default function LoginPage() {
           }}>
             E
           </div>
-          <Title level={1} style={{ color: '#fff', marginBottom: 8, fontSize: 36 }}>
+          <Title className="login-brand-title" level={1} style={{ color: '#121A3A', marginBottom: 8, fontSize: 36 }}>
             伊娃东方舞
           </Title>
-          <Title level={4} style={{
-            color: 'rgba(247,42,138,0.82)',
-            fontWeight: 400,
+          <Title className="login-brand-subtitle" level={4} style={{
+            color: '#F72A8A',
+            fontWeight: 600,
             margin: '0 0 8px',
             fontSize: 16,
-            letterSpacing: 4,
+            letterSpacing: 2,
           }}>
             数字化运营平台
           </Title>
-          <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: 16 }}>
+          <Text style={{ color: '#606A80', fontSize: 16 }}>
             连接 · 学习 · 成长 · 绽放
           </Text>
 
@@ -193,19 +213,19 @@ export default function LoginPage() {
               ['⚡', '高效便捷', '智能工作流'],
             ].map(([icon, t, d], i) => (
               <div key={i} style={{
-                background: 'rgba(255,255,255,0.06)',
+                background: '#FFFFFF',
                 borderRadius: 12,
                 padding: '14px 18px',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.06)',
+                border: '1px solid #E9ECF5',
+                boxShadow: '0 12px 32px rgba(18, 26, 58, 0.08)',
                 transition: 'all 0.3s',
               }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(247,42,138,0.1)'; e.currentTarget.style.borderColor = 'rgba(247,42,138,0.22)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#FFF4FA'; e.currentTarget.style.borderColor = '#FFB6D8'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#E9ECF5'; }}
               >
                 <div style={{ fontSize: 22, marginBottom: 6 }}>{icon}</div>
-                <Text strong style={{ color: '#fff', display: 'block', marginBottom: 2, fontSize: 13 }}>{t}</Text>
-                <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}>{d}</Text>
+                <Text strong style={{ color: '#121A3A', display: 'block', marginBottom: 2, fontSize: 13 }}>{t}</Text>
+                <Text style={{ color: '#7A8199', fontSize: 11 }}>{d}</Text>
               </div>
             ))}
           </div>
@@ -213,100 +233,113 @@ export default function LoginPage() {
       </div>
 
       {/* Right: Login Form */}
-      <div style={{
-        width: 480,
+      <div className="login-form-panel" style={{
+        width: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 48,
+        padding: 0,
         position: 'relative',
         zIndex: 1,
       }}>
-        <div style={{
+        <div className="login-card" style={{
           width: '100%',
           maxWidth: 380,
           background: '#fff',
           borderRadius: 20,
           padding: 40,
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          border: '1px solid #E9ECF5',
+          boxShadow: '0 24px 64px rgba(18, 26, 58, 0.14)',
         }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <Title level={3} style={{ marginBottom: 4, color: '#1f2937' }}>欢迎回来</Title>
             <Text style={{ color: '#6b7280', fontSize: 14 }}>登录您的管理后台</Text>
           </div>
 
-          <Form
-            form={form}
-            name="login"
-            onFinish={onFinish}
-            size="large"
-            initialValues={{ remember: false }}
-          >
-            <Form.Item
-              name="username"
-              rules={[
-                { required: true, message: '请输入账号或手机号' },
-                { min: 2, message: '账号至少2个字符' },
-              ]}
-            >
+          <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} style={{ width: '100%' }}>
+            {loginError && (
+              <Alert
+                type="error"
+                showIcon
+                message={loginError}
+                style={{
+                  marginBottom: 20,
+                  borderRadius: 10,
+                  borderColor: '#FCA5A5',
+                  background: '#FEF2F2',
+                  color: '#991B1B',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  boxShadow: '0 10px 24px rgba(220, 38, 38, 0.12)',
+                }}
+              />
+            )}
+
+            <div style={{ marginBottom: 24 }}>
               <Input
+                id="login-username"
                 prefix={<UserOutlined style={{ color: '#999' }} />}
-                placeholder="账号 / 手机号"
+                placeholder="账号"
+                size="large"
+                value={username}
+                status={loginError ? 'error' : undefined}
+                onChange={event => {
+                  setUsername(event.target.value);
+                  if (loginError) setLoginError('');
+                }}
                 style={{ borderRadius: 10, height: 48, paddingLeft: 14 }}
               />
-            </Form.Item>
+            </div>
 
-            <Form.Item
-              name="password"
-              rules={[
-                { required: true, message: '请输入密码' },
-                { min: 4, message: '密码至少4个字符' },
-              ]}
-            >
+            <div style={{ marginBottom: 24 }}>
               <Input.Password
+                id="login-password"
                 prefix={<LockOutlined style={{ color: '#999' }} />}
                 placeholder="密码"
+                size="large"
+                value={password}
+                status={loginError ? 'error' : undefined}
+                onChange={event => {
+                  setPassword(event.target.value);
+                  if (loginError) setLoginError('');
+                }}
                 iconRender={visible => visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />}
                 style={{ borderRadius: 10, height: 48, paddingLeft: 14 }}
               />
-            </Form.Item>
+            </div>
 
-            <Form.Item style={{ marginBottom: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Form.Item name="remember" valuePropName="checked" noStyle>
-                  <Checkbox
-                    checked={rememberPassword}
-                    onChange={e => setRememberPassword(e.target.checked)}
-                    style={{ fontSize: 13, color: '#6b7280' }}
-                  >
-                    记住密码
-                  </Checkbox>
-                </Form.Item>
-                <a style={{ fontSize: 13, color: '#F72A8A' }}>忘记密码？</a>
-              </div>
-            </Form.Item>
-
-            <Form.Item style={{ marginBottom: 0 }}>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                block
-                style={{
-                  height: 48,
-                  borderRadius: 10,
-                  fontSize: 16,
-                  fontWeight: 600,
-                  background: 'linear-gradient(135deg, #F72A8A, #7C3AED)',
-                  border: 'none',
-                  boxShadow: '0 12px 28px rgba(247,42,138,0.24)',
-                  letterSpacing: 4,
-                }}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <Checkbox
+                id="login-remember"
+                checked={rememberAccount}
+                onChange={e => setRememberAccount(e.target.checked)}
+                style={{ fontSize: 13, color: '#6b7280' }}
               >
-                {loading ? '登录中...' : '登  录'}
-              </Button>
-            </Form.Item>
-          </Form>
+                记住账号
+              </Checkbox>
+              <a href="/forgot-password" style={{ fontSize: 13, color: '#F72A8A' }}>忘记密码？</a>
+            </div>
+
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              block
+              size="large"
+              style={{
+                height: 48,
+                borderRadius: 10,
+                fontSize: 16,
+                fontWeight: 600,
+                background: 'linear-gradient(135deg, #F72A8A, #7C3AED)',
+                border: 'none',
+                boxShadow: '0 12px 28px rgba(247,42,138,0.24)',
+                letterSpacing: 4,
+              }}
+            >
+              {loading ? '登录中...' : '登  录'}
+            </Button>
+          </form>
 
           <div style={{
             marginTop: 24,
@@ -319,6 +352,7 @@ export default function LoginPage() {
             </Text>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -1,0 +1,98 @@
+<view class="player-page" wx:if="{{!reviewMode}}">
+  <view class="video-container">
+    <video
+      id="courseVideo"
+      class="video"
+      src="{{playUrl}}"
+      title="{{video.name}}"
+      controls
+      object-fit="contain"
+      show-center-play-btn
+      enable-progress-gesture="{{video.authorized}}"
+      enable-play-gesture
+      bindtimeupdate="onTimeUpdate"
+      bindended="onEnded"
+      binderror="onVideoError"
+      playback-rate="{{playbackRate}}"
+      picture-in-picture-mode="{{['push', 'pop']}}"
+    >
+    </video>
+
+    <button class="video-menu-trigger" bindtap="togglePlayerMenu">...</button>
+
+    <view class="player-menu-backdrop" wx:if="{{showPlayerMenu}}" bindtap="closePlayerMenu"></view>
+    <view class="player-menu" wx:if="{{showPlayerMenu}}" catchtap="noop">
+      <view class="player-menu-section">
+        <view class="player-menu-title">清晰度</view>
+        <view class="player-menu-options">
+          <view
+            class="player-menu-option {{currentQuality === item.value ? 'active' : ''}}"
+            wx:for="{{qualityOptions}}"
+            wx:key="value"
+            data-quality="{{item.value}}"
+            bindtap="setQuality"
+          >
+            {{item.label}}
+          </view>
+        </view>
+      </view>
+      <view class="player-menu-section">
+        <view class="player-menu-title">速度</view>
+        <view class="player-menu-options">
+          <view
+            class="player-menu-option {{playbackRate === item ? 'active' : ''}}"
+            wx:for="{{rateOptions}}"
+            wx:key="*this"
+            data-rate="{{item}}"
+            bindtap="setRate"
+          >
+            {{item}}x
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 断点续播提示 -->
+    <view class="resume-overlay" wx:if="{{hasResumePosition}}">
+      <view class="resume-card">
+        <text>上次播放到 {{resumeSeconds}}s</text>
+        <view class="resume-actions">
+          <button class="resume-btn" bindtap="resumeFromPosition">继续播放</button>
+          <button class="restart-btn" bindtap="playFromStart">从头开始</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="content">
+    <view class="video-card card">
+      <view class="title">{{video.name || '内容详情'}}</view>
+      <view class="meta">内容仅供已确认的用户播放</view>
+      <view class="progress-track"><view class="progress-fill" style="width: {{percent}}%;"></view></view>
+    </view>
+
+    <!-- 内容列表 -->
+    <view class="outline card">
+      <view class="outline-title">内容列表</view>
+      <view class="outline-item {{item.videoId == videoId ? 'current' : ''}}" wx:for="{{outline}}" wx:key="videoId" data-id="{{item.videoId}}" bindtap="switchVideo">
+        <view class="outline-info">
+          <text class="outline-name">{{item.name}}</text>
+        </view>
+        <text class="outline-status">{{item.videoId == videoId ? '当前 ' : ''}}{{item.progressPercent}}%</text>
+      </view>
+    </view>
+    <view class="cast-note">请勿转发链接或二次传播内容资料。</view>
+  </view>
+</view>
+
+<view class="player-page" wx:else>
+  <view class="content">
+    <view class="video-card card">
+      <view class="title">内容详情</view>
+      <view class="meta">当前内容用于品牌展示与播放。</view>
+      <view class="actions">
+        <button class="ghost-btn" bindtap="requestAuthorization">查看说明</button>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,127 @@
+.tab-scroll {
+  width: 100%;
+  margin-top: 6rpx;
+  white-space: nowrap;
+}
+
+.tab-row {
+  display: inline-flex;
+  gap: 14rpx;
+}
+
+.filter-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 146rpx;
+  height: 68rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  color: #6d655e;
+  background: #ffffff;
+  border: 1rpx solid rgba(32, 33, 36, 0.06);
+  font-size: 26rpx;
+  font-weight: 800;
+}
+
+.filter-tab.active {
+  color: #ffffff;
+  background: #ff5b45;
+}
+
+.course-count {
+  margin: 28rpx 0 8rpx;
+  color: #8c8172;
+  font-size: 25rpx;
+}
+
+.system-list {
+  display: grid;
+  gap: 18rpx;
+}
+
+.system-card {
+  display: grid;
+  grid-template-columns: 220rpx 1fr;
+  gap: 22rpx;
+  padding: 22rpx;
+}
+
+.cover {
+  position: relative;
+  width: 220rpx;
+  height: 220rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2d3541, #b56a48);
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.cover image {
+  width: 100%;
+  height: 100%;
+}
+
+.badge {
+  position: absolute;
+  left: 12rpx;
+  top: 12rpx;
+  padding: 7rpx 12rpx;
+  border-radius: 999rpx;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.42);
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.course-main {
+  min-width: 0;
+}
+
+.course-name {
+  color: #202124;
+  font-size: 32rpx;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.course-subtitle {
+  margin-top: 10rpx;
+  color: #82786f;
+  font-size: 25rpx;
+  line-height: 1.4;
+}
+
+.course-meta {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  margin-top: 16rpx;
+}
+
+.course-meta text {
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  color: #706861;
+  background: #f6eee6;
+  font-size: 23rpx;
+}
+
+.course-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14rpx;
+  margin-top: 18rpx;
+}
+
+.course-bottom .ghost-btn {
+  min-width: 156rpx;
+  min-height: 64rpx;
+  padding: 0 18rpx;
+  font-size: 25rpx;
+}

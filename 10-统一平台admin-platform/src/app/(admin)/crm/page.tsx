@@ -76,7 +76,7 @@ const mockLeads: Lead[] = [
   { key: '7', name: '周敏', phone: '13800138007', source: '地推', intentLevel: 'D', followStatus: '已流失', lastFollowTime: '2026-05-15', nextFollowTime: '-', follower: '伊小娃', notes: '距离太远，不考虑了' },
   { key: '8', name: '吴静', phone: '13800138008', source: '抖音', intentLevel: 'C', followStatus: '待跟进', lastFollowTime: '2026-05-23', nextFollowTime: '2026-05-26', follower: '增长专家', notes: '评论区留言咨询' },
   { key: '9', name: '郑诗涵', phone: '13800138009', source: '小红书', intentLevel: 'B', followStatus: '跟进中', lastFollowTime: '2026-05-21', nextFollowTime: '2026-05-24', follower: '伊小琳', notes: '对肚皮舞感兴趣' },
-  { key: '10', name: '孙婉婷', phone: '13800138010', source: '转介绍', intentLevel: 'A', followStatus: '已成交', lastFollowTime: '2026-05-20', nextFollowTime: '2026-06-15', follower: '增长专家', notes: 'VIP会员，转介绍的新学员' },
+  { key: '10', name: '孙婉婷', phone: '13800138010', source: '转介绍', intentLevel: 'A', followStatus: '已成交', lastFollowTime: '2026-05-20', nextFollowTime: '2026-06-15', follower: '增长专家', notes: 'VIP学员，转介绍的新学员' },
   { key: '11', name: '黄雨晴', phone: '13800138011', source: '微信', intentLevel: 'B', followStatus: '待跟进', lastFollowTime: '2026-05-23', nextFollowTime: '2026-05-24', follower: '伊小娃', notes: '群里添加，想了解价格' },
   { key: '12', name: '林思琪', phone: '13800138012', source: '线下活动', intentLevel: 'C', followStatus: '跟进中', lastFollowTime: '2026-05-22', nextFollowTime: '2026-05-28', follower: '伊小琳', notes: '参加线下活动后咨询' },
   { key: '13', name: '杨雪', phone: '13800138013', source: '抖音', intentLevel: 'D', followStatus: '已流失', lastFollowTime: '2026-05-10', nextFollowTime: '-', follower: '增长专家', notes: '暂无学习计划' },
@@ -140,7 +140,7 @@ export default function CRMPage() {
   const handleConvertSubmit = async () => {
     try {
       const values = await convertForm.validateFields();
-      message.success(`${values.name} 已成功转为学员，会员等级：${values.level}`);
+      message.success(`${values.name} 已成功转为学员，学员等级：${values.level}`);
       setLeads((prev) =>
         prev.map((l) =>
           l.key === currentLead?.key
@@ -406,23 +406,31 @@ export default function CRMPage() {
         okButtonProps={{ style: { backgroundColor: '#a855f7', borderColor: '#a855f7' } }}
       >
         <Form form={convertForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item label="姓名" name="name" rules={[{ required: true, message: '请输入姓名' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="手机号" name="phone" rules={[{ required: true, message: '请输入手机号' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="会员等级"
-            name="level"
-            rules={[{ required: true, message: '请选择会员等级' }]}
-          >
-            <Select placeholder="请选择会员等级">
-              <Select.Option value="普通会员">普通会员</Select.Option>
-              <Select.Option value="VIP会员">VIP会员</Select.Option>
-              <Select.Option value="黑金会员">黑金会员</Select.Option>
-            </Select>
-          </Form.Item>
+          <Row gutter={12}>
+            <Col xs={12} sm={12}>
+              <Form.Item label="姓名" name="name" rules={[{ required: true, message: '请输入姓名' }]}>
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col xs={12} sm={12}>
+              <Form.Item label="手机号" name="phone" rules={[{ required: true, message: '请输入手机号' }]}>
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item
+                label="学员等级"
+                name="level"
+                rules={[{ required: true, message: '请选择学员等级' }]}
+              >
+                <Select placeholder="请选择学员等级">
+                  <Select.Option value="普通学员">普通学员</Select.Option>
+                  <Select.Option value="VIP学员">VIP学员</Select.Option>
+                  <Select.Option value="黑金学员">黑金学员</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
 
@@ -503,46 +511,62 @@ export default function CRMPage() {
         okButtonProps={{ style: { backgroundColor: '#a855f7', borderColor: '#a855f7' } }}
       >
         <Form form={editForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item label="姓名" name="name" rules={[{ required: true, message: '请输入姓名' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="手机号" name="phone" rules={[{ required: true, message: '请输入手机号' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="来源渠道" name="source" rules={[{ required: true, message: '请选择来源渠道' }]}>
-            <Select>
-              {convertSources.map((s) => (
-                <Select.Option key={s} value={s}>{s}</Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item label="意向等级" name="intentLevel" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="A">A类</Select.Option>
-              <Select.Option value="B">B类</Select.Option>
-              <Select.Option value="C">C类</Select.Option>
-              <Select.Option value="D">D类</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="跟进状态" name="followStatus" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="待跟进">待跟进</Select.Option>
-              <Select.Option value="跟进中">跟进中</Select.Option>
-              <Select.Option value="已报价">已报价</Select.Option>
-              <Select.Option value="已成交">已成交</Select.Option>
-              <Select.Option value="已流失">已流失</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="跟进人" name="follower" rules={[{ required: true }]}>
-            <Select>
-              {followers.map((f) => (
-                <Select.Option key={f} value={f}>{f}</Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item label="备注" name="notes">
-            <Input.TextArea rows={3} />
-          </Form.Item>
+          <Row gutter={12}>
+            <Col xs={12} sm={12}>
+              <Form.Item label="姓名" name="name" rules={[{ required: true, message: '请输入姓名' }]}>
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col xs={12} sm={12}>
+              <Form.Item label="手机号" name="phone" rules={[{ required: true, message: '请输入手机号' }]}>
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col xs={12} sm={12}>
+              <Form.Item label="来源渠道" name="source" rules={[{ required: true, message: '请选择来源渠道' }]}>
+                <Select>
+                  {convertSources.map((s) => (
+                    <Select.Option key={s} value={s}>{s}</Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={12} sm={12}>
+              <Form.Item label="意向等级" name="intentLevel" rules={[{ required: true }]}>
+                <Select>
+                  <Select.Option value="A">A类</Select.Option>
+                  <Select.Option value="B">B类</Select.Option>
+                  <Select.Option value="C">C类</Select.Option>
+                  <Select.Option value="D">D类</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={12} sm={12}>
+              <Form.Item label="跟进状态" name="followStatus" rules={[{ required: true }]}>
+                <Select>
+                  <Select.Option value="待跟进">待跟进</Select.Option>
+                  <Select.Option value="跟进中">跟进中</Select.Option>
+                  <Select.Option value="已报价">已报价</Select.Option>
+                  <Select.Option value="已成交">已成交</Select.Option>
+                  <Select.Option value="已流失">已流失</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={12} sm={12}>
+              <Form.Item label="跟进人" name="follower" rules={[{ required: true }]}>
+                <Select>
+                  {followers.map((f) => (
+                    <Select.Option key={f} value={f}>{f}</Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item label="备注" name="notes">
+                <Input.TextArea rows={3} />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
     </>

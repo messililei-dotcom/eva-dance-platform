@@ -5,8 +5,11 @@ node_modules/
 
 # Build
 .next/
+.next-build/
+.next-preview/
 dist/
 build/
+out/
 *.tsbuildinfo
 
 # Environment
@@ -30,9 +33,28 @@ Thumbs.db
 *.swp
 *.swo
 
-# Database backup
+# Local databases and backups
+*.db
+*.db-*
+*.db.*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
 *.db.bak*
 *.tar.gz
+*.bak
+*.backup
+
+# Temporary scripts and local scratch
+tmp-*.sh
+private/
 
 # Uploads
 uploads/
+
+# Local archives and generated deliverables
+00-数据库备份/
+已删除开发数据/
+证书-伊娃东方舞/
+10-赛事系统/旧程序数据/

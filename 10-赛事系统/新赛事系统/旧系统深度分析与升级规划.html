@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>旧赛事系统深度分析与AiwaRaks赛事管理平台升级规划</title>
+    <style>
+      :root {
+        --ink: #1f2730;
+        --muted: #66727f;
+        --line: #dce4e8;
+        --paper: #ffffff;
+        --page: #f4f7f4;
+        --dark: #222b35;
+        --red: #bd3d32;
+        --blue: #176b87;
+        --green: #3d7d50;
+        --gold: #bb8325;
+        --soft-red: #fff0ee;
+        --soft-blue: #eef7fa;
+        --soft-green: #eef8f1;
+        --soft-gold: #fff7e8;
+        --shadow: 0 18px 44px rgba(31, 39, 48, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--page);
+        font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        line-height: 1.65;
+        letter-spacing: 0;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .hero {
+        min-height: 430px;
+        color: #fff;
+        background:
+          linear-gradient(90deg, rgba(31, 39, 48, 0.94), rgba(31, 39, 48, 0.72)),
+          url("https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1800&q=80");
+        background-size: cover;
+        background-position: center;
+        display: grid;
+        align-items: end;
+        padding: 48px;
+      }
+
+      .hero-inner {
+        max-width: 1120px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 0 10px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 999px;
+        color: #dce8ef;
+        font-size: 13px;
+        margin-bottom: 18px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        max-width: 880px;
+        font-size: 46px;
+        line-height: 1.15;
+      }
+
+      .hero p {
+        max-width: 780px;
+        margin-top: 18px;
+        color: #dce8ef;
+        font-size: 17px;
+      }
+
+      .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        max-width: 980px;
+        margin-top: 34px;
+      }
+
+      .hero-stat {
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .hero-stat strong {
+        display: block;
+        font-size: 28px;
+      }
+
+      .hero-stat span {
+        display: block;
+        color: #c5d2da;
+        font-size: 13px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 26px;
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 28px;
+      }
+
+      .toc {
+        position: sticky;
+        top: 20px;
+        align-self: start;
+        background: var(--dark);
+        color: #fff;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .toc strong {
+        display: block;
+        margin-bottom: 12px;
+      }
+
+      .toc a {
+        display: block;
+        color: #c9d4dc;
+        text-decoration: none;
+        padding: 8px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 14px;
+      }
+
+      .content {
+        display: grid;
+        gap: 20px;
+      }
+
+      section {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        padding: 26px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      h2 {
+        font-size: 25px;
+        line-height: 1.25;
+      }
+
+      h3 {
+        font-size: 17px;
+        margin-bottom: 8px;
+      }
+
+      .section-head p,
+      .muted {
+        color: var(--muted);
+      }
+
+      .grid-2,
+      .grid-3,
+      .grid-4 {
+        display: grid;
+        gap: 14px;
+      }
+
+      .grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 16px;
+        background: #fbfcfc;
+      }
+
+      .card.blue {
+        background: var(--soft-blue);
+        border-color: #cfe8ef;
+      }
+
+      .card.green {
+        background: var(--soft-green);
+        border-color: #d2ead9;
+      }
+
+      .card.gold {
+        background: var(--soft-gold);
+        border-color: #efdcb4;
+      }
+
+      .card.red {
+        background: var(--soft-red);
+        border-color: #f0c9c4;
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 30px;
+        line-height: 1.2;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      ul,
+      ol {
+        margin: 10px 0 0 20px;
+        padding: 0;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 11px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 13px;
+        background: #f8fafb;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 26px;
+        border-radius: 999px;
+        padding: 0 9px;
+        background: #eef3f5;
+        color: var(--blue);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .flow-step {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px;
+        background: #fff;
+        position: relative;
+      }
+
+      .flow-step::after {
+        content: "";
+        position: absolute;
+        right: -11px;
+        top: 50%;
+        width: 10px;
+        height: 2px;
+        background: var(--line);
+      }
+
+      .flow-step:last-child::after {
+        display: none;
+      }
+
+      .module-map {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .platform-stack {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .stack-layer {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 16px;
+        background: #fbfcfc;
+      }
+
+      .stack-layer.platform {
+        background: var(--soft-blue);
+        border-color: #cfe8ef;
+      }
+
+      .stack-layer.domain {
+        background: var(--soft-green);
+        border-color: #d2ead9;
+      }
+
+      .stack-layer.data {
+        background: var(--soft-gold);
+        border-color: #efdcb4;
+      }
+
+      .stack-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .module {
+        border-left: 4px solid var(--blue);
+      }
+
+      .module:nth-child(2n) {
+        border-left-color: var(--red);
+      }
+
+      .module:nth-child(3n) {
+        border-left-color: var(--green);
+      }
+
+      .roadmap {
+        display: grid;
+        gap: 12px;
+      }
+
+      .phase {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 16px;
+        background: #fbfcfc;
+      }
+
+      .phase strong {
+        color: var(--red);
+      }
+
+      code {
+        padding: 2px 6px;
+        border-radius: 6px;
+        background: #edf1f3;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.92em;
+      }
+
+      .print-note {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 1020px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .toc {
+          position: static;
+        }
+
+        .hero-stats,
+        .grid-2,
+        .grid-3,
+        .grid-4,
+        .flow,
+        .module-map {
+          grid-template-columns: 1fr;
+        }
+
+        .flow-step::after {
+          display: none;
+        }
+
+        .phase {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media print {
+        .toc {
+          display: none;
+        }
+
+        .layout {
+          display: block;
+          padding: 0;
+        }
+
+        section,
+        .hero {
+          box-shadow: none;
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-inner">
+        <span class="eyebrow">旧系统深度分析 · AiwaRaks赛事管理平台升级规划</span>
+        <h1>从报名投票小程序升级为AiwaRaks赛事运营中枢</h1>
+        <p>
+          基于旧 Java 微服务、微信小程序、SQL 备份和两份 Excel 数据，梳理现有赛事业务链路、数据资产、风险点与重构方向，形成可落地的新系统结构和分阶段建设计划。
+        </p>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong>14</strong><span>历史赛事</span></div>
+          <div class="hero-stat"><strong>2033</strong><span>报名/选手记录</span></div>
+          <div class="hero-stat"><strong>256</strong><span>合并评委</span></div>
+          <div class="hero-stat"><strong>65248</strong><span>评分记录</span></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="toc">
+        <strong>目录</strong>
+        <a href="#assets">1. 旧系统资产画像</a>
+        <a href="#business">2. 业务流程还原</a>
+        <a href="#data">3. 数据模型与保留策略</a>
+        <a href="#source-audit">3.1 全源读取与新库归并</a>
+        <a href="#diagnosis">4. 问题诊断</a>
+        <a href="#upgrade">5. 升级目标</a>
+        <a href="#architecture">6. 新系统结构</a>
+        <a href="#schema">7. 新数据结构</a>
+        <a href="#api">8. 接口与小程序计划</a>
+        <a href="#roadmap">9. 阶段路线图</a>
+        <a href="#technical">10. 技术与安全架构</a>
+        <a href="#mvp">11. MVP 与验收标准</a>
+      </aside>
+
+      <main class="content">
+        <section id="assets">
+          <div class="section-head">
+            <div>
+              <h2>1. 旧系统资产画像</h2>
+              <p>旧系统由 Java 微服务后端、微信原生小程序、MySQL SQL 备份、用户/评委 Excel 清单组成。</p>
+            </div>
+            <span class="tag">资产盘点</span>
+          </div>
+          <div class="grid-3">
+            <article class="card blue">
+              <h3>后端</h3>
+              <p>包含 `software-auth.jar`、`software-gateway.jar`、`software-modules-system.jar`、`software-modules-file.jar` 等服务包，配置来自 Nacos 风格的 `software_config.sql`。</p>
+            </article>
+            <article class="card green">
+              <h3>小程序</h3>
+              <p>`小程序mp-vote` 是微信原生小程序，名称偏“报名投票系统”，实际覆盖赛事展示、报名、评委打分、成绩查看、排行、用户中心。</p>
+            </article>
+            <article class="card gold">
+              <h3>数据</h3>
+              <p>`software_cloud.sql` 是核心业务库，`产赛用户.xlsx` 与 `评委数据.xlsx` 是外部补充清单，已通过迁移脚本合并入新快照。</p>
+            </article>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>旧表</th>
+                <th>记录数</th>
+                <th>业务含义</th>
+                <th>新系统处理</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>dfwq_competition</code></td><td>14</td><td>赛事主档案、海报、报名开关、视频号、主办方</td><td>赛事档案完整保留</td></tr>
+              <tr><td><code>dfwq_group</code></td><td>1700</td><td>赛事组别、报名费、比赛时间、评委密钥</td><td>升级为组别/场次/赛制配置</td></tr>
+              <tr><td><code>dfwq_player</code></td><td>2033</td><td>报名选手、节目、音乐、支付、出场顺序、成绩</td><td>升级为报名与参赛作品</td></tr>
+              <tr><td><code>dfwq_comps_user</code></td><td>1147</td><td>微信用户、手机号、评委标记、状态</td><td>拆分为用户、评委身份、选手身份</td></tr>
+              <tr><td><code>dfwq_groupjudges</code></td><td>5838</td><td>评委与赛事/组别授权关系</td><td>升级为评委授权矩阵</td></tr>
+              <tr><td><code>dfwq_score</code></td><td>65248</td><td>评委分项打分记录</td><td>作为成绩核算原始凭证保留</td></tr>
+              <tr><td><code>sys_user</code></td><td>17</td><td>后台管理员/主办方账号</td><td>迁移为组织与管理员</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="business">
+          <div class="section-head">
+            <div>
+              <h2>2. 业务流程还原</h2>
+              <p>旧小程序虽然命名为报名投票，但真实业务已经形成一条完整赛事链路。</p>
+            </div>
+            <span class="tag">业务链路</span>
+          </div>
+          <div class="flow">
+            <div class="flow-step"><h3>赛事发布</h3><p>后台配置赛事、海报、报名开关、城市、视频号和介绍。</p></div>
+            <div class="flow-step"><h3>选手报名</h3><p>用户选择赛事与组别，填写节目、机构、老师、音乐、人数并支付。</p></div>
+            <div class="flow-step"><h3>组别编排</h3><p>通过组别排序、出场顺序、评委组别关系组织现场比赛。</p></div>
+            <div class="flow-step"><h3>评委评分</h3><p>评委绑定手机号或密钥后，对选手按评分规则提交分项分数。</p></div>
+            <div class="flow-step"><h3>成绩发布</h3><p>选手可付费查看成绩，系统提供排行和历史记录。</p></div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>小程序页面</th>
+                <th>接口</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>首页/赛事详情</td><td><code>getCompList</code>、<code>getComp</code></td><td>展示赛事列表、海报、介绍、报名入口。</td></tr>
+              <tr><td>报名</td><td><code>getSignupCompList</code>、<code>getSignupTypes</code>、<code>submitSignup</code>、<code>paySignup</code></td><td>赛事报名、组别选择、支付。</td></tr>
+              <tr><td>个人中心</td><td><code>getUserinfo</code>、<code>saveUserinfo</code>、<code>getSignups</code></td><td>用户资料、报名记录、历史赛事。</td></tr>
+              <tr><td>评委绑定/评分</td><td><code>sendSms</code>、<code>bindVoter</code>、<code>bindShow</code>、<code>getVoteList</code>、<code>getShow</code>、<code>submitRating</code></td><td>评委身份确认、组别授权、现场评分。</td></tr>
+              <tr><td>成绩/排行</td><td><code>getVoteDetail</code>、<code>payScore</code>、<code>getRank</code></td><td>成绩查看、排行展示和付费查看。</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="data">
+          <div class="section-head">
+            <div>
+              <h2>3. 数据模型与保留策略</h2>
+              <p>升级前最重要的是不丢数据。新系统应把旧字段原样保留，同时建立更清晰的业务实体。</p>
+            </div>
+            <span class="tag">数据治理</span>
+          </div>
+          <div class="grid-4">
+            <article class="card metric"><strong>2033</strong><span>Excel 产赛用户</span></article>
+            <article class="card metric"><strong>681</strong><span>按用户 ID 匹配 SQL</span></article>
+            <article class="card metric"><strong>8</strong><span>Excel 用户未在 SQL 找到</span></article>
+            <article class="card metric"><strong>256</strong><span>SQL + Excel 评委去重</span></article>
+          </div>
+          <div class="grid-2" style="margin-top: 14px">
+            <article class="card">
+              <h3>保留原则</h3>
+              <ul>
+                <li>旧 SQL 和 Excel 作为原始凭证，不覆盖、不删除。</li>
+                <li>每条迁移数据保留 `legacy_id`、`legacy_table`、`source_file`。</li>
+                <li>成绩、支付、报名状态类字段优先原样迁移，后续再做状态归一。</li>
+                <li>手机号、OpenID、昵称等敏感字段只在授权角色可见。</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>实体重构</h3>
+              <ul>
+                <li>赛事：由 `dfwq_competition` 升级为赛事项目、届次、赛程、素材。</li>
+                <li>组别：由简单分组升级为组别、场次、赛制、评分规则。</li>
+                <li>用户：拆分账户、选手身份、评委身份、主办方身份。</li>
+                <li>评分：保留原始分项记录，并新增可审计的成绩计算结果。</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section id="source-audit">
+          <div class="section-head">
+            <div>
+              <h2>3.1 全源读取与新数据库归并</h2>
+              <p>旧系统数据格式不统一，不能只按单表导入。新系统采用“原始数据留存 + 标准主表归并 + 异常治理”的三步策略。</p>
+            </div>
+            <span class="tag">新数据库</span>
+          </div>
+          <div class="grid-4">
+            <article class="card metric"><strong>31</strong><span>主业务库表</span></article>
+            <article class="card metric"><strong>12</strong><span>配置库表</span></article>
+            <article class="card metric"><strong>10</strong><span>早期投票库表</span></article>
+            <article class="card metric"><strong>26</strong><span>小程序接口</span></article>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>来源</th>
+                <th>深度读取结论</th>
+                <th>新库归并方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>software_cloud</code></td><td>承载 14 场赛事、1700 个组别、2033 条报名/选手、256 名评委、65248 条评分记录。</td><td>先写入 <code>legacy_raw_records</code>，再拆到 <code>event_competitions</code>、<code>event_groups</code>、<code>event_registrations</code>、<code>event_score_entries</code>。</td></tr>
+              <tr><td><code>software_config</code></td><td>承载网关、认证、文件、系统模块配置；包含旧环境连接信息和服务结构。</td><td>不进入业务主表，进入 <code>ops_config_snapshots</code>；旧密钥、密码、连接配置必须轮换。</td></tr>
+              <tr><td><code>api_vmp</code></td><td>更早期投票/报名库，使用 <code>cid/tid/sid/uid/vid</code> 体系。</td><td>通过 <code>legacy_id_map</code> 建立早期 ID 与新主键映射，避免和后期库 ID 冲突。</td></tr>
+              <tr><td>Excel 用户/评委</td><td>产赛用户 2033 行，评委 256 行；评委手机号可与 SQL 评委完整对齐。</td><td>按用户 ID、手机号、评委身份综合匹配到 <code>platform_users</code> 与 <code>event_judges</code>。</td></tr>
+              <tr><td>小程序源码</td><td>还原报名、支付、评委绑定、节目评分、排行、个人中心等 26 个接口语义。</td><td>保留业务语义，升级为资源式 API，并纳入手机端页面与评委端流程。</td></tr>
+            </tbody>
+          </table>
+          <div class="grid-2">
+            <article class="card">
+              <h3>新库迁移层</h3>
+              <ul>
+                <li><code>migration_sources</code>：记录每个旧库、Excel、源码来源。</li>
+                <li><code>legacy_raw_records</code>：旧表每一行原样 JSON 入库，保证不丢字段。</li>
+                <li><code>legacy_id_map</code>：旧 ID 与新主键映射，支持回溯和重跑。</li>
+                <li><code>migration_anomaly_logs</code>：手机号异常、孤立评分、重复评委、缺失音乐、状态冲突统一入账。</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>新库业务层</h3>
+              <ul>
+                <li>平台公共层：用户、管理员、权限、订单、文件、地区、操作日志。</li>
+                <li>赛事业务层：赛事、组别、场次、报名、选手、节目、音乐、评委、评分、成绩、证书、大屏。</li>
+                <li>运营增长层：积分、会员画像、课程推荐、转化事件、赛事复盘。</li>
+                <li>评分核心层：原始分、计算分、发布分、复核日志分离，避免普通 CRUD 化。</li>
+              </ul>
+            </article>
+          </div>
+          <p class="print-note">已生成配套文件：<code>旧数据深度读取与新数据库归并方案.md</code>、<code>aiwaraks_new_database.sql</code>、<code>public/legacy-source-audit.json</code>。</p>
+        </section>
+
+        <section id="diagnosis">
+          <div class="section-head">
+            <div>
+              <h2>4. 问题诊断</h2>
+              <p>旧系统可支撑业务运转，但继续扩展会遇到架构、数据、运营和现场稳定性的瓶颈。</p>
+            </div>
+            <span class="tag">风险识别</span>
+          </div>
+          <div class="grid-2">
+            <article class="card red">
+              <h3>架构风险</h3>
+              <ul>
+                <li>微服务 jar 与配置备份存在，但源代码不完整，后续维护成本高。</li>
+                <li>网关、认证、系统、文件模块耦合了旧环境地址和云资源配置。</li>
+                <li>小程序接口是扁平接口名，缺少清晰版本、权限边界和错误规范。</li>
+              </ul>
+            </article>
+            <article class="card gold">
+              <h3>数据风险</h3>
+              <ul>
+                <li>用户、评委、选手关系混在 `dfwq_comps_user` 和 Excel 中，需要统一身份模型。</li>
+                <li>组别多达 1700 条，依赖排序和 ID 关联，缺少赛程/场次层。</li>
+                <li>评分记录量大，必须保证原始分、计算分、发布分三层可追溯。</li>
+              </ul>
+            </article>
+            <article class="card blue">
+              <h3>运营风险</h3>
+              <ul>
+                <li>报名、音乐、支付、出场顺序、成绩查看都在选手表内，运营筛选困难。</li>
+                <li>评委授权由组别关系和密钥承载，缺少现场启停、锁定、异常复核。</li>
+                <li>缺少赛事结束后的证书、奖项、素材、财务、数据分析闭环。</li>
+              </ul>
+            </article>
+            <article class="card green">
+              <h3>体验风险</h3>
+              <ul>
+                <li>小程序页面已覆盖功能，但偏单点流程，现场大屏和后台协同不足。</li>
+                <li>付费查看成绩、排行、评委评分之间需要更明确的状态提示。</li>
+                <li>国际赛事包含中英文内容、海外手机号，数据格式需要更强兼容。</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section id="upgrade">
+          <div class="section-head">
+            <div>
+              <h2>5. 产品定位与升级目标</h2>
+              <p>AiwaRaks赛事管理平台不是单纯报名、评分、查成绩，而是连接赛事报名、选手管理、评委评分、证书发放、课程转化、会员沉淀、财务统计和活动复盘的一体化运营中枢。</p>
+            </div>
+            <span class="tag">产品目标</span>
+          </div>
+          <div class="card blue" style="margin-bottom: 14px">
+            <h3>最优产品定位</h3>
+            <p>不要把它做成“赛事报名系统”，而要做成“AiwaRaks赛事 + 学员 + 课程 + 会员 + 商业转化的一体化运营中枢”。旧系统沉淀的真实赛事、报名选手、评委和评分记录，是未来形成行业壁垒的数据资产。</p>
+          </div>
+          <div class="grid-3">
+            <article class="card blue"><h3>完整赛事生命周期</h3><p>从赛事创建、报名、审核、排赛、签到、评分、排行、证书、财务到复盘数据，全链路管理。</p></article>
+            <article class="card green"><h3>现场稳定与可控</h3><p>评委授权、评分提交、成绩锁定、异常复核、大屏发布都可由主控台实时控制。</p></article>
+            <article class="card gold"><h3>历史数据可追溯</h3><p>旧数据迁移后可查询、可核验、可导出；评分计算保留原始记录与发布记录。</p></article>
+            <article class="card"><h3>多角色协作</h3><p>管理员、主办方、报名负责人、财务、评委、选手、观众拥有不同入口和权限。</p></article>
+            <article class="card"><h3>专业后台界面</h3><p>管理后台首页采用赛事运营看板形态，包含 KPI、今日赛事、报名趋势、状态分布、渠道分布、待办、最新报名和公告。</p></article>
+            <article class="card"><h3>国际化能力</h3><p>兼容海外手机号、多语言赛事介绍、国际城市、不同货币和跨区域赛事。</p></article>
+            <article class="card"><h3>手机浏览优先</h3><p>报名、评委评分、主控查看、成绩发布确认都必须适配手机浏览器，现场可不用电脑也能完成关键操作。</p></article>
+            <article class="card"><h3>可扩展商业化</h3><p>报名费、成绩查看费、证书、课程、电商、会员权益可与统一平台逐步打通。</p></article>
+          </div>
+        </section>
+
+        <section id="architecture">
+          <div class="section-head">
+            <div>
+              <h2>6. AiwaRaks赛事管理平台结构</h2>
+              <p>推荐采用“统一平台入口 + 赛事独立业务域 + 数据融合”的结构。统一平台提供账号、权限、支付、证书、消息等公共底座；赛事保持独立业务边界，承载报名、编排、评委评分、现场主控、成绩发布和大屏。</p>
+            </div>
+            <span class="tag">目标架构</span>
+          </div>
+
+          <div class="platform-stack">
+            <div class="stack-layer platform">
+              <h3>统一平台入口与公共底座</h3>
+              <p>所有管理人员从统一平台进入，复用统一登录、组织、角色权限、会员档案、订单支付、文件素材、证书、消息通知和操作日志。</p>
+              <div class="stack-items">
+                <span class="tag">统一登录</span>
+                <span class="tag">组织/角色</span>
+                <span class="tag">会员档案</span>
+                <span class="tag">订单支付</span>
+                <span class="tag">证书</span>
+                <span class="tag">消息通知</span>
+                <span class="tag">文件素材</span>
+              </div>
+            </div>
+            <div class="stack-layer domain">
+              <h3>赛事独立业务域</h3>
+              <p>赛事不是统一平台里的普通页面，而是一个独立业务中心。它有自己的业务状态机、现场稳定性要求、评委授权矩阵、成绩计算规则和发布流程。</p>
+              <div class="stack-items">
+                <span class="tag">赛事管理后台</span>
+                <span class="tag">小程序报名端</span>
+                <span class="tag">评委评分端</span>
+                <span class="tag">现场主控台</span>
+                <span class="tag">大屏展示端</span>
+                <span class="tag">手机浏览优先</span>
+                <span class="tag">成绩引擎</span>
+              </div>
+            </div>
+            <div class="stack-layer data">
+              <h3>数据库融合但按域隔离</h3>
+              <p>赛事数据进入统一平台数据库，但使用 `event_*` 或 `competition_*` 前缀形成独立表域；通过外键关联统一账号、组织、订单、证书和文件，避免重复账号、重复支付和重复客户数据。</p>
+              <div class="stack-items">
+                <span class="tag">platform_users</span>
+                <span class="tag">platform_orders</span>
+                <span class="tag">platform_certificates</span>
+                <span class="tag">event_events</span>
+                <span class="tag">event_divisions</span>
+                <span class="tag">event_scores</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="module-map">
+            <article class="card module"><h3>管理后台</h3><p>赛事档案、组别赛制、报名审核、音乐审核、出场顺序、评委授权、成绩发布。</p></article>
+            <article class="card module"><h3>小程序选手端</h3><p>赛事浏览、报名、缴费、音乐上传、报名记录、成绩查看、证书领取。</p></article>
+            <article class="card module"><h3>评委评分端</h3><p>手机号/邀请码绑定、组别列表、选手评分、提交锁定、评分历史。</p></article>
+            <article class="card module"><h3>现场主控台</h3><p>赛程推进、评分开关、异常提示、成绩复核、榜单发布、大屏控制。</p></article>
+            <article class="card module"><h3>大屏展示端</h3><p>赛事主题页、当前选手、评分进度、排名、奖项名单、二维码入口。</p></article>
+            <article class="card module"><h3>数据与审计</h3><p>旧数据迁移、重复检测、手机号异常、评分异常、操作日志、导入导出。</p></article>
+          </div>
+        </section>
+
+        <section id="schema">
+          <div class="section-head">
+            <div>
+              <h2>7. 新数据结构建议</h2>
+              <p>用更清晰的实体关系承接旧表，同时保留旧 ID 便于追溯和回滚。数据进入统一平台数据库，但赛事表独立成域，公共能力引用平台表。</p>
+            </div>
+            <span class="tag">数据设计</span>
+          </div>
+          <div class="grid-2">
+            <article class="card blue">
+              <h3>平台公共表</h3>
+              <p>承接统一账号、组织、会员、订单、支付、证书、文件、消息和操作日志。赛事系统只引用这些公共表，不重复建设一套账号和财务体系。</p>
+            </article>
+            <article class="card green">
+              <h3>赛事业务表</h3>
+              <p>赛事表使用 `event_*` 前缀，例如 `event_events`、`event_divisions`、`event_registrations`、`event_score_records`，保持业务边界清晰。</p>
+            </article>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>新实体</th>
+                <th>来自旧表</th>
+                <th>关键字段</th>
+                <th>升级点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>platform_organizations</td><td><code>sys_user</code>、赛事 create_by</td><td>主办方、负责人、城市、联系方式</td><td>平台公共组织，赛事按组织归属授权。</td></tr>
+              <tr><td>event_events</td><td><code>dfwq_competition</code></td><td>名称、届次、时间、海报、介绍、报名状态</td><td>拆分赛事基础信息、素材、报名配置。</td></tr>
+              <tr><td>event_sessions</td><td><code>dfwq_group</code> 派生</td><td>比赛日期、场地、时段、主持/主控状态</td><td>补齐现场比赛场次层，支持大屏与主控台。</td></tr>
+              <tr><td>event_divisions</td><td><code>dfwq_group</code></td><td>组别名、赛制、费用、排序、比赛时间</td><td>增加赛程、场次、年龄/类别规则。</td></tr>
+              <tr><td>event_registrations</td><td><code>dfwq_player</code></td><td>选手、节目、机构、老师、音乐、支付状态</td><td>关联平台订单，拆分报名单、参赛作品、支付记录。</td></tr>
+              <tr><td>event_performances</td><td><code>dfwq_player</code> 派生</td><td>节目名、人数、舞种、出场顺序、作品状态</td><td>将“报名人”和“参赛作品”拆开，适配多人作品。</td></tr>
+              <tr><td>event_checkins</td><td>新增</td><td>选手、场次、签到时间、签到人、异常备注</td><td>支持现场检录、候场和缺席提示。</td></tr>
+              <tr><td>event_music_files</td><td><code>dfwq_player.mp3_file</code></td><td>音乐文件、时长、审核状态、版本</td><td>独立音乐审核，避免现场临时找文件。</td></tr>
+              <tr><td>platform_accounts</td><td><code>dfwq_comps_user</code>、Excel</td><td>手机号、OpenID、昵称、头像、状态</td><td>统一账号；评委、选手、管理员通过身份表区分。</td></tr>
+              <tr><td>event_judge_assignments</td><td><code>dfwq_groupjudges</code></td><td>评委、赛事、组别、组长</td><td>增加授权有效期、评分开关、权限日志。</td></tr>
+              <tr><td>event_score_items</td><td><code>dfwq_competition_scorerules</code></td><td>评分项、分值、权重</td><td>支持模板化评分规则。</td></tr>
+              <tr><td>event_score_records</td><td><code>dfwq_score</code></td><td>评委、选手、组别、评分项、分值、时间</td><td>不可变原始评分凭证。</td></tr>
+              <tr><td>event_score_results</td><td>由评分记录计算</td><td>总分、排名、奖项、发布状态</td><td>支持复核、锁定、撤回、重新发布，并可生成平台证书。</td></tr>
+              <tr><td>event_awards</td><td>新增</td><td>奖项名称、获奖规则、名额、排序、发布状态</td><td>支持奖项名单、证书和大屏发布。</td></tr>
+              <tr><td>event_certificates</td><td>新增</td><td>证书模板、获奖人、发放状态、平台证书 ID</td><td>与统一平台证书模块打通。</td></tr>
+              <tr><td>event_result_publish_logs</td><td>新增</td><td>发布人、发布时间、发布版本、变更摘要</td><td>成绩发布后留痕，支持撤回和重发。</td></tr>
+              <tr><td>event_score_audit_logs</td><td>新增</td><td>复核人、复核原因、调整前后、附件</td><td>评分复核全程可审计。</td></tr>
+              <tr><td>event_bigscreen_states</td><td>新增</td><td>当前赛事、场次、选手、榜单、展示模式</td><td>支持现场大屏由主控台统一控制。</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="api">
+          <div class="section-head">
+            <div>
+              <h2>8. 接口与小程序升级计划</h2>
+              <p>先保留旧接口兼容，再逐步切换到版本化 REST/API，降低一次性替换风险。新接口按平台、赛事、评委评分、成绩发布分组。</p>
+            </div>
+            <span class="tag">接口计划</span>
+          </div>
+          <div class="grid-2">
+            <article class="card">
+              <h3>兼容层</h3>
+              <ul>
+                <li>保留 `getCompList`、`getComp`、`submitSignup`、`submitRating` 等旧接口名。</li>
+                <li>旧小程序不立即重写，只把接口指向新服务兼容层。</li>
+                <li>兼容层负责把旧字段映射到新实体，返回旧格式。</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>新接口</h3>
+              <ul>
+                <li>`/api/v1/platform/...`：账号、组织、权限、订单、文件、证书、消息。</li>
+                <li>`/api/v1/event/events`：赛事、海报、报名配置、发布归档。</li>
+                <li>`/api/v1/event/divisions`：组别、场次、评分规则。</li>
+                <li>`/api/v1/event/registrations`：报名、音乐、支付、审核。</li>
+                <li>`/api/v1/judging/...`：评委授权、选手列表、评分提交、漏评提醒。</li>
+                <li>`/api/v1/results/...`：成绩计算、锁定、发布、撤回、证书。</li>
+              </ul>
+            </article>
+          </div>
+          <div class="grid-3" style="margin-top: 14px">
+            <article class="card blue"><h3>小程序端</h3><p>保留轻量报名和成绩查询体验，增加报名进度、音乐状态、证书入口。</p></article>
+            <article class="card green"><h3>评委端</h3><p>评分页减少干扰，重点保障授权清晰、选手切换快、提交反馈明确。</p></article>
+            <article class="card gold"><h3>后台端</h3><p>所有高风险操作记录日志，包括成绩重算、评分解锁、报名退款、榜单发布。</p></article>
+          </div>
+          <div class="card red" style="margin-top: 14px">
+            <h3>评分系统必须单独作为核心模块</h3>
+            <p>评分系统不是普通 CRUD。它必须具备评委授权开关、组别评分锁定、单个选手评分状态、漏评分提醒、异常分预警、去最高最低分、复核后发布、发布后留痕和重新计算记录。旧系统已有 65248 条评分记录，新系统必须把原始分、计算分、发布分三层拆清楚。</p>
+          </div>
+        </section>
+
+        <section id="technical">
+          <div class="section-head">
+            <div>
+              <h2>10. 技术与安全架构</h2>
+              <p>结合旧系统 Java 微服务资产，建议初期采用模块化单体或轻量服务化，避免一开始就恢复复杂微服务带来的运维成本。</p>
+            </div>
+            <span class="tag">工程架构</span>
+          </div>
+          <div class="grid-3">
+            <article class="card blue">
+              <h3>访问层</h3>
+              <p>小程序端、H5 评委端、管理后台、现场主控台、大屏展示端统一接入 API Gateway，支持鉴权、限流、版本管理和日志追踪。</p>
+            </article>
+            <article class="card green">
+              <h3>服务层</h3>
+              <p>赛事服务、报名服务、评分服务、成绩服务、证书服务、订单服务、文件服务、消息服务按业务边界组织，先模块化再按压力拆分。</p>
+            </article>
+            <article class="card gold">
+              <h3>数据层</h3>
+              <p>MySQL 承载核心业务，Redis 缓存当前赛事/评分/大屏状态，OSS 存储海报、音乐、证书和素材，审计日志独立留存。</p>
+            </article>
+          </div>
+          <div class="grid-2" style="margin-top: 14px">
+            <article class="card">
+              <h3>角色与权限</h3>
+              <ul>
+                <li>超级管理员：管理全平台所有数据和配置。</li>
+                <li>平台运营：管理赛事、报名、内容、消息。</li>
+                <li>主办方管理员：管理自己组织下的赛事。</li>
+                <li>赛事负责人：管理指定赛事。</li>
+                <li>报名负责人：管理报名、审核、音乐。</li>
+                <li>财务人员：查看订单、支付、退款和收入统计。</li>
+                <li>计分负责人：管理评分、复核和成绩发布。</li>
+                <li>评委：只可对授权组别评分。</li>
+                <li>选手：查看自己的报名、成绩和证书。</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>安全与稳定性</h3>
+              <ul>
+                <li>HTTPS 全站加密，JWT + RBAC 权限。</li>
+                <li>手机号、OpenID、支付数据脱敏展示。</li>
+                <li>成绩、支付、证书、高风险操作二次确认并写日志。</li>
+                <li>防止接口重复提交，防止评委越权评分。</li>
+                <li>评分接口优先保障，现场评分支持自动保存。</li>
+                <li>Redis 缓存当前赛事状态，大屏可手动刷新。</li>
+                <li>重大赛事前提供演练模式和备份检查。</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section id="mvp">
+          <div class="section-head">
+            <div>
+              <h2>11. MVP 与验收标准</h2>
+              <p>第一版不要贪大。先完成能真实支撑一场赛事的最小闭环，再扩展增长与商业化模块。</p>
+            </div>
+            <span class="tag">交付标准</span>
+          </div>
+          <div class="grid-4">
+            <article class="card">
+              <h3>管理后台 MVP</h3>
+              <ul>
+                <li>登录</li>
+                <li>赛事列表/创建</li>
+                <li>组别管理</li>
+                <li>报名与选手列表</li>
+                <li>评委列表</li>
+                <li>评分规则</li>
+                <li>成绩列表</li>
+                <li>数据导出</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>小程序 MVP</h3>
+              <ul>
+                <li>首页</li>
+                <li>赛事详情</li>
+                <li>报名</li>
+                <li>支付</li>
+                <li>我的报名</li>
+                <li>成绩查询</li>
+                <li>证书领取</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>评委端 MVP</h3>
+              <ul>
+                <li>评委登录</li>
+                <li>授权组别</li>
+                <li>选手列表</li>
+                <li>分项评分</li>
+                <li>提交确认</li>
+                <li>评分历史</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>主控台 MVP</h3>
+              <ul>
+                <li>当前组别</li>
+                <li>当前选手</li>
+                <li>评分进度</li>
+                <li>成绩计算</li>
+                <li>排名发布</li>
+                <li>大屏控制</li>
+              </ul>
+            </article>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>验收类型</th>
+                <th>验收标准</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>数据验收</td><td>旧赛事、报名、评委、评分记录完整导入；每条迁移数据可追溯旧 ID；异常数据有清单。</td></tr>
+              <tr><td>功能验收</td><td>可以创建赛事、配置组别和评分规则；选手可报名支付；评委可对授权组别评分；管理员可复核并发布成绩；选手可查询成绩和证书。</td></tr>
+              <tr><td>稳定性验收</td><td>评分提交无明显延迟，多评委同时评分不冲突，刷新后评分状态不丢失，成绩计算可复核，重要操作均有日志。</td></tr>
+              <tr><td>移动端验收</td><td>管理台、评委端、小程序端在手机浏览器中可读、可操作；关键表格自动卡片化；现场操作不依赖横向拖拽。</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="roadmap">
+          <div class="section-head">
+            <div>
+              <h2>9. 阶段路线图</h2>
+              <p>建议分阶段建设，先保障历史数据和核心赛事流程，再扩展商业化和智能化能力。</p>
+            </div>
+            <span class="tag">实施计划</span>
+          </div>
+          <div class="roadmap">
+            <div class="phase">
+              <strong>第 1 阶段</strong>
+              <div>
+                <h3>数据迁移与只读管理台</h3>
+                <p>完成 SQL/Excel 迁移、数据核验、赛事/报名/评委/评分查询、导出和异常清单。当前已完成第一版 HTML 管理原型和迁移快照。</p>
+              </div>
+            </div>
+            <div class="phase">
+              <strong>第 2 阶段</strong>
+              <div>
+                <h3>新赛事后台 MVP</h3>
+                <p>把赛事入口挂入统一平台导航，复用平台登录、组织、角色、文件和订单能力；在赛事业务域内完成赛事、组别、报名、选手、音乐、评委、评分规则管理。</p>
+              </div>
+            </div>
+            <div class="phase">
+              <strong>第 3 阶段</strong>
+              <div>
+                <h3>现场评分闭环</h3>
+                <p>上线评委端、现场主控台、大屏、成绩计算、排名发布、漏评分提醒、异常分预警和复核锁定，保持现场评分逻辑独立稳定。</p>
+              </div>
+            </div>
+            <div class="phase">
+              <strong>第 4 阶段</strong>
+              <div>
+                <h3>小程序报名端升级</h3>
+                <p>旧小程序接口接入兼容层，新小程序逐步替换报名、支付、音乐上传、个人中心、成绩查询和证书领取，并与统一会员中心打通。</p>
+              </div>
+            </div>
+            <div class="phase">
+              <strong>第 5 阶段</strong>
+              <div>
+                <h3>证书 + 财务 + 数据看板</h3>
+                <p>成绩和奖项回流平台证书模块，报名订单进入统一财务；建立收入统计、报名统计、机构统计、老师统计和赛事复盘看板。</p>
+              </div>
+            </div>
+            <div class="phase">
+              <strong>第 6 阶段</strong>
+              <div>
+                <h3>商业化增长</h3>
+                <p>将赛事选手转化到课程、会员、电商、训练营和复训营，沉淀学员画像、机构/老师资源库和长期复购资产。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <div>
+              <h2>结论</h2>
+              <p>旧系统的核心价值是已经沉淀了真实赛事、选手、评委与评分数据。升级重点不是推倒重来，而是以数据可追溯为底线，采用“统一平台入口 + 赛事独立业务域 + 数据融合”的方案：统一平台做账号、权限、支付、证书和会员底座，赛事系统做独立业务中心，数据库融合但边界清楚。</p>
+            </div>
+          </div>
+          <p class="print-note">文档文件：新赛事系统/旧系统深度分析与升级规划.html。可直接用浏览器打开或打印为 PDF。</p>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

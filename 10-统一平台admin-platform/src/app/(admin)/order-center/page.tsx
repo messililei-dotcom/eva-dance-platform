@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { Table, Card, Tag, Badge, Space, Button, Input, Select, DatePicker, Row, Col, Statistic, Tabs, Modal, Descriptions, Steps, message } from 'antd';
 import { SearchOutlined, ReloadOutlined, DownloadOutlined, EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SyncOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { formatCompactMoney, formatPaymentAmount } from '@/lib/money-format';
+import { sortableColumns } from '@/lib/table-sort';
 
 const { RangePicker } = DatePicker;
 
@@ -89,13 +91,13 @@ export default function OrderCenterPage() {
     setDetailVisible(true);
   };
 
-  const columns = [
+  const columns = sortableColumns<any>([
     { title: '订单号', dataIndex: 'orderNo', key: 'orderNo', width: 160, render: (v: string) => <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{v}</span> },
     { title: '类型', dataIndex: 'typeLabel', key: 'type', width: 100, render: (v: string, r: any) => <Tag>{v}</Tag> },
-    { title: '会员', key: 'member', width: 130, render: (_: any, r: any) => <>{r.memberName}<br /><span style={{ fontSize: 11, color: '#999' }}>{r.memberPhone}</span></> },
+    { title: '学员', key: 'member', width: 130, render: (_: any, r: any) => <>{r.memberName}<br /><span style={{ fontSize: 11, color: '#999' }}>{r.memberPhone}</span></> },
     { title: '商品', dataIndex: 'title', key: 'title', ellipsis: true },
     { title: '金额', dataIndex: 'amount', key: 'amount', width: 100, align: 'right' as const,
-      render: (v: number) => <span style={{ fontWeight: 600 }}>¥{v.toLocaleString()}</span> },
+      render: (v: number) => <span style={{ fontWeight: 600 }}>{formatPaymentAmount(v)}</span> },
     { title: '状态', dataIndex: 'status', key: 'status', width: 100,
       render: (_: any, r: any) => <Tag color={r.statusLabel.color}>{r.statusLabel.label}</Tag> },
     { title: '支付方式', dataIndex: 'payMethod', key: 'payMethod', width: 90,
@@ -103,7 +105,7 @@ export default function OrderCenterPage() {
     { title: '下单时间', dataIndex: 'createdAt', key: 'createdAt', width: 150, render: (v: string) => <span style={{ fontSize: 12, color: '#666' }}>{v}</span> },
     { title: '操作', key: 'action', width: 80, fixed: 'right' as const,
       render: (_: any, r: any) => <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => showDetail(r)}>详情</Button> },
-  ];
+  ]);
 
   return (
     <div>
@@ -114,13 +116,13 @@ export default function OrderCenterPage() {
         <Col span={6}><Card size="small"><Statistic title="总订单" value={stats.total} suffix="笔" /></Card></Col>
         <Col span={6}><Card size="small"><Statistic title="已完成" value={stats.completed} suffix="笔" valueStyle={{ color: '#10b981' }} /></Card></Col>
         <Col span={6}><Card size="small"><Statistic title="待处理" value={stats.pending} suffix="笔" valueStyle={{ color: '#f59e0b' }} prefix={<ClockCircleOutlined />} /></Card></Col>
-        <Col span={6}><Card size="small"><Statistic title="总营收" value={stats.revenue} precision={0} prefix="¥" valueStyle={{ color: '#a855f7' }} /></Card></Col>
+        <Col span={6}><Card size="small"><Statistic title="总营收" value={formatCompactMoney(stats.revenue)} valueStyle={{ color: '#a855f7' }} /></Card></Col>
       </Row>
 
       {/* Filters */}
       <Card size="small" style={{ marginBottom: 16 }}>
         <Space wrap>
-          <Input placeholder="搜索订单号/会员/手机号" prefix={<SearchOutlined />} style={{ width: 240 }}
+          <Input placeholder="搜索订单号/学员/手机号" prefix={<SearchOutlined />} style={{ width: 240 }}
             value={searchText} onChange={e => setSearchText(e.target.value)} allowClear />
           <Select placeholder="订单状态" style={{ width: 120 }} value={statusFilterVal || undefined}
             onChange={v => setStatusFilterVal(v || '')} allowClear
@@ -146,13 +148,13 @@ export default function OrderCenterPage() {
             <Descriptions column={2} size="small" bordered style={{ marginBottom: 16 }}>
               <Descriptions.Item label="订单号">{detailOrder.orderNo}</Descriptions.Item>
               <Descriptions.Item label="订单类型">{detailOrder.typeLabel}</Descriptions.Item>
-              <Descriptions.Item label="会员姓名">{detailOrder.memberName}</Descriptions.Item>
-              <Descriptions.Item label="会员手机">{detailOrder.memberPhone}</Descriptions.Item>
+              <Descriptions.Item label="学员姓名">{detailOrder.memberName}</Descriptions.Item>
+              <Descriptions.Item label="学员手机">{detailOrder.memberPhone}</Descriptions.Item>
               <Descriptions.Item label="商品">{detailOrder.title}</Descriptions.Item>
-              <Descriptions.Item label="金额"><span style={{ fontWeight: 600, color: '#a855f7' }}>¥{detailOrder.amount.toLocaleString()}</span></Descriptions.Item>
+              <Descriptions.Item label="金额"><span style={{ fontWeight: 600, color: '#a855f7' }}>{formatPaymentAmount(detailOrder.amount)}</span></Descriptions.Item>
               <Descriptions.Item label="实付">
                 <span style={{ fontWeight: 600, color: detailOrder.paidAmount > 0 ? '#10b981' : '#999' }}>
-                  ¥{detailOrder.paidAmount.toLocaleString()}
+                  {formatPaymentAmount(detailOrder.paidAmount)}
                 </span>
               </Descriptions.Item>
               <Descriptions.Item label="状态"><Tag color={detailOrder.statusLabel.color}>{detailOrder.statusLabel.label}</Tag></Descriptions.Item>

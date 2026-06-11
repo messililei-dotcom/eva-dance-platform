@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Table, Card, Tag, Space, Button, Input, Select, DatePicker, Row, Col, Statistic, Tabs, Modal, Form, Switch, message } from 'antd';
 import { PlusOutlined, SearchOutlined, VideoCameraOutlined, PlayCircleOutlined, ClockCircleOutlined, UserOutlined, SettingOutlined, CopyOutlined } from '@ant-design/icons';
 import { InputNumber } from 'antd';
+import { sortableColumns } from '@/lib/table-sort';
 
 interface LiveCourse { key: string; name: string; instructor: string; schedule: string; enrolled: number; maxStudents: number; status: string; nextLive: string; platform: string; price: number; }
 const liveCourses: LiveCourse[] = Array.from({ length: 8 }, (_, i) => ({
@@ -35,7 +36,7 @@ export default function LivePage() {
   const filtered = liveCourses.filter(c => !searchText || c.name.includes(searchText) || c.instructor.includes(searchText));
   const totalEnrolled = liveCourses.reduce((s, c) => s + c.enrolled, 0);
 
-  const columns = [
+  const columns = sortableColumns<LiveCourse>([
     { title: '直播课程', dataIndex: 'name', key: 'name', width: 200, render: (v: string) => <><VideoCameraOutlined style={{ color: '#a855f7', marginRight: 6 }} /><a>{v}</a></> },
     { title: '讲师', dataIndex: 'instructor', key: 'instructor', width: 100 },
     { title: '时间安排', dataIndex: 'schedule', key: 'schedule', width: 200, render: (v: string) => <span style={{ fontSize: 13 }}>{v}</span> },
@@ -49,7 +50,7 @@ export default function LivePage() {
         <Button type="link" size="small" icon={<CopyOutlined />}>直播间链接</Button>
         <Button type="link" size="small" icon={<SettingOutlined />}>设置</Button>
       </Space> },
-  ];
+  ]);
 
   return (
     <div>
@@ -67,7 +68,7 @@ export default function LivePage() {
           value={searchText} onChange={e => setSearchText(e.target.value)} allowClear />
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>新建直播</Button>
       </Space>}>
-        <Table columns={columns} dataSource={filtered} size="middle" pagination={false} />
+        <Table columns={columns} dataSource={filtered} size="middle" pagination={false} scroll={{ x: 'max-content' }} />
       </Card>
 
       <Modal title="新建直播" open={modalVisible} onCancel={() => setModalVisible(false)} footer={null} width={550}>

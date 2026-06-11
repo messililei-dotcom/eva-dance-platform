@@ -1,0 +1,55 @@
+<view class="page detail-page">
+  <view class="hero-card card">
+    <view class="cover">
+      <image wx:if="{{series.cover_image}}" src="{{series.cover_image}}" mode="aspectFill" binderror="onImageError" data-path="series.cover_image"></image>
+      <view wx:else class="cover-text">{{series.category || '伊娃东方舞'}}</view>
+    </view>
+
+    <view class="info">
+      <view class="title">{{series.name}}</view>
+      <view class="subtitle">{{series.subtitle || series.teacher}}</view>
+      <view class="stats">
+        <text>{{series.total_courses || courses.length}} 项内容</text>
+        <text>持续更新</text>
+        <text>{{series.popularityText}}</text>
+      </view>
+      <view class="auth ok">已确认用户可播放完整内容</view>
+    </view>
+  </view>
+
+  <view class="tabs">
+    <view class="tab {{tab === 'intro' ? 'active' : ''}}" bindtap="switchTab" data-tab="intro">介绍</view>
+    <view class="tab {{tab === 'lessons' ? 'active' : ''}}" bindtap="switchTab" data-tab="lessons">内容列表</view>
+  </view>
+
+  <view wx:if="{{tab === 'intro'}}" class="panel card">
+    <view class="panel-title">内容介绍</view>
+    <view class="desc">{{series.description || '伊娃东方舞内容展示，呈现东方舞美学、舞台表达与作品风格。'}}</view>
+    <view class="stage-list">
+      <view>东方舞美学</view>
+      <view>舞台表达</view>
+      <view>作品风格</view>
+      <view>舞感表达</view>
+      <view>组合展示</view>
+      <view>舞台编舞</view>
+    </view>
+  </view>
+
+  <view wx:if="{{tab === 'lessons'}}" class="lesson-list">
+    <view wx:if="{{courses.length}}">
+      <view class="lesson card" wx:for="{{courses}}" wx:key="id" bindtap="openCourse" data-index="{{index}}">
+        <view class="lesson-num">{{index + 1}}</view>
+        <view class="lesson-main">
+          <view class="lesson-title">{{item.name}}</view>
+          <view class="lesson-meta">{{item.durationText + ' · ' + (item.videos.length || item.video_count || 0) + ' 个内容'}}</view>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="empty card">内容正在整理中。</view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="bottom-price">内容播放</view>
+    <button class="primary-btn" bindtap="primaryAction">播放内容</button>
+  </view>
+</view>

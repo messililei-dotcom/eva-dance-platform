@@ -189,7 +189,7 @@ Phase 1 建议：
 
 - 以 `User` 表为后台人员来源，合并 `AdminUser`、电商/财务环境变量账号。
 - 所有后台登录统一走 `admin.dongfangwuquan.com/login`。
-- 学员登录统一走 `learn.dongfangwuquan.com/login` 或 `auth.dongfangwuquan.com`。
+- 学员登录统一走官网弹窗入口 `www.dongfangwuquan.com/?login=1` 或统一认证入口。
 
 ## 六、权限体系
 
@@ -418,10 +418,8 @@ Phase 1：
 
 需要合并或淘汰：
 
-- `xueyuan.dongfangwuquan.com` 后台入口。
-- `wangke.dongfangwuquan.com` 网课后台入口。
-- `dianshang.dongfangwuquan.com` / `shop.dongfangwuquan.com` 独立电商后台入口。
-- `caiwu.dongfangwuquan.com` 独立财务后台入口。
+- 学员、课程、电商、财务等独立后台入口。
+- 电商、财务、网课等分散的管理路径。
 - 电商、财务、网课各自的管理员账号和 Token。
 - 电商 JSON 存储。
 - 多套系统切换 SSO 临时 token 方案。

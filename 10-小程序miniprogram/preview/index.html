@@ -1,0 +1,899 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>伊娃东方舞小程序模拟器</title>
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="shortcut icon" href="../favicon.png">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#eef1f6;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;color:#202124}
+    .shell{min-height:100vh;display:grid;place-items:center;padding:14px}
+    .phone{width:390px;max-width:100%;height:min(844px,calc(100vh - 28px));background:#f6f7f9;border:8px solid #111;border-radius:36px;box-shadow:0 22px 70px rgba(25,32,46,.2);overflow:hidden;position:relative}
+    .status{height:28px;display:flex;align-items:end;justify-content:space-between;padding:0 18px 5px;font-size:11px;font-weight:700;background:#fff}
+    .nav{height:42px;display:flex;align-items:center;justify-content:center;background:#fff;border-bottom:1px solid #eceff3;font-size:17px;font-weight:900;position:relative}
+    .nav-icon{position:absolute;top:7px;border:0;background:transparent;color:#202124;font-size:22px;line-height:1}
+    .nav-icon.left{left:12px}.nav-icon.search{right:50px}.nav-icon.share{right:14px;font-size:21px}
+    .page{position:absolute;top:70px;bottom:58px;left:0;right:0;overflow:auto;padding:8px 10px 72px}
+    .tabbar{position:absolute;left:0;right:0;bottom:0;height:58px;background:rgba(255,255,255,.98);border-top:1px solid #e7ebf0;display:grid;grid-template-columns:repeat(4,1fr);align-items:center;padding:4px 2px 6px}
+    .tabbar button{border:0;background:transparent;color:#858c96;font-size:10px;line-height:1.12;min-height:46px;border-radius:12px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+    .tabbar button.active{color:#f05b46}
+    .tab-icon{width:22px;height:22px;display:grid;place-items:center}
+    .tab-icon img{width:21px;height:21px;display:block;object-fit:contain}
+    .card{background:#fff;border-radius:8px;box-shadow:0 4px 14px rgba(32,33,36,.04);border:1px solid rgba(32,33,36,.05)}
+    .live-profile{display:grid;grid-template-columns:58px minmax(0,1fr) 76px;gap:10px;align-items:center;padding:16px 4px 10px;background:#fff;margin:-14px -14px 0;padding-left:14px;padding-right:14px}
+    .live-avatar{width:54px;height:54px;border-radius:50%;background:linear-gradient(145deg,#252832,#737b8c);color:#fff;display:grid;place-items:center;font-size:22px;font-weight:900;position:relative}
+    .live-avatar:after{content:"V";position:absolute;right:-2px;bottom:0;width:18px;height:18px;border-radius:50%;background:#f2c94c;color:#fff;display:grid;place-items:center;font-size:11px;border:2px solid #fff}
+    .live-name{font-size:19px;font-weight:900;line-height:1.22;margin-bottom:4px}
+    .live-meta{color:#8d8d8d;font-size:16px;font-weight:700}
+    .cert{border:0;border-radius:999px;background:#ececec;color:#fff;padding:10px 12px;font-weight:900;font-size:15px}
+    .banner-strip{display:flex;gap:8px;overflow:hidden;margin:0 -10px 2px;padding-left:10px}
+    .banner{min-width:306px;height:108px;border-radius:8px;overflow:hidden;position:relative;color:#fff;background:linear-gradient(135deg,#121a42,#4066df 64%,#7fc7d7);box-shadow:0 6px 16px rgba(28,45,119,.13)}
+    .banner:before{content:"";position:absolute;left:-24px;bottom:-36px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#f6d7c7 0 16%,#c28a7d 17% 28%,transparent 29%)}
+    .banner-copy{position:absolute;left:16px;top:11px;right:16px;text-align:center}
+    .brand-label{position:absolute;left:16px;top:58px;color:#ffe1ac;font-size:13px;font-weight:800}
+    .banner h3{font-size:34px;line-height:.9;margin:18px 0 2px;text-shadow:0 3px 10px rgba(0,0,0,.2)}
+    .banner p{margin:0;font-size:12px;color:#ffe1ac;font-weight:800}
+    .banner small{font-size:11px}
+    .banner.next{min-width:56px;background:linear-gradient(145deg,#e2f8ff,#83c9d9);opacity:.82}
+    .dots{display:flex;justify-content:center;gap:6px;margin:-9px 0 7px;position:relative;z-index:1}
+    .dots span{width:6px;height:6px;border-radius:999px;background:rgba(255,255,255,.72);box-shadow:0 0 0 1px rgba(0,0,0,.04)}
+    .dots span.active{width:20px;background:#fff}
+    .section-head{display:flex;justify-content:space-between;align-items:end;margin:12px 2px 6px}
+    .section-head h2{margin:0;font-size:18px}
+    .section-head small{display:block;margin-top:2px;color:#9aa1aa;font-size:11px;font-weight:700}
+    .section-head button{border:0;background:transparent;color:#9aa1aa;font-size:13px;font-weight:800;padding:0}
+    .hero{padding:13px;background:linear-gradient(145deg,#303544,#4b5264);color:#fff;border-radius:10px;min-height:132px;display:flex;flex-direction:column;justify-content:space-between}
+    .hero small{color:#ffd8cf;font-weight:800}
+    .hero h1{font-size:19px;line-height:1.2;margin:6px 0;letter-spacing:0}
+    .hero p{margin:0;color:#f5f2ef;font-size:12px;line-height:1.45}
+    .hero-actions{display:grid;grid-template-columns:1.1fr .9fr;gap:8px;margin-top:12px}
+    .pill{border:0;border-radius:999px;background:#ff5b45;color:#fff;padding:8px 10px;font-weight:900;font-size:12px}
+    .pill.light{background:#fff;color:#f05b46}
+    .stats,.system-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:8px 0;padding:10px 4px;text-align:center}
+    .stats b,.system-grid b{display:block;color:#f05b46;font-size:17px}
+    .stats span,.system-grid span{font-size:11px;color:#8a8f99}
+    h2{font-size:16px;margin:13px 2px 7px;letter-spacing:0}
+    .intro{padding:15px;margin-bottom:10px}
+    .intro h3,.lesson-info h3{font-size:20px;margin:0 0 8px}
+    .muted{color:#7e8591;font-size:11px;line-height:1.42}
+    .tag{display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(240,91,70,.1);color:#f05b46;font-size:13px;font-weight:900}
+    .lesson{display:grid;grid-template-columns:32px 1fr auto;gap:8px;align-items:center;padding:9px;margin-bottom:7px}
+    .num{width:28px;height:28px;border-radius:50%;background:rgba(240,91,70,.1);color:#f05b46;display:grid;place-items:center;font-weight:900;font-size:11px}
+    .num.done{background:#eff8f2;color:#38a169}
+    .lesson-info b{display:block;font-size:13px;line-height:1.32}
+    .progress{height:5px;background:#eef0f4;border-radius:999px;overflow:hidden;margin-top:5px}
+    .progress i{display:block;height:100%;background:#f05b46;border-radius:999px}
+    .done-text{font-weight:900;color:#38a169;font-size:11px;white-space:nowrap}
+    .todo-text{font-weight:900;color:#f05b46;font-size:11px;white-space:nowrap}
+    .btn{min-height:44px;border:0;border-radius:999px;background:#f05b46;color:#fff;font-weight:900;padding:0 16px}
+    .btn.ghost{background:#fff;color:#f05b46;border:1px solid rgba(240,91,70,.28)}
+    .series{display:grid;grid-template-columns:74px minmax(0,1fr);gap:8px;min-height:74px;margin-bottom:8px;overflow:hidden}
+    .cover{width:74px;aspect-ratio:1/1;background:#343a48;color:#ffd8cf;display:grid;place-items:center;font-weight:900;text-align:center;padding:7px;font-size:12px}
+    .live-series{display:grid;grid-template-columns:76px minmax(0,1fr);gap:9px;padding:8px 0;border-bottom:1px solid #eef1f4;background:#fff}
+    .live-cover{width:76px;aspect-ratio:1/1;border-radius:7px;background:linear-gradient(145deg,#2f3b40,#b37a3d);color:#fff;display:grid;place-items:center;text-align:center;font-weight:900;padding:7px;position:relative;overflow:hidden;font-size:12px}
+    .live-cover:after{content:"";position:absolute;inset:auto -20px -28px auto;width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.18)}
+    .live-rank{position:absolute;left:5px;top:5px;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.92);color:#f05b46;display:grid;place-items:center;font-size:10px;font-weight:900}
+    .live-meta-line{display:flex;justify-content:space-between;gap:8px;margin-top:6px;color:#7e8591;font-size:11px;line-height:1.2;font-weight:700}
+    .live-meta-line span{white-space:nowrap}
+    .info{padding:8px;flex:1}
+    .live-info{padding-right:2px}
+    .info b,.live-info b{font-size:13px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .row{display:flex;justify-content:space-between;align-items:center;margin-top:7px;gap:7px}
+    .live-row{display:block;margin-top:6px}
+    .live-row .muted{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .live-price{display:flex;white-space:nowrap;justify-content:space-between;align-items:baseline;margin-top:6px;gap:7px}
+    .old-price{color:#b8b8b8;text-decoration:line-through;font-size:11px}
+    .price{color:#f05b46;font-weight:900;font-size:13px}
+    .course-progress{display:flex;align-items:center;gap:6px;margin-top:6px}
+    .course-progress .progress{flex:1;margin:0}
+    .course-progress span{color:#8a8f99;font-size:10px;font-weight:800;white-space:nowrap}
+    .back{position:absolute;left:16px;border:0;background:transparent;font-size:22px}
+    .detail-cover{width:105px;height:105px;border-radius:8px;background:linear-gradient(145deg,#343a48,#ba7e50);color:#ffd8cf;display:grid;place-items:center;font-size:20px;font-weight:900;overflow:hidden}
+    .detail-cover img,.detail-cover .mini-fallback{width:105px;height:105px;border-radius:8px;object-fit:cover;display:block}
+    .detail-card{display:grid;grid-template-columns:105px minmax(0,1fr);gap:12px;align-items:start;min-height:127px;padding:11px;position:relative}
+    .detail-info h2{margin:0 0 8px;font-size:16px;line-height:1.3}
+    .detail-info .muted{margin:0 0 7px}
+    .detail-info .row{margin-top:12px}
+    .detail-desc{padding:10px;margin:8px 0;color:#5d6673;font-size:12px;line-height:1.5}
+    .detail-desc b{display:block;color:#202124;font-size:14px;margin-bottom:5px}
+    .source-note{display:inline-flex;margin-top:7px;color:#9aa1aa;font-size:10px;font-weight:800}
+    .tabs{display:grid;grid-template-columns:repeat(3,1fr);margin:8px 0;background:#fff;border-radius:8px;overflow:hidden}
+    .tabs button{border:0;background:#fff;padding:8px;font-size:12px}
+    .tabs .active{background:#f05b46;color:#fff;font-weight:900}
+    .profile-head{position:relative;display:flex;align-items:center;gap:10px;padding:17px 106px 9px 4px}
+    .profile-actions{position:absolute;right:4px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:5px}
+    .avatar{width:48px;height:48px;border-radius:8px;background:#f05b46;color:#fff;display:grid;place-items:center;font-size:19px;font-weight:900;overflow:hidden;box-shadow:0 2px 6px rgba(255,91,69,.16)}.avatar img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+    .profile-name{font-size:19px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.profile-phone{margin-top:4px;color:#8c8172;font-size:13px}
+    .profile-auth-btn{position:absolute;right:4px;top:50%;transform:translateY(-50%);padding:6px 14px;background:linear-gradient(135deg,#c8a96e,#8b1a1a);color:#fff;font-size:13px;font-weight:600;border-radius:12px;border:0;white-space:nowrap}
+    .profile-bind-btn,.profile-logout-btn{border:0;border-radius:12px;white-space:nowrap;padding:6px 10px;font-size:12px;font-weight:700}.profile-bind-btn{background:#1aad19;color:#fff}.profile-logout-btn{background:#f5f5f5;color:#999}
+    .wechat-card{padding:12px}.wechat-title{font-size:16px;font-weight:900;color:#202124}.wechat-desc{margin-top:6px;color:#8c8172;font-size:12px;font-weight:800;line-height:1.45}.wechat-form{display:grid;grid-template-columns:minmax(0,1fr) 1fr;gap:8px;margin-top:10px}.wechat-input{height:40px;border:1px solid #f0e6da;border-radius:8px;background:#fffaf4;color:#202124;font-size:13px;padding:0 10px}.sync-btn{height:40px;border:0;border-radius:8px;background:#ff5b45;color:#fff;font-size:14px;font-weight:900}
+    .address-card{padding:6px 10px}.address-title{font-size:13px;font-weight:800;color:#202124;margin-bottom:5px}.address-row{display:flex;gap:8px}.address-field-half{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;background:#f5f6f8;border-radius:6px;padding:3px 8px;min-height:32px}
+    .certificate-empty{padding:18px 14px;color:#8c8172;font-size:13px;text-align:center}.certificate-list{overflow:hidden}.certificate-item{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #f1f1f1}.certificate-item:last-child{border-bottom:0}.certificate-title{font-size:13px;font-weight:900;color:#202124}.certificate-sub{margin-top:4px;color:#8c8172;font-size:11px}
+    .login-container{min-height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:34px 18px 20px;background:#fff}
+    .logo-section{text-align:center;padding-top:20px}
+    .logo-mark{width:74px;height:74px;margin:0 auto 13px;border-radius:24px;background:linear-gradient(145deg,#2d3037,#c45d45);color:#fff;display:grid;place-items:center;font-size:30px;font-weight:900;box-shadow:0 12px 28px rgba(196,93,69,.18)}
+    .login-logo{width:74px;height:74px;margin:0 auto 13px;border-radius:24px;display:block;object-fit:contain;box-shadow:0 12px 28px rgba(196,93,69,.18)}
+    .login-title{font-size:24px;font-weight:900}
+    .login-subtitle{margin-top:6px;color:#8a8f99;font-size:13px;font-weight:800}
+    .form-section{display:grid;gap:14px;margin-top:24px}
+    .input-group{display:grid;gap:7px}
+    .input-label{font-size:13px;font-weight:900;color:#202124}
+    .input,.code-input{width:100%;height:44px;border:1px solid #e4e7ec;border-radius:10px;background:#f8f9fb;padding:0 12px;font-size:15px;outline:none}
+    .code-row{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:8px}
+    .code-btn{height:44px;border:0;border-radius:10px;background:#fff2ef;color:#f05b46;font-size:12px;font-weight:900;white-space:nowrap;padding:0 10px}
+    .login-btn{height:48px;border:0;border-radius:999px;background:#f05b46;color:#fff;font-size:16px;font-weight:900;line-height:48px;text-align:center;padding:0}
+    .hint{text-align:center;color:#8a8f99;font-size:12px}
+    .back-login{border:0;background:transparent;color:#8a8f99;font-size:13px;font-weight:900}
+    .menu{overflow:hidden}
+    .menu div,.menu button{display:flex;justify-content:space-between;align-items:center;width:100%;padding:16px;border:0;border-bottom:1px solid #f1f1f1;background:#fff;color:#202124;font:inherit;text-align:left}
+    .menu div:last-child,.menu button:last-child{border-bottom:0}
+    .empty{padding:28px;text-align:center;color:#8a8f99}
+    .training-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-bottom:10px;padding:4px;border-radius:9px;background:#fff;border:1px solid rgba(32,33,36,.06)}.training-tab{height:34px;border:0;border-radius:7px;background:transparent;color:#6f7782;font-size:14px;font-weight:900;text-decoration:none;display:grid;place-items:center}.training-tab.active{color:#fff;background:#ff5b45}
+    .practice-hero{padding:19px 16px 15px;border-radius:9px;color:#fff;background:linear-gradient(135deg,#3b2830 0%,#aa5242 56%,#df8f54 100%)}
+    .practice-label{display:inline-flex;padding:4px 8px;border-radius:999px;color:#ffe7c8;background:rgba(255,255,255,.14);font-size:12px;font-weight:800}
+    .practice-hero-title{margin-top:18px;font-size:26px;font-weight:900}
+    .practice-hero-desc{margin-top:7px;color:rgba(255,255,255,.78);font-size:13.5px;line-height:1.55}
+    .practice-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}.practice-stat{padding:9px;border-radius:7px;background:rgba(255,255,255,.12)}.practice-stat-val{display:block;font-size:18px;font-weight:900}.practice-stat-lbl{display:block;margin-top:3px;color:rgba(255,255,255,.68);font-size:11.5px}
+    .practice-section-head{display:flex;align-items:center;justify-content:space-between;margin:17px 0 8px;font-size:19px;font-weight:800}.practice-section-head small{color:#b8b8b8;font-size:14px;font-weight:500}
+    .practice-card{display:grid;grid-template-columns:73px 1fr;gap:12px;padding:15px;border-radius:9px;background:#fff7ef;border:1px solid rgba(181,117,76,.16)}
+    .practice-ring{width:66px;height:66px;border-radius:50%;display:grid;place-content:center;color:#fff;background:#ff5b45;border:5px solid #f3d7bd;text-align:center}.practice-ring span{display:block}.practice-ring-min{font-size:19px;font-weight:900}.practice-ring-unit{font-size:11px;font-weight:700}
+    .practice-tag{display:inline-flex;max-width:90px;padding:4px 7px;border-radius:999px;color:#a44d39;background:rgba(255,91,69,.1);font-size:11px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .practice-title-lg{margin-top:5px;color:#202124;font-size:17px;font-weight:900}
+    .practice-desc{margin-top:5px;color:#7c7065;font-size:13.5px;line-height:1.55}
+    .practice-steps{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.practice-step{padding:4px 7px;border-radius:999px;color:#6f665d;background:#fff;font-size:11.5px;font-weight:700}
+    .practice-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+    .ghost-btn{height:38px;border:1px solid rgba(255,91,69,.25);border-radius:999px;background:#fff;color:#ff5b45;font-size:13px;font-weight:900}
+    .week-card{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:11px}.week-item{display:grid;justify-items:center;gap:5px}.week-dot{width:29px;height:29px;border-radius:50%;display:grid;place-items:center;color:#8c8172;background:#f4eee8;font-size:12px;font-weight:900}.week-dot.done{color:#fff;background:#ff5b45}.week-label{color:#8c8172;font-size:11px}
+    .assist-card{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:12px;margin-bottom:9px}.assist-title{font-size:15.5px;font-weight:900}.assist-desc{margin-top:4px;color:#8c8172;font-size:12.5px;line-height:1.45}.assist-action{flex:0 0 auto;padding:6px 10px;border-radius:999px;color:#ff5b45;background:#fff2ee;font-size:12.5px;font-weight:800}
+    .recommend-list{display:grid;gap:8px}.recommend-card{display:grid;grid-template-columns:66px minmax(0,1fr);gap:9px;padding:9px}.recommend-cover{width:66px;height:66px;border-radius:7px;overflow:hidden;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#2d3541,#b56a48);font-size:18px;font-weight:900}.recommend-cover img{width:100%;height:100%;object-fit:cover}.recommend-main{min-width:0;display:grid;align-content:center;gap:5px}.recommend-topline{display:flex;align-items:center;justify-content:space-between;gap:6px}.recommend-badge{max-width:90px;padding:3px 6px;border-radius:999px;color:#a44d39;background:rgba(255,91,69,.1);font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.recommend-price{flex:0 0 auto;color:#ff5b45;font-size:12px;font-weight:900}.recommend-title{color:#202124;font-size:15px;line-height:1.32;font-weight:900;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.recommend-meta{color:#8c8172;font-size:12px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .learning-section{margin-top:14px}.learning-section:first-child{margin-top:0}.learning-section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;font-size:16px;font-weight:900}.learning-more{color:#f05b46;font-size:12px;font-weight:900}.recent-card{padding:13px;margin-bottom:9px}.recent-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.recent-title,.learn-course-title{font-size:16px;font-weight:800;line-height:1.35}.recent-meta,.learn-course-meta{margin-top:5px;color:#8c8172;font-size:13px}.percent{flex:0 0 auto;color:#ff5b45;font-size:17px;font-weight:900}.progress-track{height:6px;margin-top:11px;border-radius:999px;background:#efe6d9;overflow:hidden}.progress-fill{height:100%;border-radius:999px;background:#ff5b45}.learn-course-card{display:grid;grid-template-columns:75px minmax(0,1fr);gap:10px;align-items:center;padding:10px;margin-bottom:9px}.learn-thumb{position:relative;width:75px;height:75px;border-radius:6px;overflow:hidden;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#343a48,#9e7445);font-size:13px;font-weight:900}.learn-thumb img{width:100%;height:100%;object-fit:cover}.thumb-badge{position:absolute;top:4px;left:4px;padding:2px 5px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:800}.learn-course-info{min-width:0}.learn-course-status{display:inline-flex;margin-top:7px;padding:4px 7px;border-radius:999px;color:#2f6d4d;background:#e9f6ef;font-size:11.5px;font-weight:800}.learn-course-price{margin-top:5px;color:#ff5b45;font-size:14px;font-weight:900}.hot-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.hot-card{padding:14px 11px;border-radius:9px;background:linear-gradient(145deg,#fef9f1,#f8edd7)}.hot-title{font-size:15px;font-weight:900;color:#252c35;margin-bottom:4px;line-height:1.28}.hot-desc{font-size:11px;color:#8c8172;line-height:1.4;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.hot-meta{font-size:10px;color:#b3a696}
+    .academy-hero{padding:15px 14px 16px;border-radius:10px;color:#fff;background:linear-gradient(135deg,#2d3037 0%,#765746 52%,#c45d45 100%);box-shadow:0 8px 22px rgba(71,48,55,.18)}
+    .hero-eyebrow{display:inline-flex;padding:4px 8px;border-radius:999px;color:#ffe0b5;background:rgba(255,255,255,.13);font-size:11px;font-weight:800}
+    .hero-title{margin-top:13px;font-size:23px;line-height:1.18;font-weight:900}
+    .hero-desc{width:95%;margin-top:11px;color:rgba(255,255,255,.82);font-size:13.5px;line-height:1.6}
+    .academy-hero .hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
+    .primary-btn,.light-btn,.gold-btn{border:0;min-height:44px;border-radius:22px;font-size:15px;font-weight:900}
+    .primary-btn,.gold-btn{background:#ff5b45;color:#fff}.light-btn{background:rgba(255,255,255,.16);color:#fff}.bottom-cta .gold-btn{display:inline-flex;align-items:center;justify-content:center;padding:0 18px;text-decoration:none}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px}.stat-card{min-height:58px;padding:9px 4px;border-radius:8px;text-align:center;background:#fff;border:1px solid rgba(32,33,36,.06);box-shadow:0 4px 9px rgba(32,33,36,.04)}.stat-value{display:block;color:#9b5b34;font-size:14px;font-weight:900}.stat-label{display:block;margin-top:4px;color:#8c8172;font-size:10.5px;line-height:1.2}
+    .pain-section{margin-top:14px;padding:11px 10px;border-radius:10px;background:#fff;border:1px solid rgba(151,111,75,.12);text-align:center}.section-kicker{color:#b26840;font-size:12px;font-weight:800}.section-title-main{margin-top:4px;color:#202124;font-size:17px;line-height:1.3;font-weight:900}
+    .section-title{margin-bottom:7px;color:#202124;font-size:16px;font-weight:900}.pain-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:9px}.pain-tags span{padding:4px 7px;border-radius:999px;color:#c45d45;background:#fff2ef;font-size:12px;font-weight:800}
+    .path-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:9px}.path-node{min-height:56px;padding:6px 4px;border-radius:8px;text-align:center;background:#fbf7f2;border:1px solid rgba(155,91,52,.1)}.path-step{color:#b26840;font-size:14px;font-weight:900}.path-label{margin-top:3px;color:#202124;font-size:12.5px;font-weight:900}.path-sub{margin-top:2px;color:#8c8172;font-size:10.5px}
+    .section-number{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;border-radius:7px;color:#fff;background:#2c3440;font-size:11px;font-weight:900;margin-right:6px}
+    .online-groups{display:grid;gap:7px}.online-group{padding:10px}.group-info{position:relative;padding-left:38px}.group-mark{position:absolute;left:0;top:0;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;color:#fff;background:#b26840;font-size:12px;font-weight:900}.group-badge{display:inline-flex;padding:3px 7px;border-radius:999px;color:#9b5b34;background:#fbf0e5;font-size:11px;font-weight:800}.group-title{margin-top:4px;color:#202124;font-size:15px;font-weight:900}.group-pain{margin-top:3px;color:#c45d45;font-size:12px;line-height:1.35;font-weight:800}.group-desc{margin-top:3px;color:#746b63;font-size:12.5px;line-height:1.5}
+    .mini-course-list{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px}.mini-course{position:relative;overflow:hidden;border-radius:8px;aspect-ratio:1/1;background:#2d3541;border:1px solid rgba(155,91,52,.1)}.mini-course img,.mini-fallback{width:100%;height:100%;object-fit:cover}.mini-fallback{display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#2d3541,#b56a48);font-size:20px;font-weight:900}.mini-info{position:absolute;left:0;right:0;bottom:0;padding:21px 7px 7px;color:#fff;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(20,22,26,.82) 100%)}.mini-title{color:#fff;font-size:12px;line-height:1.3;font-weight:900;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.mini-meta{display:none}.mini-empty{margin-top:8px;padding:18px 10px;border-radius:8px;background:#f8f4ef;border:1px dashed rgba(155,91,52,.22);color:#9b5b34;text-align:center;font-size:12px;font-weight:900}
+    .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.feature-course{position:relative;overflow:hidden;aspect-ratio:1/1}.feature-cover{position:relative;width:100%;height:100%;display:grid;place-items:center;overflow:hidden;color:#fff;background:#2d3541;font-size:15px;font-weight:900}.feature-cover img{width:100%;height:100%;object-fit:cover}.feature-badge{position:absolute;left:7px;top:7px;padding:4px 6px;border-radius:999px;color:#fff;background:rgba(0,0,0,.46);font-size:10.5px;font-weight:800}.feature-body{position:absolute;left:0;right:0;bottom:0;padding:28px 8px 8px;color:#fff;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(19,21,26,.86) 100%)}.feature-title{min-height:0;color:#fff;font-size:12.5px;line-height:1.3;font-weight:900;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.feature-meta{display:none}.feature-price{margin-top:4px;color:#ffd1a8;font-size:13px;font-weight:900}.bottom-cta{margin-top:17px;padding:16px 13px;border-radius:10px;text-align:center;background:#2c3440;color:#fff}.cta-title{font-size:17px;line-height:1.35;font-weight:900}.cta-desc{margin:7px 0 12px;color:rgba(255,255,255,.72);font-size:12.5px;line-height:1.45}
+    .home-section-head{display:flex;align-items:center;justify-content:space-between;margin:4px 0 9px}.home-section-head>div{display:flex;flex-direction:column;gap:3px}.home-kicker{color:#202124;font-size:15px;line-height:1.2;font-weight:900}.home-section-head:not(.home-list-head) .home-kicker{font-size:18px}.home-title{color:#202124;font-size:18px;line-height:1.18;font-weight:900}.all-courses-btn{border:0;border-radius:999px;padding:7px 11px;color:#d65342;background:#fff0ed;font-size:11px;font-weight:900}.bottom-all-courses-btn{width:100%;height:38px;margin:11px 0 4px;border:0;border-radius:999px;color:#fff;background:#f05b46;font-size:14px;font-weight:900;box-shadow:0 5px 12px rgba(240,91,70,.2)}.course-carousel{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -10px;padding:0 10px 7px}.course-carousel::-webkit-scrollbar{display:none}.hero-slide-card{position:relative;flex:0 0 calc((100% - 8px)/2);aspect-ratio:1/1;overflow:hidden;border-radius:10px;background:#2d3541;scroll-snap-align:start;box-shadow:0 9px 22px rgba(38,44,56,.13)}.hero-slide-card img,.home-cover-fallback{width:100%;height:100%;object-fit:cover}.image-stack{position:relative;width:100%;height:100%}.image-stack img{position:absolute;inset:0;z-index:1}.image-stack .home-cover-fallback{position:absolute;inset:0}.home-cover-fallback,.mini-fallback{display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#334965 0%,#8d5d57 54%,#c66a45 100%);font-size:17px;font-weight:900}.slide-shade{position:absolute;left:0;right:0;bottom:0;height:62%;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(17,20,26,.84) 100%)}.slide-content{position:absolute;left:9px;right:9px;bottom:12px;color:#fff}.slide-badge,.row-badge{display:inline-flex;align-items:center;width:fit-content;border-radius:999px;font-weight:900}.slide-badge{padding:4px 7px;color:#fff;background:rgba(255,255,255,.18);font-size:10px}.slide-title{margin-top:5px;color:#fff;font-size:14px;line-height:1.22;font-weight:900;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.slide-meta{margin-top:4px;color:rgba(255,255,255,.82);font-size:10.5px;font-weight:700}.home-list-head{margin-top:15px}.home-course-list{display:grid;gap:7px}.home-course-row{display:grid;grid-template-columns:82px minmax(0,1fr);gap:9px;min-height:82px;padding:7px;border-radius:9px;background:#fff;border:1px solid rgba(32,33,36,.06);box-shadow:0 4px 11px rgba(32,33,36,.04)}.row-cover{width:82px;height:82px;overflow:hidden;border-radius:7px;background:#2d3541}.row-cover img{width:100%;height:100%;object-fit:cover}.row-body{min-width:0;display:flex;flex-direction:column;justify-content:center}.row-badge{padding:3px 6px;color:#b26840;background:#fbf0e5;font-size:10px}.row-title{margin-top:6px;color:#202124;font-size:14.5px;line-height:1.32;font-weight:900;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.row-meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;color:#7e8591;font-size:11px;font-weight:700}
+    @media (max-width: 520px) {
+      .shell{padding:0;display:block;min-height:100vh}
+      .phone{width:100vw;height:100vh;max-width:none;border:0;border-radius:0;box-shadow:none}
+      .page{bottom:calc(58px + env(safe-area-inset-bottom));padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+      .tabbar{height:calc(58px + env(safe-area-inset-bottom));padding-bottom:calc(6px + env(safe-area-inset-bottom))}
+      .banner{min-width:calc(100vw - 74px)}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell"><div class="phone">
+    <div class="status"><span>11:37</span><span>▮▮ 89</span></div>
+    <div class="nav">
+      <button id="homeBackBtn" class="nav-icon left" style="display:none">‹</button>
+      <button id="backBtn" class="back" style="display:none" onclick="goHome()">‹</button>
+      <span id="title">伊娃东方舞·东方舞圈</span>
+      <button id="searchBtn" class="nav-icon search" style="display:none">⌕</button>
+      <button id="shareBtn" class="nav-icon share" style="display:none">⇧</button>
+    </div>
+    <main id="app" class="page"></main>
+    <nav class="tabbar">
+      <button id="tabHome" class="active" onclick="renderHome()"><span class="tab-icon"><img src="/images/tab-home-active.png" data-normal="/images/tab-home.png" data-active="/images/tab-home-active.png" alt=""></span><span>首页</span></button>
+      <button id="tabPractice" onclick="renderPractice()"><span class="tab-icon"><img src="/images/tab-practice.png" data-normal="/images/tab-practice.png" data-active="/images/tab-practice-active.png" alt=""></span><span>练习</span></button>
+      <button id="tabCourses" onclick="renderCourses()"><span class="tab-icon"><img src="/images/tab-courses.png" data-normal="/images/tab-courses.png" data-active="/images/tab-courses-active.png" alt=""></span><span>开始训练</span></button>
+      <button id="tabProfile" onclick="renderProfile()"><span class="tab-icon"><img src="/images/tab-profile.png" data-normal="/images/tab-profile.png" data-active="/images/tab-profile-active.png" alt=""></span><span>个人中心</span></button>
+    </nav>
+  </div></div>
+  <script>
+    window.EVA_MINI_RUNTIME_CONFIG = window.EVA_MINI_RUNTIME_CONFIG || {
+      apiBase: "https://admin.dongfangwuquan.com/api/mini",
+      loginApiBase: "https://admin.dongfangwuquan.com/api/mini",
+      fallbackApiBases: [],
+      fallbackLoginApiBases: [],
+      officialWebsiteUrl: "https://www.dongfangwuquan.com",
+      memberId: null,
+      memberName: null,
+      reviewMode: false
+    };
+  </script>
+  <script src="/mini-shared/runtime-config.js"></script>
+  <script>
+    let series = [], authorized = [], recentCourses = [], miniConfig = null, homeStats = null, profileData = null, current = null;
+    let simulatedMember = JSON.parse(localStorage.getItem('evaMiniPreviewMember') || 'null');
+
+    let coursesPanel = 'recent';
+    const app = document.getElementById('app');
+    const miniRuntimeConfig = window.EVA_MINI_RUNTIME_CONFIG;
+    const apiBases = [miniRuntimeConfig.apiBase].concat(miniRuntimeConfig.fallbackApiBases || []).filter(Boolean);
+    const api = path => {
+      const localProxyBases = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+        ? ['/api/mini']
+        : [];
+      const bases = localProxyBases.concat(apiBases);
+      const requestFrom = index => {
+        const base = bases[index];
+        if (!base) return Promise.resolve([]);
+        const url = base + path;
+        return fetch(url)
+          .then(r => r.json())
+          .then(j => normalizeAssets(j.data ?? [], base))
+          .catch(error => {
+            if (index + 1 < bases.length) return requestFrom(index + 1);
+            throw error;
+          });
+      };
+      return requestFrom(0);
+    };
+    function setContent(html) {
+      app.innerHTML = html;
+      app.scrollTop = 0;
+    }
+    function escapeHtml(text) {
+      return String(text ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
+    }
+    function normalizeAssets(value, apiBase) {
+      const origin = apiBase.replace(/\/api(?:\/mini)?(?:\/.*)?$/, '').replace(/\/$/, '');
+      const apiAssetPattern = /^https?:\/\/[^/]+\/api\//;
+      const isImageKey = key => key.indexOf('image') >= 0
+        || key === 'thumbnail'
+        || key.indexOf('cover') >= 0
+        || key.indexOf('avatar') >= 0
+        || key.indexOf('poster') >= 0;
+      const isAssetKey = key => isImageKey(key) || key.endsWith('_url') || key.endsWith('_path');
+      const withOrigin = path => origin + path;
+      const normalizeImagePath = source => {
+        if (source.indexOf('/uploads/online-course/series-covers/') === 0) {
+          const filename = encodeURIComponent(decodeURIComponent(source.split('/').pop() || ''));
+          return '/api/course/series/cover/' + filename;
+        }
+        if (source.indexOf('/uploads/') === 0) return '/api/course/cover-image?src=' + encodeURIComponent(source);
+        return source;
+      };
+      const normalizeAsset = (url, key) => {
+        if (!url || typeof url !== 'string') return url;
+        let trimmed = url.trim();
+        if (!trimmed) return '';
+        if (isImageKey(key) && /^https?:\/\/admin\.dongfangwuquan\.com\//i.test(trimmed)) {
+          const path = trimmed.replace(/^https?:\/\/admin\.dongfangwuquan\.com/i, '');
+          const normalizedPath = normalizeImagePath(path);
+          if (normalizedPath.indexOf('/api/course/') === 0) return withOrigin(normalizedPath);
+        }
+        if (trimmed.indexOf('/api/course/') === 0 && isImageKey(key)) return withOrigin(trimmed);
+        if ((trimmed.startsWith('/api/') || apiAssetPattern.test(trimmed)) && isImageKey(key)) return '';
+        if (/^https?:\/\//.test(trimmed)) return trimmed;
+        if (trimmed.startsWith('//')) return 'https:' + trimmed;
+        if (isImageKey(key)) {
+          const normalizedPath = normalizeImagePath(trimmed);
+          if (normalizedPath.indexOf('/api/course/') === 0) return withOrigin(normalizedPath);
+        }
+        if (trimmed.startsWith('/official-images/') || trimmed.startsWith('/api/') || trimmed.startsWith('/static/')) return origin + trimmed;
+        return trimmed;
+      };
+
+      if (Array.isArray(value)) return value.map(item => normalizeAssets(item, apiBase));
+      if (value && typeof value === 'object') {
+        const next = {};
+        Object.keys(value).forEach(key => {
+          next[key] = isAssetKey(key)
+            ? normalizeAsset(value[key], key)
+            : normalizeAssets(value[key], apiBase);
+        });
+        return next;
+      }
+      return value;
+    }
+    async function load() {
+      if (location.protocol !== 'file:') {
+        try {
+          series = await api('/public/series');
+          homeStats = await api('/public/home-stats').catch(() => null);
+          miniConfig = await api('/admin/miniprogram-config').catch(() => null);
+          window.platformOfflineCourses = await api('/public/offline-courses').catch(() => []);
+          if (miniRuntimeConfig.memberId) {
+            authorized = await api('/member/authorized-series?member_id=' + miniRuntimeConfig.memberId).catch(() => []);
+            recentCourses = await api('/member/recent-courses?member_id=' + miniRuntimeConfig.memberId).catch(() => []);
+            profileData = await api('/member/profile?member_id=' + miniRuntimeConfig.memberId).catch(() => null);
+        }
+      } catch (error) {
+          window.evaMiniPreviewOffline = true;
+      }
+      }
+      routeFromHash();
+    }
+    function routeFromHash(){
+      const route = (location.hash || '').replace('#', '');
+      if (route === 'login') return renderLogin();
+      if (route === 'profile') return renderProfile();
+      if (route === 'bind-wechat') return bindWechatPreview();
+      if (route === 'courses' || route === 'courses-recent') {
+        coursesPanel = 'recent';
+        return renderCourses();
+      }
+      if (route === 'courses-all') {
+        coursesPanel = 'all';
+        return renderCourses();
+      }
+      if (route === 'practice') return renderPractice();
+      return renderHome();
+    }
+    function nav(title, back=false){
+      document.getElementById('title').textContent = title;
+      backBtn.style.display = back ? 'block' : 'none';
+      homeBackBtn.style.display = title === '伊娃东方舞·东方舞圈' ? 'block' : 'none';
+      searchBtn.style.display = title === '伊娃东方舞·东方舞圈' ? 'block' : 'none';
+      shareBtn.style.display = title === '伊娃东方舞·东方舞圈' ? 'block' : 'none';
+      document.querySelectorAll('.tabbar button').forEach(b => b.classList.remove('active'));
+    }
+    function setTab(id){
+      document.querySelectorAll('.tabbar button').forEach(b => {
+        b.classList.remove('active');
+        const img = b.querySelector('img[data-normal]');
+        if (img) img.src = img.dataset.normal;
+      });
+      document.getElementById(id)?.classList.add('active');
+      const activeImg = document.getElementById(id)?.querySelector('img[data-active]');
+      if (activeImg) activeImg.src = activeImg.dataset.active;
+    }
+    function progressPercent(item) {
+      return item && item.duration ? Math.min(100, Math.round((item.progress || 0) / item.duration * 100)) : 0;
+    }
+    function popularitySeed(item){
+      return String((item && (item.id || item.source_id || item.name)) || 'eva-course');
+    }
+    const MIN_POPULARITY_BASE = 500;
+    const MAX_POPULARITY_BASE = 2000;
+    const POPULARITY_BASE_RANGE = MAX_POPULARITY_BASE - MIN_POPULARITY_BASE + 1;
+    const popularityBaseBySeed = {};
+    const usedPopularityBases = {};
+    function stablePopularityBase(seed){
+      if (popularityBaseBySeed[seed] !== undefined) return popularityBaseBySeed[seed];
+
+      let hash = 0;
+      for (let index = 0; index < seed.length; index += 1) {
+        hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+      }
+
+      let base = MIN_POPULARITY_BASE + (hash % POPULARITY_BASE_RANGE);
+      for (let offset = 0; offset < POPULARITY_BASE_RANGE; offset += 1) {
+        if (!usedPopularityBases[base] || usedPopularityBases[base] === seed) {
+          usedPopularityBases[base] = seed;
+          popularityBaseBySeed[seed] = base;
+          return base;
+        }
+        base = base >= MAX_POPULARITY_BASE ? MIN_POPULARITY_BASE : base + 1;
+      }
+
+      popularityBaseBySeed[seed] = base;
+      return base;
+    }
+    function popularityValue(item){
+      const real = Number((item && (item.total_students || item.students || item.user_count || item.views)) || 0);
+      return stablePopularityBase(popularitySeed(item)) + real;
+    }
+    function popularityText(item){
+      return popularityValue(item) + '人气';
+    }
+    function formatDate(value){
+      return value ? String(value).slice(0, 10) : '未填写';
+    }
+    function finiteMoneyNumber(value) {
+      const number = Number(value || 0);
+      return Number.isFinite(number) ? number : 0;
+    }
+    function trimMoneyZeros(value) {
+      return value.replace(/\.00$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
+    }
+    function formatPrice(value, symbol = '¥') {
+      return symbol + trimMoneyZeros(finiteMoneyNumber(value).toFixed(2));
+    }
+    function formatPaymentAmount(value, symbol = '¥') {
+      return symbol + finiteMoneyNumber(value).toFixed(2);
+    }
+    function formatCompactMoney(value, symbol = '¥') {
+      const number = finiteMoneyNumber(value);
+      const abs = Math.abs(number);
+      if (abs >= 100000000) return symbol + trimMoneyZeros((number / 100000000).toFixed(1)) + '亿';
+      if (abs >= 10000) return symbol + trimMoneyZeros((number / 10000).toFixed(1)) + '万';
+      return formatPrice(number, symbol);
+    }
+    function formatMemberLevel(level) {
+      const raw = String(level || '').trim();
+      if (!raw) return '普通学员';
+      const map = {
+        vip: 'VIP 学员',
+        svip: 'SVIP 学员',
+        normal: '普通学员',
+        regular: '普通学员',
+        beginner: '基础学员',
+        advanced: '进阶学员'
+      };
+      return map[raw.toLowerCase()] || raw;
+    }
+    function memberLocation(member){
+      return [member.province, member.city, member.address].filter(Boolean).join(' ') || member.foreignRegion || member.country || '未填写';
+    }
+
+    function lessonCard(lesson, index) {
+      const percent = progressPercent(lesson);
+      const done = !!lesson.completed || percent >= 90;
+      return '<section class="lesson card"><span class="num ' + (done ? 'done' : '') + '">' + (done ? '✓' : index + 1) + '</span><div class="lesson-info"><b>' + (lesson.course_name || lesson.name || lesson.last_video_name || '课节') + '</b><p class="muted">' + (lesson.series_name || lesson.group_name || '') + '</p></div><span class="' + (done ? 'done-text' : 'todo-text') + '">' + (done ? '已完成' : '学习中') + '</span></section>';
+    }
+    function imageHtml(src, fallback){
+      const fallbackHtml = '<div class="home-cover-fallback">' + escapeHtml(fallback) + '</div>';
+      return src ? '<div class="image-stack">' + fallbackHtml + '<img src="' + escapeHtml(src) + '" alt="" onerror="this.style.display=&quot;none&quot;"></div>' : fallbackHtml;
+    }
+    function card(s){
+      const recent = recentCourses.find(item => String(item.series_id) === String(s.id));
+      const percent = progressPercent(recent);
+      return '<section class="series card" onclick="openDetail(' + s.id + ')"><div class="cover">' + imageHtml(s.cover_image, s.category || '学习') + '</div><div class="info"><b>' + s.name + '</b><p class="muted">' + (s.total_courses || s.course_count || 0) + '节 · ' + popularityText(s) + '</p><div class="course-progress"><div class="progress"><i style="width:' + percent + '%"></i></div><span>' + percent + '%</span></div><div class="row"><span class="price">' + (s.is_free ? '免费' : formatPrice(s.promo_price || s.price || 0)) + '</span><span class="muted">' + (s.category || '') + '</span></div></div></section>';
+    }
+    const onlineGroups = [
+      { id:'beginner', mark:'01', title:'入门系统', badge:'从0开始', pain:'零基础，不知道从哪里开始学？', desc:'先建立站姿、节奏、基础动作和身体使用方式，从一开始就走对路径。', keywords:['零基础','亲传教练'] },
+      { id:'body', mark:'02', title:'身体开发系统', badge:'底层能力', pain:'动作没根、发力不清楚？', desc:'用呼吸、核心、肌力和身体控制重建舞者底层能力。', keywords:['呼吸','全力出肌','核心','肌力'] },
+      { id:'tech', mark:'03', title:'技术体系', badge:'核心技巧', pain:'学了很多技巧，但没有形成体系？', desc:'从标准动作、技巧变化到组合应用，建立完整东方舞技巧库。', keywords:['7+1','技巧大全','云·弟子','云弟子'] },
+      { id:'special', mark:'04', title:'专项突破系统', badge:'重点突破', pain:'西米、旋转、甩发、手臂总卡住？', desc:'把短板拆成可训练的专项模块，一次解决一个关键能力。', keywords:['西米','旋转','头部','甩发','手臂'] },
+      { id:'express', mark:'05', title:'表达系统', badge:'高级舞感', pain:'动作会做，但跳不出高级感？', desc:'围绕胸腰、S曲线和身体流动，让技巧真正进入舞感表达。', keywords:['S曲线','胸腰','舞感'] },
+      { id:'choreo', mark:'06', title:'创编系统', badge:'独立创作', pain:'只会模仿，不会编舞？', desc:'从听音乐、理解中东节奏到试编训练，走向独立创作。', keywords:['编舞师','创编','音乐','英语'] }
+    ];
+    function shuffle(list){ const next = list.slice(); for(let i = next.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [next[i], next[j]] = [next[j], next[i]]; } return next; }
+    function isDanceSeries(item){
+      const category = item.category || '';
+      const name = item.name || '';
+      if (item.source_type) return item.source_type === 'official_dance_collection';
+      return item.source_type === 'official_dance_collection'
+        || /^成品舞[｜|:：]/.test(name)
+        || /^(经典成品舞|情感主题|国风|道具舞|民俗舞|现代融合|古典)$/.test(category);
+    }
+    const hiddenOnlineCategory = ['线', '上', '学', '院'].join('');
+    function isOnlineSeries(item){
+      if (item.source_type) return item.source_type === 'official_online';
+      return item.source_type === 'official_online' || item.category === hiddenOnlineCategory || item.category === '线上学院';
+    }
+    function isOfflineSeries(item){
+      const text = [item.name, item.subtitle, item.category, item.source_name].filter(Boolean).join(' ');
+      return item.source_type === 'platform_offline_course'
+        || item.source_type === 'official_offline'
+        || /线下|培训|面授|集训/.test(text);
+    }
+    function isOfficialOfflineSeries(item){
+      const name = item.name || '';
+      const text = [item.name, item.subtitle, item.category, item.source_name].filter(Boolean).join(' ');
+      return item.source_type === 'official_offline'
+        || item.source_type === 'platform_offline_course'
+        || /^(线下训练|线下培训|线下学习)[｜|:：]/.test(name)
+        || /线下|培训|面授|集训/.test(text);
+    }
+    function normalizeHomeCard(item, badge, sourceType = 'online'){
+      const price = Number(item.promo_price || item.price || 0);
+      const displayTitle = String(item.name || '')
+        .replace(/^(成品舞|线下课程|线下训练|线下培训|线下学习)[｜|:：]?\s*/, '')
+        .replace(/课程/g, '训练');
+      const lessons = Number(item.total_courses || item.course_count || item.lesson_count || 0);
+      return {
+        ...item,
+        badge: item.badge || badge,
+        sourceType,
+        title: displayTitle,
+        meta: item.subtitle || item.category || '伊娃东方舞',
+        lessonText: lessons ? lessons + '节课' : '持续更新',
+        popularityText: popularityText(item),
+        priceText: miniRuntimeConfig.reviewMode ? '咨询' : (price > 0 ? formatPrice(price) : '免费')
+      };
+    }
+    function uniqueById(list){
+      const seen = new Set();
+      return list.filter(item => {
+        const key = String(item.id || item.name || Math.random());
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+    function pickCarouselCourses(online, offline, dances, all){
+      const picked = [
+        ...shuffle(online).slice(0, 4).map(item => normalizeHomeCard(item, '线上训练', 'online')),
+        ...shuffle(offline).slice(0, 2).map(item => normalizeHomeCard(item, '线下训练', 'offline')),
+        ...shuffle(dances).slice(0, 2).map(item => normalizeHomeCard(item, '成品舞', 'dance'))
+      ];
+      if (picked.length >= 8) return picked.slice(0, 8);
+      const fill = shuffle(all)
+        .map(item => normalizeHomeCard(item, item.badge || '训练', isOfflineSeries(item) ? 'offline' : isDanceSeries(item) ? 'dance' : 'online'))
+        .filter(item => !picked.some(pickedItem => String(pickedItem.id) === String(item.id)));
+      return picked.concat(fill).slice(0, 8);
+    }
+    function listHomeCourses(online, dances, offline){
+      const picked = uniqueById([
+        ...shuffle(online).slice(0, 4).map(item => normalizeHomeCard(item, '线上训练', 'online')),
+        ...shuffle(dances).slice(0, 2).map(item => normalizeHomeCard(item, '成品舞', 'dance')),
+        ...shuffle(offline).slice(0, 2).map(item => normalizeHomeCard(item, '线下训练', 'offline'))
+      ]);
+      const fill = uniqueById([
+        ...shuffle(online).map(item => normalizeHomeCard(item, '线上训练', 'online')),
+        ...shuffle(dances).map(item => normalizeHomeCard(item, '成品舞', 'dance')),
+        ...shuffle(offline).map(item => normalizeHomeCard(item, '线下训练', 'offline'))
+      ]).filter(item => !picked.some(pickedItem => String(pickedItem.id) === String(item.id)));
+      return picked.concat(fill).slice(0, 8);
+    }
+    function groupOnlineCourses(list) {
+      return onlineGroups.map(group => {
+        const courses = list.filter(item => {
+          const text = String(item.name || '');
+          return group.keywords.some(keyword => text.indexOf(keyword) >= 0);
+        }).slice(0, 2).map(item => normalizeHomeCard(item, '线下训练'));
+        return { ...group, courseCount: courses.length, courses };
+      });
+    }
+	    function practiceRecommendations(){
+	      const authorizedIds = new Set(authorized.map(item => String(item.id)));
+	      const missingOnline = series.filter(item => item.category === '线上学院' && !authorizedIds.has(String(item.id)));
+	      if (missingOnline.length) return { hint: '按学习进度补齐线上系统课', items: missingOnline.slice(0, 2).map(item => normalizeHomeCard(item, '缺失系统课')) };
+	      const pool = series.filter(item => isOfflineSeries(item) || isDanceSeries(item));
+	      return { hint: pool.length ? '线上系统课已齐，推荐线下与成品舞' : '暂无更多后台推荐', items: pool.slice(0, 2).map(item => normalizeHomeCard(item, isDanceSeries(item) ? '成品舞' : '线下课')) };
+	    }
+	    function courseRecommendScore(item, recentList){
+	      const text = String((item.name || '') + (item.category || '') + (item.subtitle || ''));
+	      const recentText = (recentList || []).map(item => String((item.series_name || '') + (item.course_name || '') + (item.last_video_name || ''))).join('');
+	      const progressAvg = recentList && recentList.length ? recentList.reduce((sum, item) => sum + progressPercent(item) / 100, 0) / recentList.length : 0;
+	      let score = popularityValue(item);
+	      ['零基础','入门','基础'].forEach(key => { if (progressAvg < 0.35 && text.indexOf(key) >= 0) score += 80; });
+	      ['技巧','西米','旋转','手臂','甩发','呼吸','核心','S曲线'].forEach(key => { if (recentText.indexOf(key) >= 0 && text.indexOf(key) >= 0) score += 60; });
+	      return score - Number(item.sort_order || 0);
+	    }
+	    function buildCourseRecommendations(visibleSeries, offlineCourses, authorizedList, recentList){
+	      const authIds = new Set((authorizedList || []).map(item => String(item.id || item.series_id)));
+	      const pool = uniqueById([...(visibleSeries || []), ...(offlineCourses || [])]).filter(item => !authIds.has(String(item.id || item.series_id)));
+	      const sortByScore = (a, b) => courseRecommendScore(b, recentList) - courseRecommendScore(a, recentList);
+	      const online = miniRuntimeConfig.reviewMode ? [] : pool.filter(item => isOnlineSeries(item) && !isDanceSeries(item) && !isOfflineSeries(item)).sort(sortByScore);
+	      const offline = pool.filter(isOfflineSeries).sort(sortByScore);
+	      const dances = pool.filter(isDanceSeries).sort(sortByScore);
+	      const picked = uniqueById([
+	        ...online.slice(0, 2).map(item => normalizeHomeCard(item, '线上课', 'online')),
+	        ...offline.slice(0, 1).map(item => normalizeHomeCard(item, '线下课', 'offline')),
+	        ...dances.slice(0, 1).map(item => normalizeHomeCard(item, '成品舞', 'dance'))
+	      ]);
+	      const fill = uniqueById([
+	        ...online.map(item => normalizeHomeCard(item, '线上课', 'online')),
+	        ...offline.map(item => normalizeHomeCard(item, '线下课', 'offline')),
+	        ...dances.map(item => normalizeHomeCard(item, '成品舞', 'dance')),
+	        ...pool.sort(sortByScore).map(item => normalizeHomeCard(item, isOfflineSeries(item) ? '线下课' : isDanceSeries(item) ? '成品舞' : '线上课', isOfflineSeries(item) ? 'offline' : isDanceSeries(item) ? 'dance' : 'online'))
+	      ]).filter(item => !picked.some(pickedItem => String(pickedItem.id) === String(item.id)));
+	      return picked.concat(fill).slice(0, 4);
+	    }
+	    function featureCard(item, source){
+      const action = source === 'offline' ? "alert('具体排课和报名请联系伊娃确认。')" : 'openDetail(' + item.id + ')';
+      return '<section class="feature-course card" onclick="' + action + '"><div class="feature-cover">' + imageHtml(item.cover_image, item.badge || '课') + '<div class="feature-badge">' + item.badge + '</div><div class="feature-body"><div class="feature-title">' + item.title + '</div><div class="feature-price">' + (source === 'offline' ? '咨询报名' : item.priceText) + '</div></div></div></section>';
+    }
+    function normalizeLearningCourse(item){
+      const text = String((item.category || '') + (item.name || '') + (item.subtitle || ''));
+      const type = /成品舞|作品|编舞|舞蹈/.test(text) ? 'dance' : 'online';
+      const price = Number(item.promo_price || item.price || 0);
+      return {
+        ...item,
+        badge: type === 'dance' ? '成品舞' : '训练项目',
+        priceText: miniRuntimeConfig.reviewMode ? '咨询' : (price > 0 ? formatPrice(price) : '免费')
+      };
+    }
+    function buildMyTrainingCourses(authorizedList, catalog){
+      const source = (authorizedList || []).length ? authorizedList : catalog.slice(0, 4);
+      return [...source]
+        .sort((a, b) => popularityValue(b) - popularityValue(a))
+        .slice(0, 4)
+        .map(item => ({
+          id: item.id,
+          title: item.name,
+          desc: item.subtitle || item.teacher || item.category || '伊娃东方舞',
+          courseCount: item.course_count || item.total_courses || 0,
+          students: popularityValue(item)
+        }));
+    }
+    function stableRecentPercent(item){
+      const seed = String((item && (item.id || item.name)) || 'eva-course');
+      let hash = 0;
+      for (let index = 0; index < seed.length; index += 1) {
+        hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+      }
+      return 18 + (hash % 73);
+    }
+    function buildRecentPreview(catalog){
+      return catalog.slice(0, 3).map(item => ({
+        course_id: item.id,
+        series_id: item.id,
+        course_name: item.name,
+        series_name: item.subtitle || item.teacher || '伊娃东方舞',
+        percent: stableRecentPercent(item)
+      }));
+    }
+	    function learningCourseCard(item, statusText){
+	      return '<section class="learn-course-card card" onclick="openDetail(' + item.id + ')"><div class="learn-thumb">' + imageHtml(item.cover_image, item.badge || '训练') + '<div class="thumb-badge">' + escapeHtml(item.badge || '训练项目') + '</div></div><div class="learn-course-info"><div class="learn-course-title">' + escapeHtml(item.name || item.title || '训练项目') + '</div><div class="learn-course-meta">' + escapeHtml(item.subtitle || item.teacher || '伊娃东方舞') + ' · ' + (item.course_count || item.total_courses || 0) + ' 项安排</div>' + (statusText ? '<div class="learn-course-status">' + statusText + '</div>' : '<div class="learn-course-price">' + escapeHtml(item.priceText || '咨询') + '</div>') + '</div></section>';
+	    }
+	    function learningProgressMap(recentList){
+	      const buckets = {};
+	      (recentList || []).forEach(item => {
+	        const key = String(item.series_id || item.id || '');
+	        if (!key) return;
+	        const current = buckets[key] || { total: 0, count: 0 };
+	        current.total += progressPercent(item);
+	        current.count += 1;
+	        buckets[key] = current;
+	      });
+	      return Object.keys(buckets).reduce((map, key) => {
+	        map[key] = buckets[key].count ? Math.round(buckets[key].total / buckets[key].count) : 0;
+	        return map;
+	      }, {});
+	    }
+	    function ownedLearningCard(item, progressMap){
+	      const percent = progressMap[String(item.id)] || 0;
+	      const lessonCount = item.total_courses || item.course_count || item.lesson_count || 0;
+	      const action = percent > 0 ? '继续学习' : '开始学习';
+	      return '<section class="learn-course-card card owned-course-card" onclick="openDetail(' + item.id + ')"><div class="learn-thumb">' + imageHtml(item.cover_image, item.badge || '训练') + '<div class="thumb-badge">' + escapeHtml(item.badge || '训练项目') + '</div></div><div class="learn-course-info"><div class="recent-top"><div class="learn-course-title">' + escapeHtml(item.name || item.title || '训练项目') + '</div><div class="percent">' + percent + '%</div></div><div class="learn-course-meta">' + escapeHtml(item.subtitle || item.teacher || '伊娃东方舞') + ' · ' + lessonCount + ' 项内容</div><div class="progress-track"><div class="progress-fill" style="width:' + percent + '%"></div></div><div class="learn-course-status">' + action + '</div></div></section>';
+	    }
+    function recentLearningCard(item){
+      const percent = item.percent != null
+        ? Math.min(100, Math.max(0, Math.round(Number(item.percent) || 0)))
+        : (item.duration ? Math.min(100, Math.round((item.progress || 0) / item.duration * 100)) : 0);
+      return '<section class="recent-card card" onclick="openDetail(' + item.series_id + ')"><div class="recent-top"><div><div class="recent-title">' + escapeHtml(item.course_name || '训练记录') + '</div><div class="recent-meta">' + escapeHtml(item.series_name || '伊娃东方舞') + '</div></div><div class="percent">' + percent + '%</div></div><div class="progress-track"><div class="progress-fill" style="width:' + percent + '%"></div></div></section>';
+    }
+    function openOfficialHome(){
+      window.location.href = miniRuntimeConfig.officialWebsiteUrl || 'https://www.dongfangwuquan.com';
+    }
+    function renderHome(){
+      nav('伊娃东方舞·东方舞圈');
+      setTab('tabHome');
+      const online = series.filter(isOnlineSeries);
+      const dances = series.filter(isDanceSeries);
+      const officialOffline = (window.platformOfflineCourses || []).length ? window.platformOfflineCourses : series.filter(isOfficialOfflineSeries);
+      const allCourses = uniqueById([...online, ...dances, ...officialOffline, ...series]);
+      const carouselCourses = pickCarouselCourses(online, officialOffline, dances, allCourses);
+      const courseRows = listHomeCourses(online, dances, officialOffline);
+      const courseAction = item => item.sourceType === 'offline' ? "alert('具体排课和报名请联系伊娃确认。')" : 'openDetail(' + item.id + ')';
+      const slideHtml = carouselCourses.map(item => '<section class="hero-slide-card" onclick="' + courseAction(item) + '">' + imageHtml(item.cover_image, '训练') + '<div class="slide-shade"></div><div class="slide-content"><div class="slide-badge">' + escapeHtml(item.badge) + '</div><div class="slide-title">' + escapeHtml(item.title) + '</div><div class="slide-meta">' + escapeHtml(item.lessonText) + ' · ' + escapeHtml(item.popularityText) + '</div></div></section>').join('');
+      const rowHtml = courseRows.map(item => '<section class="home-course-row" onclick="' + courseAction(item) + '"><div class="row-cover">' + imageHtml(item.cover_image, '训练') + '</div><div class="row-body"><div class="row-badge">' + escapeHtml(item.badge) + '</div><div class="row-title">' + escapeHtml(item.title) + '</div><div class="row-meta"><span>' + escapeHtml(item.lessonText) + '</span><span>' + escapeHtml(item.popularityText) + '</span></div></div></section>').join('');
+      setContent('<div class="home-section-head"><div><span class="home-kicker">精选训练</span></div></div>' + (slideHtml ? '<section class="course-carousel">' + slideHtml + '</section>' : '<section class="empty card">暂无轮播训练</section>') + '<div class="home-section-head home-list-head"><div><span class="home-kicker">训练列表</span></div><button class="all-courses-btn" onclick="renderSystem()">全部训练</button></div>' + (rowHtml ? '<section class="home-course-list">' + rowHtml + '</section>' : '<section class="empty card">暂无训练数据</section>') + '<button class="bottom-all-courses-btn" onclick="renderSystem()">查看全部训练</button>');
+    }
+    function renderSystem(){
+      nav('系统学习 · 成品舞', true);
+      setContent('<h2>全部训练</h2>' + (series.map(card).join('') || '<section class="empty card">暂无训练数据</section>'));
+    }
+    function renderPractice(){
+      nav('今日必练');
+      setTab('tabPractice');
+      const lessons = recentCourses.slice(0, 10);
+      const next = lessons[0] || null;
+      const done = lessons.filter(function(item){ return item.completed; }).length;
+      const recommended = practiceRecommendations();
+      var todayPlan = null;
+      if (next) {
+        todayPlan = {
+          title: next.course_name || next.series_name,
+          focus: '继续练习',
+          minutes: next && next.duration ? Math.max(1, Math.round((next.duration - (next.progress || 0)) / 60)) : 0,
+          desc: next.last_video_name || next.series_name || '',
+          steps: [next.series_name, next && next.percent !== undefined ? '已完成 ' + next.percent + '%' : ''].filter(Boolean),
+          seriesId: next.series_id
+        };
+      }
+      var weekDays = ['一','二','三','四','五','六','日'].map(function(day,i){ return { day: day, label: i < 5 ? '训练' : '复习', done: i === 3 }; });
+      var heroHtml = '<section class="practice-hero"><div class="practice-label">' + (todayPlan ? '继续练习' : '今日待完成') + '</div><div class="practice-hero-title">今日必练</div><div class="practice-hero-desc">每天一张训练卡，只做该做的动作。它是练习任务，不是普通货架。</div><div class="practice-stats"><div class="practice-stat"><span class="practice-stat-val">' + (todayPlan ? todayPlan.minutes : 0) + '</span><span class="practice-stat-lbl">分钟</span></div><div class="practice-stat"><span class="practice-stat-val">' + (done || 0) + '</span><span class="practice-stat-lbl">累计打卡</span></div></div></section>';
+      var todayCardHtml = '';
+      if (todayPlan) {
+        todayCardHtml = '<div class="practice-section-head"><span>今日训练卡</span><small>' + todayPlan.focus + '</small></div><section class="practice-card"><div class="practice-ring"><span class="practice-ring-min">' + todayPlan.minutes + '</span><span class="practice-ring-unit">min</span></div><div class="practice-main"><div class="practice-tag">' + todayPlan.focus + '</div><div class="practice-title-lg">' + escapeHtml(todayPlan.title) + '</div><div class="practice-desc">' + escapeHtml(todayPlan.desc) + '</div><div class="practice-steps">' + todayPlan.steps.map(function(s){ return '<span class="practice-step">' + escapeHtml(s) + '</span>'; }).join('') + '</div><div class="practice-actions"><button class="primary-btn" onclick="openDetail(' + todayPlan.seriesId + ')">开始练习</button><button class="ghost-btn">打卡</button></div></div></section>';
+      } else {
+        todayCardHtml = '<section class="assist-card card"><div><div class="assist-title">暂无今日训练任务</div><div class="assist-desc">登录后可根据训练记录生成继续练习入口。</div></div><div class="assist-action" onclick="renderLogin()">去选课</div></section>';
+      }
+      var weekHtml = '<div class="practice-section-head"><span>本周节奏</span><small>轻量坚持</small></div><section class="week-card card">' + weekDays.map(function(w){
+        return '<div class="week-item"><div class="week-dot' + (w.done ? ' done' : '') + '">' + (w.done ? '✓' : w.day) + '</div><div class="week-label">' + w.label + '</div></div>';
+      }).join('') + '</section>';
+      var recentHtml = '';
+      if (next) {
+        recentHtml = '<div class="practice-section-head"><span>继续练习</span><small>上次进度</small></div><section class="assist-card card" onclick="openDetail(' + next.series_id + ')"><div><div class="assist-title">继续上次练习</div><div class="assist-desc">' + escapeHtml(next.course_name || next.series_name) + ' · ' + progressPercent(next) + '%</div></div><div class="assist-action">续播</div></section>';
+      } else {
+        recentHtml = '<div class="practice-section-head"><span>继续练习</span><small>上次进度</small></div><section class="assist-card card"><div><div class="assist-title">暂无训练记录</div><div class="assist-desc">完成今日训练后，这里会显示你的进度。</div></div></section>';
+      }
+      var recommendHtml = '<div class="practice-section-head"><span>推荐训练</span><small>' + recommended.hint + '</small></div>';
+      if (recommended.items.length) {
+        recommendHtml += '<section class="recommend-list">' + recommended.items.map(function(item){
+          return '<div class="recommend-card card" onclick="openDetail(' + item.id + ')"><div class="recommend-cover">' + imageHtml(item.cover_image, item.badge === '成品舞' ? '舞' : item.badge === '线下课' ? '训' : '课') + '</div><div class="recommend-main"><div class="recommend-topline"><span class="recommend-badge">' + item.badge + '</span><span class="recommend-price">' + (item.badge === '线下课' ? '咨询报名' : item.priceText) + '</span></div><div class="recommend-title">' + item.title + '</div><div class="recommend-meta">' + item.meta + '</div></div></div>';
+        }).join('') + '</section>';
+      } else {
+        recommendHtml += '<section class="assist-card card"><div><div class="assist-title">暂无后台推荐</div><div class="assist-desc">推荐项目会从已上架训练和训练记录中实时生成。</div></div></section>';
+      }
+      setContent(heroHtml + todayCardHtml + weekHtml + recentHtml + recommendHtml);
+    }
+	    function renderCourses(){
+	      nav('练习资料');
+	      setTab('tabCourses');
+	      const recent = (recentCourses || []).map(item => ({
+	        ...item,
+	        percent: item.duration ? Math.min(100, Math.round((item.progress || 0) / item.duration * 100)) : 0
+	      }));
+	      const visible = miniRuntimeConfig.reviewMode ? series.filter(item => item.category !== hiddenOnlineCategory) : series;
+	      const progressMap = learningProgressMap(recent);
+	      const ownedCourses = (authorized || []).map(normalizeLearningCourse);
+	      const ownedHtml = ownedCourses.length
+	        ? ownedCourses.map(item => ownedLearningCard(item, progressMap)).join('')
+	        : '<section class="empty card">当前账号暂无授权课程，请联系伊娃开通训练内容。</section>';
+	      const recommended = buildCourseRecommendations(visible, window.platformOfflineCourses || [], authorized, recent);
+	      const recommendHtml = recommended.length
+	        ? '<section class="recommend-list">' + recommended.map(item => {
+	          const action = item.sourceType === 'offline' ? "alert('具体排课和报名请联系伊娃确认。')" : 'openDetail(' + item.id + ')';
+	          return '<div class="recommend-card card" onclick="' + action + '"><div class="recommend-cover">' + imageHtml(item.cover_image, item.badge === '成品舞' ? '舞' : item.sourceType === 'offline' ? '训' : '课') + '</div><div class="recommend-main"><div class="recommend-topline"><span class="recommend-badge">' + escapeHtml(item.badge) + '</span><span class="recommend-price">' + (item.sourceType === 'offline' ? '咨询安排' : '查看训练') + '</span></div><div class="recommend-title">' + escapeHtml(item.title || item.name || '训练项目') + '</div><div class="recommend-meta">' + escapeHtml(item.meta || item.subtitle || item.category || '伊娃东方舞') + '</div></div></div>';
+	        }).join('') + '</section>'
+	        : '<section class="empty card">暂无可推荐训练。</section>';
+	      setContent('<section class="learning-section">' + ownedHtml + '</section><section class="learning-section"><div class="learning-section-title"><span>推荐训练</span></div>' + recommendHtml + '</section>');
+	    }
+    function switchCoursesPanel(panel){
+      coursesPanel = panel;
+      renderCourses();
+    }
+    window.switchCoursesPanel = switchCoursesPanel;
+    async function openDetail(id){
+      current = series.find(item => String(item.id) === String(id)) || {};
+      let courses = [];
+      if (location.protocol !== 'file:') {
+        try {
+          const detail = await api('/public/series/' + id + '/detail');
+          const loadedCourses = await api('/public/series/' + id + '/courses');
+          current = detail || current;
+          courses = loadedCourses || [];
+        } catch (error) {}
+      }
+      nav('训练详情', true);
+      const lessonHtml = courses.map((item, index) => '<section class="lesson card"><span class="num">' + (index + 1) + '</span><div class="lesson-info"><b>' + (item.name || '课节') + '</b><p class="muted">' + (Math.round((item.duration || 0) / 60) || '待更新') + ' 分钟 · ' + ((item.videos || []).length || item.video_count || 0) + ' 个素材</p></div><span class="todo-text">' + ((item.videos || []).length ? '可查看' : '整理中') + '</span></section>').join('');
+      setContent('<section class="detail-card card"><div class="detail-cover">' + imageHtml(current.cover_image, current.category || '伊娃东方舞') + '</div><div class="detail-info"><h2>' + (current.name || '训练详情') + '</h2><p class="muted">' + (current.subtitle || current.teacher || '') + '</p><p class="muted">' + popularityText(current) + '</p><div class="row"><span>' + (current.total_courses || courses.length || 0) + ' 节</span><span class="price">' + (current.is_free ? '免费' : formatPrice(current.promo_price || current.price || 0)) + '</span></div></div></section><div class="tabs"><button class="active">介绍</button><button>训练安排</button></div><section class="detail-desc card"><b>训练介绍</b>' + (current.description || '后台暂未填写训练介绍。') + '<span class="source-note">' + (current.source_name || '后台数据库') + '</span></section><h2>训练安排 · ' + courses.length + '节</h2>' + (lessonHtml || '<section class="empty card">后台暂无已上架课节</section>'));
+    }
+    async function renderProfile(){
+      nav('我的');
+      setTab('tabProfile');
+      if (simulatedMember?.phone && !profileData?.member) {
+        profileData = await api('/member/profile?phone=' + encodeURIComponent(simulatedMember.phone)).catch(() => null);
+      }
+      const profile = profileData;
+      const member = profile?.member || simulatedMember || { name: miniRuntimeConfig.memberName || '未登录', phone: '手机号登录后同步授权学习' };
+      const isSynced = !!profile?.member;
+      const isLoggedIn = !!(simulatedMember || profile?.member || miniRuntimeConfig.memberId);
+      const stats = profile?.stats || { authorized_count: isLoggedIn ? authorized.length : 0, learning_count: isLoggedIn ? recentCourses.length : 0, completed_count: 0, completion_rate: 0, order_count: 0, paid_amount: 0 };
+      const recent = profile?.recent_progress || [];
+      const commission = profile?.commission_summary || { available_amount: 0 };
+      const certificates = Array.isArray(profile?.certificates) ? profile.certificates : [];
+      let adminStatus = null;
+      if (location.protocol !== 'file:' && miniRuntimeConfig.memberId) {
+        try { adminStatus = await api('/admin/status?member_id=' + miniRuntimeConfig.memberId); } catch (error) {}
+      }
+      const adminEntry = adminStatus?.is_admin ? '<div onclick="renderAdmin()"><b>小程序管理</b><span>' + (adminStatus.admin?.role || '管理员') + ' · 管理/编辑/授权</span></div>' : '';
+      const displayName = member.wx_nickname || member.name || '未登录';
+      const displayPhone = member.phone || (isLoggedIn ? '已登录' : '手机号登录后同步授权学习');
+      const levelText = formatMemberLevel(member.level);
+      const avatarHtml = member.wx_avatar_url || member.avatar_url ? '<img src="' + escapeHtml(member.wx_avatar_url || member.avatar_url) + '" alt="">' : escapeHtml(displayName.slice(0, 1) || '伊');
+      const certificateHtml = certificates.length ? '<section class="certificate-list card">' + certificates.map(cert => '<div class="certificate-item"><div><div class="certificate-title">' + escapeHtml(cert.courseName || cert.course_name || cert.name || '结业证书') + '</div><div class="certificate-sub">' + escapeHtml(formatDate(cert.issueDate || cert.issue_date)) + ' · ' + escapeHtml(cert.certificateNo || cert.certificate_no || '') + '</div></div><span class="menu-value">查看</span></div>').join('') + '</section>' : '<section class="certificate-empty card">暂无证书</section>';
+      const profileActions = isLoggedIn ? '<div class="profile-actions"><button class="profile-bind-btn" onclick="bindWechatPreview()">绑定微信</button><button class="profile-logout-btn" data-action="logout">退出</button></div>' : '<button class="profile-auth-btn" data-action="login">登录</button>';
+      setContent('<section class="profile-head"><div class="avatar">' + avatarHtml + '</div><div class="profile-main"><div class="profile-name">' + escapeHtml(displayName) + '</div><div class="profile-phone">' + escapeHtml(displayPhone) + '</div></div>' + profileActions + '</section><section class="stats card"><div><b>' + escapeHtml(levelText) + '</b><span>学员等级</span></div><div><b>' + (stats.authorized_count || 0) + '</b><span>关注训练</span></div><div><b>' + (stats.learning_count || 0) + '</b><span>练习记录</span></div><div><b>' + (stats.completion_rate || 0) + '%</b><span>完成率</span></div></section>' + (recent.length ? '<div class="section-title">最近练习</div><section class="menu card">' + recent.slice(0, 4).map(item => '<div><b>' + (item.series_name || item.course_name || '练习') + '</b><span>' + (item.completed ? '已完成' : '练习中') + '</span></div>').join('') + '</section>' : '') + '<section class="menu card">' + '<div id="profileEdit"><b>个人资料</b><span>编辑 ›</span></div>' + '<div id="certificatesPage"><b>我的证书</b><span>' + (certificates.length || 0) + ' 张 ›</span></div>' + adminEntry + '<div><b>字体设置</b><span>标准</span></div><div><b>我的分销</b><span>邀请好友</span></div><div><b>笔记</b><span>' + (stats.order_count || 0) + ' 笔</span></div><button data-action="wechat-service"><b>联系客服</b><span>微信客服</span></button></section>');
+    }
+    function renderLogin(){
+      nav('手机号登录', true);
+      document.querySelectorAll('.tabbar button').forEach(b => b.classList.remove('active'));
+      setContent('<section class="login-container"><div><div class="logo-section"><img class="login-logo" src="/images/logo.png" alt="伊娃东方舞"><div class="login-title">伊娃东方舞</div><div class="login-subtitle">舞者成长系统</div></div><div class="form-section"><button class="login-btn" style="background:#1aad19" data-action="phone-auth-login">手机一键登陆</button></div></div><button class="back-login" data-action="profile">返回个人中心</button></section>');
+    }
+    async function loginPreviewByPhoneAuth(){
+      const phone = '13900000000';
+      simulatedMember = { id: 999, name: '伊娃学员', phone };
+      localStorage.setItem('evaMiniPreviewMember', JSON.stringify(simulatedMember));
+      profileData = await api('/member/profile?phone=' + encodeURIComponent(phone)).catch(() => null);
+      renderProfile();
+    }
+    function logoutPreview(){
+      simulatedMember = null;
+      localStorage.removeItem('evaMiniPreviewMember');
+      renderProfile();
+    }
+    function bindWechatPreview(){
+      if (!simulatedMember && !profileData?.member && !miniRuntimeConfig.memberId) {
+        renderLogin();
+        return;
+      }
+      const member = profileData?.member || simulatedMember || { id: miniRuntimeConfig.memberId || 999, phone: '13900000000' };
+      const synced = Object.assign({}, member, {
+        name: member.name || '伊娃学员',
+        wx_nickname: '微信学员',
+        wx_avatar_url: '/images/logo.png',
+        wx_profile_synced_at: new Date().toISOString()
+      });
+      simulatedMember = Object.assign({}, simulatedMember || {}, synced);
+      localStorage.setItem('evaMiniPreviewMember', JSON.stringify(simulatedMember));
+      profileData = Object.assign({}, profileData || {}, { member: synced });
+      history.replaceState(null, '', '#profile');
+      renderProfile();
+    }
+    function openWechatServicePreview(){
+      alert('预览模式：这里会唤起微信客服系统。');
+    }
+    async function renderAdmin(){
+      nav('小程序管理', true);
+      let cfg = miniConfig;
+      try { cfg = await api('/admin/miniprogram-config'); } catch (error) {}
+      const s = cfg?.stats || {};
+      const list = cfg?.system?.all || series;
+      setContent('<section class="hero"><div><small>管理员</small><h1>小程序管理台</h1><p>所有统计和训练列表均来自后台数据库。</p></div></section><section class="stats card"><div><b>' + (s.published_series || 0) + '</b><span>上架训练</span></div><div><b>' + (s.authorizations || 0) + '</b><span>授权</span></div><div><b>' + (s.orders || 0) + '</b><span>订单</span></div><div><b>' + formatCompactMoney(s.paid_revenue || 0) + '</b><span>收入</span></div></section><h2>训练管理</h2>' + (list.slice(0, 12).map(item => '<section class="series card"><div class="cover">' + imageHtml(item.cover_image, item.category || '训练') + '</div><div class="info"><b>' + item.name + '</b><p class="muted">' + (item.category || '未分类') + ' · ' + (item.status || 'published') + '</p></div></section>').join('') || '<section class="empty card">暂无后台训练</section>'));
+    }
+    function renderCertificatesPage(){
+      nav('我的证书', true);
+      const certificates = Array.isArray(profileData?.certificates) ? profileData.certificates : [];
+      if (!certificates.length) {
+        setContent('<section class="empty card" style="padding:60px 20px;text-align:center"><div style="font-size:60px;margin-bottom:10px">📜</div><div style="font-size:16px;font-weight:900;color:#202124">暂无证书</div><div style="margin-top:8px;color:#8c8172;font-size:13px">完成学习后可获得对应课程证书</div></section>');
+        return;
+      }
+      const html = certificates.map(cert => {
+        const name = cert.courseName || cert.course_name || cert.name || '结业证书';
+        const date = String(cert.issueDate || cert.issue_date || '').slice(0,10) || '待登记日期';
+        const no = cert.certificateNo || cert.certificate_no || cert.certNo || '';
+        return '<div class="certificate-item" style="display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid #f1f1f1"><div style="flex:0 0 auto;width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#fef3e6,#fae4ce);display:grid;place-items:center;font-size:24px">🏆</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:900;color:#202124">' + escapeHtml(name) + '</div><div style="margin-top:4px;color:#8c8172;font-size:12px">' + escapeHtml(date) + ' · ' + escapeHtml(no) + '</div></div><span style="flex:0 0 auto;padding:4px 14px;border-radius:999px;color:#ff5b45;background:#fff2ef;font-size:12px;font-weight:800">查看</span></div>';
+      }).join('');
+      setContent('<section class="card" style="overflow:hidden">' + html + '</section>');
+    }
+
+    function renderProfileEdit(){
+      nav('个人资料', true);
+      const member = profileData?.member || simulatedMember || { name: '未登录', phone: '' };
+      const displayName = member.name || '伊娃学员';
+      const map = { male:'男', female:'女' };
+      const genderText = map[member.gender] || member.gender || '未设置';
+      const levelText = formatMemberLevel(member.level);
+      const avatarHtml = member.wx_avatar_url || member.avatar_url ? '<img src="' + escapeHtml(member.wx_avatar_url || member.avatar_url) + '" style="width:60px;height:60px;border-radius:10px;object-fit:cover">' : '<div style="width:60px;height:60px;border-radius:10px;background:#ff5b45;color:#fff;display:grid;place-items:center;font-size:24px;font-weight:900">' + (displayName.slice(0,1) || '伊') + '</div>';
+      const fields = [
+        { label:'学员等级', value:levelText, readonly:true },
+        { label:'姓名', value:displayName },
+        { label:'手机号', value:member.phone || '' },
+        { label:'性别', value:genderText },
+        { label:'生日', value:member.birthday || '' },
+        { label:'省份', value:member.province || '' },
+        { label:'城市', value:member.city || '' },
+        { label:'注册日期', value:(member.created_at || member.registeredAt || '').slice(0,10) || '未记录', readonly:true }
+      ];
+      const formHtml = fields.map(f => {
+        const valClass = f.readonly ? 'color:#8c8172' : 'color:#3e4652';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;min-height:56px;padding:0 20px;border-bottom:1px solid #f0e6da"><span style="flex:0 0 110px;font-size:14px;font-weight:800;color:#202124">' + f.label + '</span><span style="font-size:14px;text-align:right;' + valClass + '">' + (f.value || '') + '</span></div>';
+      }).join('');
+      const avatarRow = '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px"><span style="font-size:14px;font-weight:800;color:#202124">头像</span>' + avatarHtml + '</div>';
+      setContent('<section class="card">' + avatarRow + '</section><section class="card" style="margin-top:10px;overflow:hidden">' + formHtml + '</section><div style="text-align:center;padding:16px;color:#8c8172;font-size:12px">修改后点击其他地方即可自动保存</div>');
+    }
+
+    function goHome(){ renderHome(); }
+    window.addEventListener('hashchange', routeFromHash);
+    document.addEventListener('click', event => {
+      const target = event.target.closest('button');
+      if (!target) return;
+      const action = target.dataset.action || target.id;
+      const handlers = {
+        tabHome: renderHome,
+        tabPractice: renderPractice,
+        tabCourses: renderCourses,
+        tabProfile: renderProfile,
+        profileEdit: renderProfileEdit,
+        certificatesPage: renderCertificatesPage,
+        login: renderLogin,
+        logout: logoutPreview,
+        profile: renderProfile,
+        'bind-wechat': bindWechatPreview,
+        'wechat-service': openWechatServicePreview,
+        'official-home': openOfficialHome,
+        'phone-auth-login': loginPreviewByPhoneAuth,
+
+        'courses-recent': () => switchCoursesPanel('recent'),
+        'courses-all': () => switchCoursesPanel('all')
+      };
+      if (handlers[action]) {
+        event.preventDefault();
+        handlers[action]();
+      }
+    });
+    load();
+  </script>
+</body>
+</html>

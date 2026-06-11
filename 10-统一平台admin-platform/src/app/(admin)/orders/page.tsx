@@ -3,25 +3,29 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button, Card, Col, DatePicker, Empty, Input, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Typography } from 'antd';
 import { DownloadOutlined, ReloadOutlined, SearchOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { platformAdapter } from '@/lib/adapters/platform';
+import { formatCompactMoney, formatPaymentAmount } from '@/lib/money-format';
+import { sortableColumns } from '@/lib/table-sort';
 import type { UnifiedOrder } from '@/types/domain';
 
 const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
 
 function money(value: number) {
-  return `¥${Number(value || 0).toLocaleString()}`;
+  return formatPaymentAmount(value);
 }
 
 function orderTypeLabel(value: string) {
   const map: Record<string, string> = {
+    online_course: '线上课程',
     course: '线上课程',
+    lizhi: '荔枝微课',
+    'offline-training': '线下课程',
     live: '直播',
     training: '线下培训',
-    masterclass: '大师课',
     event: '活动',
     competition: '赛事',
     shop: '电商商品',
-    membership: '会员',
+    membership: '学员',
     finance: '财务订单',
   };
   return map[value] || value || '-';
@@ -75,14 +79,14 @@ export default function OrdersPage() {
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={6}><Card><Statistic title="全部订单" value={orders.length} prefix={<ShoppingCartOutlined />} /></Card></Col>
-        <Col xs={24} md={6}><Card><Statistic title="订单总额" value={totalAmount} prefix="¥" valueStyle={{ color: '#F72A8A' }} /></Card></Col>
+        <Col xs={24} md={6}><Card><Statistic title="订单总额" value={formatCompactMoney(totalAmount)} valueStyle={{ color: '#F72A8A' }} /></Card></Col>
         <Col xs={24} md={6}><Card><Statistic title="已完成" value={orders.filter(item => ['paid', 'completed'].includes(item.status)).length} valueStyle={{ color: '#22C55E' }} /></Card></Col>
         <Col xs={24} md={6}><Card><Statistic title="待处理" value={orders.filter(item => item.status === 'pending').length} valueStyle={{ color: '#F59E0B' }} /></Card></Col>
       </Row>
 
       <Card style={{ marginBottom: 16 }}>
         <Row gutter={[12, 12]} align="middle">
-          <Col xs={24} lg={8}><Input prefix={<SearchOutlined />} placeholder="搜索订单号、会员、手机号、内容" value={keyword} onChange={event => setKeyword(event.target.value)} allowClear /></Col>
+          <Col xs={24} lg={8}><Input prefix={<SearchOutlined />} placeholder="搜索订单号、学员、手机号、内容" value={keyword} onChange={event => setKeyword(event.target.value)} allowClear /></Col>
           <Col xs={24} md={6}><Select value={type} onChange={setType} style={{ width: '100%' }} options={types.map(item => ({ value: item, label: item === 'all' ? '全部类型' : orderTypeLabel(item) }))} /></Col>
           <Col xs={24} md={6}><RangePicker style={{ width: '100%' }} /></Col>
           <Col xs={24} md={4} style={{ textAlign: 'right' }}><Space><Button icon={<ReloadOutlined />} onClick={load}>刷新</Button><Button icon={<DownloadOutlined />}>导出</Button></Space></Col>
@@ -101,17 +105,17 @@ export default function OrdersPage() {
         ]}
       />
 
-      <Card bodyStyle={{ padding: 0 }}>
+      <Card styles={{ body: { padding: 0 } }}>
         <Table
           rowKey="id"
           size="middle"
           dataSource={filtered}
           scroll={{ x: 1100 }}
-          pagination={{ pageSize: 15, showSizeChanger: true, showTotal: total => `共 ${total} 条订单` }}
+          pagination={{ pageSize: 20, showSizeChanger: true, showTotal: total => `共 ${total} 条订单` }}
           locale={{ emptyText: <Empty description="暂无订单数据" /> }}
-          columns={[
+          columns={sortableColumns<UnifiedOrder>([
             { title: '订单号', dataIndex: 'orderNo', fixed: 'left', width: 170, render: value => <Text strong>{value}</Text> },
-            { title: '会员', dataIndex: 'memberName', width: 130 },
+            { title: '学员', dataIndex: 'memberName', width: 130 },
             { title: '手机号', dataIndex: 'memberPhone', width: 130 },
             { title: '类型', dataIndex: 'orderType', width: 120, render: value => <Tag color="magenta">{orderTypeLabel(value)}</Tag> },
             { title: '内容', dataIndex: 'title', ellipsis: true, width: 240 },
@@ -119,7 +123,7 @@ export default function OrdersPage() {
             { title: '状态', dataIndex: 'status', width: 110, render: value => <Tag color={statusColor(value)}>{value}</Tag> },
             { title: '来源', dataIndex: 'sourceType', width: 140 },
             { title: '日期', dataIndex: 'orderDate', width: 120 },
-          ]}
+          ])}
         />
       </Card>
     </div>

@@ -1,0 +1,210 @@
+.player-page {
+  min-height: 100vh;
+  background: #f5f2ec;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 422rpx;
+  background: #000;
+  overflow: hidden;
+}
+
+.video {
+  width: 100%;
+  height: 422rpx;
+  display: block;
+  background: #000;
+  object-fit: contain;
+}
+
+.video-menu-trigger {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  width: 64rpx;
+  height: 64rpx;
+  padding: 0;
+  border: none;
+  border-radius: 32rpx;
+  background: rgba(0, 0, 0, 0.56);
+  color: #fff;
+  font-size: 32rpx;
+  line-height: 56rpx;
+  text-align: center;
+  z-index: 14;
+}
+
+.video-menu-trigger::after {
+  border: none;
+}
+
+.player-menu-backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 11;
+}
+
+.player-menu {
+  position: absolute;
+  top: 96rpx;
+  right: 20rpx;
+  width: 360rpx;
+  max-width: calc(100% - 40rpx);
+  padding: 22rpx;
+  border-radius: 12rpx;
+  background: rgba(18, 18, 18, 0.92);
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.32);
+  z-index: 13;
+}
+
+.player-menu-section + .player-menu-section {
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.16);
+}
+
+.player-menu-title {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 24rpx;
+  margin-bottom: 14rpx;
+}
+
+.player-menu-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.player-menu-option {
+  min-width: 88rpx;
+  padding: 12rpx 16rpx;
+  border-radius: 8rpx;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 24rpx;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.player-menu-option.active {
+  background: #8B1A1A;
+}
+
+/* 断点续播覆盖层 */
+.resume-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.resume-card {
+  background: white;
+  border-radius: 16rpx;
+  padding: 40rpx;
+  text-align: center;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2);
+}
+
+.resume-card text {
+  font-size: 28rpx;
+  color: #666;
+  display: block;
+  margin-bottom: 24rpx;
+}
+
+.resume-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.resume-btn, .restart-btn {
+  flex: 1;
+  padding: 16rpx 24rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+}
+
+.resume-btn {
+  background: #8B1A1A;
+  color: white;
+}
+
+.restart-btn {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* 训练目录 */
+.outline {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  background: white;
+}
+
+.outline-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.outline-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  justify-content: space-between;
+  padding: 20rpx 16rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+  font-size: 28rpx;
+}
+
+.outline-item.current {
+  background: #fff8f5;
+}
+
+.outline-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.outline-name {
+  display: block;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outline-status {
+  color: #999;
+  font-size: 24rpx;
+  flex-shrink: 0;
+  min-width: 92rpx;
+  text-align: right;
+}
+
+.outline-item.current .outline-status {
+  color: #8B1A1A;
+}
+
+.cast-note {
+  text-align: center;
+  color: #999;
+  font-size: 24rpx;
+  padding: 20rpx 0;
+}

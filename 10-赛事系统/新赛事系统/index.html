@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AiwaRaks赛事管理平台</title>
+    <link rel="stylesheet" href="./styles.css?v=20260605-create-2" />
+  </head>
+  <body>
+    <div id="login-overlay" class="login-overlay" role="dialog" aria-modal="true" aria-labelledby="login-title">
+      <form id="login-form" class="login-card">
+        <div class="login-brand">
+          <span class="brand-mark">赛</span>
+          <div>
+            <h1 id="login-title">管理员登录</h1>
+            <p>AiwaRaks赛事管理平台</p>
+          </div>
+        </div>
+        <label class="login-field">
+          <span>用户名</span>
+          <input id="login-username" type="text" autocomplete="username" placeholder="请输入用户名" />
+        </label>
+        <label class="login-field">
+          <span>密码</span>
+          <input id="login-password" type="password" autocomplete="current-password" placeholder="请输入密码" />
+        </label>
+        <p id="login-error" class="login-error" hidden></p>
+        <button id="login-submit" class="login-submit" type="submit">登录</button>
+      </form>
+    </div>
+
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">赛</span>
+        <div>
+          <strong>AiwaRaks赛事管理平台</strong>
+          <small>赛事 · 学员 · 课程 · 会员</small>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-item active" data-view="dashboard">总览</button>
+        <button class="nav-item" data-view="competitions">赛事</button>
+        <button class="nav-item" data-view="players">报名记录</button>
+        <button class="nav-item" data-view="music">音乐审核</button>
+        <button class="nav-item" data-view="scoring">评分记录</button>
+        <button class="nav-item" data-view="judges">评委</button>
+        <button class="nav-item" data-view="certfinance">证书财务</button>
+        <button class="nav-item" data-view="roadmap">路线图</button>
+      </nav>
+      <div class="source-box">
+        <span>数据源</span>
+        <strong id="source-count">读取中</strong>
+      </div>
+      <div class="admin-user sidebar-admin-user">
+        <span class="avatar">A</span>
+        <strong>超级管理员</strong>
+      </div>
+      <button class="logout-button" type="button" onclick="logout()">退出登录</button>
+    </aside>
+
+    <main class="shell">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-button" type="button" aria-label="菜单">☰</button>
+          <div>
+            <h1 id="view-title">数据看板</h1>
+            <p id="view-subtitle">AiwaRaks赛事、学员、课程、会员与商业转化的一体化运营中枢。</p>
+          </div>
+        </div>
+        <div class="actions">
+          <label class="search">
+            <input id="search-input" type="search" placeholder="赛事、选手、手机号、评委" />
+          </label>
+          <button id="create-competition" class="primary" type="button" data-open-create-competition>新建赛事</button>
+          <a class="primary link-button" href="./mobile.html">手机端</a>
+          <a class="primary link-button" href="./bigscreen.html">大屏展示</a>
+          <button id="export-json" class="primary">导出快照</button>
+        </div>
+      </header>
+
+      <section id="dashboard" class="view active">
+        <div class="metrics" id="metrics"></div>
+        <div class="dashboard-grid">
+          <section class="panel today-panel">
+            <div class="section-title">
+              <h2>今日赛事</h2>
+              <a href="#competitions" data-jump="competitions">查看更多</a>
+            </div>
+            <div class="table-wrap compact-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>赛事名称</th>
+                    <th>比赛时间</th>
+                    <th>地点</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="today-event-rows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="panel trend-panel">
+            <div class="section-title">
+              <h2>报名趋势（近7天）</h2>
+              <select id="competition-filter"></select>
+            </div>
+            <div id="signup-trend" class="line-chart"></div>
+          </section>
+          <section class="panel">
+            <div class="section-title"><h2>赛事状态分布</h2></div>
+            <div id="event-status-chart" class="donut-block"></div>
+          </section>
+          <section class="panel">
+            <div class="section-title"><h2>报名渠道分布</h2></div>
+            <div id="signup-channel-chart" class="donut-block"></div>
+          </section>
+          <section class="panel todo-panel">
+            <div class="section-title"><h2>待办事项</h2></div>
+            <div id="todo-list" class="todo-list"></div>
+          </section>
+          <section class="panel latest-panel">
+            <div class="section-title"><h2>最新报名</h2></div>
+            <div class="table-wrap compact-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>选手姓名</th>
+                    <th>赛事名称</th>
+                    <th>组别</th>
+                    <th>报名时间</th>
+                    <th>支付状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="latest-player-rows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="panel notice-panel">
+            <div class="section-title">
+              <h2>系统公告</h2>
+              <a href="#audit" data-jump="audit">查看更多</a>
+            </div>
+            <div id="notice-list" class="notice-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="competitions" class="view">
+        <div id="competition-workspace" class="competition-workspace"></div>
+        <div id="competition-list-wrap" class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>赛事</th>
+                <th>时间</th>
+                <th>报名</th>
+                <th>组别</th>
+                <th>选手</th>
+                <th>评委</th>
+                <th>评分记录</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="competition-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="players" class="view">
+        <div class="table-wrap player-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>编号</th>
+                <th>选手/节目</th>
+                <th>赛事</th>
+                <th>组别</th>
+                <th>机构/老师</th>
+                <th>支付</th>
+                <th>得分</th>
+              </tr>
+            </thead>
+            <tbody id="player-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="music" class="view">
+        <div class="score-board">
+          <div>
+            <h2>音乐文件审核</h2>
+            <p>从报名表中独立出音乐审核工作台，提前发现未上传、缺少时长、文件异常，减少现场临时风险。</p>
+          </div>
+          <div id="music-summary"></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>选手/节目</th>
+                <th>赛事</th>
+                <th>组别</th>
+                <th>音乐文件</th>
+                <th>时长</th>
+                <th>审核状态</th>
+              </tr>
+            </thead>
+            <tbody id="music-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="judges" class="view">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>评委</th>
+                <th>手机</th>
+                <th>来源</th>
+                <th>参与赛事</th>
+                <th>评分数</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody id="judge-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="certfinance" class="view">
+        <div class="score-board">
+          <div>
+            <h2>证书 + 财务 + 数据看板</h2>
+            <p>把报名收入、成绩查看收入、获奖证书和机构/老师统计放到同一运营闭环里。</p>
+          </div>
+        </div>
+        <div class="metrics" id="certfinance-metrics"></div>
+        <div class="dashboard-grid">
+          <section class="panel latest-panel">
+            <div class="section-title"><h2>证书发放候选</h2></div>
+            <div class="table-wrap compact-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>选手</th>
+                    <th>赛事</th>
+                    <th>组别</th>
+                    <th>成绩</th>
+                    <th>证书状态</th>
+                  </tr>
+                </thead>
+                <tbody id="certificate-rows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="panel notice-panel">
+            <div class="section-title"><h2>收入构成</h2></div>
+            <div id="finance-breakdown" class="todo-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="scoring" class="view">
+        <div class="score-board">
+          <div>
+            <h2>评分记录</h2>
+            <p>评分系统是赛事生命线：授权、锁定、漏评提醒、异常预警、复核发布都必须围绕原始分、计算分、发布分留痕。</p>
+          </div>
+          <div id="score-summary"></div>
+        </div>
+        <div class="control-grid" id="scoring-controls"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>赛事</th>
+                <th>组别</th>
+                <th>选手</th>
+                <th>评委</th>
+                <th>评分记录</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody id="scoring-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="roadmap" class="view">
+        <div class="score-board">
+          <div>
+            <h2>AiwaRaks赛事运营中枢开发路线</h2>
+            <p>统一平台入口 + 赛事独立业务域 + 数据融合。目标不是赛事报名系统，而是赛事、学员、课程、会员和商业转化的一体化运营中枢。</p>
+          </div>
+        </div>
+        <div class="roadmap-layout">
+          <section class="roadmap-panel">
+            <h2>三层架构</h2>
+            <div id="architecture-layers" class="layer-list"></div>
+          </section>
+          <section class="roadmap-panel">
+            <h2>评分生命线</h2>
+            <div id="scoring-lifeline" class="lifeline-grid"></div>
+          </section>
+          <section class="roadmap-panel full">
+            <h2>六阶段实施路线</h2>
+            <div id="phase-roadmap" class="phase-grid"></div>
+          </section>
+        </div>
+      </section>
+
+    </main>
+
+    <script src="./public/legacy-data.js"></script>
+    <script src="./app.js?v=20260605-create-3"></script>
+    <script src="./login.js?v=20260605-auth-2"></script>
+  </body>
+</html>

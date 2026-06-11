@@ -1,30 +1,22 @@
 import api from '@/lib/api';
+import { pickArray, pickData } from '@/lib/data-shape';
 import { platformLinkMatrix, platformLinks } from '@/lib/platform-links';
 import type {
   Course,
+  DataAnalytics,
   DashboardData,
   EcommerceSummary,
   FinanceSummary,
   Member,
+  MemberProfile360,
   PermissionUser,
   PlatformSettings,
   Product,
   UnifiedOrder,
 } from '@/types/domain';
 
-function pickData<T>(payload: any, fallback: T): T {
-  if (payload && typeof payload === 'object' && 'data' in payload) return payload.data ?? fallback;
-  return payload ?? fallback;
-}
-
-function asArray<T = any>(payload: any): T[] {
-  const data = pickData<any>(payload, payload);
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.items)) return data.items;
-  if (Array.isArray(data?.rows)) return data.rows;
-  if (Array.isArray(data?.list)) return data.list;
-  if (Array.isArray(data?.products)) return data.products;
-  return [];
+function asArray<T = unknown>(payload: unknown): T[] {
+  return pickArray<T>(pickData(payload, payload));
 }
 
 function numberValue(value: unknown): number {
@@ -50,12 +42,32 @@ function normalizeStatus(status: unknown): string {
   return map[value] || value;
 }
 
+function monthKey(date?: string) {
+  const value = textValue(date, '');
+  return /^\d{4}-\d{2}/.test(value) ? value.slice(0, 7) : '';
+}
+
+function percentValue(value: number, total: number): number {
+  if (!total) return 0;
+  return Math.round((value / total) * 1000) / 10;
+}
+
+function groupCount<T>(rows: T[], getKey: (row: T) => string, fallback: string) {
+  const map = new Map<string, number>();
+  rows.forEach(row => {
+    const key = getKey(row) || fallback;
+    map.set(key, (map.get(key) || 0) + 1);
+  });
+  return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+}
+
 export function adaptMember(raw: any, index = 0): Member {
   return {
     id: textValue(raw?.id ?? raw?.memberId ?? index),
     name: textValue(raw?.name ?? raw?.memberName, '未知学员'),
     phone: textValue(raw?.phone ?? raw?.memberPhone, ''),
-    level: textValue(raw?.level ?? raw?.memberLevel, '普通会员'),
+    level: textValue(raw?.level ?? raw?.memberLevel, '普通学员'),
+    status: textValue(raw?.status, 'active'),
     city: textValue(raw?.city ?? raw?.province ?? raw?.foreignRegion, '-'),
     country: textValue(raw?.country, '中国'),
     registerDate: textValue(raw?.register_date ?? raw?.registerDate ?? raw?.created_at ?? raw?.createdAt, '-').slice(0, 10),
@@ -63,6 +75,7 @@ export function adaptMember(raw: any, index = 0): Member {
     courseCount: numberValue(raw?.courseCount ?? raw?.courses),
     growth: numberValue(raw?.growth ?? raw?.growthValue),
     lastActiveAt: textValue(raw?.updated_at ?? raw?.updatedAt ?? raw?.lastLogin ?? raw?.register_date, '-').slice(0, 16),
+    avatar: textValue(raw?.avatar ?? raw?.avatarUrl ?? raw?.avatar_url, ''),
     raw,
   };
 }
@@ -125,9 +138,9 @@ export function adaptOfflineCourse(raw: any, index = 0): Course {
 export function adaptOnlineCourse(raw: any, index = 0): Course {
   return {
     id: textValue(raw?.id ?? index),
-    name: textValue(raw?.name ?? raw?.title, '未命名专栏'),
+    name: textValue(raw?.name ?? raw?.title, '未命名课程'),
     type: 'online',
-    category: textValue(raw?.category, '线上专栏'),
+    category: textValue(raw?.category, '线上课程'),
     teacher: textValue(raw?.teacher, '-'),
     price: numberValue(raw?.price ?? raw?.promo_price),
     sessions: numberValue(raw?.total_courses ?? raw?.courseCount ?? raw?.lessonCount),
@@ -164,18 +177,38 @@ const permissionLabels: Record<string, string> = {
   permLogView: '查看日志',
 };
 
+const PERM_FIELDS = [
+  'permCourseView', 'permCourseCreate', 'permCourseEdit', 'permCourseDelete',
+  'permMemberView', 'permMemberCreate', 'permMemberEdit', 'permMemberDelete',
+  'permTeacherView', 'permTeacherCreate', 'permTeacherEdit', 'permTeacherDelete',
+  'permPaymentView', 'permPaymentCreate', 'permPaymentEdit', 'permPaymentDelete',
+  'permConsumeView', 'permConsumeCreate', 'permConsumeEdit', 'permConsumeDelete',
+  'permLogView',
+  'bonusTraining', 'bonusCard', 'bonusYearly', 'bonusDisciple',
+];
+
 export function adaptPermissionUser(raw: any, index = 0): PermissionUser {
-  const permissions = Object.keys(permissionLabels)
+  const permissionNames = Object.keys(permissionLabels)
     .filter(key => raw?.[key])
     .map(key => permissionLabels[key]);
+
+  // 提取所有权限字段
+  const permValues: Record<string, any> = {};
+  for (const field of PERM_FIELDS) {
+    if (raw?.[field] !== undefined) {
+      permValues[field] = raw[field];
+    }
+  }
+
   return {
     id: textValue(raw?.id ?? index),
     username: textValue(raw?.username, '-'),
     name: textValue(raw?.name ?? raw?.username, '-'),
     role: textValue(raw?.role, 'user'),
     status: textValue(raw?.status, 'active'),
-    permissionCount: permissions.length,
-    permissions,
+    permissionCount: permissionNames.length,
+    permissions: permissionNames,
+    ...permValues,
     raw,
   };
 }
@@ -184,6 +217,92 @@ export const platformAdapter = {
   async getMembers(): Promise<Member[]> {
     const res = await api.get('/members');
     return asArray(res.data).map(adaptMember);
+  },
+
+  async getMemberProfile(id: number | string): Promise<MemberProfile360> {
+    const res = await api.get(`/members/${id}/profile360`);
+    return pickData<MemberProfile360>(res.data, {
+      member: {},
+      summary: {
+        offlineIncome: 0,
+        onlineIncome: 0,
+        totalIncome: 0,
+        consumeCount: 0,
+        authorizationCount: 0,
+        completedVideoCount: 0,
+        financeIncome: 0,
+        financeOrderAmount: 0,
+      },
+      offlinePayments: [],
+      consumeRecords: [],
+      courseOrders: [],
+      authorizations: [],
+      progress: [],
+      financeIncomes: [],
+      financeOrders: [],
+      operationLogs: [],
+    });
+  },
+
+  async getRegions(): Promise<Array<{ province: string; cities: string[] }>> {
+    const res = await api.get('/provinces');
+    return asArray(res.data).map((item: any) => ({
+      province: textValue(item?.province, ''),
+      cities: Array.isArray(item?.cities) ? item.cities.map((city: unknown) => textValue(city, '')).filter(Boolean) : [],
+    })).filter(item => item.province);
+  },
+
+  async createMember(data: {
+    name: string;
+    phone: string;
+    gender?: string;
+    birthday?: string;
+    level?: string;
+    register_date?: string;
+    country?: string;
+    province?: string;
+    city?: string;
+    foreignRegion?: string;
+    address?: string;
+    remark?: string;
+    avatar?: string;
+  }): Promise<{ id?: string | number; success?: boolean }> {
+    const res = await api.post('/members', data);
+    const id = res.data?.id;
+    if (id && (data.country || data.province || data.city || data.foreignRegion || data.address)) {
+      await api.put(`/members/${id}`, data);
+    }
+    return res.data;
+  },
+
+  async updateMember(id: number | string, data: {
+    name: string;
+    phone: string;
+    gender?: string;
+    birthday?: string;
+    level?: string;
+    register_date?: string;
+    country?: string;
+    province?: string;
+    city?: string;
+    foreignRegion?: string;
+    address?: string;
+    remark?: string;
+    avatar?: string;
+    previousAvatar?: string;
+  }): Promise<{ success?: boolean }> {
+    const res = await api.put(`/members/${id}`, data);
+    return res.data;
+  },
+
+  async uploadMemberAvatar(formData: FormData): Promise<{ success?: boolean; data?: { avatar?: string; filename?: string } }> {
+    const res = await api.post('/members/avatar', formData);
+    return res.data;
+  },
+
+  async deleteMember(id: number | string): Promise<{ success?: boolean }> {
+    const res = await api.delete(`/members/${id}`);
+    return res.data;
   },
 
   async getOrders(params?: Record<string, unknown>): Promise<UnifiedOrder[]> {
@@ -221,8 +340,34 @@ export const platformAdapter = {
     return asArray(res.data).map(adaptPermissionUser);
   },
 
+  async createUser(data: {
+    username: string;
+    password: string;
+    name: string;
+    role: string;
+    status?: string;
+  }): Promise<{ success: boolean; data?: PermissionUser; error?: string }> {
+    const res = await api.post('/users', data);
+    return res.data;
+  },
+
+  async updateUser(id: number | string, data: Record<string, any>): Promise<{ success: boolean; data?: PermissionUser; error?: string }> {
+    const res = await api.put(`/users/${id}`, data);
+    return res.data;
+  },
+
+  async deleteUser(id: number | string): Promise<{ success: boolean; error?: string; message?: string }> {
+    const res = await api.delete(`/users/${id}`);
+    return res.data;
+  },
+
+  async toggleUserStatus(id: number | string): Promise<{ success: boolean; data?: { id: string; status: string }; error?: string; message?: string }> {
+    const res = await api.put(`/users/${id}/status`);
+    return res.data;
+  },
+
   getPlatformSettings(): PlatformSettings {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || '/api';
     return {
       appName: process.env.NEXT_PUBLIC_APP_NAME || '伊娃东方舞数字化运营平台',
       shortName: '伊娃东方舞',
@@ -235,10 +380,7 @@ export const platformAdapter = {
       authDomain: platformLinks.api.auth.replace('https://', ''),
       authMode: 'JWT + Bearer Token',
       dataSources: [
-        { name: '线下培训系统', path: '03-学员管理系统/学员管理系统/server/dance.db', mode: 'adapter', status: '已接入核心数据' },
-        { name: '网课系统', path: '04-网课系统开发计划', mode: 'adapter', status: '适配中' },
-        { name: '电商系统', path: '07-电商系统', mode: 'adapter', status: '已接入库存总览' },
-        { name: '财务系统', path: '09-财务系统', mode: 'adapter', status: '以统一订单账本替代直连' },
+        { name: '统一业务数据库', path: '10-统一平台admin-platform/admin.db', mode: 'shared-db', status: '官网/后台/学习中心/网课小程序共用' },
       ],
       endpoints: ['/login', '/validate-token', '/members', '/members/:id/profile360', '/orders/unified', '/shop/summary', '/courses', '/course/series', '/users'],
       linkMatrix: platformLinkMatrix,
@@ -296,6 +438,110 @@ export const platformAdapter = {
       recentMembers: members.slice(0, 8),
       recentOrders: orders.slice(0, 8),
       orderSources: Array.from(sourceMap.entries()).map(([label, item]) => ({ label, ...item })),
+    };
+  },
+
+  async getAnalyticsData(): Promise<DataAnalytics> {
+    const [members, orders, courses, finance] = await Promise.all([
+      this.getMembers().catch(() => []),
+      this.getOrders().catch(() => []),
+      this.getCourses().catch(() => ({ offline: [], online: [] })),
+      this.getFinanceSummary().catch(() => ({
+        income: 0,
+        expense: 0,
+        profit: 0,
+        orderCount: 0,
+        averageOrderAmount: 0,
+        monthIncome: 0,
+        refunds: 0,
+        byType: [],
+        recentOrders: [],
+      })),
+    ]);
+
+    const now = new Date();
+    const currentMonthKey = now.toISOString().slice(0, 7);
+    const previousMonthKey = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().slice(0, 7);
+    const monthlyKeys = Array.from({ length: 12 }, (_, index) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - 11 + index, 1);
+      return date.toISOString().slice(0, 7);
+    });
+    const monthly = monthlyKeys.map(key => ({
+      month: `${Number(key.slice(5, 7))}月`,
+      revenue: orders.filter(order => monthKey(order.orderDate) === key).reduce((sum, order) => sum + order.amount, 0),
+    }));
+
+    const currentMonthIncome = monthly.find(item => item.month === `${Number(currentMonthKey.slice(5, 7))}月`)?.revenue || 0;
+    const previousMonthIncome = orders
+      .filter(order => monthKey(order.orderDate) === previousMonthKey)
+      .reduce((sum, order) => sum + order.amount, 0);
+    const currentMonthOrders = orders.filter(order => monthKey(order.orderDate) === currentMonthKey);
+    const previousMonthMembers = members.filter(member => monthKey(member.registerDate) === previousMonthKey).length;
+    const newThisMonth = members.filter(member => monthKey(member.registerDate) === currentMonthKey).length;
+    const activeMembers = members.filter(member => member.totalSpent > 0 || member.courseCount > 0).length;
+
+    const levelRows = groupCount(members, member => member.level, '未分级')
+      .map(([level, count], index) => ({ key: String(index + 1), level, count, percent: percentValue(count, members.length) }));
+    const cityRows = groupCount(members, member => member.city && member.city !== '-' ? member.city : member.country, '未填写')
+      .slice(0, 8)
+      .map(([city, count], index) => ({ key: String(index + 1), city, count, percent: percentValue(count, members.length) }));
+
+    const allCourses = [...courses.online, ...courses.offline];
+    const totalEnrollments = allCourses.reduce((sum, course) => sum + course.students, 0);
+    const hotCourses = allCourses
+      .slice()
+      .sort((a, b) => b.students - a.students)
+      .slice(0, 10)
+      .map((course, index) => ({
+        key: course.id,
+        rank: index + 1,
+        name: course.name,
+        type: course.type === 'online' ? '线上' as const : '线下' as const,
+        enrollments: course.students,
+        completion: course.capacity ? Math.min(100, Math.round((course.students / course.capacity) * 100)) : 0,
+        rating: 0,
+      }));
+
+    const colors = ['#F72A8A', '#7C3AED', '#3B82F6', '#22C55E', '#F59E0B', '#6B7280'];
+    const byType = finance.byType.map((item, index) => ({
+      key: String(index + 1),
+      category: item.label,
+      amount: item.value,
+      percent: percentValue(item.value, finance.income),
+      color: colors[index % colors.length],
+    }));
+
+    return {
+      sales: {
+        monthIncome: currentMonthIncome,
+        previousMonthIncome,
+        growthRate: previousMonthIncome ? percentValue(currentMonthIncome - previousMonthIncome, previousMonthIncome) : 0,
+        orderCount: currentMonthOrders.length,
+        averageOrderAmount: currentMonthOrders.length ? Math.round(currentMonthIncome / currentMonthOrders.length) : 0,
+        monthly,
+      },
+      members: {
+        total: members.length,
+        newThisMonth,
+        active: activeMembers,
+        churnRate: previousMonthMembers ? percentValue(Math.max(previousMonthMembers - newThisMonth, 0), previousMonthMembers) : 0,
+        byLevel: levelRows,
+        byCity: cityRows,
+      },
+      courses: {
+        onlineCount: courses.online.length,
+        offlineCount: courses.offline.length,
+        totalEnrollments,
+        completionRate: allCourses.length ? Math.round(allCourses.reduce((sum, course) => sum + (course.capacity ? Math.min(100, course.students / course.capacity * 100) : 0), 0) / allCourses.length) : 0,
+        hotCourses,
+      },
+      finance: {
+        income: finance.income,
+        expense: finance.expense,
+        profit: finance.profit,
+        profitRate: finance.income ? percentValue(finance.profit, finance.income) : 0,
+        byType,
+      },
     };
   },
 };

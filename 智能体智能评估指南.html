@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🎯 你的AI Agent到底有多聪明？——14维度智能度评估框架完全指南</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .article-wrapper {
+    max-width: 680px;
+    margin: 0 auto;
+    background: #fff;
+    min-height: 100vh;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+  }
+
+  /* 公众号头部 */
+  .gzh-header {
+    display: flex;
+    align-items: center;
+    padding: 20px 24px 0;
+  }
+  .gzh-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FF6B35, #F7C948);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    margin-right: 12px;
+    box-shadow: 0 2px 8px rgba(255,107,53,0.3);
+  }
+  .gzh-info { flex: 1; }
+  .gzh-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #222;
+  }
+  .gzh-desc {
+    font-size: 13px;
+    color: #999;
+    margin-top: 2px;
+  }
+  .gzh-follow {
+    font-size: 13px;
+    color: #07c160;
+    border: 1px solid #07c160;
+    border-radius: 4px;
+    padding: 4px 12px;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  /* 文章头部 */
+  .article-header {
+    padding: 28px 24px 16px;
+  }
+  .article-title {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #1a1a1a;
+    letter-spacing: 0.5px;
+  }
+  .article-meta {
+    font-size: 14px;
+    color: #b2b2b2;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .article-meta .dot { color: #ddd; }
+
+  /* 正文区 */
+  .article-body {
+    padding: 0 24px 40px;
+  }
+
+  .article-body p {
+    font-size: 16px;
+    line-height: 1.8;
+    margin-bottom: 18px;
+    color: #333;
+    text-align: justify;
+  }
+
+  .article-body h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 36px 0 16px;
+    padding-left: 14px;
+    border-left: 4px solid #FF6B35;
+    line-height: 1.4;
+  }
+
+  .article-body h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2a2a2a;
+    margin: 28px 0 12px;
+  }
+
+  .article-body h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #444;
+    margin: 20px 0 10px;
+  }
+
+  /* 金句卡片 */
+  .quote-card {
+    background: linear-gradient(135deg, #FFF8F0, #FFF3E0);
+    border-radius: 12px;
+    padding: 24px 20px;
+    margin: 24px 0;
+    border-left: 4px solid #FF6B35;
+    position: relative;
+  }
+  .quote-card::before {
+    content: '"';
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-size: 48px;
+    color: rgba(255,107,53,0.15);
+    font-family: Georgia, serif;
+    line-height: 1;
+  }
+  .quote-card p {
+    margin-bottom: 0 !important;
+    font-size: 17px !important;
+    color: #5D4037 !important;
+    font-weight: 500;
+    text-align: center !important;
+  }
+
+  /* 引用块 */
+  .blockquote {
+    background: #f7f7f7;
+    border-left: 4px solid #FF6B35;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 20px 0;
+    font-size: 15px;
+    color: #666;
+  }
+  .blockquote p { margin-bottom: 0 !important; font-size: 15px !important; color: #666 !important; }
+
+  /* 高亮卡片 */
+  .highlight-card {
+    background: linear-gradient(135deg, #FFF8E1, #FFFDE7);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(255,152,0,0.08);
+  }
+  .highlight-card .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #E65100;
+    margin-bottom: 8px;
+  }
+  .highlight-card p { margin-bottom: 0 !important; }
+
+  /* 信息卡片 */
+  .info-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border: 1px solid #f0f0f0;
+  }
+  .info-card .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #FF6B35;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* 特性网格 */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .feature-item {
+    background: #FAFAFA;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid #f0f0f0;
+    transition: all 0.2s;
+  }
+  .feature-item:hover { border-color: #FF6B35; }
+  .feature-item .fi-icon { font-size: 20px; margin-bottom: 6px; }
+  .feature-item .fi-label { font-size: 14px; font-weight: 600; color: #333; }
+  .feature-item .fi-desc { font-size: 12px; color: #999; margin-top: 4px; }
+
+  /* 表格样式 */
+  .article-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .article-body thead {
+    background: linear-gradient(135deg, #FF6B35, #FF8F50);
+    color: #fff;
+  }
+  .article-body th {
+    padding: 12px 10px;
+    font-weight: 600;
+    text-align: left;
+    font-size: 13px;
+  }
+  .article-body td {
+    padding: 11px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #444;
+  }
+  .article-body tr:last-child td { border-bottom: none; }
+  .article-body tbody tr:hover { background: #FFF8F0; }
+  .article-body tbody tr:nth-child(even) { background: #FAFAFA; }
+  .article-body tbody tr:nth-child(even):hover { background: #FFF8F0; }
+
+  /* 代码块 */
+  .code-block {
+    background: #2d2d2d;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .code-block code {
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    color: #e8e8e8;
+    white-space: pre;
+  }
+  .code-block .kw { color: #c678dd; }
+  .code-block .str { color: #98c379; }
+  .code-block .cm { color: #5a5a5a; }
+  .code-block .fn { color: #61afef; }
+  .code-block .num { color: #d19a66; }
+
+  /* 内联代码 */
+  .inline-code {
+    background: #f0f0f0;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: "SF Mono", "Consolas", monospace;
+    font-size: 14px;
+    color: #e74c3c;
+  }
+
+  /* 分隔线 */
+  .divider {
+    text-align: center;
+    color: #ddd;
+    font-size: 18px;
+    letter-spacing: 8px;
+    margin: 32px 0;
+  }
+  .divider-light {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+    margin: 28px 0;
+  }
+
+  /* 进度条 */
+  .progress-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 0;
+  }
+  .progress-bar-label {
+    width: 120px;
+    font-size: 14px;
+    color: #555;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .progress-bar-track {
+    flex: 1;
+    height: 22px;
+    background: #f0f0f0;
+    border-radius: 11px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 11px;
+    color: #fff;
+    font-weight: 600;
+    transition: width 0.6s ease;
+  }
+  .progress-bar-value {
+    font-size: 13px;
+    color: #888;
+    width: 40px;
+    text-align: left;
+    flex-shrink: 0;
+  }
+
+  /* 评分等级标签 */
+  .grade-tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .grade-A { background: #E8F5E9; color: #2E7D32; }
+  .grade-B { background: #FFF3E0; color: #E65100; }
+  .grade-C { background: #FBE9E7; color: #BF360C; }
+
+  /* 数据来源卡片 */
+  .source-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .source-item {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .source-item .si-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+  }
+  .source-item .si-path {
+    font-size: 11px;
+    color: #999;
+    margin-top: 4px;
+    word-break: break-all;
+  }
+  .source-item .si-use {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+  }
+
+  /* 模式表格 */
+  .mode-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 0;
+    margin: 16px 0;
+    border: 1px solid #eee;
+    overflow: hidden;
+  }
+  .mode-card .mode-row {
+    display: flex;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f5f5f5;
+    align-items: center;
+  }
+  .mode-card .mode-row:last-child { border-bottom: none; }
+  .mode-card .mode-name {
+    width: 80px;
+    font-weight: 700;
+    font-size: 15px;
+    color: #FF6B35;
+    flex-shrink: 0;
+  }
+  .mode-card .mode-info { flex: 1; font-size: 14px; color: #555; }
+  .mode-card .mode-use {
+    font-size: 12px;
+    color: #999;
+    width: 100px;
+    text-align: right;
+  }
+
+  /* 安全模型列表 */
+  .safety-list {
+    margin: 16px 0;
+  }
+  .safety-item {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+    gap: 12px;
+  }
+  .safety-item:last-child { border-bottom: none; }
+  .safety-item .si-rule {
+    width: 140px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    flex-shrink: 0;
+  }
+  .safety-item .si-detail {
+    font-size: 14px;
+    color: #666;
+    flex: 1;
+  }
+
+  /* 示例输出 */
+  .example-output {
+    background: #1e1e2e;
+    border-radius: 10px;
+    padding: 18px;
+    margin: 16px 0;
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #cdd6f4;
+    overflow-x: auto;
+  }
+  .example-output .eo-section { color: #89b4fa; }
+  .example-output .eo-score { color: #a6e3a1; }
+  .example-output .eo-label { color: #f9e2af; }
+  .example-output .eo-warn { color: #fab387; }
+  .example-output .eo-dim { color: #6c7086; }
+
+  /* 结尾区 */
+  .article-footer {
+    padding: 32px 24px;
+    border-top: 1px solid #f0f0f0;
+    text-align: center;
+  }
+  .footer-qr {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, #FF6B35, #F7C948);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    box-shadow: 0 4px 16px rgba(255,107,53,0.2);
+  }
+  .footer-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+  }
+  .footer-desc {
+    font-size: 13px;
+    color: #999;
+    margin-top: 6px;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 16px;
+  }
+  .footer-links a {
+    color: #07c160;
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .footer-links a:hover { text-decoration: underline; }
+
+  .footer-actions {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .footer-actions .fa-item {
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+  }
+  .footer-actions .fa-icon {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .footer-actions .fa-item:hover { color: #FF6B35; }
+  .footer-copyright {
+    font-size: 12px;
+    color: #ccc;
+    margin-top: 16px;
+  }
+
+  /* 响应式 */
+  @media (max-width: 480px) {
+    .article-title { font-size: 22px; }
+    .article-header { padding: 20px 16px 12px; }
+    .article-body { padding: 0 16px 30px; }
+    .gzh-header { padding: 16px 16px 0; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .source-grid { grid-template-columns: 1fr; }
+    .article-body table { font-size: 12px; }
+    .article-body th,
+    .article-body td { padding: 8px 6px; }
+    .progress-bar-label { width: 80px; font-size: 12px; }
+    .safety-item { flex-direction: column; gap: 4px; }
+    .safety-item .si-rule { width: auto; }
+    .mode-card .mode-row { flex-wrap: wrap; }
+    .mode-card .mode-use { width: auto; margin-top: 4px; }
+    .footer-links { flex-wrap: wrap; gap: 12px; }
+  }
+
+  /* 动画 */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .article-body > * {
+    animation: fadeInUp 0.5s ease both;
+  }
+  .article-body > *:nth-child(1) { animation-delay: 0.05s; }
+  .article-body > *:nth-child(2) { animation-delay: 0.1s; }
+  .article-body > *:nth-child(3) { animation-delay: 0.15s; }
+  .article-body > *:nth-child(4) { animation-delay: 0.2s; }
+  .article-body > *:nth-child(5) { animation-delay: 0.25s; }
+  .article-body > *:nth-child(6) { animation-delay: 0.3s; }
+  .article-body > *:nth-child(7) { animation-delay: 0.35s; }
+  .article-body > *:nth-child(8) { animation-delay: 0.4s; }
+
+  /* 标签 */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+  .tag-orange { background: #FFF3E0; color: #E65100; }
+  .tag-green { background: #E8F5E9; color: #2E7D32; }
+  .tag-blue { background: #E3F2FD; color: #1565C0; }
+  .tag-purple { background: #F3E5F5; color: #6A1B9A; }
+  .tag-red { background: #FFEBEE; color: #C62828; }
+
+  /* 维度评分卡片 */
+  .dimension-score {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 16px 0;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .dimension-score .ds-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dimension-score .ds-subtitle {
+    font-size: 13px;
+    color: #999;
+    margin-bottom: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="article-wrapper">
+
+  <!-- 公众号头部 -->
+  <div class="gzh-header">
+    <div class="gzh-avatar">🎯</div>
+    <div class="gzh-info">
+      <div class="gzh-name">智能体研习社</div>
+      <div class="gzh-desc">AI Agent 能力评估 · 最佳实践 · 开源生态</div>
+    </div>
+    <a class="gzh-follow" href="#">关注</a>
+  </div>
+
+  <!-- 文章头部 -->
+  <div class="article-header">
+    <h1 class="article-title">🎯 你的 AI Agent 到底有多聪明？<br>—— 14 维度智能度评估框架完全指南</h1>
+    <div class="article-meta">
+      <span>智能体研习社</span>
+      <span class="dot">·</span>
+      <span>圆规</span>
+      <span class="dot">·</span>
+      <span>2026-06-02</span>
+    </div>
+  </div>
+
+  <!-- 文章正文 -->
+  <div class="article-body">
+
+    <!-- 开篇引导 -->
+    <div class="quote-card">
+      <p>"你的 Agent 到底有多聪明？这个数字是涨了还是跌了？<br>—— 大多数改进停留在'感觉好了'，现在，让能力进化变得可测量。"</p>
+    </div>
+
+    <p>2026年，AI Agent 的数量正以指数级增长。从个人助手到企业自动化，从代码开发到金融投研，每个 Agent 都在宣称自己"更智能"。但一个核心问题始终悬而未决——<strong>我们到底如何衡量一个 Agent 的智能度？</strong></p>
+
+    <p>直觉式的"感觉变好了"不再是答案。我们需要的是一个<strong>可量化、可重复、可追踪</strong>的评估体系。</p>
+
+    <p>来自开发者 <strong>圆规</strong> 的开源项目 <strong>smartness-eval</strong>，正是为此而生。它提供一个 <strong>14 维度</strong> 的 AI Agent 智能度评估框架，将真实运行数据转化为结构化、可重复的智能度评分，并支持置信区间、趋势追踪和反作弊探针——对齐 CLEAR、T-Eval、Anthropic 等国际评测标准。</p>
+
+    <p class="blockquote">项目地址：<a href="https://github.com/xyva-yuangui/smartness-eval" target="_blank" style="color:#FF6B35;text-decoration:none;">github.com/xyva-yuangui/smartness-eval</a> ⭐</p>
+
+    <!-- 分隔线 -->
+    <div class="divider">◆ ◆ ◆</div>
+
+    <!-- 项目概述 -->
+    <h2>一、评估框架核心</h2>
+
+    <p>smartness-eval 将三种评估信号融合为一个综合评分：</p>
+
+    <div class="info-card">
+      <div class="card-title">📡 三大评估信号</div>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="fi-icon">🧪</div>
+          <div class="fi-label">任务测试</div>
+          <div class="fi-desc">34 项自动化测试命令，覆盖 14 个维度</div>
+        </div>
+        <div class="feature-item">
+          <div class="fi-icon">📊</div>
+          <div class="fi-label">运行时遥测</div>
+          <div class="fi-desc">真实日志、延迟指标、错误追踪、推理知识库</div>
+        </div>
+        <div class="feature-item">
+          <div class="fi-icon">🛡️</div>
+          <div class="fi-label">反作弊探针</div>
+          <div class="fi-desc">评估时注入随机输入，防止过拟合已知测试</div>
+        </div>
+        <div class="feature-item">
+          <div class="fi-icon">📋</div>
+          <div class="fi-label">报告输出</div>
+          <div class="fi-desc">JSON + Markdown，含评分、置信区间、趋势对比</div>
+        </div>
+      </div>
+    </div>
+
+    <p>每一次评估产出的不是一个冰冷数字，而是一份完整的 <strong>智能度体检报告</strong>：总体评分、各维度细分、置信区间、风险标记、趋势变化、升级建议——一目了然。</p>
+
+    <!-- 分隔线 -->
+    <div class="divider">◆ ◆ ◆</div>
+
+    <!-- 14维度详解 -->
+    <h2>二、14 维度智能度评估体系</h2>
+
+    <p>评估体系分为 <strong>7 大主维度</strong> 和 <strong>7 大扩展维度</strong>，覆盖 Agent 智能的核心能力边界。每个维度配备 0–5 级详细评分量表。</p>
+
+    <h3>🏆 7 大主维度（权重 63%）</h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>维度</th>
+          <th>权重</th>
+          <th>衡量内容</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>理解能力</strong> 🧠</td>
+          <td>9%</td>
+          <td>意图识别、约束捕获、上下文一致性</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>分析能力</strong> 🔍</td>
+          <td>9%</td>
+          <td>问题分解、依赖识别、结构化输出</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>思考能力</strong> 🤔</td>
+          <td>9%</td>
+          <td>风险意识、自我检查、对抗性推理</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>推理能力</strong> 🔗</td>
+          <td>13%</td>
+          <td>逻辑链完整性、证据支撑、置信校准</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>自我迭代</strong> 🔄</td>
+          <td>9%</td>
+          <td>错误修复率、模式升级、学习新鲜度</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><strong>对话沟通</strong> 💬</td>
+          <td>9%</td>
+          <td>清晰度、完整性、可执行性、语气匹配</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><strong>响应时长</strong> ⚡</td>
+          <td>5%</td>
+          <td>P50/P95 延迟、超时率、API 链健康度</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>🚀 7 大扩展维度（权重 37%）</h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>维度</th>
+          <th>权重</th>
+          <th>衡量内容</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>8</td>
+          <td><strong>鲁棒性</strong> 🛡️</td>
+          <td>7%</td>
+          <td>噪音/长上下文/边界条件下的稳定性</td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td><strong>泛化能力</strong> 🌐</td>
+          <td>5%</td>
+          <td>跨领域路由准确率、意图多样化</td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td><strong>⭐ 规划能力</strong> 📐</td>
+          <td>5%</td>
+          <td>任务分解、步骤排序、依赖管理、工作流执行</td>
+        </tr>
+        <tr>
+          <td>11</td>
+          <td><strong>⭐ 幻觉控制</strong> 🎯</td>
+          <td>6%</td>
+          <td>事实准确性、接地响应、不确定时拒绝回答</td>
+        </tr>
+        <tr>
+          <td>12</td>
+          <td><strong>策略遵循</strong> 📏</td>
+          <td>5%</td>
+          <td>AGENTS.md 合规性、安全确认、操作约束</td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td><strong>工具可靠性</strong> 🔧</td>
+          <td>4%</td>
+          <td>脚本可用性、Cron 健康度、状态文件完整性</td>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td><strong>校准能力</strong> ⚖️</td>
+          <td>5%</td>
+          <td>不确定性表达、置信准确度、高置信错误率</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>其中 ⭐ 标记的"规划能力"和"幻觉控制"为 v0.3.0 新增维度，对齐 <strong>CLEAR</strong> 框架、<strong>T-Eval</strong>（ACL 2024）及 <strong>Anthropic Agent 评估</strong> 标准。</p>
+
+    <!-- 分隔线 -->
+    <div class="divider">◆ ◆ ◆</div>
+
+    <!-- 三种评估模式 -->
+    <h2>三、三种评估模式：按需选择深度</h2>
+
+    <p>针对不同场景和需求，smartness-eval 提供三种评估模式：</p>
+
+    <div class="mode-card">
+      <div class="mode-row">
+        <div class="mode-name">⚡ Quick</div>
+        <div class="mode-info">~12 项测试 · 3 天数据窗口 · 1x 重复 · 1 个探针</div>
+        <div class="mode-use">每日自省</div>
+      </div>
+      <div class="mode-row">
+        <div class="mode-name">📊 Standard</div>
+        <div class="mode-info">~30 项测试 · 7 天数据窗口 · 1x 重复 · 2 个探针</div>
+        <div class="mode-use">每周能力周报</div>
+      </div>
+      <div class="mode-row">
+        <div class="mode-name">🔬 Deep</div>
+        <div class="mode-info">全部测试 · 30 天数据窗口 · 2x 重复 · 3 个探针</div>
+        <div class="mode-use">月度审计 / 升级后</div>
+      </div>
+    </div>
+
+    <!-- 分隔线 -->
+    <div class="divider">◆ ◆ ◆</div>
+
+    <!-- 快速上手 -->
+    <h2>四、快速上手：5 分钟跑起来</h2>
+
+    <p>安装使用非常简单，无需任何外部依赖（仅需 Python 3.9+）：</p>
+
+    <div class="code-block">
+<code><span class="cm"># 1. 克隆项目</span>
+git clone https://github.com/xyva-yuangui/smartness-eval.git
+cd smartness-eval
+
+<span class="cm"># 2. 检查结构完整性</span>
+python3 scripts/check.py
+
+<span class="cm"># 3. 快速评估（~10 项测试，3 天数据窗口）</span>
+python3 scripts/eval.py --mode quick --no-probes
+
+<span class="cm"># 4. 标准评估 + Markdown 报告</span>
+python3 scripts/eval.py --mode standard --format markdown
+
+<span class="cm"># 5. 深度评估 + 趋势对比</span>
+python3 scripts/eval.py --mode deep --compare-last</code>
+    </div>
+
+    <div class="info-card">
+      <div class="card-title">🔧 CLI 参数一览</div>
+      <table>
+        <thead>
+          <tr>
+            <th>参数</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code class="inline-code">--mode</code></td><td>评估深度：quick / standard / deep</td></tr>
+          <tr><td><code class="inline-code">--format</code></td><td>输出格式：json / markdown</td></tr>
+          <tr><td><code class="inline-code">--compare-last</code></td><td>与上次评估对比趋势</td></tr>
+          <tr><td><code class="inline-code">--llm-judge</code></td><td>启用 LLM 主观评分（需 API Key）</td></tr>
+          <tr><td><code class="inline-code">--no-probes</code></td><td>关闭反作弊探针</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 分隔线 -->
+    <div class="divider">◆ ◆ ◆</div>
+
+    <!-- 评估示例 -->
+    <h2>五、真实评估示例：71.36 分意味着什么？</h2>
+
+    <p>以下是一次真实评估的输出（Quick 模式，15 个样本）：</p>
+
+    <div class="example-output">
+      <span class="eo-dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+      <span class="eo-section">Overall:</span> <span class="eo-score">71.36</span> (<span class="grade-tag grade-B">B-</span>)
+      <span class="eo-dim">CI: [71.36, 71.36]  |  mode: quick  |  samples: 15</span>
+      <span class="eo-dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+
+      <span class="eo-section">Main dimensions / 主维度:</span>
+        understanding        <span class="eo-score">85.00</span>
+        analysis             <span class="eo-score">76.31</span>
+        thinking             <span class="eo-score">73.50</span>
+        reasoning            <span class="eo-score">74.79</span>
+        self_iteration       <span class="eo-score">55.56</span>
+        dialogue_comm        <span class="eo-score">82.50</span>
+        responsiveness       <span class="eo-score">63.05</span>
+
+      <span class="eo-section">Expanded dimensions / 扩展维度:</span>
+        robustness           <span class="eo-score">62.14</span>
+        generalization       <span class="eo-score">70.00</span>
+        policy_adherence     <span class="eo-score">77.14</span>
+        tool_reliability     <span class="eo-score">72.43</span>
+        calibration          <span class="eo-score">60.69</span>
+
+      <span class="eo-section">Risk flags / 风险:</span>
+        <span class="eo-warn">⚠ 仍有 5 个出错中的启用 Cron 任务</span>
+        <span class="eo-warn">⚠ finalize 闭环样本不足</span>
+
+      <span class="eo-section">Top evidence / 关键证据:</span>
+        benchmark_pass_rate    <span class="eo-score">100.0%</span>
+        p50_latency_ms         <span class="eo-score">5246</span>
+        reasoning_store_total  <span class="eo-score">116 entries</span>
+        error_fix_rate_pct     <span class="eo-score">0.0%</span>
+        cron_error_pct         <span class="eo-score">35.71%</span>
+
+      <span class="eo-section">Recommendations / 建议:</span>
+        <span class="eo-label">→ 修复出错 Cron 任务或将其 thin-script 化</span>
+        <span class="eo-label">→ 增加 finalize 路径使用，提升 thinking/calibration 可信度</span>
+      <span class="eo-dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+    </div>
+
+    <p>这张"体检报告"告诉我们：这个 Agent 的理解和对话能力不错（80+），但自我迭代能力严重不足（55.56），且有 5 个 Cron 任务长期出错。建议一目了然——先修 Cron，再提 finalize。</p>
+
+    <!-- 分隔线 -->
+    <div class="divider">◆ ◆ ◆</div>
+
+    <!-- 评分逻辑 -->
+    <h2>六、底层评分逻辑：数字如何炼成？</h2>
+
+    <p>每个维度的最终得分 = <strong>任务测试得分</strong> × 权重 + <strong>真实运行指标</strong> × 权重。</p>
+
+    <p>以 <code class="inline-code">reasoning</code>（推理能力）维度为例——</p>
+
+    <div class="code-block">
+<code><span class="cm"># reasoning（推理）评分公式</span>
+<span class="fn">reasoning</span> = task_score × <span class="num">0.40</span>
+          + benchmark_pass_rate × <span class="num">0.15</span>
+          + reasoning_depth × <span class="num">0.25</span>     <span class="cm"># 高置信条目占比</span>
+          + reasoning_total × <span class="num">0.20</span>        <span class="cm"># 知识库总量（上限 120 条）</span></code>
+    </div>
+
+    <p><strong>评分公式的设计哲学</strong>：</p>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <div class="fi-icon">📝</div>
+        <div class="fi-label">任务测试</div>
+        <div class="fi-desc">标准化试题，衡量"能不能"</div>
+      </div>
+      <div class="feature-item">
+        <div class="fi-icon">📈</div>
+        <div class="fi-label">运行指标</div>
+        <div class="fi-desc">真实数据，衡量"做没做"</div>
+      </div>
+      <div class="feature-item">
+        <div class="fi-icon">⚖️</div>
+        <div class="fi-label">加权融合</div>
+        <div class="fi-desc">测试与实战各取所需，全面评估</div>
+      </div>
+      <div class="feature-item">
+        <div class="fi-icon">🔬</div>
+        <div class="fi-label">趋势对比</div>
+        <div class="fi-desc">--compare-last 追踪各维度变化</div>
+      </div>
+    </div>
+
+    <p>完整评分公式见项目 <a href="#" style="color:#FF6B35;text-decoration:none;">docs/SCORING.md</a>。</p>
+
+    <!-- 分隔线 -->
+    <div class="divider">◆ ◆ ◆</div>
+
+    <!-- 数据来源 -->
+    <h2>七、数据来源：十大数据源交叉验证</h2>
+
+    <p>smartness-eval 从多个数据源采集真实运行数据进行交叉验证，确保评分不偏不倚：</p>
+
+    <div class="source-grid">
+      <div class="source-item">
+        <div class="si-name">⏱ 响应延迟</div>
+        <div class="si-path">state/response-latency-metrics.json</div>
+        <div class="si-use">P50/P95 延迟计算</div>
+      </div>
+      <div class="source-item">
+        <div class="si-name">🐛 错误追踪</div>
+        <div class="si-path">state/error-tracker.json</div>
+        <div class="si-use">修复率、重复率</div>
+      </div>
+      <div class="source-item">
+        <div class="si-name">📦 模式库</div>
+        <div class="si-path">state/pattern-library.json</div>
+        <div class="si-use">高置信模式数量</div>
+      </div>
+      <div class="source-item">
+        <div class="si-name">⏰ Cron 报告</div>
+        <div class="si-path">state/cron-governor-report.json</div>
+        <div class="si-use">任务健康度</div>
+      </div>
+      <div class="source-item">
+        <div class="si-name">📊 Benchmark</div>
+        <div class="si-path">state/benchmark-results/history.jsonl</div>
+        <div class="si-use">通过率</div>
+      </div>
+      <div class="source-item">
+        <div class="si-name">🧠 推理知识库</div>
+        <div class="si-path">.reasoning/reasoning-store.sqlite</div>
+        <div class="si-use">推理深度与覆盖</div>
+      </div>
+      <div class="source-item">
+        <div class="si-name">📜 编排器日志</div>
+        <div class="si-path">state/v5-orchestrator-log.json</div>
+        <div class="si-use">管道使用量</div>
+      </div>
+      <div class="source-item">
+        <div class="si-name">💬 消息分析日志</div>
+        <div class="si-path">state/message-analyzer-log.json</div>
+        <div class="si-use">真实交互采样</div>
+      </div>
+      <div class="source-item">
+        <div class="si-name">📝 反思报告</div>
+        <div class="si-path">state/reflection-reports/</div>
+        <div class="si-use">自省数量</div>
+      </div>
+      <div class="source-item">
+        <div class="si-name">🔔 告警日志</div>
+        <div class="si-path">state/alerts.jsonl</div>
+        <div class="si-use">告警频率</div>
+      </div>
+    </div>
+
+    <!-- 分隔线 -->
+    <div class="divider">◆ ◆ ◆</div>
+
+    <!-- 安全模型 -->
+    <h2>八、安全第一：多层防护机制</h2>
+
+    <p>由于执行自动化测试涉及 <code class="inline-code">subprocess</code>，smartness-eval 内置了严格的安全执行模型：</p>
+
+    <div class="info-card">
+      <div class="card-title">🔒 安全执行规则</div>
+      <div class="safety-list">
+        <div class="safety-item">
+          <div class="si-rule">🟢 解释器白名单</div>
+          <div class="si-detail">仅允许 <code class="inline-code">python3</code></div>
+        </div>
+        <div class="safety-item">
+          <div class="si-rule">🔴 禁止内联执行</div>
+          <div class="si-detail">拦截 <code class="inline-code">-c</code> 和 <code class="inline-code">exec(</code></div>
+        </div>
+        <div class="safety-item">
+          <div class="si-rule">🔴 禁止绝对路径</div>
+          <div class="si-detail">所有路径必须相对</div>
+        </div>
+        <div class="safety-item">
+          <div class="si-rule">🔴 禁止路径穿越</div>
+          <div class="si-detail">拒绝 <code class="inline-code">..</code> 段</div>
+        </div>
+        <div class="safety-item">
+          <div class="si-rule">🟢 前缀白名单</div>
+          <div class="si-detail">仅限 scripts/, skills/…, state/, benchmarks/</div>
+        </div>
+        <div class="safety-item">
+          <div class="si-rule">🔴 默认网络关闭</div>
+          <div class="si-detail"><code class="inline-code">--llm-judge</code> 需显式启用 + API Key</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 分隔线 -->
+    <div class="divider">◆ ◆ ◆</div>
+
+    <!-- 输出文件 -->
+    <h2>九、评估输出：体检报告的格式</h2>
+
+    <p>每次评估产生 3 份输出文件，满足不同场景需求：</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>文件</th>
+          <th>路径</th>
+          <th>用途</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>📄 Run JSON</strong></td>
+          <td style="font-size:12px;">state/smartness-eval/runs/&lt;timestamp&gt;.json</td>
+          <td>完整结构化结果，适合程序分析</td>
+        </tr>
+        <tr>
+          <td><strong>📝 Markdown 报告</strong></td>
+          <td style="font-size:12px;">state/smartness-eval/reports/&lt;date&gt;.md</td>
+          <td>人类可读报告，适合分享</td>
+        </tr>
+        <tr>
+          <td><strong>📊 历史记录</strong></td>
+          <td style="font-size:12px;">state/smartness-eval/history.jsonl</td>
+          <td>每次评估一行，支持中长期趋势分析</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 分隔线 -->
+    <div class="divider">◆ ◆ ◆</div>
+
+    <!-- 兼容性 -->
+    <h2>十、兼容性与项目结构</h2>
+
+    <div class="info-card">
+      <div class="card-title">🖥 系统要求</div>
+      <table>
+        <thead>
+          <tr><th>依赖项</th><th>版本要求</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Python</td><td>3.9+</td></tr>
+          <tr><td>OpenClaw</td><td>2026.3.13+</td></tr>
+          <tr><td>操作系统</td><td>macOS, Linux</td></tr>
+          <tr><td>外部依赖</td><td>无（仅 Python 标准库）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>项目结构清晰，配置、脚本、文档各司其职：</p>
+
+    <div class="code-block">
+<code>smartness-eval/
+├── README.md                  <span class="cm"># 中英双语介绍</span>
+├── SKILL.md                   <span class="cm"># OpenClaw skill 清单</span>
+├── _meta.json                 <span class="cm"># ClawHub 注册元数据</span>
+├── LICENSE                    <span class="cm"># MIT No Attribution</span>
+├── CHANGELOG.md               <span class="cm"># 版本历史</span>
+│
+├── config/
+│   ├── config.json            <span class="cm"># 权重与模式配置</span>
+│   ├── rubrics.json           <span class="cm"># 0–5 级评分量表</span>
+│   └── task-suite.json        <span class="cm"># 28 项测试定义</span>
+│
+├── scripts/
+│   ├── eval.py                <span class="cm"># 核心评估引擎</span>
+│   ├── check.py               <span class="cm"># 结构健康检查</span>
+│   └── state_probe.py         <span class="cm"># 安全本地状态探针</span>
+│
+├── docs/
+│   ├── ARCHITECTURE.md        <span class="cm"># 系统架构</span>
+│   ├── SCORING.md             <span class="cm"># 评分公式详解</span>
+│   ├── ROADMAP.md             <span class="cm"># 路线图</span>
+│   ├── SHOWCASE.md            <span class="cm"># 案例与分享</span>
+│   ├── FAQ.md                 <span class="cm"># 常见问题</span>
+│   └── GROWTH.md              <span class="cm"># 增长策略</span>
+│
+└── .github/
+    ├── workflows/ci.yml       <span class="cm"># CI：提交/PR 自动检查</span>
+    ├── ISSUE_TEMPLATE/        <span class="cm"># Issue 模板</span>
+    └── pull_request_template.md</code>
+    </div>
+
+    <!-- 分隔线 -->
+    <div class="divider">◆ ◆ ◆</div>
+
+    <!-- 结语 -->
+    <h2>写在最后：从"感觉"到"数字"</h2>
+
+    <div class="quote-card">
+      <p>"构建更智能的 Agent 的第一步，<br>是精确知道它今天有多聪明。"</p>
+    </div>
+
+    <p>smartness-eval 的诞生源于一个简单而坚定的信念——<strong>不能被测量的东西，就无法被改进</strong>。</p>
+
+    <p>无论你是在开发一个简单的聊天助手，还是构建一个复杂的多智能体协作系统，<strong>14 维度智能度评估框架</strong> 能帮你回答三个关键问题：</p>
+
+    <div class="info-card">
+      <div class="feature-grid">
+        <div class="feature-item" style="text-align:center;">
+          <div class="fi-icon" style="font-size:28px;">📊</div>
+          <div class="fi-label" style="font-size:15px;">我的 Agent 现在有多智能？</div>
+        </div>
+        <div class="feature-item" style="text-align:center;">
+          <div class="fi-icon" style="font-size:28px;">📈</div>
+          <div class="fi-label" style="font-size:15px;">哪些维度需要优先提升？</div>
+        </div>
+        <div class="feature-item" style="text-align:center;">
+          <div class="fi-icon" style="font-size:28px;">🔄</div>
+          <div class="fi-label" style="font-size:15px;">升级后是变强了还是变弱了？</div>
+        </div>
+        <div class="feature-item" style="text-align:center;">
+          <div class="fi-icon" style="font-size:28px;">🔍</div>
+          <div class="fi-label" style="font-size:15px;">潜在风险点在哪里？</div>
+        </div>
+      </div>
+    </div>
+
+    <p>如果你对提升 AI Agent 的智能度感兴趣，欢迎：</p>
+    <ul style="padding-left:20px;margin-bottom:18px;font-size:16px;color:#555;">
+      <li style="margin-bottom:8px;">⭐ 给项目 <a href="https://github.com/xyva-yuangui/smartness-eval" target="_blank" style="color:#FF6B35;text-decoration:none;">Star</a>，帮助更多人发现它</li>
+      <li style="margin-bottom:8px;">🧪 分享你的评估结果截图</li>
+      <li style="margin-bottom:8px;">🔁 展示你的 before/after 能力提升</li>
+      <li style="margin-bottom:8px;">💬 在 Discussions 中交流心得</li>
+    </ul>
+
+    <p><strong>项目作者</strong>：<a href="https://github.com/yh22e" target="_blank" style="color:#FF6B35;text-decoration:none;">圆规</a> · GitHub: <code class="inline-code">@yh22e</code> · ClawHub: <code class="inline-code">yh22e</code></p>
+
+    <p>项目使用 <strong>MIT No Attribution</strong> 许可证，欢迎所有形式的贡献——Issue 和 PR 的大门永远敞开！</p>
+
+  </div>
+
+  <!-- 结尾区 -->
+  <div class="article-footer">
+    <div class="footer-qr">🎯</div>
+    <div class="footer-title">智能体研习社</div>
+    <div class="footer-desc">关注 AI Agent 能力评估与最佳实践，每周带来开源生态的最新进展。</div>
+    <div class="footer-links">
+      <a href="https://github.com/xyva-yuangui/smartness-eval" target="_blank">GitHub 项目</a>
+      <a href="#">查看更多</a>
+      <a href="#">联系我们</a>
+    </div>
+    <div class="footer-actions">
+      <div class="fa-item">
+        <span class="fa-icon">❤️</span>
+        在看
+      </div>
+      <div class="fa-item">
+        <span class="fa-icon">⭐</span>
+        收藏
+      </div>
+      <div class="fa-item">
+        <span class="fa-icon">↗️</span>
+        分享
+      </div>
+    </div>
+    <div class="footer-copyright">
+      智能体研习社 · 用数字丈量智能
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

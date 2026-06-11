@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { Table, Card, Tag, Space, Button, Input, Row, Col, Statistic, Modal, Form, Select } from 'antd';
+import { Table, Card, Tag, Space, Button, Input, Row, Col, Statistic, Modal, Form, Select, Tooltip } from 'antd';
 import { PlusOutlined, SearchOutlined, FileTextOutlined, LinkOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { sortableColumns } from '@/lib/table-sort';
 
 const contentItems = Array.from({ length: 12 }, (_, i) => ({
   key: String(300 + i),
@@ -23,7 +24,7 @@ export default function ContentPage() {
 
   const filtered = contentItems.filter(c => !searchText || c.title.includes(searchText));
 
-  const columns = [
+  const columns = sortableColumns<any>([
     { title: '内容标题', dataIndex: 'title', key: 'title', width: 280, render: (v: string) => <a><FileTextOutlined style={{ marginRight: 6 }} />{v}</a> },
     { title: '类型', dataIndex: 'type', key: 'type', width: 100, render: (v: string) => <Tag color={['文章', '专访', '科普', '学员故事', '课程公告'].includes(v) ? 'blue' : 'purple'}>{v}</Tag> },
     { title: '浏览量', dataIndex: 'views', key: 'views', width: 80, align: 'right' as const },
@@ -33,9 +34,11 @@ export default function ContentPage() {
     { title: '操作', key: 'action', width: 140, render: () => <Space>
       <Button type="link" size="small" icon={<EyeOutlined />}>预览</Button>
       <Button type="link" size="small" icon={<EditOutlined />}>编辑</Button>
-      <Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button>
+      <Tooltip title="删除">
+        <Button type="link" size="small" danger icon={<DeleteOutlined />} aria-label="删除" />
+      </Tooltip>
     </Space> },
-  ];
+  ]);
 
   return (
     <div>
@@ -53,7 +56,7 @@ export default function ContentPage() {
           value={searchText} onChange={e => setSearchText(e.target.value)} allowClear />
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>新建内容</Button>
       </Space>}>
-        <Table columns={columns} dataSource={filtered} size="middle" pagination={false} />
+        <Table columns={columns} dataSource={filtered} size="middle" pagination={false} scroll={{ x: 'max-content' }} />
       </Card>
 
       <Modal title="新建内容" open={modalVisible} onCancel={() => setModalVisible(false)} footer={null} width={600}>

@@ -1,0 +1,3776 @@
+{
+  "sql": {
+    "software_cloud": {
+      "source": "software_cloud",
+      "file": "旧程序数据/software_cloud.sql",
+      "tableCount": 31,
+      "tables": {
+        "dfwq_competition": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "int(11)",
+              "raw": "`id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'id'"
+            },
+            {
+              "name": "comps_name",
+              "type": "varchar(1000)",
+              "raw": "`comps_name` varchar(1000) DEFAULT NULL COMMENT '赛事名称'"
+            },
+            {
+              "name": "comps_sysuser_id",
+              "type": "int(11)",
+              "raw": "`comps_sysuser_id` int(11) DEFAULT NULL COMMENT '主办方/机构ID（关联系统用户表ID）'"
+            },
+            {
+              "name": "startDate",
+              "type": "datetime",
+              "raw": "`startDate` datetime DEFAULT NULL COMMENT '赛事开始时间'"
+            },
+            {
+              "name": "endDate",
+              "type": "datetime",
+              "raw": "`endDate` datetime DEFAULT NULL COMMENT '赛事结束时间'"
+            },
+            {
+              "name": "sort",
+              "type": "int(11)",
+              "raw": "`sort` int(11) DEFAULT NULL COMMENT '赛事排序'"
+            },
+            {
+              "name": "comps_enter_time",
+              "type": "datetime",
+              "raw": "`comps_enter_time` datetime DEFAULT NULL COMMENT '赛事录入时间'"
+            },
+            {
+              "name": "signup",
+              "type": "int(11)",
+              "raw": "`signup` int(11) DEFAULT NULL COMMENT '报名开关,0代表关闭，1代表开启'"
+            },
+            {
+              "name": "comps_time",
+              "type": "datetime",
+              "raw": "`comps_time` datetime DEFAULT NULL COMMENT '比赛日期时间'"
+            },
+            {
+              "name": "tel",
+              "type": "varchar(255)",
+              "raw": "`tel` varchar(255) DEFAULT NULL COMMENT '联系电话'"
+            },
+            {
+              "name": "citys",
+              "type": "varchar(255)",
+              "raw": "`citys` varchar(255) DEFAULT NULL COMMENT '比赛城市，关联城市级联表ID，多个ID以逗号隔开'"
+            },
+            {
+              "name": "wxChannelId",
+              "type": "varchar(32)",
+              "raw": "`wxChannelId` varchar(32) DEFAULT NULL COMMENT '微信视频号ID'"
+            },
+            {
+              "name": "vidLogo",
+              "type": "text",
+              "raw": "`vidLogo` text COMMENT '视频号LOGO'"
+            },
+            {
+              "name": "vidQrcode",
+              "type": "text",
+              "raw": "`vidQrcode` text COMMENT '视频号二维码'"
+            },
+            {
+              "name": "videoName",
+              "type": "varchar(255)",
+              "raw": "`videoName` varchar(255) DEFAULT NULL COMMENT '视频播放源文件名'"
+            },
+            {
+              "name": "videoUrl",
+              "type": "varchar(255)",
+              "raw": "`videoUrl` varchar(255) DEFAULT NULL COMMENT '视频播放链接（关联阿里云OSS）'"
+            },
+            {
+              "name": "videoCover",
+              "type": "varchar(255)",
+              "raw": "`videoCover` varchar(255) DEFAULT NULL COMMENT '视频封面图片（关联阿里云OSS）'"
+            },
+            {
+              "name": "comps_posterPic",
+              "type": "varchar(255)",
+              "raw": "`comps_posterPic` varchar(255) DEFAULT NULL COMMENT '赛事海报图片（关联阿里云OSS）'"
+            },
+            {
+              "name": "comps_defaultAvatar",
+              "type": "varchar(255)",
+              "raw": "`comps_defaultAvatar` varchar(255) DEFAULT NULL COMMENT '赛事默认头像（关联阿里云OSS）'"
+            },
+            {
+              "name": "intro",
+              "type": "text",
+              "raw": "`intro` text COMMENT '赛事介绍'"
+            },
+            {
+              "name": "sign_price",
+              "type": "decimal(10",
+              "raw": "`sign_price` decimal(10,2) DEFAULT NULL COMMENT '报名费用'"
+            },
+            {
+              "name": "create_by",
+              "type": "int(11)",
+              "raw": "`create_by` int(11) DEFAULT NULL COMMENT '创建人'"
+            },
+            {
+              "name": "player_num",
+              "type": "int(11)",
+              "raw": "`player_num` int(11) unsigned zerofill DEFAULT NULL COMMENT '报名人数基础数'"
+            },
+            {
+              "name": "member_visibility",
+              "type": "tinyint(4)",
+              "raw": "`member_visibility` tinyint(4) DEFAULT '0' COMMENT '组员信息是否可见'"
+            }
+          ],
+          "insertRows": 14
+        },
+        "dfwq_competition_scorerules": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "int(11)",
+              "raw": "`id` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "comps_id",
+              "type": "int(11)",
+              "raw": "`comps_id` int(11) DEFAULT NULL COMMENT '关联赛事ID'"
+            },
+            {
+              "name": "scoreid",
+              "type": "int(11)",
+              "raw": "`scoreid` int(11) DEFAULT NULL COMMENT '评分项（关联字典表）'"
+            },
+            {
+              "name": "scoreValue",
+              "type": "int(11)",
+              "raw": "`scoreValue` int(11) DEFAULT NULL COMMENT '分值'"
+            }
+          ],
+          "insertRows": 103
+        },
+        "dfwq_comps_user": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "int(11)",
+              "raw": "`id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'id'"
+            },
+            {
+              "name": "openid",
+              "type": "varchar(64)",
+              "raw": "`openid` varchar(64) DEFAULT NULL COMMENT '微信openid'"
+            },
+            {
+              "name": "session_key",
+              "type": "varchar(32)",
+              "raw": "`session_key` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "third_session",
+              "type": "varchar(32)",
+              "raw": "`third_session` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "nickname",
+              "type": "varchar(32)",
+              "raw": "`nickname` varchar(32) DEFAULT NULL COMMENT '昵称'"
+            },
+            {
+              "name": "avatarUrl",
+              "type": "varchar(1000)",
+              "raw": "`avatarUrl` varchar(1000) DEFAULT NULL COMMENT '头像'"
+            },
+            {
+              "name": "sex",
+              "type": "int(11)",
+              "raw": "`sex` int(11) NOT NULL DEFAULT '0' COMMENT '性别（0男，1女）'"
+            },
+            {
+              "name": "user_date",
+              "type": "datetime",
+              "raw": "`user_date` datetime DEFAULT NULL COMMENT '注册时间'"
+            },
+            {
+              "name": "active",
+              "type": "varchar(15)",
+              "raw": "`active` varchar(15) DEFAULT NULL"
+            },
+            {
+              "name": "banned",
+              "type": "tinyint(1)",
+              "raw": "`banned` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "is_voter",
+              "type": "tinyint(1)",
+              "raw": "`is_voter` tinyint(1) DEFAULT '0'"
+            },
+            {
+              "name": "rankScore",
+              "type": "int(11)",
+              "raw": "`rankScore` int(11) NOT NULL DEFAULT '0' COMMENT '排行榜评分(总积分)'"
+            },
+            {
+              "name": "tel",
+              "type": "varchar(255)",
+              "raw": "`tel` varchar(255) DEFAULT NULL COMMENT '手机号码'"
+            },
+            {
+              "name": "isJudges",
+              "type": "int(1)",
+              "raw": "`isJudges` int(1) unsigned zerofill DEFAULT NULL COMMENT '是否为评委（0否，1是）'"
+            },
+            {
+              "name": "user_state",
+              "type": "tinyint(1)",
+              "raw": "`user_state` tinyint(1) unsigned zerofill DEFAULT NULL COMMENT '用户状态（0冻结，1正常）'"
+            }
+          ],
+          "insertRows": 1147
+        },
+        "dfwq_group": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "int(11)",
+              "raw": "`id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'id'"
+            },
+            {
+              "name": "comps_id",
+              "type": "int(11)",
+              "raw": "`comps_id` int(11) DEFAULT NULL COMMENT '关联赛事ID'"
+            },
+            {
+              "name": "group_name",
+              "type": "varchar(255)",
+              "raw": "`group_name` varchar(255) DEFAULT NULL COMMENT '组别名称'"
+            },
+            {
+              "name": "sign_price",
+              "type": "decimal(10",
+              "raw": "`sign_price` decimal(10,2) DEFAULT NULL COMMENT '报名费用'"
+            },
+            {
+              "name": "sort",
+              "type": "int(11)",
+              "raw": "`sort` int(11) DEFAULT NULL COMMENT '组别排序'"
+            },
+            {
+              "name": "group_time",
+              "type": "datetime",
+              "raw": "`group_time` datetime DEFAULT NULL COMMENT '组别添加时间'"
+            },
+            {
+              "name": "comps_time",
+              "type": "datetime",
+              "raw": "`comps_time` datetime DEFAULT NULL COMMENT '比赛日期时间'"
+            },
+            {
+              "name": "group_type",
+              "type": "int(11)",
+              "raw": "`group_type` int(11) DEFAULT NULL COMMENT '组别类别(1小组赛，2冠军赛)'"
+            },
+            {
+              "name": "group_key",
+              "type": "varchar(255)",
+              "raw": "`group_key` varchar(255) DEFAULT NULL COMMENT '评委加入密钥（随机4位数字）'"
+            },
+            {
+              "name": "score_price",
+              "type": "decimal(10",
+              "raw": "`score_price` decimal(10,2) DEFAULT NULL COMMENT '查看评分费用'"
+            },
+            {
+              "name": "create_by",
+              "type": "int(11)",
+              "raw": "`create_by` int(11) DEFAULT NULL"
+            }
+          ],
+          "insertRows": 1700
+        },
+        "dfwq_groupjudges": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "int(11)",
+              "raw": "`id` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "comps_id",
+              "type": "int(11)",
+              "raw": "`comps_id` int(11) DEFAULT NULL COMMENT '关联赛事ID'"
+            },
+            {
+              "name": "group_id",
+              "type": "int(11)",
+              "raw": "`group_id` int(11) DEFAULT NULL COMMENT '组别ID'"
+            },
+            {
+              "name": "judges_id",
+              "type": "int(11)",
+              "raw": "`judges_id` int(11) DEFAULT NULL COMMENT '评委ID（关联dfwq_comps_user表ID）'"
+            },
+            {
+              "name": "isLeader",
+              "type": "int(11)",
+              "raw": "`isLeader` int(11) DEFAULT NULL COMMENT '是否是组长（0否，1是）'"
+            }
+          ],
+          "insertRows": 5838
+        },
+        "dfwq_integral": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "int(11)",
+              "raw": "`id` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "user_id",
+              "type": "int(11)",
+              "raw": "`user_id` int(11) DEFAULT NULL COMMENT '用户ID，关联用户表/或者系统用户表'"
+            },
+            {
+              "name": "userType",
+              "type": "int(11)",
+              "raw": "`userType` int(11) DEFAULT NULL COMMENT '用户类型，1为普通用户，2为系统用户（即机构）'"
+            },
+            {
+              "name": "integral_text",
+              "type": "int(11)",
+              "raw": "`integral_text` int(11) DEFAULT NULL COMMENT '积分明细内容（关联数据字典表）'"
+            },
+            {
+              "name": "integral_value",
+              "type": "int(11)",
+              "raw": "`integral_value` int(11) DEFAULT NULL COMMENT '积分值'"
+            },
+            {
+              "name": "integral_time",
+              "type": "datetime",
+              "raw": "`integral_time` datetime DEFAULT NULL COMMENT '获得积分时间'"
+            }
+          ],
+          "insertRows": 2475
+        },
+        "dfwq_player": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "varchar(100)",
+              "raw": "`id` varchar(100) NOT NULL COMMENT 'id'"
+            },
+            {
+              "name": "uid",
+              "type": "int(11)",
+              "raw": "`uid` int(11) NOT NULL DEFAULT '0' COMMENT '用户ID（关联dfwq_comps_user表ID）'"
+            },
+            {
+              "name": "name",
+              "type": "varchar(16)",
+              "raw": "`name` varchar(16) DEFAULT NULL COMMENT '姓名'"
+            },
+            {
+              "name": "show_name",
+              "type": "varchar(32)",
+              "raw": "`show_name` varchar(32) DEFAULT NULL COMMENT '节目名称'"
+            },
+            {
+              "name": "tid",
+              "type": "int(11)",
+              "raw": "`tid` int(11) NOT NULL DEFAULT '0' COMMENT '组别(关联组别ID)'"
+            },
+            {
+              "name": "cid",
+              "type": "int(11)",
+              "raw": "`cid` int(11) DEFAULT '0' COMMENT '赛事ID'"
+            },
+            {
+              "name": "amount",
+              "type": "int(11)",
+              "raw": "`amount` int(11) NOT NULL DEFAULT '0' COMMENT '人数'"
+            },
+            {
+              "name": "cost",
+              "type": "float",
+              "raw": "`cost` float NOT NULL DEFAULT '0' COMMENT '支付报名费金额'"
+            },
+            {
+              "name": "mobile",
+              "type": "varchar(12)",
+              "raw": "`mobile` varchar(12) DEFAULT NULL COMMENT '手机号'"
+            },
+            {
+              "name": "province",
+              "type": "varchar(10)",
+              "raw": "`province` varchar(10) DEFAULT NULL COMMENT '省份'"
+            },
+            {
+              "name": "city",
+              "type": "varchar(10)",
+              "raw": "`city` varchar(10) DEFAULT NULL COMMENT '城市'"
+            },
+            {
+              "name": "group_name",
+              "type": "varchar(32)",
+              "raw": "`group_name` varchar(32) DEFAULT NULL COMMENT '机构简称'"
+            },
+            {
+              "name": "zhidao",
+              "type": "varchar(32)",
+              "raw": "`zhidao` varchar(32) DEFAULT NULL COMMENT '指导老师'"
+            },
+            {
+              "name": "bianwu",
+              "type": "varchar(32)",
+              "raw": "`bianwu` varchar(32) DEFAULT NULL COMMENT '编舞老师'"
+            },
+            {
+              "name": "style",
+              "type": "int(11)",
+              "raw": "`style` int(11) DEFAULT NULL COMMENT '先音乐或先舞台定位(关联数字字典表)'"
+            },
+            {
+              "name": "mp3FileName",
+              "type": "varchar(400)",
+              "raw": "`mp3FileName` varchar(400) DEFAULT NULL COMMENT '音乐文件名称'"
+            },
+            {
+              "name": "mp3_file",
+              "type": "text",
+              "raw": "`mp3_file` text COMMENT '音乐文件(关联阿里云oss)'"
+            },
+            {
+              "name": "mp3Time",
+              "type": "varchar(100)",
+              "raw": "`mp3Time` varchar(100) DEFAULT NULL COMMENT '音乐时长'"
+            },
+            {
+              "name": "sign_time",
+              "type": "datetime",
+              "raw": "`sign_time` datetime DEFAULT NULL COMMENT '报名时间'"
+            },
+            {
+              "name": "signOrder",
+              "type": "varchar(255)",
+              "raw": "`signOrder` varchar(255) DEFAULT NULL COMMENT '报名顺序'"
+            },
+            {
+              "name": "isSignSuccess",
+              "type": "int(11)",
+              "raw": "`isSignSuccess` int(11) DEFAULT '0' COMMENT '是否报名成功（0不成功，1成功）'"
+            },
+            {
+              "name": "paid_time",
+              "type": "datetime",
+              "raw": "`paid_time` datetime DEFAULT NULL COMMENT '报名支付时间'"
+            },
+            {
+              "name": "isPaySuccess",
+              "type": "int(11)",
+              "raw": "`isPaySuccess` int(11) DEFAULT '0' COMMENT '报名是否支付成功（0不成功，1成功）'"
+            },
+            {
+              "name": "startOrder",
+              "type": "int(11)",
+              "raw": "`startOrder` int(11) DEFAULT NULL COMMENT '出场顺序'"
+            },
+            {
+              "name": "score",
+              "type": "decimal(10",
+              "raw": "`score` decimal(10,2) unsigned zerofill DEFAULT NULL COMMENT '评分值'"
+            },
+            {
+              "name": "score_time",
+              "type": "datetime",
+              "raw": "`score_time` datetime DEFAULT NULL COMMENT '查看评分时间'"
+            },
+            {
+              "name": "isScoreSuccess",
+              "type": "int(11)",
+              "raw": "`isScoreSuccess` int(11) DEFAULT '0' COMMENT '查看是否评分成功（0不成功，1成功）'"
+            },
+            {
+              "name": "costTradeNo",
+              "type": "varchar(50)",
+              "raw": "`costTradeNo` varchar(50) DEFAULT NULL COMMENT '查看评分支付编号'"
+            },
+            {
+              "name": "costScore",
+              "type": "float",
+              "raw": "`costScore` float NOT NULL DEFAULT '0' COMMENT '支付查看评分费金额'"
+            },
+            {
+              "name": "isCostSuccess",
+              "type": "varchar(255)",
+              "raw": "`isCostSuccess` varchar(255) DEFAULT NULL COMMENT '查看评分费是否支付成功（0不成功，1成功）'"
+            }
+          ],
+          "insertRows": 2033
+        },
+        "dfwq_score": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "int(11)",
+              "raw": "`id` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "scorerulesId",
+              "type": "int(11)",
+              "raw": "`scorerulesId` int(11) DEFAULT NULL COMMENT '评分规则ID（关联dfwq_competition_scorerules表）'"
+            },
+            {
+              "name": "user_id",
+              "type": "int(11)",
+              "raw": "`user_id` int(11) DEFAULT NULL COMMENT '用户ID（关联dfwq_comps_user表ID）'"
+            },
+            {
+              "name": "judges_id",
+              "type": "int(11)",
+              "raw": "`judges_id` int(11) DEFAULT NULL COMMENT '评委ID（关联dfwq_comps_user表ID）'"
+            },
+            {
+              "name": "comps_id",
+              "type": "int(11)",
+              "raw": "`comps_id` int(11) DEFAULT NULL COMMENT '关联赛事ID'"
+            },
+            {
+              "name": "group_id",
+              "type": "int(11)",
+              "raw": "`group_id` int(11) DEFAULT NULL COMMENT '组别ID'"
+            },
+            {
+              "name": "scoreValue",
+              "type": "decimal(10",
+              "raw": "`scoreValue` decimal(10,2) DEFAULT NULL COMMENT '分值'"
+            },
+            {
+              "name": "score_time",
+              "type": "datetime",
+              "raw": "`score_time` datetime DEFAULT NULL COMMENT '评分时间'"
+            }
+          ],
+          "insertRows": 65248
+        },
+        "dfwq_sms": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "int(11)",
+              "raw": "`id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键'"
+            },
+            {
+              "name": "code",
+              "type": "varchar(255)",
+              "raw": "`code` varchar(255) DEFAULT NULL COMMENT '验证码'"
+            },
+            {
+              "name": "mobile",
+              "type": "varchar(255)",
+              "raw": "`mobile` varchar(255) DEFAULT NULL COMMENT '手机号'"
+            },
+            {
+              "name": "sendDate",
+              "type": "datetime",
+              "raw": "`sendDate` datetime DEFAULT NULL COMMENT '发送时间'"
+            },
+            {
+              "name": "status",
+              "type": "varchar(255)",
+              "raw": "`status` varchar(255) DEFAULT NULL COMMENT '0：未验证；1：已验证'"
+            }
+          ],
+          "insertRows": 84
+        },
+        "gen_table": {
+          "columns": [
+            {
+              "name": "table_id",
+              "type": "bigint(20)",
+              "raw": "`table_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '编号'"
+            },
+            {
+              "name": "table_name",
+              "type": "varchar(200)",
+              "raw": "`table_name` varchar(200) DEFAULT '' COMMENT '表名称'"
+            },
+            {
+              "name": "table_comment",
+              "type": "varchar(500)",
+              "raw": "`table_comment` varchar(500) DEFAULT '' COMMENT '表描述'"
+            },
+            {
+              "name": "sub_table_name",
+              "type": "varchar(64)",
+              "raw": "`sub_table_name` varchar(64) DEFAULT NULL COMMENT '关联子表的表名'"
+            },
+            {
+              "name": "sub_table_fk_name",
+              "type": "varchar(64)",
+              "raw": "`sub_table_fk_name` varchar(64) DEFAULT NULL COMMENT '子表关联的外键名'"
+            },
+            {
+              "name": "class_name",
+              "type": "varchar(100)",
+              "raw": "`class_name` varchar(100) DEFAULT '' COMMENT '实体类名称'"
+            },
+            {
+              "name": "tpl_category",
+              "type": "varchar(200)",
+              "raw": "`tpl_category` varchar(200) DEFAULT 'crud' COMMENT '使用的模板（crud单表操作 tree树表操作）'"
+            },
+            {
+              "name": "tpl_web_type",
+              "type": "varchar(30)",
+              "raw": "`tpl_web_type` varchar(30) DEFAULT '' COMMENT '前端模板类型（element-ui模版 element-plus模版）'"
+            },
+            {
+              "name": "package_name",
+              "type": "varchar(100)",
+              "raw": "`package_name` varchar(100) DEFAULT NULL COMMENT '生成包路径'"
+            },
+            {
+              "name": "module_name",
+              "type": "varchar(30)",
+              "raw": "`module_name` varchar(30) DEFAULT NULL COMMENT '生成模块名'"
+            },
+            {
+              "name": "business_name",
+              "type": "varchar(30)",
+              "raw": "`business_name` varchar(30) DEFAULT NULL COMMENT '生成业务名'"
+            },
+            {
+              "name": "function_name",
+              "type": "varchar(50)",
+              "raw": "`function_name` varchar(50) DEFAULT NULL COMMENT '生成功能名'"
+            },
+            {
+              "name": "function_author",
+              "type": "varchar(50)",
+              "raw": "`function_author` varchar(50) DEFAULT NULL COMMENT '生成功能作者'"
+            },
+            {
+              "name": "gen_type",
+              "type": "char(1)",
+              "raw": "`gen_type` char(1) DEFAULT '0' COMMENT '生成代码方式（0zip压缩包 1自定义路径）'"
+            },
+            {
+              "name": "gen_path",
+              "type": "varchar(200)",
+              "raw": "`gen_path` varchar(200) DEFAULT '/' COMMENT '生成路径（不填默认项目路径）'"
+            },
+            {
+              "name": "options",
+              "type": "varchar(1000)",
+              "raw": "`options` varchar(1000) DEFAULT NULL COMMENT '其它生成选项'"
+            },
+            {
+              "name": "create_by",
+              "type": "varchar(64)",
+              "raw": "`create_by` varchar(64) DEFAULT '' COMMENT '创建者'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "update_by",
+              "type": "varchar(64)",
+              "raw": "`update_by` varchar(64) DEFAULT '' COMMENT '更新者'"
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "raw": "`update_time` datetime DEFAULT NULL COMMENT '更新时间'"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(500)",
+              "raw": "`remark` varchar(500) DEFAULT NULL COMMENT '备注'"
+            }
+          ],
+          "insertRows": 10
+        },
+        "gen_table_column": {
+          "columns": [
+            {
+              "name": "column_id",
+              "type": "bigint(20)",
+              "raw": "`column_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '编号'"
+            },
+            {
+              "name": "table_id",
+              "type": "bigint(20)",
+              "raw": "`table_id` bigint(20) DEFAULT NULL COMMENT '归属表编号'"
+            },
+            {
+              "name": "column_name",
+              "type": "varchar(200)",
+              "raw": "`column_name` varchar(200) DEFAULT NULL COMMENT '列名称'"
+            },
+            {
+              "name": "column_comment",
+              "type": "varchar(500)",
+              "raw": "`column_comment` varchar(500) DEFAULT NULL COMMENT '列描述'"
+            },
+            {
+              "name": "column_type",
+              "type": "varchar(100)",
+              "raw": "`column_type` varchar(100) DEFAULT NULL COMMENT '列类型'"
+            },
+            {
+              "name": "java_type",
+              "type": "varchar(500)",
+              "raw": "`java_type` varchar(500) DEFAULT NULL COMMENT 'JAVA类型'"
+            },
+            {
+              "name": "java_field",
+              "type": "varchar(200)",
+              "raw": "`java_field` varchar(200) DEFAULT NULL COMMENT 'JAVA字段名'"
+            },
+            {
+              "name": "is_pk",
+              "type": "char(1)",
+              "raw": "`is_pk` char(1) DEFAULT NULL COMMENT '是否主键（1是）'"
+            },
+            {
+              "name": "is_increment",
+              "type": "char(1)",
+              "raw": "`is_increment` char(1) DEFAULT NULL COMMENT '是否自增（1是）'"
+            },
+            {
+              "name": "is_required",
+              "type": "char(1)",
+              "raw": "`is_required` char(1) DEFAULT NULL COMMENT '是否必填（1是）'"
+            },
+            {
+              "name": "is_insert",
+              "type": "char(1)",
+              "raw": "`is_insert` char(1) DEFAULT NULL COMMENT '是否为插入字段（1是）'"
+            },
+            {
+              "name": "is_edit",
+              "type": "char(1)",
+              "raw": "`is_edit` char(1) DEFAULT NULL COMMENT '是否编辑字段（1是）'"
+            },
+            {
+              "name": "is_list",
+              "type": "char(1)",
+              "raw": "`is_list` char(1) DEFAULT NULL COMMENT '是否列表字段（1是）'"
+            },
+            {
+              "name": "is_query",
+              "type": "char(1)",
+              "raw": "`is_query` char(1) DEFAULT NULL COMMENT '是否查询字段（1是）'"
+            },
+            {
+              "name": "query_type",
+              "type": "varchar(200)",
+              "raw": "`query_type` varchar(200) DEFAULT 'EQ' COMMENT '查询方式（等于、不等于、大于、小于、范围）'"
+            },
+            {
+              "name": "html_type",
+              "type": "varchar(200)",
+              "raw": "`html_type` varchar(200) DEFAULT NULL COMMENT '显示类型（文本框、文本域、下拉框、复选框、单选框、日期控件）'"
+            },
+            {
+              "name": "dict_type",
+              "type": "varchar(200)",
+              "raw": "`dict_type` varchar(200) DEFAULT '' COMMENT '字典类型'"
+            },
+            {
+              "name": "sort",
+              "type": "int(11)",
+              "raw": "`sort` int(11) DEFAULT NULL COMMENT '排序'"
+            },
+            {
+              "name": "create_by",
+              "type": "varchar(64)",
+              "raw": "`create_by` varchar(64) DEFAULT '' COMMENT '创建者'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "update_by",
+              "type": "varchar(64)",
+              "raw": "`update_by` varchar(64) DEFAULT '' COMMENT '更新者'"
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "raw": "`update_time` datetime DEFAULT NULL COMMENT '更新时间'"
+            }
+          ],
+          "insertRows": 99
+        },
+        "sys_config": {
+          "columns": [
+            {
+              "name": "config_id",
+              "type": "int(11)",
+              "raw": "`config_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '参数主键'"
+            },
+            {
+              "name": "config_name",
+              "type": "varchar(100)",
+              "raw": "`config_name` varchar(100) DEFAULT '' COMMENT '参数名称'"
+            },
+            {
+              "name": "config_key",
+              "type": "varchar(100)",
+              "raw": "`config_key` varchar(100) DEFAULT '' COMMENT '参数键名'"
+            },
+            {
+              "name": "config_value",
+              "type": "varchar(500)",
+              "raw": "`config_value` varchar(500) DEFAULT '' COMMENT '参数键值'"
+            },
+            {
+              "name": "config_type",
+              "type": "char(1)",
+              "raw": "`config_type` char(1) DEFAULT 'N' COMMENT '系统内置（Y是 N否）'"
+            },
+            {
+              "name": "create_by",
+              "type": "varchar(64)",
+              "raw": "`create_by` varchar(64) DEFAULT '' COMMENT '创建者'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "update_by",
+              "type": "varchar(64)",
+              "raw": "`update_by` varchar(64) DEFAULT '' COMMENT '更新者'"
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "raw": "`update_time` datetime DEFAULT NULL COMMENT '更新时间'"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(500)",
+              "raw": "`remark` varchar(500) DEFAULT NULL COMMENT '备注'"
+            }
+          ],
+          "insertRows": 5
+        },
+        "sys_dept": {
+          "columns": [
+            {
+              "name": "dept_id",
+              "type": "bigint(20)",
+              "raw": "`dept_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '部门id'"
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint(20)",
+              "raw": "`parent_id` bigint(20) DEFAULT '0' COMMENT '父部门id'"
+            },
+            {
+              "name": "ancestors",
+              "type": "varchar(50)",
+              "raw": "`ancestors` varchar(50) DEFAULT '' COMMENT '祖级列表'"
+            },
+            {
+              "name": "dept_name",
+              "type": "varchar(30)",
+              "raw": "`dept_name` varchar(30) DEFAULT '' COMMENT '部门名称'"
+            },
+            {
+              "name": "order_num",
+              "type": "int(11)",
+              "raw": "`order_num` int(11) DEFAULT '0' COMMENT '显示顺序'"
+            },
+            {
+              "name": "leader",
+              "type": "varchar(20)",
+              "raw": "`leader` varchar(20) DEFAULT NULL COMMENT '负责人'"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(11)",
+              "raw": "`phone` varchar(11) DEFAULT NULL COMMENT '联系电话'"
+            },
+            {
+              "name": "email",
+              "type": "varchar(50)",
+              "raw": "`email` varchar(50) DEFAULT NULL COMMENT '邮箱'"
+            },
+            {
+              "name": "status",
+              "type": "char(1)",
+              "raw": "`status` char(1) DEFAULT '0' COMMENT '部门状态（0正常 1停用）'"
+            },
+            {
+              "name": "del_flag",
+              "type": "char(1)",
+              "raw": "`del_flag` char(1) DEFAULT '0' COMMENT '删除标志（0代表存在 2代表删除）'"
+            },
+            {
+              "name": "create_by",
+              "type": "varchar(64)",
+              "raw": "`create_by` varchar(64) DEFAULT '' COMMENT '创建者'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "update_by",
+              "type": "varchar(64)",
+              "raw": "`update_by` varchar(64) DEFAULT '' COMMENT '更新者'"
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "raw": "`update_time` datetime DEFAULT NULL COMMENT '更新时间'"
+            }
+          ],
+          "insertRows": 12
+        },
+        "sys_dict_data": {
+          "columns": [
+            {
+              "name": "dict_code",
+              "type": "bigint(20)",
+              "raw": "`dict_code` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '字典编码'"
+            },
+            {
+              "name": "dict_sort",
+              "type": "int(11)",
+              "raw": "`dict_sort` int(11) DEFAULT '0' COMMENT '字典排序'"
+            },
+            {
+              "name": "dict_label",
+              "type": "varchar(100)",
+              "raw": "`dict_label` varchar(100) DEFAULT '' COMMENT '字典标签'"
+            },
+            {
+              "name": "dict_value",
+              "type": "varchar(100)",
+              "raw": "`dict_value` varchar(100) DEFAULT '' COMMENT '字典键值'"
+            },
+            {
+              "name": "dict_type",
+              "type": "varchar(100)",
+              "raw": "`dict_type` varchar(100) DEFAULT '' COMMENT '字典类型'"
+            },
+            {
+              "name": "css_class",
+              "type": "varchar(100)",
+              "raw": "`css_class` varchar(100) DEFAULT NULL COMMENT '样式属性（其他样式扩展）'"
+            },
+            {
+              "name": "list_class",
+              "type": "varchar(100)",
+              "raw": "`list_class` varchar(100) DEFAULT NULL COMMENT '表格回显样式'"
+            },
+            {
+              "name": "is_default",
+              "type": "char(1)",
+              "raw": "`is_default` char(1) DEFAULT 'N' COMMENT '是否默认（Y是 N否）'"
+            },
+            {
+              "name": "status",
+              "type": "char(1)",
+              "raw": "`status` char(1) DEFAULT '0' COMMENT '状态（0正常 1停用）'"
+            },
+            {
+              "name": "create_by",
+              "type": "varchar(64)",
+              "raw": "`create_by` varchar(64) DEFAULT '' COMMENT '创建者'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "update_by",
+              "type": "varchar(64)",
+              "raw": "`update_by` varchar(64) DEFAULT '' COMMENT '更新者'"
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "raw": "`update_time` datetime DEFAULT NULL COMMENT '更新时间'"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(500)",
+              "raw": "`remark` varchar(500) DEFAULT NULL COMMENT '备注'"
+            }
+          ],
+          "insertRows": 44
+        },
+        "sys_dict_type": {
+          "columns": [
+            {
+              "name": "dict_id",
+              "type": "bigint(20)",
+              "raw": "`dict_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '字典主键'"
+            },
+            {
+              "name": "dict_name",
+              "type": "varchar(100)",
+              "raw": "`dict_name` varchar(100) DEFAULT '' COMMENT '字典名称'"
+            },
+            {
+              "name": "dict_type",
+              "type": "varchar(100)",
+              "raw": "`dict_type` varchar(100) DEFAULT '' COMMENT '字典类型'"
+            },
+            {
+              "name": "status",
+              "type": "char(1)",
+              "raw": "`status` char(1) DEFAULT '0' COMMENT '状态（0正常 1停用）'"
+            },
+            {
+              "name": "create_by",
+              "type": "varchar(64)",
+              "raw": "`create_by` varchar(64) DEFAULT '' COMMENT '创建者'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "update_by",
+              "type": "varchar(64)",
+              "raw": "`update_by` varchar(64) DEFAULT '' COMMENT '更新者'"
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "raw": "`update_time` datetime DEFAULT NULL COMMENT '更新时间'"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(500)",
+              "raw": "`remark` varchar(500) DEFAULT NULL COMMENT '备注'"
+            }
+          ],
+          "insertRows": 14
+        },
+        "sys_job": {
+          "columns": [
+            {
+              "name": "job_id",
+              "type": "bigint(20)",
+              "raw": "`job_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '任务ID'"
+            },
+            {
+              "name": "job_name",
+              "type": "varchar(64)",
+              "raw": "`job_name` varchar(64) NOT NULL DEFAULT '' COMMENT '任务名称'"
+            },
+            {
+              "name": "job_group",
+              "type": "varchar(64)",
+              "raw": "`job_group` varchar(64) NOT NULL DEFAULT 'DEFAULT' COMMENT '任务组名'"
+            },
+            {
+              "name": "invoke_target",
+              "type": "varchar(500)",
+              "raw": "`invoke_target` varchar(500) NOT NULL COMMENT '调用目标字符串'"
+            },
+            {
+              "name": "cron_expression",
+              "type": "varchar(255)",
+              "raw": "`cron_expression` varchar(255) DEFAULT '' COMMENT 'cron执行表达式'"
+            },
+            {
+              "name": "misfire_policy",
+              "type": "varchar(20)",
+              "raw": "`misfire_policy` varchar(20) DEFAULT '3' COMMENT '计划执行错误策略（1立即执行 2执行一次 3放弃执行）'"
+            },
+            {
+              "name": "concurrent",
+              "type": "char(1)",
+              "raw": "`concurrent` char(1) DEFAULT '1' COMMENT '是否并发执行（0允许 1禁止）'"
+            },
+            {
+              "name": "status",
+              "type": "char(1)",
+              "raw": "`status` char(1) DEFAULT '0' COMMENT '状态（0正常 1暂停）'"
+            },
+            {
+              "name": "create_by",
+              "type": "varchar(64)",
+              "raw": "`create_by` varchar(64) DEFAULT '' COMMENT '创建者'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "update_by",
+              "type": "varchar(64)",
+              "raw": "`update_by` varchar(64) DEFAULT '' COMMENT '更新者'"
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "raw": "`update_time` datetime DEFAULT NULL COMMENT '更新时间'"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(500)",
+              "raw": "`remark` varchar(500) DEFAULT '' COMMENT '备注信息'"
+            }
+          ],
+          "insertRows": 3
+        },
+        "sys_job_log": {
+          "columns": [
+            {
+              "name": "job_log_id",
+              "type": "bigint(20)",
+              "raw": "`job_log_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '任务日志ID'"
+            },
+            {
+              "name": "job_name",
+              "type": "varchar(64)",
+              "raw": "`job_name` varchar(64) NOT NULL COMMENT '任务名称'"
+            },
+            {
+              "name": "job_group",
+              "type": "varchar(64)",
+              "raw": "`job_group` varchar(64) NOT NULL COMMENT '任务组名'"
+            },
+            {
+              "name": "invoke_target",
+              "type": "varchar(500)",
+              "raw": "`invoke_target` varchar(500) NOT NULL COMMENT '调用目标字符串'"
+            },
+            {
+              "name": "job_message",
+              "type": "varchar(500)",
+              "raw": "`job_message` varchar(500) DEFAULT NULL COMMENT '日志信息'"
+            },
+            {
+              "name": "status",
+              "type": "char(1)",
+              "raw": "`status` char(1) DEFAULT '0' COMMENT '执行状态（0正常 1失败）'"
+            },
+            {
+              "name": "exception_info",
+              "type": "varchar(2000)",
+              "raw": "`exception_info` varchar(2000) DEFAULT '' COMMENT '异常信息'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            }
+          ],
+          "insertRows": 0
+        },
+        "sys_logininfor": {
+          "columns": [
+            {
+              "name": "info_id",
+              "type": "bigint(20)",
+              "raw": "`info_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '访问ID'"
+            },
+            {
+              "name": "user_name",
+              "type": "varchar(50)",
+              "raw": "`user_name` varchar(50) DEFAULT '' COMMENT '用户账号'"
+            },
+            {
+              "name": "ipaddr",
+              "type": "varchar(128)",
+              "raw": "`ipaddr` varchar(128) DEFAULT '' COMMENT '登录IP地址'"
+            },
+            {
+              "name": "status",
+              "type": "char(1)",
+              "raw": "`status` char(1) DEFAULT '0' COMMENT '登录状态（0成功 1失败）'"
+            },
+            {
+              "name": "msg",
+              "type": "varchar(255)",
+              "raw": "`msg` varchar(255) DEFAULT '' COMMENT '提示信息'"
+            },
+            {
+              "name": "access_time",
+              "type": "datetime",
+              "raw": "`access_time` datetime DEFAULT NULL COMMENT '访问时间'"
+            }
+          ],
+          "insertRows": 1561
+        },
+        "sys_menu": {
+          "columns": [
+            {
+              "name": "menu_id",
+              "type": "bigint(20)",
+              "raw": "`menu_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '菜单ID'"
+            },
+            {
+              "name": "menu_name",
+              "type": "varchar(50)",
+              "raw": "`menu_name` varchar(50) NOT NULL COMMENT '菜单名称'"
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint(20)",
+              "raw": "`parent_id` bigint(20) DEFAULT '0' COMMENT '父菜单ID'"
+            },
+            {
+              "name": "order_num",
+              "type": "int(11)",
+              "raw": "`order_num` int(11) DEFAULT '0' COMMENT '显示顺序'"
+            },
+            {
+              "name": "path",
+              "type": "varchar(200)",
+              "raw": "`path` varchar(200) DEFAULT '' COMMENT '路由地址'"
+            },
+            {
+              "name": "component",
+              "type": "varchar(255)",
+              "raw": "`component` varchar(255) DEFAULT NULL COMMENT '组件路径'"
+            },
+            {
+              "name": "query",
+              "type": "varchar(255)",
+              "raw": "`query` varchar(255) DEFAULT NULL COMMENT '路由参数'"
+            },
+            {
+              "name": "is_frame",
+              "type": "int(11)",
+              "raw": "`is_frame` int(11) DEFAULT '1' COMMENT '是否为外链（0是 1否）'"
+            },
+            {
+              "name": "is_cache",
+              "type": "int(11)",
+              "raw": "`is_cache` int(11) DEFAULT '0' COMMENT '是否缓存（0缓存 1不缓存）'"
+            },
+            {
+              "name": "menu_type",
+              "type": "char(1)",
+              "raw": "`menu_type` char(1) DEFAULT '' COMMENT '菜单类型（M目录 C菜单 F按钮）'"
+            },
+            {
+              "name": "visible",
+              "type": "char(1)",
+              "raw": "`visible` char(1) DEFAULT '0' COMMENT '菜单状态（0显示 1隐藏）'"
+            },
+            {
+              "name": "status",
+              "type": "char(1)",
+              "raw": "`status` char(1) DEFAULT '0' COMMENT '菜单状态（0正常 1停用）'"
+            },
+            {
+              "name": "perms",
+              "type": "varchar(100)",
+              "raw": "`perms` varchar(100) DEFAULT NULL COMMENT '权限标识'"
+            },
+            {
+              "name": "icon",
+              "type": "varchar(100)",
+              "raw": "`icon` varchar(100) DEFAULT '#' COMMENT '菜单图标'"
+            },
+            {
+              "name": "create_by",
+              "type": "varchar(64)",
+              "raw": "`create_by` varchar(64) DEFAULT '' COMMENT '创建者'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "update_by",
+              "type": "varchar(64)",
+              "raw": "`update_by` varchar(64) DEFAULT '' COMMENT '更新者'"
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "raw": "`update_time` datetime DEFAULT NULL COMMENT '更新时间'"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(500)",
+              "raw": "`remark` varchar(500) DEFAULT '' COMMENT '备注'"
+            }
+          ],
+          "insertRows": 127
+        },
+        "sys_notice": {
+          "columns": [
+            {
+              "name": "notice_id",
+              "type": "int(11)",
+              "raw": "`notice_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '公告ID'"
+            },
+            {
+              "name": "notice_title",
+              "type": "varchar(50)",
+              "raw": "`notice_title` varchar(50) NOT NULL COMMENT '公告标题'"
+            },
+            {
+              "name": "notice_type",
+              "type": "char(1)",
+              "raw": "`notice_type` char(1) NOT NULL COMMENT '公告类型（1通知 2公告）'"
+            },
+            {
+              "name": "notice_content",
+              "type": "longblob",
+              "raw": "`notice_content` longblob COMMENT '公告内容'"
+            },
+            {
+              "name": "status",
+              "type": "char(1)",
+              "raw": "`status` char(1) DEFAULT '0' COMMENT '公告状态（0正常 1关闭）'"
+            },
+            {
+              "name": "create_by",
+              "type": "varchar(64)",
+              "raw": "`create_by` varchar(64) DEFAULT '' COMMENT '创建者'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "update_by",
+              "type": "varchar(64)",
+              "raw": "`update_by` varchar(64) DEFAULT '' COMMENT '更新者'"
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "raw": "`update_time` datetime DEFAULT NULL COMMENT '更新时间'"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(255)",
+              "raw": "`remark` varchar(255) DEFAULT NULL COMMENT '备注'"
+            }
+          ],
+          "insertRows": 2
+        },
+        "sys_oper_log": {
+          "columns": [
+            {
+              "name": "oper_id",
+              "type": "bigint(20)",
+              "raw": "`oper_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '日志主键'"
+            },
+            {
+              "name": "title",
+              "type": "varchar(50)",
+              "raw": "`title` varchar(50) DEFAULT '' COMMENT '模块标题'"
+            },
+            {
+              "name": "business_type",
+              "type": "int(11)",
+              "raw": "`business_type` int(11) DEFAULT '0' COMMENT '业务类型（0其它 1新增 2修改 3删除）'"
+            },
+            {
+              "name": "method",
+              "type": "varchar(100)",
+              "raw": "`method` varchar(100) DEFAULT '' COMMENT '方法名称'"
+            },
+            {
+              "name": "request_method",
+              "type": "varchar(10)",
+              "raw": "`request_method` varchar(10) DEFAULT '' COMMENT '请求方式'"
+            },
+            {
+              "name": "operator_type",
+              "type": "int(11)",
+              "raw": "`operator_type` int(11) DEFAULT '0' COMMENT '操作类别（0其它 1后台用户 2手机端用户）'"
+            },
+            {
+              "name": "oper_name",
+              "type": "varchar(50)",
+              "raw": "`oper_name` varchar(50) DEFAULT '' COMMENT '操作人员'"
+            },
+            {
+              "name": "dept_name",
+              "type": "varchar(50)",
+              "raw": "`dept_name` varchar(50) DEFAULT '' COMMENT '部门名称'"
+            },
+            {
+              "name": "oper_url",
+              "type": "varchar(255)",
+              "raw": "`oper_url` varchar(255) DEFAULT '' COMMENT '请求URL'"
+            },
+            {
+              "name": "oper_ip",
+              "type": "varchar(128)",
+              "raw": "`oper_ip` varchar(128) DEFAULT '' COMMENT '主机地址'"
+            },
+            {
+              "name": "oper_location",
+              "type": "varchar(255)",
+              "raw": "`oper_location` varchar(255) DEFAULT '' COMMENT '操作地点'"
+            },
+            {
+              "name": "oper_param",
+              "type": "varchar(2000)",
+              "raw": "`oper_param` varchar(2000) DEFAULT '' COMMENT '请求参数'"
+            },
+            {
+              "name": "json_result",
+              "type": "varchar(2000)",
+              "raw": "`json_result` varchar(2000) DEFAULT '' COMMENT '返回参数'"
+            },
+            {
+              "name": "status",
+              "type": "int(11)",
+              "raw": "`status` int(11) DEFAULT '0' COMMENT '操作状态（0正常 1异常）'"
+            },
+            {
+              "name": "error_msg",
+              "type": "varchar(2000)",
+              "raw": "`error_msg` varchar(2000) DEFAULT '' COMMENT '错误消息'"
+            },
+            {
+              "name": "oper_time",
+              "type": "datetime",
+              "raw": "`oper_time` datetime DEFAULT NULL COMMENT '操作时间'"
+            },
+            {
+              "name": "cost_time",
+              "type": "bigint(20)",
+              "raw": "`cost_time` bigint(20) DEFAULT '0' COMMENT '消耗时间'"
+            }
+          ],
+          "insertRows": 10264
+        },
+        "sys_pic": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "int(11)",
+              "raw": "`id` int(11) NOT NULL AUTO_INCREMENT COMMENT '图片编号'"
+            },
+            {
+              "name": "pic_name",
+              "type": "varchar(255)",
+              "raw": "`pic_name` varchar(255) DEFAULT NULL COMMENT '图片名称'"
+            },
+            {
+              "name": "pic_url",
+              "type": "varchar(255)",
+              "raw": "`pic_url` varchar(255) DEFAULT NULL COMMENT '图片路径'"
+            }
+          ],
+          "insertRows": 0
+        },
+        "sys_post": {
+          "columns": [
+            {
+              "name": "post_id",
+              "type": "bigint(20)",
+              "raw": "`post_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '岗位ID'"
+            },
+            {
+              "name": "post_code",
+              "type": "varchar(64)",
+              "raw": "`post_code` varchar(64) NOT NULL COMMENT '岗位编码'"
+            },
+            {
+              "name": "post_name",
+              "type": "varchar(50)",
+              "raw": "`post_name` varchar(50) NOT NULL COMMENT '岗位名称'"
+            },
+            {
+              "name": "post_sort",
+              "type": "int(11)",
+              "raw": "`post_sort` int(11) NOT NULL COMMENT '显示顺序'"
+            },
+            {
+              "name": "status",
+              "type": "char(1)",
+              "raw": "`status` char(1) NOT NULL COMMENT '状态（0正常 1停用）'"
+            },
+            {
+              "name": "create_by",
+              "type": "varchar(64)",
+              "raw": "`create_by` varchar(64) DEFAULT '' COMMENT '创建者'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "update_by",
+              "type": "varchar(64)",
+              "raw": "`update_by` varchar(64) DEFAULT '' COMMENT '更新者'"
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "raw": "`update_time` datetime DEFAULT NULL COMMENT '更新时间'"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(500)",
+              "raw": "`remark` varchar(500) DEFAULT NULL COMMENT '备注'"
+            }
+          ],
+          "insertRows": 4
+        },
+        "sys_role": {
+          "columns": [
+            {
+              "name": "role_id",
+              "type": "bigint(20)",
+              "raw": "`role_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '角色ID'"
+            },
+            {
+              "name": "role_name",
+              "type": "varchar(30)",
+              "raw": "`role_name` varchar(30) NOT NULL COMMENT '角色名称'"
+            },
+            {
+              "name": "role_key",
+              "type": "varchar(100)",
+              "raw": "`role_key` varchar(100) NOT NULL COMMENT '角色权限字符串'"
+            },
+            {
+              "name": "role_sort",
+              "type": "int(11)",
+              "raw": "`role_sort` int(11) NOT NULL COMMENT '显示顺序'"
+            },
+            {
+              "name": "data_scope",
+              "type": "char(1)",
+              "raw": "`data_scope` char(1) DEFAULT '1' COMMENT '数据范围（1：全部数据权限 2：自定数据权限 3：本部门数据权限 4：本部门及以下数据权限）'"
+            },
+            {
+              "name": "menu_check_strictly",
+              "type": "tinyint(1)",
+              "raw": "`menu_check_strictly` tinyint(1) DEFAULT '1' COMMENT '菜单树选择项是否关联显示'"
+            },
+            {
+              "name": "dept_check_strictly",
+              "type": "tinyint(1)",
+              "raw": "`dept_check_strictly` tinyint(1) DEFAULT '1' COMMENT '部门树选择项是否关联显示'"
+            },
+            {
+              "name": "status",
+              "type": "char(1)",
+              "raw": "`status` char(1) NOT NULL COMMENT '角色状态（0正常 1停用）'"
+            },
+            {
+              "name": "del_flag",
+              "type": "char(1)",
+              "raw": "`del_flag` char(1) DEFAULT '0' COMMENT '删除标志（0代表存在 2代表删除）'"
+            },
+            {
+              "name": "create_by",
+              "type": "varchar(64)",
+              "raw": "`create_by` varchar(64) DEFAULT '' COMMENT '创建者'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "update_by",
+              "type": "varchar(64)",
+              "raw": "`update_by` varchar(64) DEFAULT '' COMMENT '更新者'"
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "raw": "`update_time` datetime DEFAULT NULL COMMENT '更新时间'"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(500)",
+              "raw": "`remark` varchar(500) DEFAULT NULL COMMENT '备注'"
+            }
+          ],
+          "insertRows": 3
+        },
+        "sys_role_dept": {
+          "columns": [
+            {
+              "name": "role_id",
+              "type": "bigint(20)",
+              "raw": "`role_id` bigint(20) NOT NULL COMMENT '角色ID'"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint(20)",
+              "raw": "`dept_id` bigint(20) NOT NULL COMMENT '部门ID'"
+            }
+          ],
+          "insertRows": 3
+        },
+        "sys_role_menu": {
+          "columns": [
+            {
+              "name": "role_id",
+              "type": "bigint(20)",
+              "raw": "`role_id` bigint(20) NOT NULL COMMENT '角色ID'"
+            },
+            {
+              "name": "menu_id",
+              "type": "bigint(20)",
+              "raw": "`menu_id` bigint(20) NOT NULL COMMENT '菜单ID'"
+            }
+          ],
+          "insertRows": 100
+        },
+        "sys_user": {
+          "columns": [
+            {
+              "name": "user_id",
+              "type": "bigint(20)",
+              "raw": "`user_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '用户ID'"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint(20)",
+              "raw": "`dept_id` bigint(20) DEFAULT NULL COMMENT '部门ID'"
+            },
+            {
+              "name": "user_name",
+              "type": "varchar(30)",
+              "raw": "`user_name` varchar(30) NOT NULL COMMENT '用户账号'"
+            },
+            {
+              "name": "nick_name",
+              "type": "varchar(30)",
+              "raw": "`nick_name` varchar(30) NOT NULL COMMENT '用户昵称'"
+            },
+            {
+              "name": "user_type",
+              "type": "varchar(2)",
+              "raw": "`user_type` varchar(2) DEFAULT '00' COMMENT '用户类型（00系统用户）'"
+            },
+            {
+              "name": "email",
+              "type": "varchar(50)",
+              "raw": "`email` varchar(50) DEFAULT '' COMMENT '用户邮箱'"
+            },
+            {
+              "name": "phonenumber",
+              "type": "varchar(11)",
+              "raw": "`phonenumber` varchar(11) DEFAULT '' COMMENT '手机号码'"
+            },
+            {
+              "name": "sex",
+              "type": "char(1)",
+              "raw": "`sex` char(1) DEFAULT '0' COMMENT '用户性别（0男 1女 2未知）'"
+            },
+            {
+              "name": "avatar",
+              "type": "varchar(100)",
+              "raw": "`avatar` varchar(100) DEFAULT '' COMMENT '头像地址'"
+            },
+            {
+              "name": "password",
+              "type": "varchar(100)",
+              "raw": "`password` varchar(100) DEFAULT '' COMMENT '密码'"
+            },
+            {
+              "name": "status",
+              "type": "char(1)",
+              "raw": "`status` char(1) DEFAULT '0' COMMENT '帐号状态（0正常 1停用）'"
+            },
+            {
+              "name": "del_flag",
+              "type": "char(1)",
+              "raw": "`del_flag` char(1) DEFAULT '0' COMMENT '删除标志（0代表存在 2代表删除）'"
+            },
+            {
+              "name": "login_ip",
+              "type": "varchar(128)",
+              "raw": "`login_ip` varchar(128) DEFAULT '' COMMENT '最后登录IP'"
+            },
+            {
+              "name": "login_date",
+              "type": "datetime",
+              "raw": "`login_date` datetime DEFAULT NULL COMMENT '最后登录时间'"
+            },
+            {
+              "name": "create_by",
+              "type": "varchar(64)",
+              "raw": "`create_by` varchar(64) DEFAULT '' COMMENT '创建者'"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "raw": "`create_time` datetime DEFAULT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "update_by",
+              "type": "varchar(64)",
+              "raw": "`update_by` varchar(64) DEFAULT '' COMMENT '更新者'"
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "raw": "`update_time` datetime DEFAULT NULL COMMENT '更新时间'"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(500)",
+              "raw": "`remark` varchar(500) DEFAULT NULL COMMENT '备注'"
+            },
+            {
+              "name": "province",
+              "type": "varchar(50)",
+              "raw": "`province` varchar(50) DEFAULT NULL COMMENT '省份'"
+            },
+            {
+              "name": "city",
+              "type": "varchar(50)",
+              "raw": "`city` varchar(50) DEFAULT NULL COMMENT '城市'"
+            },
+            {
+              "name": "area",
+              "type": "varchar(50)",
+              "raw": "`area` varchar(50) DEFAULT NULL COMMENT '区域'"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "raw": "`address` varchar(255) DEFAULT NULL COMMENT '详细地址'"
+            },
+            {
+              "name": "longitude",
+              "type": "varchar(255)",
+              "raw": "`longitude` varchar(255) DEFAULT NULL COMMENT '地图经度'"
+            },
+            {
+              "name": "latitude",
+              "type": "varchar(255)",
+              "raw": "`latitude` varchar(255) DEFAULT NULL COMMENT '地图纬度'"
+            }
+          ],
+          "insertRows": 17
+        },
+        "sys_user_post": {
+          "columns": [
+            {
+              "name": "user_id",
+              "type": "bigint(20)",
+              "raw": "`user_id` bigint(20) NOT NULL COMMENT '用户ID'"
+            },
+            {
+              "name": "post_id",
+              "type": "bigint(20)",
+              "raw": "`post_id` bigint(20) NOT NULL COMMENT '岗位ID'"
+            }
+          ],
+          "insertRows": 8
+        },
+        "sys_user_role": {
+          "columns": [
+            {
+              "name": "user_id",
+              "type": "bigint(20)",
+              "raw": "`user_id` bigint(20) NOT NULL COMMENT '用户ID'"
+            },
+            {
+              "name": "role_id",
+              "type": "bigint(20)",
+              "raw": "`role_id` bigint(20) NOT NULL COMMENT '角色ID'"
+            }
+          ],
+          "insertRows": 14
+        },
+        "t_places": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "varchar(255)",
+              "raw": "`id` varchar(255) NOT NULL COMMENT '数据id'"
+            },
+            {
+              "name": "parent_id",
+              "type": "varchar(255)",
+              "raw": "`parent_id` varchar(255) NOT NULL DEFAULT '0' COMMENT '父级id'"
+            },
+            {
+              "name": "cname",
+              "type": "varchar(120)",
+              "raw": "`cname` varchar(120) NOT NULL DEFAULT '' COMMENT '名称'"
+            },
+            {
+              "name": "ctype",
+              "type": "tinyint(1)",
+              "raw": "`ctype` tinyint(1) NOT NULL DEFAULT '2' COMMENT '级别'"
+            }
+          ],
+          "insertRows": 3880
+        },
+        "t_test": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "int(11)",
+              "raw": "`id` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "pic_url",
+              "type": "varchar(255)",
+              "raw": "`pic_url` varchar(255) DEFAULT NULL COMMENT '单个图片'"
+            },
+            {
+              "name": "pic_moreurl",
+              "type": "varchar(2000)",
+              "raw": "`pic_moreurl` varchar(2000) DEFAULT NULL COMMENT '多个图片'"
+            },
+            {
+              "name": "jianjie",
+              "type": "text",
+              "raw": "`jianjie` text COMMENT '简介'"
+            },
+            {
+              "name": "wenbenyu",
+              "type": "varchar(255)",
+              "raw": "`wenbenyu` varchar(255) DEFAULT NULL COMMENT '文本域'"
+            },
+            {
+              "name": "wenjian_file",
+              "type": "varchar(255)",
+              "raw": "`wenjian_file` varchar(255) DEFAULT NULL COMMENT '文件上传'"
+            }
+          ],
+          "insertRows": 1
+        }
+      }
+    },
+    "software_config": {
+      "source": "software_config",
+      "file": "旧程序数据/software_config.sql",
+      "tableCount": 12,
+      "tables": {
+        "config_info": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint(20)",
+              "raw": "`id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id'"
+            },
+            {
+              "name": "data_id",
+              "type": "varchar(255)",
+              "raw": "`data_id` varchar(255) COLLATE utf8_bin NOT NULL COMMENT 'data_id'"
+            },
+            {
+              "name": "group_id",
+              "type": "varchar(255)",
+              "raw": "`group_id` varchar(255) COLLATE utf8_bin DEFAULT NULL"
+            },
+            {
+              "name": "content",
+              "type": "longtext",
+              "raw": "`content` longtext COLLATE utf8_bin NOT NULL COMMENT 'content'"
+            },
+            {
+              "name": "md5",
+              "type": "varchar(32)",
+              "raw": "`md5` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT 'md5'"
+            },
+            {
+              "name": "gmt_create",
+              "type": "datetime",
+              "raw": "`gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'"
+            },
+            {
+              "name": "gmt_modified",
+              "type": "datetime",
+              "raw": "`gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间'"
+            },
+            {
+              "name": "src_user",
+              "type": "text",
+              "raw": "`src_user` text COLLATE utf8_bin COMMENT 'source user'"
+            },
+            {
+              "name": "src_ip",
+              "type": "varchar(50)",
+              "raw": "`src_ip` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'source ip'"
+            },
+            {
+              "name": "app_name",
+              "type": "varchar(128)",
+              "raw": "`app_name` varchar(128) COLLATE utf8_bin DEFAULT NULL"
+            },
+            {
+              "name": "tenant_id",
+              "type": "varchar(128)",
+              "raw": "`tenant_id` varchar(128) COLLATE utf8_bin DEFAULT '' COMMENT '租户字段'"
+            },
+            {
+              "name": "c_desc",
+              "type": "varchar(256)",
+              "raw": "`c_desc` varchar(256) COLLATE utf8_bin DEFAULT NULL"
+            },
+            {
+              "name": "c_use",
+              "type": "varchar(64)",
+              "raw": "`c_use` varchar(64) COLLATE utf8_bin DEFAULT NULL"
+            },
+            {
+              "name": "effect",
+              "type": "varchar(64)",
+              "raw": "`effect` varchar(64) COLLATE utf8_bin DEFAULT NULL"
+            },
+            {
+              "name": "type",
+              "type": "varchar(64)",
+              "raw": "`type` varchar(64) COLLATE utf8_bin DEFAULT NULL"
+            },
+            {
+              "name": "c_schema",
+              "type": "text",
+              "raw": "`c_schema` text COLLATE utf8_bin"
+            },
+            {
+              "name": "encrypted_data_key",
+              "type": "text",
+              "raw": "`encrypted_data_key` text COLLATE utf8_bin COMMENT '秘钥'"
+            }
+          ],
+          "insertRows": 11
+        },
+        "config_info_aggr": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint(20)",
+              "raw": "`id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id'"
+            },
+            {
+              "name": "data_id",
+              "type": "varchar(255)",
+              "raw": "`data_id` varchar(255) COLLATE utf8_bin NOT NULL COMMENT 'data_id'"
+            },
+            {
+              "name": "group_id",
+              "type": "varchar(255)",
+              "raw": "`group_id` varchar(255) COLLATE utf8_bin NOT NULL COMMENT 'group_id'"
+            },
+            {
+              "name": "datum_id",
+              "type": "varchar(255)",
+              "raw": "`datum_id` varchar(255) COLLATE utf8_bin NOT NULL COMMENT 'datum_id'"
+            },
+            {
+              "name": "content",
+              "type": "longtext",
+              "raw": "`content` longtext COLLATE utf8_bin NOT NULL COMMENT '内容'"
+            },
+            {
+              "name": "gmt_modified",
+              "type": "datetime",
+              "raw": "`gmt_modified` datetime NOT NULL COMMENT '修改时间'"
+            },
+            {
+              "name": "app_name",
+              "type": "varchar(128)",
+              "raw": "`app_name` varchar(128) COLLATE utf8_bin DEFAULT NULL"
+            },
+            {
+              "name": "tenant_id",
+              "type": "varchar(128)",
+              "raw": "`tenant_id` varchar(128) COLLATE utf8_bin DEFAULT '' COMMENT '租户字段'"
+            }
+          ],
+          "insertRows": 0
+        },
+        "config_info_beta": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint(20)",
+              "raw": "`id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id'"
+            },
+            {
+              "name": "data_id",
+              "type": "varchar(255)",
+              "raw": "`data_id` varchar(255) COLLATE utf8_bin NOT NULL COMMENT 'data_id'"
+            },
+            {
+              "name": "group_id",
+              "type": "varchar(128)",
+              "raw": "`group_id` varchar(128) COLLATE utf8_bin NOT NULL COMMENT 'group_id'"
+            },
+            {
+              "name": "app_name",
+              "type": "varchar(128)",
+              "raw": "`app_name` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT 'app_name'"
+            },
+            {
+              "name": "content",
+              "type": "longtext",
+              "raw": "`content` longtext COLLATE utf8_bin NOT NULL COMMENT 'content'"
+            },
+            {
+              "name": "beta_ips",
+              "type": "varchar(1024)",
+              "raw": "`beta_ips` varchar(1024) COLLATE utf8_bin DEFAULT NULL COMMENT 'betaIps'"
+            },
+            {
+              "name": "md5",
+              "type": "varchar(32)",
+              "raw": "`md5` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT 'md5'"
+            },
+            {
+              "name": "gmt_create",
+              "type": "datetime",
+              "raw": "`gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'"
+            },
+            {
+              "name": "gmt_modified",
+              "type": "datetime",
+              "raw": "`gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间'"
+            },
+            {
+              "name": "src_user",
+              "type": "text",
+              "raw": "`src_user` text COLLATE utf8_bin COMMENT 'source user'"
+            },
+            {
+              "name": "src_ip",
+              "type": "varchar(50)",
+              "raw": "`src_ip` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'source ip'"
+            },
+            {
+              "name": "tenant_id",
+              "type": "varchar(128)",
+              "raw": "`tenant_id` varchar(128) COLLATE utf8_bin DEFAULT '' COMMENT '租户字段'"
+            },
+            {
+              "name": "encrypted_data_key",
+              "type": "text",
+              "raw": "`encrypted_data_key` text COLLATE utf8_bin COMMENT '秘钥'"
+            }
+          ],
+          "insertRows": 0
+        },
+        "config_info_tag": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint(20)",
+              "raw": "`id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id'"
+            },
+            {
+              "name": "data_id",
+              "type": "varchar(255)",
+              "raw": "`data_id` varchar(255) COLLATE utf8_bin NOT NULL COMMENT 'data_id'"
+            },
+            {
+              "name": "group_id",
+              "type": "varchar(128)",
+              "raw": "`group_id` varchar(128) COLLATE utf8_bin NOT NULL COMMENT 'group_id'"
+            },
+            {
+              "name": "tenant_id",
+              "type": "varchar(128)",
+              "raw": "`tenant_id` varchar(128) COLLATE utf8_bin DEFAULT '' COMMENT 'tenant_id'"
+            },
+            {
+              "name": "tag_id",
+              "type": "varchar(128)",
+              "raw": "`tag_id` varchar(128) COLLATE utf8_bin NOT NULL COMMENT 'tag_id'"
+            },
+            {
+              "name": "app_name",
+              "type": "varchar(128)",
+              "raw": "`app_name` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT 'app_name'"
+            },
+            {
+              "name": "content",
+              "type": "longtext",
+              "raw": "`content` longtext COLLATE utf8_bin NOT NULL COMMENT 'content'"
+            },
+            {
+              "name": "md5",
+              "type": "varchar(32)",
+              "raw": "`md5` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT 'md5'"
+            },
+            {
+              "name": "gmt_create",
+              "type": "datetime",
+              "raw": "`gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'"
+            },
+            {
+              "name": "gmt_modified",
+              "type": "datetime",
+              "raw": "`gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间'"
+            },
+            {
+              "name": "src_user",
+              "type": "text",
+              "raw": "`src_user` text COLLATE utf8_bin COMMENT 'source user'"
+            },
+            {
+              "name": "src_ip",
+              "type": "varchar(50)",
+              "raw": "`src_ip` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'source ip'"
+            }
+          ],
+          "insertRows": 0
+        },
+        "config_tags_relation": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint(20)",
+              "raw": "`id` bigint(20) NOT NULL COMMENT 'id'"
+            },
+            {
+              "name": "tag_name",
+              "type": "varchar(128)",
+              "raw": "`tag_name` varchar(128) COLLATE utf8_bin NOT NULL COMMENT 'tag_name'"
+            },
+            {
+              "name": "tag_type",
+              "type": "varchar(64)",
+              "raw": "`tag_type` varchar(64) COLLATE utf8_bin DEFAULT NULL COMMENT 'tag_type'"
+            },
+            {
+              "name": "data_id",
+              "type": "varchar(255)",
+              "raw": "`data_id` varchar(255) COLLATE utf8_bin NOT NULL COMMENT 'data_id'"
+            },
+            {
+              "name": "group_id",
+              "type": "varchar(128)",
+              "raw": "`group_id` varchar(128) COLLATE utf8_bin NOT NULL COMMENT 'group_id'"
+            },
+            {
+              "name": "tenant_id",
+              "type": "varchar(128)",
+              "raw": "`tenant_id` varchar(128) COLLATE utf8_bin DEFAULT '' COMMENT 'tenant_id'"
+            },
+            {
+              "name": "nid",
+              "type": "bigint(20)",
+              "raw": "`nid` bigint(20) NOT NULL AUTO_INCREMENT"
+            }
+          ],
+          "insertRows": 0
+        },
+        "group_capacity": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint(20)",
+              "raw": "`id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID'"
+            },
+            {
+              "name": "group_id",
+              "type": "varchar(128)",
+              "raw": "`group_id` varchar(128) COLLATE utf8_bin NOT NULL DEFAULT '' COMMENT 'Group ID，空字符表示整个集群'"
+            },
+            {
+              "name": "quota",
+              "type": "int(10)",
+              "raw": "`quota` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '配额，0表示使用默认值'"
+            },
+            {
+              "name": "usage",
+              "type": "int(10)",
+              "raw": "`usage` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '使用量'"
+            },
+            {
+              "name": "max_size",
+              "type": "int(10)",
+              "raw": "`max_size` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '单个配置大小上限，单位为字节，0表示使用默认值'"
+            },
+            {
+              "name": "max_aggr_count",
+              "type": "int(10)",
+              "raw": "`max_aggr_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '聚合子配置最大个数，，0表示使用默认值'"
+            },
+            {
+              "name": "max_aggr_size",
+              "type": "int(10)",
+              "raw": "`max_aggr_size` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '单个聚合数据的子配置大小上限，单位为字节，0表示使用默认值'"
+            },
+            {
+              "name": "max_history_count",
+              "type": "int(10)",
+              "raw": "`max_history_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '最大变更历史数量'"
+            },
+            {
+              "name": "gmt_create",
+              "type": "datetime",
+              "raw": "`gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'"
+            },
+            {
+              "name": "gmt_modified",
+              "type": "datetime",
+              "raw": "`gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间'"
+            }
+          ],
+          "insertRows": 0
+        },
+        "his_config_info": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint(64)",
+              "raw": "`id` bigint(64) unsigned NOT NULL"
+            },
+            {
+              "name": "nid",
+              "type": "bigint(20)",
+              "raw": "`nid` bigint(20) unsigned NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "data_id",
+              "type": "varchar(255)",
+              "raw": "`data_id` varchar(255) COLLATE utf8_bin NOT NULL"
+            },
+            {
+              "name": "group_id",
+              "type": "varchar(128)",
+              "raw": "`group_id` varchar(128) COLLATE utf8_bin NOT NULL"
+            },
+            {
+              "name": "app_name",
+              "type": "varchar(128)",
+              "raw": "`app_name` varchar(128) COLLATE utf8_bin DEFAULT NULL COMMENT 'app_name'"
+            },
+            {
+              "name": "content",
+              "type": "longtext",
+              "raw": "`content` longtext COLLATE utf8_bin NOT NULL"
+            },
+            {
+              "name": "md5",
+              "type": "varchar(32)",
+              "raw": "`md5` varchar(32) COLLATE utf8_bin DEFAULT NULL"
+            },
+            {
+              "name": "gmt_create",
+              "type": "datetime",
+              "raw": "`gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP"
+            },
+            {
+              "name": "gmt_modified",
+              "type": "datetime",
+              "raw": "`gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP"
+            },
+            {
+              "name": "src_user",
+              "type": "text",
+              "raw": "`src_user` text COLLATE utf8_bin"
+            },
+            {
+              "name": "src_ip",
+              "type": "varchar(50)",
+              "raw": "`src_ip` varchar(50) COLLATE utf8_bin DEFAULT NULL"
+            },
+            {
+              "name": "op_type",
+              "type": "char(10)",
+              "raw": "`op_type` char(10) COLLATE utf8_bin DEFAULT NULL"
+            },
+            {
+              "name": "tenant_id",
+              "type": "varchar(128)",
+              "raw": "`tenant_id` varchar(128) COLLATE utf8_bin DEFAULT '' COMMENT '租户字段'"
+            },
+            {
+              "name": "encrypted_data_key",
+              "type": "text",
+              "raw": "`encrypted_data_key` text COLLATE utf8_bin COMMENT '秘钥'"
+            }
+          ],
+          "insertRows": 1
+        },
+        "permissions": {
+          "columns": [
+            {
+              "name": "role",
+              "type": "varchar(50)",
+              "raw": "`role` varchar(50) NOT NULL"
+            },
+            {
+              "name": "resource",
+              "type": "varchar(255)",
+              "raw": "`resource` varchar(255) NOT NULL"
+            },
+            {
+              "name": "action",
+              "type": "varchar(8)",
+              "raw": "`action` varchar(8) NOT NULL"
+            }
+          ],
+          "insertRows": 0
+        },
+        "roles": {
+          "columns": [
+            {
+              "name": "username",
+              "type": "varchar(50)",
+              "raw": "`username` varchar(50) NOT NULL"
+            },
+            {
+              "name": "role",
+              "type": "varchar(50)",
+              "raw": "`role` varchar(50) NOT NULL"
+            }
+          ],
+          "insertRows": 0
+        },
+        "tenant_capacity": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint(20)",
+              "raw": "`id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID'"
+            },
+            {
+              "name": "tenant_id",
+              "type": "varchar(128)",
+              "raw": "`tenant_id` varchar(128) COLLATE utf8_bin NOT NULL DEFAULT '' COMMENT 'Tenant ID'"
+            },
+            {
+              "name": "quota",
+              "type": "int(10)",
+              "raw": "`quota` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '配额，0表示使用默认值'"
+            },
+            {
+              "name": "usage",
+              "type": "int(10)",
+              "raw": "`usage` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '使用量'"
+            },
+            {
+              "name": "max_size",
+              "type": "int(10)",
+              "raw": "`max_size` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '单个配置大小上限，单位为字节，0表示使用默认值'"
+            },
+            {
+              "name": "max_aggr_count",
+              "type": "int(10)",
+              "raw": "`max_aggr_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '聚合子配置最大个数'"
+            },
+            {
+              "name": "max_aggr_size",
+              "type": "int(10)",
+              "raw": "`max_aggr_size` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '单个聚合数据的子配置大小上限，单位为字节，0表示使用默认值'"
+            },
+            {
+              "name": "max_history_count",
+              "type": "int(10)",
+              "raw": "`max_history_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '最大变更历史数量'"
+            },
+            {
+              "name": "gmt_create",
+              "type": "datetime",
+              "raw": "`gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'"
+            },
+            {
+              "name": "gmt_modified",
+              "type": "datetime",
+              "raw": "`gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间'"
+            }
+          ],
+          "insertRows": 0
+        },
+        "tenant_info": {
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint(20)",
+              "raw": "`id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id'"
+            },
+            {
+              "name": "kp",
+              "type": "varchar(128)",
+              "raw": "`kp` varchar(128) COLLATE utf8_bin NOT NULL COMMENT 'kp'"
+            },
+            {
+              "name": "tenant_id",
+              "type": "varchar(128)",
+              "raw": "`tenant_id` varchar(128) COLLATE utf8_bin DEFAULT '' COMMENT 'tenant_id'"
+            },
+            {
+              "name": "tenant_name",
+              "type": "varchar(128)",
+              "raw": "`tenant_name` varchar(128) COLLATE utf8_bin DEFAULT '' COMMENT 'tenant_name'"
+            },
+            {
+              "name": "tenant_desc",
+              "type": "varchar(256)",
+              "raw": "`tenant_desc` varchar(256) COLLATE utf8_bin DEFAULT NULL COMMENT 'tenant_desc'"
+            },
+            {
+              "name": "create_source",
+              "type": "varchar(32)",
+              "raw": "`create_source` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT 'create_source'"
+            },
+            {
+              "name": "gmt_create",
+              "type": "bigint(20)",
+              "raw": "`gmt_create` bigint(20) NOT NULL COMMENT '创建时间'"
+            },
+            {
+              "name": "gmt_modified",
+              "type": "bigint(20)",
+              "raw": "`gmt_modified` bigint(20) NOT NULL COMMENT '修改时间'"
+            }
+          ],
+          "insertRows": 0
+        },
+        "users": {
+          "columns": [
+            {
+              "name": "username",
+              "type": "varchar(50)",
+              "raw": "`username` varchar(50) NOT NULL"
+            },
+            {
+              "name": "password",
+              "type": "varchar(500)",
+              "raw": "`password` varchar(500) NOT NULL"
+            },
+            {
+              "name": "enabled",
+              "type": "tinyint(1)",
+              "raw": "`enabled` tinyint(1) NOT NULL"
+            }
+          ],
+          "insertRows": 10
+        }
+      }
+    },
+    "api_vmp": {
+      "source": "api_vmp",
+      "file": "旧程序数据/api_vmp_20231031_190745.sql.gz",
+      "tableCount": 10,
+      "tables": {
+        "vmpdb_admin_logs": {
+          "columns": [
+            {
+              "name": "aid",
+              "type": "int(11)",
+              "raw": "`aid` int(11) NOT NULL"
+            },
+            {
+              "name": "action",
+              "type": "text",
+              "raw": "`action` text NOT NULL"
+            },
+            {
+              "name": "date",
+              "type": "varchar(15)",
+              "raw": "`date` varchar(15) DEFAULT NULL"
+            }
+          ],
+          "insertRows": 3878
+        },
+        "vmpdb_admins": {
+          "columns": [
+            {
+              "name": "aid",
+              "type": "int(11)",
+              "raw": "`aid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "username",
+              "type": "varchar(32)",
+              "raw": "`username` varchar(32) NOT NULL"
+            },
+            {
+              "name": "pass",
+              "type": "varchar(32)",
+              "raw": "`pass` varchar(32) NOT NULL"
+            },
+            {
+              "name": "session",
+              "type": "varchar(32)",
+              "raw": "`session` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "cid",
+              "type": "int(11)",
+              "raw": "`cid` int(11) NOT NULL DEFAULT '0' COMMENT '赛事ID'"
+            }
+          ],
+          "insertRows": 9
+        },
+        "vmpdb_comps": {
+          "columns": [
+            {
+              "name": "cid",
+              "type": "int(11)",
+              "raw": "`cid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "raw": "`name` varchar(128) DEFAULT NULL"
+            },
+            {
+              "name": "img",
+              "type": "varchar(128)",
+              "raw": "`img` varchar(128) DEFAULT NULL"
+            },
+            {
+              "name": "startDate",
+              "type": "char(15)",
+              "raw": "`startDate` char(15) DEFAULT NULL COMMENT '比赛日期'"
+            },
+            {
+              "name": "endDate",
+              "type": "char(15)",
+              "raw": "`endDate` char(15) DEFAULT NULL COMMENT '结束日期'"
+            },
+            {
+              "name": "del",
+              "type": "tinyint(1)",
+              "raw": "`del` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "sort",
+              "type": "int(11)",
+              "raw": "`sort` int(11) NOT NULL DEFAULT '100'"
+            },
+            {
+              "name": "date",
+              "type": "varchar(15)",
+              "raw": "`date` varchar(15) DEFAULT NULL"
+            },
+            {
+              "name": "end",
+              "type": "tinyint(1)",
+              "raw": "`end` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "intro",
+              "type": "varchar(512)",
+              "raw": "`intro` varchar(512) DEFAULT NULL"
+            },
+            {
+              "name": "signup",
+              "type": "tinyint(1)",
+              "raw": "`signup` tinyint(1) NOT NULL DEFAULT '0' COMMENT '开启报名'"
+            },
+            {
+              "name": "avatar",
+              "type": "text",
+              "raw": "`avatar` text COMMENT '选手默认头像'"
+            },
+            {
+              "name": "dates",
+              "type": "text",
+              "raw": "`dates` text COMMENT '比赛日期'"
+            },
+            {
+              "name": "tel",
+              "type": "varchar(64)",
+              "raw": "`tel` varchar(64) DEFAULT NULL COMMENT '电话'"
+            },
+            {
+              "name": "location",
+              "type": "varchar(64)",
+              "raw": "`location` varchar(64) DEFAULT NULL COMMENT '位置'"
+            },
+            {
+              "name": "uname",
+              "type": "varchar(64)",
+              "raw": "`uname` varchar(64) DEFAULT NULL COMMENT '机构名称'"
+            },
+            {
+              "name": "wxChannelId",
+              "type": "varchar(32)",
+              "raw": "`wxChannelId` varchar(32) DEFAULT NULL COMMENT '微信视频号ID'"
+            },
+            {
+              "name": "wxChannelVid",
+              "type": "text",
+              "raw": "`wxChannelVid` text COMMENT '视频号视频ID'"
+            },
+            {
+              "name": "vidLogo",
+              "type": "text",
+              "raw": "`vidLogo` text COMMENT '视频号LOGO'"
+            },
+            {
+              "name": "vidQrcode",
+              "type": "text",
+              "raw": "`vidQrcode` text COMMENT '视频号二维码'"
+            },
+            {
+              "name": "isOpen",
+              "type": "tinyint(1)",
+              "raw": "`isOpen` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否开放组别点入'"
+            }
+          ],
+          "insertRows": 51
+        },
+        "vmpdb_shows": {
+          "columns": [
+            {
+              "name": "sid",
+              "type": "int(11)",
+              "raw": "`sid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "signupID",
+              "type": "int(11)",
+              "raw": "`signupID` int(11) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "tid",
+              "type": "int(11)",
+              "raw": "`tid` int(11) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "sort",
+              "type": "tinyint(4)",
+              "raw": "`sort` tinyint(4) NOT NULL DEFAULT '100'"
+            },
+            {
+              "name": "rating",
+              "type": "float",
+              "raw": "`rating` float NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "r1",
+              "type": "float",
+              "raw": "`r1` float NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "r2",
+              "type": "float",
+              "raw": "`r2` float NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "r3",
+              "type": "float",
+              "raw": "`r3` float NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "r4",
+              "type": "float",
+              "raw": "`r4` float NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "r5",
+              "type": "float",
+              "raw": "`r5` float NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "ratingPaid",
+              "type": "char(15)",
+              "raw": "`ratingPaid` char(15) DEFAULT NULL"
+            },
+            {
+              "name": "name",
+              "type": "varchar(64)",
+              "raw": "`name` varchar(64) DEFAULT NULL"
+            },
+            {
+              "name": "del",
+              "type": "tinyint(1)",
+              "raw": "`del` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "complete",
+              "type": "tinyint(1)",
+              "raw": "`complete` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "nickname",
+              "type": "varchar(128)",
+              "raw": "`nickname` varchar(128) DEFAULT NULL"
+            },
+            {
+              "name": "avatar",
+              "type": "text",
+              "raw": "`avatar` text"
+            }
+          ],
+          "insertRows": 12044
+        },
+        "vmpdb_signups": {
+          "columns": [
+            {
+              "name": "sid",
+              "type": "int(11)",
+              "raw": "`sid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "uid",
+              "type": "int(11)",
+              "raw": "`uid` int(11) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "name",
+              "type": "varchar(16)",
+              "raw": "`name` varchar(16) DEFAULT NULL COMMENT '姓名'"
+            },
+            {
+              "name": "show_name",
+              "type": "varchar(32)",
+              "raw": "`show_name` varchar(32) DEFAULT NULL COMMENT '节目名称'"
+            },
+            {
+              "name": "tid",
+              "type": "int(11)",
+              "raw": "`tid` int(11) NOT NULL DEFAULT '0' COMMENT '组别'"
+            },
+            {
+              "name": "cid",
+              "type": "int(11)",
+              "raw": "`cid` int(11) DEFAULT '0' COMMENT '赛事ID'"
+            },
+            {
+              "name": "amount",
+              "type": "int(11)",
+              "raw": "`amount` int(11) NOT NULL DEFAULT '0' COMMENT '人数'"
+            },
+            {
+              "name": "cost",
+              "type": "float",
+              "raw": "`cost` float NOT NULL DEFAULT '0' COMMENT '报名费'"
+            },
+            {
+              "name": "sn",
+              "type": "varchar(32)",
+              "raw": "`sn` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "mobile",
+              "type": "varchar(12)",
+              "raw": "`mobile` varchar(12) DEFAULT NULL COMMENT '手机号'"
+            },
+            {
+              "name": "province",
+              "type": "varchar(10)",
+              "raw": "`province` varchar(10) DEFAULT NULL COMMENT '省份'"
+            },
+            {
+              "name": "city",
+              "type": "varchar(10)",
+              "raw": "`city` varchar(10) DEFAULT NULL COMMENT '城市'"
+            },
+            {
+              "name": "group_name",
+              "type": "varchar(32)",
+              "raw": "`group_name` varchar(32) DEFAULT NULL COMMENT '机构简称'"
+            },
+            {
+              "name": "zhidao",
+              "type": "varchar(32)",
+              "raw": "`zhidao` varchar(32) DEFAULT NULL COMMENT '指导老师'"
+            },
+            {
+              "name": "bianwu",
+              "type": "varchar(32)",
+              "raw": "`bianwu` varchar(32) DEFAULT NULL COMMENT '编舞老师'"
+            },
+            {
+              "name": "style",
+              "type": "varchar(6)",
+              "raw": "`style` varchar(6) DEFAULT NULL COMMENT '先音乐或先舞台定位'"
+            },
+            {
+              "name": "file",
+              "type": "text",
+              "raw": "`file` text COMMENT '音乐文件'"
+            },
+            {
+              "name": "date",
+              "type": "varchar(15)",
+              "raw": "`date` varchar(15) DEFAULT NULL COMMENT '报名时间'"
+            },
+            {
+              "name": "paid",
+              "type": "varchar(15)",
+              "raw": "`paid` varchar(15) DEFAULT NULL COMMENT '支付时间'"
+            },
+            {
+              "name": "del",
+              "type": "tinyint(1)",
+              "raw": "`del` tinyint(1) DEFAULT '0' COMMENT '已删除'"
+            }
+          ],
+          "insertRows": 11860
+        },
+        "vmpdb_sms": {
+          "columns": [
+            {
+              "name": "uid",
+              "type": "int(11)",
+              "raw": "`uid` int(11) NOT NULL COMMENT '用户ID'"
+            },
+            {
+              "name": "code",
+              "type": "int(11)",
+              "raw": "`code` int(11) NOT NULL COMMENT '验证码'"
+            },
+            {
+              "name": "mobile",
+              "type": "varchar(15)",
+              "raw": "`mobile` varchar(15) DEFAULT NULL COMMENT '手机号'"
+            },
+            {
+              "name": "date",
+              "type": "char(15)",
+              "raw": "`date` char(15) DEFAULT NULL COMMENT '日期'"
+            },
+            {
+              "name": "checked",
+              "type": "char(15)",
+              "raw": "`checked` char(15) DEFAULT NULL COMMENT '验证时间'"
+            }
+          ],
+          "insertRows": 635
+        },
+        "vmpdb_types": {
+          "columns": [
+            {
+              "name": "tid",
+              "type": "int(11)",
+              "raw": "`tid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "cid",
+              "type": "int(11)",
+              "raw": "`cid` int(11) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "name",
+              "type": "varchar(32)",
+              "raw": "`name` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "voters",
+              "type": "varchar(256)",
+              "raw": "`voters` varchar(256) DEFAULT NULL"
+            },
+            {
+              "name": "del",
+              "type": "tinyint(1)",
+              "raw": "`del` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "sort",
+              "type": "int(11)",
+              "raw": "`sort` int(11) NOT NULL DEFAULT '100'"
+            },
+            {
+              "name": "end",
+              "type": "tinyint(1)",
+              "raw": "`end` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "cost",
+              "type": "float",
+              "raw": "`cost` float NOT NULL DEFAULT '0'"
+            }
+          ],
+          "insertRows": 2980
+        },
+        "vmpdb_users": {
+          "columns": [
+            {
+              "name": "uid",
+              "type": "int(11)",
+              "raw": "`uid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "openid",
+              "type": "varchar(64)",
+              "raw": "`openid` varchar(64) DEFAULT NULL"
+            },
+            {
+              "name": "unionid",
+              "type": "varchar(64)",
+              "raw": "`unionid` varchar(64) DEFAULT NULL"
+            },
+            {
+              "name": "session_key",
+              "type": "varchar(32)",
+              "raw": "`session_key` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "third_session",
+              "type": "varchar(32)",
+              "raw": "`third_session` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "nickname",
+              "type": "varchar(32)",
+              "raw": "`nickname` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "avatarUrl",
+              "type": "varchar(255)",
+              "raw": "`avatarUrl` varchar(255) DEFAULT NULL"
+            },
+            {
+              "name": "sex",
+              "type": "int(1)",
+              "raw": "`sex` int(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "date",
+              "type": "varchar(15)",
+              "raw": "`date` varchar(15) DEFAULT NULL"
+            },
+            {
+              "name": "active",
+              "type": "varchar(15)",
+              "raw": "`active` varchar(15) DEFAULT NULL"
+            },
+            {
+              "name": "banned",
+              "type": "tinyint(1)",
+              "raw": "`banned` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "is_voter",
+              "type": "tinyint(1)",
+              "raw": "`is_voter` tinyint(1) DEFAULT '0'"
+            },
+            {
+              "name": "rankScore",
+              "type": "int(11)",
+              "raw": "`rankScore` int(11) NOT NULL DEFAULT '0' COMMENT '排行榜评分'"
+            }
+          ],
+          "insertRows": 2988
+        },
+        "vmpdb_voters": {
+          "columns": [
+            {
+              "name": "vid",
+              "type": "int(11)",
+              "raw": "`vid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "name",
+              "type": "varchar(16)",
+              "raw": "`name` varchar(16) DEFAULT NULL"
+            },
+            {
+              "name": "mobile",
+              "type": "varchar(12)",
+              "raw": "`mobile` varchar(12) DEFAULT NULL"
+            },
+            {
+              "name": "uid",
+              "type": "int(11)",
+              "raw": "`uid` int(11) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "del",
+              "type": "tinyint(1)",
+              "raw": "`del` tinyint(1) NOT NULL DEFAULT '0'"
+            }
+          ],
+          "insertRows": 634
+        },
+        "vmpdb_votes": {
+          "columns": [
+            {
+              "name": "vid",
+              "type": "int(11)",
+              "raw": "`vid` int(11) NOT NULL"
+            },
+            {
+              "name": "sid",
+              "type": "int(11)",
+              "raw": "`sid` int(11) NOT NULL"
+            },
+            {
+              "name": "rating",
+              "type": "float",
+              "raw": "`rating` float NOT NULL"
+            },
+            {
+              "name": "detail1",
+              "type": "float",
+              "raw": "`detail1` float NOT NULL DEFAULT '0' COMMENT '服装造型2'"
+            },
+            {
+              "name": "detail2",
+              "type": "float",
+              "raw": "`detail2` float NOT NULL DEFAULT '0' COMMENT '动作编排2'"
+            },
+            {
+              "name": "detail3",
+              "type": "float",
+              "raw": "`detail3` float NOT NULL DEFAULT '0' COMMENT '表现力2'"
+            },
+            {
+              "name": "detail4",
+              "type": "float",
+              "raw": "`detail4` float NOT NULL DEFAULT '0' COMMENT '创意1'"
+            },
+            {
+              "name": "detail5",
+              "type": "float",
+              "raw": "`detail5` float NOT NULL DEFAULT '0' COMMENT '综合3'"
+            },
+            {
+              "name": "date",
+              "type": "varchar(15)",
+              "raw": "`date` varchar(15) DEFAULT NULL"
+            }
+          ],
+          "insertRows": 33825
+        }
+      }
+    },
+    "api_vmp_20240121": {
+      "source": "api_vmp_20240121",
+      "file": "旧程序数据/db_api_vmp_20240121_032801_vuydtz.sql.gz",
+      "tableCount": 10,
+      "tables": {
+        "vmpdb_admin_logs": {
+          "columns": [
+            {
+              "name": "aid",
+              "type": "int(11)",
+              "raw": "`aid` int(11) NOT NULL"
+            },
+            {
+              "name": "action",
+              "type": "text",
+              "raw": "`action` text NOT NULL"
+            },
+            {
+              "name": "date",
+              "type": "varchar(15)",
+              "raw": "`date` varchar(15) DEFAULT NULL"
+            }
+          ],
+          "insertRows": 4721
+        },
+        "vmpdb_admins": {
+          "columns": [
+            {
+              "name": "aid",
+              "type": "int(11)",
+              "raw": "`aid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "username",
+              "type": "varchar(32)",
+              "raw": "`username` varchar(32) NOT NULL"
+            },
+            {
+              "name": "pass",
+              "type": "varchar(32)",
+              "raw": "`pass` varchar(32) NOT NULL"
+            },
+            {
+              "name": "session",
+              "type": "varchar(32)",
+              "raw": "`session` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "cid",
+              "type": "int(11)",
+              "raw": "`cid` int(11) NOT NULL DEFAULT '0' COMMENT '赛事ID'"
+            }
+          ],
+          "insertRows": 10
+        },
+        "vmpdb_comps": {
+          "columns": [
+            {
+              "name": "cid",
+              "type": "int(11)",
+              "raw": "`cid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "raw": "`name` varchar(128) DEFAULT NULL"
+            },
+            {
+              "name": "img",
+              "type": "varchar(128)",
+              "raw": "`img` varchar(128) DEFAULT NULL"
+            },
+            {
+              "name": "startDate",
+              "type": "char(15)",
+              "raw": "`startDate` char(15) DEFAULT NULL COMMENT '比赛日期'"
+            },
+            {
+              "name": "endDate",
+              "type": "char(15)",
+              "raw": "`endDate` char(15) DEFAULT NULL COMMENT '结束日期'"
+            },
+            {
+              "name": "del",
+              "type": "tinyint(1)",
+              "raw": "`del` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "sort",
+              "type": "int(11)",
+              "raw": "`sort` int(11) NOT NULL DEFAULT '100'"
+            },
+            {
+              "name": "date",
+              "type": "varchar(15)",
+              "raw": "`date` varchar(15) DEFAULT NULL"
+            },
+            {
+              "name": "end",
+              "type": "tinyint(1)",
+              "raw": "`end` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "intro",
+              "type": "varchar(512)",
+              "raw": "`intro` varchar(512) DEFAULT NULL"
+            },
+            {
+              "name": "signup",
+              "type": "tinyint(1)",
+              "raw": "`signup` tinyint(1) NOT NULL DEFAULT '0' COMMENT '开启报名'"
+            },
+            {
+              "name": "avatar",
+              "type": "text",
+              "raw": "`avatar` text COMMENT '选手默认头像'"
+            },
+            {
+              "name": "dates",
+              "type": "text",
+              "raw": "`dates` text COMMENT '比赛日期'"
+            },
+            {
+              "name": "tel",
+              "type": "varchar(64)",
+              "raw": "`tel` varchar(64) DEFAULT NULL COMMENT '电话'"
+            },
+            {
+              "name": "location",
+              "type": "varchar(64)",
+              "raw": "`location` varchar(64) DEFAULT NULL COMMENT '位置'"
+            },
+            {
+              "name": "uname",
+              "type": "varchar(64)",
+              "raw": "`uname` varchar(64) DEFAULT NULL COMMENT '机构名称'"
+            },
+            {
+              "name": "wxChannelId",
+              "type": "varchar(32)",
+              "raw": "`wxChannelId` varchar(32) DEFAULT NULL COMMENT '微信视频号ID'"
+            },
+            {
+              "name": "wxChannelVid",
+              "type": "text",
+              "raw": "`wxChannelVid` text COMMENT '视频号视频ID'"
+            },
+            {
+              "name": "vidLogo",
+              "type": "text",
+              "raw": "`vidLogo` text COMMENT '视频号LOGO'"
+            },
+            {
+              "name": "vidQrcode",
+              "type": "text",
+              "raw": "`vidQrcode` text COMMENT '视频号二维码'"
+            },
+            {
+              "name": "isOpen",
+              "type": "tinyint(1)",
+              "raw": "`isOpen` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否开放组别点入'"
+            }
+          ],
+          "insertRows": 57
+        },
+        "vmpdb_shows": {
+          "columns": [
+            {
+              "name": "sid",
+              "type": "int(11)",
+              "raw": "`sid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "signupID",
+              "type": "int(11)",
+              "raw": "`signupID` int(11) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "tid",
+              "type": "int(11)",
+              "raw": "`tid` int(11) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "sort",
+              "type": "tinyint(4)",
+              "raw": "`sort` tinyint(4) NOT NULL DEFAULT '100'"
+            },
+            {
+              "name": "rating",
+              "type": "float",
+              "raw": "`rating` float NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "r1",
+              "type": "float",
+              "raw": "`r1` float NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "r2",
+              "type": "float",
+              "raw": "`r2` float NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "r3",
+              "type": "float",
+              "raw": "`r3` float NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "r4",
+              "type": "float",
+              "raw": "`r4` float NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "r5",
+              "type": "float",
+              "raw": "`r5` float NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "ratingPaid",
+              "type": "char(15)",
+              "raw": "`ratingPaid` char(15) DEFAULT NULL"
+            },
+            {
+              "name": "name",
+              "type": "varchar(64)",
+              "raw": "`name` varchar(64) DEFAULT NULL"
+            },
+            {
+              "name": "del",
+              "type": "tinyint(1)",
+              "raw": "`del` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "complete",
+              "type": "tinyint(1)",
+              "raw": "`complete` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "nickname",
+              "type": "varchar(128)",
+              "raw": "`nickname` varchar(128) DEFAULT NULL"
+            },
+            {
+              "name": "avatar",
+              "type": "text",
+              "raw": "`avatar` text"
+            }
+          ],
+          "insertRows": 12542
+        },
+        "vmpdb_signups": {
+          "columns": [
+            {
+              "name": "sid",
+              "type": "int(11)",
+              "raw": "`sid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "uid",
+              "type": "int(11)",
+              "raw": "`uid` int(11) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "name",
+              "type": "varchar(16)",
+              "raw": "`name` varchar(16) DEFAULT NULL COMMENT '姓名'"
+            },
+            {
+              "name": "show_name",
+              "type": "varchar(32)",
+              "raw": "`show_name` varchar(32) DEFAULT NULL COMMENT '节目名称'"
+            },
+            {
+              "name": "tid",
+              "type": "int(11)",
+              "raw": "`tid` int(11) NOT NULL DEFAULT '0' COMMENT '组别'"
+            },
+            {
+              "name": "cid",
+              "type": "int(11)",
+              "raw": "`cid` int(11) DEFAULT '0' COMMENT '赛事ID'"
+            },
+            {
+              "name": "amount",
+              "type": "int(11)",
+              "raw": "`amount` int(11) NOT NULL DEFAULT '0' COMMENT '人数'"
+            },
+            {
+              "name": "cost",
+              "type": "float",
+              "raw": "`cost` float NOT NULL DEFAULT '0' COMMENT '报名费'"
+            },
+            {
+              "name": "sn",
+              "type": "varchar(32)",
+              "raw": "`sn` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "mobile",
+              "type": "varchar(12)",
+              "raw": "`mobile` varchar(12) DEFAULT NULL COMMENT '手机号'"
+            },
+            {
+              "name": "province",
+              "type": "varchar(10)",
+              "raw": "`province` varchar(10) DEFAULT NULL COMMENT '省份'"
+            },
+            {
+              "name": "city",
+              "type": "varchar(10)",
+              "raw": "`city` varchar(10) DEFAULT NULL COMMENT '城市'"
+            },
+            {
+              "name": "group_name",
+              "type": "varchar(32)",
+              "raw": "`group_name` varchar(32) DEFAULT NULL COMMENT '机构简称'"
+            },
+            {
+              "name": "zhidao",
+              "type": "varchar(32)",
+              "raw": "`zhidao` varchar(32) DEFAULT NULL COMMENT '指导老师'"
+            },
+            {
+              "name": "bianwu",
+              "type": "varchar(32)",
+              "raw": "`bianwu` varchar(32) DEFAULT NULL COMMENT '编舞老师'"
+            },
+            {
+              "name": "style",
+              "type": "varchar(6)",
+              "raw": "`style` varchar(6) DEFAULT NULL COMMENT '先音乐或先舞台定位'"
+            },
+            {
+              "name": "file",
+              "type": "text",
+              "raw": "`file` text COMMENT '音乐文件'"
+            },
+            {
+              "name": "date",
+              "type": "varchar(15)",
+              "raw": "`date` varchar(15) DEFAULT NULL COMMENT '报名时间'"
+            },
+            {
+              "name": "paid",
+              "type": "varchar(15)",
+              "raw": "`paid` varchar(15) DEFAULT NULL COMMENT '支付时间'"
+            },
+            {
+              "name": "del",
+              "type": "tinyint(1)",
+              "raw": "`del` tinyint(1) DEFAULT '0' COMMENT '已删除'"
+            }
+          ],
+          "insertRows": 12491
+        },
+        "vmpdb_sms": {
+          "columns": [
+            {
+              "name": "uid",
+              "type": "int(11)",
+              "raw": "`uid` int(11) NOT NULL COMMENT '用户ID'"
+            },
+            {
+              "name": "code",
+              "type": "int(11)",
+              "raw": "`code` int(11) NOT NULL COMMENT '验证码'"
+            },
+            {
+              "name": "mobile",
+              "type": "varchar(15)",
+              "raw": "`mobile` varchar(15) DEFAULT NULL COMMENT '手机号'"
+            },
+            {
+              "name": "date",
+              "type": "char(15)",
+              "raw": "`date` char(15) DEFAULT NULL COMMENT '日期'"
+            },
+            {
+              "name": "checked",
+              "type": "char(15)",
+              "raw": "`checked` char(15) DEFAULT NULL COMMENT '验证时间'"
+            }
+          ],
+          "insertRows": 831
+        },
+        "vmpdb_types": {
+          "columns": [
+            {
+              "name": "tid",
+              "type": "int(11)",
+              "raw": "`tid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "cid",
+              "type": "int(11)",
+              "raw": "`cid` int(11) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "name",
+              "type": "varchar(32)",
+              "raw": "`name` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "voters",
+              "type": "varchar(256)",
+              "raw": "`voters` varchar(256) DEFAULT NULL"
+            },
+            {
+              "name": "del",
+              "type": "tinyint(1)",
+              "raw": "`del` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "sort",
+              "type": "int(11)",
+              "raw": "`sort` int(11) NOT NULL DEFAULT '100'"
+            },
+            {
+              "name": "end",
+              "type": "tinyint(1)",
+              "raw": "`end` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "cost",
+              "type": "float",
+              "raw": "`cost` float NOT NULL DEFAULT '0'"
+            }
+          ],
+          "insertRows": 3292
+        },
+        "vmpdb_users": {
+          "columns": [
+            {
+              "name": "uid",
+              "type": "int(11)",
+              "raw": "`uid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "openid",
+              "type": "varchar(64)",
+              "raw": "`openid` varchar(64) DEFAULT NULL"
+            },
+            {
+              "name": "unionid",
+              "type": "varchar(64)",
+              "raw": "`unionid` varchar(64) DEFAULT NULL"
+            },
+            {
+              "name": "session_key",
+              "type": "varchar(32)",
+              "raw": "`session_key` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "third_session",
+              "type": "varchar(32)",
+              "raw": "`third_session` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "nickname",
+              "type": "varchar(32)",
+              "raw": "`nickname` varchar(32) DEFAULT NULL"
+            },
+            {
+              "name": "avatarUrl",
+              "type": "varchar(255)",
+              "raw": "`avatarUrl` varchar(255) DEFAULT NULL"
+            },
+            {
+              "name": "sex",
+              "type": "int(1)",
+              "raw": "`sex` int(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "date",
+              "type": "varchar(15)",
+              "raw": "`date` varchar(15) DEFAULT NULL"
+            },
+            {
+              "name": "active",
+              "type": "varchar(15)",
+              "raw": "`active` varchar(15) DEFAULT NULL"
+            },
+            {
+              "name": "banned",
+              "type": "tinyint(1)",
+              "raw": "`banned` tinyint(1) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "is_voter",
+              "type": "tinyint(1)",
+              "raw": "`is_voter` tinyint(1) DEFAULT '0'"
+            },
+            {
+              "name": "rankScore",
+              "type": "int(11)",
+              "raw": "`rankScore` int(11) NOT NULL DEFAULT '0' COMMENT '排行榜评分'"
+            }
+          ],
+          "insertRows": 3319
+        },
+        "vmpdb_voters": {
+          "columns": [
+            {
+              "name": "vid",
+              "type": "int(11)",
+              "raw": "`vid` int(11) NOT NULL AUTO_INCREMENT"
+            },
+            {
+              "name": "name",
+              "type": "varchar(16)",
+              "raw": "`name` varchar(16) DEFAULT NULL"
+            },
+            {
+              "name": "mobile",
+              "type": "varchar(12)",
+              "raw": "`mobile` varchar(12) DEFAULT NULL"
+            },
+            {
+              "name": "uid",
+              "type": "int(11)",
+              "raw": "`uid` int(11) NOT NULL DEFAULT '0'"
+            },
+            {
+              "name": "del",
+              "type": "tinyint(1)",
+              "raw": "`del` tinyint(1) NOT NULL DEFAULT '0'"
+            }
+          ],
+          "insertRows": 698
+        },
+        "vmpdb_votes": {
+          "columns": [
+            {
+              "name": "vid",
+              "type": "int(11)",
+              "raw": "`vid` int(11) NOT NULL"
+            },
+            {
+              "name": "sid",
+              "type": "int(11)",
+              "raw": "`sid` int(11) NOT NULL"
+            },
+            {
+              "name": "rating",
+              "type": "float",
+              "raw": "`rating` float NOT NULL"
+            },
+            {
+              "name": "detail1",
+              "type": "float",
+              "raw": "`detail1` float NOT NULL DEFAULT '0' COMMENT '服装造型2'"
+            },
+            {
+              "name": "detail2",
+              "type": "float",
+              "raw": "`detail2` float NOT NULL DEFAULT '0' COMMENT '动作编排2'"
+            },
+            {
+              "name": "detail3",
+              "type": "float",
+              "raw": "`detail3` float NOT NULL DEFAULT '0' COMMENT '表现力2'"
+            },
+            {
+              "name": "detail4",
+              "type": "float",
+              "raw": "`detail4` float NOT NULL DEFAULT '0' COMMENT '创意1'"
+            },
+            {
+              "name": "detail5",
+              "type": "float",
+              "raw": "`detail5` float NOT NULL DEFAULT '0' COMMENT '综合3'"
+            },
+            {
+              "name": "date",
+              "type": "varchar(15)",
+              "raw": "`date` varchar(15) DEFAULT NULL"
+            }
+          ],
+          "insertRows": 36450
+        }
+      }
+    }
+  },
+  "excel": {
+    "competition_users": {
+      "source": "competition_users",
+      "file": "旧程序数据/产赛用户.xlsx",
+      "sheet": "Sheet1",
+      "rows": 2033,
+      "columns": [
+        "用户ID",
+        "昵称",
+        "手机号码"
+      ]
+    },
+    "judges": {
+      "source": "judges",
+      "file": "旧程序数据/评委数据.xlsx",
+      "sheet": "Sheet1",
+      "rows": 256,
+      "columns": [
+        "昵称",
+        "手机号码",
+        "列3",
+        "列4",
+        "列5"
+      ]
+    }
+  },
+  "miniprogram": {
+    "source": "mp-vote",
+    "file": "旧程序数据/小程序mp-vote",
+    "pageCount": 18,
+    "pages": [
+      "pages/add/add.js",
+      "pages/bind/bind.js",
+      "pages/bind/bind_show.js",
+      "pages/comp/comp.js",
+      "pages/index/index.js",
+      "pages/rank/rank.js",
+      "pages/score/score.js",
+      "pages/signup/signup.js",
+      "pages/type/type.js",
+      "pages/user/agreement.js",
+      "pages/user/privacy.js",
+      "pages/user/profile.js",
+      "pages/user/signupEdit.js",
+      "pages/user/signups.js",
+      "pages/user/user.js",
+      "pages/vote/input.js",
+      "pages/vote/vote.js",
+      "app.js"
+    ],
+    "endpointCount": 26,
+    "endpoints": {
+      "bindShow": [
+        "pages/bind/bind_show.js"
+      ],
+      "bindVoter": [
+        "pages/bind/bind.js"
+      ],
+      "getComp": [
+        "pages/comp/comp.js"
+      ],
+      "getCompList": [
+        "pages/index/index.js"
+      ],
+      "getHistory": [
+        "pages/user/user.js"
+      ],
+      "getRank": [
+        "pages/rank/rank.js"
+      ],
+      "getSettings": [
+        "pages/user/agreement.js",
+        "pages/user/privacy.js"
+      ],
+      "getShow": [
+        "pages/vote/input.js"
+      ],
+      "getSignup": [
+        "pages/signup/signup.js"
+      ],
+      "getSignupCompList": [
+        "pages/signup/signup.js"
+      ],
+      "getSignupTypes": [
+        "pages/signup/signup.js",
+        "pages/user/signupEdit.js"
+      ],
+      "getSignups": [
+        "pages/user/signups.js",
+        "pages/user/user.js"
+      ],
+      "getType": [
+        "pages/type/type.js"
+      ],
+      "getUserinfo": [
+        "pages/user/profile.js",
+        "pages/user/user.js"
+      ],
+      "getVoteDetail": [
+        "pages/score/score.js"
+      ],
+      "getVoteList": [
+        "pages/user/user.js",
+        "pages/vote/vote.js"
+      ],
+      "login": [
+        "app.js"
+      ],
+      "payScore": [
+        "pages/score/score.js"
+      ],
+      "paySignup": [
+        "pages/signup/signup.js"
+      ],
+      "saveUserinfo": [
+        "pages/user/profile.js",
+        "pages/user/user.js"
+      ],
+      "sendSms": [
+        "pages/bind/bind.js",
+        "pages/bind/bind_show.js"
+      ],
+      "signupEdit": [
+        "pages/user/signupEdit.js"
+      ],
+      "signupEditDetail": [
+        "pages/user/signupEdit.js"
+      ],
+      "submitRating": [
+        "pages/vote/input.js"
+      ],
+      "submitSignup": [
+        "pages/signup/signup.js"
+      ],
+      "unbind": [
+        "pages/user/user.js"
+      ]
+    }
+  }
+}

@@ -1,0 +1,211 @@
+.detail-page {
+  padding-bottom: 150rpx;
+}
+
+.hero-card {
+  display: flex;
+  align-items: stretch;
+  gap: 22rpx;
+  min-height: 214rpx;
+  padding: 22rpx;
+}
+
+.cover {
+  flex: 0 0 190rpx;
+  width: 190rpx;
+  height: 190rpx;
+  aspect-ratio: 1 / 1;
+  border-radius: 18rpx;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff5b45;
+  background: #202124;
+}
+
+.cover image {
+  width: 100%;
+  height: 100%;
+}
+
+.cover-text {
+  padding: 0 18rpx;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.info {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.title {
+  font-size: 34rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.subtitle {
+  margin-top: 8rpx;
+  color: #8c8172;
+  font-size: 25rpx;
+  line-height: 1.35;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx 16rpx;
+  margin-top: 14rpx;
+  color: #8c8172;
+  font-size: 23rpx;
+  line-height: 1.35;
+}
+
+.auth {
+  align-self: flex-start;
+  margin-top: 14rpx;
+  padding: 10rpx 14rpx;
+  border-radius: 12rpx;
+  color: #ff5b45;
+  background: rgba(255, 91, 69, 0.09);
+  font-size: 23rpx;
+  font-weight: 700;
+}
+
+.auth.ok {
+  color: #4d6120;
+  background: rgba(214, 184, 115, 0.35);
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin-top: 26rpx;
+  border-radius: 16rpx;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.tab {
+  padding: 24rpx 0;
+  text-align: center;
+  color: #8c8172;
+  font-size: 29rpx;
+  font-weight: 700;
+}
+
+.tab.active {
+  color: #ffffff;
+  background: #ff5b45;
+}
+
+.panel {
+  margin-top: 22rpx;
+  padding: 28rpx;
+}
+
+.panel-title {
+  font-size: 32rpx;
+  font-weight: 800;
+}
+
+.desc {
+  margin-top: 14rpx;
+  color: #5f554b;
+  font-size: 28rpx;
+  line-height: 1.65;
+}
+
+.stage-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14rpx;
+  margin-top: 24rpx;
+}
+
+.stage-list view {
+  padding: 18rpx;
+  border-radius: 14rpx;
+  color: #3a1713;
+  background: #f3eadb;
+  font-size: 27rpx;
+  font-weight: 700;
+}
+
+.lesson-list {
+  margin-top: 22rpx;
+}
+
+.lesson {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  min-height: 128rpx;
+  margin-bottom: 16rpx;
+  padding: 22rpx;
+}
+
+.lesson:active {
+  opacity: 0.82;
+}
+
+.lesson-num {
+  width: 58rpx;
+  height: 58rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff5b45;
+  background: rgba(255, 91, 69, 0.09);
+  font-weight: 800;
+}
+
+.lesson-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.lesson-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.lesson-meta {
+  margin-top: 8rpx;
+  color: #8c8172;
+  font-size: 24rpx;
+}
+
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 18rpx 28rpx calc(18rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  box-shadow: 0 -8rpx 26rpx rgba(36, 31, 26, 0.08);
+}
+
+.bottom-price {
+  width: 190rpx;
+  color: #ff5b45;
+  font-size: 36rpx;
+  font-weight: 800;
+}
+
+.bottom-bar .primary-btn {
+  flex: 1;
+}

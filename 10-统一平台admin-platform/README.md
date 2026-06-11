@@ -43,7 +43,7 @@ iframe 拼装旧后台
 统一登录
 统一 Layout
 统一 API Client
-统一会员中心
+统一学员中心
 统一订单中心
 统一权限
 统一数据适配层
@@ -70,6 +70,14 @@ npm run dev
 
 ```text
 http://localhost:3003
+```
+
+生产访问恢复：
+
+```text
+docs/生产访问恢复说明.md
+deploy/admin-platform.nginx.conf
+scripts/production-healthcheck.sh
 ```
 
 ## 生产域名
@@ -135,8 +143,8 @@ Phase 1：
 后台 Layout
 学习中心 /learn
 首页总览
-会员中心
-会员 360
+学员中心
+详情
 订单中心
 电商库存总览
 财务总览

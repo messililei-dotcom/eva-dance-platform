@@ -1,6 +1,7 @@
 import { AntdRegistry } from '@ant-design/nextjs-registry';
-import { ConfigProvider } from 'antd';
+import { App as AntdApp, ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
+import { KeyboardEnterSubmit } from '@/components/keyboard-enter-submit';
 import { AuthProvider } from '@/lib/auth-context';
 import '@/styles/globals.css';
 
@@ -10,7 +11,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <title>伊娃东方舞 · 数字化运营平台</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="shortcut icon" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body style={{ margin: 0 }}>
         <AntdRegistry>
@@ -64,9 +67,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               },
             }}
           >
-            <AuthProvider>
-              {children}
-            </AuthProvider>
+            <AntdApp>
+              <AuthProvider>
+                <KeyboardEnterSubmit />
+                {children}
+              </AuthProvider>
+            </AntdApp>
           </ConfigProvider>
         </AntdRegistry>
       </body>

@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>伊娃东方舞知识库｜18个体系专业增强版</title>
+<style>
+:root {
+  --bg:#f8f1e7; --paper:#fffdf8; --ink:#2b2118; --muted:#776754;
+  --gold:#b8862f; --gold2:#e8c579; --deep:#2b1b10; --line:#eadbc5;
+  --soft:#fff3d8;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; color:var(--ink); line-height:1.82;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(232,197,121,.26), transparent 32%),
+    linear-gradient(180deg,#fff8ea 0%,var(--bg) 100%);
+}
+.hero{
+  padding:72px 24px 48px; text-align:center; color:white;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(232,197,121,.42), transparent 28%),
+    linear-gradient(135deg,#1f140e 0%,#4f3517 56%,#9b6820 100%);
+}
+.hero small{letter-spacing:.22em;color:var(--gold2);font-weight:700}
+.hero h1{font-size:46px;line-height:1.18;margin:14px 0 16px}
+.hero p{max-width:980px;margin:0 auto;color:#f8ead4;font-size:18px}
+.stats{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:28px}
+.stats span{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.1);padding:8px 14px;border-radius:999px;color:#fff6df}
+.layout{display:grid;grid-template-columns:310px minmax(0,1fr);gap:30px;max-width:1360px;margin:0 auto;padding:30px 24px 78px}
+.toc{
+  position:sticky;top:18px;align-self:start;max-height:calc(100vh - 36px);overflow:auto;
+  background:rgba(255,253,248,.92);border:1px solid var(--line);border-radius:26px;padding:18px;
+  box-shadow:0 16px 36px rgba(80,50,16,.08);backdrop-filter:blur(10px)
+}
+.toc h2{font-size:19px;margin:0 0 14px;color:#583713}
+.toc a{display:flex;gap:10px;align-items:center;text-decoration:none;color:#4c3927;border-radius:14px;padding:9px 10px;font-size:14px}
+.toc a:hover{background:var(--soft);color:#7b5016}
+.toc b{color:var(--gold);font-size:12px;letter-spacing:.08em}
+.section{
+  background:var(--paper);border:1px solid var(--line);border-radius:30px;margin-bottom:28px;padding:38px 46px;
+  box-shadow:0 18px 46px rgba(88,57,18,.075)
+}
+.kicker{color:var(--gold);letter-spacing:.18em;font-size:13px;font-weight:800;text-transform:uppercase}
+.section h2{font-size:32px;line-height:1.25;margin:6px 0 18px;color:#432710;border-bottom:2px solid #f0e2ca;padding-bottom:15px}
+.section h3{font-size:23px;margin:32px 0 12px;color:#684515}
+.section h4{font-size:17px;margin:0 0 6px;color:#7a551b}
+.quote{background:linear-gradient(90deg,#fff0ce,#fffaf1);border-left:5px solid var(--gold);padding:16px 18px;border-radius:16px;color:#4b3826;font-size:17px}
+ul{margin:8px 0 14px 22px;padding:0}
+li{margin:6px 0}
+.modules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.module{border:1px solid #efdfc7;background:#fffaf1;border-radius:18px;padding:16px 18px}
+.module p{margin:0;color:#4f4235}
+.tags{display:flex;flex-wrap:wrap;gap:9px}
+.tags span{background:#f3e2c6;color:#684515;border:1px solid #e3c48a;padding:6px 11px;border-radius:999px;font-size:13px}
+.footer{text-align:center;color:var(--muted);padding:30px;font-size:14px}
+@media(max-width:980px){
+  .layout{grid-template-columns:1fr;padding:18px 14px 52px}
+  .toc{position:relative;top:auto;max-height:none}
+  .section{padding:28px 20px}
+  .hero h1{font-size:32px}
+  .modules{grid-template-columns:1fr}
+}
+@media print{
+  .toc{display:none}
+  .layout{display:block;padding:0}
+  .hero{background:white;color:black;padding:24px}
+  .hero p,.hero small{color:#333}
+  .section{box-shadow:none;border:0;page-break-after:always}
+}
+</style>
+</head>
+<body>
+<header class="hero">
+  <small>AIWA ORIENTAL DANCE KNOWLEDGE BASE</small>
+  <h1>伊娃东方舞知识库｜18个体系专业增强版</h1>
+  <p>以伊娃老师直播知识为基础，将18个体系升级为“定义、目标、核心模块、常见错误、教学运营要点、应用场景、知识标签”的专业知识库结构，可用于AI客服、课程顾问、教练培训、直播话术和官网内容沉淀。</p>
+  <div class="stats"><span>18个体系</span><span>120+核心模块</span><span>可用于AI知识库</span><span>适合打印与培训</span></div>
+</header>
+<div class="layout">
+  <nav class="toc"><h2>目录导航</h2><a href="#s01"><b>01</b>01_课程体系</a><a href="#s02"><b>02</b>02_基本功体系</a><a href="#s03"><b>03</b>03_呼吸训练体系</a><a href="#s04"><b>04</b>04_核心发力体系</a><a href="#s05"><b>05</b>05_框架技巧体系</a><a href="#s06"><b>06</b>06_胸腰技巧体系</a><a href="#s07"><b>07</b>07_头部技巧体系</a><a href="#s08"><b>08</b>08_甩发技巧体系</a><a href="#s09"><b>09</b>09_旋转技巧体系</a><a href="#s10"><b>10</b>10_胯部技巧体系</a><a href="#s11"><b>11</b>11_西米技巧体系</a><a href="#s12"><b>12</b>12_手臂技巧体系</a><a href="#s13"><b>13</b>13_步伐体系</a><a href="#s14"><b>14</b>14_编舞体系</a><a href="#s15"><b>15</b>15_教学理念体系</a><a href="#s16"><b>16</b>16_直播销售话术体系</a><a href="#s17"><b>17</b>17_学员案例体系</a><a href="#s18"><b>18</b>18_品牌价值观体系</a></nav>
+  <main>
+<section class="section" id="s01">
+  <div class="kicker">体系 01</div>
+  <h2>01_课程体系.md</h2>
+  <div class="quote">伊娃东方舞课程体系不是单纯的成品舞教学，也不是传统动作模仿式教学，而是一套围绕身体开发、核心控制、技巧系统、音乐理解、编舞思维、舞台表达和艺术人格建立的长期成长体系。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立东方舞学习的完整路径</li><li>帮助不同基础学员找到适合自己的课程入口</li><li>明确基本功、技巧课、编舞课、现场课之间的关系</li><li>避免碎片化学习和盲目囤课</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>身体能力开发体系</h4><p>呼吸、核心、体能、柔韧、稳定、肌肉控制、身体开发。它是所有技巧的根基，解决身体不会用、动作发飘、腰痛、无力等问题。</p></div><div class='module'><h4>框架体系</h4><p>手型、手位、手臂、头部、肩部、步伐、脚位。核心目标是先建立好看的身体，让学员跳任何舞都具备基本气质。</p></div><div class='module'><h4>技巧体系</h4><p>胯部、西米、八字、胸腰、甩发、旋转、复合技巧。核心不是轨迹，而是呼吸、发力、肌肉、空间和控制。</p></div><div class='module'><h4>7+1技巧系统</h4><p>以技巧为主线，加入呼吸、发力、形体、起范、空间、叠加和五感化表达。它解决动作单一、不会衔接、没有高级感的问题。</p></div><div class='module'><h4>云弟子体系</h4><p>对应整套教材的系统化课程，适合长期深度学习、教练成长和教学型老师完善知识结构。</p></div><div class='module'><h4>编舞体系</h4><p>从音乐结构、节奏逻辑、动作词汇、空间设计到即兴能力，帮助学员从舞者升级为创作者。</p></div><div class='module'><h4>舞台表达体系</h4><p>包含五感、起范、小范、舞台气场、审美、角色感和艺术人格。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>把所有课程都当成成品舞课</li><li>只想学结果，不愿意打身体基础</li><li>忽略呼吸和核心，直接学高级技巧</li><li>课程购买很多，但没有学习顺序</li><li>把现场课用于学习本该在线上提前练好的基础内容</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>零基础先建立呼吸、核心和框架，不建议一开始追求复杂技巧。</li><li>有基础但动作不高级的学员，应优先补发力、胸腰、框架和7+1。</li><li>老师型学员应重点补云弟子、编舞师、教学逻辑和课程结构。</li><li>现场课应解决高价值问题，例如细节调整、作品表达、技巧整合和舞台表现。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>课程顾问咨询</li><li>学员学习路径规划</li><li>线上课程体系搭建</li><li>教练培训课程总纲</li><li>智能客服课程推荐</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>课程体系</span><span>学习路径</span><span>7+1</span><span>云弟子</span><span>编舞师</span><span>课程分层</span></div>
+</section>
+
+<section class="section" id="s02">
+  <div class="kicker">体系 02</div>
+  <h2>02_基本功体系.md</h2>
+  <div class="quote">基本功不是压腿、下腰、记动作，而是身体控制能力。伊娃体系中的基本功包括呼吸、核心、肌肉控制、稳定性、身体连接、形体、空间感、节奏控制、协调性和重心控制。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>让身体具备跳舞的基础条件</li><li>建立稳定、分离、连接和控制能力</li><li>减少腰痛、关节代偿和错误发力</li><li>为后续技巧、成品舞和舞台表达打底</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>呼吸基本功</h4><p>通过腹式、肋式、胸式呼吸建立深层核心和身体空间。</p></div><div class='module'><h4>核心基本功</h4><p>上核心控制胸腰和上半身，下核心控制骨盆、胯和下盘。</p></div><div class='module'><h4>肌肉控制</h4><p>训练收、放、推、提、延伸、击控、分离与稳定。</p></div><div class='module'><h4>形体基本功</h4><p>背肌、肩线、手臂、头部和身体线条的基础建设。</p></div><div class='module'><h4>稳定性基本功</h4><p>中轴、足底、重心、核心四类稳定，是技巧安全和质量的前提。</p></div><div class='module'><h4>协调基本功</h4><p>手脚协调、呼吸协调、身体协调、节奏协调，让动作不断层。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>只练动作轨迹，不练身体能力</li><li>只练软开，不练核心和肌肉控制</li><li>一开始就学复杂成品舞</li><li>练习时没有呼吸，导致动作死、腰痛、身体僵</li><li>忽略背肌、手臂、头部等形体基础</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>基本功教学要从身体感受开始，而不是从外形模仿开始。</li><li>每一个基本功动作都要说明发力来源、呼吸方式、肌肉参与和常见错误。</li><li>基础训练应可重复、可检测、可纠正。</li><li>基本功不是低级课程，而是决定高级感的长期系统。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>零基础入门课</li><li>每日带练课</li><li>线下集训预备课</li><li>教练训练SOP</li><li>学员体测与分层</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>基本功</span><span>身体控制</span><span>稳定性</span><span>形体</span><span>重心</span><span>肌肉控制</span></div>
+</section>
+
+<section class="section" id="s03">
+  <div class="kicker">体系 03</div>
+  <h2>03_呼吸训练体系.md</h2>
+  <div class="quote">呼吸是伊娃东方舞体系的根基。它不是简单吸气吐气，而是深层肌肉启动、核心建立、身体连接、力量传导和情绪表达的入口。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立上核心、下核心和中段连接</li><li>让动作有气口、有节奏、有生命力</li><li>解决腰痛、身体僵硬、动作断层问题</li><li>让高级技巧具备安全和控制基础</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>腹式呼吸</h4><p>训练下腹、盆底和下核心，帮助稳定骨盆和胯部动作。</p></div><div class='module'><h4>肋式呼吸</h4><p>训练侧腰、肋骨打开和横向空间，让身体不再平面化。</p></div><div class='module'><h4>胸式呼吸</h4><p>训练提胸、上核心、胸腔空间和背肌启动。</p></div><div class='module'><h4>呼吸与核心</h4><p>吐气收上腹，夹臀提下腹，上下连接形成完整核心。</p></div><div class='module'><h4>呼吸与发力</h4><p>呼吸先启动，再由核心传导到胯、腿、手臂、头部。</p></div><div class='module'><h4>呼吸与舞感</h4><p>呼吸形成动作之间的气口、停顿、层次和情绪。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>把呼吸练成单纯鼓肚子</li><li>跳舞时憋气</li><li>只用胸、不用肋和腹</li><li>只会收腹，不会夹臀和连接下核心</li><li>动作与呼吸脱节，导致身体断层</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>呼吸课要先让学员感受到身体内部变化。</li><li>教学中应把呼吸和具体动作连接，例如圆胯、骆驼、胸腰、甩发。</li><li>呼吸练习应从慢到快，从静态到动态，从单一到复合。</li><li>老师要不断提醒：呼吸不是装饰，而是发力入口。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>呼吸专项课</li><li>核心训练课</li><li>腰痛问题答疑</li><li>7+1前置课</li><li>高阶技巧安全训练</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>呼吸</span><span>核心</span><span>腹式呼吸</span><span>肋式呼吸</span><span>胸式呼吸</span><span>气口</span></div>
+</section>
+
+<section class="section" id="s04">
+  <div class="kicker">体系 04</div>
+  <h2>04_核心发力体系.md</h2>
+  <div class="quote">核心发力是身体深层肌肉的精准连接与控制。东方舞的发力不是猛用力，而是通过呼吸、收腹、夹臀、核心连接和肌肉传导形成稳定、流动、连续的动作。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立正确发力链条</li><li>避免髋关节、腰椎、脖子等部位代偿</li><li>让动作稳定、细腻、丝滑、有力量</li><li>提升击控、分离、旋转、甩发、西米等技巧质量</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>上核心</h4><p>通过吐气、收肋、收上腹建立，控制胸腰、手臂和上半身稳定。</p></div><div class='module'><h4>下核心</h4><p>通过夹臀、盆底肌、下腹收紧建立，控制骨盆、胯和下盘。</p></div><div class='module'><h4>中段连接</h4><p>上核心与下核心形成一整段连接，让身体不断层。</p></div><div class='module'><h4>腿部发力链</h4><p>呼吸 → 收腹 → 夹臀 → 髋周稳定 → 腿部延伸。</p></div><div class='module'><h4>胯部发力链</h4><p>核心稳定后由骨盆和髋周肌肉带动，而不是直接甩髋。</p></div><div class='module'><h4>复合技巧发力</h4><p>在旋转、甩发、撩腿、西米等动作中保持核心稳定和持续连接。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>只收腹，不连接臀腿</li><li>用髋关节硬抬腿</li><li>用腰代偿胯部动作</li><li>甩发只用脖子</li><li>动作之间发力断层</li><li>追求幅度而失去控制</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>讲发力必须讲肌肉和路径，不能只喊用力。</li><li>每个动作都要拆出起点、传导、结果。</li><li>先慢练，让学员感受到核心连接，再加速度、节奏和空间。</li><li>教学中要用对比法：错误发力和正确发力并列示范。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>发力纠错课</li><li>腰痛问题诊断</li><li>撩腿与圆胯训练</li><li>西米控制训练</li><li>教练发力语言标准化</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>核心发力</span><span>上核心</span><span>下核心</span><span>夹臀</span><span>盆底肌</span><span>发力链</span></div>
+</section>
+
+<section class="section" id="s05">
+  <div class="kicker">体系 05</div>
+  <h2>05_框架技巧体系.md</h2>
+  <div class="quote">框架是身体整体结构与舞蹈气质的建立。它不是摆姿势，而是通过头、肩、背、胸腰、手臂、脚位、步伐和空间共同形成舞者的身体美学。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立高级形体和舞蹈气质</li><li>让身体不散、不塌、不僵</li><li>让简单动作也有气场和高级感</li><li>为技巧和舞台表达提供外在结构</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>大框架</h4><p>背肌、胸腰、肩线、中轴、身体空间，决定整体气场。</p></div><div class='module'><h4>小框架</h4><p>头部、手型、手指、眼神、肩部细节，决定精致度和味道。</p></div><div class='module'><h4>头部框架</h4><p>头部方向、留头、转头、点头，让身体有灵气。</p></div><div class='module'><h4>肩背框架</h4><p>肩部打开下沉，背肌支撑手臂和胸腰。</p></div><div class='module'><h4>手臂框架</h4><p>从背肌到指尖的完整延伸，形成空间线条。</p></div><div class='module'><h4>脚位与步伐框架</h4><p>脚位决定重心，步伐决定舞台空间。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>肩膀耸起</li><li>背肌塌掉</li><li>手臂只靠手在摆</li><li>头部不参与动作</li><li>脚位混乱导致重心不稳</li><li>身体没有空间维度</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>框架课要把站姿、背肌、肩线、手臂、头部作为整体训练。</li><li>先建立稳定静态框架，再加入动作、步伐和节奏。</li><li>框架不是僵硬保持，而是有呼吸、有空间的动态结构。</li><li>训练时要强调头、手、胸腰、重心的连接。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>形体提升课</li><li>舞蹈气质训练</li><li>零基础框架入门</li><li>成品舞高级感纠错</li><li>教练基础课标准</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>框架</span><span>形体</span><span>背肌</span><span>肩线</span><span>头部</span><span>手臂</span><span>脚位</span></div>
+</section>
+
+<section class="section" id="s06">
+  <div class="kicker">体系 06</div>
+  <h2>06_胸腰技巧体系.md</h2>
+  <div class="quote">胸腰是东方舞高级感的重要来源，它不是弯腰、顶胸或身体波浪，而是呼吸、上核心、背肌、肋骨、腰部控制和空间延展共同形成的身体能力。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立上半身空间和延展感</li><li>提升舞蹈高级感、女人味和流动感</li><li>支持旋转、甩发、手臂、骆驼等技巧</li><li>改善塌胸、身体平、动作死的问题</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>胸式呼吸</h4><p>帮助打开胸腔，建立上核心和提胸能力。</p></div><div class='module'><h4>肋骨空间</h4><p>肋式呼吸让身体具备横向空间和侧腰控制。</p></div><div class='module'><h4>背肌启动</h4><p>背肌支撑胸腰，避免腰部硬折。</p></div><div class='module'><h4>胸腰分离</h4><p>训练胸、肋、腰的分层控制。</p></div><div class='module'><h4>胸腰连接手臂</h4><p>胸腰带动背肌，背肌带动手臂，手臂延伸到指尖。</p></div><div class='module'><h4>胸腰连接甩发</h4><p>胸腰提供甩发动力和轨迹的身体来源。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>硬折腰</li><li>只顶胸不提背</li><li>没有呼吸</li><li>只追求幅度</li><li>腰部代偿</li><li>胸腰和手臂、头部脱节</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>胸腰教学要先建立提拉感，而不是下压感。</li><li>每次胸腰动作都应说明吸气、延展、背肌和空间。</li><li>胸腰可以连接手臂、头部、甩发和旋转，避免孤立训练。</li><li>要强调胸腰的美感来自空间，而不是幅度。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>胸腰专项课</li><li>高级感提升课</li><li>甩发前置训练</li><li>手臂线条训练</li><li>形体气质课</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>胸腰</span><span>背肌</span><span>上核心</span><span>肋骨</span><span>空间感</span><span>提胸</span></div>
+</section>
+
+<section class="section" id="s07">
+  <div class="kicker">体系 07</div>
+  <h2>07_头部技巧体系.md</h2>
+  <div class="quote">头部技巧是东方舞灵气、五感和舞台感的重要来源。头不是孤立运动，而是由核心、胸腰、背肌、呼吸带动的空间延伸。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>让动作拥有灵气和方向感</li><li>解决头部僵硬、缩脖子、头掉下去的问题</li><li>建立留头、点头、转头和头发轨迹基础</li><li>增强舞台表现与五感表达</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>头部方向</h4><p>通过前后、左右、斜线、圆形方向建立空间意识。</p></div><div class='module'><h4>留头</h4><p>身体先走，头最后离开，形成视觉延迟和高级感。</p></div><div class='module'><h4>点头</h4><p>训练小框架、节奏点和灵气。</p></div><div class='module'><h4>转头</h4><p>连接空间方向、眼神和身体路线。</p></div><div class='module'><h4>头部与胸腰</h4><p>胸腰和背肌支撑头部，让头是拎出去而不是掉出去。</p></div><div class='module'><h4>头部与手臂</h4><p>头的方向与手臂延伸形成完整画面。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>甩脖子</li><li>缩脖子</li><li>头和身体一起走，没有留头</li><li>头部没有方向</li><li>头部和眼神分离</li><li>头部动作没有呼吸</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>先练头部稳定和延伸，再练速度和轨迹。</li><li>留头训练要配合转身、步伐和旋转。</li><li>头部教学不能只讲头，要讲胸腰、背肌和核心。</li><li>头部动作要与眼神、手臂和音乐气口统一。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>头部专项课</li><li>甩发前置课</li><li>舞台表现训练</li><li>成品舞五感提升</li><li>旋转留头训练</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>头部技巧</span><span>留头</span><span>点头</span><span>转头</span><span>五感</span><span>眼神</span></div>
+</section>
+
+<section class="section" id="s08">
+  <div class="kicker">体系 08</div>
+  <h2>08_甩发技巧体系.md</h2>
+  <div class="quote">甩发是东方舞高阶表现技巧，不是乱甩头发，而是身体、呼吸、核心、胸腰、节奏、空间和情绪的综合表达。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立安全、稳定、有控制的甩发能力</li><li>让甩发具备音乐性、空间感和情绪爆发</li><li>避免脖子代偿和头部失控</li><li>提升舞台视觉冲击力</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>中轴稳定</h4><p>甩发时身体不能飞，核心和足底必须稳定。</p></div><div class='module'><h4>胸腰动力</h4><p>甩发动力来自胸腰和背肌，不是脖子。</p></div><div class='module'><h4>留头技巧</h4><p>身体先走，头最后离开，形成甩发高级感。</p></div><div class='module'><h4>头发轨迹</h4><p>圆、半圆、横线、斜线、螺旋等轨迹要清晰。</p></div><div class='module'><h4>节奏与气口</h4><p>甩发需要拍点、停顿、爆发和收回。</p></div><div class='module'><h4>情绪表达</h4><p>甩发不只是技巧，而是音乐情绪和女性力量的爆发。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>只用脖子甩</li><li>核心不稳导致身体飞</li><li>没有胸腰</li><li>不会留头</li><li>头发乱飞没有轨迹</li><li>只追求大和猛</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>甩发前必须检查核心、胸腰、足底和头部控制基础。</li><li>先练慢轨迹，再练速度和爆发。</li><li>每个甩发都要有起点、路线、落点和情绪。</li><li>不建议基础弱的学员直接练高强度甩发。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>甩发专项课</li><li>舞台冲击力训练</li><li>高阶技巧集训</li><li>头部技巧进阶</li><li>作品高潮段落训练</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>甩发</span><span>留头</span><span>胸腰</span><span>头发轨迹</span><span>中轴</span><span>舞台表现</span></div>
+</section>
+
+<section class="section" id="s09">
+  <div class="kicker">体系 09</div>
+  <h2>09_旋转技巧体系.md</h2>
+  <div class="quote">旋转不是简单转圈，而是中轴、核心、重心、足底、胸腰、呼吸、留头、节奏和空间控制的综合能力。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立稳定中轴和脚下功夫</li><li>提升平转、定点转、空间转等技巧质量</li><li>让身体在旋转中保持轻、稳、长</li><li>避免晕、飘、偏轴和重心失控</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>中轴</h4><p>头、胸、核心、骨盆、支撑腿形成一条稳定轴线。</p></div><div class='module'><h4>足底</h4><p>抓地、推地、稳定、传导，是旋转基础。</p></div><div class='module'><h4>重心</h4><p>不同脚位对应不同重心，重心清晰才不乱。</p></div><div class='module'><h4>核心</h4><p>稳定身体，防止散架和腰部代偿。</p></div><div class='module'><h4>胸腰提拉</h4><p>胸腰和背肌提起来，旋转会更轻。</p></div><div class='module'><h4>留头</h4><p>帮助稳定方向、减少眩晕、增强高级感。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>只追求圈数</li><li>中轴断掉</li><li>脚下没力</li><li>胸腰塌</li><li>不会留头</li><li>转圈憋气</li><li>上半身乱晃</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>旋转先练稳定，再练速度和圈数。</li><li>要先讲重心和脚下，再讲转。</li><li>留头训练必须贯穿旋转教学。</li><li>旋转应结合空间、音乐和身体提拉，而不是机械转圈。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>旋转专项课</li><li>足底力量训练</li><li>平转训练</li><li>舞台走位训练</li><li>高阶技巧稳定性提升</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>旋转</span><span>中轴</span><span>足底</span><span>重心</span><span>留头</span><span>平转</span></div>
+</section>
+
+<section class="section" id="s10">
+  <div class="kicker">体系 10</div>
+  <h2>10_胯部技巧体系.md</h2>
+  <div class="quote">胯部技巧是东方舞最核心的身体语言之一，但它不是扭胯或甩胯，而是核心、呼吸、骨盆、髋周肌肉、空间、节奏与身体控制的综合体系。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立骨盆和髋周控制能力</li><li>让胯部动作细腻、稳定、有空间</li><li>解决动作空、硬、飘、断层的问题</li><li>提升女性韵律、节奏表达和舞感</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>骨盆控制</h4><p>骨盆是胯部技巧中心，负责连接上下半身。</p></div><div class='module'><h4>核心与夹臀</h4><p>呼吸、收腹、夹臀建立下核心和骨盆稳定。</p></div><div class='module'><h4>小圆胯</h4><p>偏击控，重点在腰腹控制和清晰度。</p></div><div class='module'><h4>大圆胯</h4><p>偏空间表达，包含高低、前后、左右、框架变化。</p></div><div class='module'><h4>摆胯</h4><p>本质是重心转换和骨盆控制。</p></div><div class='module'><h4>八字胯</h4><p>上八字、前八字、后八字建立空间流动和女性韵律。</p></div><div class='module'><h4>胯与西米</h4><p>西米是胯部高频控制，需要核心、臀腿和重心。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>只学轨迹</li><li>直接甩髋关节</li><li>腰代偿</li><li>没有核心</li><li>没有重心</li><li>胯只有左右没有空间</li><li>只追求大不追求细</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>胯部技巧必须先讲骨盆、核心和呼吸。</li><li>教学中要区分小圆和大圆的发力与空间逻辑。</li><li>摆胯、八字、圆胯、西米应建立系列关系，而不是孤立动作。</li><li>胯部训练要从慢速控制进入节奏变化。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>胯部专项课</li><li>7+1核心技巧</li><li>零基础胯部入门</li><li>成品舞胯部质感提升</li><li>腰痛与代偿纠错</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>胯部技巧</span><span>骨盆</span><span>圆胯</span><span>摆胯</span><span>八字胯</span><span>髋周控制</span></div>
+</section>
+
+<section class="section" id="s11">
+  <div class="kicker">体系 11</div>
+  <h2>11_西米技巧体系.md</h2>
+  <div class="quote">西米是东方舞最具代表性的技巧之一。它不是乱抖，也不是单纯追求速度，而是核心、臀腿、骨盆、重心、节奏、击控、呼吸和身体分离的综合能力。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立稳定清晰的高频控制</li><li>让西米有节奏、有层次、有持续性</li><li>解决身体乱、腰痛、重心飘、上身散的问题</li><li>让西米能够融入步伐、手臂、空间和音乐</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>核心稳定</h4><p>没有核心，西米一定散。</p></div><div class='module'><h4>臀腿支撑</h4><p>西米不是胯自己抖，而是下盘在控制。</p></div><div class='module'><h4>骨盆控制</h4><p>骨盆稳，西米才清晰。</p></div><div class='module'><h4>重心管理</h4><p>双脚、单脚、行走、转圈西米都需要不同重心。</p></div><div class='module'><h4>击控能力</h4><p>每一下都清楚，而不是糊成一片。</p></div><div class='module'><h4>分离能力</h4><p>下半身西米，上半身仍能表达。</p></div><div class='module'><h4>音乐层次</h4><p>西米要有轻重、气口、节奏变化。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>只追求快</li><li>核心散</li><li>只抖胯</li><li>骨盆不稳</li><li>憋气</li><li>上半身跟着乱抖</li><li>不会分离</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>西米先慢练清晰度，再逐渐加频率。</li><li>先稳定下盘，再加入手臂、步伐和空间。</li><li>要区分训练西米、音乐西米和舞台西米。</li><li>西米教学中要不断强调呼吸和重心。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>西米专项课</li><li>节奏训练</li><li>下盘稳定训练</li><li>舞蹈质感提升</li><li>高阶技巧组合</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>西米</span><span>Shimmy</span><span>击控</span><span>臀腿</span><span>重心</span><span>身体分离</span></div>
+</section>
+
+<section class="section" id="s12">
+  <div class="kicker">体系 12</div>
+  <h2>12_手臂技巧体系.md</h2>
+  <div class="quote">手臂是东方舞气质和线条的重要来源。真正高级的手臂不是摆手，而是背肌、胸腰、肩部、呼吸、空间、节奏和情绪的延伸。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立优雅、稳定、有延伸感的手臂线条</li><li>解决手僵、手散、耸肩、手短的问题</li><li>让手臂与头部、胸腰、步伐和音乐统一</li><li>提升舞蹈气质和高级感</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>背肌来源</h4><p>手臂从背里长出来，背肌决定手臂长度和气质。</p></div><div class='module'><h4>肩部控制</h4><p>肩要打开、下沉、稳定，避免耸肩。</p></div><div class='module'><h4>胸腰连接</h4><p>胸腰带动背肌，背肌带动手臂到指尖。</p></div><div class='module'><h4>掌指腕</h4><p>掌决定气场，指决定精致，腕决定流动。</p></div><div class='module'><h4>肘部连接</h4><p>肘连接肩、臂、腕，避免手臂断层。</p></div><div class='module'><h4>手臂与头部</h4><p>头有方向，手有延伸，形成完整画面。</p></div><div class='module'><h4>手臂与节奏</h4><p>手臂也要唱音乐，有气口和层次。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>只摆手</li><li>耸肩</li><li>手腕断</li><li>指尖没延伸</li><li>手臂没有呼吸</li><li>只有手没有背</li><li>手和头部不连接</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>手臂教学不能从手开始，而要从背肌和胸腰开始。</li><li>掌、指、腕、肘、臂要拆开训练再整体连接。</li><li>手臂要和呼吸、头部、眼神、音乐同步。</li><li>训练中要让学员感受到手臂的空间方向和延伸路径。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>手臂专项课</li><li>形体气质训练</li><li>零基础框架课</li><li>成品舞手臂纠错</li><li>舞台表现训练</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>手臂</span><span>掌指腕</span><span>背肌</span><span>指尖</span><span>肩部</span><span>手臂延伸</span></div>
+</section>
+
+<section class="section" id="s13">
+  <div class="kicker">体系 13</div>
+  <h2>13_步伐体系.md</h2>
+  <div class="quote">步伐是舞蹈从原地动作走向空间表达的基础。真正的步伐不是换脚或移动，而是重心、足底、核心、空间、节奏、呼吸和身体连接的综合体系。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立稳定清晰的移动能力</li><li>让学员从原地动作进入舞台空间</li><li>解决走路飘、重心乱、手脚不协调的问题</li><li>提升成品舞、编舞和舞台调度能力</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>脚位</h4><p>一位、二位、三位、四位、五位、六位、七位脚决定不同重心。</p></div><div class='module'><h4>重心</h4><p>步伐本质是重心转换，不是脚乱换。</p></div><div class='module'><h4>足底</h4><p>抓地、推地、缓冲、稳定，让身体有根。</p></div><div class='module'><h4>核心</h4><p>移动中保持身体不断层。</p></div><div class='module'><h4>空间方向</h4><p>前后、左右、斜线、圆形、舞台路线。</p></div><div class='module'><h4>手脚协调</h4><p>脚控制重心，手控制空间，身体形成整体流动。</p></div><div class='module'><h4>步伐与音乐</h4><p>每一步都有拍点、轻重、气口和节奏变化。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>只换脚不换重心</li><li>脚下没力</li><li>身体飘</li><li>没有呼吸</li><li>只顾脚不顾上身</li><li>走位没有空间设计</li><li>像赶路而不是跳舞</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>步伐训练要先练重心，再练路线。</li><li>每个步伐都要连接核心、胸腰、手臂和头部。</li><li>步伐应结合音乐，而不是机械走。</li><li>教学中要让学员理解舞台方向和观众视角。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>步伐专项课</li><li>舞台走位训练</li><li>成品舞空间提升</li><li>编舞基础训练</li><li>零基础脚位训练</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>步伐</span><span>脚位</span><span>重心</span><span>足底</span><span>走位</span><span>空间移动</span></div>
+</section>
+
+<section class="section" id="s14">
+  <div class="kicker">体系 14</div>
+  <h2>14_编舞体系.md</h2>
+  <div class="quote">编舞不是拼动作，而是音乐、身体、空间、节奏、情绪和艺术逻辑的综合创作。它要求舞者听懂音乐、理解结构、掌握动作词汇并具备空间与情绪设计能力。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>帮助学员从动作学习者升级为创作者</li><li>建立音乐理解和节奏逻辑</li><li>提升组合编排、作品创作和即兴能力</li><li>形成更高级的舞蹈审美和作品判断力</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>音乐结构</h4><p>前奏、主歌、副歌、过渡、高潮、收尾，决定作品起承转合。</p></div><div class='module'><h4>节奏体系</h4><p>打拍、数拍、重拍、切分、花音以及中东节奏识别。</p></div><div class='module'><h4>动作词汇</h4><p>技巧、步伐、手臂、空间变化构成编舞词汇。</p></div><div class='module'><h4>空间设计</h4><p>前后、左右、高低、斜线、圆形、舞台调度。</p></div><div class='module'><h4>情绪层次</h4><p>情绪推进、能量变化、角色表达和音乐情感。</p></div><div class='module'><h4>即兴能力</h4><p>在音乐逻辑和身体词汇基础上的即时创作。</p></div><div class='module'><h4>审美判断</h4><p>判断一个作品是否有结构、空间、层次、呼吸和高级感。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>只拼动作</li><li>听不懂音乐</li><li>动作太满没有留白</li><li>没有空间变化</li><li>没有情绪推进</li><li>只会模仿不会创作</li><li>即兴变成乱跳</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>编舞课要先从听音乐开始，而不是直接排动作。</li><li>要训练学员听节奏、乐器、花音和音乐结构。</li><li>编舞应同时考虑动作、空间、情绪和舞台。</li><li>即兴训练必须建立在系统逻辑上。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>编舞师课程</li><li>教师进阶培训</li><li>作品创作训练</li><li>即兴能力训练</li><li>比赛作品打磨</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>编舞</span><span>音乐结构</span><span>节奏</span><span>即兴</span><span>空间设计</span><span>作品创作</span></div>
+</section>
+
+<section class="section" id="s15">
+  <div class="kicker">体系 15</div>
+  <h2>15_教学理念体系.md</h2>
+  <div class="quote">伊娃教学理念的核心是：东方舞不是学动作，而是改变身体。真正的教学不是让学生暂时模仿，而是让学生建立身体能力、理解发力逻辑、形成审美和长期成长能力。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立系统化教学标准</li><li>提升教师对身体、动作、课程和学员的理解</li><li>避免只教轨迹的低效教学</li><li>用教学成果验证课程价值</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>不学轨迹</h4><p>轨迹只是外形，真正要教呼吸、发力、肌肉、空间和五感。</p></div><div class='module'><h4>系统大于努力</h4><p>努力必须建立在正确方法和完整路径上。</p></div><div class='module'><h4>先身体后技巧</h4><p>身体能力决定技巧上限。</p></div><div class='module'><h4>磨刀理论</h4><p>呼吸、软开、框架、手臂、核心都属于磨刀，现场课应解决高价值问题。</p></div><div class='module'><h4>成果导向</h4><p>真正的老师要能让学生成长，而不是只有流量和头衔。</p></div><div class='module'><h4>因材施教</h4><p>根据年龄、基础、身体能力和学习目标调整教学。</p></div><div class='module'><h4>教师责任</h4><p>老师影响学生审美、身体、价值观和艺术方向。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>只带动作不讲原理</li><li>只展示自己厉害，不解决学生问题</li><li>忽略学生身体基础</li><li>把所有学生用同一套方法教</li><li>为了流量降低审美</li><li>没有课程顺序和训练闭环</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>教师应先诊断学生问题，再决定训练内容。</li><li>每个动作都要有发力、呼吸、轨迹、空间和常见错误。</li><li>教学要有长期路径，不是单次刺激。</li><li>老师的专业最终必须体现在学生成果上。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>教练培训</li><li>教学SOP</li><li>课程研发</li><li>老师话术标准</li><li>教学质量评估</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>教学理念</span><span>系统教学</span><span>因材施教</span><span>教学成果</span><span>教师责任</span><span>磨刀理论</span></div>
+</section>
+
+<section class="section" id="s16">
+  <div class="kicker">体系 16</div>
+  <h2>16_直播销售话术体系.md</h2>
+  <div class="quote">伊娃直播销售不是硬卖课，而是教学型直播、信任型直播、专业型直播和成长型直播的结合。直播通过真实教学、问题诊断、成长路径和人格魅力完成自然转化。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立专业信任和用户粘性</li><li>让用户感受到真实收获</li><li>通过问题识别激发学习需求</li><li>根据用户阶段推荐合适课程</li><li>形成长期品牌关系而非一次性成交</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>价值输出</h4><p>先教学，输出技术、发力、呼吸、核心、问题分析。</p></div><div class='module'><h4>问题放大</h4><p>指出只学轨迹、没核心、不会发力、动作断层、没高级感等问题。</p></div><div class='module'><h4>解决方案</h4><p>对应呼吸、书、7+1、云弟子、胸腰、甩发、编舞师等课程路径。</p></div><div class='module'><h4>用户分层</h4><p>零基础、进阶、老师型、现场课预备学员分别推荐不同路径。</p></div><div class='module'><h4>案例见证</h4><p>通过学员成长建立可信度。</p></div><div class='module'><h4>人格信任</h4><p>真诚、专业、高标准、幽默、有力量感。</p></div><div class='module'><h4>限时成交</h4><p>在价值和信任之后，再用活动、赠课、限量推动行动。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>一上来就卖课</li><li>只讲优惠不讲价值</li><li>没有专业输出</li><li>没有问题诊断</li><li>没有成长路径</li><li>没有案例和人格信任</li><li>把课程当商品而不是成长方案</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>直播话术应先教学后成交。</li><li>销售不是逼单，而是帮助用户做学习决策。</li><li>课程推荐必须符合学员阶段。</li><li>高价值观点和真实专业输出，是最强成交前提。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>直播脚本</li><li>课程转化话术</li><li>客服成交SOP</li><li>短视频口播</li><li>私域运营</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>直播销售</span><span>成交话术</span><span>教学型直播</span><span>用户分层</span><span>课程转化</span><span>私域</span></div>
+</section>
+
+<section class="section" id="s17">
+  <div class="kicker">体系 17</div>
+  <h2>17_学员案例体系.md</h2>
+  <div class="quote">学员案例是教学体系有效性的证明，也是品牌最重要的信任资产。真正的案例不是炫耀，而是呈现一个普通人在系统训练中身体、气质、技术和心理状态的真实改变。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>证明课程体系有效</li><li>增强用户信任和学习信心</li><li>沉淀可复用的教学成果素材</li><li>形成品牌长期口碑</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>零基础案例</h4><p>从不会跳到身体稳定、形体变好、动作有控制。</p></div><div class='module'><h4>大龄案例</h4><p>50+、60+ 学员通过正确方法依然明显成长。</p></div><div class='module'><h4>长期学不好案例</h4><p>多年无突破的学员通过发力、呼吸、核心重新建立身体。</p></div><div class='module'><h4>形体改变案例</h4><p>背肌、脖颈、肩线、手臂、气质发生变化。</p></div><div class='module'><h4>核心改变案例</h4><p>腰痛减少、动作更稳、身体更有力量。</p></div><div class='module'><h4>现场系统班案例</h4><p>高密度学习、当天消化、助教代练、即时调整。</p></div><div class='module'><h4>心理成长案例</h4><p>更自信、更有目标、更愿意表达自己。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>只展示优秀结果，不讲成长过程</li><li>案例没有前后对比</li><li>不说明学员原始问题</li><li>只做营销，不做教学复盘</li><li>忽略普通学员的真实进步</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>每个案例应记录学员起点、问题、训练路径、改变结果。</li><li>案例要分类管理，方便课程咨询和客服调用。</li><li>案例要强调方法有效，而不是制造焦虑。</li><li>案例最好配合视频、照片、学员反馈和老师点评。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>课程销售案例库</li><li>短视频素材</li><li>官网学员成果页</li><li>教练培训案例</li><li>私域成交辅助</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>学员案例</span><span>教学成果</span><span>成长故事</span><span>前后对比</span><span>品牌信任</span><span>口碑</span></div>
+</section>
+
+<section class="section" id="s18">
+  <div class="kicker">体系 18</div>
+  <h2>18_品牌价值观体系.md</h2>
+  <div class="quote">伊娃东方舞不是单纯舞蹈培训品牌，而是身体成长、艺术成长、女性成长和东方美学的综合体系。品牌核心是专业、系统、真实成长、长期主义和高级审美。</div>
+  <h3>训练 / 建设目标</h3>
+  <ul><li>建立品牌长期精神内核</li><li>统一课程、直播、宣传、教学和团队表达</li><li>区别于低质流量型舞蹈内容</li><li>推动中国东方舞专业化和国际化</li></ul>
+  <h3>核心模块</h3>
+  <div class="modules"><div class='module'><h4>专业第一</h4><p>真正长期的品牌必须建立在教学成果和专业能力上。</p></div><div class='module'><h4>系统化</h4><p>成长不靠碎片学习，而靠完整路径。</p></div><div class='module'><h4>长期主义</h4><p>真正高级来自长期积累，不靠速成幻想。</p></div><div class='module'><h4>真实成长</h4><p>身体变化、气质变化、审美变化比包装更重要。</p></div><div class='module'><h4>女性成长</h4><p>帮助女性建立自信、气场、身体力量和女性能量。</p></div><div class='module'><h4>年龄平等</h4><p>任何年龄都可以通过正确训练成长。</p></div><div class='module'><h4>艺术审美</h4><p>反对低俗化、擦边化和审美降级。</p></div><div class='module'><h4>教师责任</h4><p>老师不仅教动作，更影响学生的审美和价值观。</p></div><div class='module'><h4>中国东方舞使命</h4><p>推动中国东方舞专业化、系统化、国际化。</p></div></div>
+  <h3>常见错误</h3>
+  <ul><li>只追求流量</li><li>用低俗内容换关注</li><li>只包装老师不建设课程体系</li><li>忽视学生成果</li><li>没有长期价值观</li><li>把品牌做成一次性卖课</li></ul>
+  <h3>教学与运营要点</h3>
+  <ul><li>所有宣传内容都要体现专业、系统和高级审美。</li><li>品牌表达要聚焦成长，而不是制造焦虑。</li><li>课程体系、直播话术、学员案例和视觉设计都应统一价值观。</li><li>品牌最终要建立行业影响力，而不只是销售额。</li></ul>
+  <h3>应用场景</h3>
+  <ul><li>品牌手册</li><li>官网品牌页</li><li>招商介绍</li><li>团队培训</li><li>内容审核标准</li></ul>
+  <h3>知识库标签</h3>
+  <div class="tags"><span>品牌价值观</span><span>专业化</span><span>女性成长</span><span>长期主义</span><span>东方舞美学</span><span>中国东方舞</span></div>
+</section>
+</main>
+</div>
+<footer class="footer">伊娃东方舞知识库 · 专业增强版 HTML</footer>
+</body>
+</html>

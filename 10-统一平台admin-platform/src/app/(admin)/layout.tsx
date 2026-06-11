@@ -1,10 +1,10 @@
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Badge, Button, Space, Input, Typography, Tooltip, AutoComplete, message } from 'antd';
+import { App, Layout, Menu, Avatar, Dropdown, Button, Space, Drawer, Grid } from 'antd';
 import {
   HomeOutlined, UserOutlined, ShoppingCartOutlined,
   ShopOutlined, DollarOutlined, SettingOutlined, SafetyOutlined,
-  BellOutlined, MenuFoldOutlined, MenuUnfoldOutlined, SearchOutlined,
+  MenuUnfoldOutlined,
   LogoutOutlined, TeamOutlined, LaptopOutlined, CrownOutlined,
   BookOutlined, GiftOutlined, CalendarOutlined, BarChartOutlined,
   PictureOutlined, AppstoreOutlined, FileTextOutlined, GlobalOutlined,
@@ -13,8 +13,9 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { platformLinks } from '@/lib/platform-links';
 
-const { Sider, Content, Header } = Layout;
-const { Text } = Typography;
+const { Sider, Content } = Layout;
+const { useBreakpoint } = Grid;
+const EVENT_MANAGEMENT_URL = 'https://saishi.dongfangwuquan.com';
 
 // ========== 完整导航菜单 ==========
 const menuItems: any[] = [
@@ -24,7 +25,7 @@ const menuItems: any[] = [
     label: '核心',
     children: [
       { key: '/dashboard', icon: <HomeOutlined />, label: '首页总览' },
-      { key: '/members', icon: <UserOutlined />, label: '学员中心' },
+      { key: '/members', icon: <UserOutlined />, label: '学员信息' },
       { key: '/orders', icon: <ShoppingCartOutlined />, label: '订单中心' },
       { key: '/student-progress', icon: <BarChartOutlined />, label: '学员进度' },
     ],
@@ -34,11 +35,10 @@ const menuItems: any[] = [
     type: 'group',
     label: '教学',
     children: [
-      { key: '/courses', icon: <BookOutlined />, label: '课程管理' },
-      { key: '/training', icon: <TeamOutlined />, label: '线下培训' },
-      { key: '/online-course', icon: <LaptopOutlined />, label: '网课系统' },
+      { key: '/training', icon: <TeamOutlined />, label: '线下课程' },
+      { key: '/online-course', icon: <LaptopOutlined />, label: '线上课程' },
       { key: '/certificates', icon: <CrownOutlined />, label: '证书管理' },
-      { key: '/events', icon: <CalendarOutlined />, label: '活动管理' },
+      { key: '/events', icon: <CalendarOutlined />, label: '赛事管理' },
     ],
   },
   {
@@ -68,7 +68,6 @@ const menuItems: any[] = [
     type: 'group',
     label: '更多',
     children: [
-      { key: '/masterclass', icon: <CrownOutlined />, label: '大师课' },
       { key: '/order-center', icon: <ShoppingCartOutlined />, label: '收银台' },
     ],
   },
@@ -113,15 +112,33 @@ for (const item of menuItems) {
 const searchableItems = menuItems.flatMap((it: any) =>
   it.children ? it.children.map((c: any) => ({ label: c.label, key: c.key, icon: c.icon })) : []
 );
+const MOBILE_HIDDEN_MENU_KEYS = new Set(['/dashboard', '/members', '/orders', '/student-progress', '/certificates', '/events', '/live']);
+
+function filterMobileMenuItems(items: any[]) {
+  return items
+    .filter(item => item.key !== 'grp-core' && item.key !== 'grp-extras')
+    .map(item => {
+      if (!item.children) return item;
+      const children = item.children.filter((child: any) => !MOBILE_HIDDEN_MENU_KEYS.has(child.key));
+      return { ...item, children };
+    })
+    .filter(item => !item.children || item.children.length > 0);
+}
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { message } = App.useApp();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
 
   const [collapsed, setCollapsed] = useState(false);
-  const [searchOptions, setSearchOptions] = useState<{ value: string; label: string; key: string }[]>([]);
-  const [pageTitle, setPageTitle] = useState('首页总览');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const shouldRedirectMobileDashboard = pathname === '/dashboard' && isMobile;
+  const visibleMenuItems = useMemo(() => (
+    isMobile ? filterMobileMenuItems(menuItems) : menuItems
+  ), [isMobile]);
 
   // 找到当前激活的菜单项
   const active = useMemo(() => {
@@ -132,34 +149,21 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   // 更新页面标题
   useEffect(() => {
     const label = pathLabelMap[active] || '首页总览';
-    setPageTitle(label);
     if (typeof document !== 'undefined') {
       document.title = `${label} · 伊娃东方舞`;
     }
   }, [active]);
 
-  // 搜索功能
-  const handleSearch = (value: string) => {
-    if (!value) {
-      setSearchOptions([]);
-      return;
+  useEffect(() => {
+    if (pathname !== '/dashboard') return;
+    if (isMobile) {
+      router.replace('/training');
     }
-    const filtered = searchableItems
-      .filter(item => item.label.includes(value) || item.key.includes(value))
-      .map(item => ({ value: item.key, label: item.label, key: item.key }));
-    setSearchOptions(filtered);
-  };
-
-  const handleSearchSelect = (value: string | undefined) => {
-    if (value && value.startsWith('/')) {
-      router.push(value);
-      setSearchOptions([]);
-    }
-  };
+  }, [isMobile, pathname, router]);
 
   // 用户信息
-  const userName = user?.name || user?.username || '管理员';
-  const userAvatar = user?.name?.[0] || user?.username?.[0] || 'A';
+  const rawUserName = user?.name || user?.username || '管理员';
+  const userName = rawUserName === '李磊' ? '李雷' : rawUserName;
   const userRole = user?.role || user?.roles?.[0] || '管理员';
   const userInitials = userName[0]?.toUpperCase() || 'A';
 
@@ -208,209 +212,208 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     },
   ];
 
+  const menu = (
+    <Menu
+      mode="inline"
+      theme="dark"
+      selectedKeys={[active]}
+      defaultOpenKeys={isMobile ? ['grp-education'] : ['grp-core']}
+      items={visibleMenuItems}
+      onClick={({ key }) => {
+        if (key === '/events') {
+          window.location.href = EVENT_MANAGEMENT_URL;
+          setMobileMenuOpen(false);
+          return;
+        }
+        if (key.startsWith('/')) {
+          router.push(key);
+          setMobileMenuOpen(false);
+        }
+      }}
+      style={{
+        background: 'transparent',
+        borderRight: 'none',
+        paddingTop: 4,
+        fontSize: 13,
+      }}
+    />
+  );
+
+  const userProfile = (compact = false) => (
+    <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="topLeft">
+      <Space
+        style={{
+          width: '100%',
+          height: compact ? 28 : 28,
+          cursor: 'pointer',
+          padding: compact ? '0' : '0 6px',
+          borderRadius: 6,
+          justifyContent: compact ? 'center' : 'flex-start',
+          transition: 'background 0.2s',
+        }}
+        className="user-trigger"
+        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+      >
+        <Avatar
+          style={{
+            background: 'linear-gradient(135deg, #F72A8A, #7C3AED)',
+            verticalAlign: 'middle',
+            fontSize: compact ? 11 : 12,
+            fontWeight: 600,
+            flexShrink: 0,
+          }}
+          size={compact ? 22 : 22}
+        >
+          {userInitials}
+        </Avatar>
+        {!compact && (
+          <div style={{ lineHeight: 1.05, minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {userName}
+            </div>
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.55)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {userRole}
+            </div>
+          </div>
+        )}
+      </Space>
+    </Dropdown>
+  );
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       {/* ===== 左侧边栏 ===== */}
-      <Sider
-        collapsible
-        collapsed={collapsed}
-        onCollapse={setCollapsed}
-        theme="dark"
-        width={220}
-        className="sider-brand"
-        style={{
-          background: 'linear-gradient(180deg, #07172D 0%, #180B3A 100%)',
-          borderRight: '1px solid rgba(255,255,255,0.06)',
-          overflow: 'auto',
-          height: '100vh',
-          position: 'sticky',
-          top: 0,
-          left: 0,
+      {!isMobile && (
+        <Sider
+          collapsible
+          collapsed={collapsed}
+          onCollapse={setCollapsed}
+          theme="dark"
+          width={220}
+          className="sider-brand"
+          style={{
+            background: 'linear-gradient(180deg, #07172D 0%, #180B3A 100%)',
+            borderRight: '1px solid rgba(255,255,255,0.06)',
+            overflow: 'hidden',
+            height: '100vh',
+            position: 'sticky',
+            top: 0,
+            left: 0,
+          }}
+        >
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', paddingBottom: 28 }}>
+            {/* Logo */}
+            <div style={{
+              height: 64,
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0 16px',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              flexShrink: 0,
+            }}>
+              <div style={{
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                background: 'transparent',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                overflow: 'hidden',
+              }}>
+                <img
+                  src="/apple-touch-icon.png"
+                  alt="伊娃东方舞"
+                  style={{
+                    width: 30,
+                    height: 30,
+                    objectFit: 'contain',
+                    display: 'block',
+                  }}
+                />
+              </div>
+              {!collapsed && (
+                <div style={{ marginLeft: 10, flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap', color: '#fff', lineHeight: 1.2 }}>
+                    伊娃东方舞
+                  </div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap' }}>
+                    数字化运营平台
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 菜单 */}
+            <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+              {menu}
+            </div>
+
+            {/* 底部用户信息 */}
+            <div style={{
+              flexShrink: 0,
+              height: 50,
+              padding: collapsed ? '0 12px' : '0 8px',
+              borderTop: '1px solid rgba(255,255,255,0.06)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              {userProfile(collapsed)}
+            </div>
+          </div>
+        </Sider>
+      )}
+
+      <Drawer
+        placement="left"
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        width={280}
+        styles={{
+          body: { padding: 0, background: '#07172D' },
+          header: { display: 'none' },
         }}
       >
-        {/* Logo */}
-        <div style={{
-          height: 64,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 16px',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          justifyContent: collapsed ? 'center' : 'flex-start',
-        }}>
-          <div style={{
-            width: 34,
-            height: 34,
-            borderRadius: 10,
-            background: 'linear-gradient(135deg, #F72A8A, #7C3AED)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 800,
-            fontSize: 15,
-            flexShrink: 0,
-            boxShadow: '0 10px 24px rgba(247,42,138,0.22)',
-          }}>
-            E
+        <div className="sider-brand" style={{ minHeight: '100vh', paddingTop: 8, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '14px 18px', color: '#fff', fontWeight: 700, flexShrink: 0 }}>伊娃东方舞</div>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {menu}
           </div>
-          {!collapsed && (
-            <div style={{ marginLeft: 10, flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap', color: '#fff', lineHeight: 1.2 }}>
-                伊娃东方舞
-              </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap' }}>
-                数字化运营平台
-              </div>
-            </div>
-          )}
+          <div style={{ flexShrink: 0, padding: '10px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            {userProfile(false)}
+          </div>
         </div>
-
-        {/* 菜单 */}
-        <Menu
-          mode="inline"
-          theme="dark"
-          selectedKeys={[active]}
-          defaultOpenKeys={['grp-core']}
-          items={menuItems}
-          onClick={({ key }) => {
-            if (key.startsWith('/')) router.push(key);
-          }}
-          style={{
-            background: 'transparent',
-            borderRight: 'none',
-            paddingTop: 4,
-            fontSize: 13,
-          }}
-        />
-
-        {/* 底部版本信息 */}
-        {!collapsed && (
-          <div style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '12px 16px',
-            borderTop: '1px solid rgba(255,255,255,0.06)',
-            textAlign: 'center',
-            color: 'rgba(255,255,255,0.3)',
-            fontSize: 11,
-          }}>
-            v1.0.0
-          </div>
-        )}
-      </Sider>
+      </Drawer>
 
       {/* ===== 右侧内容区 ===== */}
-      <Layout>
-        <Header style={{
-          padding: '0 24px',
-          background: '#fff',
-          borderBottom: '1px solid #f0f0f0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: 56,
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-        }}>
-          {/* 左侧：折叠按钮 + 面包屑/标题 */}
-          <Space>
-            <Tooltip title={collapsed ? '展开侧栏' : '收起侧栏'}>
-              <Button
-                type="text"
-                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                onClick={() => setCollapsed(!collapsed)}
-                style={{ color: '#666' }}
-              />
-            </Tooltip>
-            <span style={{ fontSize: 15, fontWeight: 600, color: '#1f2937' }}>
-              {pageTitle}
-            </span>
-          </Space>
-
-          {/* 右侧：搜索 + 通知 + 用户 */}
-          <Space size="middle" wrap={false}>
-            {/* 搜索框（带自动补全） */}
-            <AutoComplete
-              options={searchOptions}
-              onSearch={handleSearch}
-              onSelect={handleSearchSelect}
-              value={undefined}
-              style={{ width: 220 }}
-              notFoundContent={null}
-            >
-              <Input
-                placeholder="搜索菜单..."
-                prefix={<SearchOutlined style={{ color: '#999' }} />}
-                style={{ borderRadius: 6, height: 34, background: '#f5f5f5', border: '1px solid #e8e8e8' }}
-                size="small"
-                allowClear
-              />
-            </AutoComplete>
-
-            {/* 通知 */}
-            <Tooltip title="品牌官网">
-              <Button
-                type="text"
-                icon={<GlobalOutlined />}
-                href={platformLinks.website.home}
-                target="_blank"
-                style={{ color: '#666' }}
-              />
-            </Tooltip>
-            <Tooltip title="学员中心">
-              <Button
-                type="text"
-                icon={<BookOutlined />}
-                href={platformLinks.learn.home}
-                target="_blank"
-                style={{ color: '#666' }}
-              />
-            </Tooltip>
-
-            {/* 通知 */}
-            <Tooltip title="通知">
-              <Badge count={0} size="small" offset={[-2, 2]}>
-                <BellOutlined style={{ fontSize: 18, cursor: 'pointer', color: '#666' }} />
-              </Badge>
-            </Tooltip>
-
-            {/* 用户信息 */}
-            <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
-              <Space style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: 8, transition: 'background 0.2s' }}
-                className="user-trigger"
-                onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f5')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-              >
-                <Avatar
-                  style={{
-                    background: 'linear-gradient(135deg, #F72A8A, #7C3AED)',
-                    verticalAlign: 'middle',
-                    fontSize: 13,
-                    fontWeight: 600,
-                  }}
-                  size={30}
-                >
-                  {userInitials}
-                </Avatar>
-                <div style={{ lineHeight: 1.2 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#1f2937' }}>{userName}</div>
-                  <div style={{ fontSize: 11, color: '#999' }}>{userRole}</div>
-                </div>
-              </Space>
-            </Dropdown>
-          </Space>
-        </Header>
+      <Layout className="admin-main-layout">
+        {isMobile && (
+          <div className="admin-mobile-header">
+            <div className="admin-mobile-title">
+              <strong>{pathLabelMap[active] || '首页总览'}</strong>
+              <span>{pathGroupMap[active] || '后台管理'}</span>
+            </div>
+            <Button
+              className="admin-mobile-menu-button"
+              type="primary"
+              shape="circle"
+              icon={<MenuUnfoldOutlined />}
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="打开菜单"
+            />
+          </div>
+        )}
 
         <Content style={{
-          padding: 24,
+          padding: isMobile ? 12 : 24,
           background: '#f0f2f5',
-          minHeight: 'calc(100vh - 56px)',
+          minHeight: '100vh',
         }}>
-          {children}
+          {shouldRedirectMobileDashboard ? null : children}
         </Content>
       </Layout>
     </Layout>

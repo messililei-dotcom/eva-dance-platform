@@ -1,0 +1,67 @@
+<view class="page">
+  <view class="section-head hero-head">
+    <view>
+      <text class="section-kicker">精选内容</text>
+    </view>
+  </view>
+
+  <swiper class="course-swiper" autoplay circular display-multiple-items="2" indicator-dots indicator-color="rgba(255,255,255,0.45)" indicator-active-color="#ffffff" wx:if="{{carouselCourses.length}}">
+    <swiper-item wx:for="{{carouselCourses}}" wx:key="id">
+      <view class="hero-slide" bindtap="goCard" data-id="{{item.id}}" data-source="{{item.sourceType}}">
+        <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" binderror="onImageError" data-path="carouselCourses[{{index}}].cover_image"></image>
+        <view wx:else class="cover-fallback">内容</view>
+        <view class="slide-shade"></view>
+        <view class="slide-content">
+          <view class="slide-badge">{{item.badge}}</view>
+          <view class="slide-title">{{item.title}}</view>
+          <view class="slide-meta">{{item.lessonText}} · {{item.popularityText}}</view>
+        </view>
+      </view>
+    </swiper-item>
+  </swiper>
+  <view wx:else class="empty-card">暂无轮播内容</view>
+
+  <view class="section-head list-head">
+    <view>
+      <text class="section-kicker">内容列表</text>
+    </view>
+    <view class="list-actions">
+      <button class="all-btn" bindtap="goSystemCourses">全部内容</button>
+      <view class="inline-search">
+        <input
+          class="search-input"
+          value="{{searchKeyword}}"
+          placeholder="搜索"
+          confirm-type="search"
+          focus="{{searchFocused}}"
+          bindinput="onSearchInput"
+          bindconfirm="onSearchConfirm"
+        />
+        <button class="search-icon-btn" aria-label="搜索" bindtap="onSearchButtonTap">
+          <view class="search-icon"></view>
+        </button>
+      </view>
+    </view>
+  </view>
+  <view class="search-result" wx:if="{{searchCountText}}">{{searchCountText}}</view>
+
+  <view class="course-list" wx:if="{{courseRows.length}}">
+    <view class="course-row" wx:for="{{courseRows}}" wx:key="id" bindtap="goCard" data-id="{{item.id}}" data-source="{{item.sourceType}}">
+      <view class="row-cover">
+        <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" binderror="onImageError" data-path="courseRows[{{index}}].cover_image"></image>
+        <view wx:else class="cover-fallback">内容</view>
+      </view>
+      <view class="row-body">
+        <view class="row-badge">{{item.badge}}</view>
+        <view class="row-title">{{item.title}}</view>
+        <view class="row-meta">
+          <text>{{item.lessonText}}</text>
+          <text>{{item.popularityText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  <view wx:else class="empty-card">暂无内容数据</view>
+
+  <button class="bottom-all-btn" bindtap="goSystemCourses">查看全部内容</button>
+</view>

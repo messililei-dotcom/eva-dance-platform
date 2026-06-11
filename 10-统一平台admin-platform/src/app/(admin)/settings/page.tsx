@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Alert, Button, Card, Descriptions, Divider, Form, Input, Space, Switch, Table, Tabs, Tag, Typography } from 'antd';
 import { ApiOutlined, CloudServerOutlined, DatabaseOutlined, LinkOutlined, SaveOutlined, SettingOutlined } from '@ant-design/icons';
 import { platformAdapter } from '@/lib/adapters/platform';
+import { sortableColumns } from '@/lib/table-sort';
 
 const { Text, Title } = Typography;
 
@@ -52,16 +53,17 @@ export default function SettingsPage() {
           <div>
             <Alert message="官网、统一后台、学员中心、网课小程序的跨端入口统一从 src/lib/platform-links.ts 读取。" type="success" showIcon style={{ marginBottom: 16 }} />
             <Table
+              scroll={{ x: 'max-content' }}
               rowKey="key"
               size="middle"
               dataSource={settings.linkMatrix}
               pagination={false}
-              columns={[
+              columns={sortableColumns<any>([
                 { title: '链路', dataIndex: 'label', render: value => <Space><LinkOutlined />{value}</Space> },
                 { title: '目标地址', dataIndex: 'url', render: value => <Text copyable>{value}</Text> },
                 { title: '目标端', dataIndex: 'target', render: value => <Tag color={value === 'admin' ? 'purple' : value === 'learn' ? 'magenta' : value === 'miniapp' ? 'blue' : 'green'}>{value}</Tag> },
                 { title: '用途', dataIndex: 'description' },
-              ]}
+              ])}
             />
           </div>
         )}
@@ -86,16 +88,17 @@ export default function SettingsPage() {
           <div>
             <Alert message="旧系统不再作为页面拼装来源，只作为数据源和适配对象。" type="info" showIcon style={{ marginBottom: 16 }} />
             <Table
+              scroll={{ x: 'max-content' }}
               rowKey="name"
               size="middle"
               dataSource={settings.dataSources}
               pagination={false}
-              columns={[
+              columns={sortableColumns<any>([
                 { title: '数据源', dataIndex: 'name', render: value => <Space><DatabaseOutlined />{value}</Space> },
                 { title: '路径', dataIndex: 'path', render: value => <Text copyable>{value}</Text> },
                 { title: '模式', dataIndex: 'mode', render: value => <Tag color="purple">{value}</Tag> },
                 { title: '状态', dataIndex: 'status', render: value => <Tag color="green">{value}</Tag> },
-              ]}
+              ])}
             />
             <Card size="small" style={{ marginTop: 16 }} title={<Space><CloudServerOutlined />部署原则</Space>}>
               <Text>统一平台部署读取 `10-统一平台admin-platform`，旧系统数据库必须先备份再迁移，禁止直接覆盖云端数据库。</Text>

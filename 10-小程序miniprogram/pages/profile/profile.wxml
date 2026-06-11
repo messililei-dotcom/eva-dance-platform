@@ -1,0 +1,129 @@
+<view class="page">
+  <view class="profile-head">
+    <view class="avatar" wx:if="{{isLoggedIn}}">
+      <image wx:if="{{avatarUrl}}" class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" binderror="onAvatarError"></image>
+      <text wx:else>{{displayInitial}}</text>
+    </view>
+    <view class="avatar" wx:else>伊</view>
+    <view class="profile-main">
+      <view class="name">{{wechatName || memberName}}</view>
+      <view class="phone">{{memberPhone || (isLoggedIn ? (needsPhoneBinding ? '微信已登录，可同步播放记录' : '已登录') : '登录后同步播放记录')}}</view>
+    </view>
+    <view class="auth-btn" wx:if="{{!isLoggedIn}}" bindtap="goLogin">
+      <text>登录</text>
+    </view>
+    <view class="profile-actions" wx:if="{{isLoggedIn}}">
+      <view class="bind-phone-btn" wx:if="{{needsPhoneBinding}}" bindtap="goLogin">
+        <text>绑定手机</text>
+      </view>
+      <view class="bind-wechat-btn" wx:else bindtap="openWechatBinder">
+        <text>{{isWechatBound ? '微信资料' : '绑定微信'}}</text>
+      </view>
+      <view class="logout-btn" bindtap="logout">
+        <text>退出</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="stats card">
+      <view>
+        <text class="num level-num">{{memberLevelText}}</text>
+        <text class="label">用户状态</text>
+      </view>
+      <view>
+        <text class="num">{{authorizedCount}}</text>
+        <text class="label">关注内容</text>
+      </view>
+      <view>
+        <text class="num">{{stats.learningCount}}</text>
+        <text class="label">播放记录</text>
+      </view>
+      <view>
+        <text class="num">{{stats.completionRate}}%</text>
+        <text class="label">完成率</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{isLoggedIn && showWechatBinder}}">
+    <view class="wechat-card card">
+      <view class="wechat-copy">
+        <view class="wechat-title">微信资料</view>
+        <view class="wechat-desc">{{wechatIdentityText || '微信身份已登录'}}</view>
+      </view>
+      <view class="wechat-profile-row">
+        <button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+          <image wx:if="{{avatarUrl}}" class="avatar-picker-img" src="{{avatarUrl}}" mode="aspectFill"></image>
+          <text wx:else>{{displayInitial}}</text>
+        </button>
+        <input
+          class="wechat-input"
+          type="nickname"
+          value="{{wechatNameDraft}}"
+          placeholder="填写微信昵称"
+          bindinput="onWechatNameInput"
+        />
+      </view>
+      <button class="sync-btn" bindtap="syncWechatProfile">同步微信资料</button>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{recentProgress.length}}">
+    <view class="section-title">最近播放</view>
+    <view class="progress-list card">
+      <view class="progress-item" wx:for="{{recentProgress}}" wx:key="last_play_at">
+        <view>
+          <view class="progress-title">{{item.series_name || item.course_name}}</view>
+          <view class="progress-sub">{{item.video_name || item.course_name}}</view>
+        </view>
+        <text class="menu-value">{{item.completed ? '已完成' : '播放中'}}</text>
+      </view>
+    </view>
+  </view>
+
+
+
+  <view class="section">
+    <view class="menu card">
+      <view class="menu-item" bindtap="goProfileEdit">
+        <text>个人资料</text>
+        <text class="menu-value">编辑 ›</text>
+      </view>
+      <view class="menu-item" bindtap="goCertificates">
+        <text>播放记录</text>
+        <text class="menu-value">{{certificates.length || 0}} 张 ›</text>
+      </view>
+      <view class="menu-item" wx:if="{{isLoggedIn}}" bindtap="openWechatBinder">
+        <text>微信资料</text>
+        <text class="menu-value">{{isWechatBound ? '已同步' : '去同步'}} ›</text>
+      </view>
+      <view class="menu-item admin-item" wx:if="{{isAdmin}}" bindtap="goAdmin">
+        <text>管理后台</text>
+        <text class="menu-value">{{adminRole || '管理员'}}</text>
+      </view>
+      <view class="menu-item">
+        <text>字体设置</text>
+        <text class="menu-value">标准</text>
+      </view>
+      <view class="menu-item" bindtap="showDistribution">
+        <text>邀请记录</text>
+        <text class="menu-value">暂未开放</text>
+      </view>
+      <view class="menu-item" bindtap="showOrders">
+        <text>笔记</text>
+        <text class="menu-value">{{stats.orderCount}} 笔</text>
+      </view>
+      <button
+        class="menu-item support-item"
+        open-type="contact"
+        show-message-card="true"
+        send-message-title="伊娃东方舞咨询"
+        send-message-path="/pages/profile/profile"
+      >
+        <text>联系客服</text>
+        <text class="menu-value">微信客服</text>
+      </button>
+    </view>
+  </view>
+</view>
