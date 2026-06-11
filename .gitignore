@@ -22,6 +22,7 @@ out/
 # Logs
 *.log
 npm-debug.log*
+logs/
 
 # OS
 .DS_Store
@@ -32,6 +33,7 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+project.private.config.json
 
 # Local databases and backups
 *.db
@@ -54,6 +56,7 @@ private/
 uploads/
 
 # Local archives and generated deliverables
+02-官方网站工程设计/官方网站/
 00-数据库备份/
 已删除开发数据/
 证书-伊娃东方舞/
