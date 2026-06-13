@@ -100,7 +100,11 @@ export function recordSeriesVisit(db: AdminDb, seriesId: number, memberId: numbe
      VALUES (?, ?, ?, datetime('now','localtime'), datetime('now','localtime'), 1)
      ON CONFLICT(member_id, series_id) DO UPDATE SET
        last_visited_at=excluded.last_visited_at,
-       source=CASE WHEN COALESCE(CourseSeriesVisit.source, '')='' THEN excluded.source ELSE CourseSeriesVisit.source END,
+       source=CASE
+         WHEN excluded.source='auth_request' THEN excluded.source
+         WHEN COALESCE(CourseSeriesVisit.source, '')='' THEN excluded.source
+         ELSE CourseSeriesVisit.source
+       END,
        visit_count=CourseSeriesVisit.visit_count + 1`
   ).run(memberId, seriesId, source);
 }

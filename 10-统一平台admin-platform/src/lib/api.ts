@@ -508,6 +508,10 @@ export const onlineCourseApi = {
     const res = await api.get(`/course/series/${id}/courses`);
     return res.data;
   },
+  reorderSeriesCourses: async (id: number | string, data: unknown): Promise<any> => {
+    const res = await api.post(`/course/series/${id}/courses/reorder`, data);
+    return res.data;
+  },
   createCourse: async (data: unknown): Promise<any> => {
     const res = await api.post('/course/courses', data);
     return res.data;

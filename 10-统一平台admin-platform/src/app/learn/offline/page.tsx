@@ -42,7 +42,7 @@ export default function OfflineCoursesPage() {
   return (
     <main className="learn-page learn-offline-page" style={{ minHeight: '100vh', background: 'var(--learn-bg)', color: 'var(--learn-text)' }}>
       <section style={{ padding: '30px clamp(16px, 5vw, 58px) 24px' }}>
-        <Button href="/learn" type="link" style={{ padding: 0, color: 'var(--learn-gold-dark)', fontWeight: 800 }}>返回学习中心</Button>
+        <Button href="/learn" type="link" style={{ padding: 0, color: 'var(--learn-gold-dark)', fontWeight: 800 }}>返回个人中心</Button>
         <div className="learn-offline-hero" style={{ marginTop: 12, minHeight: 290, borderRadius: 8, position: 'relative', overflow: 'hidden', border: '1px solid var(--learn-border)', background: 'linear-gradient(120deg,rgba(255,253,248,.96),rgba(242,230,207,.92)), url(/learn/dance-hero.webp) center/cover' }}>
           <div className="learn-offline-hero-content" style={{ maxWidth: 700, padding: '46px clamp(22px, 5vw, 58px)' }}>
             <Tag color="gold" style={{ marginBottom: 16 }}>AIWA RAKS</Tag>

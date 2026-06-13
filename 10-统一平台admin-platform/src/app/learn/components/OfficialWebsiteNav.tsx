@@ -6,8 +6,8 @@ import { platformLinks } from '@/lib/platform-links';
 
 const navItems = [
   { label: '首页', href: platformLinks.website.home },
-  { label: '线上学院', href: '/learn' },
-  { label: '线上课程', href: '/learn/courses' },
+  { label: '个人中心', href: '/learn' },
+  { label: '我的课程', href: '/learn#courses' },
   { label: '线下培训', href: `${platformLinks.website.origin}/offline` },
   { label: '赛事平台', href: `${platformLinks.website.origin}/festival` },
   { label: '品牌文化', href: `${platformLinks.website.origin}/about` },
@@ -72,7 +72,7 @@ export default function OfficialWebsiteNav() {
                 alignItems: 'center',
                 padding: '0 11px',
                 borderRadius: 6,
-                color: item.href === '/learn/courses' ? 'var(--learn-red)' : 'var(--learn-text)',
+                color: item.href === '/learn' || item.href === '/learn#courses' ? 'var(--learn-red)' : 'var(--learn-text)',
                 fontSize: 14,
                 fontWeight: 800,
                 whiteSpace: 'nowrap',
@@ -85,8 +85,8 @@ export default function OfficialWebsiteNav() {
         </nav>
 
         <Space className="learn-official-nav-actions" size={10}>
-          <Button href="/learn" icon={<HomeOutlined />} style={{ borderRadius: 6 }}>学习中心</Button>
-          <Button type="primary" href="/learn/courses" icon={<BookOutlined />} style={{ borderRadius: 6 }}>我的课程</Button>
+          <Button href="/learn" icon={<HomeOutlined />} style={{ borderRadius: 6 }}>个人中心</Button>
+          <Button type="primary" href="/learn#courses" icon={<BookOutlined />} style={{ borderRadius: 6 }}>我的课程</Button>
           <Dropdown
             menu={{ items: navItems.map(item => ({ key: item.label, label: <a href={item.href}>{item.label}</a> })) }}
             trigger={['click']}

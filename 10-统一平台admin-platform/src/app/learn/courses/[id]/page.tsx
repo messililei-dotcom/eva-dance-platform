@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeftOutlined, PlayCircleOutlined, ReadOutlined, UserOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import { Alert, Button, Card, Empty, Progress, Segmented, Skeleton, Spin, Tag, Typography } from 'antd';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import OfficialWebsiteNav from '@/app/learn/components/OfficialWebsiteNav';
 import { hideBrokenCover, normalizeLearnCover } from '@/lib/learn-cover';
 import { studentApi } from '@/lib/student-api';
@@ -136,6 +136,7 @@ function sanitizeHtml(html: string): string {
 
 export default function CourseDetailPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const params = useParams();
   const id = String(params?.id || '');
   const [detail, setDetail] = useState<SeriesDetail | null>(null);
@@ -178,6 +179,10 @@ export default function CourseDetailPage() {
     if (id) loadDetail();
   }, [id, loadDetail]);
 
+  useEffect(() => {
+    if (searchParams.get('section') === 'lessons') setActivePanel('catalog');
+  }, [searchParams]);
+
   const videoCount = useMemo(() => chapters.reduce((sum, chapter) => sum + (chapter.videos?.length || chapter.video_count || 0), 0), [chapters]);
   const firstPlayableVideo = useMemo(() => chapters.flatMap(chapter => chapter.videos || [])[0], [chapters]);
   const playVideo = useCallback((videoId: string | number) => {
@@ -197,7 +202,7 @@ export default function CourseDetailPage() {
     <main className="learn-page learn-course-detail-page" style={{ minHeight: '100vh', background: 'var(--learn-bg)', color: 'var(--learn-text)', padding: '28px clamp(16px, 4vw, 42px)' }}>
       <OfficialWebsiteNav />
       <div className="learn-course-detail-topline">
-        <Button className="learn-course-detail-back" icon={<ArrowLeftOutlined />} href="/learn/courses" style={{ borderRadius: 4 }}>返回课程列表</Button>
+        <Button className="learn-course-detail-back" icon={<ArrowLeftOutlined />} href="/learn#courses" style={{ borderRadius: 4 }}>返回个人中心</Button>
       </div>
       {error ? <Alert type="error" showIcon message={error} style={{ marginBottom: 18, borderRadius: 8 }} /> : null}
 
@@ -230,9 +235,9 @@ export default function CourseDetailPage() {
             </div>
             <div className="learn-course-detail-actions">
               <Button type="primary" icon={<PlayCircleOutlined />} disabled={!firstPlayableVideo} onClick={() => firstPlayableVideo && playVideo(firstPlayableVideo.id)}>
-                开始学习
+                立即学习
               </Button>
-              <Button onClick={() => setActivePanel('catalog')}>看目录</Button>
+              <Button onClick={() => setActivePanel('catalog')}>查看课程课节</Button>
             </div>
           </Card>
         </section>

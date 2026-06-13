@@ -227,6 +227,30 @@ function oversizedFileNames(files: File[]) {
   return files.filter(file => file.size > MAX_UPLOAD_FILE_SIZE).map(file => file.name);
 }
 
+function lessonSortValue(row: LessonRow) {
+  const value = Number(row.sort_order);
+  return Number.isInteger(value) && value > 0 ? value : Number.MAX_SAFE_INTEGER;
+}
+
+function normalizeLessonRows(rows: LessonRow[], seriesId?: number) {
+  return [...rows]
+    .map(item => ({ ...item, ...(seriesId ? { series_id: seriesId } : {}) }))
+    .sort((a, b) => lessonSortValue(a) - lessonSortValue(b) || Number(a.id) - Number(b.id))
+    .map((item, index) => ({ ...item, sort_order: index + 1 }));
+}
+
+function reorderLessonRows(rows: LessonRow[], lessonId: number, sortOrder: number) {
+  const ordered = normalizeLessonRows(rows);
+  const currentIndex = ordered.findIndex(item => Number(item.id) === Number(lessonId));
+  if (currentIndex < 0) return ordered;
+
+  const nextIndex = Math.max(0, Math.min(ordered.length - 1, Math.trunc(sortOrder) - 1));
+  const [moving] = ordered.splice(currentIndex, 1);
+  ordered.splice(nextIndex, 0, moving);
+
+  return ordered.map((item, index) => ({ ...item, sort_order: index + 1 }));
+}
+
 export default function OnlineCourseEditorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -358,11 +382,7 @@ export default function OnlineCourseEditorPage() {
       const detail = detailPayload?.data || detailPayload;
       setSeries(detail);
       seriesForm.setFieldsValue({ ...detail, is_free: Boolean(detail?.is_free) });
-      setLessons(
-        pickArray(lessonPayload)
-          .map(item => ({ ...item, series_id: seriesId }))
-          .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0) || Number(a.id) - Number(b.id))
-      );
+      setLessons(normalizeLessonRows(pickArray(lessonPayload), seriesId));
       setMaterials(pickArray(materialPayload));
       setFolders(pickFolderRows(folderPayload));
       setMembers(memberRows);
@@ -470,7 +490,7 @@ export default function OnlineCourseEditorPage() {
     try {
       await replaceLessonMaterial(materialPickerLesson.id, material.id);
       const payload = await onlineCourseApi.getSeriesCourses(seriesId).catch(() => ({ data: [] }));
-      setLessons(pickArray(payload).map(item => ({ ...item, series_id: seriesId })));
+      setLessons(normalizeLessonRows(pickArray(payload), seriesId));
       setLessonMaterialPickerOpen(false);
       setMaterialPickerLesson(null);
       message.success(firstMaterial(materialPickerLesson) ? '素材已替换' : '素材已添加');
@@ -498,7 +518,7 @@ export default function OnlineCourseEditorPage() {
         onlineCourseApi.getMaterials().catch(() => ({ data: [] })),
         onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] })),
       ]);
-      setLessons(pickArray(coursePayload).map(item => ({ ...item, series_id: seriesId })));
+      setLessons(normalizeLessonRows(pickArray(coursePayload), seriesId));
       setMaterials(pickArray(materialPayload));
       setFolders(pickFolderRows(folderPayload));
       setLessonMaterialPickerOpen(false);
@@ -765,14 +785,21 @@ export default function OnlineCourseEditorPage() {
   };
 
   const saveLessonSort = async (record: LessonRow, sortOrder: number | null) => {
-    if (!sortOrder || sortOrder === record.sort_order) return;
+    const nextSortOrder = Math.trunc(Number(sortOrder));
+    if (!Number.isInteger(nextSortOrder) || nextSortOrder < 1 || nextSortOrder === Number(record.sort_order)) return;
+
+    const previousLessons = lessons;
+    const nextLessons = reorderLessonRows(lessons, record.id, nextSortOrder);
+    const changed = nextLessons.some((item, index) => Number(item.id) !== Number(previousLessons[index]?.id) || Number(item.sort_order) !== Number(previousLessons[index]?.sort_order));
+    if (!changed) return;
+
+    setLessons(nextLessons);
     try {
-      await onlineCourseApi.updateCourse(record.id, {
-        sort_order: sortOrder,
-        status: record.local_status || record.status || 'draft',
-      });
-      await loadEditor();
+      await onlineCourseApi.reorderSeriesCourses(seriesId, { ids: nextLessons.map(item => item.id) });
+      const payload = await onlineCourseApi.getSeriesCourses(seriesId).catch(() => ({ data: nextLessons }));
+      setLessons(normalizeLessonRows(pickArray(payload), seriesId));
     } catch (err) {
+      setLessons(previousLessons);
       message.error(apiError(err));
     }
   };
@@ -1310,6 +1337,13 @@ export default function OnlineCourseEditorPage() {
                   { title: '学员', dataIndex: 'name', fixed: 'left', width: 140, sorter: true, render: value => <Text strong>{value || '学员'}</Text> },
                   { title: '手机号', dataIndex: 'phone', width: 140, sorter: true, render: value => value || '-' },
                   { title: '初次访问时间', dataIndex: 'first_visited_at', width: 170, sorter: true, render: (value, record) => (value || record.visited_at) ? String(value || record.visited_at).replace('T', ' ').slice(0, 16) : '-' },
+                  {
+                    title: '来源',
+                    dataIndex: 'visit_source',
+                    width: 110,
+                    sorter: true,
+                    render: value => value === 'auth_request' ? '授权申请' : value === 'catalog' ? '浏览课节' : value === 'video' ? '观看记录' : value || '-',
+                  },
                   { title: '授权人', dataIndex: 'granted_by_name', width: 120, sorter: true, render: value => displayAdminName(value) || currentAdminName },
                   { title: '授权时间', dataIndex: 'granted_at', width: 160, sorter: true, render: value => value ? String(value).replace('T', ' ').slice(0, 16) : '-' },
                   {

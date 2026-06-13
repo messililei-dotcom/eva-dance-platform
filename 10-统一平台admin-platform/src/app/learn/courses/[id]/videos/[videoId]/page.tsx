@@ -247,7 +247,7 @@ export default function CourseVideoPage() {
 
   return (
     <main className="learn-page learn-video-page" style={{ minHeight: '100vh', background: 'var(--learn-bg)', color: 'var(--learn-text)', padding: '24px clamp(14px, 3vw, 34px)' }}>
-      <Button href={`/learn/courses/${seriesId}`} style={{ marginBottom: 16, borderRadius: 4 }}>返回课程目录</Button>
+      <Button href={`/learn/courses/${seriesId}?section=lessons`} style={{ marginBottom: 16, borderRadius: 4 }}>返回课程目录</Button>
       {error ? <Alert type="error" showIcon message={error} style={{ marginBottom: 18, borderRadius: 8 }} /> : null}
 
       {loading ? (

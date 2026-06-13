@@ -105,7 +105,7 @@ export default function CourseSearchPage() {
 
   return (
     <main className="learn-page learn-search-page" style={{ minHeight: '100vh', background: 'var(--learn-bg)', color: 'var(--learn-text)', padding: '30px clamp(16px, 4vw, 42px)' }}>
-      <Button href="/learn" type="link" style={{ padding: 0, color: 'var(--learn-gold-dark)', fontWeight: 800 }}>返回学习中心</Button>
+      <Button href="/learn" type="link" style={{ padding: 0, color: 'var(--learn-gold-dark)', fontWeight: 800 }}>返回个人中心</Button>
 
       <section className="learn-search-hero" style={{ margin: '10px 0 26px', padding: '30px clamp(18px, 4vw, 40px)', borderRadius: 8, background: 'linear-gradient(135deg,#FFFDF8,#F2E6CF)', border: '1px solid var(--learn-border)', boxShadow: 'var(--learn-shadow)' }}>
         <Title level={1} style={{ margin: 0, color: 'var(--learn-red)' }}>课程探索</Title>
@@ -164,7 +164,7 @@ export default function CourseSearchPage() {
               className="learn-course-card learn-authorized-course-card"
               style={{ ...cardStyle, overflow: 'hidden' }}
               styles={{ body: { padding: 0 } }}
-              onClick={() => router.push(`/learn/courses/${course.id}`)}
+              onClick={() => router.push(`/learn/courses/${course.id}?section=lessons`)}
               key={course.id}
             >
               <div className="learn-authorized-course-row">

@@ -34,12 +34,12 @@ export const platformLinks = {
     settings: 'https://admin.dongfangwuquan.com/settings',
   },
   learn: {
-    label: '学员成长系统',
+    label: '个人中心',
     domain: 'www.dongfangwuquan.com',
     origin: 'https://www.dongfangwuquan.com',
     home: 'https://www.dongfangwuquan.com/learn',
     login: 'https://www.dongfangwuquan.com/?login=1',
-    courses: 'https://www.dongfangwuquan.com/learn/courses',
+    courses: 'https://www.dongfangwuquan.com/learn#courses',
     calendar: 'https://admin.dongfangwuquan.com/learn/calendar',
     assignments: 'https://www.dongfangwuquan.com/learn#assignments',
     support: 'https://www.dongfangwuquan.com/learn#support',
@@ -66,7 +66,7 @@ export const platformLinkMatrix: PlatformLinkItem[] = [
     key: 'website-to-learn',
     label: '官网 → 学员成长系统',
     url: platformLinks.learn.home,
-    description: '官网学习详情、招生页、登录入口统一引导学员进入学员成长系统。',
+    description: '官网课程详情、招生页、登录入口统一引导学员进入个人中心。',
     target: 'learn',
   },
   {

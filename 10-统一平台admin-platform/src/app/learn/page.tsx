@@ -54,7 +54,7 @@ const cardStyle = {
 
 const navItems = [
   { icon: <HomeFilled />, label: '首页', href: platformLinks.learn.home, hash: '' },
-  { icon: <BookOutlined />, label: '我的课程', href: '/learn/courses' },
+  { icon: <BookOutlined />, label: '我的课程', href: '/learn#courses' },
   { icon: <ReadOutlined />, label: '线下课程', href: '/learn/offline' },
   { icon: <CheckCircleFilled />, label: '签到核销', href: '#checkins' },
   { icon: <ProfileOutlined />, label: '学习计划', href: '#plans' },
@@ -420,7 +420,7 @@ export default function LearnCenterPage() {
                   </Row>
                 )}
                 <div className="learn-hero-actions" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                  <Button type="primary" size="large" href={platformLinks.learn.courses} icon={<PlayCircleOutlined />} style={{ borderRadius: 4 }}>继续学习</Button>
+                  <Button type="primary" size="large" href="/learn#courses" icon={<PlayCircleOutlined />} style={{ borderRadius: 4 }}>继续学习</Button>
                   <Button size="large" href={platformLinks.website.courses} style={{ borderColor: BRAND.gold, color: BRAND.goldDark, fontWeight: 800, borderRadius: 4 }}>全部课程</Button>
                 </div>
               </div>
@@ -467,7 +467,7 @@ export default function LearnCenterPage() {
                   {data.courses.slice(0, 4).map(course => (
                     <CourseCard
                       course={course}
-                      onOpen={() => router.push(`/learn/courses/${encodeURIComponent(course.id)}`)}
+                      onOpen={() => router.push(`/learn/courses/${encodeURIComponent(course.id)}?section=lessons`)}
                       key={course.id}
                     />
                   ))}
@@ -542,7 +542,7 @@ export default function LearnCenterPage() {
               ) : (
                 <Space direction="vertical" size={10} style={{ width: '100%' }}>
                   <Text style={{ color: BRAND.muted }}>当前暂无直播排期，请关注官网公告或咨询教务。</Text>
-                  <Button type="link" href={platformLinks.learn.courses} style={{ padding: 0 }}>
+                  <Button type="link" href="/learn#courses" style={{ padding: 0 }}>
                     查看线上课程 →
                   </Button>
                 </Space>

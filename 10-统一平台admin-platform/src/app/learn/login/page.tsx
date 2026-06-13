@@ -34,7 +34,7 @@ export default function StudentLoginPage() {
     const token = studentApi.getToken();
     const member = studentApi.getStoredMember();
     if (token && member?.id) {
-      router.replace('/learn/courses');
+      router.replace('/learn#courses');
       return;
     }
 
@@ -88,7 +88,7 @@ export default function StudentLoginPage() {
         localStorage.removeItem(REMEMBER_PHONE_KEY);
       }
       message.success('登录成功');
-      router.replace('/learn/courses');
+      router.replace('/learn#courses');
     } catch (err) {
       message.error(err instanceof Error ? err.message : '登录失败，请重试');
     } finally {
@@ -122,8 +122,8 @@ export default function StudentLoginPage() {
               <div style={{ color: 'rgba(255,255,255,.62)', fontSize: 12, letterSpacing: 1 }}>AIWA RAKS</div>
             </div>
           </div>
-          <Title level={1} style={{ color: '#fff', margin: 0, fontSize: 52, lineHeight: 1.12 }}>伊娃东方舞学员成长系统</Title>
-          <Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 18, display: 'block', marginTop: 14 }}>继续课程、查看进度、管理学习计划</Text>
+          <Title level={1} style={{ color: '#fff', margin: 0, fontSize: 52, lineHeight: 1.12 }}>伊娃东方舞个人中心</Title>
+          <Text style={{ color: 'rgba(255,255,255,.82)', fontSize: 18, display: 'block', marginTop: 14 }}>继续课程、查看进度、管理个人资料</Text>
         </div>
       </section>
 

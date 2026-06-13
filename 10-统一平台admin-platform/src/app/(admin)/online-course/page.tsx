@@ -65,7 +65,7 @@ import type { Member } from '@/types/domain';
 
 const { Text, Title } = Typography;
 const MAX_UPLOAD_FILE_SIZE = 1024 * 1024 * 1024;
-const SERIES_PAGE_SIZE_DEFAULT = 15;
+const SERIES_PAGE_SIZE_DEFAULT = 30;
 const SERIES_PAGE_SIZE_OPTIONS = [15, 30, 50, 100];
 
 type SeriesRow = {
@@ -276,6 +276,11 @@ function accessSourceText(record: any) {
   const shareChannel = record?.share_channel || record?.distribution_source;
   if (shareChannel) return `分享：${shareChannel}`;
   if (record?.access_source) return record.access_source;
+  const visitSource = record?.visit_source || record?.source;
+  if (visitSource === 'auth_request') return '授权申请';
+  if (visitSource === 'catalog') return '浏览课节';
+  if (visitSource === 'video') return '观看记录';
+  if (visitSource === 'learn') return '学习访问';
   if (record?.first_visited_at || record?.visited_at) return '自主搜索/直接访问';
   const authType = record?.auth_type || record?.authorization_type || record?.type;
   if (authType === 'admin_grant') return '后台授权';
@@ -1796,7 +1801,7 @@ export default function OnlineCoursePage() {
                     rowKey="id"
                     size="middle"
                     dataSource={filteredSeries}
-                    scroll={{ x: 1380, y: 1720 }}
+                    scroll={{ x: 1380, y: 'calc(100dvh - 320px)' }}
                     pagination={{
                       current: seriesPage,
                       pageSize: seriesPageSize,
@@ -1839,13 +1844,16 @@ export default function OnlineCoursePage() {
                               aria-label={`课程编辑：${value || record.name}`}
                             >
                               <Space style={{ width: '100%', justifyContent: 'flex-start' }}>
-                                {coverSource ? (
-                                  <div style={{ width: 44, height: 44, borderRadius: 6, overflow: 'hidden', background: '#f6f7fb', border: '1px solid #edf0f6', flexShrink: 0 }}>
-                                    <img src={coverSource} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                  </div>
-                                ) : (
-                                  <div style={{ width: 44, height: 44, borderRadius: 6, background: '#f7efff', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>封面</div>
-                                )}
+                                <div className="series-cover-thumb">
+                                  <span>封面</span>
+                                  {coverSource ? (
+                                    <img
+                                      src={coverSource}
+                                      alt=""
+                                      onError={event => { event.currentTarget.style.display = 'none'; }}
+                                    />
+                                  ) : null}
+                                </div>
                                 <div style={{ minWidth: 0 }}>
                                   <Text strong ellipsis style={{ display: 'block', maxWidth: 230 }}>{value}</Text>
                                   <Text type="secondary" ellipsis style={{ display: 'block', maxWidth: 230 }}>{record.subtitle || '未设置副标题'}</Text>
@@ -2101,7 +2109,17 @@ export default function OnlineCoursePage() {
                     >
                       {coverSource ? (
                         <>
-                          <img src={coverSource} alt="课程主图" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <div className="series-cover-preview-fallback">
+                            <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.5 }}>封面</div>
+                            <div style={{ fontWeight: 600, color: '#8C8172', marginBottom: 4 }}>{coverUploading ? '上传中...' : '课程主图'}</div>
+                            <div style={{ fontSize: 12, color: '#B5A898' }}>点击上传</div>
+                          </div>
+                          <img
+                            src={coverSource}
+                            alt="课程主图"
+                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={event => { event.currentTarget.style.display = 'none'; }}
+                          />
                           <span style={{
                             position: 'absolute',
                             left: 0,
