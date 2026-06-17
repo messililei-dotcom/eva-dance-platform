@@ -1,4 +1,5 @@
 import { getMemberId, jsonError, recordSeriesVisit, toPositiveInt, withDb } from '../../../../_helpers';
+import { publicShortCacheJson } from '@/lib/http-cache';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const routeParams = await params;
@@ -12,8 +13,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
          FROM CourseSeries cs WHERE cs.id=? AND cs.status='published'`
       ).get(seriesId);
       if (!data) return jsonError('课程不存在', 404);
-      recordSeriesVisit(db, seriesId, getMemberId(new URL(request.url).searchParams, request), 'detail');
-      return Response.json({ success: true, data });
+      const memberId = getMemberId(new URL(request.url).searchParams, request);
+      recordSeriesVisit(db, seriesId, memberId, 'detail');
+      return memberId ? Response.json({ success: true, data }) : publicShortCacheJson({ success: true, data });
     });
   } catch (err: any) {
     return jsonError(err.message);

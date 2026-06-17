@@ -1,4 +1,4 @@
-export type PlatformSurface = 'website' | 'admin' | 'learn' | 'miniapp';
+export type PlatformSurface = 'website' | 'admin' | 'miniapp';
 
 export interface PlatformLinkItem {
   key: string;
@@ -33,17 +33,6 @@ export const platformLinks = {
     miniprogram: 'https://admin.dongfangwuquan.com/miniprogram',
     settings: 'https://admin.dongfangwuquan.com/settings',
   },
-  learn: {
-    label: '个人中心',
-    domain: 'www.dongfangwuquan.com',
-    origin: 'https://www.dongfangwuquan.com',
-    home: 'https://www.dongfangwuquan.com/learn',
-    login: 'https://www.dongfangwuquan.com/?login=1',
-    courses: 'https://www.dongfangwuquan.com/learn#courses',
-    calendar: 'https://admin.dongfangwuquan.com/learn/calendar',
-    assignments: 'https://www.dongfangwuquan.com/learn#assignments',
-    support: 'https://www.dongfangwuquan.com/learn#support',
-  },
   miniapp: {
     label: '网课小程序',
     domain: '微信小程序',
@@ -63,13 +52,6 @@ export const platformLinks = {
 
 export const platformLinkMatrix: PlatformLinkItem[] = [
   {
-    key: 'website-to-learn',
-    label: '官网 → 学员成长系统',
-    url: platformLinks.learn.home,
-    description: '官网课程详情、招生页、登录入口统一引导学员进入个人中心。',
-    target: 'learn',
-  },
-  {
     key: 'website-to-admin',
     label: '官网 → 管理后台',
     url: platformLinks.admin.login,
@@ -84,13 +66,6 @@ export const platformLinkMatrix: PlatformLinkItem[] = [
     target: 'website',
   },
   {
-    key: 'admin-to-learn',
-    label: '后台 → 学员成长系统',
-    url: platformLinks.learn.home,
-    description: '运营和教务从学员详情、学习管理预览学员侧学习体验。',
-    target: 'learn',
-  },
-  {
     key: 'admin-to-miniapp',
     label: '后台 → 网课小程序',
     url: platformLinks.miniapp.adminConfig,
@@ -103,13 +78,6 @@ export const platformLinkMatrix: PlatformLinkItem[] = [
     url: platformLinks.miniapp.apiBase,
     description: '小程序只访问 miniapi 与 auth，由 API 网关聚合学习、订单、学习数据。',
     target: 'miniapp',
-  },
-  {
-    key: 'learn-to-website',
-    label: '学员成长系统 → 官网',
-    url: platformLinks.website.home,
-    description: '品牌内容、活动介绍、公开学习回到官网展示。',
-    target: 'website',
   },
 ];
 

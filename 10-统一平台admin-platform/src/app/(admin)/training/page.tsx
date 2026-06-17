@@ -251,6 +251,7 @@ export default function TrainingPage() {
   const courseCoverImage = Form.useWatch('coverImage', courseForm);
   const memberCountry = Form.useWatch('country', memberForm);
   const memberProvince = Form.useWatch('province', memberForm);
+  const consumeMemberId = Form.useWatch('memberId', consumeForm);
 
   const load = () => {
     setLoading(true);
@@ -344,13 +345,29 @@ export default function TrainingPage() {
     return map;
   }, [consumeRecords]);
 
-  const paymentOptions = useMemo(() => payments
-    .filter(item => Number(item.remainingSessions || 0) > 0 || editingConsume?.paymentId === item.id)
+  const consumablePayments = useMemo(() => payments
+    .filter(item => Number(item.remainingSessions || 0) > 0 || editingConsume?.paymentId === item.id), [payments, editingConsume]);
+
+  const consumeMemberOptions = useMemo(() => {
+    const grouped = new Map<string, { value: number | string; label: string; searchText: string }>();
+    consumablePayments.forEach(item => {
+      const value = item.memberId || item.memberPhone || item.memberName;
+      if (!value) return;
+      const key = String(value);
+      if (grouped.has(key)) return;
+      const label = `${item.memberName || '未命名学员'}${item.memberPhone ? ` / ${item.memberPhone}` : ''}`;
+      grouped.set(key, { value, label, searchText: `${label} ${item.courseName || ''}` });
+    });
+    return Array.from(grouped.values()).sort((a, b) => a.label.localeCompare(b.label, 'zh-CN'));
+  }, [consumablePayments]);
+
+  const paymentOptions = useMemo(() => consumablePayments
+    .filter(item => !consumeMemberId || String(item.memberId || item.memberPhone || item.memberName) === String(consumeMemberId))
     .map(item => ({
       value: item.id,
-      label: `${item.memberName} / ${item.courseName} / 剩余 ${item.remainingSessions || 0} 次`,
+      label: `${item.courseName || '未命名课程'}${item.courseSubType ? ` / ${item.courseSubType}` : ''} / 剩余 ${item.remainingSessions || 0} 次`,
       row: item,
-    })), [payments, editingConsume]);
+    })), [consumablePayments, consumeMemberId]);
 
   const buildCourseStudents = (course: CourseRow): CourseStudent[] => {
     const grouped = new Map<string, CourseStudent>();
@@ -553,8 +570,12 @@ export default function TrainingPage() {
 
   const openConsumeModal = (record?: Partial<ConsumeRow>) => {
     setEditingConsume(record?.id ? record as ConsumeRow : null);
+    const payment = record?.paymentId ? payments.find(item => String(item.id) === String(record.paymentId)) : undefined;
+    consumeForm.resetFields();
     consumeForm.setFieldsValue(record ? {
       ...record,
+      memberId: payment?.memberId || record.memberId || payment?.memberPhone || payment?.memberName,
+      paymentId: payment?.id || record.paymentId,
       consumeDate: record.consumeDate ? dayjs(record.consumeDate) : dayjs(),
     } : { consumeDate: dayjs(), count: 1 });
     setConsumeModalOpen(true);
@@ -717,6 +738,10 @@ export default function TrainingPage() {
   const saveConsume = async () => {
     const values = await consumeForm.validateFields();
     const payment = payments.find(item => String(item.id) === String(values.paymentId));
+    if (!editingConsume?.id && !payment) {
+      message.error('请先选择学员和可核销课程');
+      return;
+    }
     setSaving(true);
     try {
       if (editingConsume?.id) {
@@ -1084,6 +1109,7 @@ export default function TrainingPage() {
                 </Space>
               }>
                 <Table<PaymentRow>
+                  className="training-payments-table"
                   rowKey="id"
                   size="middle"
                   dataSource={filteredPayments}
@@ -1758,9 +1784,36 @@ export default function TrainingPage() {
         <Form form={consumeForm} layout="vertical">
           <Row className="payment-modal-grid" gutter={[8, 0]}>
             {!editingConsume?.id && (
+              <>
+                <Col className="payment-field-equal" xs={12} md={12}>
+                  <Form.Item name="memberId" label="选择学员" rules={[{ required: true, message: '请选择学员' }]}>
+                    <Select
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder="先选择学员"
+                      options={consumeMemberOptions}
+                      onChange={() => consumeForm.setFieldValue('paymentId', undefined)}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col className="payment-field-equal" xs={12} md={12}>
+                  <Form.Item name="paymentId" label="选择已有课程" rules={[{ required: true, message: '请选择该学员已有课程' }]}>
+                    <Select
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder={consumeMemberId ? '选择可核销课程' : '请先选择学员'}
+                      disabled={!consumeMemberId}
+                      options={paymentOptions}
+                      notFoundContent={consumeMemberId ? '该学员暂无可核销课程' : '请先选择学员'}
+                    />
+                  </Form.Item>
+                </Col>
+              </>
+            )}
+            {editingConsume?.id && (
               <Col className="payment-field-remark" span={24}>
-                <Form.Item name="paymentId" label="可核销缴费课程" rules={[{ required: true, message: '请选择可核销课程' }]}>
-                  <Select showSearch optionFilterProp="label" options={paymentOptions} />
+                <Form.Item label="核销课程">
+                  <Input value={`${editingConsume.memberName || ''} / ${editingConsume.courseName || ''}`} disabled />
                 </Form.Item>
               </Col>
             )}

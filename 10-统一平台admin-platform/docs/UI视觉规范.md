@@ -129,25 +129,7 @@
 
 ### 学员学习端
 
-当前在统一平台内新增 `/learn` 作为 `learn.dongfangwuquan.com` 唯一学习中心入口，视觉保持同源：
-
-```text
-粉色侧栏
-大视觉 Banner
-学习进度
-我的课程
-近期课程
-今日学习计划
-快捷入口
-```
-
-当前实现：
-
-```text
-src/app/learn/page.tsx
-public/learn/dance-hero.png
-public/learn/student-home-template.png
-```
+`/learn` 与 `learn.dongfangwuquan.com` 已废弃并从统一平台删除；学员学习入口统一收敛到网课小程序。
 
 ## 6. 新平台实现要求
 

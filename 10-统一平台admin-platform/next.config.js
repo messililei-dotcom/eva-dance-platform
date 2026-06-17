@@ -4,7 +4,11 @@ const legacyStudentApiUrl = process.env.LEGACY_STUDENT_API_URL || 'https://admin
 const nextConfig = {
   reactStrictMode: true,
   distDir: process.env.NEXT_DIST_DIR || '.next',
+  compress: true,
+  poweredByHeader: false,
   images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 2678400,
     remotePatterns: [
       { protocol: 'http', hostname: '127.0.0.1' },
       { protocol: 'https', hostname: '**' },
@@ -12,7 +16,21 @@ const nextConfig = {
   },
   experimental: {
     cpus: 1,
-    proxyClientMaxBodySize: '4gb',
+    optimizePackageImports: ['@ant-design/icons', 'antd', 'lucide-react', 'echarts', 'echarts-for-react'],
+    proxyClientMaxBodySize: '5gb',
+  },
+  async headers() {
+    return [
+      {
+        source: '/uploads/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
   },
   async rewrites() {
     return {

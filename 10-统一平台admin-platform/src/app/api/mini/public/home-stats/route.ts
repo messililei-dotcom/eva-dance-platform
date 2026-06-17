@@ -1,4 +1,5 @@
 import { jsonError, withDb } from '../../_helpers';
+import { publicShortCacheJson } from '@/lib/http-cache';
 
 type CountRow = { count: number };
 
@@ -44,7 +45,7 @@ export async function GET() {
       ).get<CountRow>());
       const members = countValue(db.prepare('SELECT COUNT(*) AS count FROM Member').get<CountRow>());
 
-      return Response.json({
+      return publicShortCacheJson({
         success: true,
         data: {
           online_count: onlineCount,

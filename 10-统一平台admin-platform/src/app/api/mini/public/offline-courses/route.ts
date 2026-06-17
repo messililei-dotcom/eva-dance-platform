@@ -1,5 +1,6 @@
 import { jsonError } from '../../_helpers';
 import { openTrainingDb } from '../../../training-db';
+import { publicShortCacheJson } from '@/lib/http-cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,7 @@ export async function GET() {
       ORDER BY COALESCE(NULLIF(startDate, ''), created_at) DESC, id DESC
     `).all();
 
-    return Response.json({
+    return publicShortCacheJson({
       success: true,
       data: rows.map((row: any) => ({
         id: 900000 + Number(row.id || 0),

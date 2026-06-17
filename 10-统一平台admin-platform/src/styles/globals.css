@@ -65,6 +65,38 @@ body {
   background: linear-gradient(135deg, #F87171, #E11D48) !important;
 }
 
+.ant-input-affix-wrapper {
+  align-items: center !important;
+}
+
+.ant-input-prefix,
+.ant-input-suffix {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+input.ant-input,
+.ant-input-affix-wrapper > input.ant-input,
+.ant-input-number .ant-input-number-input {
+  line-height: 1.45 !important;
+}
+
+.ant-input-affix-wrapper > input.ant-input {
+  height: auto !important;
+  min-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+textarea.ant-input {
+  line-height: 1.45 !important;
+}
+
+.ant-input::placeholder,
+.ant-input-number-input::placeholder {
+  line-height: inherit;
+}
+
 /* Table polish */
 .ant-table-wrapper {
   border-radius: 10px;
@@ -1442,6 +1474,54 @@ body {
   }
 }
 
+.login-card-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.login-card-brand-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.login-card-brand-title .ant-typography {
+  font-size: 30px !important;
+  line-height: 1.18 !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+}
+
+.login-card-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  flex: 0 0 auto;
+}
+
+.login-card-logo img {
+  display: block;
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.login-card-subtitle {
+  display: block;
+  line-height: 1.4;
+  letter-spacing: 0 !important;
+}
+
 @media (max-width: 767px) {
   body {
     overflow-x: hidden;
@@ -1533,6 +1613,30 @@ body {
 
   .login-card .ant-typography {
     margin-bottom: 4px !important;
+  }
+
+  .login-card-heading {
+    margin-bottom: 28px !important;
+    gap: 5px;
+  }
+
+  .login-card-brand-title {
+    gap: 10px;
+  }
+
+  .login-card-brand-title .ant-typography {
+    font-size: 28px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .login-card-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .login-card-logo img {
+    width: 34px;
+    height: 34px;
   }
 
   .login-card form > div {
@@ -2977,20 +3081,35 @@ body {
   }
 
   .online-course-replica .oc-topbar {
-    margin: -12px -12px 14px;
+    min-height: auto;
+    margin: -12px -12px 10px;
     align-items: flex-start;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     padding: 12px;
   }
 
   .online-course-replica .oc-topbar h2 {
-    font-size: 18px !important;
+    font-size: 24px !important;
+    line-height: 1.12 !important;
   }
 
   .online-course-replica .oc-topbar .ant-typography {
     display: block;
-    line-height: 1.45;
+    max-width: 330px;
+    font-size: 13px !important;
+    line-height: 1.42;
+  }
+
+  .online-course-replica .oc-topbar .ant-space {
+    width: 100%;
+  }
+
+  .online-course-replica .oc-topbar .ant-btn {
+    height: 38px;
+    min-height: 38px;
+    border-radius: 8px;
+    font-size: 15px;
   }
 
   .online-course-replica .oc-hero h2 {
@@ -2998,7 +3117,7 @@ body {
   }
 
   .online-course-replica .oc-tabs .ant-tabs-nav {
-    margin: 0 -2px 12px;
+    margin: 0 -2px 10px;
   }
 
   .online-course-replica .oc-tabs .ant-tabs-nav-wrap {
@@ -3008,12 +3127,195 @@ body {
   }
 
   .online-course-replica .oc-tabs .ant-tabs-nav-list {
-    min-width: max-content;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: 100%;
+    width: 100%;
+    transform: none !important;
   }
 
   .online-course-replica .oc-tabs .ant-tabs-tab {
-    flex: 0 0 auto;
-    padding: 9px 10px;
+    justify-content: center;
+    margin: 0 !important;
+    padding: 7px 4px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .online-course-replica .oc-tabs .ant-tabs-tab-btn {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
+  }
+
+  .online-course-replica .oc-tabs .ant-tabs-ink-bar {
+    display: none;
+  }
+
+  .online-course-replica .oc-series-list-card {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    border-radius: 8px !important;
+  }
+
+  .online-course-replica .oc-series-list-card > .ant-card-head {
+    min-height: 0;
+    padding: 0 12px !important;
+  }
+
+  .online-course-replica .oc-series-list-card > .ant-card-head .ant-card-head-wrapper {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .online-course-replica .oc-series-list-card > .ant-card-head .ant-card-head-title {
+    flex: 0 0 100%;
+    padding: 10px 0 6px !important;
+    font-size: 15px;
+  }
+
+  .online-course-replica .oc-series-list-card > .ant-card-head .ant-card-extra {
+    flex: 0 0 100%;
+    width: 100%;
+    margin-inline-start: 0;
+    padding: 0 0 10px;
+  }
+
+  .online-course-replica .oc-series-list-card > .ant-card-head .ant-card-extra .ant-space {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 118px;
+    gap: 8px !important;
+    width: 100%;
+  }
+
+  .online-course-replica .oc-series-list-card > .ant-card-head .ant-card-extra .ant-space-item {
+    min-width: 0;
+  }
+
+  .online-course-replica .oc-series-list-card .ant-input-search,
+  .online-course-replica .oc-series-list-card .ant-select {
+    width: 100% !important;
+  }
+
+  .online-course-replica .oc-series-list-card .ant-input-affix-wrapper,
+  .online-course-replica .oc-series-list-card .ant-input-search-button,
+  .online-course-replica .oc-series-list-card .ant-select-selector {
+    height: 36px !important;
+    min-height: 36px !important;
+    border-radius: 8px !important;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table-wrapper,
+  .online-course-replica .oc-series-list-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table {
+    font-size: 13px !important;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table-body {
+    max-height: calc(100dvh - 304px) !important;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table-thead > tr > th,
+  .online-course-replica .oc-series-list-table .ant-table-tbody > tr > td {
+    padding: 7px 8px !important;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table-thead > tr > th,
+  .online-course-replica .oc-series-list-table .ant-table-tbody > tr > td {
+    display: none;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table-thead > tr > th:first-child,
+  .online-course-replica .oc-series-list-table .ant-table-tbody > tr > td:first-child,
+  .online-course-replica .oc-series-list-table .ant-table-thead > tr > th:last-child,
+  .online-course-replica .oc-series-list-table .ant-table-tbody > tr > td:last-child {
+    display: table-cell;
+  }
+
+  .online-course-replica .oc-series-list-table .series-name-column {
+    width: auto !important;
+    min-width: 218px !important;
+    max-width: none !important;
+    left: 0 !important;
+    position: static !important;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table-thead > tr > th:last-child,
+  .online-course-replica .oc-series-list-table .ant-table-tbody > tr > td:last-child {
+    width: 116px !important;
+    min-width: 116px !important;
+    max-width: 116px !important;
+    position: static !important;
+    right: auto !important;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table-cell-fix-left,
+  .online-course-replica .oc-series-list-table .ant-table-cell-fix-right {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    box-shadow: none !important;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table-container,
+  .online-course-replica .oc-series-list-table .ant-table-content,
+  .online-course-replica .oc-series-list-table .ant-table {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .online-course-replica .series-cover-thumb {
+    width: 42px;
+    height: 42px;
+    border-radius: 7px;
+    font-size: 11px;
+  }
+
+  .online-course-replica .series-name-column .ant-space {
+    gap: 8px !important;
+  }
+
+  .online-course-replica .series-name-column .ant-typography {
+    max-width: 170px !important;
+    line-height: 1.28;
+  }
+
+  .online-course-replica .series-name-column .ant-typography-ellipsis:first-of-type {
+    font-size: 14px;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table-pagination {
+    justify-content: center;
+    margin: 8px 6px !important;
+    padding: 0;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table-tbody > tr > td:last-child .ant-space {
+    display: grid !important;
+    grid-template-columns: repeat(2, 30px);
+    gap: 5px !important;
+    justify-content: end;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table-tbody > tr > td:last-child .ant-btn {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 !important;
+    border-radius: 7px;
+    font-size: 0;
+  }
+
+  .online-course-replica .oc-series-list-table .ant-table-tbody > tr > td:last-child .ant-btn .anticon {
+    margin-inline-end: 0;
+    font-size: 14px;
   }
 
   .online-course-replica .oc-material-layout {
@@ -3307,6 +3609,12 @@ body {
     display: none !important;
   }
 
+  .training-payments-card .training-payments-table .ant-table-body,
+  .training-payments-card .training-payments-table .ant-table-content {
+    max-height: min(72dvh, 630px);
+    overflow-y: auto !important;
+  }
+
   .training-filter-card {
     display: none !important;
   }
@@ -3403,6 +3711,424 @@ body {
 }
 
 @media (max-width: 768px) {
+  .ecommerce-admin-page {
+    padding-bottom: 18px;
+  }
+
+  .ecommerce-admin-page .ecommerce-page-header {
+    margin-bottom: 10px;
+  }
+
+  .ecommerce-admin-page .ecommerce-page-header h2.ant-typography {
+    font-size: 32px !important;
+    line-height: 1.12 !important;
+    margin-bottom: 8px !important;
+  }
+
+  .ecommerce-page-subtitle {
+    display: block;
+    max-width: 340px;
+    font-size: 14px !important;
+    line-height: 1.55 !important;
+  }
+
+  .ecommerce-top-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 10px !important;
+    width: min(100%, 320px);
+  }
+
+  .ecommerce-top-actions .ant-space-item {
+    min-width: 0;
+  }
+
+  .ecommerce-top-actions .ant-btn {
+    width: 100%;
+    height: 40px;
+    border-radius: 8px;
+    font-size: 15px;
+  }
+
+  .ecommerce-filter-card.ant-card {
+    margin-bottom: 12px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 12px 28px rgba(18, 26, 58, 0.08);
+  }
+
+  .ecommerce-filter-card .ant-card-body {
+    padding: 12px !important;
+  }
+
+  .ecommerce-filter-card .ant-row {
+    flex-wrap: nowrap !important;
+  }
+
+  .ecommerce-filter-card .ant-row > .ant-col:first-child {
+    flex: 1 1 62% !important;
+    max-width: none !important;
+    min-width: 0;
+  }
+
+  .ecommerce-filter-card .ant-row > .ant-col:nth-child(2) {
+    flex: 0 0 38% !important;
+    max-width: 38% !important;
+    min-width: 118px;
+  }
+
+  .ecommerce-filter-card .ant-input-affix-wrapper,
+  .ecommerce-filter-card .ant-select-selector {
+    min-height: 42px !important;
+    border-radius: 8px !important;
+  }
+
+  .ecommerce-tabs .ant-tabs-nav {
+    margin-bottom: 10px !important;
+    overflow-x: auto;
+  }
+
+  .ecommerce-tabs .ant-tabs-nav-wrap {
+    overflow: visible !important;
+  }
+
+  .ecommerce-tabs .ant-tabs-tab {
+    padding: 9px 0 !important;
+    margin: 0 18px 0 0 !important;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  .ecommerce-workbench-grid {
+    row-gap: 12px !important;
+  }
+
+  .ecommerce-workbench-col {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  .ecommerce-workbench-card.ant-card {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 150px;
+    border-radius: 8px !important;
+    overflow: hidden;
+  }
+
+  .ecommerce-workbench-card > .ant-card-body {
+    height: auto !important;
+    padding: 10px !important;
+  }
+
+  .ecommerce-product-card-layout.ant-space {
+    align-items: stretch !important;
+    gap: 9px !important;
+    height: auto !important;
+    width: 100%;
+  }
+
+  .ecommerce-product-image {
+    width: 96px !important;
+    height: 96px !important;
+    flex-basis: 96px !important;
+    border-radius: 8px !important;
+  }
+
+  .ecommerce-product-image .ant-image,
+  .ecommerce-product-image img {
+    width: 96px !important;
+    height: 96px !important;
+  }
+
+  .ecommerce-product-content.ant-space {
+    height: auto !important;
+    min-height: 96px;
+    gap: 5px !important;
+  }
+
+  .ecommerce-product-heading.ant-space {
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .ecommerce-product-heading .ant-tag {
+    flex: 0 0 auto;
+    margin-inline-end: 0;
+  }
+
+  .ecommerce-product-name {
+    display: block;
+    max-width: 150px !important;
+    font-size: 15px;
+    line-height: 1.2;
+  }
+
+  .ecommerce-product-stats {
+    margin-top: 3px !important;
+  }
+
+  .ecommerce-product-stats .ant-col {
+    flex: 0 0 33.333% !important;
+    max-width: 33.333% !important;
+  }
+
+  .ecommerce-product-stats .ant-statistic-title {
+    font-size: 11px !important;
+    margin-bottom: 1px !important;
+  }
+
+  .ecommerce-product-stats .ant-statistic-content {
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+  }
+
+  .ecommerce-card-actions.ant-space {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px !important;
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .ecommerce-card-actions .ant-space-item {
+    min-width: 0;
+  }
+
+  .ecommerce-card-actions .ant-btn {
+    width: 100%;
+    min-width: 0;
+    height: 30px;
+    padding: 0 6px;
+    border-radius: 7px;
+    font-size: 12px;
+  }
+
+  .ecommerce-card-actions .ant-btn-icon-only {
+    padding: 0;
+  }
+
+  .finance-admin-page {
+    padding-bottom: 16px;
+  }
+
+  .finance-admin-page .finance-page-header {
+    margin-bottom: 10px;
+  }
+
+  .finance-admin-page .finance-page-header h2.ant-typography {
+    font-size: 32px !important;
+    line-height: 1.12 !important;
+    margin-bottom: 8px !important;
+  }
+
+  .finance-admin-page .finance-page-header .ant-typography-secondary {
+    display: block;
+    max-width: 340px;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+  }
+
+  .finance-admin-page .finance-page-header .ant-btn {
+    height: 40px;
+    border-radius: 8px;
+    font-size: 15px;
+  }
+
+  .finance-summary-grid {
+    row-gap: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .finance-summary-grid > .ant-col {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+  }
+
+  .finance-admin-page .finance-summary-grid.ant-row > .ant-col:has(> .finance-stat-card) {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+  }
+
+  .finance-stat-card.ant-card {
+    height: 86px;
+    border-radius: 8px !important;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(18, 26, 58, 0.07);
+  }
+
+  .finance-summary-grid-primary .finance-stat-card.ant-card {
+    background: linear-gradient(180deg, #FFFFFF 0%, #F7FAFF 100%);
+  }
+
+  .finance-stat-card > .ant-card-body {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    padding: 10px 12px !important;
+  }
+
+  .finance-stat-card .ant-statistic {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .finance-stat-card .ant-statistic-title {
+    margin-bottom: 5px !important;
+    overflow: hidden;
+    color: #778097;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .finance-stat-card .ant-statistic-content {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    font-size: 18px !important;
+    line-height: 1.15 !important;
+  }
+
+  .finance-stat-card .ant-statistic-content-prefix {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-end: 4px !important;
+    font-size: 18px !important;
+  }
+
+  .finance-stat-card .ant-statistic-content-value {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .finance-admin-page > .ant-row:not(.finance-summary-grid) {
+    row-gap: 10px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .finance-admin-page > .ant-row:not(.finance-summary-grid) > .ant-col {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  .finance-admin-page > .ant-row:not(.finance-summary-grid) > .ant-col > .ant-card {
+    border-radius: 8px !important;
+  }
+
+  .finance-admin-page > .ant-row:not(.finance-summary-grid) > .ant-col > .ant-card > .ant-card-head {
+    min-height: 42px;
+    padding: 0 12px !important;
+  }
+
+  .finance-admin-page > .ant-row:not(.finance-summary-grid) > .ant-col > .ant-card > .ant-card-head .ant-card-head-title {
+    padding: 10px 0 !important;
+    font-size: 15px;
+  }
+
+  .finance-admin-page > .ant-row:not(.finance-summary-grid) > .ant-col > .ant-card > .ant-card-body {
+    padding: 12px !important;
+  }
+
+  .finance-admin-page .ant-progress-line {
+    margin-bottom: 2px;
+  }
+
+  .finance-admin-page .finance-page-header,
+  .finance-admin-page .finance-summary-grid,
+  .finance-admin-page > .ant-row {
+    display: none !important;
+  }
+
+  .finance-admin-page {
+    height: calc(100dvh - 58px);
+    min-height: calc(100dvh - 58px);
+    padding-bottom: 0;
+  }
+
+  .finance-record-tabs.ant-tabs {
+    display: flex;
+    height: calc(100dvh - 64px);
+    min-height: calc(100dvh - 64px);
+    flex-direction: column;
+  }
+
+  .finance-record-tabs .ant-tabs-nav {
+    margin-bottom: 8px !important;
+    overflow-x: auto;
+  }
+
+  .finance-record-tabs .ant-tabs-nav-wrap {
+    overflow: visible !important;
+  }
+
+  .finance-record-tabs .ant-tabs-tab {
+    margin: 0 16px 0 0 !important;
+    padding: 8px 0 !important;
+    white-space: nowrap;
+  }
+
+  .finance-record-tabs .ant-tabs-content-holder,
+  .finance-record-tabs .ant-tabs-content,
+  .finance-record-tabs .ant-tabs-tabpane,
+  .finance-record-tabs .ant-card,
+  .finance-record-tabs .ant-card-body {
+    min-height: 0;
+  }
+
+  .finance-record-tabs .ant-tabs-content-holder,
+  .finance-record-tabs .ant-tabs-content,
+  .finance-record-tabs .ant-tabs-tabpane,
+  .finance-record-tabs .ant-card,
+  .finance-record-tabs .ant-card-body,
+  .finance-record-tabs .ant-table-wrapper,
+  .finance-record-tabs .ant-spin-nested-loading,
+  .finance-record-tabs .ant-spin-container {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  .finance-record-tabs .ant-card {
+    border-radius: 8px !important;
+    overflow: hidden;
+  }
+
+  .finance-record-tabs .ant-card-head {
+    min-height: 40px;
+    padding: 0 12px !important;
+  }
+
+  .finance-record-tabs .ant-card-head-title {
+    padding: 9px 0 !important;
+    font-size: 15px;
+  }
+
+  .finance-record-tabs .ant-table-wrapper {
+    height: 100%;
+    max-height: none;
+    overflow: auto;
+  }
+
+  .finance-record-tabs .ant-table-body,
+  .finance-record-tabs .ant-table-content {
+    max-height: calc(100dvh - 170px) !important;
+    overflow: auto !important;
+  }
+
+  .finance-record-tabs .ant-table-thead > tr > th,
+  .finance-record-tabs .ant-table-tbody > tr > td {
+    padding: 8px 10px !important;
+    font-size: 13px;
+  }
+
+  .finance-record-tabs .ant-table-pagination {
+    justify-content: center;
+    margin: 8px 6px !important;
+  }
+
   .finance-expense-modal.ant-modal {
     top: 10px !important;
     width: calc(100vw - 24px) !important;

@@ -4,8 +4,13 @@ import https from 'https';
 import path from 'path';
 
 type RpcParams = Record<string, string | number | undefined>;
-const VOD_RPC_TIMEOUT_MS = Number(process.env.ALIYUN_VOD_RPC_TIMEOUT_MS || 60000);
-const VOD_UPLOAD_TIMEOUT_MS = Number(process.env.ALIYUN_VOD_UPLOAD_TIMEOUT_MS || 300000);
+function positiveNumber(value: string | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+const VOD_RPC_TIMEOUT_MS = positiveNumber(process.env.ALIYUN_VOD_RPC_TIMEOUT_MS, 60000);
+const VOD_UPLOAD_TIMEOUT_MS = positiveNumber(process.env.ALIYUN_VOD_UPLOAD_TIMEOUT_MS, 300000);
+const VOD_UPLOAD_TIMEOUT_BYTES_PER_SECOND = positiveNumber(process.env.ALIYUN_VOD_UPLOAD_TIMEOUT_BYTES_PER_SECOND, 512 * 1024);
 
 export class VodRpcError extends Error {
   code = '';
@@ -210,6 +215,11 @@ function signOssPut(auth: DecodedUploadAuth, bucket: string, objectName: string,
   return `OSS ${auth.AccessKeyId}:${signature}`;
 }
 
+function uploadTimeoutForSize(fileSize: number) {
+  const speed = Math.max(128 * 1024, VOD_UPLOAD_TIMEOUT_BYTES_PER_SECOND);
+  return Math.max(VOD_UPLOAD_TIMEOUT_MS, Math.ceil(fileSize / speed) * 1000);
+}
+
 async function putObjectByUploadAuth(filePath: string, uploadAddress: DecodedUploadAddress, uploadAuth: DecodedUploadAuth) {
   const endpoint = uploadAddress.Endpoint || '';
   const bucket = uploadAddress.Bucket || '';
@@ -247,8 +257,8 @@ async function putObjectByUploadAuth(filePath: string, uploadAddress: DecodedUpl
       });
     });
     req.on('error', reject);
-    req.setTimeout(VOD_UPLOAD_TIMEOUT_MS, () => {
-      const err = new Error('VOD 上传超时，请稍后重试');
+    req.setTimeout(uploadTimeoutForSize(stat.size), () => {
+      const err = new Error('VOD 上传超时，请稍后重试或检查服务器上行带宽');
       readStream.destroy(err);
       req.destroy(err);
     });

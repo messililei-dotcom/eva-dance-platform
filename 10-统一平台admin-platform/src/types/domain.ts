@@ -152,7 +152,6 @@ export interface PlatformSettings {
   productionApiBase: string;
   adminDomain: string;
   websiteDomain: string;
-  learnDomain: string;
   miniapiDomain: string;
   authDomain: string;
   authMode: string;

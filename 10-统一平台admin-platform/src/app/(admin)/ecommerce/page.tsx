@@ -620,15 +620,15 @@ export default function EcommercePage() {
   ]);
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="ecommerce-admin-page">
+      <div className="page-header ecommerce-page-header">
         <Row justify="space-between" align="middle" gutter={[12, 12]}>
           <Col>
             <Title level={2}>电商系统</Title>
-            <Text type="secondary">商品建档、规格库存、进货入库、销售出库、库存流水与销售记录。</Text>
+            <Text className="ecommerce-page-subtitle" type="secondary">商品建档、规格库存、进货入库、销售出库、库存流水与销售记录。</Text>
           </Col>
           <Col>
-            <Space>
+            <Space className="ecommerce-top-actions">
               <Button icon={<ReloadOutlined />} onClick={load}>刷新</Button>
               <Button type="primary" icon={<PlusOutlined />} onClick={() => openProductModal()}>新增商品</Button>
             </Space>
@@ -636,7 +636,7 @@ export default function EcommercePage() {
         </Row>
       </div>
 
-      <Card style={{ marginBottom: 16 }}>
+      <Card className="ecommerce-filter-card" style={{ marginBottom: 16 }}>
         <Row gutter={[12, 12]} align="middle">
           <Col xs={24} md={10}>
             <Input prefix={<SearchOutlined />} placeholder="搜索商品、分类、颜色、尺码" value={keyword} onChange={event => setKeyword(event.target.value)} allowClear />
@@ -648,6 +648,7 @@ export default function EcommercePage() {
       </Card>
 
       <Tabs
+        className="ecommerce-tabs"
         activeKey={activeTab}
         onChange={setActiveTab}
         items={[
@@ -655,17 +656,18 @@ export default function EcommercePage() {
             key: 'workbench',
             label: `工作台 ${groups.length}`,
             children: (
-              <Row gutter={[16, 16]}>
+              <Row className="ecommerce-workbench-grid" gutter={[16, 16]}>
                 {groups.map(group => (
-                  <Col flex={`0 0 ${WORKBENCH_CARD_WIDTH}px`} style={{ maxWidth: '100%' }} key={group.key}>
+                  <Col className="ecommerce-workbench-col" flex={`0 0 ${WORKBENCH_CARD_WIDTH}px`} style={{ maxWidth: '100%' }} key={group.key}>
                     <Card
+                      className="ecommerce-workbench-card"
                       hoverable
                       styles={{ body: { padding: 12, height: '100%' } }}
                       onClick={() => openGroupDetail(group)}
                       style={{ cursor: 'pointer', width: WORKBENCH_CARD_WIDTH, maxWidth: '100%', height: WORKBENCH_CARD_HEIGHT }}
                     >
-                      <Space align="start" size={10} style={{ width: '100%', height: '100%' }}>
-                        <div style={{
+                      <Space className="ecommerce-product-card-layout" align="start" size={10} style={{ width: '100%', height: '100%' }}>
+                        <div className="ecommerce-product-image" style={{
                           width: WORKBENCH_IMAGE_SIZE,
                           height: WORKBENCH_IMAGE_SIZE,
                           borderRadius: 8,
@@ -683,22 +685,22 @@ export default function EcommercePage() {
                             <ShopOutlined style={{ fontSize: 34, color: '#CBD5E1' }} />
                           )}
                         </div>
-                        <Space direction="vertical" style={{ flex: 1, minWidth: 0, height: WORKBENCH_IMAGE_SIZE, justifyContent: 'space-between' }} size={4}>
+                        <Space className="ecommerce-product-content" direction="vertical" style={{ flex: 1, minWidth: 0, height: WORKBENCH_IMAGE_SIZE, justifyContent: 'space-between' }} size={4}>
                           <div>
-                            <Space align="start" style={{ justifyContent: 'space-between', width: '100%' }}>
+                            <Space className="ecommerce-product-heading" align="start" style={{ justifyContent: 'space-between', width: '100%' }}>
                               <div style={{ minWidth: 0 }}>
                                 <Text type="secondary">{group.category} · {group.spec}</Text>
-                                <div><Text strong ellipsis style={{ maxWidth: 128 }}>{group.name}</Text></div>
+                                <div><Text className="ecommerce-product-name" strong ellipsis style={{ maxWidth: 128 }}>{group.name}</Text></div>
                               </div>
                               {group.lowStockCount > 0 ? <Tag color="orange">低库存 {group.lowStockCount}</Tag> : <Tag color="green">正常</Tag>}
                             </Space>
-                            <Row gutter={4} style={{ marginTop: 6 }}>
+                            <Row className="ecommerce-product-stats" gutter={4} style={{ marginTop: 6 }}>
                               <Col span={8}><Statistic title="库存" value={group.stock} valueStyle={{ fontSize: 16 }} /></Col>
                               <Col span={8}><Statistic title="规格" value={group.variants.length} valueStyle={{ fontSize: 16 }} /></Col>
                               <Col span={8}><Statistic title="售价" value={group.minPrice === group.maxPrice ? money(group.minPrice) : `${money(group.minPrice)} - ${money(group.maxPrice)}`} valueStyle={{ fontSize: 14 }} /></Col>
                             </Row>
                           </div>
-                          <Space size={3} wrap onClick={event => event.stopPropagation()}>
+                          <Space className="ecommerce-card-actions" size={3} wrap onClick={event => event.stopPropagation()}>
                             <Button size="small" onClick={() => openProductModal(group.variants[0])}>编辑</Button>
                             <Button size="small" onClick={() => openStockModal(group)}>入库</Button>
                             <Button size="small" type="primary" onClick={() => openSaleModal(group)} disabled={group.stock <= 0}>销售</Button>

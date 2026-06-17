@@ -23,9 +23,20 @@ import { deleteVodVideos, getVodConfigStatus, uploadLocalVideoToVod } from '@/li
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const MAX_TOTAL_SIZE = 4 * 1024 * 1024 * 1024;
+const GIB = 1024 * 1024 * 1024;
+function positiveNumber(value: string | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+const MAX_TOTAL_SIZE = positiveNumber(process.env.MAX_MATERIAL_UPLOAD_REQUEST_SIZE, 5 * GIB);
+const MAX_SYNC_THUMBNAIL_VIDEO_SIZE = positiveNumber(process.env.MAX_SYNC_VIDEO_THUMBNAIL_SIZE, 300 * 1024 * 1024);
 const { execFileSync } = require('node:child_process');
 const DIRECT_PLAYABLE_VIDEO_EXTENSIONS = new Set(['.mp4', '.m4v', '.webm', '.m3u8']);
+
+function formatBytes(value: number) {
+  if (value >= GIB) return `${Number((value / GIB).toFixed(1))}GB`;
+  return `${Math.ceil(value / 1024 / 1024)}MB`;
+}
 
 function requestAbortedError() {
   const err = new Error('上传已停止');
@@ -162,7 +173,7 @@ export async function POST(request: Request) {
     if (!files.length) return jsonError('请选择本地文件', 400);
 
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    if (totalSize > MAX_TOTAL_SIZE) return jsonError('文件总大小超过限制', 413);
+    if (totalSize > MAX_TOTAL_SIZE) return jsonError(`单次上传总大小超过限制（${formatBytes(MAX_TOTAL_SIZE)}）`, 413);
 
     const requestedFolderId = toPositiveInt(formData.get('folder_id') || formData.get('folderId'), 0);
     const uploadedBy = Math.max(0, Number(formData.get('uploaded_by') || 0));
@@ -209,7 +220,7 @@ export async function POST(request: Request) {
             thumbnail = uploadUrl(...MATERIAL_CENTER_SEGMENTS, folderId, type, encodeURIComponent(savedThumbnail.filename));
           }
         }
-        if (type === 'video' && !thumbnail) {
+        if (type === 'video' && !thumbnail && size <= MAX_SYNC_THUMBNAIL_VIDEO_SIZE) {
           try {
             const thumbBase = path.basename(absolutePath, path.extname(absolutePath));
             const thumbPath = path.join(dir, `${thumbBase}-thumb-${Date.now()}.jpg`);

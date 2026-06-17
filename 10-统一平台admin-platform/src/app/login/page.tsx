@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Alert, App, Input, Button, Checkbox, Typography } from 'antd';
 import { UserOutlined, LockOutlined, EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { authApi } from '@/lib/api';
 import { apiErrorMessage, isRecord } from '@/lib/data-shape';
 
@@ -251,9 +252,14 @@ export default function LoginPage() {
           border: '1px solid #E9ECF5',
           boxShadow: '0 24px 64px rgba(18, 26, 58, 0.14)',
         }}>
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <Title level={3} style={{ marginBottom: 4, color: '#1f2937' }}>欢迎回来</Title>
-            <Text style={{ color: '#6b7280', fontSize: 14 }}>登录您的管理后台</Text>
+          <div className="login-card-heading" style={{ textAlign: 'center', marginBottom: 32 }}>
+            <div className="login-card-brand-title">
+              <span className="login-card-logo">
+                <Image src="/apple-touch-icon.png" alt="伊娃东方舞" width={44} height={44} priority />
+              </span>
+              <Title level={3} style={{ margin: 0, color: '#121A3A' }}>伊娃东方舞</Title>
+            </div>
+            <Text className="login-card-subtitle" style={{ color: '#6b7280', fontSize: 14 }}>数字化平台</Text>
           </div>
 
           <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} style={{ width: '100%' }}>

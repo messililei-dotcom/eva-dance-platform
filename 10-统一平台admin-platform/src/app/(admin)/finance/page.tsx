@@ -299,8 +299,8 @@ export default function FinancePage() {
   if (loading) return <div style={{ padding: 80, textAlign: 'center' }}><Spin size="large" /></div>;
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="finance-admin-page">
+      <div className="page-header finance-page-header">
         <Row justify="space-between" align="middle" gutter={[12, 12]}>
           <Col>
             <Title level={2}>财务中心</Title>
@@ -312,18 +312,18 @@ export default function FinancePage() {
         </Row>
       </div>
 
-      <Row gutter={[12, 12]} style={{ marginBottom: 12 }}>
-        <Col xs={24} md={6}><Card><Statistic title="总收入" value={formatCompactMoney(dashboard.income)} prefix={<ArrowUpOutlined />} valueStyle={{ color: '#16A34A' }} /></Card></Col>
-        <Col xs={24} md={6}><Card><Statistic title="总支出" value={formatCompactMoney(dashboard.expense)} prefix={<ArrowDownOutlined />} valueStyle={{ color: '#DC2626' }} /></Card></Col>
-        <Col xs={24} md={6}><Card><Statistic title="经营净额" value={formatCompactMoney(dashboard.net)} prefix={<WalletOutlined />} valueStyle={{ color: dashboard.net >= 0 ? '#2563EB' : '#DC2626' }} /></Card></Col>
-        <Col xs={24} md={6}><Card><Statistic title="利润率" value={dashboard.profitRate} suffix="%" prefix={<RiseOutlined />} valueStyle={{ color: dashboard.profitRate >= 0 ? '#7C3AED' : '#DC2626' }} /></Card></Col>
+      <Row className="finance-summary-grid finance-summary-grid-primary" gutter={[12, 12]} style={{ marginBottom: 12 }}>
+        <Col xs={24} md={6}><Card className="finance-stat-card"><Statistic title="总收入" value={formatCompactMoney(dashboard.income)} prefix={<ArrowUpOutlined />} valueStyle={{ color: '#16A34A' }} /></Card></Col>
+        <Col xs={24} md={6}><Card className="finance-stat-card"><Statistic title="总支出" value={formatCompactMoney(dashboard.expense)} prefix={<ArrowDownOutlined />} valueStyle={{ color: '#DC2626' }} /></Card></Col>
+        <Col xs={24} md={6}><Card className="finance-stat-card"><Statistic title="经营净额" value={formatCompactMoney(dashboard.net)} prefix={<WalletOutlined />} valueStyle={{ color: dashboard.net >= 0 ? '#2563EB' : '#DC2626' }} /></Card></Col>
+        <Col xs={24} md={6}><Card className="finance-stat-card"><Statistic title="利润率" value={dashboard.profitRate} suffix="%" prefix={<RiseOutlined />} valueStyle={{ color: dashboard.profitRate >= 0 ? '#7C3AED' : '#DC2626' }} /></Card></Col>
       </Row>
 
-      <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-        <Col xs={24} md={6}><Card><Statistic title="成交/收入笔数" value={dashboard.orderCount} suffix="笔" prefix={<DollarOutlined />} /></Card></Col>
-        <Col xs={24} md={6}><Card><Statistic title="平均收入单价" value={money(dashboard.averageOrder)} prefix={<BankOutlined />} /></Card></Col>
-        <Col xs={24} md={6}><Card><Statistic title="本月收入" value={formatCompactMoney(summary?.monthIncome || 0)} prefix={<FundOutlined />} /></Card></Col>
-        <Col xs={24} md={6}><Card><Statistic title="库存成本资产" value={formatCompactMoney(dashboard.stockAsset)} prefix={<BarChartOutlined />} /></Card></Col>
+      <Row className="finance-summary-grid finance-summary-grid-secondary" gutter={[12, 12]} style={{ marginBottom: 16 }}>
+        <Col xs={24} md={6}><Card className="finance-stat-card"><Statistic title="成交/收入笔数" value={dashboard.orderCount} suffix="笔" prefix={<DollarOutlined />} /></Card></Col>
+        <Col xs={24} md={6}><Card className="finance-stat-card"><Statistic title="平均收入单价" value={money(dashboard.averageOrder)} prefix={<BankOutlined />} /></Card></Col>
+        <Col xs={24} md={6}><Card className="finance-stat-card"><Statistic title="本月收入" value={formatCompactMoney(summary?.monthIncome || 0)} prefix={<FundOutlined />} /></Card></Col>
+        <Col xs={24} md={6}><Card className="finance-stat-card"><Statistic title="库存成本资产" value={formatCompactMoney(dashboard.stockAsset)} prefix={<BarChartOutlined />} /></Card></Col>
       </Row>
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
@@ -369,6 +369,7 @@ export default function FinancePage() {
       </Row>
 
       <Tabs
+        className="finance-record-tabs"
         items={[
           {
             key: 'cashflow',
@@ -380,7 +381,7 @@ export default function FinancePage() {
                   rowKey="id"
                   size="middle"
                   dataSource={dashboard.cashflow}
-                  pagination={{ pageSize: 12 }}
+                  pagination={{ pageSize: 25 }}
                   locale={{ emptyText: <Empty description="暂无现金流水" /> }}
                   columns={sortableColumns<CashflowRow>([
                     { title: '日期', dataIndex: 'date', width: 130 },
@@ -404,7 +405,7 @@ export default function FinancePage() {
                   rowKey="id"
                   size="middle"
                   dataSource={summary?.recentOrders || []}
-                  pagination={{ pageSize: 12 }}
+                  pagination={{ pageSize: 25 }}
                   locale={{ emptyText: <Empty description="暂无财务订单" /> }}
                   columns={sortableColumns<UnifiedOrder>([
                     { title: '订单号', dataIndex: 'orderNo' },
@@ -429,7 +430,7 @@ export default function FinancePage() {
                   rowKey="id"
                   size="middle"
                   dataSource={dashboard.cashflow.filter(item => item.direction === 'expense')}
-                  pagination={{ pageSize: 12 }}
+                  pagination={{ pageSize: 25 }}
                   locale={{ emptyText: <Empty description="暂无支出明细" /> }}
                   columns={sortableColumns<CashflowRow>([
                     { title: '日期', dataIndex: 'date', width: 130 },

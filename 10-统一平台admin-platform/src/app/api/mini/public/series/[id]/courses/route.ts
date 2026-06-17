@@ -1,4 +1,5 @@
 import { getMemberId, jsonError, recordSeriesVisit, toPositiveInt, withDb } from '../../../../_helpers';
+import { publicShortCacheJson } from '@/lib/http-cache';
 
 const VISIBLE_VIDEO_STATUS = "(cv.status IS NULL OR cv.status = '' OR cv.status = 'published')";
 
@@ -18,17 +19,29 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
          WHERE oc.series_id=? AND oc.status='published'
          ORDER BY oc.sort_order, oc.id`
       ).all(seriesId);
-      const data = courses.map((course: any) => ({
-        ...course,
-        videos: db.prepare(
-          `SELECT cv.id, cv.material_id, cv.name, COALESCE(cv.duration, m.duration, 0) as duration
+      const courseIds = courses.map((course: any) => Number(course.id)).filter(Boolean);
+      const videoRows = courseIds.length
+        ? db.prepare(
+          `SELECT cv.id, cv.material_id, cv.course_id, cv.name, COALESCE(cv.duration, m.duration, 0) as duration
            FROM CourseVideo cv
            LEFT JOIN Material m ON cv.material_id=m.id
-           WHERE cv.course_id=? AND ${VISIBLE_VIDEO_STATUS}
+           WHERE cv.course_id IN (${courseIds.map(() => '?').join(',')}) AND ${VISIBLE_VIDEO_STATUS}
            ORDER BY cv.sort_order, cv.id`
-        ).all(course.id),
+        ).all(...courseIds)
+        : [];
+      const videosByCourse = new Map<number, any[]>();
+      for (const { course_id, ...video } of videoRows as any[]) {
+        const key = Number(course_id);
+        const group = videosByCourse.get(key) || [];
+        group.push(video);
+        videosByCourse.set(key, group);
+      }
+      const data = courses.map((course: any) => ({
+        ...course,
+        videos: videosByCourse.get(Number(course.id)) || [],
       }));
-      return Response.json({ success: true, data });
+      const isPersonalized = getMemberId(new URL(request.url).searchParams, request) > 0;
+      return isPersonalized ? Response.json({ success: true, data }) : publicShortCacheJson({ success: true, data });
     });
   } catch (err: any) {
     return jsonError(err.message);

@@ -43,7 +43,6 @@ iframe 拼装旧后台
 统一登录
 统一 Layout
 统一 API Client
-统一学员中心
 统一订单中心
 统一权限
 统一数据适配层
@@ -85,7 +84,6 @@ scripts/production-healthcheck.sh
 ```text
 www.dongfangwuquan.com
 admin.dongfangwuquan.com
-learn.dongfangwuquan.com
 miniapi.dongfangwuquan.com
 ```
 
@@ -94,11 +92,10 @@ miniapi.dongfangwuquan.com
 ```text
 www.dongfangwuquan.com -> 品牌官网
 admin.dongfangwuquan.com -> 统一管理后台
-learn.dongfangwuquan.com -> 唯一学习中心学员端，对应 /learn
 miniapi.dongfangwuquan.com -> 网课小程序 API
 ```
 
-四端链接统一维护在：
+三端链接统一维护在：
 
 ```text
 src/lib/platform-links.ts
@@ -141,9 +138,7 @@ Phase 1：
 ```text
 登录
 后台 Layout
-学习中心 /learn
 首页总览
-学员中心
 详情
 订单中心
 电商库存总览

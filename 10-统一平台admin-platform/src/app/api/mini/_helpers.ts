@@ -199,6 +199,10 @@ export function ensureMiniTables(db: AdminDb) {
   db.exec("CREATE INDEX IF NOT EXISTS idx_answer_question ON Answer(question_id, created_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_series ON CourseSeriesVisit(series_id, first_visited_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_member ON CourseSeriesVisit(member_id, last_visited_at)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_public ON CourseSeries(status, sort_order, created_at)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_online_course_series_public ON OnlineCourse(series_id, status, sort_order, id)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_course_video_course_public ON CourseVideo(course_id, status, sort_order, id)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_course_auth_series_member ON CourseAuthorization(series_id, member_id, status)");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_member_wx_openid ON Member(wx_openid) WHERE wx_openid <> ''");
   db.exec("CREATE INDEX IF NOT EXISTS idx_member_wx_unionid ON Member(wx_unionid) WHERE wx_unionid <> ''");
 }

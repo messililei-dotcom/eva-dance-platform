@@ -6,7 +6,7 @@ import {
   ShopOutlined, DollarOutlined, SettingOutlined, SafetyOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined, TeamOutlined, LaptopOutlined, CrownOutlined,
-  BookOutlined, GiftOutlined, CalendarOutlined, BarChartOutlined,
+  GiftOutlined, CalendarOutlined, BarChartOutlined,
   PictureOutlined, AppstoreOutlined, FileTextOutlined, GlobalOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
@@ -184,11 +184,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       key: 'website',
       icon: <GlobalOutlined />,
       label: <a href={platformLinks.website.home} target="_blank" rel="noreferrer">打开品牌官网</a>,
-    },
-    {
-      key: 'learn',
-      icon: <BookOutlined />,
-      label: <a href={platformLinks.learn.home} target="_blank" rel="noreferrer">打开学员中心</a>,
     },
     {
       key: 'miniapp',

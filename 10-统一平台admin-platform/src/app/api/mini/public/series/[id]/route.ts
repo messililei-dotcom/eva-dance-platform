@@ -1,4 +1,5 @@
 import { getMemberId, jsonError, recordSeriesVisit, toPositiveInt, withDb } from '../../../_helpers';
+import { publicShortCacheJson } from '@/lib/http-cache';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const routeParams = await params;
@@ -19,8 +20,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
          WHERE series_id=? AND status='published'
          ORDER BY sort_order, id`
       ).all(id);
-      recordSeriesVisit(db, id, getMemberId(new URL(request.url).searchParams, request), 'series');
-      return Response.json({ success: true, data: { ...series, courses } });
+      const memberId = getMemberId(new URL(request.url).searchParams, request);
+      recordSeriesVisit(db, id, memberId, 'series');
+      const body = { success: true, data: { ...series, courses } };
+      return memberId ? Response.json(body) : publicShortCacheJson(body);
     });
   } catch (err: any) {
     return jsonError(err.message);

@@ -35,6 +35,7 @@ module.exports = {
       NEXT_PUBLIC_API_URL: '/api',
       NEXT_PUBLIC_LEGACY_STUDENT_API_URL: '/legacy-student-api',
       NEXT_PUBLIC_APP_NAME: '伊娃东方舞数字化运营平台',
+      MAX_MATERIAL_UPLOAD_REQUEST_SIZE: process.env.MAX_MATERIAL_UPLOAD_REQUEST_SIZE || productionEnv.MAX_MATERIAL_UPLOAD_REQUEST_SIZE || String(5 * 1024 * 1024 * 1024),
       WECHAT_MINIAPP_APP_ID: process.env.WECHAT_MINIAPP_APP_ID || productionEnv.WECHAT_MINIAPP_APP_ID,
       WECHAT_MINIAPP_SECRET: process.env.WECHAT_MINIAPP_SECRET || productionEnv.WECHAT_MINIAPP_SECRET,
       ALIYUN_ACCESS_KEY_ID: process.env.ALIYUN_ACCESS_KEY_ID || productionEnv.ALIYUN_ACCESS_KEY_ID,

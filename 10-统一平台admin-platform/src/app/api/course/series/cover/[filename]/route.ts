@@ -1,12 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
+import { unstable_noStore as noStore } from 'next/cache';
+import { connection } from 'next/server';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 export const runtime = 'nodejs';
 
 const COVER_ROOT = path.join(process.cwd(), 'public', 'uploads', 'online-course', 'series-covers');
-const UPLOADS_ROOT = path.join(process.cwd(), 'public', 'uploads');
 
 function contentType(filename: string) {
   const ext = path.extname(filename).toLowerCase();
@@ -28,27 +31,6 @@ function normalizeName(value: string) {
     .toLowerCase();
 }
 
-function listImages(root: string) {
-  if (!fs.existsSync(root)) return [];
-  const files: string[] = [];
-  const walk = (directory: string) => {
-    for (const item of fs.readdirSync(directory)) {
-      const absolute = path.join(directory, item);
-      const stat = fs.statSync(absolute);
-      if (stat.isDirectory()) {
-        walk(absolute);
-      } else if (
-        /\.(jpe?g|png|webp|gif|svg)$/i.test(item)
-        && !/学员管理系统|扫码|ChatGPT Image|\/video\//i.test(absolute)
-      ) {
-        files.push(absolute);
-      }
-    }
-  };
-  walk(root);
-  return files;
-}
-
 function findFallbackCover(filename: string) {
   const wanted = normalizeName(filename);
   if (!wanted || !fs.existsSync(COVER_ROOT)) return null;
@@ -63,28 +45,16 @@ function findFallbackCover(filename: string) {
   return matched ? path.join(COVER_ROOT, matched) : null;
 }
 
-function findFallbackUpload(filename: string) {
-  const wanted = normalizeName(filename);
-  const files = listImages(UPLOADS_ROOT);
-  if (!wanted || !files.length) return null;
-  const matched = files.find(file => {
-    const candidate = normalizeName(file);
-    return candidate === wanted
-      || candidate.includes(wanted)
-      || wanted.includes(candidate)
-      || (wanted.includes('呼吸') && candidate.includes('呼吸'));
-  });
-  return matched || null;
-}
-
 export async function GET(_request: Request, { params }: { params: Promise<{ filename: string }> }) {
+  noStore();
+  await connection();
   const routeParams = await params;
   const filename = path.basename(decodeURIComponent(routeParams.filename || ''));
   const absolutePath = path.resolve(COVER_ROOT, filename);
   const root = path.resolve(COVER_ROOT);
   if (!filename || !absolutePath.startsWith(root + path.sep)) return new Response('Not found', { status: 404 });
   const directPath = fs.existsSync(absolutePath) ? absolutePath : null;
-  const filePath = directPath || findFallbackCover(filename) || findFallbackUpload(filename);
+  const filePath = directPath || findFallbackCover(filename);
   if (!filePath) return new Response('Not found', { status: 404 });
 
   const stat = fs.statSync(filePath);
@@ -92,7 +62,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ fil
     headers: {
       'Content-Type': contentType(filePath),
       'Content-Length': String(stat.size),
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Cache-Control': 'no-cache, max-age=0, must-revalidate',
       'X-Content-Type-Options': 'nosniff',
     },
   });

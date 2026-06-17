@@ -375,12 +375,11 @@ export const platformAdapter = {
       productionApiBase: platformLinks.api.gateway,
       adminDomain: platformLinks.admin.domain,
       websiteDomain: platformLinks.website.domain,
-      learnDomain: platformLinks.learn.domain,
       miniapiDomain: platformLinks.api.miniapi.replace('https://', ''),
       authDomain: platformLinks.api.auth.replace('https://', ''),
       authMode: 'JWT + Bearer Token',
       dataSources: [
-        { name: '统一业务数据库', path: '10-统一平台admin-platform/admin.db', mode: 'shared-db', status: '官网/后台/学习中心/网课小程序共用' },
+        { name: '统一业务数据库', path: '10-统一平台admin-platform/admin.db', mode: 'shared-db', status: '官网/后台/网课小程序共用' },
       ],
       endpoints: ['/login', '/validate-token', '/members', '/members/:id/profile360', '/orders/unified', '/shop/summary', '/courses', '/course/series', '/users'],
       linkMatrix: platformLinkMatrix,

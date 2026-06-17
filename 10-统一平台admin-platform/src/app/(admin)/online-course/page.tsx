@@ -64,7 +64,19 @@ import { sortableColumns } from '@/lib/table-sort';
 import type { Member } from '@/types/domain';
 
 const { Text, Title } = Typography;
-const MAX_UPLOAD_FILE_SIZE = 1024 * 1024 * 1024;
+const GIB = 1024 * 1024 * 1024;
+function positiveNumber(value: string | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function versionedImageSource(source: string, version?: string | number) {
+  if (!source || version === undefined || version === null || version === '') return source;
+  const separator = source.includes('?') ? '&' : '?';
+  return `${source}${separator}v=${encodeURIComponent(String(version))}`;
+}
+
+const MAX_UPLOAD_FILE_SIZE = positiveNumber(process.env.NEXT_PUBLIC_MAX_MATERIAL_UPLOAD_SIZE, 2 * GIB);
 const SERIES_PAGE_SIZE_DEFAULT = 30;
 const SERIES_PAGE_SIZE_OPTIONS = [15, 30, 50, 100];
 
@@ -88,6 +100,7 @@ type SeriesRow = {
   total_students?: number;
   course_count?: number;
   created_at?: string;
+  updated_at?: string;
 };
 
 type LessonRow = {
@@ -368,6 +381,13 @@ function mergeUploadFiles(prev: RcFile[], files: RcFile[]) {
 
 function oversizedFileNames(files: Array<{ name: string; size: number }>) {
   return files.filter(file => file.size > MAX_UPLOAD_FILE_SIZE).map(file => file.name);
+}
+
+function uploadSizeLimitText() {
+  if (MAX_UPLOAD_FILE_SIZE >= GIB) {
+    return `${Number((MAX_UPLOAD_FILE_SIZE / GIB).toFixed(1))}GB`;
+  }
+  return fileSize(MAX_UPLOAD_FILE_SIZE);
 }
 
 export default function OnlineCoursePage() {
@@ -929,7 +949,7 @@ export default function OnlineCoursePage() {
     if (!files.length) return;
     const tooLarge = oversizedFileNames(files);
     if (tooLarge.length) {
-      message.error(`单文件不得超过1GB：${tooLarge.slice(0, 3).join('、')}${tooLarge.length > 3 ? ' 等' : ''}`);
+      message.error(`单文件不得超过${uploadSizeLimitText()}：${tooLarge.slice(0, 3).join('、')}${tooLarge.length > 3 ? ' 等' : ''}`);
     }
     const validFiles = files.filter(file => file.size <= MAX_UPLOAD_FILE_SIZE);
     if (!validFiles.length) return;
@@ -1243,7 +1263,7 @@ export default function OnlineCoursePage() {
     }
     const tooLarge = oversizedFileNames(uploadFiles);
     if (tooLarge.length) {
-      message.error(`单文件不得超过1GB：${tooLarge.slice(0, 3).join('、')}${tooLarge.length > 3 ? ' 等' : ''}`);
+      message.error(`单文件不得超过${uploadSizeLimitText()}：${tooLarge.slice(0, 3).join('、')}${tooLarge.length > 3 ? ' 等' : ''}`);
       return;
     }
     setSaving(true);
@@ -1825,7 +1845,10 @@ export default function OnlineCoursePage() {
                         onHeaderCell: () => ({ className: 'course-name-column series-name-column' }),
                         width: 330,
                         render: (value, record) => {
-                          const coverSource = imageDisplaySource(record.cover_image);
+                          const coverSource = versionedImageSource(
+                            imageDisplaySource(record.cover_image),
+                            record.updated_at || record.cover_image || record.id,
+                          );
                           return (
                             <button
                               type="button"
@@ -2258,7 +2281,7 @@ export default function OnlineCoursePage() {
                   <div className="ant-upload-drag-container">
                     <p className="ant-upload-drag-icon"><CloudUploadOutlined /></p>
                     <p className="ant-upload-text">选择或拖拽素材文件到这里</p>
-                    <p className="ant-upload-hint">视频、音频、图片、PDF</p>
+                    <p className="ant-upload-hint">视频、音频、图片、PDF；单文件最高 {uploadSizeLimitText()}</p>
                   </div>
                 </div>
               </div>

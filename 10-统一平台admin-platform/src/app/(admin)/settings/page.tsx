@@ -39,7 +39,6 @@ export default function SettingsPage() {
             <Form.Item label="平台简称"><Input defaultValue={settings.shortName} /></Form.Item>
             <Form.Item label="后台域名"><Input defaultValue={settings.adminDomain} /></Form.Item>
             <Form.Item label="官网域名"><Input defaultValue={settings.websiteDomain} /></Form.Item>
-            <Form.Item label="学习中心域名"><Input defaultValue={settings.learnDomain} /></Form.Item>
             <Form.Item label="小程序 API 域名"><Input defaultValue={settings.miniapiDomain} /></Form.Item>
             <Divider />
             <Form.Item label="记录操作日志"><Switch defaultChecked /></Form.Item>
@@ -51,7 +50,7 @@ export default function SettingsPage() {
 
         {tab === 'links' && (
           <div>
-            <Alert message="官网、统一后台、学员中心、网课小程序的跨端入口统一从 src/lib/platform-links.ts 读取。" type="success" showIcon style={{ marginBottom: 16 }} />
+            <Alert message="官网、统一后台、网课小程序的跨端入口统一从 src/lib/platform-links.ts 读取。" type="success" showIcon style={{ marginBottom: 16 }} />
             <Table
               scroll={{ x: 'max-content' }}
               rowKey="key"
@@ -61,7 +60,7 @@ export default function SettingsPage() {
               columns={sortableColumns<any>([
                 { title: '链路', dataIndex: 'label', render: value => <Space><LinkOutlined />{value}</Space> },
                 { title: '目标地址', dataIndex: 'url', render: value => <Text copyable>{value}</Text> },
-                { title: '目标端', dataIndex: 'target', render: value => <Tag color={value === 'admin' ? 'purple' : value === 'learn' ? 'magenta' : value === 'miniapp' ? 'blue' : 'green'}>{value}</Tag> },
+                { title: '目标端', dataIndex: 'target', render: value => <Tag color={value === 'admin' ? 'purple' : value === 'miniapp' ? 'blue' : 'green'}>{value}</Tag> },
                 { title: '用途', dataIndex: 'description' },
               ])}
             />

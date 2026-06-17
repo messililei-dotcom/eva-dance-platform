@@ -1,4 +1,5 @@
 import { jsonError, withDb } from '../../_helpers';
+import { publicShortCacheJson } from '@/lib/http-cache';
 
 export async function GET() {
   try {
@@ -12,7 +13,7 @@ export async function GET() {
          WHERE cs.status='published'
          ORDER BY cs.sort_order, cs.created_at DESC`
       ).all();
-      return Response.json({ success: true, data });
+      return publicShortCacheJson({ success: true, data });
     });
   } catch (err: any) {
     return jsonError(err.message);
