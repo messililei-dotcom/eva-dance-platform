@@ -36,6 +36,16 @@ export function withDb<T>(fn: (db: AdminDb) => T): T {
   }
 }
 
+export function ensureMaterialFingerprintSchema(db: any) {
+  const columns = db.prepare('PRAGMA table_info(Material)').all();
+  const hasFileHash = columns.some((column: any) => column.name === 'file_hash');
+  if (!hasFileHash) {
+    db.prepare("ALTER TABLE Material ADD COLUMN file_hash TEXT DEFAULT ''").run();
+  }
+  db.prepare("CREATE INDEX IF NOT EXISTS idx_material_file_hash ON Material(file_hash)").run();
+  db.prepare("CREATE INDEX IF NOT EXISTS idx_material_type_size ON Material(type, file_size)").run();
+}
+
 export function cleanText(value: unknown, fallback = '') {
   const text = String(value ?? '').normalize('NFC').trim();
   return text || fallback;

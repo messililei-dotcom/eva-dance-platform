@@ -2470,11 +2470,11 @@ textarea.ant-input {
 }
 
 .online-course-replica .series-cover-thumb {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 60px;
   border-radius: 6px;
   overflow: hidden;
-  background: #f7efff;
+  background: #fff;
   color: #7c3aed;
   border: 1px solid #edf0f6;
   flex-shrink: 0;
@@ -2489,7 +2489,8 @@ textarea.ant-input {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #fff;
 }
 
 .online-course-replica .series-cover-preview-fallback {
@@ -3272,8 +3273,8 @@ textarea.ant-input {
   }
 
   .online-course-replica .series-cover-thumb {
-    width: 42px;
-    height: 42px;
+    width: 46px;
+    height: 58px;
     border-radius: 7px;
     font-size: 11px;
   }

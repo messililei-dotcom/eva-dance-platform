@@ -95,18 +95,24 @@ export function getMemberId(params: URLSearchParams, request?: Request) {
 
 export function recordSeriesVisit(db: AdminDb, seriesId: number, memberId: number, source = 'learn') {
   if (!seriesId || !memberId) return;
-  db.prepare(
-    `INSERT INTO CourseSeriesVisit (member_id, series_id, source, first_visited_at, last_visited_at, visit_count)
-     VALUES (?, ?, ?, datetime('now','localtime'), datetime('now','localtime'), 1)
-     ON CONFLICT(member_id, series_id) DO UPDATE SET
-       last_visited_at=excluded.last_visited_at,
-       source=CASE
-         WHEN excluded.source='auth_request' THEN excluded.source
-         WHEN COALESCE(CourseSeriesVisit.source, '')='' THEN excluded.source
-         ELSE CourseSeriesVisit.source
-       END,
-       visit_count=CourseSeriesVisit.visit_count + 1`
-  ).run(memberId, seriesId, source);
+  db.transaction(() => {
+    db.prepare(
+      `INSERT INTO CourseSeriesVisitLog (member_id, series_id, source, visited_at, created_at)
+       VALUES (?, ?, ?, datetime('now','localtime'), datetime('now','localtime'))`
+    ).run(memberId, seriesId, source);
+    db.prepare(
+      `INSERT INTO CourseSeriesVisit (member_id, series_id, source, first_visited_at, last_visited_at, visit_count)
+       VALUES (?, ?, ?, datetime('now','localtime'), datetime('now','localtime'), 1)
+       ON CONFLICT(member_id, series_id) DO UPDATE SET
+         last_visited_at=excluded.last_visited_at,
+         source=CASE
+           WHEN excluded.source='auth_request' THEN excluded.source
+           WHEN COALESCE(CourseSeriesVisit.source, '')='' THEN excluded.source
+           ELSE CourseSeriesVisit.source
+         END,
+         visit_count=CourseSeriesVisit.visit_count + 1`
+    ).run(memberId, seriesId, source);
+  })();
 }
 
 function columns(db: AdminDb, table: string) {
@@ -182,6 +188,14 @@ export function ensureMiniTables(db: AdminDb) {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(member_id, series_id)
   )`).run();
+  db.prepare(`CREATE TABLE IF NOT EXISTS CourseSeriesVisitLog (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    member_id INTEGER NOT NULL,
+    series_id INTEGER NOT NULL,
+    source TEXT DEFAULT 'learn',
+    visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`).run();
   addColumn(db, 'Member', 'wx_nickname', "wx_nickname TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_avatar_url', "wx_avatar_url TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_openid', "wx_openid TEXT DEFAULT ''");
@@ -199,6 +213,7 @@ export function ensureMiniTables(db: AdminDb) {
   db.exec("CREATE INDEX IF NOT EXISTS idx_answer_question ON Answer(question_id, created_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_series ON CourseSeriesVisit(series_id, first_visited_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_member ON CourseSeriesVisit(member_id, last_visited_at)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_log_series_member ON CourseSeriesVisitLog(series_id, member_id, visited_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_public ON CourseSeries(status, sort_order, created_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_online_course_series_public ON OnlineCourse(series_id, status, sort_order, id)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_video_course_public ON CourseVideo(course_id, status, sort_order, id)");

@@ -1,4 +1,4 @@
-import { cleanText, deletePaymentOrder, hasAuth, openTrainingDb, syncCourseDenormalizedFields, toNumber, unauthorized } from '../../training-db';
+import { cleanText, deletePaymentOrder, findMatchingCourseByIdentity, hasAuth, mergeCourseInto, openTrainingDb, syncCourseDenormalizedFields, toNumber, unauthorized } from '../../training-db';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +12,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const db = openTrainingDb();
   try {
     const result = db.transaction(() => {
+      const current = db.prepare('SELECT id FROM Course WHERE id = ?').get(routeParams.id);
+      if (!current) return { changes: 0 };
+
+      const mergeTarget = findMatchingCourseByIdentity(db, name, body.subType, routeParams.id);
+      if (mergeTarget) {
+        const mergeResult = mergeCourseInto(db, routeParams.id, mergeTarget.id);
+        return { changes: 1, ...mergeResult };
+      }
+
       const info = db.prepare(`
         UPDATE Course
         SET name = ?, type = ?, subType = ?, startDate = ?, endDate = ?, price = ?,
@@ -35,7 +44,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return info;
     })();
     if (!result.changes) return Response.json({ success: false, error: '课程不存在' }, { status: 404 });
-    return Response.json({ success: true });
+    return Response.json({ success: true, merged: Boolean((result as any).merged), targetId: (result as any).targetId });
   } finally {
     db.close();
   }

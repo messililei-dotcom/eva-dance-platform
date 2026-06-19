@@ -303,6 +303,23 @@ function accessSourceText(record: any) {
   return '-';
 }
 
+function formatVisitTime(value: unknown) {
+  return value ? String(value).replace('T', ' ').slice(0, 16) : '-';
+}
+
+function visitRecords(record: any) {
+  if (Array.isArray(record?.visit_records) && record.visit_records.length) return record.visit_records;
+  const visitedAt = record?.last_visited_at || record?.first_visited_at || record?.visited_at;
+  return visitedAt ? [{ id: `summary-${record?.id || record?.member_id || ''}`, source: record?.visit_source || record?.source || 'learn', visited_at: visitedAt }] : [];
+}
+
+function visitRecordText(record: any) {
+  const count = Number(record?.visit_count || visitRecords(record).length || 0);
+  const lastVisitedAt = record?.last_visited_at || visitRecords(record)[0]?.visited_at;
+  if (!count && !lastVisitedAt) return '-';
+  return `${count || 1}次 · ${formatVisitTime(lastVisitedAt)}`;
+}
+
 function folderNameError(name: string) {
   const value = name.trim();
   if (!value) return '请输入文件夹名称';
@@ -460,6 +477,7 @@ export default function OnlineCoursePage() {
   const thumbnailGeneratingIds = useRef(new Set<number>());
   const uploadAbortControllers = useRef(new Map<string, AbortController>());
   const uploadStopRequestedRef = useRef(false);
+  const uploadRunningRef = useRef(false);
   const [seriesForm] = Form.useForm();
   const [lessonForm] = Form.useForm();
   const [authForm] = Form.useForm();
@@ -764,7 +782,6 @@ export default function OnlineCoursePage() {
   const currentMaterialFolderName = selectedFolderId === 'all'
     ? '全部素材'
     : folderLabel(currentMaterialFolder);
-  const storagePercent = storageStats?.total_bytes ? Math.min(100, Math.round((Number(storageStats.used_bytes || 0) / Number(storageStats.total_bytes || 1)) * 100)) : 0;
   const uploadProgressRows = Object.values(uploadProgress);
   const uploadActiveCount = uploadProgressRows.filter(item => ['preparing', 'uploading', 'processing'].includes(item.status)).length;
   const isUploadingMaterials = uploadActiveCount > 0;
@@ -1257,6 +1274,10 @@ export default function OnlineCoursePage() {
   };
 
   const uploadLocalMaterials = async () => {
+    if (uploadRunningRef.current) {
+      message.info('素材正在上传中，请勿重复点击');
+      return;
+    }
     if (!uploadFiles.length) {
       message.warning('请选择要上传的素材文件');
       return;
@@ -1266,6 +1287,7 @@ export default function OnlineCoursePage() {
       message.error(`单文件不得超过${uploadSizeLimitText()}：${tooLarge.slice(0, 3).join('、')}${tooLarge.length > 3 ? ' 等' : ''}`);
       return;
     }
+    uploadRunningRef.current = true;
     setSaving(true);
     uploadStopRequestedRef.current = false;
     try {
@@ -1387,6 +1409,7 @@ export default function OnlineCoursePage() {
       message.error(apiError(err));
     } finally {
       uploadAbortControllers.current.clear();
+      uploadRunningRef.current = false;
       setSaving(false);
     }
   };
@@ -1646,10 +1669,8 @@ export default function OnlineCoursePage() {
                           <Text type="secondary">存储容量</Text>
                           <Text type="secondary">
                             已用 {fileSize(storageStats?.used_bytes || storageStats?.material_bytes || 0)}
-                            {storageStats?.total_bytes ? ` / ${fileSize(storageStats.total_bytes)}` : ` · 素材 ${fileSize(storageStats?.material_bytes || 0)}`}
                           </Text>
                         </Space>
-                        <Progress percent={storagePercent} size="small" status={storagePercent >= 90 ? 'exception' : 'active'} />
                       </Space>
                     </div>
                     {materialViewMode === 'list' ? (
@@ -1969,32 +1990,32 @@ export default function OnlineCoursePage() {
                       { title: '学员', dataIndex: 'name', fixed: 'left', width: 130, render: value => <Text strong>{value || '-'}</Text> },
                       { title: '手机号', dataIndex: 'phone', width: 140 },
                       { title: '授权课程', width: 220, render: (_, record) => record.series_name || currentAuthSeries?.name || '-' },
-                      { title: '初次访问时间', dataIndex: 'first_visited_at', width: 170, render: (value, record) => (value || record.visited_at) ? String(value || record.visited_at).replace('T', ' ').slice(0, 16) : '-' },
-                      { title: '授权状态', dataIndex: 'authorized', width: 110, render: (value, record) => <Tag color={value ? 'green' : 'default'} onClick={() => toggleAuthorization(record)} style={{ cursor: 'pointer', userSelect: 'none' }} title={value ? '点击取消授权' : '点击授权'}>{value ? '已授权' : '未授权'}</Tag> },
-	                      { title: '访问来源', width: 150, render: (_, record) => accessSourceText(record) },
+                      {
+                        title: '访问记录',
+                        dataIndex: 'visit_count',
+                        width: 180,
+                        render: (_, record) => {
+                          const text = visitRecordText(record);
+                          return text === '-' ? '-' : (
+                            <Button
+                              type="link"
+                              size="small"
+                              onClick={() => {
+                                setAuthDetailRecord(record);
+                                setAuthDetailOpen(true);
+                              }}
+                            >
+                              {text}
+                            </Button>
+                          );
+                        },
+                      },
+                      { title: '访问来源', width: 150, render: (_, record) => accessSourceText(record) },
                       { title: '授权人', dataIndex: 'granted_by_name', width: 120, render: value => value || '-' },
                       { title: '授权时间', dataIndex: 'granted_at', width: 160, render: value => value ? String(value).slice(0, 16) : '-' },
                       { title: '授权次数', width: 100, render: (_, record) => record.grant_history?.grant_count || 0 },
                       { title: '撤销次数', width: 100, render: (_, record) => record.grant_history?.revoke_count || 0 },
-                      {
-                        title: '操作',
-                        fixed: 'right',
-                        width: 150,
-                        render: (_, record) => (
-                          <Space size={4}>
-                            <Button size="small" onClick={() => { setAuthDetailRecord(record); setAuthDetailOpen(true); }}>详情</Button>
-                            {record.authorized ? (
-                              <Button
-                                size="small"
-                                danger
-                                onClick={() => cancelAuthorization(record)}
-                              >
-                                撤销
-                              </Button>
-                            ) : null}
-                          </Space>
-                        ),
-                      },
+                      { title: '授权状态', dataIndex: 'authorized', width: 110, render: (value, record) => <Tag color={value ? 'green' : 'red'} onClick={() => toggleAuthorization(record)} style={{ cursor: 'pointer', userSelect: 'none' }} title={value ? '点击取消授权' : '点击授权'}>{value ? '已授权' : '未授权'}</Tag> },
                     ]}
                   />
                 </Card>
@@ -2237,7 +2258,7 @@ export default function OnlineCoursePage() {
             ) : (
               <>
                 <Button onClick={resetUploadModal}>取消</Button>
-                <Button type="primary" onClick={uploadLocalMaterials} loading={saving} disabled={!uploadFiles.length}>开始上传</Button>
+                <Button type="primary" onClick={uploadLocalMaterials} loading={saving} disabled={!uploadFiles.length || uploadRunningRef.current}>开始上传</Button>
               </>
             )}
           </Space>
@@ -2574,18 +2595,31 @@ export default function OnlineCoursePage() {
       </Modal>
 
       <Modal title="授权详情" open={authDetailOpen} onCancel={() => setAuthDetailOpen(false)} footer={<Button onClick={() => setAuthDetailOpen(false)}>关闭</Button>} width={720} destroyOnClose>
-        <Descriptions column={2} bordered size="small">
-          <Descriptions.Item label="学员">{authDetailRecord?.name || '-'}</Descriptions.Item>
-          <Descriptions.Item label="手机号">{authDetailRecord?.phone || '-'}</Descriptions.Item>
-          <Descriptions.Item label="课程">{authDetailRecord?.series_name || currentSeries?.name || '-'}</Descriptions.Item>
-          <Descriptions.Item label="状态">{authDetailRecord?.authorized ? '已授权' : '未授权'}</Descriptions.Item>
-	          <Descriptions.Item label="访问来源">{accessSourceText(authDetailRecord)}</Descriptions.Item>
-          <Descriptions.Item label="授权人">{authDetailRecord?.granted_by_name || '-'}</Descriptions.Item>
-          <Descriptions.Item label="授权时间">{authDetailRecord?.granted_at ? String(authDetailRecord.granted_at).slice(0, 16) : '-'}</Descriptions.Item>
-          <Descriptions.Item label="初次访问时间">{authDetailRecord?.first_visited_at || authDetailRecord?.visited_at ? String(authDetailRecord.first_visited_at || authDetailRecord.visited_at).slice(0, 16) : '-'}</Descriptions.Item>
-          <Descriptions.Item label="授权次数">{authDetailRecord?.grant_history?.grant_count || 0}</Descriptions.Item>
-          <Descriptions.Item label="撤销次数">{authDetailRecord?.grant_history?.revoke_count || 0}</Descriptions.Item>
-        </Descriptions>
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Descriptions column={2} bordered size="small">
+            <Descriptions.Item label="学员">{authDetailRecord?.name || '-'}</Descriptions.Item>
+            <Descriptions.Item label="手机号">{authDetailRecord?.phone || '-'}</Descriptions.Item>
+            <Descriptions.Item label="课程">{authDetailRecord?.series_name || currentSeries?.name || '-'}</Descriptions.Item>
+            <Descriptions.Item label="状态">{authDetailRecord?.authorized ? '已授权' : '未授权'}</Descriptions.Item>
+            <Descriptions.Item label="访问来源">{accessSourceText(authDetailRecord)}</Descriptions.Item>
+            <Descriptions.Item label="授权人">{authDetailRecord?.granted_by_name || '-'}</Descriptions.Item>
+            <Descriptions.Item label="授权时间">{authDetailRecord?.granted_at ? String(authDetailRecord.granted_at).slice(0, 16) : '-'}</Descriptions.Item>
+            <Descriptions.Item label="访问记录">{visitRecordText(authDetailRecord)}</Descriptions.Item>
+            <Descriptions.Item label="授权次数">{authDetailRecord?.grant_history?.grant_count || 0}</Descriptions.Item>
+            <Descriptions.Item label="撤销次数">{authDetailRecord?.grant_history?.revoke_count || 0}</Descriptions.Item>
+          </Descriptions>
+          <Table
+            rowKey={(record: any) => String(record.id || `${record.source}-${record.visited_at}`)}
+            size="small"
+            pagination={false}
+            dataSource={visitRecords(authDetailRecord)}
+            locale={{ emptyText: <Empty description="暂无访问记录" /> }}
+            columns={[
+              { title: '访问时间', dataIndex: 'visited_at', render: formatVisitTime },
+              { title: '访问来源', dataIndex: 'source', render: value => accessSourceText({ visit_source: value }) },
+            ]}
+          />
+        </Space>
       </Modal>
     </div>
   );

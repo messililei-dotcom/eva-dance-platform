@@ -1,12 +1,15 @@
 import fs from 'fs';
 import fsp from 'fs/promises';
 import path from 'path';
-import { hasAuth, unauthorized } from '../../../training-db';
+import crypto from 'crypto';
+import { Readable } from 'stream';
+import { authPayloadFromRequest, hasAuth, unauthorized } from '../../../training-db';
 import {
   MATERIAL_CENTER_ROOT,
   MATERIAL_CENTER_SEGMENTS,
   MaterialRuleError,
   cleanText,
+  ensureMaterialFingerprintSchema,
   ensureDefaultMaterialFolder,
   materialFolderById,
   jsonError,
@@ -28,10 +31,14 @@ function positiveNumber(value: string | undefined, fallback: number) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
+const MAX_FILE_SIZE = positiveNumber(process.env.MAX_MATERIAL_UPLOAD_FILE_SIZE, 2 * GIB);
 const MAX_TOTAL_SIZE = positiveNumber(process.env.MAX_MATERIAL_UPLOAD_REQUEST_SIZE, 5 * GIB);
 const MAX_SYNC_THUMBNAIL_VIDEO_SIZE = positiveNumber(process.env.MAX_SYNC_VIDEO_THUMBNAIL_SIZE, 300 * 1024 * 1024);
 const { execFileSync } = require('node:child_process');
+const Busboy = require('next/dist/compiled/busboy');
 const DIRECT_PLAYABLE_VIDEO_EXTENSIONS = new Set(['.mp4', '.m4v', '.webm', '.m3u8']);
+const pendingUploadKeys = new Set<string>();
+const pendingUploadHashes = new Set<string>();
 
 function formatBytes(value: number) {
   if (value >= GIB) return `${Number((value / GIB).toFixed(1))}GB`;
@@ -44,70 +51,170 @@ function requestAbortedError() {
   return err;
 }
 
-async function writeFile(file: File, absolutePath: string, signal?: AbortSignal) {
-  const writeStream = fs.createWriteStream(absolutePath);
-  const reader = file.stream().getReader();
+function decodePossiblyMojibake(value: string) {
+  const text = String(value || '');
+  if (!text) return '';
+  if (!/[ÃÂãåèçæéïð]/.test(text)) return text;
+  try {
+    const decoded = Buffer.from(text, 'latin1').toString('utf8');
+    if (decoded && !decoded.includes('�')) return decoded;
+  } catch {}
+  return text;
+}
+
+function httpError(message: string, status = 500) {
+  const err = new Error(message);
+  (err as any).status = status;
+  return err;
+}
+
+type ParsedUploadFile = {
+  tempPath: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  fileHash: string;
+};
+
+function busboyFileInfo(infoOrFilename: any, encoding?: string, mimeType?: string) {
+  if (infoOrFilename && typeof infoOrFilename === 'object') {
+    return {
+      filename: decodePossiblyMojibake(String(infoOrFilename.filename || '')),
+      mimeType: String(infoOrFilename.mimeType || infoOrFilename.mime || ''),
+    };
+  }
+  return {
+    filename: decodePossiblyMojibake(String(infoOrFilename || '')),
+    mimeType: String(mimeType || ''),
+  };
+}
+
+async function parseUploadRequest(request: Request) {
+  if (!request.body) throw httpError('请选择本地文件', 400);
+  const fields = new Map<string, string>();
+  const files: ParsedUploadFile[] = [];
+  const tempFiles: string[] = [];
+  const tempRoot = path.join(MATERIAL_CENTER_ROOT, '_tmp');
+  await fsp.mkdir(tempRoot, { recursive: true });
+
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > MAX_TOTAL_SIZE + 1024 * 1024) {
+    throw httpError(`单次上传总大小超过限制（${formatBytes(MAX_TOTAL_SIZE)}）`, 413);
+  }
+
   try {
     await new Promise<void>((resolve, reject) => {
+      let totalSize = 0;
       let settled = false;
+      const pendingWrites: Promise<void>[] = [];
+      const source = Readable.fromWeb(request.body as any);
+      const busboy = Busboy({
+        headers: Object.fromEntries(request.headers.entries()),
+        defCharset: 'utf8',
+        defParamCharset: 'utf8',
+        limits: {
+          fileSize: MAX_FILE_SIZE,
+          files: 20,
+          fields: 50,
+        },
+      });
+
       const cleanup = () => {
-        signal?.removeEventListener('abort', onAbort);
-        writeStream.off('error', fail);
-        writeStream.off('finish', done);
-      };
-      const fail = (err: unknown) => {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        writeStream.destroy();
-        reject(err);
-      };
-      const done = () => {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        resolve();
-      };
-      const onAbort = () => {
-        reader.cancel().catch(() => {});
-        fail(requestAbortedError());
+        request.signal.removeEventListener('abort', onAbort);
+        source.off('error', fail);
+        busboy.off('error', fail);
+        busboy.off('finish', done);
       };
 
-      if (signal?.aborted) {
+      const fail = (err: any) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        source.destroy();
+        reject(err);
+      };
+
+      const done = () => {
+        Promise.all(pendingWrites)
+          .then(() => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            resolve();
+          })
+          .catch(fail);
+      };
+
+      const onAbort = () => fail(requestAbortedError());
+      if (request.signal.aborted) {
         onAbort();
         return;
       }
 
-      signal?.addEventListener('abort', onAbort, { once: true });
-      writeStream.on('error', fail);
-      writeStream.on('finish', done);
-
-      async function pump() {
-        try {
-          while (true) {
-            if (signal?.aborted) throw requestAbortedError();
-            const { done, value } = await reader.read();
-            if (done) {
-              writeStream.end();
-              break;
-            }
-            if (signal?.aborted) throw requestAbortedError();
-            if (!writeStream.write(Buffer.from(value))) {
-              await new Promise<void>(done => writeStream.once('drain', () => done()));
-            }
-          }
-        } catch (err) {
-          fail(err);
+      request.signal.addEventListener('abort', onAbort, { once: true });
+      source.on('error', fail);
+      busboy.on('error', fail);
+      busboy.on('finish', done);
+      busboy.on('field', (name: string, value: string) => {
+        fields.set(name, value);
+      });
+      busboy.on('file', (fieldName: string, fileStream: NodeJS.ReadableStream, infoOrFilename: any, encoding?: string, mimeType?: string) => {
+        if (fieldName !== 'files') {
+          fileStream.resume();
+          return;
         }
-      }
+        const info = busboyFileInfo(infoOrFilename, encoding, mimeType);
+        const originalName = safeName(info.filename || `material-${Date.now()}`);
+        const tempPath = path.join(tempRoot, `${Date.now()}-${Math.random().toString(16).slice(2)}-${originalName}`);
+        tempFiles.push(tempPath);
+        const output = fs.createWriteStream(tempPath);
+        const fileHash = crypto.createHash('sha256');
+        let fileSize = 0;
+        let rejected = false;
 
-      pump();
+        const writePromise = new Promise<void>((resolveFile, rejectFile) => {
+          const rejectOnce = (err: any) => {
+            if (rejected) return;
+            rejected = true;
+            output.destroy();
+            rejectFile(err);
+            if (typeof (busboy as any).destroy === 'function') (busboy as any).destroy(err);
+          };
+
+          fileStream.on('data', (chunk: Buffer) => {
+            fileSize += chunk.length;
+            totalSize += chunk.length;
+            fileHash.update(chunk);
+            if (totalSize > MAX_TOTAL_SIZE) {
+              rejectOnce(httpError(`单次上传总大小超过限制（${formatBytes(MAX_TOTAL_SIZE)}）`, 413));
+            }
+          });
+          fileStream.on('limit', () => {
+            rejectOnce(httpError(`单文件不得超过${formatBytes(MAX_FILE_SIZE)}：${originalName}`, 413));
+            fileStream.resume();
+          });
+          fileStream.on('error', rejectOnce);
+          output.on('error', rejectOnce);
+          output.on('finish', () => {
+            if (rejected) return;
+            files.push({ tempPath, originalName, mimeType: info.mimeType, size: fileSize, fileHash: fileHash.digest('hex') });
+            resolveFile();
+          });
+        }).catch(async (err) => {
+          await fsp.unlink(tempPath).catch(() => {});
+          throw err;
+        });
+        pendingWrites.push(writePromise);
+        fileStream.pipe(output);
+      });
+      source.pipe(busboy);
     });
   } catch (err) {
-    writeStream.destroy();
-    await fsp.unlink(absolutePath).catch(() => {});
+    await Promise.all(tempFiles.map(file => fsp.unlink(file).catch(() => {})));
     throw err;
   }
+
+  return { fields, files, tempFiles };
 }
 
 function videoFormatWarning(name: string) {
@@ -139,6 +246,18 @@ function findDuplicateMaterial(db: any, name: string, type: string, size: number
   `).get(name, type, size);
 }
 
+function findDuplicateMaterialByHash(db: any, fileHash: string, type: string, size: number) {
+  const hash = cleanText(fileHash);
+  if (!hash) return null;
+  return db.prepare(`
+    SELECT m.id, m.name, m.type, m.file_size, m.folder_id, f.name AS folder_name
+    FROM Material m
+    LEFT JOIN MaterialFolder f ON f.id=m.folder_id
+    WHERE m.file_hash=? AND m.type=? AND m.file_size=?
+    LIMIT 1
+  `).get(hash, type, size);
+}
+
 type PendingVodTask = {
   materialId: number;
   absolutePath: string;
@@ -153,6 +272,7 @@ export async function POST(request: Request) {
   const uploadedVodIds: string[] = [];
   const pendingVodTasks: PendingVodTask[] = [];
   const warnings: Array<{ file: string; message: string }> = [];
+  let parsedUpload: Awaited<ReturnType<typeof parseUploadRequest>> | null = null;
 
   function assertRequestActive() {
     if (request.signal.aborted) {
@@ -167,19 +287,27 @@ export async function POST(request: Request) {
     const contentType = request.headers.get('content-type') || '';
     if (!contentType.includes('multipart/form-data')) return jsonError('请选择本地文件', 400);
 
-    const formData = await request.formData();
+    parsedUpload = await parseUploadRequest(request);
     assertRequestActive();
-    const files = formData.getAll('files').filter((item): item is File => item instanceof File && item.size > 0);
+    const files = parsedUpload.files.filter(item => item.size > 0);
     if (!files.length) return jsonError('请选择本地文件', 400);
 
-    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    if (totalSize > MAX_TOTAL_SIZE) return jsonError(`单次上传总大小超过限制（${formatBytes(MAX_TOTAL_SIZE)}）`, 413);
+    const oversized = files.filter(file => file.size > MAX_FILE_SIZE);
+    if (oversized.length) {
+      const names = oversized.slice(0, 3).map(file => file.originalName || '未命名素材').join('、');
+      throw httpError(`单文件不得超过${formatBytes(MAX_FILE_SIZE)}：${names}${oversized.length > 3 ? ' 等' : ''}`, 413);
+    }
 
-    const requestedFolderId = toPositiveInt(formData.get('folder_id') || formData.get('folderId'), 0);
-    const uploadedBy = Math.max(0, Number(formData.get('uploaded_by') || 0));
-    const thumbnailDataUrl = formData.get('thumbnail_data_url');
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    if (totalSize > MAX_TOTAL_SIZE) throw httpError(`单次上传总大小超过限制（${formatBytes(MAX_TOTAL_SIZE)}）`, 413);
+
+    const requestedFolderId = toPositiveInt(parsedUpload.fields.get('folder_id') || parsedUpload.fields.get('folderId'), 0);
+    const authPayload = authPayloadFromRequest(request);
+    const uploadedBy = Math.max(0, Number(parsedUpload.fields.get('uploaded_by') || authPayload?.id || 0));
+    const thumbnailDataUrl = parsedUpload.fields.get('thumbnail_data_url');
 
     return await withDb(async (db) => {
+      ensureMaterialFingerprintSchema(db);
       const folder = ensureTargetFolder(db, requestedFolderId);
       const folderId = Number(folder.id);
       const created: any[] = [];
@@ -187,113 +315,134 @@ export async function POST(request: Request) {
 
       for (const file of files) {
         assertRequestActive();
-        const originalName = safeName(file.name || `material-${Date.now()}`);
-        const type = materialTypeFromFile(file, originalName);
+        const originalName = safeName(file.originalName || `material-${Date.now()}`);
+        const type = materialTypeFromFile({ type: file.mimeType } as File, originalName);
         const size = file.size || 0;
         const key = duplicateKey(originalName, type, size);
+        const fileHash = cleanText(file.fileHash);
         if (incoming.has(key)) {
-          return jsonError(`已有重复的素材「${originalName}」，不能上传重复的素材`, 409);
+          throw httpError(`已有重复的素材「${originalName}」，不能上传重复的素材`, 409);
         }
         incoming.add(key);
 
+        const duplicateByHash = findDuplicateMaterialByHash(db, fileHash, type, size);
+        if (duplicateByHash) {
+          const folderText = duplicateByHash.folder_name ? `（${duplicateByHash.folder_name}）` : '';
+          throw httpError(`已有素材「${duplicateByHash.name}」${folderText}，禁止重复上传`, 409);
+        }
         const duplicate = findDuplicateMaterial(db, originalName, type, size);
         if (duplicate) {
           const folderText = duplicate.folder_name ? `（${duplicate.folder_name}）` : '';
-          return jsonError(`已有重复的素材「${duplicate.name}」${folderText}，不能上传重复的素材`, 409);
+          throw httpError(`已有重复的素材「${duplicate.name}」${folderText}，不能上传重复的素材`, 409);
         }
-
-        const dir = path.join(MATERIAL_CENTER_ROOT, String(folderId), type);
-        await fsp.mkdir(dir, { recursive: true });
-
-        const diskName = await uniqueDiskName(dir, originalName);
-        const absolutePath = path.join(dir, diskName);
-        await writeFile(file, absolutePath, request.signal);
-        writtenFiles.push(absolutePath);
-        assertRequestActive();
-
-        const filePath = uploadUrl(...MATERIAL_CENTER_SEGMENTS, folderId, type, encodeURIComponent(diskName));
-        let thumbnail = '';
-        if (type === 'video') {
-          const savedThumbnail = saveThumbnailDataUrl(thumbnailDataUrl, dir, diskName);
-          if (savedThumbnail) {
-            writtenFiles.push(savedThumbnail.absolutePath);
-            thumbnail = uploadUrl(...MATERIAL_CENTER_SEGMENTS, folderId, type, encodeURIComponent(savedThumbnail.filename));
-          }
+        if (fileHash && pendingUploadHashes.has(fileHash)) {
+          throw httpError(`素材「${originalName}」正在上传处理中，请勿重复提交`, 409);
         }
-        if (type === 'video' && !thumbnail && size <= MAX_SYNC_THUMBNAIL_VIDEO_SIZE) {
-          try {
-            const thumbBase = path.basename(absolutePath, path.extname(absolutePath));
-            const thumbPath = path.join(dir, `${thumbBase}-thumb-${Date.now()}.jpg`);
-            execFileSync('ffmpeg', ['-y', '-ss', '5', '-i', absolutePath, '-vframes', '1', '-vf', 'scale=640:-1', '-q:v', '3', thumbPath], {
-              timeout: 30000,
-              stdio: 'ignore',
-            });
-            if (fs.existsSync(thumbPath) && fs.statSync(thumbPath).size > 5000) {
-              writtenFiles.push(thumbPath);
-              thumbnail = uploadUrl(...MATERIAL_CENTER_SEGMENTS, folderId, type, encodeURIComponent(path.basename(thumbPath)));
+        if (pendingUploadKeys.has(key)) {
+          throw httpError(`素材「${originalName}」正在上传处理中，请勿重复提交`, 409);
+        }
+        pendingUploadKeys.add(key);
+        if (fileHash) pendingUploadHashes.add(fileHash);
+
+        try {
+          const dir = path.join(MATERIAL_CENTER_ROOT, String(folderId), type);
+          await fsp.mkdir(dir, { recursive: true });
+
+          const diskName = await uniqueDiskName(dir, originalName);
+          const absolutePath = path.join(dir, diskName);
+          await fsp.rename(file.tempPath, absolutePath);
+          writtenFiles.push(absolutePath);
+          assertRequestActive();
+
+          const filePath = uploadUrl(...MATERIAL_CENTER_SEGMENTS, folderId, type, encodeURIComponent(diskName));
+          let thumbnail = '';
+          if (type === 'video') {
+            const savedThumbnail = saveThumbnailDataUrl(thumbnailDataUrl, dir, diskName);
+            if (savedThumbnail) {
+              writtenFiles.push(savedThumbnail.absolutePath);
+              thumbnail = uploadUrl(...MATERIAL_CENTER_SEGMENTS, folderId, type, encodeURIComponent(savedThumbnail.filename));
             }
-          } catch {}
-        }
-
-        let vodVideoId = '';
-        let vodMediaId = '';
-        let transcodeStatus = 'success';
-        let needsVodUpload = false;
-        if (type === 'video') {
-          const formatWarning = videoFormatWarning(originalName);
-          const vodConfig = getVodConfigStatus();
-          if (vodConfig.ready) {
-            // VOD 上传改为异步后台任务，HTTP 请求立即返回
-            needsVodUpload = true;
-            transcodeStatus = 'pending';
-            if (formatWarning) {
-              warnings.push({ file: originalName, message: formatWarning });
-            }
-          } else {
-            warnings.push({
-              file: originalName,
-              message: `VOD 未配置，已保留本地素材（缺少 ${vodConfig.missingRequired.join(' / ')}）${formatWarning ? `；${formatWarning}` : ''}`,
-            });
-            transcodeStatus = DIRECT_PLAYABLE_VIDEO_EXTENSIONS.has(path.extname(originalName).toLowerCase()) ? 'success' : 'failed';
           }
-        }
+          if (type === 'video' && !thumbnail && size <= MAX_SYNC_THUMBNAIL_VIDEO_SIZE) {
+            try {
+              const thumbBase = path.basename(absolutePath, path.extname(absolutePath));
+              const thumbPath = path.join(dir, `${thumbBase}-thumb-${Date.now()}.jpg`);
+              execFileSync('ffmpeg', ['-y', '-ss', '5', '-i', absolutePath, '-vframes', '1', '-vf', 'scale=640:-1', '-q:v', '3', thumbPath], {
+                timeout: 30000,
+                stdio: 'ignore',
+              });
+              if (fs.existsSync(thumbPath) && fs.statSync(thumbPath).size > 5000) {
+                writtenFiles.push(thumbPath);
+                thumbnail = uploadUrl(...MATERIAL_CENTER_SEGMENTS, folderId, type, encodeURIComponent(path.basename(thumbPath)));
+              }
+            } catch {}
+          }
 
-        const result = db.prepare(`
-          INSERT INTO Material (
-            name, type, folder_id, file_path, file_url, file_size,
-            duration, thumbnail, transcode_status, risk_status, uploaded_by,
-            vod_media_id, vod_video_id, created_at, updated_at
-          )
-          VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, 'passed', ?, ?, ?,
-            datetime('now','localtime'), datetime('now','localtime'))
-        `).run(originalName, type, folderId, filePath, filePath, size, thumbnail, transcodeStatus, uploadedBy, vodMediaId, vodVideoId);
+          let vodVideoId = '';
+          let vodMediaId = '';
+          let transcodeStatus = 'success';
+          let needsVodUpload = false;
+          if (type === 'video') {
+            const formatWarning = videoFormatWarning(originalName);
+            const vodConfig = getVodConfigStatus();
+            if (vodConfig.ready) {
+              // VOD 上传改为异步后台任务，HTTP 请求立即返回
+              needsVodUpload = true;
+              transcodeStatus = 'pending';
+              if (formatWarning) {
+                warnings.push({ file: originalName, message: formatWarning });
+              }
+            } else {
+              warnings.push({
+                file: originalName,
+                message: `VOD 未配置，已保留本地素材（缺少 ${vodConfig.missingRequired.join(' / ')}）${formatWarning ? `；${formatWarning}` : ''}`,
+              });
+              transcodeStatus = DIRECT_PLAYABLE_VIDEO_EXTENSIONS.has(path.extname(originalName).toLowerCase()) ? 'success' : 'failed';
+            }
+          }
 
-        const materialId = Number(result.lastInsertRowid);
+          const result = db.prepare(`
+            INSERT INTO Material (
+              name, type, folder_id, file_path, file_url, file_size,
+              duration, thumbnail, transcode_status, risk_status, uploaded_by,
+              vod_media_id, vod_video_id, file_hash, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, 'passed', ?, ?, ?, ?,
+              datetime('now','localtime'), datetime('now','localtime'))
+          `).run(originalName, type, folderId, filePath, filePath, size, thumbnail, transcodeStatus, uploadedBy, vodMediaId, vodVideoId, fileHash);
 
-        created.push({
-          id: materialId,
-          name: originalName,
-          type,
-          folder_id: folderId,
-          folder_name: folder.name,
-          file_path: filePath,
-          file_url: filePath,
-          file_size: size,
-          thumbnail,
-          vod_media_id: vodMediaId,
-          vod_video_id: vodVideoId,
-          transcode_status: transcodeStatus,
-        });
+          const materialId = Number(result.lastInsertRowid);
 
-        // 记录待后台上传的 VOD 任务
-        if (needsVodUpload) {
-          pendingVodTasks.push({
+          created.push({
             materialId,
-            absolutePath,
-            diskName,
-            size,
-            originalName,
+            id: materialId,
+            name: originalName,
+            type,
+            folder_id: folderId,
+            folder_name: folder.name,
+            file_path: filePath,
+            file_url: filePath,
+            file_size: size,
+            file_hash: fileHash,
+            thumbnail,
+            vod_media_id: vodMediaId,
+            vod_video_id: vodVideoId,
+            transcode_status: transcodeStatus,
           });
+
+          // 记录待后台上传的 VOD 任务
+          if (needsVodUpload) {
+            pendingVodTasks.push({
+              materialId,
+              absolutePath,
+              diskName,
+              size,
+              originalName,
+            });
+          }
+        } finally {
+          pendingUploadKeys.delete(key);
+          if (fileHash) pendingUploadHashes.delete(fileHash);
         }
       }
 
@@ -349,6 +498,7 @@ export async function POST(request: Request) {
     }) as any;
   } catch (err: any) {
     if (uploadedVodIds.length) await deleteVodVideos(uploadedVodIds).catch(() => null);
+    await Promise.all((parsedUpload?.tempFiles || []).map(file => fsp.unlink(file).catch(() => {})));
     await Promise.all(writtenFiles.map(file => fsp.unlink(file).catch(() => {})));
     return jsonError(cleanText(err?.message, '上传失败'), err?.status || 500);
   }

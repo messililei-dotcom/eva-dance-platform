@@ -75,7 +75,28 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
          LIMIT 500`
       ).all(...values);
 
-      return Response.json({ success: true, data: rows });
+      const visitLogStmt = db.prepare(
+        `SELECT id, source, visited_at
+         FROM CourseSeriesVisitLog
+         WHERE series_id=? AND member_id=?
+         ORDER BY visited_at DESC, id DESC
+         LIMIT 20`
+      );
+      const enrichedRows = rows.map((row: any) => {
+        const visitRecords = visitLogStmt.all(seriesId, row.id);
+        return {
+          ...row,
+          visit_records: visitRecords.length ? visitRecords : (
+            row.first_visited_at ? [{
+              id: `summary-${row.id}`,
+              source: row.visit_source || 'learn',
+              visited_at: row.last_visited_at || row.first_visited_at,
+            }] : []
+          ),
+        };
+      });
+
+      return Response.json({ success: true, data: enrichedRows });
     });
   } catch (err: any) {
     return jsonError(err?.message || '获取学员授权失败');

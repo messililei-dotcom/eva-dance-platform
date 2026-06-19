@@ -218,7 +218,7 @@ export default function TrainingPage() {
   const [saving, setSaving] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState('all');
-  const [activeTab, setActiveTab] = useState('payments');
+  const [activeTab, setActiveTab] = useState('courses');
   const [courseModalOpen, setCourseModalOpen] = useState(false);
   const [memberModalOpen, setMemberModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -290,6 +290,7 @@ export default function TrainingPage() {
     const syncTabFromUrl = () => {
       const tab = new URLSearchParams(window.location.search).get('tab');
       if (tab && ['courses', 'payments', 'consume'].includes(tab)) setActiveTab(tab);
+      else setActiveTab('courses');
     };
     syncTabFromUrl();
     const handleTopFeatureChange = (event: Event) => {
@@ -297,6 +298,7 @@ export default function TrainingPage() {
       if (!key.startsWith('/training')) return;
       const tab = new URLSearchParams(key.split('?')[1] || '').get('tab');
       if (tab && ['courses', 'payments', 'consume'].includes(tab)) setActiveTab(tab);
+      else setActiveTab('courses');
     };
     window.addEventListener('popstate', syncTabFromUrl);
     window.addEventListener('admin-top-feature-change', handleTopFeatureChange);

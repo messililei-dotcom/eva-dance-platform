@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { getMemberId, jsonError, toPositiveInt, withDb } from '../../../_helpers';
+import { getMemberId, jsonError, recordSeriesVisit, toPositiveInt, withDb } from '../../../_helpers';
 import { getVodPlayOptions, isVodVideoMissingError } from '@/lib/server/aliyun-vod';
 import {
   isDirectPlayableMediaMaterial,
@@ -40,6 +40,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       const member = db.prepare('SELECT phone FROM Member WHERE id=?').get<{ phone?: string }>(memberId);
       const auth = video.series_is_free || getActiveAuthorization(db, Number(video.series_id || 0), memberId, member?.phone || '');
       if (!auth) return jsonError('请先申请授权观看完整学习', 403);
+      recordSeriesVisit(db, Number(video.series_id || 0), memberId, 'video');
       const rawUrl = video.file_url || video.file_path || '';
       const isRemoteUrl = /^https?:\/\//.test(rawUrl);
       const absolutePath = !isRemoteUrl ? localMaterialPath(rawUrl) : null;

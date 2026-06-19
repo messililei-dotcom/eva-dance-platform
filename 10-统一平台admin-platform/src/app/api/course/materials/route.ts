@@ -1,6 +1,7 @@
 import { allowedSort, jsonError, withDb } from '../_materials';
 import { hasAuth, unauthorized } from '../../training-db';
 import { importMissingVodMaterials, syncVodMaterials } from '../_vod-sync';
+import { ensureLocalAuthTables } from '../../_local-auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -19,6 +20,7 @@ export async function GET(request: Request) {
 
   try {
     return withDb(async (db) => {
+      ensureLocalAuthTables(db);
       let where = 'WHERE 1=1';
       const params: any[] = [];
       if (folderId && folderId !== 'all') {
@@ -52,10 +54,11 @@ export async function GET(request: Request) {
         SELECT m.*,
                mf.name as folder_name,
                CASE WHEN COUNT(cv.id) > 0 THEN 1 ELSE 0 END as is_referenced,
-               COALESCE(NULLIF(mem.name, ''), CASE WHEN m.uploaded_by > 0 THEN 'ID:' || m.uploaded_by ELSE '管理员' END) as uploaded_by_name
+               COALESCE(NULLIF(u.name, ''), NULLIF(mem.name, ''), (SELECT NULLIF(name, '') FROM User WHERE username='lilei' LIMIT 1), CASE WHEN m.uploaded_by > 0 THEN 'ID:' || m.uploaded_by ELSE '管理员' END) as uploaded_by_name
         FROM Material m
         LEFT JOIN MaterialFolder mf ON mf.id = m.folder_id
         LEFT JOIN CourseVideo cv ON cv.material_id = m.id
+        LEFT JOIN User u ON u.id = m.uploaded_by
         LEFT JOIN Member mem ON mem.id = m.uploaded_by
         ${where}
         GROUP BY m.id

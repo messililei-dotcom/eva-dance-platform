@@ -31,12 +31,55 @@ function statusFromVodStatus(status: string | null, fallback: string) {
 }
 
 function materialNameFromVod(video: VodVideoInfo) {
-  const title = cleanText(video.title, `VOD-${video.videoId}`);
+  const title = cleanText(decodePossiblyMojibake(video.title), `VOD-${video.videoId}`);
   return title.length > 180 ? `${title.slice(0, 170)}-${video.videoId.slice(0, 8)}` : title;
 }
 
+function decodePossiblyMojibake(value: string) {
+  const text = String(value || '');
+  if (!text || !/[ÃÂãåèçæéïð]/.test(text)) return text;
+  try {
+    const decoded = Buffer.from(text, 'latin1').toString('utf8');
+    if (decoded && !decoded.includes('�')) return decoded;
+  } catch {}
+  return text;
+}
+
+function comparableMaterialName(value: string) {
+  return cleanText(decodePossiblyMojibake(value))
+    .replace(/\.[a-z0-9]{1,8}$/i, '')
+    .toLowerCase();
+}
+
+function claimLocalMaterialForVod(db: any, video: VodVideoInfo, name: string, status: string) {
+  const targetName = comparableMaterialName(name);
+  if (!targetName || !video.size) return false;
+  const candidates = db.prepare(`
+    SELECT id, name, thumbnail, is_referenced, vod_video_id
+    FROM Material
+    WHERE type='video'
+      AND file_size=?
+      AND COALESCE(vod_video_id,'')=''
+    ORDER BY is_referenced DESC, id DESC
+    LIMIT 20
+  `).all(Math.max(0, Math.floor(video.size || 0)));
+  const match = candidates.find((row: any) => comparableMaterialName(row.name || '') === targetName);
+  if (!match) return false;
+  db.prepare(`
+    UPDATE Material
+    SET name=?,
+        vod_video_id=?,
+        vod_media_id=?,
+        thumbnail=COALESCE(NULLIF(thumbnail,''), ?),
+        transcode_status=?,
+        updated_at=datetime('now','localtime')
+    WHERE id=?
+  `).run(name, video.videoId, video.videoId, video.coverUrl || '', status, match.id);
+  return true;
+}
+
 function insertMissingVodMaterials(db: any, videos: VodVideoInfo[]) {
-  if (!videos.length) return { imported: 0 };
+  if (!videos.length) return { imported: 0, claimed: 0 };
   const existingRows = db.prepare("SELECT vod_video_id FROM Material WHERE COALESCE(vod_video_id,'') != ''").all();
   const existingIds = new Set(existingRows.map((row: any) => String(row.vod_video_id || '').trim()).filter(Boolean));
   const defaultFolder = ensureDefaultMaterialFolder(db);
@@ -51,11 +94,17 @@ function insertMissingVodMaterials(db: any, videos: VodVideoInfo[]) {
   `);
 
   let imported = 0;
+  let claimed = 0;
   const transaction = db.transaction((items: VodVideoInfo[]) => {
     for (const video of items) {
       if (existingIds.has(video.videoId)) continue;
       const name = materialNameFromVod(video);
       const status = statusFromVodStatus(video.status, 'processing');
+      if (claimLocalMaterialForVod(db, video, name, status)) {
+        existingIds.add(video.videoId);
+        claimed += 1;
+        continue;
+      }
       insertStmt.run(
         name,
         Number(defaultFolder.id),
@@ -72,7 +121,7 @@ function insertMissingVodMaterials(db: any, videos: VodVideoInfo[]) {
     }
   });
   transaction(videos);
-  return { imported };
+  return { imported, claimed };
 }
 
 export async function importMissingVodMaterials(db: any, options: { limit?: number } = {}) {
@@ -90,7 +139,7 @@ export async function importMissingVodMaterials(db: any, options: { limit?: numb
       page += 1;
     }
     const result = insertMissingVodMaterials(db, videos);
-    return { checked: videos.length, imported: result.imported, ready: true, errors: 0 };
+    return { checked: videos.length, imported: result.imported, claimed: result.claimed, ready: true, errors: 0 };
   } catch (err: any) {
     console.warn(`[VOD-SYNC] 拉取 VOD 文件列表失败：${err?.message || err}`);
     return { checked: 0, imported: 0, ready: true, errors: 1 };

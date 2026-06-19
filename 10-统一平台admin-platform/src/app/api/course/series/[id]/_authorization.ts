@@ -37,8 +37,17 @@ export function ensureCourseSeriesVisitTable(db: AdminDb) {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(member_id, series_id)
   )`).run();
+  db.prepare(`CREATE TABLE IF NOT EXISTS CourseSeriesVisitLog (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    member_id INTEGER NOT NULL,
+    series_id INTEGER NOT NULL,
+    source TEXT DEFAULT 'learn',
+    visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`).run();
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_series ON CourseSeriesVisit(series_id, first_visited_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_member ON CourseSeriesVisit(member_id, last_visited_at)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_log_series_member ON CourseSeriesVisitLog(series_id, member_id, visited_at)");
 }
 
 export function authorizeMembers(db: AdminDb, seriesId: number, memberIds: number[], grantedBy = 1) {

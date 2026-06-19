@@ -51,6 +51,28 @@ export function hasAuth(request: Request) {
   return false;
 }
 
+export function authPayloadFromRequest(request: Request) {
+  if (isLocalhostRequest(request)) return null;
+
+  const bearerToken = request.headers.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+  if (bearerToken) {
+    try {
+      const payload = verifyLocalToken(bearerToken);
+      if (payload) return payload;
+    } catch {}
+  }
+
+  const cookieToken = cookieValue(request.headers.get('cookie'), ['token', 'admin_media_token']);
+  if (cookieToken) {
+    try {
+      const payload = verifyLocalToken(cookieToken);
+      if (payload) return payload;
+    } catch {}
+  }
+
+  return null;
+}
+
 export function unauthorized() {
   return Response.json({ success: false, error: '未登录' }, { status: 401 });
 }
@@ -264,6 +286,55 @@ export function syncCourseDenormalizedFields(db: any, courseId: number | string)
   db.prepare('UPDATE Payment SET courseName = ? WHERE courseId = ?').run(course.name, course.id);
   db.prepare('UPDATE ConsumeRecord SET courseName = ? WHERE courseId = ?').run(course.name, course.id);
   db.prepare("UPDATE orders SET title = ?, updated_at = ? WHERE source_type = 'offline-training' AND source_id IN (SELECT CAST(id AS TEXT) FROM Payment WHERE courseId = ?)").run(course.name, nowIso(), course.id);
+}
+
+function courseIdentityKey(name: unknown, subType: unknown) {
+  const normalize = (value: unknown) => cleanText(value).replace(/\s+/g, ' ').toLowerCase();
+  return `${normalize(name)}\u0000${normalize(subType)}`;
+}
+
+export function findMatchingCourseByIdentity(db: any, name: unknown, subType: unknown, excludeId?: number | string) {
+  const key = courseIdentityKey(name, subType);
+  if (!key.split('\u0000')[0]) return null;
+  return db.prepare('SELECT id, name, subType FROM Course ORDER BY id ASC').all()
+    .find((course: any) => String(course.id) !== String(excludeId || '') && courseIdentityKey(course.name, course.subType) === key) || null;
+}
+
+function tableExists(db: any, tableName: string) {
+  return Boolean(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(tableName));
+}
+
+function offlineCertificateSeriesId(courseId: number | string) {
+  return -Math.abs(Number(courseId || 0));
+}
+
+export function mergeCourseInto(db: any, sourceCourseId: number | string, targetCourseId: number | string) {
+  const source = db.prepare('SELECT * FROM Course WHERE id = ?').get(sourceCourseId);
+  const target = db.prepare('SELECT * FROM Course WHERE id = ?').get(targetCourseId);
+  if (!source || !target || String(source.id) === String(target.id)) return { merged: false };
+
+  db.prepare('UPDATE Payment SET courseId = ?, courseName = ? WHERE courseId = ?').run(target.id, target.name, source.id);
+  db.prepare('UPDATE ConsumeRecord SET courseId = ?, courseName = ? WHERE courseId = ?').run(target.id, target.name, source.id);
+
+  if (tableExists(db, 'Certificate')) {
+    db.prepare("UPDATE Certificate SET series_id = ?, updated_at = datetime('now','localtime') WHERE series_id = ?")
+      .run(offlineCertificateSeriesId(target.id), offlineCertificateSeriesId(source.id));
+  }
+
+  if (tableExists(db, 'CertificateTemplate')) {
+    const sourceSeriesId = offlineCertificateSeriesId(source.id);
+    const targetSeriesId = offlineCertificateSeriesId(target.id);
+    const targetTemplate = db.prepare('SELECT id FROM CertificateTemplate WHERE series_id = ?').get(targetSeriesId);
+    if (targetTemplate) {
+      db.prepare('DELETE FROM CertificateTemplate WHERE series_id = ?').run(sourceSeriesId);
+    } else {
+      db.prepare("UPDATE CertificateTemplate SET series_id = ?, updated_at = datetime('now','localtime') WHERE series_id = ?").run(targetSeriesId, sourceSeriesId);
+    }
+  }
+
+  db.prepare('DELETE FROM Course WHERE id = ?').run(source.id);
+  syncCourseDenormalizedFields(db, target.id);
+  return { merged: true, sourceId: Number(source.id), targetId: Number(target.id) };
 }
 
 export function syncMemberDenormalizedFields(db: any, memberId: number | string) {

@@ -61,6 +61,17 @@ const { Text, Title } = Typography;
 const MAX_UPLOAD_FILE_SIZE = 1024 * 1024 * 1024;
 const BATCH_UPLOAD_CONCURRENCY = 2;
 
+function formatVisitTime(value: unknown) {
+  return value ? String(value).replace('T', ' ').slice(0, 16) : '-';
+}
+
+function visitRecordText(record: any) {
+  const count = Number(record?.visit_count || 0);
+  const lastVisitedAt = record?.last_visited_at || record?.first_visited_at || record?.visited_at;
+  if (!count && !lastVisitedAt) return '-';
+  return `${count || 1}次 · ${formatVisitTime(lastVisitedAt)}`;
+}
+
 type BatchUploadStatus = 'ready' | 'preparing' | 'uploading' | 'processing' | 'done' | 'error';
 
 type BatchUploadItem = {
@@ -1336,7 +1347,7 @@ export default function OnlineCourseEditorPage() {
                 columns={sortableColumns<any>([
                   { title: '学员', dataIndex: 'name', fixed: 'left', width: 140, sorter: true, render: value => <Text strong>{value || '学员'}</Text> },
                   { title: '手机号', dataIndex: 'phone', width: 140, sorter: true, render: value => value || '-' },
-                  { title: '初次访问时间', dataIndex: 'first_visited_at', width: 170, sorter: true, render: (value, record) => (value || record.visited_at) ? String(value || record.visited_at).replace('T', ' ').slice(0, 16) : '-' },
+                  { title: '访问记录', dataIndex: 'visit_count', width: 180, sorter: true, render: (_, record) => visitRecordText(record) },
                   {
                     title: '来源',
                     dataIndex: 'visit_source',

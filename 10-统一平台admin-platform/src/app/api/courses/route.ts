@@ -1,4 +1,4 @@
-import { cleanText, hasAuth, openTrainingDb, toNumber, unauthorized } from '../training-db';
+import { cleanText, findMatchingCourseByIdentity, hasAuth, openTrainingDb, toNumber, unauthorized } from '../training-db';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +25,11 @@ export async function POST(request: Request) {
 
   const db = openTrainingDb();
   try {
+    const existing = findMatchingCourseByIdentity(db, name, body.subType);
+    if (existing) {
+      return Response.json({ success: true, id: existing.id, existing: true });
+    }
+
     const result = db.prepare(`
       INSERT INTO Course (
         name, type, subType, startDate, endDate, price, sessions, validDays,
