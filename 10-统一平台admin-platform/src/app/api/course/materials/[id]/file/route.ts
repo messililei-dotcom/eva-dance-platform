@@ -24,7 +24,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     if (material.vod_video_id && isVideoMaterial(material)) {
       try {
         const vodUrl = await getVodPlayUrl(String(material.vod_video_id));
-        if (vodUrl) return Response.redirect(vodUrl, 302);
+        if (vodUrl) {
+          if (!['success', 'completed'].includes(String(material.transcode_status || '').toLowerCase())) {
+            withDb((db) => {
+              db.prepare("UPDATE Material SET transcode_status='success', updated_at=datetime('now','localtime') WHERE id=?").run(material.id);
+            });
+          }
+          return Response.redirect(vodUrl, 302);
+        }
       } catch (err) {
         if (isVodVideoMissingError(err)) {
           withDb((db) => {

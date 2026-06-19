@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { deleteVodVideos, getVodConfigStatus, getVodVideoStatus, listVodVideos, uploadLocalVideoToVod, type VodVideoInfo } from '@/lib/server/aliyun-vod';
+import { deleteVodVideos, getVodConfigStatus, getVodPlayUrl, getVodVideoStatus, listVodVideos, uploadLocalVideoToVod, type VodVideoInfo } from '@/lib/server/aliyun-vod';
 import { cleanText, deleteLocalMaterialFiles, ensureDefaultMaterialFolder, localMaterialPath } from './_materials';
 
 type VodMaterialRow = {
@@ -247,7 +247,13 @@ export async function syncVodMaterials(db: any, rows: VodMaterialRow[], options:
       continue;
     }
 
-    const nextStatus = statusFromVodStatus(vod.status, String(row.transcode_status || 'processing'));
+    let nextStatus = statusFromVodStatus(vod.status, String(row.transcode_status || 'processing'));
+    if (nextStatus === 'processing') {
+      try {
+        const playUrl = await getVodPlayUrl(vodVideoId);
+        if (playUrl) nextStatus = 'success';
+      } catch {}
+    }
     if (options.repairStaleUploads && vod.status === 'Uploading' && isStaleVodUpload(row)) {
       try {
         if (await reuploadLocalVideoToVod(db, row)) {
