@@ -1,5 +1,7 @@
-import { getVodConfigStatus, getVodVideoStatus, listVodVideos, type VodVideoInfo } from '@/lib/server/aliyun-vod';
-import { cleanText, deleteLocalMaterialFiles, ensureDefaultMaterialFolder } from './_materials';
+import fs from 'fs';
+import path from 'path';
+import { deleteVodVideos, getVodConfigStatus, getVodVideoStatus, listVodVideos, uploadLocalVideoToVod, type VodVideoInfo } from '@/lib/server/aliyun-vod';
+import { cleanText, deleteLocalMaterialFiles, ensureDefaultMaterialFolder, localMaterialPath } from './_materials';
 
 type VodMaterialRow = {
   id: number;
@@ -11,6 +13,8 @@ type VodMaterialRow = {
   vod_video_id?: string;
   transcode_status?: string;
   is_referenced?: number;
+  file_size?: number;
+  updated_at?: string;
 };
 
 function statusFromVodStatus(status: string | null, fallback: string) {
@@ -49,6 +53,50 @@ function comparableMaterialName(value: string) {
   return cleanText(decodePossiblyMojibake(value))
     .replace(/\.[a-z0-9]{1,8}$/i, '')
     .toLowerCase();
+}
+
+function localVideoFile(row: VodMaterialRow) {
+  const candidates = [row.file_path, row.file_url]
+    .map(value => localMaterialPath(String(value || '')))
+    .filter((value): value is string => Boolean(value));
+  return candidates.find(filePath => {
+    if (!fs.existsSync(filePath)) return false;
+    const ext = path.extname(filePath).toLowerCase();
+    return ['.mp4', '.m4v', '.mov', '.webm', '.avi', '.mkv'].includes(ext);
+  }) || '';
+}
+
+function isStaleVodUpload(row: VodMaterialRow) {
+  const raw = String(row.updated_at || '').trim();
+  if (!raw) return true;
+  const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T');
+  const time = new Date(normalized).getTime();
+  if (!Number.isFinite(time)) return true;
+  return Date.now() - time > 10 * 60 * 1000;
+}
+
+async function reuploadLocalVideoToVod(db: any, row: VodMaterialRow) {
+  const filePath = localVideoFile(row);
+  if (!filePath) return false;
+  const oldVideoId = String(row.vod_video_id || '').trim();
+  const uploaded = await uploadLocalVideoToVod({
+    filePath,
+    fileName: path.basename(filePath),
+    fileSize: Number(row.file_size || 0) || fs.statSync(filePath).size,
+    title: row.name || path.basename(filePath),
+  });
+  db.prepare(`
+    UPDATE Material
+    SET vod_video_id=?,
+        vod_media_id=?,
+        transcode_status='processing',
+        updated_at=datetime('now','localtime')
+    WHERE id=?
+  `).run(uploaded.videoId, uploaded.videoId, row.id);
+  if (oldVideoId && oldVideoId !== uploaded.videoId) {
+    await deleteVodVideos([oldVideoId]).catch(() => null);
+  }
+  return true;
 }
 
 function claimLocalMaterialForVod(db: any, video: VodVideoInfo, name: string, status: string) {
@@ -146,12 +194,12 @@ export async function importMissingVodMaterials(db: any, options: { limit?: numb
   }
 }
 
-export async function syncVodMaterials(db: any, rows: VodMaterialRow[], options: { limit?: number } = {}) {
+export async function syncVodMaterials(db: any, rows: VodMaterialRow[], options: { limit?: number; repairStaleUploads?: boolean } = {}) {
   const config = getVodConfigStatus();
   if (!config.ready) return { checked: 0, updated: 0, deleted: 0, missing: 0, errors: 0, skipped: rows.length, ready: false };
 
   const candidates = rows
-    .filter(row => row?.type === 'video' && String(row.vod_video_id || '').trim())
+    .filter(row => row?.type === 'video' && (String(row.vod_video_id || '').trim() || String(row.transcode_status || '') === 'pending'))
     .slice(0, Math.max(1, Math.min(50, Number(options.limit || 20))));
   let checked = 0;
   let updated = 0;
@@ -163,6 +211,18 @@ export async function syncVodMaterials(db: any, rows: VodMaterialRow[], options:
   for (const row of candidates) {
     checked += 1;
     const vodVideoId = String(row.vod_video_id || '').trim();
+    if (!vodVideoId) {
+      if (!options.repairStaleUploads) continue;
+      try {
+        if (await reuploadLocalVideoToVod(db, row)) {
+          updated += 1;
+        }
+      } catch (err: any) {
+        errors += 1;
+        console.warn(`[VOD-SYNC] 本地素材 ${row.id} 重新上传 VOD 失败：${err?.message || err}`);
+      }
+      continue;
+    }
     const vod = await getVodVideoStatus(vodVideoId).catch((err) => {
       errors += 1;
       console.warn(`[VOD-SYNC] 同步素材 ${row.id}(${vodVideoId}) 失败：${err?.message || err}`);
@@ -188,6 +248,17 @@ export async function syncVodMaterials(db: any, rows: VodMaterialRow[], options:
     }
 
     const nextStatus = statusFromVodStatus(vod.status, String(row.transcode_status || 'processing'));
+    if (options.repairStaleUploads && vod.status === 'Uploading' && isStaleVodUpload(row)) {
+      try {
+        if (await reuploadLocalVideoToVod(db, row)) {
+          updated += 1;
+          continue;
+        }
+      } catch (err: any) {
+        errors += 1;
+        console.warn(`[VOD-SYNC] 素材 ${row.id}(${vodVideoId}) 卡在上传中，重传失败：${err?.message || err}`);
+      }
+    }
     if (nextStatus !== row.transcode_status) {
       db.prepare("UPDATE Material SET transcode_status=?, updated_at=datetime('now','localtime') WHERE id=?").run(nextStatus, row.id);
       updated += 1;

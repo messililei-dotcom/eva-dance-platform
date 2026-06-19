@@ -9,6 +9,7 @@ export async function POST(request: Request) {
   if (!hasAuth(request)) return unauthorized();
   const body = await request.json().catch(() => ({}));
   const limit = Math.max(1, Math.min(500, Number(body.limit || 100)));
+  const repairStaleUploads = body.repair_stale_uploads === true;
   const ids = Array.isArray(body.ids)
     ? body.ids.map((id: unknown) => Number(id)).filter((id: number) => Number.isInteger(id) && id > 0)
     : [];
@@ -34,7 +35,8 @@ export async function POST(request: Request) {
                  CASE WHEN COUNT(cv.id) > 0 THEN 1 ELSE 0 END AS is_referenced
           FROM Material m
           LEFT JOIN CourseVideo cv ON cv.material_id=m.id
-          WHERE m.type='video' AND m.vod_video_id != ''
+          WHERE m.type='video'
+            AND (COALESCE(m.vod_video_id,'') != '' OR m.transcode_status='pending')
           GROUP BY m.id
           ORDER BY
             CASE WHEN m.transcode_status IN ('pending', 'processing') THEN 0 ELSE 1 END,
@@ -43,7 +45,7 @@ export async function POST(request: Request) {
         `).all(limit);
       }
 
-      const vod_sync = await syncVodMaterials(db, rows, { limit });
+      const vod_sync = await syncVodMaterials(db, rows, { limit, repairStaleUploads });
       return Response.json({ success: true, ...vod_sync, imported: vod_import.imported, import_checked: vod_import.checked, import_errors: vod_import.errors });
     });
   } catch (err: any) {

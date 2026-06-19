@@ -446,46 +446,42 @@ export async function POST(request: Request) {
         }
       }
 
-      // 返回响应前启动后台 VOD 上传任务（不阻塞 HTTP 响应）
+      // VOD 上传必须在响应前完成并写回数据库，避免 HTTP 返回后后台任务被中断，
+      // 造成平台显示上传成功但 VOD 长时间停留在“上传中”。
       if (pendingVodTasks.length) {
-        // 串行执行后台 VOD 上传，避免内存暴涨
-        (async () => {
-          for (const task of pendingVodTasks) {
-            try {
-              const uploaded = await uploadLocalVideoToVod({
-                filePath: task.absolutePath,
-                fileName: task.diskName,
-                fileSize: task.size,
-                title: task.originalName,
-              });
-              // VOD 上传成功，更新 DB 中的 vod_video_id 和状态
-              const { openAdminDb } = await import('@/lib/server/admin-db');
-              const bgDb = openAdminDb();
-              try {
-                bgDb.prepare(
-                  "UPDATE Material SET vod_video_id=?, vod_media_id=?, transcode_status='processing', updated_at=datetime('now','localtime') WHERE id=?"
-                ).run(uploaded.videoId, uploaded.videoId, task.materialId);
-              } finally {
-                bgDb.close();
-              }
-              console.log(`[VOD-BG] 上传完成: ${task.originalName} → ${uploaded.videoId}`);
-            } catch (bgErr: any) {
-              console.error(`[VOD-BG] 上传失败: ${task.originalName} - ${bgErr?.message || bgErr}`);
-              // 更新状态为 failed（本地文件仍可用播放）
-              try {
-                const { openAdminDb } = await import('@/lib/server/admin-db');
-                const bgDb = openAdminDb();
-                try {
-                  bgDb.prepare(
-                    "UPDATE Material SET transcode_status='success', updated_at=datetime('now','localtime') WHERE id=?"
-                  ).run(task.materialId);
-                } finally {
-                  bgDb.close();
-                }
-              } catch {}
+        for (const task of pendingVodTasks) {
+          try {
+            const uploaded = await uploadLocalVideoToVod({
+              filePath: task.absolutePath,
+              fileName: task.diskName,
+              fileSize: task.size,
+              title: task.originalName,
+            });
+            db.prepare(
+              "UPDATE Material SET vod_video_id=?, vod_media_id=?, transcode_status='processing', updated_at=datetime('now','localtime') WHERE id=?"
+            ).run(uploaded.videoId, uploaded.videoId, task.materialId);
+            uploadedVodIds.push(uploaded.videoId);
+            const item = created.find(row => row.id === task.materialId);
+            if (item) {
+              item.vod_video_id = uploaded.videoId;
+              item.vod_media_id = uploaded.videoId;
+              item.transcode_status = 'processing';
             }
+            console.log(`[VOD] 上传完成: ${task.originalName} → ${uploaded.videoId}`);
+          } catch (vodErr: any) {
+            console.error(`[VOD] 上传失败: ${task.originalName} - ${vodErr?.message || vodErr}`);
+            const localStatus = DIRECT_PLAYABLE_VIDEO_EXTENSIONS.has(path.extname(task.originalName).toLowerCase()) ? 'success' : 'failed';
+            db.prepare(
+              "UPDATE Material SET transcode_status=?, updated_at=datetime('now','localtime') WHERE id=?"
+            ).run(localStatus, task.materialId);
+            const item = created.find(row => row.id === task.materialId);
+            if (item) item.transcode_status = localStatus;
+            warnings.push({
+              file: task.originalName,
+              message: `VOD 上传失败，已保留本地素材：${cleanText(vodErr?.message, '请稍后重新同步 VOD')}`,
+            });
           }
-        })().catch(() => {});
+        }
       }
 
       return Response.json({
