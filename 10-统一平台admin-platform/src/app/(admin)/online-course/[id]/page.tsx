@@ -686,7 +686,7 @@ export default function OnlineCourseEditorPage() {
             onUploadProgress: (event: any) => {
               const total = event.total || file.size || 1;
               if (event.loaded >= total) {
-                setBatchUploadItems(prev => ({ ...prev, [uid]: { ...prev[uid], status: 'processing', percent: Math.max(prev[uid]?.percent || 0, 95) } }));
+                setBatchUploadItems(prev => ({ ...prev, [uid]: { ...prev[uid], status: 'uploading', percent: Math.max(prev[uid]?.percent || 0, 95) } }));
                 return;
               }
               const percent = Math.min(90, Math.round((event.loaded / total) * 90));
@@ -1750,7 +1750,7 @@ export default function OnlineCourseEditorPage() {
                       }}>
                         {item.status === 'preparing' ? '准备上传' :
                          item.status === 'uploading' ? `${item.percent}%` :
-                         item.status === 'processing' ? '转码中' :
+                         item.status === 'processing' ? '云端上传' :
                          item.status === 'done' ? '✅ 完成' :
                          item.status === 'error' ? '❌ 失败' :
                          '待上传'}

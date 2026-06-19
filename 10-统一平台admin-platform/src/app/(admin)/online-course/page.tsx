@@ -783,7 +783,7 @@ export default function OnlineCoursePage() {
     ? '全部素材'
     : folderLabel(currentMaterialFolder);
   const uploadProgressRows = Object.values(uploadProgress);
-  const uploadActiveCount = uploadProgressRows.filter(item => ['preparing', 'uploading', 'processing'].includes(item.status)).length;
+  const uploadActiveCount = uploadProgressRows.filter(item => ['preparing', 'uploading'].includes(item.status)).length;
   const isUploadingMaterials = uploadActiveCount > 0;
   const uploadTargetFolderName = folderLabel(selectedFolderId === 'all' ? defaultMaterialFolder(folders) : folders.find(item => item.id === selectedFolderId));
   const sortTitle = (label: string, key: string) => (
@@ -1319,7 +1319,7 @@ export default function OnlineCoursePage() {
           onUploadProgress: (event: any) => {
             const total = event.total || file.size || 1;
             if (event.loaded >= total) {
-              setUploadProgress(prev => ({ ...prev, [file.uid]: { ...(prev[file.uid] || { uid: file.uid, name: file.name, percent: 0 }), status: 'processing', percent: Math.max(prev[file.uid]?.percent || 0, 95) } }));
+              setUploadProgress(prev => ({ ...prev, [file.uid]: { ...(prev[file.uid] || { uid: file.uid, name: file.name, percent: 0 }), status: 'uploading', percent: Math.max(prev[file.uid]?.percent || 0, 95) } }));
               return;
             }
             const percent = Math.min(90, Math.round((event.loaded / total) * 90));
@@ -2232,7 +2232,7 @@ export default function OnlineCoursePage() {
             <Col xs={12} md={12}><Form.Item name="tags" label="标签"><Input placeholder="多个标签用逗号分隔" /></Form.Item></Col>
             <Col xs={8} md={8}><Form.Item name="file_size" label="文件大小(字节)"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
             <Col xs={8} md={8}><Form.Item name="duration" label="时长(秒)"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col xs={8} md={8}><Form.Item name="transcode_status" label="转码状态"><Select options={[{ value: 'completed', label: '已完成' }, { value: 'processing', label: '转码中' }, { value: 'pending', label: '待处理' }, { value: 'failed', label: '失败' }]} /></Form.Item></Col>
+            <Col xs={8} md={8}><Form.Item name="transcode_status" label="素材状态"><Select options={[{ value: 'completed', label: '已完成' }, { value: 'success', label: '已上传' }, { value: 'processing', label: '云端处理中' }, { value: 'pending', label: '待处理' }, { value: 'failed', label: '失败' }]} /></Form.Item></Col>
             <Col span={24}>
               <Form.Item name="thumbnail" label="缩略图">
                 <Input
@@ -2321,12 +2321,12 @@ export default function OnlineCoursePage() {
                   const progress = uploadProgress[file.uid];
                   const statusText = progress?.status === 'preparing' ? '准备上传'
                     : progress?.status === 'uploading' ? `${progress.percent}%`
-                    : progress?.status === 'processing' ? '转码中'
+                    : progress?.status === 'processing' ? '云端上传'
                     : progress?.status === 'done' ? '完成'
                     : progress?.status === 'error' ? progress.message || '失败'
                     : progress?.status === 'cancelled' ? '已停止'
                     : '';
-                  const rowUploading = progress && ['preparing', 'uploading', 'processing'].includes(progress.status);
+                  const rowUploading = progress && ['preparing', 'uploading'].includes(progress.status);
                   return (
                     <div key={file.uid} className="oc-upload-file-row">
                       <Text ellipsis className="oc-upload-file-name">{file.name}</Text>

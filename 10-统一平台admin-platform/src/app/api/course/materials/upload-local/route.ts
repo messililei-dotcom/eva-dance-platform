@@ -386,7 +386,6 @@ export async function POST(request: Request) {
             const formatWarning = videoFormatWarning(originalName);
             const vodConfig = getVodConfigStatus();
             if (vodConfig.ready) {
-              // VOD 上传改为异步后台任务，HTTP 请求立即返回
               needsVodUpload = true;
               transcodeStatus = 'pending';
               if (formatWarning) {
@@ -446,8 +445,8 @@ export async function POST(request: Request) {
         }
       }
 
-      // VOD 上传必须在响应前完成并写回数据库，避免 HTTP 返回后后台任务被中断，
-      // 造成平台显示上传成功但 VOD 长时间停留在“上传中”。
+      // 平台只等待“文件上传到 VOD 并取得 VideoId”。后续转码由 VOD 自动化独立完成，
+      // 不再把转码状态暴露为上传流程的一部分，避免前端长时间停在“转码中”。
       if (pendingVodTasks.length) {
         for (const task of pendingVodTasks) {
           try {
@@ -458,14 +457,14 @@ export async function POST(request: Request) {
               title: task.originalName,
             });
             db.prepare(
-              "UPDATE Material SET vod_video_id=?, vod_media_id=?, transcode_status='processing', updated_at=datetime('now','localtime') WHERE id=?"
+              "UPDATE Material SET vod_video_id=?, vod_media_id=?, transcode_status='success', updated_at=datetime('now','localtime') WHERE id=?"
             ).run(uploaded.videoId, uploaded.videoId, task.materialId);
             uploadedVodIds.push(uploaded.videoId);
             const item = created.find(row => row.id === task.materialId);
             if (item) {
               item.vod_video_id = uploaded.videoId;
               item.vod_media_id = uploaded.videoId;
-              item.transcode_status = 'processing';
+              item.transcode_status = 'success';
             }
             console.log(`[VOD] 上传完成: ${task.originalName} → ${uploaded.videoId}`);
           } catch (vodErr: any) {
