@@ -113,14 +113,15 @@
 
 .series-card {
   display: grid;
-  grid-template-columns: 150rpx 1fr;
+  grid-template-columns: 180rpx 1fr;
   gap: 18rpx;
   padding: 18rpx;
 }
 
 .series-card image {
-  width: 150rpx;
-  height: 150rpx;
+  width: 180rpx;
+  height: 135rpx;
+  aspect-ratio: 4 / 3;
   border-radius: 12rpx;
   background: #202936;
 }

@@ -1295,11 +1295,11 @@ export default function TrainingPage() {
               {detailCourse.attendanceSheetPath && <Button href={detailCourse.attendanceSheetPath} target="_blank">查看已签签到表</Button>}
             </Space>
             <Row gutter={16} align="top">
-              <Col flex="150px">
+              <Col flex="180px">
                 <Upload showUploadList={false} beforeUpload={uploadDetailCourseCover} accept="image/*">
                   <div
                     title="点击上传更换课程主图"
-                    style={{ width: 150, height: 150, borderRadius: 8, overflow: 'hidden', border: '1px solid #edf0f6', background: '#f7efff', color: '#C026D3', display: 'grid', placeItems: 'center', cursor: 'pointer' }}
+                    style={{ width: 180, height: 135, borderRadius: 8, overflow: 'hidden', border: '1px solid #edf0f6', background: '#f7efff', color: '#C026D3', display: 'grid', placeItems: 'center', cursor: 'pointer' }}
                   >
                     {trainingCourseCoverSource(detailCourse.coverImage, detailCourse.name, true) ? (
                       <img src={trainingCourseCoverSource(detailCourse.coverImage, detailCourse.name, true)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1404,8 +1404,8 @@ export default function TrainingPage() {
                   <div
                     className="training-course-cover-upload"
                     style={{
-                      width: 150,
-                      height: 150,
+                      width: 180,
+                      height: 135,
                       border: '1px dashed #d9d9d9',
                       borderRadius: 8,
                       overflow: 'hidden',

@@ -1,6 +1,6 @@
 .learning-card {
   display: grid;
-  grid-template-columns: 164rpx minmax(0, 1fr);
+  grid-template-columns: 184rpx minmax(0, 1fr);
   gap: 22rpx;
   align-items: center;
   padding: 22rpx;
@@ -19,8 +19,8 @@
 }
 
 .thumb {
-  width: 164rpx;
-  height: 164rpx;
+  width: 184rpx;
+  height: 138rpx;
   border-radius: 14rpx;
   font-size: 26rpx;
 }
@@ -131,7 +131,7 @@
 
 .recommend-thumb {
   width: 100%;
-  height: 176rpx;
+  aspect-ratio: 4 / 3;
   border-radius: 0;
   font-size: 28rpx;
 }

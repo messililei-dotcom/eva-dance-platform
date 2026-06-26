@@ -2470,8 +2470,8 @@ textarea.ant-input {
 }
 
 .online-course-replica .series-cover-thumb {
-  width: 48px;
-  height: 60px;
+  width: 64px;
+  height: 48px;
   border-radius: 6px;
   overflow: hidden;
   background: #fff;
@@ -2489,7 +2489,7 @@ textarea.ant-input {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   background: #fff;
 }
 
@@ -3273,8 +3273,8 @@ textarea.ant-input {
   }
 
   .online-course-replica .series-cover-thumb {
-    width: 46px;
-    height: 58px;
+    width: 56px;
+    height: 42px;
     border-radius: 7px;
     font-size: 11px;
   }

@@ -2119,7 +2119,7 @@ export default function OnlineCoursePage() {
             <Col xs={12} md={12}><Form.Item name="subtitle" label="副标题"><Input /></Form.Item></Col>
           </Row>
           <Form.Item name="cover_image" hidden><Input /></Form.Item>
-          <div style={{ display: 'grid', gridTemplateColumns: '150px minmax(0, 1fr)', gap: 12, alignItems: 'start', marginBottom: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '180px minmax(0, 1fr)', gap: 12, alignItems: 'start', marginBottom: 10 }}>
             <div>
               {(() => {
                 const coverSource = imageDisplaySource(seriesCoverImage);
@@ -2135,8 +2135,8 @@ export default function OnlineCoursePage() {
                     <button
                       type="button"
                       style={{
-                        width: 150,
-                        height: 150,
+                        width: 180,
+                        height: 135,
                         borderRadius: 8,
                         overflow: 'hidden',
                         border: coverSource ? '2px solid #C8A96E' : '2px dashed #E8DDCB',
@@ -2503,7 +2503,7 @@ export default function OnlineCoursePage() {
                         setCoverPickerOpen(false);
                       }}
                     >
-                      <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 6, overflow: 'hidden', background: '#f6f7fb', border: '1px solid #edf0f6' }}>
+                      <div style={{ width: '100%', aspectRatio: '4 / 3', borderRadius: 6, overflow: 'hidden', background: '#f6f7fb', border: '1px solid #edf0f6' }}>
                         {url ? <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : materialCover(item)}
                       </div>
                       <Text ellipsis style={{ display: 'block', marginTop: 6, fontSize: 12 }}>{item.name}</Text>

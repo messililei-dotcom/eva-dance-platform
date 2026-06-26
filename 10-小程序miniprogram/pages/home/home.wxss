@@ -252,9 +252,9 @@
 
 .course-row {
   display: grid;
-  grid-template-columns: 164rpx minmax(0, 1fr);
+  grid-template-columns: 184rpx minmax(0, 1fr);
   gap: 18rpx;
-  min-height: 164rpx;
+  min-height: 138rpx;
   padding: 14rpx;
   border-radius: 18rpx;
   background: #ffffff;
@@ -263,8 +263,9 @@
 }
 
 .row-cover {
-  width: 164rpx;
-  height: 164rpx;
+  width: 184rpx;
+  height: 138rpx;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   border-radius: 14rpx;
   background: #2d3541;
