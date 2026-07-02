@@ -1,10 +1,11 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Alert,
   App,
+  AutoComplete,
   Button,
   Card,
   Col,
@@ -77,6 +78,7 @@ function versionedImageSource(source: string, version?: string | number) {
 }
 
 const MAX_UPLOAD_FILE_SIZE = positiveNumber(process.env.NEXT_PUBLIC_MAX_MATERIAL_UPLOAD_SIZE, 2 * GIB);
+const MAX_COURSE_COVER_SIZE = 2 * 1024 * 1024;
 const SERIES_PAGE_SIZE_DEFAULT = 30;
 const SERIES_PAGE_SIZE_OPTIONS = [15, 30, 50, 100];
 
@@ -214,6 +216,18 @@ const WINDOWS_RESERVED_NAMES = new Set([
 const topTabs = ['series', 'materials', 'auth'];
 const topTabOrder: Record<string, number> = { series: 0, materials: 1, auth: 2 };
 
+function tabFromOnlineCoursePath(pathname?: string | null) {
+  if (pathname === '/online-course/materials' || pathname?.startsWith('/online-course/materials/')) return 'materials';
+  if (pathname === '/online-course/auth' || pathname?.startsWith('/online-course/auth/')) return 'auth';
+  return 'series';
+}
+
+function pathForTopTab(tab: string, seriesId?: number) {
+  const path = tab === 'materials' ? '/online-course/materials' : tab === 'auth' ? '/online-course/auth' : '/online-course';
+  if (tab === 'auth' && seriesId) return `${path}?seriesId=${seriesId}`;
+  return path;
+}
+
 const tabMeta: Record<string, { title: string; desc: string; icon: ReactNode }> = {
   materials: { title: '素材中心', desc: '像网盘一样管理视频、音频、PPT、图片素材。', icon: <FolderOutlined /> },
   series: { title: '课程管理', desc: '编辑课程信息、课程主图、价格、分类和上架状态。', icon: <LaptopOutlined /> },
@@ -225,8 +239,15 @@ function folderLabel(folder?: FolderRow) {
   return folder.parent_id === 0 && folder.name === '默认素材' ? '根目录文件夹' : folder.name;
 }
 
+function isRootMaterialFolder(folder?: FolderRow) {
+  if (!folder) return false;
+  const name = String(folder.name || '').trim();
+  return Number(folder.parent_id || 0) === 0 && (name === '默认素材' || name === '根目录文件夹');
+}
+
 function defaultMaterialFolder(folders: FolderRow[]) {
   return folders.find(item => item.parent_id === 0 && item.name === '默认素材')
+    || folders.find(item => isRootMaterialFolder(item))
     || folders.find(item => item.parent_id === 0)
     || folders[0];
 }
@@ -261,6 +282,7 @@ function folderMergedIds(folder?: FolderRow) {
 function mergeFoldersByName(folders: FolderRow[]) {
   const groups = new Map<string, FolderRow>();
   const sorted = [...folders].sort((a, b) => {
+    if (isRootMaterialFolder(a) !== isRootMaterialFolder(b)) return isRootMaterialFolder(a) ? -1 : 1;
     const nameCompare = folderSortName(a).localeCompare(folderSortName(b), 'zh-CN', { numeric: true, sensitivity: 'base' });
     if (nameCompare !== 0) return nameCompare;
     return Number(a.id || 0) - Number(b.id || 0);
@@ -277,10 +299,17 @@ function mergeFoldersByName(folders: FolderRow[]) {
     existing.merged_ids = folderMergedIds(existing).concat(Number(folder.id));
   });
 
-  return Array.from(groups.values()).map(folder => ({
-    ...folder,
-    merged_ids: folderMergedIds(folder),
-  }));
+  return Array.from(groups.values())
+    .map(folder => ({
+      ...folder,
+      merged_ids: folderMergedIds(folder),
+    }))
+    .sort((a, b) => {
+      if (isRootMaterialFolder(a) !== isRootMaterialFolder(b)) return isRootMaterialFolder(a) ? -1 : 1;
+      const nameCompare = folderSortName(a).localeCompare(folderSortName(b), 'zh-CN', { numeric: true, sensitivity: 'base' });
+      if (nameCompare !== 0) return nameCompare;
+      return Number(a.id || 0) - Number(b.id || 0);
+    });
 }
 
 function accessSourceText(record: any) {
@@ -303,21 +332,37 @@ function accessSourceText(record: any) {
   return '-';
 }
 
-function formatVisitTime(value: unknown) {
-  return value ? String(value).replace('T', ' ').slice(0, 16) : '-';
+function normalizeAuthPhone(value: unknown) {
+  return String(value || '').trim().replace(/[\s-]/g, '');
 }
 
-function visitRecords(record: any) {
-  if (Array.isArray(record?.visit_records) && record.visit_records.length) return record.visit_records;
-  const visitedAt = record?.last_visited_at || record?.first_visited_at || record?.visited_at;
-  return visitedAt ? [{ id: `summary-${record?.id || record?.member_id || ''}`, source: record?.visit_source || record?.source || 'learn', visited_at: visitedAt }] : [];
+function extractAuthPhone(value: unknown) {
+  const text = String(value || '').trim();
+  return normalizeAuthPhone(text.match(/\+?\d[\d\s-]{3,20}\d/)?.[0] || text);
 }
 
-function visitRecordText(record: any) {
-  const count = Number(record?.visit_count || visitRecords(record).length || 0);
-  const lastVisitedAt = record?.last_visited_at || visitRecords(record)[0]?.visited_at;
-  if (!count && !lastVisitedAt) return '-';
-  return `${count || 1}次 · ${formatVisitTime(lastVisitedAt)}`;
+function isValidAuthPhone(value: unknown) {
+  const phone = extractAuthPhone(value);
+  return /^\+?\d{5,20}$/.test(phone);
+}
+
+function authActionTime(record: any) {
+  return record?.auth_action_at
+    || (record?.authorization_status === 'revoked' ? record?.revoked_at : record?.granted_at)
+    || record?.granted_at
+    || record?.revoked_at
+    || record?.last_visited_at
+    || record?.first_visited_at
+    || record?.visited_at
+    || '';
+}
+
+function authActionUser(record: any) {
+  return record?.auth_action_by_name
+    || (record?.authorization_status === 'revoked' ? record?.revoked_by_name : record?.granted_by_name)
+    || record?.granted_by_name
+    || record?.revoked_by_name
+    || '-';
 }
 
 function folderNameError(name: string) {
@@ -409,6 +454,7 @@ function uploadSizeLimitText() {
 
 export default function OnlineCoursePage() {
   const router = useRouter();
+  const pathname = usePathname();
   const { message, modal } = App.useApp();
   const [series, setSeries] = useState<SeriesRow[]>([]);
   const [lessons, setLessons] = useState<LessonRow[]>([]);
@@ -447,6 +493,10 @@ export default function OnlineCoursePage() {
   const [seriesModalOpen, setSeriesModalOpen] = useState(false);
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [batchAuthModalOpen, setBatchAuthModalOpen] = useState(false);
+  const [authMemberModalOpen, setAuthMemberModalOpen] = useState(false);
+  const [authEditingMember, setAuthEditingMember] = useState<Member | null>(null);
+  const [authMemberSaving, setAuthMemberSaving] = useState(false);
   const [authDetailOpen, setAuthDetailOpen] = useState(false);
   const [authDetailRecord, setAuthDetailRecord] = useState<any | null>(null);
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
@@ -481,6 +531,8 @@ export default function OnlineCoursePage() {
   const [seriesForm] = Form.useForm();
   const [lessonForm] = Form.useForm();
   const [authForm] = Form.useForm();
+  const [batchAuthForm] = Form.useForm();
+  const [authMemberForm] = Form.useForm();
   const [materialForm] = Form.useForm();
   const [folderForm] = Form.useForm();
   const seriesCoverImage = Form.useWatch('cover_image', seriesForm);
@@ -491,6 +543,10 @@ export default function OnlineCoursePage() {
       || folders.find(item => Number(item.id) === Number(selectedFolderId));
   const selectedMaterialFolderIds = folderMergedIds(selectedMaterialFolder);
   const selectedMaterialFolderParam = selectedFolderId === 'all' ? 'all' : selectedMaterialFolderIds.join(',');
+  const allMaterialCount = Number(storageStats?.material_count || materialTotalRows || 0);
+  const currentMaterialCount = selectedFolderId === 'all'
+    ? allMaterialCount
+    : Number(selectedMaterialFolder?.material_count || 0);
 
   const openFolderModal = (parentId?: number) => {
     setEditingFolder(null);
@@ -514,6 +570,7 @@ export default function OnlineCoursePage() {
       sort_order: materialSortOrder,
       folder_id: selectedMaterialFolderParam,
       type: materialType,
+      keyword: materialKeyword.trim(),
     };
     const [materialPayload, storagePayload] = await Promise.all([
       onlineCourseApi.getMaterials(params).catch(() => ({ data: [], total: 0 })),
@@ -522,7 +579,7 @@ export default function OnlineCoursePage() {
     setMaterials(pickArray(materialPayload));
     setMaterialTotalRows(Number((materialPayload as any)?.total || 0));
     if (storagePayload) setStorageStats(storagePayload);
-  }, [materialPage, materialPageSize, materialSortBy, materialSortOrder, selectedMaterialFolderParam, materialType]);
+  }, [materialPage, materialPageSize, materialSortBy, materialSortOrder, selectedMaterialFolderParam, materialType, materialKeyword]);
 
   const load = () => {
     setLoading(true);
@@ -536,6 +593,7 @@ export default function OnlineCoursePage() {
         sort_order: materialSortOrder,
         folder_id: selectedMaterialFolderParam,
         type: materialType,
+        keyword: materialKeyword.trim(),
       }).catch(() => ({ data: [], total: 0 })),
       onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] })),
       onlineCourseApi.getDashboard().catch(() => ({ data: null })),
@@ -573,24 +631,34 @@ export default function OnlineCoursePage() {
   useEffect(() => {
     setMaterialPage(1);
     setSelectedMaterialIds([]);
-  }, [selectedFolderId, materialType]);
+  }, [selectedFolderId, materialType, materialKeyword]);
 
   const syncTabFromUrl = () => {
+    const currentPath = window.location.pathname;
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
     const seriesId = Number(params.get('seriesId') || 0);
     if (seriesId) setSelectedSeriesId(seriesId);
-    if (tab === 'auth') setAuthSeriesId(seriesId || 'all');
     if (tab === 'lessons') {
       setActiveTab('series');
-      router.replace('/online-course?tab=series');
+      router.replace('/online-course');
       return;
     }
     if (tab === 'miniapp') {
       router.replace('/miniprogram');
       return;
     }
-    if (tab && topTabs.includes(tab)) setActiveTab(tab);
+    if (tab && topTabs.includes(tab)) {
+      setActiveTab(tab);
+      if (tab === 'auth') setAuthSeriesId(seriesId || 'all');
+      if (currentPath === '/online-course' || currentPath === '/online-course/') {
+        router.replace(pathForTopTab(tab, seriesId));
+      }
+      return;
+    }
+    const pathTab = tabFromOnlineCoursePath(currentPath);
+    setActiveTab(pathTab);
+    if (pathTab === 'auth') setAuthSeriesId(seriesId || 'all');
   };
 
   useEffect(() => {
@@ -598,11 +666,11 @@ export default function OnlineCoursePage() {
     const handleTopFeatureChange = (event: Event) => {
       const key = (event as CustomEvent<string>).detail || '';
       if (!key.startsWith('/online-course')) return;
-      const params = new URLSearchParams(key.split('?')[1] || '');
+      const url = new URL(key, window.location.origin);
+      const params = url.searchParams;
       const tab = params.get('tab');
       const seriesId = Number(params.get('seriesId') || 0);
       if (seriesId) setSelectedSeriesId(seriesId);
-      if (tab === 'auth') setAuthSeriesId(seriesId || 'all');
       if (tab === 'lessons') {
         setActiveTab('series');
         return;
@@ -611,7 +679,12 @@ export default function OnlineCoursePage() {
         router.replace('/miniprogram');
         return;
       }
-      if (tab && topTabs.includes(tab)) setActiveTab(tab);
+      const nextTab = tab && topTabs.includes(tab) ? tab : tabFromOnlineCoursePath(url.pathname);
+      setActiveTab(nextTab);
+      if (nextTab === 'auth') setAuthSeriesId(seriesId || 'all');
+      if (tab && topTabs.includes(tab)) {
+        router.replace(pathForTopTab(tab, seriesId));
+      }
     };
     window.addEventListener('popstate', syncTabFromUrl);
     window.addEventListener('admin-top-feature-change', handleTopFeatureChange);
@@ -620,6 +693,15 @@ export default function OnlineCoursePage() {
       window.removeEventListener('admin-top-feature-change', handleTopFeatureChange);
     };
   }, []);
+
+  useEffect(() => {
+    const nextTab = tabFromOnlineCoursePath(pathname);
+    setActiveTab(nextTab);
+    if (nextTab === 'auth' && typeof window !== 'undefined') {
+      const seriesId = Number(new URLSearchParams(window.location.search).get('seriesId') || 0);
+      setAuthSeriesId(seriesId || 'all');
+    }
+  }, [pathname]);
 
   const loadAuthRows = useCallback(async () => {
     if (!series.length) {
@@ -691,23 +773,135 @@ export default function OnlineCoursePage() {
 
   const filteredAuthorizedStudents = useMemo(() => {
     const q = authKeyword.trim().toLowerCase();
-    return authorizedStudents.filter(item => {
-      const matchStatus = authFilter === 'authorized' ? item.authorized : authFilter === 'unauthorized' ? !item.authorized : true;
-      const matchKeyword = !q || [item.name, item.phone, item.series_name, item.auth_type, item.type].some(value => String(value || '').toLowerCase().includes(q));
-      return matchStatus && matchKeyword;
-    });
+    return authorizedStudents
+      .filter(item => {
+        const matchStatus = authFilter === 'authorized' ? item.authorized : authFilter === 'unauthorized' ? !item.authorized : true;
+        const matchKeyword = !q || [item.name, item.phone, item.series_name, item.auth_type, item.type].some(value => String(value || '').toLowerCase().includes(q));
+        return matchStatus && matchKeyword;
+      })
+      .sort((a, b) => String(authActionTime(b)).localeCompare(String(authActionTime(a))) || Number(b.authorization_id || 0) - Number(a.authorization_id || 0));
   }, [authorizedStudents, authFilter, authKeyword]);
 
-  const filteredMaterials = useMemo(() => {
-    const q = materialKeyword.trim().toLowerCase();
-    const selectedFolderIds = new Set(selectedMaterialFolderIds);
-    return materials.filter(item => {
-      const matchKeyword = !q || [item.name, item.type, item.folder_name].some(value => String(value || '').toLowerCase().includes(q));
-      const matchFolder = selectedFolderId === 'all' || selectedFolderIds.has(Number(item.folder_id || 0));
-      const matchType = materialType === 'all' || item.type === materialType;
-      return matchKeyword && matchFolder && matchType;
+  const findAuthMember = useCallback((record: any): Member | null => {
+    const memberId = String(record?.member_id || record?.id || '');
+    const phone = normalizeAuthPhone(record?.phone);
+    const matched = members.find(item => String(item.id) === memberId)
+      || members.find(item => normalizeAuthPhone(item.phone) === phone);
+    if (matched) return matched;
+    if (!memberId && !phone) return null;
+    return {
+      id: memberId || String(record?.phone || ''),
+      name: record?.name || '',
+      phone: record?.phone || '',
+      level: record?.level || '普通学员',
+      status: record?.status || '正常',
+      city: record?.city || '',
+      country: record?.country || '中国',
+      registerDate: record?.register_date || '',
+      totalSpent: 0,
+      courseCount: 0,
+      growth: 0,
+      lastActiveAt: '',
+      raw: record,
+    };
+  }, [members]);
+
+  const openAuthMemberModal = useCallback((record: any) => {
+    const member = findAuthMember(record);
+    if (!member?.id) {
+      message.warning('未找到该学员档案');
+      return;
+    }
+    setAuthEditingMember(member);
+    authMemberForm.setFieldsValue({
+      name: member.name || record?.name || '',
+      phone: member.phone || record?.phone || '',
+      gender: String(member.raw?.gender || ''),
+      level: member.level || '普通学员',
+      country: member.country || String(member.raw?.country || '中国'),
+      province: String(member.raw?.province || ''),
+      city: member.city || String(member.raw?.city || ''),
+      address: String(member.raw?.address || ''),
+      remark: String(member.raw?.remark || ''),
     });
-  }, [materials, materialKeyword, selectedFolderId, selectedMaterialFolderParam, materialType]);
+    setAuthMemberModalOpen(true);
+  }, [authMemberForm, findAuthMember, message]);
+
+  const saveAuthMemberProfile = async () => {
+    const member = authEditingMember;
+    if (!member?.id) {
+      message.warning('未找到学员档案，无法保存');
+      return;
+    }
+    const values = await authMemberForm.validateFields();
+    setAuthMemberSaving(true);
+    try {
+      const payload = {
+        name: String(values.name || '').trim(),
+        phone: String(values.phone || '').trim(),
+        gender: values.gender || '',
+        level: values.level || '普通学员',
+        country: values.country || '中国',
+        province: values.province || '',
+        city: values.city || '',
+        address: values.address || '',
+        remark: values.remark || '',
+        birthday: String(member.raw?.birthday || ''),
+        register_date: String(member.raw?.register_date || member.registerDate || ''),
+        avatar: String(member.raw?.avatar || member.avatar || ''),
+        previousAvatar: String(member.raw?.avatar || member.avatar || ''),
+      };
+      await platformAdapter.updateMember(member.id, payload);
+      setMembers(prev => prev.map(item => String(item.id) === String(member.id)
+        ? {
+          ...item,
+          name: payload.name,
+          phone: payload.phone,
+          level: payload.level,
+          country: payload.country,
+          city: payload.city,
+          raw: { ...(item.raw || {}), ...payload },
+        }
+        : item));
+      setAuthorizedStudents(prev => prev.map(row => {
+        const sameMember = String(row.member_id || row.id || '') === String(member.id);
+        const samePhone = normalizeAuthPhone(row.phone) === normalizeAuthPhone(member.phone);
+        return sameMember || samePhone ? { ...row, name: payload.name, phone: payload.phone, level: payload.level } : row;
+      }));
+      message.success('学员档案已保存');
+      setAuthMemberModalOpen(false);
+      setAuthEditingMember(null);
+    } catch (err) {
+      message.error(apiError(err));
+    } finally {
+      setAuthMemberSaving(false);
+    }
+  };
+
+  const memberAuthOptions = useMemo(() => members.map(item => ({
+    value: `${item.name || '未命名学员'}${item.phone ? ` · ${item.phone}` : ''}`,
+    label: `${item.name || '未命名学员'}${item.phone ? ` · ${item.phone}` : ''}`,
+    memberId: Number(item.id),
+    searchText: `${item.name || ''} ${item.phone || ''}`,
+  })), [members]);
+
+  const resolveAuthSubject = (value: unknown, selectedMemberId?: unknown) => {
+    const selectedId = Number(selectedMemberId || 0);
+    if (selectedId > 0) return { memberId: selectedId, phone: '' };
+    const raw = String(value || '').trim();
+    const memberMatch = raw.match(/^member:(\d+)$/);
+    if (memberMatch) return { memberId: Number(memberMatch[1]), phone: '' };
+
+    const normalized = extractAuthPhone(raw);
+    const matchedMember = members.find(item => normalizeAuthPhone(item.phone) === normalized);
+    if (matchedMember?.id) return { memberId: Number(matchedMember.id), phone: '' };
+    if (isValidAuthPhone(raw)) return { memberId: 0, phone: normalized };
+    return { memberId: 0, phone: '' };
+  };
+
+  const filteredMaterials = useMemo(() => {
+    return materials;
+  }, [materials]);
 
   const filteredFolders = useMemo(() => {
     const q = folderKeyword.trim().toLowerCase();
@@ -792,19 +986,30 @@ export default function OnlineCoursePage() {
 
   const openSeriesModal = (record?: SeriesRow) => {
     setEditingSeries(record || null);
-    seriesForm.setFieldsValue(record ? { ...record, is_free: Boolean(record.is_free) } : { status: 'draft', price: 0, promo_price: 0, trial_count: 0, is_free: false });
+    seriesForm.resetFields();
+    seriesForm.setFieldsValue(record ? {
+      ...record,
+      cover_image: record.cover_image || '',
+      teacher: record.teacher || '',
+      price: Number(record.price || 0),
+      promo_price: Number(record.promo_price || 0),
+      trial_count: Number(record.trial_count || 0),
+      is_free: Boolean(record.is_free),
+      status: record.status || 'draft',
+    } : {
+      name: '',
+      subtitle: '',
+      description: '',
+      rich_description: '',
+      cover_image: '',
+      teacher: '伊娃',
+      status: 'draft',
+      price: 0,
+      promo_price: 0,
+      trial_count: 0,
+      is_free: false,
+    });
     setSeriesModalOpen(true);
-  };
-
-  const openSeriesAuthorization = (record: SeriesRow) => {
-    setSelectedSeriesId(record.id);
-    setAuthSeriesId(record.id);
-    setSelectedAuthIds([]);
-    setActiveTab('auth');
-    const params = new URLSearchParams(window.location.search);
-    params.set('tab', 'auth');
-    params.set('seriesId', String(record.id));
-    router.replace(`/online-course?${params.toString()}`);
   };
 
   const openLessonModal = (record?: LessonRow) => {
@@ -844,26 +1049,7 @@ export default function OnlineCoursePage() {
 
   const persistSeriesCoverImage = async (source: string, silent = false) => {
     seriesForm.setFieldValue('cover_image', source);
-    if (!editingSeries) {
-      if (!silent) message.success('已填入课程主图，保存课程后生效');
-      return;
-    }
-
-    const values = seriesForm.getFieldsValue(true);
-    const payload = {
-      ...editingSeries,
-      ...values,
-      cover_image: source,
-      share_image: editingSeries.share_image || '',
-      category: editingSeries.category || '',
-      trial_count: editingSeries.trial_count || 0,
-      is_free: editingSeries.is_free || 0,
-      share_text: editingSeries.share_text || '',
-    };
-    await onlineCourseApi.updateSeries(editingSeries.id, payload);
-    setEditingSeries(prev => prev ? { ...prev, cover_image: source } : prev);
-    setSeries(prev => prev.map(item => item.id === editingSeries.id ? { ...item, cover_image: source } : item));
-    if (!silent) message.success('课程主图已自动保存');
+    if (!silent) message.success('已填入课程主图，点击确定保存');
   };
 
   const uploadSeriesCoverImage = async (file: RcFile) => {
@@ -871,18 +1057,21 @@ export default function OnlineCoursePage() {
       message.warning('请选择图片文件');
       return;
     }
+    if (file.size > MAX_COURSE_COVER_SIZE) {
+      message.error('图片太大，不能超过2M');
+      return;
+    }
     setCoverUploading(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('courseName', seriesForm.getFieldValue('name') || editingSeries?.name || '课程主图');
-      formData.append('oldCoverImage', seriesForm.getFieldValue('cover_image') || editingSeries?.cover_image || '');
       const result = await onlineCourseApi.uploadSeriesCover(formData);
       const source = result?.data?.coverImage || result?.coverImage;
       if (!source) throw new Error('上传成功，但没有返回图片地址');
       await persistSeriesCoverImage(source, true);
       setCoverPickerOpen(false);
-      message.success(editingSeries ? '图片已上传并自动保存为课程主图' : '图片已上传并填入课程主图');
+      message.success('图片已上传并填入课程主图，点击确定保存');
     } catch (err) {
       message.error(apiError(err));
     } finally {
@@ -982,19 +1171,43 @@ export default function OnlineCoursePage() {
     const values = await seriesForm.validateFields();
     setSaving(true);
     try {
+      const name = String(values.name || '').trim();
+      if (!name) {
+        message.warning('请输入课程名称');
+        return;
+      }
       const payload = {
-        ...values,
+        name,
+        subtitle: String(values.subtitle || '').trim(),
+        description: values.description || '',
+        rich_description: values.rich_description || '',
+        cover_image: values.cover_image || '',
+        teacher: String(values.teacher || '').trim(),
+        status: values.status || 'draft',
+        price: Number(values.price || 0),
+        promo_price: Number(values.promo_price || 0),
         share_image: editingSeries?.share_image || '',
         category: editingSeries?.category || '',
-        trial_count: editingSeries?.trial_count || 0,
-        is_free: editingSeries?.is_free || 0,
+        trial_count: Number(values.trial_count ?? editingSeries?.trial_count ?? 0),
+        is_free: values.is_free ? 1 : 0,
         share_text: editingSeries?.share_text || '',
       };
-      if (editingSeries) await onlineCourseApi.updateSeries(editingSeries.id, payload);
-      else await onlineCourseApi.createSeries(payload);
+      const result = editingSeries
+        ? await onlineCourseApi.updateSeries(editingSeries.id, payload)
+        : await onlineCourseApi.createSeries(payload);
+      const savedSeries = result?.data || result?.series || null;
       message.success(editingSeries ? '课程已更新' : '课程已新建');
       setSeriesModalOpen(false);
-      load();
+      seriesForm.resetFields();
+      if (savedSeries?.id) {
+        const nextRow = { ...(editingSeries || {}), ...savedSeries };
+        setSeries(prev => editingSeries
+          ? prev.map(item => item.id === editingSeries.id ? { ...item, ...nextRow } : item)
+          : [nextRow as SeriesRow, ...prev]);
+        setEditingSeries(null);
+      } else {
+        await load();
+      }
     } catch (err) {
       message.error(apiError(err));
     } finally {
@@ -1096,13 +1309,61 @@ export default function OnlineCoursePage() {
 
   const saveAuthorization = async () => {
     const values = await authForm.validateFields();
+    const subject = resolveAuthSubject(values.member_lookup, values.member_lookup_id);
+    if (!subject.memberId && !subject.phone) {
+      message.warning('请选择学员，或输入手机号进行授权');
+      return;
+    }
     setSaving(true);
     try {
-      if (values.member_id) await onlineCourseApi.authorizeMember(values.series_id, { member_id: values.member_id, type: values.type || 'admin_grant', remark: values.remark || '' });
-      else await onlineCourseApi.authorizePhone(values.series_id, { phone: values.phone, type: 'phone_grant', remark: values.remark || '' });
+      if (subject.memberId) await onlineCourseApi.authorizeMember(values.series_id, { member_id: subject.memberId, type: 'admin_grant', remark: values.remark || '' });
+      else await onlineCourseApi.authorizePhone(values.series_id, { phone: subject.phone, type: 'admin_grant', remark: values.remark || '' });
       message.success('授权已生效');
       setAuthModalOpen(false);
       setAuthSeriesId(Number(values.series_id));
+      await loadAuthRows();
+    } catch (err) {
+      message.error(apiError(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveBatchCourseAuthorization = async () => {
+    const values = await batchAuthForm.validateFields();
+    const seriesIds = Array.isArray(values.series_ids) ? values.series_ids.filter(Boolean) : [];
+    const subject = resolveAuthSubject(values.member_lookup, values.member_lookup_id);
+    if (!subject.memberId && !subject.phone) {
+      message.warning('请选择学员，或输入手机号进行授权');
+      return;
+    }
+    if (!seriesIds.length) {
+      message.warning('请选择要授权的课程');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (subject.memberId) {
+        await Promise.all(seriesIds.map((seriesId: number) => (
+          onlineCourseApi.authorizeMember(seriesId, {
+            member_id: subject.memberId,
+            type: 'admin_grant',
+            remark: values.remark || '',
+          })
+        )));
+      } else {
+        await Promise.all(seriesIds.map((seriesId: number) => (
+          onlineCourseApi.authorizePhone(seriesId, {
+            phone: subject.phone,
+            type: 'admin_grant',
+            remark: values.remark || '',
+          })
+        )));
+      }
+      message.success(`已批量授权 ${seriesIds.length} 门课程`);
+      setBatchAuthModalOpen(false);
+      batchAuthForm.resetFields();
       await loadAuthRows();
     } catch (err) {
       message.error(apiError(err));
@@ -1508,7 +1769,15 @@ export default function OnlineCoursePage() {
       }
       const folderPayload = await onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] }));
       setFolders(pickFolderRows(folderPayload));
-      const materialPayload = await onlineCourseApi.getMaterials({ page: materialPage, pageSize: materialPageSize, sort_by: materialSortBy, sort_order: materialSortOrder, folder_id: selectedFolderId, type: materialType }).catch(() => ({ data: [] }));
+      const materialPayload = await onlineCourseApi.getMaterials({
+        page: materialPage,
+        pageSize: materialPageSize,
+        sort_by: materialSortBy,
+        sort_order: materialSortOrder,
+        folder_id: selectedMaterialFolderParam,
+        type: materialType,
+        keyword: materialKeyword.trim(),
+      }).catch(() => ({ data: [] }));
       setMaterials(pickArray(materialPayload));
       setMaterialTotalRows(Number((materialPayload as any)?.total || 0));
     } catch (err) {
@@ -1563,11 +1832,12 @@ export default function OnlineCoursePage() {
         activeKey={activeTab}
         onChange={(key) => {
           setActiveTab(key);
-          const nextPath = `/online-course?tab=${key}`;
+          const nextPath = pathForTopTab(key);
           router.replace(nextPath);
           window.dispatchEvent(new CustomEvent('admin-top-feature-change', { detail: nextPath }));
         }}
         className="oc-tabs"
+        tabBarStyle={{ display: 'none' }}
         items={[
           {
             key: 'materials',
@@ -1578,7 +1848,19 @@ export default function OnlineCoursePage() {
                   <Card
                     className="oc-material-folder-card"
                     title="素材文件夹"
-                    extra={<Button size="small" icon={<PlusOutlined />} onClick={() => openFolderModal()} />}
+                    extra={
+                      <Space size={4}>
+                        <Tooltip title="新建文件夹">
+                          <Button size="small" icon={<PlusOutlined />} aria-label="新建文件夹" onClick={() => openFolderModal(currentMaterialFolder?.id || 0)} />
+                        </Tooltip>
+                        <Tooltip title="编辑当前文件夹">
+                          <Button size="small" icon={<EditOutlined />} aria-label="编辑当前文件夹" disabled={!currentMaterialFolder} onClick={() => currentMaterialFolder && openEditFolderModal(currentMaterialFolder)} />
+                        </Tooltip>
+                        <Tooltip title="删除当前文件夹">
+                          <Button size="small" danger icon={<DeleteOutlined />} aria-label="删除当前文件夹" disabled={!currentMaterialFolder} onClick={deleteCurrentFolder} />
+                        </Tooltip>
+                      </Space>
+                    }
                   >
                     <Space className="oc-folder-list" direction="vertical" size={6} style={{ width: '100%' }}>
                       <Input.Search
@@ -1588,11 +1870,19 @@ export default function OnlineCoursePage() {
                         value={folderKeyword}
                         onChange={event => setFolderKeyword(event.target.value)}
                       />
-                      <Button block type={selectedFolderId === 'all' ? 'primary' : 'default'} icon={<FolderOutlined />} onClick={() => setSelectedFolderId('all')}>全部素材</Button>
+                      <Button block type={selectedFolderId === 'all' ? 'primary' : 'default'} icon={<FolderOutlined />} onClick={() => setSelectedFolderId('all')}>
+                        <span className="oc-folder-button-content">
+                          <span className="oc-folder-button-label">全部素材</span>
+                          <span className="oc-folder-button-count">{allMaterialCount}</span>
+                        </span>
+                      </Button>
                       {filteredFolders.length ? (
                         filteredFolders.map(folder => (
                           <Button key={folder.id} block type={selectedFolderId === folder.id ? 'primary' : 'default'} icon={<FolderOutlined />} onClick={() => setSelectedFolderId(folder.id)}>
-                            {folderLabel(folder)}
+                            <span className="oc-folder-button-content">
+                              <span className="oc-folder-button-label">{folderLabel(folder)}</span>
+                              <span className="oc-folder-button-count">{Number(folder.material_count || 0)}</span>
+                            </span>
                           </Button>
                         ))
                       ) : (
@@ -1608,24 +1898,12 @@ export default function OnlineCoursePage() {
                       <Space className="oc-material-title" size={8} align="center">
                         <span className="oc-material-title-prefix">素材中心</span>
                         <span className="oc-material-current-folder">{currentMaterialFolderName}</span>
+                        <span className="oc-material-current-count">共 {currentMaterialCount} 个</span>
                       </Space>
                     }
                     extra={
                       <Space className="oc-material-toolbar" wrap>
                         <Button type="primary" icon={<CloudUploadOutlined />} onClick={openUploadModal}>上传素材</Button>
-                        {currentMaterialFolder ? (
-                          <>
-                            <Button size="small" icon={<PlusOutlined />} onClick={() => openFolderModal(currentMaterialFolder.id)}>新建子文件夹</Button>
-                            <Tooltip title="重命名当前文件夹">
-                              <Button size="small" icon={<EditOutlined />} onClick={() => openEditFolderModal(currentMaterialFolder)}>重命名</Button>
-                            </Tooltip>
-                            <Tooltip title="删除当前文件夹">
-                              <Button size="small" danger icon={<DeleteOutlined />} title="删除当前文件夹" aria-label="删除当前文件夹" onClick={deleteCurrentFolder} />
-                            </Tooltip>
-                          </>
-                        ) : (
-                          <Button size="small" icon={<PlusOutlined />} onClick={() => openFolderModal(0)}>新建文件夹</Button>
-                        )}
                         <Radio.Group
                           size="small"
                           value={materialViewMode}
@@ -1922,7 +2200,6 @@ export default function OnlineCoursePage() {
                           <Space onClick={event => event.stopPropagation()}>
                             <Button size="small" icon={<EditOutlined />} onClick={() => openSeriesModal(record)} title="课程编辑">编辑</Button>
                             <Button size="small" icon={<PlayCircleOutlined />} href={`/online-course/${record.id}?tab=lessons`} title="进入课程工作台 · 课节编辑">课节</Button>
-                            <Button size="small" icon={<EyeOutlined />} onClick={() => openSeriesAuthorization(record)} title="进入该课程授权管理">授权</Button>
                             <Button size="small" danger icon={<DeleteOutlined />} title="删除" aria-label="删除" onClick={() => confirmDelete('确定删除此课程及关联课节吗？', () => onlineCourseApi.deleteSeries(record.id))} />
                           </Space>
                         ),
@@ -1973,7 +2250,8 @@ export default function OnlineCoursePage() {
                       <Input.Search allowClear size="small" placeholder="搜索姓名 / 手机号" value={authKeyword} onChange={event => setAuthKeyword(event.target.value)} style={{ width: 190 }} />
                       <Button size="small" disabled={!selectedAuthIds.length || authSeriesId === 'all'} onClick={batchAuthorizeSelected}>批量授权</Button>
                       <Button size="small" danger disabled={!selectedAuthIds.length || authSeriesId === 'all'} onClick={batchCancelAuthorization}>批量取消授权</Button>
-                      <Button type="primary" size="small" icon={<UserSwitchOutlined />} onClick={() => { authForm.resetFields(); authForm.setFieldsValue({ series_id: authSeriesId === 'all' ? undefined : authSeriesId, type: 'admin_grant' }); setAuthModalOpen(true); }}>新增授权</Button>
+                      <Button type="primary" size="small" icon={<UserSwitchOutlined />} onClick={() => { authForm.resetFields(); authForm.setFieldsValue({ series_id: authSeriesId === 'all' ? undefined : authSeriesId }); setAuthModalOpen(true); }}>新增授权</Button>
+                      <Button type="primary" size="small" ghost icon={<UserSwitchOutlined />} onClick={() => { batchAuthForm.resetFields(); batchAuthForm.setFieldsValue({ series_ids: authSeriesId === 'all' ? [] : [authSeriesId] }); setBatchAuthModalOpen(true); }}>新增批量授权</Button>
                     </Space>
                   }
                   styles={{ body: { padding: 0 } }}
@@ -1983,39 +2261,49 @@ export default function OnlineCoursePage() {
                     size="middle"
                     dataSource={filteredAuthorizedStudents}
                     rowSelection={{ selectedRowKeys: selectedAuthIds, onChange: keys => setSelectedAuthIds(keys as Array<string | number>) }}
-                    scroll={{ x: 980 }}
+                    scroll={{ x: 860 }}
                     pagination={{ pageSize: 20 }}
                     locale={{ emptyText: <Empty description="暂无授权学员；可用右上角新增授权" /> }}
                     columns={[
                       { title: '学员', dataIndex: 'name', fixed: 'left', width: 130, render: value => <Text strong>{value || '-'}</Text> },
-                      { title: '手机号', dataIndex: 'phone', width: 140 },
-                      { title: '授权课程', width: 220, render: (_, record) => record.series_name || currentAuthSeries?.name || '-' },
                       {
-                        title: '访问记录',
-                        dataIndex: 'visit_count',
-                        width: 180,
-                        render: (_, record) => {
-                          const text = visitRecordText(record);
-                          return text === '-' ? '-' : (
-                            <Button
-                              type="link"
-                              size="small"
-                              onClick={() => {
-                                setAuthDetailRecord(record);
-                                setAuthDetailOpen(true);
-                              }}
+                        title: '手机号',
+                        dataIndex: 'phone',
+                        width: 140,
+                        render: (value, record) => (
+                          <Button
+                            type="link"
+                            size="small"
+                            onClick={() => openAuthMemberModal(record)}
+                            style={{ padding: 0, height: 'auto' }}
+                          >
+                            {value || '-'}
+                          </Button>
+                        ),
+                      },
+                      { title: '授权课程', width: 220, render: (_, record) => record.series_name || currentAuthSeries?.name || '-' },
+                      { title: '访问来源', width: 150, render: (_, record) => accessSourceText(record) },
+                      { title: '授权人', width: 120, render: (_, record) => authActionUser(record) },
+                      { title: '授权时间', width: 160, render: (_, record) => authActionTime(record) ? String(authActionTime(record)).slice(0, 16) : '-' },
+                      {
+                        title: '操作',
+                        dataIndex: 'authorized',
+                        width: 120,
+                        render: (value, record) => {
+                          const label = value ? '取消授权' : '授权';
+                          const color = value ? 'red' : 'green';
+                          return (
+                            <Tag
+                              color={color}
+                              onClick={() => toggleAuthorization(record)}
+                              style={{ cursor: 'pointer', userSelect: 'none' }}
+                              title={value ? '点击取消授权' : '点击授权'}
                             >
-                              {text}
-                            </Button>
+                              {label}
+                            </Tag>
                           );
                         },
                       },
-                      { title: '访问来源', width: 150, render: (_, record) => accessSourceText(record) },
-                      { title: '授权人', dataIndex: 'granted_by_name', width: 120, render: value => value || '-' },
-                      { title: '授权时间', dataIndex: 'granted_at', width: 160, render: value => value ? String(value).slice(0, 16) : '-' },
-                      { title: '授权次数', width: 100, render: (_, record) => record.grant_history?.grant_count || 0 },
-                      { title: '撤销次数', width: 100, render: (_, record) => record.grant_history?.revoke_count || 0 },
-                      { title: '授权状态', dataIndex: 'authorized', width: 110, render: (value, record) => <Tag color={value ? 'green' : 'red'} onClick={() => toggleAuthorization(record)} style={{ cursor: 'pointer', userSelect: 'none' }} title={value ? '点击取消授权' : '点击授权'}>{value ? '已授权' : '未授权'}</Tag> },
                     ]}
                   />
                 </Card>
@@ -2042,7 +2330,7 @@ export default function OnlineCoursePage() {
               </Space>
             ),
           },
-        ].sort((a, b) => topTabOrder[a.key] - topTabOrder[b.key])}
+        ].sort((a, b) => topTabOrder[a.key] - topTabOrder[b.key]).filter(item => item.key === activeTab)}
       />
 
       <Modal
@@ -2441,10 +2729,180 @@ export default function OnlineCoursePage() {
         <Form form={authForm} layout="vertical">
           <Row gutter={12}>
             <Col xs={24} md={12}><Form.Item name="series_id" label="授权课程" rules={[{ required: true }]}><Select options={series.map(item => ({ value: item.id, label: item.name }))} /></Form.Item></Col>
-            <Col xs={24} md={12}><Form.Item name="type" label="授权类型"><Select options={[{ value: 'admin_grant', label: '后台授权' }, { value: 'phone_grant', label: '电话预授权' }, { value: 'coupon_grant', label: '兑换授权' }]} /></Form.Item></Col>
-            <Col xs={24} md={12}><Form.Item name="member_id" label="选择学员"><Select allowClear showSearch optionFilterProp="label" options={members.map(item => ({ value: Number(item.id), label: `${item.name} ${item.phone || ''}` }))} /></Form.Item></Col>
-            <Col xs={24} md={12}><Form.Item name="phone" label="手机号预授权"><Input placeholder="不选学员时可填手机号" /></Form.Item></Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="member_lookup_id" hidden><Input /></Form.Item>
+              <Form.Item
+                name="member_lookup"
+                label="选择学员 / 输入手机号"
+                rules={[
+                  { required: true, message: '请选择学员，或输入手机号' },
+                  {
+                    validator: (_, value) => {
+                      const subject = resolveAuthSubject(value);
+                      return subject.memberId || subject.phone ? Promise.resolve() : Promise.reject(new Error('请选择学员，或输入有效手机号'));
+                    },
+                  },
+                ]}
+              >
+                <AutoComplete
+                  allowClear
+                  options={memberAuthOptions}
+                  filterOption={(inputValue, option) => String((option as any)?.searchText || (option as any)?.label || '').toLowerCase().includes(inputValue.toLowerCase())}
+                  onSelect={(_, option) => authForm.setFieldsValue({ member_lookup_id: (option as any).memberId || '' })}
+                  onChange={(value) => {
+                    const matched = memberAuthOptions.find(option => option.value === value);
+                    authForm.setFieldsValue({ member_lookup_id: matched?.memberId || '' });
+                  }}
+                  placeholder="搜索姓名/手机号；搜不到可直接输入手机号"
+                />
+              </Form.Item>
+            </Col>
             <Col span={24}><Form.Item name="remark" label="授权备注"><Input.TextArea rows={3} /></Form.Item></Col>
+          </Row>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="新增批量授权"
+        open={batchAuthModalOpen}
+        onCancel={() => setBatchAuthModalOpen(false)}
+        onOk={saveBatchCourseAuthorization}
+        confirmLoading={saving}
+        width={760}
+        destroyOnClose
+      >
+        <Form form={batchAuthForm} layout="vertical">
+          <Row gutter={12}>
+            <Col span={24}>
+              <Form.Item name="member_lookup_id" hidden><Input /></Form.Item>
+              <Form.Item
+                name="member_lookup"
+                label="选择学员 / 输入手机号"
+                rules={[
+                  { required: true, message: '请选择学员，或输入手机号' },
+                  {
+                    validator: (_, value) => {
+                      const subject = resolveAuthSubject(value);
+                      return subject.memberId || subject.phone ? Promise.resolve() : Promise.reject(new Error('请选择学员，或输入有效手机号'));
+                    },
+                  },
+                ]}
+              >
+                <AutoComplete
+                  allowClear
+                  options={memberAuthOptions}
+                  filterOption={(inputValue, option) => String((option as any)?.searchText || (option as any)?.label || '').toLowerCase().includes(inputValue.toLowerCase())}
+                  onSelect={(_, option) => batchAuthForm.setFieldsValue({ member_lookup_id: (option as any).memberId || '' })}
+                  onChange={(value) => {
+                    const matched = memberAuthOptions.find(option => option.value === value);
+                    batchAuthForm.setFieldsValue({ member_lookup_id: matched?.memberId || '' });
+                  }}
+                  placeholder="搜索姓名/手机号；搜不到可直接输入手机号"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item name="series_ids" label="批量授权课程" rules={[{ required: true, message: '请选择要授权的课程' }]}>
+                <Select
+                  mode="multiple"
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="可搜索并选择多个课程"
+                  maxTagCount="responsive"
+                  options={series.map(item => ({ value: item.id, label: item.name }))}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item name="remark" label="授权备注">
+                <Input.TextArea rows={3} placeholder="可填写本次批量授权说明" />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="学员档案"
+        open={authMemberModalOpen}
+        onCancel={() => {
+          setAuthMemberModalOpen(false);
+          setAuthEditingMember(null);
+          authMemberForm.resetFields();
+        }}
+        onOk={saveAuthMemberProfile}
+        confirmLoading={authMemberSaving}
+        width={720}
+        destroyOnClose
+      >
+        <Form form={authMemberForm} layout="vertical">
+          <Row gutter={12}>
+            <Col xs={24} md={12}>
+              <Form.Item name="name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}>
+                <Input placeholder="学员姓名" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="phone"
+                label="手机号"
+                rules={[
+                  { required: true, message: '请输入手机号' },
+                  { pattern: /^\+?[0-9\s()-]{5,24}$/, message: '请输入有效手机号' },
+                ]}
+              >
+                <Input placeholder="可填写国内或国外电话号码" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="gender" label="性别">
+                <Select
+                  allowClear
+                  options={[
+                    { value: '女', label: '女' },
+                    { value: '男', label: '男' },
+                    { value: '未知', label: '未知' },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="level" label="等级">
+                <Select
+                  options={[
+                    { value: '普通学员', label: '普通学员' },
+                    { value: '体验学员', label: '体验学员' },
+                    { value: 'VIP学员', label: 'VIP学员' },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="country" label="国家/地区">
+                <Input placeholder="中国 / 新加坡 / 美国..." />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="province" label="省份">
+                <Input placeholder="省份" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="city" label="城市">
+                <Input placeholder="城市" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="address" label="详细地址">
+                <Input placeholder="街道、门牌号等" />
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item name="remark" label="备注">
+                <Input.TextArea rows={3} placeholder="学员备注" />
+              </Form.Item>
+            </Col>
           </Row>
         </Form>
       </Modal>
@@ -2600,25 +3058,15 @@ export default function OnlineCoursePage() {
             <Descriptions.Item label="学员">{authDetailRecord?.name || '-'}</Descriptions.Item>
             <Descriptions.Item label="手机号">{authDetailRecord?.phone || '-'}</Descriptions.Item>
             <Descriptions.Item label="课程">{authDetailRecord?.series_name || currentSeries?.name || '-'}</Descriptions.Item>
-            <Descriptions.Item label="状态">{authDetailRecord?.authorized ? '已授权' : '未授权'}</Descriptions.Item>
+            <Descriptions.Item label="状态">{authDetailRecord?.authorized ? '已授权' : (authDetailRecord?.authorization_status === 'revoked' ? '已取消' : '未授权')}</Descriptions.Item>
             <Descriptions.Item label="访问来源">{accessSourceText(authDetailRecord)}</Descriptions.Item>
-            <Descriptions.Item label="授权人">{authDetailRecord?.granted_by_name || '-'}</Descriptions.Item>
-            <Descriptions.Item label="授权时间">{authDetailRecord?.granted_at ? String(authDetailRecord.granted_at).slice(0, 16) : '-'}</Descriptions.Item>
-            <Descriptions.Item label="访问记录">{visitRecordText(authDetailRecord)}</Descriptions.Item>
+            <Descriptions.Item label="操作人">{authActionUser(authDetailRecord)}</Descriptions.Item>
+            <Descriptions.Item label="操作时间">{authActionTime(authDetailRecord) ? String(authActionTime(authDetailRecord)).slice(0, 16) : '-'}</Descriptions.Item>
+            <Descriptions.Item label="撤销人">{authDetailRecord?.revoked_by_name || '-'}</Descriptions.Item>
+            <Descriptions.Item label="撤销时间">{authDetailRecord?.revoked_at ? String(authDetailRecord.revoked_at).slice(0, 16) : '-'}</Descriptions.Item>
             <Descriptions.Item label="授权次数">{authDetailRecord?.grant_history?.grant_count || 0}</Descriptions.Item>
             <Descriptions.Item label="撤销次数">{authDetailRecord?.grant_history?.revoke_count || 0}</Descriptions.Item>
           </Descriptions>
-          <Table
-            rowKey={(record: any) => String(record.id || `${record.source}-${record.visited_at}`)}
-            size="small"
-            pagination={false}
-            dataSource={visitRecords(authDetailRecord)}
-            locale={{ emptyText: <Empty description="暂无访问记录" /> }}
-            columns={[
-              { title: '访问时间', dataIndex: 'visited_at', render: formatVisitTime },
-              { title: '访问来源', dataIndex: 'source', render: value => accessSourceText({ visit_source: value }) },
-            ]}
-          />
         </Space>
       </Modal>
     </div>

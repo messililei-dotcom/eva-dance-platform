@@ -14,6 +14,11 @@ export interface Member {
   growth: number;
   lastActiveAt: string;
   avatar?: string;
+  wxAvatarUrl?: string;
+  wxName?: string;
+  wxNickname?: string;
+  wxAccount?: string;
+  wxOpenid?: string;
   raw?: Record<string, unknown>;
 }
 
@@ -89,6 +94,11 @@ export interface FinanceSummary {
   refunds: number;
   byType: Array<{ label: string; value: number; count: number }>;
   recentOrders: UnifiedOrder[];
+  synced?: boolean;
+  expenseByType?: Array<{ label: string; value: number; count: number }>;
+  cashflow?: Array<Record<string, unknown>>;
+  trend?: Array<Record<string, unknown>>;
+  stockAsset?: number;
 }
 
 export interface Course {
@@ -136,6 +146,10 @@ export interface PermissionUser {
   permConsumeCreate?: number | boolean;
   permConsumeEdit?: number | boolean;
   permConsumeDelete?: number | boolean;
+  permOnlineAuthView?: number | boolean;
+  permOnlineAuthCreate?: number | boolean;
+  permOnlineAuthCancel?: number | boolean;
+  permOnlineAuthPhone?: number | boolean;
   permLogView?: number | boolean;
   bonusTraining?: number | boolean;
   bonusCard?: number | boolean;

@@ -264,6 +264,7 @@ type PendingVodTask = {
   diskName: string;
   size: number;
   originalName: string;
+  tempOnly: boolean;
 };
 
 export async function POST(request: Request) {
@@ -346,24 +347,31 @@ export async function POST(request: Request) {
 
         try {
           const dir = path.join(MATERIAL_CENTER_ROOT, String(folderId), type);
+          const isVideo = type === 'video';
+          const vodConfig = isVideo ? getVodConfigStatus() : null;
+          const videoMustUseVod = Boolean(isVideo && vodConfig?.ready);
           await fsp.mkdir(dir, { recursive: true });
 
-          const diskName = await uniqueDiskName(dir, originalName);
-          const absolutePath = path.join(dir, diskName);
-          await fsp.rename(file.tempPath, absolutePath);
-          writtenFiles.push(absolutePath);
+          const diskName = videoMustUseVod ? originalName : await uniqueDiskName(dir, originalName);
+          const absolutePath = videoMustUseVod ? file.tempPath : path.join(dir, diskName);
+          if (!videoMustUseVod) {
+            await fsp.rename(file.tempPath, absolutePath);
+            writtenFiles.push(absolutePath);
+          }
           assertRequestActive();
 
-          const filePath = uploadUrl(...MATERIAL_CENTER_SEGMENTS, folderId, type, encodeURIComponent(diskName));
+          const filePath = videoMustUseVod
+            ? ''
+            : uploadUrl(...MATERIAL_CENTER_SEGMENTS, folderId, type, encodeURIComponent(diskName));
           let thumbnail = '';
-          if (type === 'video') {
+          if (isVideo) {
             const savedThumbnail = saveThumbnailDataUrl(thumbnailDataUrl, dir, diskName);
             if (savedThumbnail) {
               writtenFiles.push(savedThumbnail.absolutePath);
               thumbnail = uploadUrl(...MATERIAL_CENTER_SEGMENTS, folderId, type, encodeURIComponent(savedThumbnail.filename));
             }
           }
-          if (type === 'video' && !thumbnail && size <= MAX_SYNC_THUMBNAIL_VIDEO_SIZE) {
+          if (isVideo && !thumbnail && !videoMustUseVod && size <= MAX_SYNC_THUMBNAIL_VIDEO_SIZE) {
             try {
               const thumbBase = path.basename(absolutePath, path.extname(absolutePath));
               const thumbPath = path.join(dir, `${thumbBase}-thumb-${Date.now()}.jpg`);
@@ -382,10 +390,9 @@ export async function POST(request: Request) {
           let vodMediaId = '';
           let transcodeStatus = 'success';
           let needsVodUpload = false;
-          if (type === 'video') {
+          if (isVideo) {
             const formatWarning = videoFormatWarning(originalName);
-            const vodConfig = getVodConfigStatus();
-            if (vodConfig.ready) {
+            if (vodConfig?.ready) {
               needsVodUpload = true;
               transcodeStatus = 'pending';
               if (formatWarning) {
@@ -394,7 +401,7 @@ export async function POST(request: Request) {
             } else {
               warnings.push({
                 file: originalName,
-                message: `VOD 未配置，已保留本地素材（缺少 ${vodConfig.missingRequired.join(' / ')}）${formatWarning ? `；${formatWarning}` : ''}`,
+                message: `VOD 未配置，已保留本地素材（缺少 ${vodConfig?.missingRequired.join(' / ')}）${formatWarning ? `；${formatWarning}` : ''}`,
               });
               transcodeStatus = DIRECT_PLAYABLE_VIDEO_EXTENSIONS.has(path.extname(originalName).toLowerCase()) ? 'success' : 'failed';
             }
@@ -437,6 +444,7 @@ export async function POST(request: Request) {
               diskName,
               size,
               originalName,
+              tempOnly: videoMustUseVod,
             });
           }
         } finally {
@@ -460,6 +468,9 @@ export async function POST(request: Request) {
               "UPDATE Material SET vod_video_id=?, vod_media_id=?, transcode_status='success', updated_at=datetime('now','localtime') WHERE id=?"
             ).run(uploaded.videoId, uploaded.videoId, task.materialId);
             uploadedVodIds.push(uploaded.videoId);
+            if (task.tempOnly) {
+              await fsp.unlink(task.absolutePath).catch(() => {});
+            }
             const item = created.find(row => row.id === task.materialId);
             if (item) {
               item.vod_video_id = uploaded.videoId;
@@ -469,6 +480,17 @@ export async function POST(request: Request) {
             console.log(`[VOD] 上传完成: ${task.originalName} → ${uploaded.videoId}`);
           } catch (vodErr: any) {
             console.error(`[VOD] 上传失败: ${task.originalName} - ${vodErr?.message || vodErr}`);
+            if (task.tempOnly) {
+              await fsp.unlink(task.absolutePath).catch(() => {});
+              db.prepare('DELETE FROM Material WHERE id=?').run(task.materialId);
+              const index = created.findIndex(row => row.id === task.materialId);
+              if (index >= 0) created.splice(index, 1);
+              warnings.push({
+                file: task.originalName,
+                message: `VOD 上传失败，视频未保存到云服务器系统盘：${cleanText(vodErr?.message, '请稍后重新上传')}`,
+              });
+              continue;
+            }
             const localStatus = DIRECT_PLAYABLE_VIDEO_EXTENSIONS.has(path.extname(task.originalName).toLowerCase()) ? 'success' : 'failed';
             db.prepare(
               "UPDATE Material SET transcode_status=?, updated_at=datetime('now','localtime') WHERE id=?"
@@ -481,6 +503,10 @@ export async function POST(request: Request) {
             });
           }
         }
+      }
+
+      if (!created.length && warnings.length) {
+        throw httpError(warnings[0]?.message || 'VOD 上传失败，视频未保存到云服务器系统盘', 502);
       }
 
       return Response.json({

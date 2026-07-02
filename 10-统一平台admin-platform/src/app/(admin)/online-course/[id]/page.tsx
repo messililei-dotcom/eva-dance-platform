@@ -18,7 +18,6 @@ import {
   Select,
   Space,
   Spin,
-  Statistic,
   Switch,
   Table,
   Tag,
@@ -60,6 +59,8 @@ type MemberRow = Pick<Member, 'id' | 'name' | 'phone' | 'level'>;
 const { Text, Title } = Typography;
 const MAX_UPLOAD_FILE_SIZE = 1024 * 1024 * 1024;
 const BATCH_UPLOAD_CONCURRENCY = 2;
+const MATERIAL_PICKER_PAGE_SIZE = 200;
+const MATERIAL_PICKER_TABLE_PAGE_SIZE = 20;
 
 function formatVisitTime(value: unknown) {
   return value ? String(value).replace('T', ' ').slice(0, 16) : '-';
@@ -138,7 +139,14 @@ type MaterialRow = {
   name: string;
   type?: string;
   folder_id?: number;
+  folderId?: number;
+  material_folder_id?: number;
   folder_name?: string;
+  folderName?: string;
+  original_name?: string;
+  file_name?: string;
+  title?: string;
+  folder?: { id?: number | string; name?: string; title?: string };
   file_path?: string;
   file_url?: string;
   thumbnail?: string;
@@ -176,6 +184,55 @@ function stripFileExtension(value?: string) {
 function folderLabel(folder?: FolderRow) {
   if (!folder) return '全部素材';
   return folder.parent_id === 0 && folder.name === '默认素材' ? '根目录文件夹' : folder.name;
+}
+
+function normalizeMaterialText(value: unknown) {
+  return String(value ?? '').trim().toLowerCase();
+}
+
+function materialFolderId(item: MaterialRow) {
+  const raw = item.folder_id ?? item.folderId ?? item.material_folder_id ?? item.folder?.id;
+  const id = Number(raw);
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
+
+function materialFolderName(item: MaterialRow) {
+  return String(item.folder_name ?? item.folderName ?? item.folder?.name ?? item.folder?.title ?? '').trim();
+}
+
+function materialRowsFromPayload(payload: unknown): MaterialRow[] {
+  const source = payload as any;
+  const candidates = [
+    source?.data?.items,
+    source?.data?.list,
+    source?.data?.rows,
+    source?.data?.materials,
+    source?.data?.data,
+    source?.items,
+    source?.list,
+    source?.rows,
+    source?.materials,
+    source?.data,
+    source,
+  ];
+  const rows = candidates.find(Array.isArray);
+  return rows ? rows : pickArray<MaterialRow>(payload);
+}
+
+function materialMetaFromPayload(payload: unknown) {
+  const source = payload as any;
+  return source?.data?.pagination || source?.data?.meta || source?.pagination || source?.meta || {};
+}
+
+function materialNumberFromPayload(payload: unknown, keys: string[], fallback: number) {
+  const source = payload as any;
+  const meta = materialMetaFromPayload(payload) as any;
+  for (const key of keys) {
+    const value = source?.[key] ?? source?.data?.[key] ?? meta?.[key];
+    const numberValue = Number(value);
+    if (Number.isFinite(numberValue) && numberValue > 0) return numberValue;
+  }
+  return fallback;
 }
 
 function firstMaterial(record: LessonRow) {
@@ -319,7 +376,8 @@ export default function OnlineCourseEditorPage() {
     total: lessons.length,
     duration: lessons.reduce((sum, item) => sum + Number(item.duration || firstMaterial(item)?.duration || 0), 0),
     published: lessons.filter(item => ['published', 'active'].includes(item.local_status || item.status || '')).length,
-  }), [lessons]);
+    students: Number(series?.total_students || 0),
+  }), [lessons, series?.total_students]);
 
   const imageMaterials = useMemo(() => materials.filter(item => item.type === 'image'), [materials]);
 
@@ -331,18 +389,51 @@ export default function OnlineCourseEditorPage() {
   }, [lessons, keyword]);
 
   const filteredMaterials = useMemo(() => {
-    const q = materialKeyword.trim().toLowerCase();
+    const q = normalizeMaterialText(materialKeyword);
+    const selectedFolder =
+      selectedFolderId === 'all'
+        ? undefined
+        : folders.find(folder => Number(folder.id) === Number(selectedFolderId));
+    const selectedFolderName = normalizeMaterialText(selectedFolder?.name);
+    const selectedFolderNumber = Number(selectedFolderId);
+    const isRootFolder =
+      selectedFolderName === normalizeMaterialText('根目录文件夹') ||
+      (selectedFolder?.parent_id === 0 && selectedFolderName === normalizeMaterialText('默认素材'));
+
     return materials.filter(item => {
-      const matchKeyword = !q || [item.name, item.type, item.folder_name].some(value => String(value || '').toLowerCase().includes(q));
+      const itemFolderId = materialFolderId(item);
+      const itemFolderName = normalizeMaterialText(materialFolderName(item));
+      const matchKeyword =
+        !q ||
+        [
+          item.name,
+          item.type,
+          item.folder_name,
+          item.folderName,
+          item.original_name,
+          item.file_name,
+          item.title,
+          materialFolderName(item),
+        ].some(value => normalizeMaterialText(value).includes(q));
       const matchType = materialType === 'all' || item.type === materialType;
-      const matchFolder = selectedFolderId === 'all' || Number(item.folder_id || 0) === Number(selectedFolderId);
+      const matchFolder =
+        selectedFolderId === 'all' ||
+        itemFolderId === selectedFolderNumber ||
+        (!!selectedFolderName &&
+          !!itemFolderName &&
+          (itemFolderName === selectedFolderName ||
+            itemFolderName.includes(selectedFolderName) ||
+            selectedFolderName.includes(itemFolderName))) ||
+        (isRootFolder && !itemFolderId && !itemFolderName);
       return matchKeyword && matchType && matchFolder;
     });
-  }, [materials, materialKeyword, materialType, selectedFolderId]);
+  }, [folders, materials, materialKeyword, materialType, selectedFolderId]);
 
   const filteredImageMaterials = useMemo(() => {
-    const q = materialKeyword.trim().toLowerCase();
-    return imageMaterials.filter(item => !q || [item.name, item.folder_name].some(value => String(value || '').toLowerCase().includes(q)));
+    const q = normalizeMaterialText(materialKeyword);
+    return imageMaterials.filter(
+      item => !q || [item.name, materialFolderName(item)].some(value => normalizeMaterialText(value).includes(q)),
+    );
   }, [imageMaterials, materialKeyword]);
 
   const referencedMaterialIdList = useMemo(() => {
@@ -376,17 +467,55 @@ export default function OnlineCourseEditorPage() {
     [selectedAuthRecords],
   );
 
+  const loadAllMaterials = async (): Promise<MaterialRow[]> => {
+    const fetchPage = (page: number, pageSize: number) => onlineCourseApi.getMaterials({ page, pageSize });
+    const firstPayload = await fetchPage(1, MATERIAL_PICKER_PAGE_SIZE);
+    const firstRows = materialRowsFromPayload(firstPayload);
+    const total = materialNumberFromPayload(firstPayload, ['total', 'totalCount', 'count'], firstRows.length);
+    const pageSize = Math.min(
+      materialNumberFromPayload(firstPayload, ['pageSize', 'limit'], MATERIAL_PICKER_PAGE_SIZE),
+      MATERIAL_PICKER_PAGE_SIZE,
+    );
+    const pageCount = Math.ceil(total / Math.max(1, pageSize));
+    const payloads = [firstPayload];
+
+    if (pageCount > 1) {
+      const restPayloads = await Promise.all(
+        Array.from({ length: pageCount - 1 }, (_, index) => fetchPage(index + 2, pageSize)),
+      );
+      payloads.push(...restPayloads);
+    } else if (firstRows.length >= pageSize) {
+      for (let page = 2; page <= 20; page += 1) {
+        const payload = await fetchPage(page, pageSize);
+        const rows = materialRowsFromPayload(payload);
+        if (!rows.length) break;
+        payloads.push(payload);
+        if (rows.length < pageSize) break;
+      }
+    }
+
+    const seen = new Set<number>();
+    return payloads
+      .flatMap(payload => materialRowsFromPayload(payload))
+      .filter(item => {
+        const id = Number(item?.id || 0);
+        if (!id || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+  };
+
   const loadEditor = async () => {
     if (!seriesId) return;
     setLoading(true);
     try {
-      const [detailPayload, lessonPayload, materialPayload, folderPayload, memberRows] = await Promise.all([
+      const [detailPayload, lessonPayload, materialRows, folderPayload, memberRows] = await Promise.all([
         onlineCourseApi.getSeriesDetail(seriesId).catch(async () => {
           const all = pickArray(await onlineCourseApi.getSeries());
           return { data: all.find(item => Number(item.id) === seriesId) };
         }),
         onlineCourseApi.getSeriesCourses(seriesId).catch(() => ({ data: [] })),
-        onlineCourseApi.getMaterials({ pageSize: 300 }).catch(() => ({ data: [] })),
+        loadAllMaterials().catch(() => []),
         onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] })),
         platformAdapter.getMembers().catch(() => []),
       ]);
@@ -394,7 +523,7 @@ export default function OnlineCourseEditorPage() {
       setSeries(detail);
       seriesForm.setFieldsValue({ ...detail, is_free: Boolean(detail?.is_free) });
       setLessons(normalizeLessonRows(pickArray(lessonPayload), seriesId));
-      setMaterials(pickArray(materialPayload));
+      setMaterials(materialRows);
       setFolders(pickFolderRows(folderPayload));
       setMembers(memberRows);
     } catch (err) {
@@ -524,13 +653,13 @@ export default function OnlineCourseEditorPage() {
       const uploaded = pickArray(result)[0] || result?.data?.[0];
       if (!uploaded?.id) throw new Error('上传成功但未返回素材 ID');
       await replaceLessonMaterial(materialPickerLesson.id, Number(uploaded.id));
-      const [coursePayload, materialPayload, folderPayload] = await Promise.all([
+      const [coursePayload, materialRows, folderPayload] = await Promise.all([
         onlineCourseApi.getSeriesCourses(seriesId).catch(() => ({ data: [] })),
-        onlineCourseApi.getMaterials().catch(() => ({ data: [] })),
+        loadAllMaterials().catch(() => []),
         onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] })),
       ]);
       setLessons(normalizeLessonRows(pickArray(coursePayload), seriesId));
-      setMaterials(pickArray(materialPayload));
+      setMaterials(materialRows);
       setFolders(pickFolderRows(folderPayload));
       setLessonMaterialPickerOpen(false);
       setMaterialPickerLesson(null);
@@ -925,11 +1054,11 @@ export default function OnlineCourseEditorPage() {
       const source = uploaded?.file_url || uploaded?.file_path || uploaded?.thumbnail;
       if (!source) throw new Error('上传成功，但没有返回图片地址');
       setCoverPickerOpen(false);
-      const [materialPayload, folderPayload] = await Promise.all([
-        onlineCourseApi.getMaterials({ pageSize: 300 }).catch(() => ({ data: [] })),
+      const [materialRows, folderPayload] = await Promise.all([
+        loadAllMaterials().catch(() => []),
         onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] })),
       ]);
-      setMaterials(pickArray(materialPayload));
+      setMaterials(materialRows);
       setFolders(pickFolderRows(folderPayload));
       await persistPickedImage(source, true);
       message.success(`图片已上传到「${folder.name}」并自动保存`);
@@ -1112,7 +1241,7 @@ export default function OnlineCourseEditorPage() {
   });
 
   return (
-    <div>
+    <div className="oc-course-detail-page">
       <div className="page-header">
         <Row justify="space-between" align="middle" gutter={[16, 16]}>
           <Col>
@@ -1137,26 +1266,32 @@ export default function OnlineCourseEditorPage() {
         </Row>
       </div>
 
-      <Card styles={{ body: { padding: 8 } }} style={{ marginBottom: 16 }}>
-        <Space wrap size={8}>
-          {navItems.map(item => (
-            <Button key={item.key} type={activeTab === item.key ? 'primary' : 'text'} icon={item.icon} onClick={() => setActiveTab(item.key)}>
-              {item.label}
-            </Button>
-          ))}
-        </Space>
+      <Card className="oc-course-workbench-switchbar" styles={{ body: { padding: 8 } }} style={{ marginBottom: 16 }}>
+        <div className="oc-course-workbench-switchbar-inner">
+          <Space wrap size={8}>
+            {navItems.map(item => (
+              <Button key={item.key} type={activeTab === item.key ? 'primary' : 'text'} icon={item.icon} onClick={() => setActiveTab(item.key)}>
+                {item.label}
+              </Button>
+            ))}
+          </Space>
+          {activeTab === 'lessons' && (
+            <div className="oc-lesson-inline-stats" aria-label="课节统计">
+              <span className="oc-lesson-stat-pill"><span>总课节</span><strong>{lessonStats.total}</strong><span>节</span></span>
+              <span className="oc-lesson-stat-pill"><span>总时长</span><strong>{durationText(lessonStats.duration)}</strong></span>
+              <span className="oc-lesson-stat-pill"><span>已上架</span><strong>{lessonStats.published}</strong><span>节</span></span>
+              <span className="oc-lesson-stat-pill"><span>学员数</span><strong>{lessonStats.students}</strong><span>人</span></span>
+            </div>
+          )}
+        </div>
       </Card>
 
       <Row gutter={[16, 16]} align="top">
         <Col span={24}>
           {activeTab === 'lessons' && (
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
-              <Row gutter={[12, 12]}>
-                <Col xs={24} md={8}><Card><Statistic title="总课节数" value={lessonStats.total} suffix="节" /></Card></Col>
-                <Col xs={24} md={8}><Card><Statistic title="总时长" value={durationText(lessonStats.duration)} /></Card></Col>
-                <Col xs={24} md={8}><Card><Statistic title="已上架数" value={lessonStats.published} suffix="节" /></Card></Col>
-              </Row>
               <Card
+                className="oc-lesson-editor-card"
                 title="课节编辑"
                 extra={
                   <Space wrap>
@@ -1191,10 +1326,11 @@ export default function OnlineCourseEditorPage() {
                   <Table<LessonRow>
                     rowKey="id"
                     size="middle"
+                    className="oc-lesson-table"
                     dataSource={filteredLessons}
                     rowSelection={{ selectedRowKeys: selectedLessonIds, onChange: keys => setSelectedLessonIds(keys as number[]) }}
-                    pagination={{ pageSize: 20, showSizeChanger: true }}
-                    scroll={{ x: 1240 }}
+                    pagination={{ defaultPageSize: 30, showSizeChanger: true, pageSizeOptions: [20, 30, 50, 100], showTotal: total => `共 ${total} 条` }}
+                    scroll={{ x: 1240, y: 'calc(100dvh - 438px)' }}
                     locale={{ emptyText: <Empty description="暂无课节；可新建或批量创建" /> }}
                     columns={sortableColumns<LessonRow>([
                       { title: '排序', dataIndex: 'sort_order', align: 'center' as const, width: 76, render: (value, record) => <InputNumber min={1} size="small" value={value || 1} onChange={next => saveLessonSort(record, next)} style={sortInputStyle(value)} /> },
@@ -1530,7 +1666,7 @@ export default function OnlineCourseEditorPage() {
                   title: referencedMaterialIds.has(Number(record.id)) ? '本课程已引用，不能重复生成课节' : undefined,
                 }),
               }}
-              pagination={{ pageSize: 8, showSizeChanger: false }}
+              pagination={{ pageSize: MATERIAL_PICKER_TABLE_PAGE_SIZE, showSizeChanger: false }}
               scroll={{ x: 760, y: 900 }}
               locale={{ emptyText: <Empty description="暂无可选素材" /> }}
               columns={[

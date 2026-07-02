@@ -3,17 +3,19 @@ import { jsonError, toPositiveInt, withDb } from '../../_materials';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const SERIES_SELECT = `
+  SELECT cs.*,
+    (SELECT COUNT(*) FROM OnlineCourse WHERE series_id=cs.id) as course_count,
+    (SELECT COUNT(DISTINCT member_id) FROM CourseAuthorization WHERE series_id=cs.id) as total_students
+  FROM CourseSeries cs WHERE cs.id=?
+`;
+
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const routeParams = await params;
   try {
     return withDb((db) => {
       const id = toPositiveInt(routeParams.id);
-      const data = db.prepare(`
-        SELECT cs.*,
-          (SELECT COUNT(*) FROM OnlineCourse WHERE series_id=cs.id) as course_count,
-          (SELECT COUNT(DISTINCT member_id) FROM CourseAuthorization WHERE series_id=cs.id) as total_students
-        FROM CourseSeries cs WHERE cs.id=?
-      `).get(id);
+      const data = db.prepare(SERIES_SELECT).get(id);
       if (!data) return jsonError('课程不存在', 404);
       return Response.json({ success: true, data });
     });
@@ -27,18 +29,29 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const body = await request.json().catch(() => ({}));
   try {
     return withDb((db) => {
+      if (body.name !== undefined && !String(body.name || '').trim()) {
+        return jsonError('课程名称不能为空', 400);
+      }
       const fields = ['name', 'subtitle', 'description', 'rich_description', 'cover_image', 'share_image', 'teacher', 'price', 'promo_price', 'is_free', 'category', 'trial_count', 'status', 'sort_order', 'share_text'];
       const updates: string[] = [];
       const values: any[] = [];
       fields.forEach(f => {
-        if (body[f] !== undefined) { updates.push(`${f}=?`); values.push(body[f]); }
+        if (body[f] !== undefined) {
+          updates.push(`${f}=?`);
+          values.push(f === 'name' ? String(body[f]).trim() : body[f]);
+        }
       });
-      if (!updates.length) return Response.json({ success: true });
+      const id = toPositiveInt(routeParams.id);
+      if (!updates.length) {
+        const data = db.prepare(SERIES_SELECT).get(id);
+        return Response.json({ success: true, data });
+      }
       updates.push("updated_at=datetime('now','localtime')");
-      values.push(toPositiveInt(routeParams.id));
+      values.push(id);
       const result = db.prepare(`UPDATE CourseSeries SET ${updates.join(', ')} WHERE id=?`).run(...values);
       if (!result.changes) return jsonError('课程不存在', 404);
-      return Response.json({ success: true });
+      const data = db.prepare(SERIES_SELECT).get(id);
+      return Response.json({ success: true, data });
     });
   } catch (err: any) {
     return jsonError(err?.message || '更新课程失败');

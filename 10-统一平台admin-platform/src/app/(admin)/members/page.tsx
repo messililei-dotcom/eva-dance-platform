@@ -21,6 +21,7 @@ const levelColors: Record<string, string> = {
 };
 
 const activeStatuses = new Set(['active', '正常', 'enabled']);
+const INTERNATIONAL_PHONE_PATTERN = /^\+?[0-9\s()-]{6,24}$/;
 
 function displayStudentText(value: string) {
   return value ? value.replace(/会员/g, '学员') : value;
@@ -480,13 +481,13 @@ export default function MembersPage() {
             <Col xs={12} sm={12}>
               <Form.Item
                 name="phone"
-                label="手机号"
+                label="手机号/国际电话"
                 rules={[
-                  { required: true, message: '请输入手机号' },
-                  { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号' },
+                  { required: true, message: '请输入手机号或国际电话' },
+                  { pattern: INTERNATIONAL_PHONE_PATTERN, message: '请输入正确的手机号或国际电话' },
                 ]}
               >
-                <Input placeholder="请输入 11 位手机号" maxLength={11} />
+                <Input placeholder="如 13800138000 或 +1 555 123 4567" maxLength={24} />
               </Form.Item>
             </Col>
             <Col xs={12} sm={12}>

@@ -85,44 +85,53 @@ function validateTokenForPath(pathname: string, token: string): 'ok' | 'expired'
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = request.headers.get('host')?.split(':')[0]?.toLowerCase() || '';
 
-  // 只处理 /api/* 路由
+  if (host === 'api.dongfangwuquan.com' && pathname === '/') {
+    return NextResponse.redirect('https://www.dongfangwuquan.com/', 308);
+  }
+
+  const withRobotsHeader = (response: NextResponse) => {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    return response;
+  };
+
   if (!pathname.startsWith('/api')) {
-    return NextResponse.next();
+    return withRobotsHeader(NextResponse.next());
   }
 
   // 公开端点放行
   if (isPublicApiPath(pathname)) {
-    return NextResponse.next();
+    return withRobotsHeader(NextResponse.next());
   }
 
   // 检查是否存在有效的token（header或cookie）
   const token = getTokenFromRequest(request);
   if (!token) {
-    return NextResponse.json(
+    return withRobotsHeader(NextResponse.json(
       { success: false, message: '未登录，请先登录', error: '未登录' },
       { status: 401 }
-    );
+    ));
   }
 
   // 基本 token 格式校验（Edge 运行时不做 HMAC，完整签名校验在 route handler 中完成）
   const tokenState = validateTokenForPath(pathname, token);
   if (tokenState === 'expired') {
-    return NextResponse.json(
+    return withRobotsHeader(NextResponse.json(
       { success: false, message: '登录已过期，请重新登录', error: 'token_expired' },
       { status: 401 }
-    );
+    ));
   }
   if (tokenState !== 'ok') {
-    return NextResponse.json(
+    return withRobotsHeader(NextResponse.json(
       { success: false, message: '无效的登录凭证', error: 'token_invalid' },
       { status: 401 }
-    );
+    ));
   }
 
-  return NextResponse.next();
+  return withRobotsHeader(NextResponse.next());
 }
 
 export const config = {
-  matcher: '/api/:path*',
+  matcher: '/:path*',
 };

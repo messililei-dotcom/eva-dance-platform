@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
              permTeacherView, permTeacherCreate, permTeacherEdit, permTeacherDelete,
              permPaymentView, permPaymentCreate, permPaymentEdit, permPaymentDelete,
              permConsumeView, permConsumeCreate, permConsumeEdit, permConsumeDelete,
+             permOnlineAuthView, permOnlineAuthCreate, permOnlineAuthCancel, permOnlineAuthPhone,
              permLogView,
              bonusTraining, bonusCard, bonusYearly, bonusDisciple
       FROM User
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
              permTeacherView, permTeacherCreate, permTeacherEdit, permTeacherDelete,
              permPaymentView, permPaymentCreate, permPaymentEdit, permPaymentDelete,
              permConsumeView, permConsumeCreate, permConsumeEdit, permConsumeDelete,
+             permOnlineAuthView, permOnlineAuthCreate, permOnlineAuthCancel, permOnlineAuthPhone,
              permLogView,
              bonusTraining, bonusCard, bonusYearly, bonusDisciple
       FROM User WHERE id = ?

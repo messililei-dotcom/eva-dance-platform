@@ -17,6 +17,7 @@ const PERMISSION_COLUMNS = [
   'permTeacherView', 'permTeacherCreate', 'permTeacherEdit', 'permTeacherDelete',
   'permPaymentView', 'permPaymentCreate', 'permPaymentEdit', 'permPaymentDelete',
   'permConsumeView', 'permConsumeCreate', 'permConsumeEdit', 'permConsumeDelete',
+  'permOnlineAuthView', 'permOnlineAuthCreate', 'permOnlineAuthCancel', 'permOnlineAuthPhone',
   'permLogView',
   'bonusTraining', 'bonusCard', 'bonusYearly', 'bonusDisciple',
 ] as const;

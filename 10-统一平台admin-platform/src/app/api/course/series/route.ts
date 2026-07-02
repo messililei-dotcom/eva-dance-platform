@@ -3,6 +3,12 @@ import { jsonError, withDb } from '../_materials';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const SERIES_SELECT = `
+  SELECT cs.*, (SELECT COUNT(*) FROM OnlineCourse WHERE series_id=cs.id) as course_count,
+         (SELECT COUNT(DISTINCT member_id) FROM CourseAuthorization WHERE series_id=cs.id) as total_students
+  FROM CourseSeries cs
+`;
+
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
@@ -23,9 +29,7 @@ export async function GET(request: Request) {
       
       const total = db.prepare(`SELECT COUNT(*) as total FROM CourseSeries ${where}`).get(...params)?.total || 0;
       const data = db.prepare(
-        `SELECT cs.*, (SELECT COUNT(*) FROM OnlineCourse WHERE series_id=cs.id) as course_count,
-                (SELECT COUNT(DISTINCT member_id) FROM CourseAuthorization WHERE series_id=cs.id) as total_students
-         FROM CourseSeries cs ${where}
+        `${SERIES_SELECT} ${where}
          ORDER BY cs.sort_order, cs.created_at DESC
          LIMIT ? OFFSET ?`
       ).all(...params, pageSize, (page - 1) * pageSize);
@@ -45,6 +49,9 @@ export async function POST(request: Request) {
   try {
     return withDb((db) => {
       const maxSort = db.prepare('SELECT COALESCE(MAX(sort_order),0) as ms FROM CourseSeries').get();
+      const status = ['published', 'draft', 'offline'].includes(String(body.status || ''))
+        ? String(body.status)
+        : 'draft';
       const result = db.prepare(
         `INSERT INTO CourseSeries (name, subtitle, description, rich_description, cover_image, teacher, price, promo_price, is_free, category, trial_count, sort_order, share_text, status)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -52,9 +59,10 @@ export async function POST(request: Request) {
         name, body.subtitle || '', body.description || '', body.rich_description || '', body.cover_image || '',
         body.teacher || '', Number(body.price || 0), Number(body.promo_price || 0), body.is_free ? 1 : 0,
         body.category || '', Number(body.trial_count || 0), Number(maxSort?.ms || 0) + 1,
-        body.share_text || '', body.status || 'draft'
+        body.share_text || '', status
       );
-      return Response.json({ success: true, data: { id: result.lastInsertRowid } });
+      const data = db.prepare(`${SERIES_SELECT} WHERE cs.id=?`).get(result.lastInsertRowid);
+      return Response.json({ success: true, data });
     });
   } catch (err: any) {
     return jsonError(err?.message || '创建课程失败');

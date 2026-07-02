@@ -18,6 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
              permTeacherView, permTeacherCreate, permTeacherEdit, permTeacherDelete,
              permPaymentView, permPaymentCreate, permPaymentEdit, permPaymentDelete,
              permConsumeView, permConsumeCreate, permConsumeEdit, permConsumeDelete,
+             permOnlineAuthView, permOnlineAuthCreate, permOnlineAuthCancel, permOnlineAuthPhone,
              permLogView,
              bonusTraining, bonusCard, bonusYearly, bonusDisciple
       FROM User WHERE id = ?
@@ -96,6 +97,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       'permTeacherView', 'permTeacherCreate', 'permTeacherEdit', 'permTeacherDelete',
       'permPaymentView', 'permPaymentCreate', 'permPaymentEdit', 'permPaymentDelete',
       'permConsumeView', 'permConsumeCreate', 'permConsumeEdit', 'permConsumeDelete',
+      'permOnlineAuthView', 'permOnlineAuthCreate', 'permOnlineAuthCancel', 'permOnlineAuthPhone',
       'permLogView',
       'bonusTraining', 'bonusCard', 'bonusYearly', 'bonusDisciple',
     ];
@@ -123,6 +125,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
              permTeacherView, permTeacherCreate, permTeacherEdit, permTeacherDelete,
              permPaymentView, permPaymentCreate, permPaymentEdit, permPaymentDelete,
              permConsumeView, permConsumeCreate, permConsumeEdit, permConsumeDelete,
+             permOnlineAuthView, permOnlineAuthCreate, permOnlineAuthCancel, permOnlineAuthPhone,
              permLogView,
              bonusTraining, bonusCard, bonusYearly, bonusDisciple
       FROM User WHERE id = ?

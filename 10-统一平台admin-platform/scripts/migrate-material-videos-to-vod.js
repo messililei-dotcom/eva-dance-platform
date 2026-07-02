@@ -199,6 +199,9 @@ function callVodRpc(action, params) {
       });
     });
     req.on('error', reject);
+    req.setTimeout(60000, () => {
+      req.destroy(new Error('VOD 请求超时'));
+    });
     req.write(body);
     req.end();
   });
@@ -231,8 +234,11 @@ function putObject(filePath, uploadAddress, uploadAuth) {
   const date = new Date().toUTCString();
   const contentType = 'application/octet-stream';
   const url = new URL(ossObjectUrl(endpoint, bucket, objectName));
+  const timeoutMs = Math.max(10 * 60 * 1000, Math.ceil(stat.size / (256 * 1024)) * 1000);
 
   return new Promise((resolve, reject) => {
+    let uploadedBytes = 0;
+    let lastLoggedAt = Date.now();
     const req = https.request({
       hostname: url.hostname,
       path: url.pathname,
@@ -257,7 +263,20 @@ function putObject(filePath, uploadAddress, uploadAuth) {
       });
     });
     req.on('error', reject);
-    fs.createReadStream(filePath).on('error', reject).pipe(req);
+    req.setTimeout(timeoutMs, () => {
+      req.destroy(new Error(`OSS 上传超时（已上传约 ${Math.round(uploadedBytes / 1024 / 1024)}MB）`));
+    });
+    fs.createReadStream(filePath)
+      .on('data', chunk => {
+        uploadedBytes += chunk.length;
+        const now = Date.now();
+        if (now - lastLoggedAt > 60000) {
+          lastLoggedAt = now;
+          console.log(`  已上传 ${Math.round(uploadedBytes / 1024 / 1024)}MB / ${Math.round(stat.size / 1024 / 1024)}MB`);
+        }
+      })
+      .on('error', reject)
+      .pipe(req);
   });
 }
 
@@ -266,10 +285,17 @@ function titleForVod(name) {
   return Array.from(base).slice(0, 128).join('');
 }
 
+function fileNameForVod(row, filePath) {
+  const fromFile = path.basename(filePath);
+  const ext = path.extname(row.name || '');
+  return ext ? row.name : fromFile;
+}
+
 async function uploadVideo(row, filePath) {
+  const fileName = fileNameForVod(row, filePath);
   const response = await callVodRpc('CreateUploadVideo', {
     Title: titleForVod(row.name),
-    FileName: row.name || path.basename(filePath),
+    FileName: fileName,
     FileSize: row.file_size || fs.statSync(filePath).size,
     Description: `material_id=${row.id}; folder_id=${row.folder_id || 0}`,
     StorageLocation: process.env.ALIYUN_VOD_STORAGE_LOCATION,

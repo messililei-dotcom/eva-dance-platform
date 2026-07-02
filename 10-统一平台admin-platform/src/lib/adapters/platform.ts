@@ -174,6 +174,10 @@ const permissionLabels: Record<string, string> = {
   permConsumeCreate: '新增核销',
   permConsumeEdit: '编辑核销',
   permConsumeDelete: '删除核销',
+  permOnlineAuthView: '查看线上课授权',
+  permOnlineAuthCreate: '新增线上课授权',
+  permOnlineAuthCancel: '取消线上课授权',
+  permOnlineAuthPhone: '手机号预授权',
   permLogView: '查看日志',
 };
 
@@ -183,6 +187,7 @@ const PERM_FIELDS = [
   'permTeacherView', 'permTeacherCreate', 'permTeacherEdit', 'permTeacherDelete',
   'permPaymentView', 'permPaymentCreate', 'permPaymentEdit', 'permPaymentDelete',
   'permConsumeView', 'permConsumeCreate', 'permConsumeEdit', 'permConsumeDelete',
+  'permOnlineAuthView', 'permOnlineAuthCreate', 'permOnlineAuthCancel', 'permOnlineAuthPhone',
   'permLogView',
   'bonusTraining', 'bonusCard', 'bonusYearly', 'bonusDisciple',
 ];

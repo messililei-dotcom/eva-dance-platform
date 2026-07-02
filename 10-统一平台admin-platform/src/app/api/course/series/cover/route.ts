@@ -10,7 +10,7 @@ const COVER_SEGMENTS = ['online-course', 'series-covers'];
 const COVER_ROOT = path.join(process.cwd(), 'public', 'uploads', ...COVER_SEGMENTS);
 const COVER_URL_PREFIX = uploadUrl(...COVER_SEGMENTS) + '/';
 const COVER_API_PREFIX = '/api/course/series/cover/';
-const MAX_IMAGE_SIZE = 12 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 const MIME_EXTENSION: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     const file = formData.get('file');
     if (!(file instanceof File)) return jsonError('请选择课程主图', 400);
     if (!file.type?.startsWith('image/')) return jsonError('课程主图仅支持图片文件', 400);
-    if (file.size > MAX_IMAGE_SIZE) return jsonError('课程主图不能超过 12MB', 413);
+    if (file.size > MAX_IMAGE_SIZE) return jsonError('图片太大，不能超过2M', 413);
 
     const extension = extensionFromFile(file);
     if (!extension) return jsonError('无法识别图片格式', 400);

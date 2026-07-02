@@ -14,6 +14,7 @@ export function activeAuthJoin(memberAlias = 'm') {
 
 export function getActiveAuthorization(db: AdminDb, seriesId: number, memberId: number, phone = '') {
   if (!seriesId || (!memberId && !phone)) return null;
+  ensureAuthorizationAuditColumns(db);
   return db.prepare(
     `SELECT id, type, granted_at, granted_by, expire_at
      FROM CourseAuthorization
@@ -23,6 +24,52 @@ export function getActiveAuthorization(db: AdminDb, seriesId: number, memberId: 
      ORDER BY CASE WHEN member_id=? THEN 0 ELSE 1 END, id DESC
      LIMIT 1`
   ).get(seriesId, memberId, phone || '', memberId) || null;
+}
+
+export function getSeriesAccessStatus(db: AdminDb, seriesId: number, memberId: number, phone = '') {
+  if (!seriesId) {
+    return { authorized: false, trial_available: false, reason: 'not_found', message: '课程不存在' };
+  }
+
+  const series = db.prepare('SELECT id, is_free FROM CourseSeries WHERE id=?').get<{ id: number; is_free?: number }>(seriesId);
+  if (!series) {
+    return { authorized: false, trial_available: false, reason: 'not_found', message: '课程不存在' };
+  }
+
+  if (Number(series.is_free || 0) === 1) {
+    return { authorized: true, trial_available: true, reason: 'free_series', auth_type: 'free_series' };
+  }
+
+  const authorization = getActiveAuthorization(db, seriesId, memberId, phone);
+  if (authorization) {
+    return { authorized: true, trial_available: false, reason: 'authorized', auth_type: authorization.type || 'admin_grant' };
+  }
+
+  return { authorized: false, trial_available: false, reason: 'unauthorized', message: '请先申请授权观看完整学习' };
+}
+
+export function getVideoAccessStatus(db: AdminDb, videoId: number, memberId: number, phone = '') {
+  if (!videoId) {
+    return { authorized: false, trial_available: false, reason: 'not_found', message: '视频不存在' };
+  }
+
+  const video = db.prepare(
+    `SELECT cv.id, cv.is_free, oc.series_id, cs.is_free as series_is_free
+     FROM CourseVideo cv
+     LEFT JOIN OnlineCourse oc ON oc.id=cv.course_id
+     LEFT JOIN CourseSeries cs ON cs.id=oc.series_id
+     WHERE cv.id=?`
+  ).get<{ id: number; is_free?: number; series_id?: number; series_is_free?: number }>(videoId);
+
+  if (!video) {
+    return { authorized: false, trial_available: false, reason: 'not_found', message: '视频不存在' };
+  }
+
+  if (Number(video.is_free || 0) === 1 || Number(video.series_is_free || 0) === 1) {
+    return { authorized: true, trial_available: true, reason: 'free_video', auth_type: 'free_video' };
+  }
+
+  return getSeriesAccessStatus(db, Number(video.series_id || 0), memberId, phone);
 }
 
 export function ensureCourseSeriesVisitTable(db: AdminDb) {
@@ -50,7 +97,15 @@ export function ensureCourseSeriesVisitTable(db: AdminDb) {
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_log_series_member ON CourseSeriesVisitLog(series_id, member_id, visited_at)");
 }
 
+export function ensureAuthorizationAuditColumns(db: AdminDb) {
+  const columns = new Set((db.prepare('PRAGMA table_info(CourseAuthorization)').all() as Array<{ name: string }>).map(column => column.name));
+  if (!columns.has('granted_by')) db.exec('ALTER TABLE CourseAuthorization ADD COLUMN granted_by INTEGER');
+  if (!columns.has('revoked_by')) db.exec('ALTER TABLE CourseAuthorization ADD COLUMN revoked_by INTEGER');
+  if (!columns.has('revoked_at')) db.exec('ALTER TABLE CourseAuthorization ADD COLUMN revoked_at DATETIME');
+}
+
 export function authorizeMembers(db: AdminDb, seriesId: number, memberIds: number[], grantedBy = 1) {
+  ensureAuthorizationAuditColumns(db);
   const ids = Array.from(new Set(memberIds.filter(id => Number.isInteger(id) && id > 0)));
   if (!ids.length) return { authorized: 0 };
 
@@ -76,6 +131,7 @@ export function authorizeMembers(db: AdminDb, seriesId: number, memberIds: numbe
 }
 
 export function deauthorizeMembers(db: AdminDb, seriesId: number, memberIds: number[], revokedBy = 1) {
+  ensureAuthorizationAuditColumns(db);
   const ids = Array.from(new Set(memberIds.filter(id => Number.isInteger(id) && id > 0)));
   if (!ids.length) return { deauthorized: 0 };
 
@@ -97,6 +153,7 @@ export function deauthorizeMembers(db: AdminDb, seriesId: number, memberIds: num
 }
 
 export function deauthorizeMemberIdentity(db: AdminDb, seriesId: number, memberId: number, phone = '', revokedBy = 1) {
+  ensureAuthorizationAuditColumns(db);
   if (!seriesId || (!memberId && !phone)) return { deauthorized: 0 };
   const member = memberId ? db.prepare('SELECT phone FROM Member WHERE id=?').get<{ phone?: string }>(memberId) : null;
   const authPhone = phone || member?.phone || '';

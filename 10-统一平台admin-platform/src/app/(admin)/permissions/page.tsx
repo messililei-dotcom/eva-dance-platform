@@ -38,6 +38,16 @@ const PERMISSION_GROUPS = [
     ],
   },
   {
+    key: 'onlineAuth',
+    label: '线上课授权权限',
+    permissions: [
+      { field: 'permOnlineAuthView', label: '查看学员授权' },
+      { field: 'permOnlineAuthCreate', label: '新增学员授权' },
+      { field: 'permOnlineAuthCancel', label: '取消学员授权' },
+      { field: 'permOnlineAuthPhone', label: '手机号预授权' },
+    ],
+  },
+  {
     key: 'teacher',
     label: '课程顾问权限',
     permissions: [

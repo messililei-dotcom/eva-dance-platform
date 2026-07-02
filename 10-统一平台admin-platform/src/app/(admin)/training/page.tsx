@@ -49,6 +49,7 @@ import { compareTableValues, sortableColumns } from '@/lib/table-sort';
 import type { Member } from '@/types/domain';
 
 const { Text, Title } = Typography;
+const INTERNATIONAL_PHONE_PATTERN = /^\+?[0-9\s()-]{6,24}$/;
 
 type CourseRow = {
   id: number;
@@ -1206,7 +1207,7 @@ export default function TrainingPage() {
                             {trainingCourseCoverSource(record.coverImage, record.name, true) ? <img src={trainingCourseCoverSource(record.coverImage, record.name, true)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <PictureOutlined style={{ fontSize: 20 }} />}
                           </div>
                           <a onClick={() => setDetailCourse(record)} style={{ minWidth: 0 }}>
-                            <Text strong ellipsis style={{ maxWidth: 190 }}>{value}</Text>
+                            <Text strong className="training-course-name-wrap">{value}</Text>
                           </a>
                         </Space>
                       ),
@@ -1376,7 +1377,7 @@ export default function TrainingPage() {
       </Modal>
 
       <Modal
-        className="training-payment-modal training-compact-modal"
+        className="training-payment-modal training-compact-modal training-course-modal"
         title={editingCourse ? '编辑课程' : '新建课程'}
         open={courseModalOpen}
         onCancel={() => setCourseModalOpen(false)}
@@ -1430,7 +1431,7 @@ export default function TrainingPage() {
               </Form.Item>
             </Col>
             <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="subType" label="课程期次"><Input placeholder="如 2026 第一期" /></Form.Item></Col>
-            <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="teacher" label="课程顾问"><Input /></Form.Item></Col>
+            <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="teacher" label="授课教师"><Input /></Form.Item></Col>
             <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="startDate" label="开始日期"><DatePicker style={{ width: '100%' }} /></Form.Item></Col>
             <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="endDate" label="结束日期"><DatePicker style={{ width: '100%' }} /></Form.Item></Col>
             <Col className="payment-field-equal" xs={8} md={8}><Form.Item name="price" label="价格"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
@@ -1469,13 +1470,13 @@ export default function TrainingPage() {
             <Col className="payment-field-equal" xs={12} md={12}>
               <Form.Item
                 name="phone"
-                label="手机号"
+                label="手机号/国际电话"
                 rules={[
-                  { required: true, message: '请输入手机号' },
-                  { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号' },
+                  { required: true, message: '请输入手机号或国际电话' },
+                  { pattern: INTERNATIONAL_PHONE_PATTERN, message: '请输入正确的手机号或国际电话' },
                 ]}
               >
-                <Input placeholder="请输入 11 位手机号" maxLength={11} />
+                <Input placeholder="如 13800138000 或 +1 555 123 4567" maxLength={24} />
               </Form.Item>
             </Col>
             <Col className="payment-field-equal" xs={12} md={12}>

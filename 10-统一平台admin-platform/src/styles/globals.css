@@ -320,6 +320,15 @@ textarea.ant-input {
   text-align: left !important;
 }
 
+.training-course-name-wrap {
+  display: block;
+  max-width: 190px;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .ant-table-wrapper .table-cell-link-button {
   height: auto;
   max-width: 100%;
@@ -698,6 +707,27 @@ textarea.ant-input {
 
 .training-payment-record-modal .ant-modal-body {
   padding-top: 4px;
+}
+
+.training-course-modal .training-course-cover-field .ant-form-item {
+  margin-bottom: 8px;
+}
+
+.training-course-modal .training-course-cover-field .ant-form-item-control-input-content {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.training-course-modal .training-course-cover-upload {
+  aspect-ratio: 4 / 3;
+}
+
+.training-course-modal .payment-field-equal .ant-form-item,
+.training-course-modal .payment-field-equal .ant-input,
+.training-course-modal .payment-field-equal .ant-input-number,
+.training-course-modal .payment-field-equal .ant-picker,
+.training-course-modal .payment-field-equal .ant-select-single {
+  width: 100% !important;
 }
 
 .training-payment-record-modal .payment-record-grid {
@@ -1295,6 +1325,84 @@ textarea.ant-input {
   .training-payment-modal .ant-modal-footer .ant-btn {
     min-width: 74px;
     height: 32px;
+  }
+
+  .training-course-modal.ant-modal {
+    top: 8px !important;
+  }
+
+  .training-course-modal .ant-modal-body {
+    max-height: calc(100dvh - 104px);
+    padding-right: 0;
+  }
+
+  .training-course-modal .payment-modal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 10px !important;
+    row-gap: 6px !important;
+  }
+
+  .training-course-modal .payment-modal-grid > .training-course-cover-field {
+    grid-column: 1 / -1;
+    order: -10;
+  }
+
+  .training-course-modal .training-course-cover-field .ant-form-item {
+    margin-bottom: 6px !important;
+  }
+
+  .training-course-modal .training-course-cover-field .ant-form-item-label {
+    display: flex;
+    justify-content: center;
+  }
+
+  .training-course-modal .training-course-cover-field .ant-form-item-label > label {
+    height: 18px !important;
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .training-course-modal .training-course-cover-field .ant-form-item-control-input-content {
+    display: flex;
+    justify-content: center;
+  }
+
+  .training-course-modal .training-course-cover-upload {
+    width: 118px !important;
+    height: 118px !important;
+    border-radius: 10px !important;
+  }
+
+  .training-course-modal .training-course-cover-upload .anticon {
+    font-size: 22px !important;
+  }
+
+  .training-course-modal .training-course-cover-upload .ant-typography {
+    font-size: 12px;
+  }
+
+  .training-course-modal .payment-field-equal .ant-form-item {
+    width: 100% !important;
+  }
+
+  .training-course-modal .payment-field-equal .ant-input,
+  .training-course-modal .payment-field-equal .ant-input-number,
+  .training-course-modal .payment-field-equal .ant-picker,
+  .training-course-modal .payment-field-equal .ant-select-single,
+  .training-course-modal .payment-field-equal .ant-select-single .ant-select-selector {
+    width: 100% !important;
+  }
+
+  .training-course-modal .ant-form-item-label > label {
+    height: auto !important;
+    min-height: 17px;
+    font-size: 12px;
+    line-height: 17px;
+    white-space: normal;
+  }
+
+  .training-course-modal textarea.ant-input {
+    min-height: 48px !important;
   }
 
   .training-table-modal .ant-modal-body {
@@ -2571,6 +2679,20 @@ textarea.ant-input {
   white-space: nowrap;
 }
 
+.online-course-replica .oc-material-current-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .online-course-replica .oc-material-toolbar .ant-radio-group {
   white-space: nowrap;
 }
@@ -2660,11 +2782,55 @@ textarea.ant-input {
   border-end-end-radius: 8px !important;
 }
 
+.online-course-replica .oc-folder-list .ant-btn > span.oc-folder-button-content,
+.online-course-replica .oc-folder-button-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.online-course-replica .oc-folder-button-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.online-course-replica .oc-folder-button-count {
+  flex: 0 0 auto;
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: #64748b;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.online-course-replica .oc-folder-list .ant-btn-primary .oc-folder-button-count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
 .online-course-replica .oc-folder-list .ant-btn > span:last-child {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.online-course-replica .oc-folder-list .ant-btn > span.oc-folder-button-content {
+  display: flex;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
 }
 
 .oc-material-upload-modal .ant-modal-content {
@@ -4176,5 +4342,189 @@ textarea.ant-input {
   .finance-expense-modal .ant-form .ant-row > .ant-col.ant-col-xs-12 {
     flex: 0 0 50% !important;
     max-width: 50% !important;
+  }
+}
+
+.oc-course-detail-page .oc-course-workbench-switchbar {
+  border-radius: 8px;
+}
+
+.oc-course-detail-page .oc-course-workbench-switchbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+}
+
+.oc-course-detail-page .oc-lesson-inline-stats {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 260px;
+}
+
+.oc-course-detail-page .oc-lesson-stat-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid #edf0f7;
+  border-radius: 6px;
+  background: #fff;
+  color: #7a8498;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.oc-course-detail-page .oc-lesson-stat-pill strong {
+  color: #091735;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.oc-course-detail-page .oc-lesson-editor-card {
+  min-height: calc(100dvh - 302px);
+  border-radius: 8px;
+}
+
+.oc-course-detail-page .oc-lesson-editor-card > .ant-card-body {
+  min-height: calc(100dvh - 360px);
+}
+
+.oc-course-detail-page .oc-lesson-table .ant-table-thead > tr > th,
+.oc-course-detail-page .oc-lesson-table .ant-table-tbody > tr > td {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.oc-course-detail-page .oc-lesson-table .ant-table-pagination {
+  margin: 8px 12px;
+}
+
+.access-records-page {
+  padding-bottom: 16px;
+}
+
+.access-records-page .page-header {
+  margin-bottom: 12px;
+}
+
+.access-records-summary-card.ant-card {
+  margin-bottom: 10px;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(18, 26, 58, 0.06);
+}
+
+.access-records-summary-line {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.access-records-summary-item {
+  display: inline-flex;
+  min-width: 0;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-right: 1px solid #edf0f7;
+  color: #091735;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.access-records-summary-item:last-child {
+  border-right: 0;
+}
+
+.access-records-summary-item strong {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.access-records-summary-item-green strong,
+.access-records-summary-item-green .anticon {
+  color: #16A34A;
+}
+
+.access-records-summary-item-blue strong,
+.access-records-summary-item-blue .anticon {
+  color: #2563EB;
+}
+
+.access-records-summary-item-purple strong,
+.access-records-summary-item-purple .anticon {
+  color: #7C3AED;
+}
+
+.access-records-table-card.ant-card {
+  min-height: calc(100dvh - 286px);
+  border-radius: 8px;
+}
+
+.access-records-table-card > .ant-card-head {
+  min-height: 46px;
+}
+
+.access-records-table-card > .ant-card-head .ant-card-head-title,
+.access-records-table-card > .ant-card-head .ant-card-extra {
+  padding: 8px 0;
+}
+
+.access-records-table-card > .ant-card-body {
+  min-height: calc(100dvh - 344px);
+}
+
+.access-records-table .ant-table-thead > tr > th,
+.access-records-table .ant-table-tbody > tr > td {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.access-records-table .ant-table-pagination {
+  margin: 8px 12px;
+}
+
+@media (max-width: 768px) {
+  .oc-course-detail-page .oc-course-workbench-switchbar-inner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .oc-course-detail-page .oc-lesson-inline-stats {
+    justify-content: flex-start;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .oc-course-detail-page .oc-lesson-editor-card,
+  .oc-course-detail-page .oc-lesson-editor-card > .ant-card-body {
+    min-height: auto;
+  }
+
+  .access-records-summary-line {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .access-records-summary-item {
+    justify-content: flex-start;
+    border-right: 0;
+  }
+
+  .access-records-table-card,
+  .access-records-table-card > .ant-card-body {
+    min-height: auto;
   }
 }

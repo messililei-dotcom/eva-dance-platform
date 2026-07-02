@@ -8,6 +8,7 @@ import {
   LogoutOutlined, TeamOutlined, LaptopOutlined, CrownOutlined,
   GiftOutlined, CalendarOutlined, BarChartOutlined,
   PictureOutlined, AppstoreOutlined, FileTextOutlined, GlobalOutlined,
+  FolderOutlined, UserSwitchOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
@@ -28,6 +29,7 @@ const menuItems: any[] = [
       { key: '/members', icon: <UserOutlined />, label: '学员信息' },
       { key: '/orders', icon: <ShoppingCartOutlined />, label: '订单中心' },
       { key: '/student-progress', icon: <BarChartOutlined />, label: '学员进度' },
+      { key: '/access-records', icon: <GlobalOutlined />, label: '访问记录' },
     ],
   },
   {
@@ -37,6 +39,8 @@ const menuItems: any[] = [
     children: [
       { key: '/training', icon: <TeamOutlined />, label: '线下课程' },
       { key: '/online-course', icon: <LaptopOutlined />, label: '线上课程' },
+      { key: '/online-course/materials', icon: <FolderOutlined />, label: '素材中心' },
+      { key: '/online-course/auth', icon: <UserSwitchOutlined />, label: '学员授权' },
       { key: '/certificates', icon: <CrownOutlined />, label: '证书管理' },
       { key: '/events', icon: <CalendarOutlined />, label: '赛事管理' },
     ],
@@ -143,7 +147,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   // 找到当前激活的菜单项
   const active = useMemo(() => {
     const allKeys = searchableItems.map(s => s.key);
-    return allKeys.find((k: string) => pathname?.startsWith(k)) || '/dashboard';
+    return allKeys
+      .filter((k: string) => pathname === k || pathname?.startsWith(`${k}/`))
+      .sort((a: string, b: string) => b.length - a.length)[0] || '/dashboard';
   }, [pathname]);
 
   // 更新页面标题

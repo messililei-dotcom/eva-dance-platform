@@ -1,4 +1,5 @@
 import type { ColumnsType, ColumnType } from 'antd/es/table';
+import type { TablePaginationConfig } from 'antd/es/table/interface';
 import { isRecord } from '@/lib/data-shape';
 
 type DataIndex = ColumnType<any>['dataIndex'];
@@ -82,4 +83,14 @@ export function sortableColumns<T extends object>(columns: ColumnsType<T>): Colu
       sorter: (a: T, b: T) => compareTableValues(valueByDataIndex(a, columnType.dataIndex), valueByDataIndex(b, columnType.dataIndex)),
     };
   });
+}
+
+export function adminTablePagination(config: TablePaginationConfig = {}): TablePaginationConfig {
+  return {
+    showSizeChanger: true,
+    showQuickJumper: true,
+    pageSizeOptions: ['10', '20', '50', '100'],
+    showTotal: (total) => `共 ${total} 条`,
+    ...config,
+  };
 }

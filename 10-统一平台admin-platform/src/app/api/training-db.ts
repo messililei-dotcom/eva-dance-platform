@@ -1,5 +1,5 @@
 import { openAdminDb } from '@/lib/server/admin-db';
-import { verifyLocalToken } from './_local-auth';
+import { ensureLocalAuthTables, verifyLocalToken } from './_local-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +75,84 @@ export function authPayloadFromRequest(request: Request) {
 
 export function unauthorized() {
   return Response.json({ success: false, error: '未登录' }, { status: 401 });
+}
+
+export function forbidden(message = '无权限访问此功能') {
+  return Response.json({ success: false, error: message }, { status: 403 });
+}
+
+export function hasPermission(request: Request, permission: string) {
+  if (isLocalhostRequest(request)) return true;
+  if (!/^[A-Za-z0-9_]+$/.test(permission)) return false;
+
+  const payload = authPayloadFromRequest(request);
+  if (!payload?.username) return false;
+  if (payload.username === 'lilei') return true;
+
+  const db = openAdminDb();
+  try {
+    ensureLocalAuthTables(db);
+    const row = db.prepare(
+      `SELECT username, status, ${permission} as allowed FROM User WHERE username = ? OR id = ? LIMIT 1`
+    ).get(payload.username, payload.id || 0) as { username?: string; status?: string; allowed?: number } | undefined;
+    if (!row || row.status !== 'active') return false;
+    if (row.username === 'lilei') return true;
+    return Boolean(row.allowed);
+  } catch {
+    return false;
+  } finally {
+    db.close();
+  }
+}
+
+export function requirePermission(request: Request, permission: string, message?: string) {
+  if (!hasAuth(request)) return unauthorized();
+  if (!hasPermission(request, permission)) return forbidden(message);
+  return null;
+}
+
+export function requireSuperAdmin(request: Request, message = '仅超级管理员可操作') {
+  if (isLocalhostRequest(request)) return null;
+  if (!hasAuth(request)) return unauthorized();
+
+  const payload = authPayloadFromRequest(request);
+  if (!payload?.username) return forbidden(message);
+  if (payload.username === 'lilei') return null;
+
+  const db = openAdminDb();
+  try {
+    ensureLocalAuthTables(db);
+    const user = db.prepare('SELECT username, role, status FROM User WHERE username = ? OR id = ? LIMIT 1')
+      .get(payload.username, payload.id || 0) as { username?: string; role?: string; status?: string } | undefined;
+    if (!user || user.status !== 'active') return forbidden(message);
+    if (user.username === 'lilei' || user.role === 'admin') return null;
+    return forbidden(message);
+  } catch {
+    return forbidden(message);
+  } finally {
+    db.close();
+  }
+}
+
+function permissionByAction(action: unknown) {
+  const normalized = cleanText(action, 'view').toLowerCase();
+  if (['create', 'add', 'post', 'upload', 'new'].includes(normalized)) return 'permCourseCreate';
+  if (['edit', 'update', 'put', 'patch', 'move', 'reorder', 'status', 'replace'].includes(normalized)) return 'permCourseEdit';
+  if (['delete', 'remove', 'destroy'].includes(normalized)) return 'permCourseDelete';
+  return 'permCourseView';
+}
+
+export function requireOnlineCoursePermission(request: Request, action: unknown = 'view', message?: string) {
+  return requirePermission(request, permissionByAction(action), message);
+}
+
+export function requireMaterialPermission(request: Request, action: unknown = 'view', message?: string) {
+  return requirePermission(request, permissionByAction(action), message);
+}
+
+export function requireEcommercePermission(request: Request, _action: unknown = 'view') {
+  if (!hasAuth(request)) return unauthorized();
+  return null;
 }
 
 export function jsonError(message: unknown, status = 500, fallback = '操作失败') {
@@ -207,6 +285,8 @@ export function ensureTrainingTables(db: any) {
     ['Payment', 'voucherPath', "TEXT DEFAULT ''"],
     ['Payment', 'voucherFilename', "TEXT DEFAULT ''"],
     ['Payment', 'voucherUploadedAt', "TEXT DEFAULT ''"],
+    ['Payment', 'commissionRate', 'REAL DEFAULT 0'],
+    ['Payment', 'commissionAmount', 'REAL DEFAULT 0'],
     ['ConsumeRecord', 'memberPhone', "TEXT DEFAULT ''"],
     ['ConsumeRecord', 'paymentId', 'INTEGER'],
     ['ConsumeRecord', 'remainingAfter', 'INTEGER'],
@@ -298,6 +378,44 @@ export function findMatchingCourseByIdentity(db: any, name: unknown, subType: un
   if (!key.split('\u0000')[0]) return null;
   return db.prepare('SELECT id, name, subType FROM Course ORDER BY id ASC').all()
     .find((course: any) => String(course.id) !== String(excludeId || '') && courseIdentityKey(course.name, course.subType) === key) || null;
+}
+
+function quoteIdentifier(identifier: string) {
+  return `"${identifier.replace(/"/g, '""')}"`;
+}
+
+export function ensureCoursePeriod(db: any, courseId: number | string, subType: unknown) {
+  const id = toNumber(courseId);
+  if (!id) return null;
+
+  const course = db.prepare('SELECT * FROM Course WHERE id = ?').get(id) as any;
+  if (!course) return null;
+
+  const period = cleanText(subType);
+  if (!period || courseIdentityKey(course.name, course.subType) === courseIdentityKey(course.name, period)) {
+    return course;
+  }
+
+  const existing = findMatchingCourseByIdentity(db, course.name, period);
+  if (existing?.id) {
+    return db.prepare('SELECT * FROM Course WHERE id = ?').get(existing.id);
+  }
+
+  const columns = db.prepare('PRAGMA table_info(Course)').all()
+    .map((row: any) => String(row.name))
+    .filter((column: string) => column && column !== 'id');
+  if (!columns.includes('subType')) return course;
+
+  const now = nowIso();
+  const values = columns.map((column: string) => {
+    if (column === 'subType') return period;
+    if (['created_at', 'createdAt', 'updated_at', 'updatedAt'].includes(column)) return now;
+    return course[column];
+  });
+  const placeholders = columns.map(() => '?').join(', ');
+  const insert = db.prepare(`INSERT INTO Course (${columns.map(quoteIdentifier).join(', ')}) VALUES (${placeholders})`);
+  const result = insert.run(...values);
+  return db.prepare('SELECT * FROM Course WHERE id = ?').get(result.lastInsertRowid);
 }
 
 function tableExists(db: any, tableName: string) {
