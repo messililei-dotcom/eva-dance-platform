@@ -1,0 +1,15 @@
+src/app/api/mini/checkins/route.ts
+src/app/api/mini/member/checkin/route.ts
+src/app/api/mini/member/messages/[id]/read/route.ts
+src/app/api/mini/member/messages/read-all/route.ts
+src/app/api/mini/member/messages/route.ts
+src/app/api/mini/member/messages/unread-count/route.ts
+src/app/api/mini/member/profile/route.ts
+src/app/api/mini/student-login/route.ts
+src/app/api/mini/video/[id]/progress/route.ts
+src/app/dashboard/messages/page.tsx
+src/app/dashboard/profile/page.tsx
+src/components/MessageCenter.tsx
+src/components/Navbar_v2.tsx
+src/lib/server/inbox-events.ts
+src/lib/student-api.ts
