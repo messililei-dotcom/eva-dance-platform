@@ -9,6 +9,7 @@ import {
   GiftOutlined, CalendarOutlined, BarChartOutlined,
   PictureOutlined, AppstoreOutlined, FileTextOutlined, GlobalOutlined,
   FolderOutlined, UserSwitchOutlined,
+  NotificationOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
@@ -53,6 +54,7 @@ const menuItems: any[] = [
       { key: '/ecommerce', icon: <ShopOutlined />, label: '电商系统' },
       { key: '/finance', icon: <DollarOutlined />, label: '财务中心' },
       { key: '/marketing', icon: <GiftOutlined />, label: '营销工具' },
+      { key: '/messages', icon: <NotificationOutlined />, label: '站内消息' },
       { key: '/live', icon: <PictureOutlined />, label: '直播管理' },
     ],
   },

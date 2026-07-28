@@ -1,4 +1,5 @@
 import { cleanText, hasAuth, jsonError, openTrainingDb, syncPaymentOrder, toNumber, today, unauthorized } from '../training-db';
+import { createPersonalMessage, recordGrowthEvent } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,6 +58,29 @@ export async function POST(request: Request) {
         cleanText(body.voucherUploadedAt),
       );
       syncPaymentOrder(db, info.lastInsertRowid);
+      const remainingSessions = Math.max(0, toNumber(body.remainingSessions, toNumber(dbCourse.sessions)));
+      createPersonalMessage(db, Number(dbMember.id), {
+        type: 'offline',
+        title: '线下课程报名成功',
+        content: `《${dbCourse.name}》已经加入你的个人中心，可用课次 ${remainingSessions} 次。`,
+        actionUrl: '/dashboard/profile#offline-courses',
+        businessType: 'offline_purchase',
+        businessId: info.lastInsertRowid,
+        dedupeKey: `offline-purchase:${info.lastInsertRowid}`,
+        priority: 'important',
+      });
+      const growthPoints = Math.max(0, Math.trunc(toNumber(body.amount)));
+      if (growthPoints) {
+        recordGrowthEvent(db, {
+          memberId: Number(dbMember.id),
+          eventType: 'offline_purchase',
+          points: growthPoints,
+          sourceType: 'payment',
+          sourceId: info.lastInsertRowid,
+          description: `报名《${dbCourse.name}》，经验值 +${growthPoints}。`,
+          actionUrl: '/dashboard/profile#offline-courses',
+        });
+      }
       return info;
     })();
     return Response.json({ success: true, id: result.lastInsertRowid });

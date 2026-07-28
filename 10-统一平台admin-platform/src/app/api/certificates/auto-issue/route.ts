@@ -7,6 +7,7 @@ import {
   ensureCertificateSchema,
   ensureTemplateForSeries,
 } from '@/lib/server/certificates';
+import { createPersonalMessage } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -69,6 +70,16 @@ export async function POST(request: Request) {
         );
         db.prepare('UPDATE Certificate SET pdf_url = ?, updated_at = datetime(\'now\',\'localtime\') WHERE id = ?')
           .run(certificatePublicUrl(result.lastInsertRowid, nextCertificateNo), result.lastInsertRowid);
+        createPersonalMessage(db, Number(progress.member_id), {
+          type: 'certificate',
+          title: '结业证书已生成',
+          content: `你已完成《${series.course_name || '线上课程'}》，结业证书已经生成。`,
+          actionUrl: '/dashboard/profile#certificates',
+          businessType: 'certificate',
+          businessId: result.lastInsertRowid,
+          dedupeKey: `certificate:${result.lastInsertRowid}`,
+          priority: 'important',
+        });
         issued++;
       }
     }

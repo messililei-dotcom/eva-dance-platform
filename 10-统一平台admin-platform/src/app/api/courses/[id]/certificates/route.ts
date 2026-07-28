@@ -12,6 +12,7 @@ import {
   ensureTemplateForSeries,
   offlineCertificateSeriesId,
 } from '@/lib/server/certificates';
+import { createPersonalMessage } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -200,6 +201,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const pdfUrl = certificatePublicUrl(result.lastInsertRowid, nextCertificateNo);
         db.prepare('UPDATE Certificate SET pdf_url = ?, updated_at = datetime(\'now\',\'localtime\') WHERE id = ?')
           .run(pdfUrl, result.lastInsertRowid);
+        createPersonalMessage(db, memberId, {
+          type: 'certificate',
+          title: '结业证书已生成',
+          content: `你的《${course.name || '线下课程'}》结业证书已经生成。`,
+          actionUrl: '/dashboard/profile#certificates',
+          businessType: 'certificate',
+          businessId: result.lastInsertRowid,
+          dedupeKey: `certificate:${result.lastInsertRowid}`,
+          priority: 'important',
+        });
 
         issuedCertificates.push({
           id: result.lastInsertRowid,

@@ -1,4 +1,5 @@
 import { cleanText, hasAuth, jsonError, openTrainingDb, toNumber, today, unauthorized } from '../training-db';
+import { createConsumeMessage, recordGrowthEvent } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +53,22 @@ export async function POST(request: Request) {
         cleanText(body.remark),
       );
       db.prepare('UPDATE Payment SET remainingSessions = ? WHERE id = ?').run(remainingAfter, payment.id);
+      createConsumeMessage(db, {
+        memberId: Number(payment.memberId),
+        consumeId: info.lastInsertRowid,
+        courseName: String(payment.courseName || '课程'),
+        count,
+        remainingAfter,
+      });
+      recordGrowthEvent(db, {
+        memberId: Number(payment.memberId),
+        eventType: 'offline_checkin',
+        points: count * 10,
+        sourceType: 'consume_record',
+        sourceId: info.lastInsertRowid,
+        description: `完成《${payment.courseName || '课程'}》线下核销，经验值 +${count * 10}。`,
+        actionUrl: '/dashboard/progress',
+      });
       return info;
     })();
     return Response.json({ success: true, id: result.lastInsertRowid });

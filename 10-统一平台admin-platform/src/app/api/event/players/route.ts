@@ -1,4 +1,5 @@
 import { cleanText, hasAuth, jsonError, mapPlayer, nowIso, toNumber, unauthorized, withEventDb } from '../_db';
+import { createPersonalMessage, recordGrowthEvent } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -85,6 +86,31 @@ export async function POST(request: Request) {
       cleanText(body.remark),
       nowIso(),
     );
+
+    const memberId = toNumber(body.memberId ?? body.member_id);
+    if (memberId) {
+      const competition = db.prepare('SELECT name FROM event_competitions WHERE id=?')
+        .get(competitionId) as { name?: string } | undefined;
+      createPersonalMessage(db, memberId, {
+        type: 'event',
+        title: '赛事报名已提交',
+        content: `你已报名《${competition?.name || '东方舞赛事'}》，可在个人中心关注审核和成绩。`,
+        actionUrl: '/dashboard/events',
+        businessType: 'event_registration',
+        businessId: result.lastInsertRowid,
+        dedupeKey: `event-registration:${result.lastInsertRowid}`,
+        priority: 'important',
+      });
+      recordGrowthEvent(db, {
+        memberId,
+        eventType: 'event_registration',
+        points: 100,
+        sourceType: 'event_player',
+        sourceId: result.lastInsertRowid,
+        description: `完成《${competition?.name || '赛事'}》报名，经验值 +100。`,
+        actionUrl: '/dashboard/events',
+      });
+    }
 
     return Response.json({ success: true, data: { id: result.lastInsertRowid } });
   });

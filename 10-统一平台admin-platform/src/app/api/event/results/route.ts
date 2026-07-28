@@ -1,4 +1,5 @@
 import { cleanText, hasAuth, jsonError, mapRanking, nowIso, recalculateGroupRankings, toNumber, unauthorized, withEventDb } from '../_db';
+import { createPersonalMessage, recordGrowthEvent } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -112,6 +113,43 @@ export async function PATCH(request: Request) {
     });
 
     publish();
+    if (action === 'publish') {
+      const competition = db.prepare('SELECT name FROM event_competitions WHERE id=?')
+        .get(group.competition_id) as { name?: string } | undefined;
+      const publishedRows = db.prepare(`
+        SELECT r.id, r.rank_no, r.published_total, p.member_id
+        FROM event_rankings r
+        JOIN event_players p ON p.id=r.player_id
+        WHERE r.group_id=? AND p.member_id>0
+      `).all(groupId) as Array<Record<string, any>>;
+      publishedRows.forEach((row: Record<string, any>) => {
+        const memberId = Number(row.member_id || 0);
+        createPersonalMessage(db, memberId, {
+          type: 'event',
+          title: '赛事成绩已公布',
+          content: `《${competition?.name || '东方舞赛事'}》成绩已公布，你的名次为第 ${row.rank_no || '-'} 名。`,
+          actionUrl: '/dashboard/events',
+          businessType: 'event_result',
+          businessId: row.id,
+          dedupeKey: `event-result:${row.id}`,
+          priority: 'urgent',
+          payload: { rank: row.rank_no, score: row.published_total },
+        });
+        const rank = Number(row.rank_no || 0);
+        const points = rank === 1 ? 100 : rank === 2 ? 50 : rank === 3 ? 20 : 0;
+        if (points) {
+          recordGrowthEvent(db, {
+            memberId,
+            eventType: 'event_placement',
+            points,
+            sourceType: 'event_ranking',
+            sourceId: row.id,
+            description: `赛事获得第 ${rank} 名，经验值 +${points}。`,
+            actionUrl: '/dashboard/events',
+          });
+        }
+      });
+    }
     return Response.json({ success: true });
   });
 }

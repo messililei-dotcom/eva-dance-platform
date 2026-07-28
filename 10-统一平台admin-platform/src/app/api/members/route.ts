@@ -1,4 +1,5 @@
 import { cleanText, hasAuth, openTrainingDb, syncMemberDenormalizedFields, today, unauthorized } from '../training-db';
+import { createWelcomeMessage } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
       cleanText(body.avatar),
     );
     syncMemberDenormalizedFields(db, result.lastInsertRowid);
+    createWelcomeMessage(db, Number(result.lastInsertRowid), name);
     return Response.json({ success: true, id: result.lastInsertRowid });
   } finally {
     db.close();

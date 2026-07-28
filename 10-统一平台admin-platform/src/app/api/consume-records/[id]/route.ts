@@ -1,4 +1,5 @@
 import { cleanText, hasAuth, jsonError, openTrainingDb, toNumber, today, unauthorized } from '../../training-db';
+import { createConsumeMessage, createPersonalMessage } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +31,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         routeParams.id,
       );
       db.prepare('UPDATE Payment SET remainingSessions = ? WHERE id = ?').run(remainingAfter, payment.id);
+      createPersonalMessage(db, Number(current.memberId), {
+        type: 'consume',
+        title: '核销记录已调整',
+        content: `《${current.courseName || '课程'}》核销调整为 ${nextCount} 课次，当前剩余 ${remainingAfter} 课次。`,
+        actionUrl: '/dashboard/progress',
+        businessType: 'consume_adjustment',
+        businessId: routeParams.id,
+        dedupeKey: `consume-adjustment:${routeParams.id}:${nextCount}:${remainingAfter}`,
+        priority: 'important',
+      });
       return info;
     })();
     if (!result.changes) return Response.json({ success: false, error: '核销记录不存在' }, { status: 404 });
@@ -49,8 +60,19 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const result = db.transaction(() => {
       const current = db.prepare('SELECT * FROM ConsumeRecord WHERE id = ?').get(routeParams.id);
       if (!current) return { changes: 0 };
-      db.prepare('UPDATE Payment SET remainingSessions = remainingSessions + ? WHERE id = ?').run(toNumber(current.count), current.paymentId);
-      return db.prepare('DELETE FROM ConsumeRecord WHERE id = ?').run(routeParams.id);
+      const payment = db.prepare('SELECT remainingSessions FROM Payment WHERE id=?').get(current.paymentId) as any;
+      const remainingAfter = toNumber(payment?.remainingSessions) + toNumber(current.count);
+      db.prepare('UPDATE Payment SET remainingSessions = ? WHERE id = ?').run(remainingAfter, current.paymentId);
+      const deleted = db.prepare('DELETE FROM ConsumeRecord WHERE id = ?').run(routeParams.id);
+      createConsumeMessage(db, {
+        memberId: Number(current.memberId),
+        consumeId: routeParams.id,
+        courseName: String(current.courseName || '课程'),
+        count: toNumber(current.count),
+        remainingAfter,
+        reversed: true,
+      });
+      return deleted;
     })();
     if (!result.changes) return Response.json({ success: false, error: '核销记录不存在' }, { status: 404 });
     return Response.json({ success: true });

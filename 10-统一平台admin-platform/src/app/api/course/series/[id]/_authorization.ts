@@ -1,4 +1,5 @@
 import type { AdminDb } from '@/lib/server/admin-db';
+import { createAuthorizationMessage } from '@/lib/server/inbox';
 
 export function activeAuthWhere() {
   return "ca.status='active' AND (ca.expire_at IS NULL OR ca.expire_at > datetime('now','localtime'))";
@@ -123,7 +124,8 @@ export function authorizeMembers(db: AdminDb, seriesId: number, memberIds: numbe
       const member = getMember.get(id) as any;
       if (!member) return;
       revoke.run(grantedBy, seriesId, id, member.phone || '');
-      insert.run(id, member.phone || '', seriesId, grantedBy);
+      const authorization = insert.run(id, member.phone || '', seriesId, grantedBy);
+      createAuthorizationMessage(db, id, seriesId, authorization.lastInsertRowid);
       count += 1;
     });
     return { authorized: count };

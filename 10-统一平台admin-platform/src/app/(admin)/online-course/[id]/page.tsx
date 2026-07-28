@@ -37,8 +37,9 @@ import {
   UnorderedListOutlined,
   UserSwitchOutlined,
   VideoCameraOutlined,
+  NotificationOutlined,
 } from '@ant-design/icons';
-import { authApi, ensureMediaAuthCookie, onlineCourseApi } from '@/lib/api';
+import { api, authApi, ensureMediaAuthCookie, onlineCourseApi } from '@/lib/api';
 import { platformAdapter } from '@/lib/adapters/platform';
 import {
   apiError,
@@ -958,6 +959,27 @@ export default function OnlineCourseEditorPage() {
     }
   };
 
+  const publishContentUpdate = () => {
+    let summary = '';
+    modal.confirm({
+      title: '发布课程更新',
+      content: (
+        <Input.TextArea
+          rows={4}
+          placeholder={`向已授权学员说明本次更新内容，例如：新增 ${lessonStats.published} 节课程内容`}
+          onChange={event => { summary = event.target.value; }}
+        />
+      ),
+      okText: '发布并通知学员',
+      cancelText: '取消',
+      onOk: async () => {
+        const response = await api.post(`/course/series/${seriesId}/release`, { summary });
+        const recipients = Number(response.data?.data?.recipients || 0);
+        message.success(`课程更新已发布，已通知 ${recipients} 名学员`);
+      },
+    });
+  };
+
   const deleteSeries = () => {
     modal.confirm({
       title: '确定删除此课程吗？',
@@ -1257,6 +1279,7 @@ export default function OnlineCourseEditorPage() {
           </Col>
           <Col>
             <Space wrap>
+              <Button type="primary" icon={<NotificationOutlined />} onClick={publishContentUpdate}>发布更新通知</Button>
               <Button onClick={() => updateSeriesStatus(series.status === 'published' ? 'offline' : 'published')}>{series.status === 'published' ? '下架' : '上架'}</Button>
               <Tooltip title="删除课程">
                 <Button danger icon={<DeleteOutlined />} aria-label="删除课程" onClick={deleteSeries} />

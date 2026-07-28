@@ -1,6 +1,7 @@
 import { cleanText, jsonError, toPositiveInt, withDb } from '../../../_materials';
 import { authPayloadFromRequest, requirePermission } from '../../../../training-db';
 import { ensureAuthorizationAuditColumns } from '../_authorization';
+import { createAuthorizationMessage, createWelcomeMessage } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -33,14 +34,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         ).run(`手机学员${normalizedPhone.slice(-4)}`, normalizedPhone);
         member = db.prepare('SELECT id, phone, name FROM Member WHERE id=?').get(result.lastInsertRowid);
         created = true;
+        createWelcomeMessage(db, Number(member.id), String(member.name || ''));
       }
 
       db.prepare("UPDATE CourseAuthorization SET status='revoked', revoked_at=datetime('now','localtime'), revoked_by=? WHERE series_id=? AND status='active' AND (phone=? OR member_id=?)")
         .run(grantedBy, seriesId, normalizedPhone, member.id);
-      db.prepare(
+      const authorization = db.prepare(
         `INSERT INTO CourseAuthorization (member_id, phone, series_id, type, granted_by, granted_at, status, remark)
          VALUES (?, ?, ?, 'admin_grant', ?, datetime('now','localtime'), 'active', ?)`
       ).run(member.id, normalizedPhone, seriesId, grantedBy, cleanText(body.remark));
+      createAuthorizationMessage(db, Number(member.id), seriesId, authorization.lastInsertRowid);
       return Response.json({ success: true, data: { member, created } });
     });
   } catch (err: any) {

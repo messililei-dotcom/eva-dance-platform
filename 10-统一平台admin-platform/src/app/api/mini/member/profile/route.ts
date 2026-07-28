@@ -8,7 +8,9 @@ export async function GET(request: Request) {
       const member = db.prepare(
         `SELECT id, name, phone, gender, birthday, country, province, city, address, remark,
                 register_date, created_at, COALESCE(wx_avatar_url, '') as avatar_url,
-                wx_avatar_url, wx_nickname, wx_openid, wx_unionid, wx_profile_synced_at, level
+                wx_avatar_url, wx_nickname, wx_openid, wx_unionid, wx_profile_synced_at, level,
+                COALESCE((SELECT experience_total FROM StudentGrowthSummary WHERE user_id=Member.id), 0) AS experience_total,
+                COALESCE((SELECT level_no FROM StudentGrowthSummary WHERE user_id=Member.id), 1) AS level_no
          FROM Member WHERE id=?`
       ).get(memberId);
       if (!member) return jsonError('学员不存在', 404);
@@ -47,7 +49,9 @@ export async function PUT(request: Request) {
       const member = db.prepare(
         `SELECT id, name, phone, gender, birthday, country, province, city, address, remark,
                 register_date, created_at, COALESCE(wx_avatar_url, '') as avatar_url,
-                wx_avatar_url, wx_nickname, wx_openid, wx_unionid, wx_profile_synced_at, level
+                wx_avatar_url, wx_nickname, wx_openid, wx_unionid, wx_profile_synced_at, level,
+                COALESCE((SELECT experience_total FROM StudentGrowthSummary WHERE user_id=Member.id), 0) AS experience_total,
+                COALESCE((SELECT level_no FROM StudentGrowthSummary WHERE user_id=Member.id), 1) AS level_no
          FROM Member WHERE id=?`
       ).get(memberId);
       return Response.json({ success: true, data: member });

@@ -1,5 +1,6 @@
 import { loginData } from '../_auth';
 import { cleanText, jsonError, withDb } from '../_helpers';
+import { createWelcomeMessage } from '@/lib/server/inbox';
 
 type WechatSession = {
   openid?: string;
@@ -106,6 +107,7 @@ export async function POST(request: Request) {
            VALUES (?, NULL, 'wechat_silent', 'active', date('now','localtime'), datetime('now','localtime'), ?, ?, ?, datetime('now','localtime'))`
         ).run(wechatName(session.openid), session.openid, session.unionid, session.sessionKey);
         member = db.prepare('SELECT * FROM Member WHERE id=?').get<any>(result.lastInsertRowid);
+        createWelcomeMessage(db, Number(member.id), cleanText(member.name));
       } else {
         db.prepare(
           `UPDATE Member

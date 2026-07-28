@@ -1,4 +1,5 @@
 import { cleanText, getMemberId, jsonError, shanghaiDateKey, toPositiveInt, withDb } from '../_helpers';
+import { recordGrowthEvent } from '@/lib/server/inbox';
 
 export async function POST(request: Request) {
   try {
@@ -13,6 +14,14 @@ export async function POST(request: Request) {
         `INSERT INTO PracticeCheckin (member_id, series_id, checkin_date, submission_type, submission_url, remark, created_at)
          VALUES (?, ?, ?, ?, ?, ?, datetime('now','localtime'))`
       ).run(memberId, toPositiveInt(body.series_id, 0), today, cleanText(body.submission_type, 'text'), cleanText(body.submission_url), cleanText(body.remark));
+      recordGrowthEvent(db, {
+        memberId,
+        eventType: 'practice_checkin',
+        points: 5,
+        sourceType: 'practice_checkin',
+        sourceId: result.lastInsertRowid,
+        description: '完成今日练习打卡，经验值 +5。',
+      });
       return Response.json({ success: true, data: { id: result.lastInsertRowid, date: today } });
     });
   } catch (err: any) {

@@ -1,5 +1,6 @@
 import type { AdminDb } from '@/lib/server/admin-db';
 import { cleanText, memberToken } from './_helpers';
+import { createWelcomeMessage } from '@/lib/server/inbox';
 
 type MemberRow = Record<string, any> & { id: unknown; phone?: unknown };
 
@@ -106,5 +107,7 @@ export function upsertPhoneMember(db: AdminDb, phone: string, options: { sourceM
      VALUES (?, ?, ?, 'active', date('now','localtime'), datetime('now','localtime'))`
   ).run(fallbackPhoneName(phone), phone, options.source || 'mini_program');
 
-  return getMember(db, result.lastInsertRowid) as MemberRow;
+  const member = getMember(db, result.lastInsertRowid) as MemberRow;
+  createWelcomeMessage(db, Number(member.id), cleanText(member.name));
+  return member;
 }

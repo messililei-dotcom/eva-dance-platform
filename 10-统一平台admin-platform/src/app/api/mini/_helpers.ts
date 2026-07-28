@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { openAdminDb, type AdminDb } from '@/lib/server/admin-db';
 import { isRecord } from '@/lib/data-shape';
 import { verifyLocalToken } from '../_local-auth';
+import { ensureInboxSchema } from '@/lib/server/inbox';
 
 const MEMBER_SESSION_TTL_MS = 3 * 86400 * 1000;
 
@@ -124,6 +125,7 @@ function addColumn(db: AdminDb, table: string, column: string, ddl: string) {
 }
 
 export function ensureMiniTables(db: AdminDb) {
+  ensureInboxSchema(db);
   db.prepare(`CREATE TABLE IF NOT EXISTS StudyNote (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     member_id INTEGER NOT NULL,

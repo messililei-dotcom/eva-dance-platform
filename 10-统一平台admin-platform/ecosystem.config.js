@@ -19,6 +19,8 @@ function readEnvFile(filePath) {
 
 const productionEnv = readEnvFile(path.join(__dirname, '.env.production'));
 
+const sharedSecret = process.env.ADMIN_SESSION_SECRET || productionEnv.ADMIN_SESSION_SECRET || 'eva-dongfangwuquan-2026-stream-secret';
+
 module.exports = {
   apps: [{
     name: 'admin-platform',
@@ -48,11 +50,26 @@ module.exports = {
       ALIYUN_VOD_PLAY_AUTH_TIMEOUT: process.env.ALIYUN_VOD_PLAY_AUTH_TIMEOUT || productionEnv.ALIYUN_VOD_PLAY_AUTH_TIMEOUT,
       ALIYUN_SMS_SIGN_NAME: process.env.ALIYUN_SMS_SIGN_NAME || '湖南雷震子咨询',
       ALIYUN_SMS_TEMPLATE_CODE: process.env.ALIYUN_SMS_TEMPLATE_CODE || 'SMS_505940264',
-      ADMIN_SESSION_SECRET: process.env.ADMIN_SESSION_SECRET || productionEnv.ADMIN_SESSION_SECRET || 'eva-dongfangwuquan-2026-stream-secret'
+      ADMIN_SESSION_SECRET: sharedSecret,
+      INBOX_JOB_SECRET: process.env.INBOX_JOB_SECRET || productionEnv.INBOX_JOB_SECRET || sharedSecret
     },
     max_restarts: 10,
     min_uptime: '10s',
     restart_delay: 3000,
+    watch: false
+  }, {
+    name: 'inbox-reminder-worker',
+    script: 'scripts/inbox-reminder-worker.js',
+    cwd: __dirname,
+    env: {
+      NODE_ENV: 'production',
+      INBOX_JOB_URL: 'http://127.0.0.1:3003/api/inbox/jobs/run',
+      INBOX_JOB_SECRET: process.env.INBOX_JOB_SECRET || productionEnv.INBOX_JOB_SECRET || sharedSecret,
+      INBOX_JOB_INTERVAL_MS: process.env.INBOX_JOB_INTERVAL_MS || productionEnv.INBOX_JOB_INTERVAL_MS || String(30 * 60 * 1000),
+    },
+    autorestart: true,
+    max_restarts: 10,
+    restart_delay: 5000,
     watch: false
   }]
 };
