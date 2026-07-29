@@ -1,6 +1,7 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Col, DatePicker, Empty, Input, Row, Select, Space, Spin, Statistic, Table, Tabs, Tag, Typography } from 'antd';
+import { useEffect, useState } from 'react';
+import { Button, Card, Col, DatePicker, Empty, Input, Row, Select, Space, Spin, Statistic, Tabs, Tag, Typography } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import { DownloadOutlined, ReloadOutlined, SearchOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { platformAdapter } from '@/lib/adapters/platform';
 import { formatCompactMoney, formatPaymentAmount } from '@/lib/money-format';
@@ -45,28 +46,45 @@ export default function OrdersPage() {
   const [keyword, setKeyword] = useState('');
   const [type, setType] = useState('all');
   const [tab, setTab] = useState('all');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [allCount, setAllCount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  const [types, setTypes] = useState<string[]>([]);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const load = () => {
-    setLoading(true);
-    platformAdapter.getOrders()
-      .then(setOrders)
-      .finally(() => setLoading(false));
-  };
+  useEffect(() => {
+    let active = true;
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      platformAdapter.getOrdersPage({
+        page,
+        pageSize,
+        keyword: keyword.trim() || undefined,
+        orderType: type === 'all' ? undefined : type,
+        status: tab === 'all' ? undefined : tab,
+      })
+        .then(result => {
+          if (!active) return;
+          setOrders(result.items);
+          setTotal(result.total);
+          setAllCount(result.allCount);
+          setTotalAmount(result.totalAmount);
+          setStatusCounts(result.statusCounts);
+          setTypes(result.types);
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    }, keyword ? 250 : 0);
 
-  useEffect(load, []);
-
-  const filtered = useMemo(() => {
-    const q = keyword.trim().toLowerCase();
-    return orders.filter(order => {
-      const matchKeyword = !q || [order.orderNo, order.memberName, order.memberPhone, order.title].some(value => value.toLowerCase().includes(q));
-      const matchType = type === 'all' || order.orderType === type;
-      const matchTab = tab === 'all' || order.status === tab;
-      return matchKeyword && matchType && matchTab;
-    });
-  }, [orders, keyword, type, tab]);
-
-  const types = useMemo(() => ['all', ...Array.from(new Set(orders.map(item => item.orderType).filter(Boolean)))], [orders]);
-  const totalAmount = orders.reduce((sum, item) => sum + item.amount, 0);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [keyword, page, pageSize, reloadKey, tab, type]);
 
   if (loading) return <div style={{ padding: 80, textAlign: 'center' }}><Spin size="large" /></div>;
 
@@ -78,30 +96,30 @@ export default function OrdersPage() {
       </div>
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} md={6}><Card><Statistic title="全部订单" value={orders.length} prefix={<ShoppingCartOutlined />} /></Card></Col>
+        <Col xs={24} md={6}><Card><Statistic title="全部订单" value={allCount} prefix={<ShoppingCartOutlined />} /></Card></Col>
         <Col xs={24} md={6}><Card><Statistic title="订单总额" value={formatCompactMoney(totalAmount)} valueStyle={{ color: '#F72A8A' }} /></Card></Col>
-        <Col xs={24} md={6}><Card><Statistic title="已完成" value={orders.filter(item => ['paid', 'completed'].includes(item.status)).length} valueStyle={{ color: '#22C55E' }} /></Card></Col>
-        <Col xs={24} md={6}><Card><Statistic title="待处理" value={orders.filter(item => item.status === 'pending').length} valueStyle={{ color: '#F59E0B' }} /></Card></Col>
+        <Col xs={24} md={6}><Card><Statistic title="已完成" value={Number(statusCounts.paid || 0) + Number(statusCounts.completed || 0)} valueStyle={{ color: '#22C55E' }} /></Card></Col>
+        <Col xs={24} md={6}><Card><Statistic title="待处理" value={Number(statusCounts.pending || 0)} valueStyle={{ color: '#F59E0B' }} /></Card></Col>
       </Row>
 
       <Card style={{ marginBottom: 16 }}>
         <Row gutter={[12, 12]} align="middle">
-          <Col xs={24} lg={8}><Input prefix={<SearchOutlined />} placeholder="搜索订单号、学员、手机号、内容" value={keyword} onChange={event => setKeyword(event.target.value)} allowClear /></Col>
-          <Col xs={24} md={6}><Select value={type} onChange={setType} style={{ width: '100%' }} options={types.map(item => ({ value: item, label: item === 'all' ? '全部类型' : orderTypeLabel(item) }))} /></Col>
+          <Col xs={24} lg={8}><Input prefix={<SearchOutlined />} placeholder="搜索订单号、学员、手机号、内容" value={keyword} onChange={event => { setKeyword(event.target.value); setPage(1); }} allowClear /></Col>
+          <Col xs={24} md={6}><Select value={type} onChange={value => { setType(value); setPage(1); }} style={{ width: '100%' }} options={['all', ...types].map(item => ({ value: item, label: item === 'all' ? '全部类型' : orderTypeLabel(item) }))} /></Col>
           <Col xs={24} md={6}><RangePicker style={{ width: '100%' }} /></Col>
-          <Col xs={24} md={4} style={{ textAlign: 'right' }}><Space><Button icon={<ReloadOutlined />} onClick={load}>刷新</Button><Button icon={<DownloadOutlined />}>导出</Button></Space></Col>
+          <Col xs={24} md={4} style={{ textAlign: 'right' }}><Space><Button icon={<ReloadOutlined />} onClick={() => setReloadKey(value => value + 1)}>刷新</Button><Button icon={<DownloadOutlined />}>导出</Button></Space></Col>
         </Row>
       </Card>
 
       <Tabs
         activeKey={tab}
-        onChange={setTab}
+        onChange={value => { setTab(value); setPage(1); }}
         items={[
-          { key: 'all', label: `全部 ${orders.length}` },
-          { key: 'pending', label: `待处理 ${orders.filter(item => item.status === 'pending').length}` },
-          { key: 'paid', label: `已支付 ${orders.filter(item => item.status === 'paid').length}` },
-          { key: 'completed', label: `已完成 ${orders.filter(item => item.status === 'completed').length}` },
-          { key: 'refunded', label: `退款 ${orders.filter(item => item.status === 'refunded').length}` },
+          { key: 'all', label: `全部 ${allCount}` },
+          { key: 'pending', label: `待处理 ${Number(statusCounts.pending || 0)}` },
+          { key: 'paid', label: `已支付 ${Number(statusCounts.paid || 0)}` },
+          { key: 'completed', label: `已完成 ${Number(statusCounts.completed || 0)}` },
+          { key: 'refunded', label: `退款 ${Number(statusCounts.refunded || 0)}` },
         ]}
       />
 
@@ -109,9 +127,19 @@ export default function OrdersPage() {
         <Table
           rowKey="id"
           size="middle"
-          dataSource={filtered}
+          dataSource={orders}
           scroll={{ x: 1100 }}
-          pagination={{ pageSize: 20, showSizeChanger: true, showTotal: total => `共 ${total} 条订单` }}
+          pagination={{
+            current: page,
+            pageSize,
+            total,
+            showSizeChanger: true,
+            showTotal: count => `共 ${count} 条订单`,
+            onChange: (nextPage, nextPageSize) => {
+              setPage(nextPageSize === pageSize ? nextPage : 1);
+              setPageSize(nextPageSize);
+            },
+          }}
           locale={{ emptyText: <Empty description="暂无订单数据" /> }}
           columns={sortableColumns<UnifiedOrder>([
             { title: '订单号', dataIndex: 'orderNo', fixed: 'left', width: 170, render: value => <Text strong>{value}</Text> },

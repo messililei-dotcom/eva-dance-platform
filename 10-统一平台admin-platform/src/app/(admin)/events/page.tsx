@@ -17,10 +17,11 @@ import {
   Select,
   Space,
   Statistic,
-  Table,
   Tabs,
   Tag,
+  Upload,
 } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {
   AuditOutlined,
   CheckCircleOutlined,
@@ -75,9 +76,11 @@ export default function EventsPage() {
   const [playerModal, setPlayerModal] = useState(false);
   const [judgeModal, setJudgeModal] = useState(false);
   const [editingCompetition, setEditingCompetition] = useState<any>(null);
+  const [coverUploading, setCoverUploading] = useState(false);
   const [competitionForm] = Form.useForm();
   const [playerForm] = Form.useForm();
   const [judgeForm] = Form.useForm();
+  const competitionCoverUrl = Form.useWatch('coverUrl', competitionForm);
 
   const selectedCompetitionId = competitions[0]?.id;
 
@@ -113,13 +116,9 @@ export default function EventsPage() {
       competitionForm.setFieldsValue({
         ...row,
         dateRange: row.startDate ? [dayjs(row.startDate), row.endDate ? dayjs(row.endDate) : dayjs(row.startDate)] : undefined,
-        registrationRange: row.registrationStart ? [
-          dayjs(row.registrationStart),
-          row.registrationEnd ? dayjs(row.registrationEnd) : dayjs(row.registrationStart),
-        ] : undefined,
       });
     } else {
-      competitionForm.setFieldsValue({ status: 'draft', registrationStatus: 'closed', organizer: '伊娃东方舞' });
+      competitionForm.setFieldsValue({ status: 'draft', organizer: '伊娃东方舞', coverUrl: '' });
     }
     setCompetitionModal(true);
   };
@@ -130,11 +129,12 @@ export default function EventsPage() {
       ...values,
       startDate: values.dateRange?.[0]?.format('YYYY-MM-DD') || '',
       endDate: values.dateRange?.[1]?.format('YYYY-MM-DD') || '',
-      registrationStart: values.registrationRange?.[0]?.format('YYYY-MM-DD') || '',
-      registrationEnd: values.registrationRange?.[1]?.format('YYYY-MM-DD') || '',
+      registrationStart: editingCompetition?.registrationStart || '',
+      registrationEnd: editingCompetition?.registrationEnd || '',
+      registrationStatus: editingCompetition?.registrationStatus || 'closed',
+      maxPlayers: editingCompetition?.maxPlayers || 0,
     };
     delete payload.dateRange;
-    delete payload.registrationRange;
     if (editingCompetition) {
       await eventApi.updateCompetition(editingCompetition.id, payload);
     } else {
@@ -143,6 +143,25 @@ export default function EventsPage() {
     message.success('赛事已保存');
     setCompetitionModal(false);
     load();
+  };
+
+  const uploadCompetitionCover = async ({ file, onSuccess, onError }: any) => {
+    setCoverUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file as File);
+      formData.append('competitionName', String(competitionForm.getFieldValue('name') || '赛事封面'));
+      const result = await eventApi.uploadCompetitionCover(formData);
+      competitionForm.setFieldValue('coverUrl', String(result?.coverUrl || ''));
+      message.success('赛事封面已上传，点击确定后保存');
+      onSuccess?.(result);
+    } catch (err: any) {
+      const error = new Error(err?.response?.data?.error || err?.message || '赛事封面上传失败');
+      message.error(error.message);
+      onError?.(error);
+    } finally {
+      setCoverUploading(false);
+    }
   };
 
   const savePlayer = async () => {
@@ -319,25 +338,32 @@ export default function EventsPage() {
         )}
       </Card>
 
-      <Modal title={editingCompetition ? '编辑赛事' : '新建赛事'} open={competitionModal} onCancel={() => setCompetitionModal(false)} onOk={saveCompetition} width={720}>
+      <Modal title={editingCompetition ? '编辑赛事' : '新建赛事'} open={competitionModal} onCancel={() => setCompetitionModal(false)} onOk={saveCompetition} width={760} confirmLoading={coverUploading}>
         <Form form={competitionForm} layout="vertical">
           <Row gutter={16}>
             <Col xs={16} sm={16}><Form.Item name="name" label="赛事名称" rules={[{ required: true, message: '请填写赛事名称' }]}><Input /></Form.Item></Col>
             <Col xs={8} sm={8}><Form.Item name="code" label="赛事编码"><Input placeholder="自动生成" /></Form.Item></Col>
           </Row>
           <Row gutter={16}>
-            <Col xs={24} sm={12}><Form.Item name="dateRange" label="比赛日期"><DatePicker.RangePicker style={{ width: '100%' }} /></Form.Item></Col>
-            <Col xs={24} sm={12}><Form.Item name="registrationRange" label="报名日期"><DatePicker.RangePicker style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={24}><Form.Item name="dateRange" label="比赛日期"><DatePicker.RangePicker style={{ width: '100%' }} /></Form.Item></Col>
           </Row>
+          <Form.Item name="coverUrl" hidden><Input /></Form.Item>
+          <Form.Item label="赛事封面主图" extra="4:3 横版，支持 JPG、PNG、WebP，不超过 8MB。点击图片可上传替换。">
+            <Upload accept="image/jpeg,image/png,image/webp" showUploadList={false} customRequest={uploadCompetitionCover} disabled={coverUploading}>
+              <div style={{ width: 320, maxWidth: '100%', aspectRatio: '4 / 3', border: '1px dashed #d9d9d9', borderRadius: 10, overflow: 'hidden', background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: coverUploading ? 'wait' : 'pointer' }}>
+                {competitionCoverUrl ? <img src={competitionCoverUrl} alt="赛事封面" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (
+                  <Space direction="vertical" align="center" size={6} style={{ color: '#8c8c8c' }}><PlusOutlined style={{ fontSize: 26 }} /><span>{coverUploading ? '正在上传…' : '点击上传 4:3 横版封面'}</span></Space>
+                )}
+              </div>
+            </Upload>
+          </Form.Item>
           <Row gutter={16}>
             <Col xs={12} sm={12}><Form.Item name="location" label="地点"><Input /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="organizer" label="主办方"><Input /></Form.Item></Col>
           </Row>
           <Row gutter={16}>
-            <Col xs={12} sm={6}><Form.Item name="maxPlayers" label="人数上限"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col xs={12} sm={6}><Form.Item name="registrationFee" label="报名费"><InputNumber min={0} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
-            <Col xs={12} sm={6}><Form.Item name="status" label="赛事状态"><Select options={[{ value: 'draft', label: '草稿' }, { value: 'published', label: '上架' }, { value: 'offline', label: '下架' }, { value: 'finished', label: '结束' }]} /></Form.Item></Col>
-            <Col xs={12} sm={6}><Form.Item name="registrationStatus" label="报名状态"><Select options={[{ value: 'open', label: '开放' }, { value: 'closed', label: '关闭' }]} /></Form.Item></Col>
+            <Col xs={12}><Form.Item name="registrationFee" label="报名费"><InputNumber min={0} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={12}><Form.Item name="status" label="赛事状态"><Select options={[{ value: 'draft', label: '草稿' }, { value: 'published', label: '上架' }, { value: 'offline', label: '下架' }, { value: 'finished', label: '结束' }]} /></Form.Item></Col>
           </Row>
           <Form.Item name="description" label="赛事说明"><Input.TextArea rows={3} /></Form.Item>
         </Form>

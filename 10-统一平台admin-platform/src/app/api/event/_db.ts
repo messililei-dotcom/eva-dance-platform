@@ -400,14 +400,11 @@ export function competitionSelectSql() {
   return `
     SELECT
       c.*,
-      COUNT(DISTINCT g.id) AS group_count,
-      COUNT(DISTINCT p.id) AS player_count,
-      COUNT(DISTINCT gj.judge_id) AS judge_count,
-      COALESCE(SUM(CASE WHEN p.audit_status = 'approved' THEN 1 ELSE 0 END), 0) AS approved_player_count
+      (SELECT COUNT(*) FROM event_groups g WHERE g.competition_id=c.id) AS group_count,
+      (SELECT COUNT(*) FROM event_players p WHERE p.competition_id=c.id AND p.status!='cancelled') AS player_count,
+      (SELECT COUNT(DISTINCT gj.judge_id) FROM event_group_judges gj WHERE gj.competition_id=c.id AND gj.status='active') AS judge_count,
+      (SELECT COUNT(*) FROM event_players p WHERE p.competition_id=c.id AND p.audit_status='approved' AND p.status!='cancelled') AS approved_player_count
     FROM event_competitions c
-    LEFT JOIN event_groups g ON g.competition_id = c.id
-    LEFT JOIN event_players p ON p.competition_id = c.id
-    LEFT JOIN event_group_judges gj ON gj.competition_id = c.id
   `;
 }
 

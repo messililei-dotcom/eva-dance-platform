@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { Alert, Button, Card, Descriptions, Divider, Form, Input, Space, Switch, Table, Tabs, Tag, Typography } from 'antd';
+import { Alert, Button, Card, Descriptions, Divider, Form, Input, Space, Switch, Tabs, Tag, Typography } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import { ApiOutlined, CloudServerOutlined, DatabaseOutlined, LinkOutlined, SaveOutlined, SettingOutlined } from '@ant-design/icons';
 import { platformAdapter } from '@/lib/adapters/platform';
 import { sortableColumns } from '@/lib/table-sort';

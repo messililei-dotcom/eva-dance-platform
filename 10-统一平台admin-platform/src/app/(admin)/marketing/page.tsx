@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Statistic, Table, Tag, Tabs, Button, Modal, Form, Input, Select, DatePicker, InputNumber, Space, Empty } from 'antd';
+import { Card, Row, Col, Statistic, Tag, Tabs, Button, Modal, Form, Input, Select, DatePicker, InputNumber, Space, Empty } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {
   DollarOutlined,
   ThunderboltOutlined,

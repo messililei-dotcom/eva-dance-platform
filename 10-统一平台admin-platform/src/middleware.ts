@@ -9,14 +9,20 @@ const PUBLIC_API_PATHS = [
   '/api/mini/student-login',
   '/api/mini/send-code',
   '/api/mini/student-login-v2',
-  '/api/mini/public/',
   '/api/course/cover-image',
-  '/api/course/series/cover/',
   '/api/courses/cover-image',
+  '/api/certificates/verify',
+  '/api/inbox/jobs/run',
+];
+
+const PUBLIC_API_PREFIXES = [
+  '/api/mini/public/',
+  '/api/course/series/cover/',
 ];
 
 function isPublicApiPath(pathname: string): boolean {
-  return PUBLIC_API_PATHS.some(prefix => pathname.startsWith(prefix));
+  return PUBLIC_API_PATHS.includes(pathname)
+    || PUBLIC_API_PREFIXES.some(prefix => pathname.startsWith(prefix));
 }
 
 function getTokenFromRequest(request: NextRequest): string | null {
@@ -60,39 +66,87 @@ function tokenStateFromPayload(payload: Record<string, unknown> | null): 'ok' | 
   return 'ok';
 }
 
-function validateLocalTokenShape(token: string): 'ok' | 'expired' | 'invalid' {
+function constantTimeEqual(left: string, right: string) {
+  if (left.length !== right.length) return false;
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  }
+  return difference === 0;
+}
+
+function bytesToBase64Url(bytes: ArrayBuffer) {
+  let binary = '';
+  for (const byte of new Uint8Array(bytes)) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+async function hasValidHmac(payload: string, signature: string) {
+  const secret = process.env.ADMIN_SESSION_SECRET;
+  if (!secret || !payload || !signature) return false;
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const expected = bytesToBase64Url(await crypto.subtle.sign('HMAC', key, encoder.encode(payload)));
+  return constantTimeEqual(expected, signature);
+}
+
+async function validateLocalToken(token: string): Promise<'ok' | 'expired' | 'invalid'> {
   const parts = token.split('.');
   if (parts.length !== 3 || parts[0] !== 'local') return 'invalid';
-  const payload = decodeBase64UrlJson(parts[1]);
+  const [, encodedPayload, signature] = parts;
+  if (!await hasValidHmac(encodedPayload, signature)) return 'invalid';
+  const payload = decodeBase64UrlJson(encodedPayload);
   if (!payload?.username) return 'invalid';
   return tokenStateFromPayload(payload);
 }
 
-function validateMiniMemberTokenShape(token: string): 'ok' | 'expired' | 'invalid' {
+async function validateMiniMemberToken(token: string): Promise<'ok' | 'expired' | 'invalid'> {
   const parts = token.split('.');
   if (parts.length !== 2) return 'invalid';
-  const payload = decodeBase64UrlJson(parts[0]);
+  const [encodedPayload, signature] = parts;
+  if (!await hasValidHmac(encodedPayload, signature)) return 'invalid';
+  const payload = decodeBase64UrlJson(encodedPayload);
   if (!payload?.memberId && !payload?.member_id && !payload?.id) return 'invalid';
   return tokenStateFromPayload(payload);
 }
 
-function validateTokenForPath(pathname: string, token: string): 'ok' | 'expired' | 'invalid' {
-  const localState = validateLocalTokenShape(token);
+async function validateTokenForPath(pathname: string, token: string): Promise<'ok' | 'expired' | 'invalid'> {
+  const localState = await validateLocalToken(token);
   if (localState !== 'invalid') return localState;
-  if (pathname.startsWith('/api/mini/')) return validateMiniMemberTokenShape(token);
+  if (pathname.startsWith('/api/mini/')) return validateMiniMemberToken(token);
   return 'invalid';
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get('host')?.split(':')[0]?.toLowerCase() || '';
 
-  if (host === 'api.dongfangwuquan.com' && pathname === '/') {
-    return NextResponse.redirect('https://www.dongfangwuquan.com/', 308);
+  if (host === 'api.swod.com.cn' && pathname === '/') {
+    return NextResponse.redirect('https://www.swod.com.cn/', 308);
   }
 
   const withRobotsHeader = (response: NextResponse) => {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    if (pathname.startsWith('/api')) {
+      response.headers.set('Cache-Control', 'private, no-store, no-cache, max-age=0, s-maxage=0');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+      response.headers.set('Vary', 'Authorization, Cookie');
+    } else if (
+      !pathname.startsWith('/_next/')
+      && !pathname.startsWith('/uploads/')
+      && !/\.[a-z0-9]{2,8}$/i.test(pathname)
+    ) {
+      response.headers.set('Cache-Control', 'private, no-store, no-cache, max-age=0, s-maxage=0');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+    }
     return response;
   };
 
@@ -114,8 +168,8 @@ export function middleware(request: NextRequest) {
     ));
   }
 
-  // 基本 token 格式校验（Edge 运行时不做 HMAC，完整签名校验在 route handler 中完成）
-  const tokenState = validateTokenForPath(pathname, token);
+  // 所有受保护接口必须在统一入口验证 HMAC，route handler 的二次校验作为纵深防御。
+  const tokenState = await validateTokenForPath(pathname, token);
   if (tokenState === 'expired') {
     return withRobotsHeader(NextResponse.json(
       { success: false, message: '登录已过期，请重新登录', error: 'token_expired' },

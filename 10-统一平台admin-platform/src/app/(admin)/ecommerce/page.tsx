@@ -18,12 +18,12 @@ import {
   Space,
   Spin,
   Statistic,
-  Table,
   Tabs,
   Tag,
   Tooltip,
   Typography,
 } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {
   DeleteOutlined,
   EditOutlined,
@@ -227,12 +227,8 @@ export default function EcommercePage() {
 
   const load = () => {
     setLoading(true);
-    Promise.all([
-      ecommerceApi.getProducts().catch(() => []),
-      ecommerceApi.getSales().catch(() => []),
-      ecommerceApi.getStockLogs().catch(() => []),
-    ])
-      .then(([productRows, saleRows, logRows]) => {
+    ecommerceApi.getOverview()
+      .then(({ products: productRows, sales: saleRows, stockLogs: logRows }) => {
         const normalizedProducts = productRows.map(normalizeProduct);
         const productMap = new Map(normalizedProducts.map(item => [item.id, item]));
         setProducts(normalizedProducts);

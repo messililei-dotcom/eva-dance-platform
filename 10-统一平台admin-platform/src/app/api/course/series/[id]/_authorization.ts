@@ -32,21 +32,55 @@ export function getSeriesAccessStatus(db: AdminDb, seriesId: number, memberId: n
     return { authorized: false, trial_available: false, reason: 'not_found', message: '课程不存在' };
   }
 
-  const series = db.prepare('SELECT id, is_free FROM CourseSeries WHERE id=?').get<{ id: number; is_free?: number }>(seriesId);
-  if (!series) {
+  const series = db.prepare(
+    "SELECT id, status, is_free, trial_count FROM CourseSeries WHERE id=?"
+  ).get<{ id: number; status?: string; is_free?: number; trial_count?: number }>(seriesId);
+  if (!series || series.status !== 'published') {
     return { authorized: false, trial_available: false, reason: 'not_found', message: '课程不存在' };
   }
 
+  const freeTrialCourses = db.prepare(
+    "SELECT COUNT(*) AS count FROM OnlineCourse WHERE series_id=? AND status='published' AND is_free_trial=1"
+  ).get<{ count: number }>(seriesId)?.count || 0;
+  const trialCount = Number(series.trial_count || 0);
+
   if (Number(series.is_free || 0) === 1) {
-    return { authorized: true, trial_available: true, reason: 'free_series', auth_type: 'free_series' };
+    return { authorized: true, trial_available: true, trial_count: trialCount, reason: 'free', auth_type: 'free' };
   }
 
   const authorization = getActiveAuthorization(db, seriesId, memberId, phone);
   if (authorization) {
-    return { authorized: true, trial_available: false, reason: 'authorized', auth_type: authorization.type || 'admin_grant' };
+    return {
+      authorized: true,
+      trial_available: trialCount > 0 || freeTrialCourses > 0,
+      trial_count: trialCount,
+      reason: 'authorized',
+      auth_type: authorization.type || 'admin_grant',
+    };
   }
 
-  return { authorized: false, trial_available: false, reason: 'unauthorized', message: '请先申请授权观看完整学习' };
+  return {
+    authorized: false,
+    trial_available: trialCount > 0 || freeTrialCourses > 0,
+    trial_count: trialCount,
+    reason: 'locked',
+    auth_type: null,
+    message: '请先申请授权观看完整学习',
+  };
+}
+
+function trialVideoIds(db: AdminDb, seriesId: number, limit: number) {
+  if (!seriesId || limit <= 0) return new Set<number>();
+  const rows = db.prepare(
+    `SELECT cv.id
+     FROM CourseVideo cv
+     JOIN OnlineCourse oc ON oc.id=cv.course_id
+     WHERE oc.series_id=? AND oc.status='published'
+       AND (cv.status IS NULL OR cv.status='' OR cv.status='published')
+     ORDER BY oc.sort_order, oc.id, cv.sort_order, cv.id
+     LIMIT ?`
+  ).all<{ id: number }>(seriesId, limit);
+  return new Set(rows.map(row => Number(row.id)).filter(Boolean));
 }
 
 export function getVideoAccessStatus(db: AdminDb, videoId: number, memberId: number, phone = '') {
@@ -55,22 +89,52 @@ export function getVideoAccessStatus(db: AdminDb, videoId: number, memberId: num
   }
 
   const video = db.prepare(
-    `SELECT cv.id, cv.is_free, oc.series_id, cs.is_free as series_is_free
+    `SELECT cv.id, cv.is_free, cv.status as video_status,
+            oc.series_id, oc.is_free_trial, oc.status as course_status,
+            cs.status as series_status, cs.is_free as series_is_free, cs.trial_count
      FROM CourseVideo cv
      LEFT JOIN OnlineCourse oc ON oc.id=cv.course_id
      LEFT JOIN CourseSeries cs ON cs.id=oc.series_id
      WHERE cv.id=?`
-  ).get<{ id: number; is_free?: number; series_id?: number; series_is_free?: number }>(videoId);
+  ).get<{
+    id: number;
+    is_free?: number;
+    video_status?: string;
+    series_id?: number;
+    is_free_trial?: number;
+    course_status?: string;
+    series_status?: string;
+    series_is_free?: number;
+    trial_count?: number;
+  }>(videoId);
 
-  if (!video) {
+  if (
+    !video
+    || video.series_status !== 'published'
+    || video.course_status !== 'published'
+    || (video.video_status && video.video_status !== 'published')
+  ) {
     return { authorized: false, trial_available: false, reason: 'not_found', message: '视频不存在' };
   }
 
-  if (Number(video.is_free || 0) === 1 || Number(video.series_is_free || 0) === 1) {
-    return { authorized: true, trial_available: true, reason: 'free_video', auth_type: 'free_video' };
-  }
+  const seriesId = Number(video.series_id || 0);
+  const authorization = getActiveAuthorization(db, seriesId, memberId, phone);
+  const isSeriesFree = Number(video.series_is_free || 0) === 1;
+  const isCourseTrial = Number(video.is_free_trial || 0) === 1;
+  const isVideoFree = Number(video.is_free || 0) === 1;
+  const trialCount = Number(video.trial_count || 0);
+  const isWithinTrialCount = trialVideoIds(db, seriesId, trialCount).has(videoId);
+  const authorized = Boolean(authorization || isSeriesFree || isCourseTrial || isVideoFree || isWithinTrialCount);
+  const isTrial = isCourseTrial || isVideoFree || isWithinTrialCount;
 
-  return getSeriesAccessStatus(db, Number(video.series_id || 0), memberId, phone);
+  return {
+    authorized,
+    series_id: seriesId,
+    trial_available: trialCount > 0 || isCourseTrial || isVideoFree,
+    reason: authorization ? 'authorized' : isSeriesFree ? 'free' : isTrial ? 'trial' : 'locked',
+    auth_type: authorization?.type || (isSeriesFree ? 'free' : isTrial ? 'trial' : null),
+    message: authorized ? '' : '请先申请授权观看完整学习',
+  };
 }
 
 export function ensureCourseSeriesVisitTable(db: AdminDb) {
@@ -103,6 +167,14 @@ export function ensureAuthorizationAuditColumns(db: AdminDb) {
   if (!columns.has('granted_by')) db.exec('ALTER TABLE CourseAuthorization ADD COLUMN granted_by INTEGER');
   if (!columns.has('revoked_by')) db.exec('ALTER TABLE CourseAuthorization ADD COLUMN revoked_by INTEGER');
   if (!columns.has('revoked_at')) db.exec('ALTER TABLE CourseAuthorization ADD COLUMN revoked_at DATETIME');
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_course_authorization_series_member_id
+      ON CourseAuthorization(series_id, member_id, id DESC);
+    CREATE INDEX IF NOT EXISTS idx_course_authorization_series_phone_id
+      ON CourseAuthorization(series_id, phone, id DESC);
+    CREATE INDEX IF NOT EXISTS idx_course_authorization_status_series
+      ON CourseAuthorization(status, series_id, id DESC);
+  `);
 }
 
 export function authorizeMembers(db: AdminDb, seriesId: number, memberIds: number[], grantedBy = 1) {

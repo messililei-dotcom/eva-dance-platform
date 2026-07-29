@@ -100,57 +100,41 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
          LIMIT 500`
       ).all(...values);
 
-      const visitLogStmt = db.prepare(
-        `SELECT id, source, visited_at, '' as visit_object
-         FROM CourseSeriesVisitLog
-         WHERE series_id=? AND member_id=?
-         ORDER BY visited_at DESC, id DESC
-         LIMIT 20`
-      );
-      const videoVisitStmt = db.prepare(
-        `SELECT vp.id,
-                'video' as source,
-                COALESCE(vp.last_play_at, vp.created_at) as visited_at,
-                COALESCE(cv.name, oc.name, '课程视频') as visit_object
-         FROM VideoProgress vp
-         JOIN CourseVideo cv ON cv.id=vp.video_id
-         JOIN OnlineCourse oc ON oc.id=cv.course_id
-         WHERE oc.series_id=? AND vp.member_id=?
-         ORDER BY COALESCE(vp.last_play_at, vp.created_at) DESC, vp.id DESC
-         LIMIT 20`
-      );
-      const grantHistoryStmt = db.prepare(
-        `SELECT COUNT(*) as grant_count,
-                SUM(CASE WHEN status='revoked' THEN 1 ELSE 0 END) as revoke_count
+      const grantHistoryRows = db.prepare(
+        `SELECT
+           COALESCE(member_id, 0) AS member_id,
+           COALESCE(phone, '') AS phone,
+           COUNT(*) AS grant_count,
+           SUM(CASE WHEN status='revoked' THEN 1 ELSE 0 END) AS revoke_count
          FROM CourseAuthorization
          WHERE series_id=?
-           AND (
-             member_id=?
-             OR (COALESCE(phone, '')<>'' AND COALESCE(?, '')<>'' AND phone=?)
-           )`
+         GROUP BY COALESCE(member_id, 0), COALESCE(phone, '')`
+      ).all(seriesId) as any[];
+      const grantHistoryByMember = new Map(
+        grantHistoryRows
+          .filter(row => Number(row.member_id || 0) > 0)
+          .map(row => [Number(row.member_id), row]),
+      );
+      const grantHistoryByPhone = new Map(
+        grantHistoryRows
+          .filter(row => String(row.phone || ''))
+          .map(row => [String(row.phone), row]),
       );
       const enrichedRows = rows.map((row: any) => {
-        const visitRecords = [
-          ...visitLogStmt.all(seriesId, row.id),
-          ...videoVisitStmt.all(seriesId, row.id),
-        ]
-          .sort((a: any, b: any) => String(b.visited_at || '').localeCompare(String(a.visited_at || '')))
-          .slice(0, 20);
-        const grantHistory = grantHistoryStmt.get(seriesId, row.id, row.phone || '', row.phone || '') as any;
+        const grantHistory = grantHistoryByMember.get(Number(row.id))
+          || grantHistoryByPhone.get(String(row.phone || ''));
         return {
           ...row,
           grant_history: {
             grant_count: Number(grantHistory?.grant_count || 0),
             revoke_count: Number(grantHistory?.revoke_count || 0),
           },
-          visit_records: visitRecords.length ? visitRecords : (
-            row.first_visited_at ? [{
-              id: `summary-${row.id}`,
-              source: row.visit_source || 'learn',
-              visited_at: row.last_visited_at || row.first_visited_at,
-              visit_object: '',
-            }] : []
-          ),
+          visit_records: row.first_visited_at ? [{
+            id: `summary-${row.id}`,
+            source: row.visit_source || 'learn',
+            visited_at: row.last_visited_at || row.first_visited_at,
+            visit_object: '',
+          }] : [],
         };
       });
 

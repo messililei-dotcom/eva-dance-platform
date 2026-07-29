@@ -264,6 +264,10 @@ export const eventApi = {
     const res = await api.put(`/event/competitions/${id}`, payload);
     return res.data;
   },
+  uploadCompetitionCover: async (data: FormData): Promise<any> => {
+    const res = await api.post('/event/competitions/cover', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data?.data;
+  },
   patchCompetition: async (id: number | string, payload: any): Promise<any> => {
     const res = await api.patch(`/event/competitions/${id}`, payload);
     return res.data;
@@ -564,6 +568,10 @@ export const onlineCourseApi = {
     const res = await api.get(`/course/series/${id}/students`, { params });
     return res.data;
   },
+  getAllSeriesStudents: async (params?: QueryParams): Promise<any> => {
+    const res = await api.get('/course/series/students', { params });
+    return res.data;
+  },
   authorizeMember: async (seriesId: number | string, data: unknown): Promise<any> => {
     const res = await api.post(`/course/series/${seriesId}/authorize`, data);
     return res.data;
@@ -662,6 +670,14 @@ export const onlineCourseApi = {
 
 // ========== 电商管理 API（已整合到学员系统 /api/ecommerce/*） ==========
 export const ecommerceApi = {
+  getOverview: async (): Promise<{ products: any[]; sales: any[]; stockLogs: any[] }> => {
+    const res = await api.get('/ecommerce/overview');
+    return {
+      products: Array.isArray(res.data?.products) ? res.data.products : [],
+      sales: Array.isArray(res.data?.sales) ? res.data.sales : [],
+      stockLogs: Array.isArray(res.data?.stockLogs) ? res.data.stockLogs : [],
+    };
+  },
   // 商品列表
   getProducts: async (): Promise<any[]> => {
     const res = await axios.get('/local-api/ecommerce/products', { headers: { Authorization: `Bearer ${getToken() || ''}` } });

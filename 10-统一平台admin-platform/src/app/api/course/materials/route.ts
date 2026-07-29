@@ -1,6 +1,5 @@
 import { allowedSort, jsonError, withDb } from '../_materials';
 import { hasAuth, unauthorized } from '../../training-db';
-import { importMissingVodMaterials, syncVodMaterials } from '../_vod-sync';
 import { ensureLocalAuthTables } from '../../_local-auth';
 
 export const dynamic = 'force-dynamic';
@@ -66,20 +65,13 @@ export async function GET(request: Request) {
         LIMIT ? OFFSET ?
       `).all(...params, pageSize, (page - 1) * pageSize);
 
-      let total = fetchTotal();
-      let rows = fetchRows();
-      const vod_import = await importMissingVodMaterials(db, { limit: Math.max(100, pageSize) });
-      if (vod_import.imported) {
-        total = fetchTotal();
-        rows = fetchRows();
-      }
-      const vod_sync = await syncVodMaterials(db, rows, { limit: pageSize });
-      if (vod_sync.updated || vod_sync.deleted) {
-        total = fetchTotal();
-        rows = fetchRows();
-      }
+      const total = fetchTotal();
+      const rows = fetchRows();
 
-      return Response.json({ success: true, data: rows, total, page, pageSize, vod_sync: { ...vod_sync, imported: vod_import.imported, import_checked: vod_import.checked, import_errors: vod_import.errors } });
+      // Listing materials must remain a database-only operation. VOD reconciliation
+      // can make dozens of external requests and is intentionally available through
+      // the explicit /materials/vod-status action instead.
+      return Response.json({ success: true, data: rows, total, page, pageSize });
     });
   } catch (err: any) {
     return jsonError(err?.message || '获取素材失败');

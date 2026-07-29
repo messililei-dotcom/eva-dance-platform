@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { App, Card, DatePicker, Empty, Input, Select, Space, Spin, Table, Tabs, Tag, Typography } from 'antd';
+import { App, Card, DatePicker, Empty, Input, Select, Space, Spin, Tabs, Tag, Typography } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import { BarChartOutlined, ClockCircleOutlined, HistoryOutlined, SearchOutlined, TeamOutlined } from '@ant-design/icons';
 import type { Dayjs } from 'dayjs';
 import { api } from '@/lib/api';

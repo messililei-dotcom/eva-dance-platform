@@ -17,7 +17,6 @@ import { platformLinks } from '@/lib/platform-links';
 
 const { Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
-const EVENT_MANAGEMENT_URL = 'https://saishi.dongfangwuquan.com';
 
 // ========== 完整导航菜单 ==========
 const menuItems: any[] = [
@@ -39,6 +38,7 @@ const menuItems: any[] = [
     label: '教学',
     children: [
       { key: '/training', icon: <TeamOutlined />, label: '线下课程' },
+      { key: '/offline-scheduling', icon: <CalendarOutlined />, label: '排课与约课' },
       { key: '/online-course', icon: <LaptopOutlined />, label: '线上课程' },
       { key: '/online-course/materials', icon: <FolderOutlined />, label: '素材中心' },
       { key: '/online-course/auth', icon: <UserSwitchOutlined />, label: '学员授权' },
@@ -223,11 +223,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       defaultOpenKeys={isMobile ? ['grp-education'] : ['grp-core']}
       items={visibleMenuItems}
       onClick={({ key }) => {
-        if (key === '/events') {
-          window.location.href = EVENT_MANAGEMENT_URL;
-          setMobileMenuOpen(false);
-          return;
-        }
         if (key.startsWith('/')) {
           router.push(key);
           setMobileMenuOpen(false);

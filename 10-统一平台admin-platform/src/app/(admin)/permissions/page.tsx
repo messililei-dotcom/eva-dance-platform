@@ -2,8 +2,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Badge, Button, Card, Col, Collapse, Empty, Form, Input, message, Modal, Row, Select,
-  Space, Spin, Statistic, Switch, Table, Tabs, Tag, Tooltip, Typography,
+  Space, Spin, Statistic, Switch, Tabs, Tag, Tooltip, Typography,
 } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {
   DeleteOutlined, EditOutlined, LockOutlined, PlusOutlined, SafetyOutlined,
   StopOutlined, CheckCircleOutlined, TeamOutlined, UserOutlined,

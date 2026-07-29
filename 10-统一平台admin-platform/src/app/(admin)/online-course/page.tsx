@@ -24,13 +24,13 @@ import {
   Spin,
   Statistic,
   Switch,
-  Table,
   Tabs,
   Tag,
   Tooltip,
   Typography,
   Upload,
 } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {
   CloudUploadOutlined,
   DeleteOutlined,
@@ -459,6 +459,9 @@ export default function OnlineCoursePage() {
   const [series, setSeries] = useState<SeriesRow[]>([]);
   const [lessons, setLessons] = useState<LessonRow[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [orderTotalRows, setOrderTotalRows] = useState(0);
+  const [orderPage, setOrderPage] = useState(1);
+  const [orderPageSize, setOrderPageSize] = useState(20);
   const [materials, setMaterials] = useState<MaterialRow[]>([]);
   const [seriesPage, setSeriesPage] = useState(1);
   const [seriesPageSize, setSeriesPageSize] = useState(SERIES_PAGE_SIZE_DEFAULT);
@@ -469,7 +472,6 @@ export default function OnlineCoursePage() {
   const [materialSortOrder, setMaterialSortOrder] = useState<'asc' | 'desc'>('desc');
   const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
   const [folders, setFolders] = useState<FolderRow[]>([]);
-  const [dashboard, setDashboard] = useState<any>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedSeriesId, setSelectedSeriesId] = useState<number | null>(null);
   const [selectedFolderId, setSelectedFolderId] = useState<number | 'all'>('all');
@@ -583,34 +585,10 @@ export default function OnlineCoursePage() {
 
   const load = () => {
     setLoading(true);
-    Promise.all([
-      onlineCourseApi.getSeries().catch(() => ({ data: [] })),
-      onlineCourseApi.getOrders().catch(() => ({ data: [] })),
-      onlineCourseApi.getMaterials({
-        page: materialPage,
-        pageSize: materialPageSize,
-        sort_by: materialSortBy,
-        sort_order: materialSortOrder,
-        folder_id: selectedMaterialFolderParam,
-        type: materialType,
-        keyword: materialKeyword.trim(),
-      }).catch(() => ({ data: [], total: 0 })),
-      onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] })),
-      onlineCourseApi.getDashboard().catch(() => ({ data: null })),
-      platformAdapter.getMembers().catch(() => []),
-      onlineCourseApi.getMaterialStorage().catch(() => null),
-    ])
-      .then(([seriesPayload, orderPayload, materialPayload, folderPayload, dashboardPayload, memberRows, storagePayload]) => {
+    onlineCourseApi.getSeries()
+      .then((seriesPayload) => {
         const nextSeries = pickArray(seriesPayload);
-        const nextOrders = pickArray(orderPayload);
         setSeries(nextSeries);
-        setOrders(nextOrders);
-        setMaterials(pickArray(materialPayload));
-        setMaterialTotalRows(Number((materialPayload as any)?.total || 0));
-        setFolders(pickFolderRows(folderPayload));
-        setDashboard((dashboardPayload as any)?.data || dashboardPayload || null);
-        setMembers(memberRows);
-        if (storagePayload) setStorageStats(storagePayload);
         const firstId = Number(nextSeries[0]?.id || 0);
         if (!selectedSeriesId && firstId) setSelectedSeriesId(firstId);
       })
@@ -624,9 +602,33 @@ export default function OnlineCoursePage() {
   }, []);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || activeTab !== 'materials') return;
     loadMaterials().catch(err => message.error(apiError(err)));
-  }, [loadMaterials]);
+  }, [activeTab, loadMaterials, loading]);
+
+  useEffect(() => {
+    if (activeTab !== 'materials') return;
+    onlineCourseApi.getMaterialFolders()
+      .then(payload => setFolders(pickFolderRows(payload)))
+      .catch(() => setFolders([]));
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'auth') return;
+    onlineCourseApi.getOrders({ page: orderPage, pageSize: orderPageSize })
+      .then((orderPayload) => {
+      setOrders(pickArray(orderPayload));
+        setOrderTotalRows(Number((orderPayload as any)?.total || pickArray(orderPayload).length));
+      })
+      .catch(err => message.error(`授权订单加载失败：${apiError(err)}`));
+  }, [activeTab, orderPage, orderPageSize]);
+
+  useEffect(() => {
+    if (activeTab !== 'auth') return;
+    platformAdapter.getMemberDirectory()
+      .then(directory => setMembers(directory.members))
+      .catch(err => message.error(`学员目录加载失败：${apiError(err)}`));
+  }, [activeTab]);
 
   useEffect(() => {
     setMaterialPage(1);
@@ -708,23 +710,40 @@ export default function OnlineCoursePage() {
       setAuthorizedStudents([]);
       return;
     }
-    if (authSeriesId === 'all') {
-      const payloads = await Promise.all(series.map(item => (
-        onlineCourseApi.getSeriesStudents(item.id, { tab: authFilter }).catch(() => ({ data: [] }))
+    const loadBySeries = async () => {
+      const results = await Promise.allSettled(series.map(item => (
+        onlineCourseApi.getSeriesStudents(item.id, { tab: authFilter })
       )));
-      setAuthorizedStudents(payloads.flatMap((payload, index) => {
+      const successful = results.filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled');
+      if (!successful.length) {
+        const firstFailure = results.find((result): result is PromiseRejectedResult => result.status === 'rejected');
+        throw firstFailure?.reason || new Error('授权数据加载失败');
+      }
+      return results.flatMap((result, index) => {
+        if (result.status !== 'fulfilled') return [];
         const sourceSeries = series[index];
-        return pickArray(payload).map(row => ({
+        return pickArray(result.value).map(row => ({
           ...row,
           series_id: sourceSeries.id,
-          series_name: sourceSeries.name,
+          series_name: row.series_name || sourceSeries.name,
           auth_row_key: `${sourceSeries.id}:${row.id || row.phone || row.authorization_id || index}`,
         }));
-      }));
+      });
+    };
+    if (authSeriesId === 'all') {
+      try {
+        const payload = await onlineCourseApi.getAllSeriesStudents({ tab: authFilter });
+        const rows = pickArray(payload);
+        // 汇总接口曾在生产环境异常返回空数据；数据库有课程时以逐课程接口兜底，
+        // 防止真实授权被静默渲染成“暂无授权学员”。
+        setAuthorizedStudents(rows.length ? rows : await loadBySeries());
+      } catch {
+        setAuthorizedStudents(await loadBySeries());
+      }
       return;
     }
     const sourceSeries = series.find(item => Number(item.id) === Number(authSeriesId));
-    const studentPayload = await onlineCourseApi.getSeriesStudents(authSeriesId, { tab: authFilter }).catch(() => ({ data: [] }));
+    const studentPayload = await onlineCourseApi.getSeriesStudents(authSeriesId, { tab: authFilter });
     setAuthorizedStudents(pickArray(studentPayload).map(row => ({
       ...row,
       series_id: authSeriesId,
@@ -806,12 +825,13 @@ export default function OnlineCoursePage() {
     };
   }, [members]);
 
-  const openAuthMemberModal = useCallback((record: any) => {
-    const member = findAuthMember(record);
-    if (!member?.id) {
+  const openAuthMemberModal = useCallback(async (record: any) => {
+    const directoryMember = findAuthMember(record);
+    if (!directoryMember?.id) {
       message.warning('未找到该学员档案');
       return;
     }
+    const member = await platformAdapter.getMemberRecord(directoryMember.id).catch(() => directoryMember);
     setAuthEditingMember(member);
     authMemberForm.setFieldsValue({
       name: member.name || record?.name || '',
@@ -2307,13 +2327,22 @@ export default function OnlineCoursePage() {
                     ]}
                   />
                 </Card>
-                <Card title={`授权订单 ${orders.length}`} styles={{ body: { padding: 0 } }}>
+                <Card title={`授权订单 ${orderTotalRows}`} styles={{ body: { padding: 0 } }}>
                   <Table<any>
                     rowKey={(record) => String(record.id || record.orderNo || record.order_no)}
                     size="middle"
                     dataSource={orders}
                     scroll={{ x: 1080 }}
-                    pagination={{ pageSize: 20 }}
+                    pagination={{
+                      current: orderPage,
+                      pageSize: orderPageSize,
+                      total: orderTotalRows,
+                      showSizeChanger: true,
+                      onChange: (page, pageSize) => {
+                        setOrderPage(pageSize === orderPageSize ? page : 1);
+                        setOrderPageSize(pageSize);
+                      },
+                    }}
                     locale={{ emptyText: <Empty description="暂无网课授权订单" /> }}
                     columns={[
                       { title: '订单号', width: 160, render: (_, record) => record.order_no || record.orderNo || '-' },

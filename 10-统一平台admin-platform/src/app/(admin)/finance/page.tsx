@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import { App, Button, Card, Col, Empty, Form, Input, InputNumber, Modal, Progress, Row, Select, Spin, Statistic, Table, Tabs, Tag, Typography } from 'antd';
+import { App, Button, Card, Col, Empty, Form, Input, InputNumber, Modal, Progress, Row, Select, Spin, Statistic, Tabs, Tag, Typography } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import { ArrowDownOutlined, ArrowUpOutlined, BankOutlined, BarChartOutlined, DollarOutlined, FundOutlined, PlusOutlined, RiseOutlined, WalletOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { platformAdapter } from '@/lib/adapters/platform';
@@ -125,17 +126,15 @@ export default function FinancePage() {
     Promise.all([
       platformAdapter.getFinanceSummary().catch(() => null),
       eduApi.getFinanceSummary().catch(() => null),
-      ecommerceApi.getSales().catch(() => []),
-      ecommerceApi.getStockLogs().catch(() => []),
-      ecommerceApi.getProducts().catch(() => []),
+      ecommerceApi.getOverview().catch(() => ({ products: [], sales: [], stockLogs: [] })),
       eduApi.getFinanceExpenses().catch(() => []),
     ])
-      .then(([nextSummary, financeData, salesData, stockData, productData, expenseData]) => {
+      .then(([nextSummary, financeData, ecommerceData, expenseData]) => {
         setSummary(nextSummary);
         setLegacySummary(isRecord(financeData) ? financeData : null);
-        setShopSales(pickArray<FinanceSourceRow>(salesData));
-        setStockLogs(pickArray<FinanceSourceRow>(stockData));
-        setProducts(pickArray<FinanceSourceRow>(productData));
+        setShopSales(pickArray<FinanceSourceRow>(ecommerceData.sales));
+        setStockLogs(pickArray<FinanceSourceRow>(ecommerceData.stockLogs));
+        setProducts(pickArray<FinanceSourceRow>(ecommerceData.products));
         setManualExpenses(pickArray<FinanceExpenseRow>(expenseData));
       })
       .finally(() => setLoading(false));

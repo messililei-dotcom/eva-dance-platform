@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       const payment = db.prepare('SELECT * FROM Payment WHERE id = ?').get(paymentId);
       if (!payment) throw new Error('缴费记录不存在');
       const remaining = toNumber(payment.remainingSessions);
-      if (remaining < count) throw new Error('剩余课时不足，无法核销');
+      if (remaining < count) throw new Error('剩余课次不足，无法核销');
       const remainingAfter = remaining - count;
       const info = db.prepare(`
         INSERT INTO ConsumeRecord (

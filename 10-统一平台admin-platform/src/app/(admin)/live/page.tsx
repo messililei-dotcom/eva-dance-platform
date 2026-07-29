@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { Table, Card, Tag, Space, Button, Input, Select, DatePicker, Row, Col, Statistic, Tabs, Modal, Form, Switch, message } from 'antd';
+import { Card, Tag, Space, Button, Input, Select, DatePicker, Row, Col, Statistic, Tabs, Modal, Form, Switch, message } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import { PlusOutlined, SearchOutlined, VideoCameraOutlined, PlayCircleOutlined, ClockCircleOutlined, UserOutlined, SettingOutlined, CopyOutlined } from '@ant-design/icons';
 import { InputNumber } from 'antd';
 import { sortableColumns } from '@/lib/table-sort';

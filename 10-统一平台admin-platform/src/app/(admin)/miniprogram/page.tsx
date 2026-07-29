@@ -1,9 +1,10 @@
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Card, Row, Col, Statistic, Table, Tag, Button, Space, Modal, Tabs,
+  Card, Row, Col, Statistic, Tag, Button, Space, Modal, Tabs,
   Form, Input, InputNumber, Switch, Select, message, Descriptions, Badge, Tooltip, Empty
 } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {
   QrcodeOutlined, AppstoreOutlined, EditOutlined,
   EyeOutlined, ReloadOutlined, CloudUploadOutlined, CheckCircleOutlined,

@@ -5,7 +5,6 @@ import {
   Row,
   Col,
   Statistic,
-  Table,
   Tag,
   Button,
   Input,
@@ -16,6 +15,7 @@ import {
   message,
   Tooltip,
 } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {
   UserOutlined,
   TeamOutlined,

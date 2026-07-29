@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Alert, Avatar, Button, Card, Col, Descriptions, Empty, Progress, Row, Space, Spin, Statistic, Table, Tabs, Tag, Typography } from 'antd';
+import { Alert, Avatar, Button, Card, Col, Descriptions, Empty, Progress, Row, Space, Spin, Statistic, Tabs, Tag, Typography } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {
   ArrowLeftOutlined,
   BookOutlined,

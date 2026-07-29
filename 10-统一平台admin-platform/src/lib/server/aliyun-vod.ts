@@ -467,6 +467,9 @@ export async function getVodPlayOptions(videoId: string): Promise<VodPlayOption[
     VideoId: videoId,
     Formats: process.env.ALIYUN_VOD_PLAY_FORMATS || 'm3u8,mp4',
     AuthTimeout: Number(process.env.ALIYUN_VOD_PLAY_AUTH_TIMEOUT || 3600),
+    PlayConfig: JSON.stringify({
+      PlayDomain: process.env.ALIYUN_VOD_PLAY_DOMAIN || 'vod.swod.com.cn',
+    }),
   });
   const playInfo = asArray(response?.PlayInfoList?.PlayInfo);
   const byDefinition = new Map<string, VodPlayOption>();

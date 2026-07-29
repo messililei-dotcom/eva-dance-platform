@@ -52,9 +52,12 @@ function nextExpenseNo(db: any) {
 }
 
 export async function GET() {
-  const db = openAdminDb();
+  const db = openAdminDb({ readonly: true });
   try {
-    ensureFinanceExpenseTable(db);
+    const table = db.prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'FinanceExpense'",
+    ).get();
+    if (!table) return Response.json([]);
     const columns = getColumns(db);
     const titleExpr = columns.has('title') ? 'title' : "COALESCE(NULLIF(remark, ''), category)";
     const dateExpr = columns.has('expense_date') && columns.has('expenseDate')

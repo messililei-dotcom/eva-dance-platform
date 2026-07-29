@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import { Avatar, Card, Col, Empty, List, Row, Space, Spin, Statistic, Table, Tag, Typography } from 'antd';
+import { Avatar, Card, Col, Empty, List, Row, Space, Spin, Statistic, Tag, Typography } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {
   BarChartOutlined, DollarOutlined, OrderedListOutlined, ShopOutlined,
   TeamOutlined, UserOutlined,

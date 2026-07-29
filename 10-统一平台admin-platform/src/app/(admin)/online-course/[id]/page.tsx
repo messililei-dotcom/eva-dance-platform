@@ -19,13 +19,13 @@ import {
   Space,
   Spin,
   Switch,
-  Table,
   Tag,
   Tooltip,
   Tree,
   Typography,
   Upload,
 } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {
   AppstoreOutlined,
   ArrowLeftOutlined,
@@ -318,6 +318,46 @@ function reorderLessonRows(rows: LessonRow[], lessonId: number, sortOrder: numbe
   ordered.splice(nextIndex, 0, moving);
 
   return ordered.map((item, index) => ({ ...item, sort_order: index + 1 }));
+}
+
+function CommittedSortInput({
+  value,
+  onCommit,
+  style,
+}: {
+  value: number | null | undefined;
+  onCommit: (value: number) => void | Promise<void>;
+  style?: React.CSSProperties;
+}) {
+  const committedValue = Number.isInteger(Number(value)) && Number(value) > 0 ? Number(value) : 1;
+  const [draftValue, setDraftValue] = useState<number | null>(committedValue);
+
+  useEffect(() => {
+    setDraftValue(committedValue);
+  }, [committedValue]);
+
+  const commit = () => {
+    const nextValue = Math.trunc(Number(draftValue));
+    if (!Number.isInteger(nextValue) || nextValue < 1) {
+      setDraftValue(committedValue);
+      return;
+    }
+    if (nextValue !== committedValue) void onCommit(nextValue);
+  };
+
+  return (
+    <InputNumber
+      min={1}
+      size="small"
+      value={draftValue}
+      controls={false}
+      keyboard={false}
+      onChange={setDraftValue}
+      onPressEnter={commit}
+      onBlur={commit}
+      style={style}
+    />
+  );
 }
 
 export default function OnlineCourseEditorPage() {
@@ -1356,7 +1396,7 @@ export default function OnlineCourseEditorPage() {
                     scroll={{ x: 1240, y: 'calc(100dvh - 438px)' }}
                     locale={{ emptyText: <Empty description="暂无课节；可新建或批量创建" /> }}
                     columns={sortableColumns<LessonRow>([
-                      { title: '排序', dataIndex: 'sort_order', align: 'center' as const, width: 76, render: (value, record) => <InputNumber min={1} size="small" value={value || 1} onChange={next => saveLessonSort(record, next)} style={sortInputStyle(value)} /> },
+                      { title: '排序', dataIndex: 'sort_order', align: 'center' as const, width: 76, render: (value, record) => <CommittedSortInput value={value} onCommit={next => saveLessonSort(record, next)} style={sortInputStyle(value)} /> },
                       { title: '课节名称', dataIndex: 'name', fixed: 'left', align: 'left' as const, width: 260, className: 'lesson-name-column', render: value => <Text strong style={{ display: 'block', textAlign: 'left' }}>{stripFileExtension(value) || value}</Text> },
                       {
                         title: '对应素材',
@@ -1402,7 +1442,7 @@ export default function OnlineCourseEditorPage() {
                         <Col xs={24} md={12} xl={8} key={item.id}>
                           <Card size="small" hoverable onClick={() => openLessonModal(item)} style={{ height: '100%' }}>
                             <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                              <Space style={{ justifyContent: 'space-between', width: '100%' }}><InputNumber min={1} size="small" value={item.sort_order || 1} onChange={next => saveLessonSort(item, next)} style={sortInputStyle(item.sort_order)} /><Text strong ellipsis style={{ maxWidth: 180 }}>{stripFileExtension(item.name) || item.name}</Text>{statusTag(item.local_status || item.status)}</Space>
+                              <Space style={{ justifyContent: 'space-between', width: '100%' }}><CommittedSortInput value={item.sort_order} onCommit={next => saveLessonSort(item, next)} style={sortInputStyle(item.sort_order)} /><Text strong ellipsis style={{ maxWidth: 180 }}>{stripFileExtension(item.name) || item.name}</Text>{statusTag(item.local_status || item.status)}</Space>
                               {previewRecord ? (
                                 <button
                                   type="button"

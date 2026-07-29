@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { Table, Card, Tag, Badge, Space, Button, Input, Select, DatePicker, Row, Col, Statistic, Tabs, Modal, Descriptions, Steps, message } from 'antd';
+import { Card, Tag, Badge, Space, Button, Input, Select, DatePicker, Row, Col, Statistic, Tabs, Modal, Descriptions, Steps, message } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import { SearchOutlined, ReloadOutlined, DownloadOutlined, EyeOutlined, CheckCircleOutlined, CloseCircleOutlined, SyncOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { formatCompactMoney, formatPaymentAmount } from '@/lib/money-format';
 import { sortableColumns } from '@/lib/table-sort';

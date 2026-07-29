@@ -1,12 +1,13 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { App, Avatar, Button, Card, Col, DatePicker, Empty, Form, Input, Modal, Row, Select, Space, Spin, Statistic, Table, Tag, Typography } from 'antd';
+import { App, Avatar, Button, Card, Col, DatePicker, Empty, Form, Input, Modal, Row, Select, Space, Spin, Statistic, Tag, Typography } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import { DeleteOutlined, PhoneOutlined, ReloadOutlined, SearchOutlined, TeamOutlined, UserAddOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { platformAdapter } from '@/lib/adapters/platform';
 import { formatPaymentAmount } from '@/lib/money-format';
 import { sortableColumns } from '@/lib/table-sort';
-import type { Member, UnifiedOrder } from '@/types/domain';
+import type { Member } from '@/types/domain';
 
 const { Text, Title } = Typography;
 
@@ -36,10 +37,6 @@ function moneyValue(value: unknown) {
   return formatPaymentAmount(value);
 }
 
-function normalizePhone(value?: string) {
-  return String(value || '').replace(/\D/g, '');
-}
-
 function dateValue(value?: string) {
   const text = String(value || '').slice(0, 10);
   return text && text !== '-' ? text : '';
@@ -52,58 +49,6 @@ function isMemberDirectoryRecord(member: Member) {
 
 function memberAvatarSource(member?: Pick<Member, 'avatar' | 'raw'> | null) {
   return String(member?.avatar || member?.raw?.avatar || member?.raw?.avatarUrl || member?.raw?.avatar_url || '');
-}
-
-function latestDate(a?: string, b?: string) {
-  const left = dateValue(a);
-  const right = dateValue(b);
-  if (!left) return right || '-';
-  if (!right) return left || '-';
-  return left > right ? left : right;
-}
-
-function mergeMemberCommerce(members: Member[], orders: UnifiedOrder[]) {
-  const byId = new Map(members.map(member => [String(member.id), member]));
-  const byPhone = new Map(members.filter(member => normalizePhone(member.phone)).map(member => [normalizePhone(member.phone), member]));
-  const byName = new Map(members.filter(member => member.name && member.name !== '未知学员').map(member => [member.name, member]));
-  const metrics = new Map<string, { totalSpent: number; courseKeys: Set<string>; lastActiveAt: string }>();
-
-  const ensure = (member: Member) => {
-    const key = String(member.id);
-    if (!metrics.has(key)) {
-      metrics.set(key, { totalSpent: 0, courseKeys: new Set(), lastActiveAt: member.lastActiveAt });
-    }
-    return metrics.get(key)!;
-  };
-
-  const findMember = (source: { memberId?: unknown; memberPhone?: string; phone?: string; memberName?: string; name?: string }) => {
-    const id = source.memberId === undefined || source.memberId === null ? '' : String(source.memberId);
-    if (id && byId.has(id)) return byId.get(id);
-    const phone = normalizePhone(source.memberPhone || source.phone);
-    if (phone && byPhone.has(phone)) return byPhone.get(phone);
-    const name = source.memberName || source.name || '';
-    return byName.get(name);
-  };
-
-  orders.forEach(order => {
-    const member = findMember(order);
-    if (!member) return;
-    const item = ensure(member);
-    item.totalSpent += numberValue(order.amount);
-    item.courseKeys.add(`${order.orderType || order.sourceType || 'order'}:${order.title || order.id}`);
-    item.lastActiveAt = latestDate(item.lastActiveAt, order.orderDate);
-  });
-
-  return members.map(member => {
-    const item = metrics.get(String(member.id));
-    if (!item) return { ...member, totalSpent: 0 };
-    return {
-      ...member,
-      totalSpent: item.totalSpent,
-      courseCount: Math.max(numberValue(member.courseCount), item.courseKeys.size),
-      lastActiveAt: item.lastActiveAt || member.lastActiveAt,
-    };
-  });
 }
 
 export default function MembersPage() {
@@ -129,15 +74,14 @@ export default function MembersPage() {
   const loadMembers = () => {
     setLoading(true);
     Promise.all([
-      platformAdapter.getMembers(),
+      platformAdapter.getMemberDirectory(),
       platformAdapter.getRegions().catch(() => []),
-      platformAdapter.getOrders().catch(() => []),
     ])
-      .then(([memberRows, regionRows, orderRows]) => {
-        const directoryMembers = memberRows.filter(isMemberDirectoryRecord);
-        setMembers(mergeMemberCommerce(directoryMembers, orderRows));
+      .then(([directory, regionRows]) => {
+        const directoryMembers = directory.members.filter(isMemberDirectoryRecord);
+        setMembers(directoryMembers);
         setRegions(regionRows);
-        setOrderRevenue(orderRows.reduce((sum, order) => sum + numberValue(order.amount), 0));
+        setOrderRevenue(directory.orderRevenue);
       })
       .catch(() => message.error('学员列表加载失败'))
       .finally(() => setLoading(false));
@@ -184,7 +128,8 @@ export default function MembersPage() {
     return text ? dayjs(text) : undefined;
   };
 
-  const openEdit = (member: Member) => {
+  const openEdit = async (summaryMember: Member) => {
+    const member = await platformAdapter.getMemberRecord(summaryMember.id).catch(() => summaryMember);
     const raw = member.raw || {};
     setEditingMember(member);
     form.setFieldsValue({
@@ -374,7 +319,7 @@ export default function MembersPage() {
           pagination={{ pageSize: 20, showSizeChanger: true, showTotal: total => `共 ${total} 位学员` }}
           locale={{ emptyText: <Empty description="暂无学员数据" /> }}
           onRow={record => ({
-            onClick: () => openEdit(record),
+            onClick: () => { void openEdit(record); },
             style: { cursor: 'pointer' },
           })}
           columns={sortableColumns<Member>([

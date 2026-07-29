@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Table, Card, Tag, Space, Button, Input, Row, Col, Statistic, Empty, App } from 'antd';
+import { Card, Tag, Space, Button, Input, Row, Col, Statistic, Empty, App } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import { SearchOutlined, UserOutlined, ReloadOutlined } from '@ant-design/icons';
 import { eduApi } from '@/lib/api';
 import { useRouter } from 'next/navigation';

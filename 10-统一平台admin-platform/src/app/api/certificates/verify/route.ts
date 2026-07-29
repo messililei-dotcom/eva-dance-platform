@@ -1,5 +1,5 @@
 import { openAdminDb } from '@/lib/server/admin-db';
-import { certificatePublicUrl, ensureCertificateSchema } from '@/lib/server/certificates';
+import { certificatePublicUrl } from '@/lib/server/certificates';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -8,9 +8,14 @@ export async function GET(request: Request) {
   const no = new URL(request.url).searchParams.get('no') || '';
   if (!no) return Response.json({ success: false, error: '缺少证书编号' }, { status: 400 });
 
-  const db = openAdminDb();
+  const db = openAdminDb({ readonly: true });
   try {
-    ensureCertificateSchema(db);
+    const certificateTable = db.prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Certificate'",
+    ).get();
+    if (!certificateTable) {
+      return Response.json({ success: false, error: '证书查询服务暂不可用' }, { status: 503 });
+    }
     const row = db.prepare(`
       SELECT c.id, c.certificate_no, c.issue_date, c.status, c.pdf_url,
              COALESCE(m.name, '') AS member_name,

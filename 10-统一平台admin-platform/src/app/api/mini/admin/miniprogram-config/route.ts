@@ -99,7 +99,7 @@ export async function GET(request: Request) {
             apiBase: app.apiBase,
             vodPlaybackDomain: vodOrigin,
             legalDomains: [
-              'https://admin.dongfangwuquan.com',
+              'https://admin.swod.com.cn',
               ...(vodOrigin ? [vodOrigin] : []),
             ],
             linkedContent: ['学习上架', '授权同步', '学习进度', '订单支付', '打卡问答'],

@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { App, Card, Descriptions, Space, Table, Tag } from 'antd';
+import { App, Card, Descriptions, Space, Tag } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import { eventApi } from '@/lib/api';
 
 export default function EventJudgeDetailPage() {

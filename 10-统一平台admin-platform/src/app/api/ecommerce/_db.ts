@@ -57,6 +57,18 @@ export function ensureCommerceTables(db: any) {
   ensureColumn(db, 'shop_sales', 'operator', "TEXT DEFAULT ''");
   ensureColumn(db, 'shop_stock_logs', 'channel', "TEXT DEFAULT ''");
   ensureColumn(db, 'shop_stock_logs', 'cost_price', 'REAL DEFAULT 0');
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_shop_products_status_updated
+      ON shop_products(status, updated_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_shop_sales_date
+      ON shop_sales(COALESCE(NULLIF(sale_date, ''), created_at) DESC, id DESC);
+    CREATE INDEX IF NOT EXISTS idx_shop_sales_product_date
+      ON shop_sales(product_id, COALESCE(NULLIF(sale_date, ''), created_at) DESC);
+    CREATE INDEX IF NOT EXISTS idx_shop_stock_logs_date
+      ON shop_stock_logs(created_at DESC, id DESC);
+    CREATE INDEX IF NOT EXISTS idx_shop_stock_logs_product_date
+      ON shop_stock_logs(product_id, created_at DESC);
+  `);
 }
 
 function ensureColumn(db: any, table: string, column: string, definition: string) {

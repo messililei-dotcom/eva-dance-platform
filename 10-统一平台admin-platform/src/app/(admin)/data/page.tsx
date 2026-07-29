@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, Col, Empty, Progress, Row, Space, Spin, Statistic, Table, Tabs, Tag, Typography } from 'antd';
+import { Card, Col, Empty, Progress, Row, Space, Spin, Statistic, Tabs, Tag, Typography } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,

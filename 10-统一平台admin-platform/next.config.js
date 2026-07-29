@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const legacyStudentApiUrl = process.env.LEGACY_STUDENT_API_URL || 'https://admin.dongfangwuquan.com/api';
+const legacyStudentApiUrl = process.env.LEGACY_STUDENT_API_URL || 'https://admin.swod.com.cn/api';
 
 const nextConfig = {
   reactStrictMode: true,

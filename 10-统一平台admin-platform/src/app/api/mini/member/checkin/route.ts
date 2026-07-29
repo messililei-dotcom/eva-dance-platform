@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
       const payment = db.prepare('SELECT * FROM Payment WHERE id=? AND memberId=?').get<any>(paymentId, memberId);
       if (!payment) return jsonError('学习记录不存在', 404);
-      if ((Number(payment.remainingSessions) || 0) < 1) return jsonError('剩余课时不足，无法签到核销', 400);
+      if ((Number(payment.remainingSessions) || 0) < 1) return jsonError('剩余课次不足，无法签到核销', 400);
 
       const course = payment.courseId ? db.prepare('SELECT * FROM Course WHERE id=?').get<any>(payment.courseId) : null;
       const today = shanghaiDateKey();
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
             member.name || member.phone || '学员',
             '签到核销',
             '学习中心',
-            `${member.name || member.phone} 自助签到核销 ${courseName} 1课时，剩余 ${newRemaining} 课时`,
+            `${member.name || member.phone} 自助签到核销 ${courseName} 1课次，剩余 ${newRemaining} 课次`,
           );
         }
       });

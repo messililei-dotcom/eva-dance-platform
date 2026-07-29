@@ -19,13 +19,13 @@ import {
   Select,
   Space,
   Spin,
-  Table,
   Tabs,
   Tag,
   Tooltip,
   Typography,
   Upload,
 } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import type { UploadProps } from 'antd';
 import {
   CheckCircleOutlined,
@@ -256,24 +256,26 @@ export default function TrainingPage() {
 
   const load = () => {
     setLoading(true);
-    return Promise.all([
-      trainingApi.getCourses(),
+    return trainingApi.getCourses()
+      .then(courseRows => {
+        const offlineCourses = courseRows.filter(isOfflineTrainingCourse);
+        setCourses(offlineCourses);
+        setLoading(false);
+        return Promise.all([
       trainingApi.getPayments(),
       trainingApi.getConsumeRecords(),
-      platformAdapter.getMembers().catch(() => []),
+          platformAdapter.getMemberDirectory().catch(() => ({ members: [], orderRevenue: 0 })),
       platformAdapter.getRegions().catch(() => []),
-    ])
-      .then(([courseRows, paymentRows, consumeRows, memberRows, regionRows]) => {
-        const offlineCourses = courseRows.filter(isOfflineTrainingCourse);
+        ]).then(([paymentRows, consumeRows, memberDirectory, regionRows]) => {
         const courseMap = new Map(offlineCourses.map(course => [String(course.id), course]));
-        setCourses(offlineCourses);
         setPayments(paymentRows.map(payment => ({
           ...payment,
           courseSubType: payment.courseSubType || courseMap.get(String(payment.courseId))?.subType || '',
         })));
         setConsumeRecords(consumeRows);
-        setMembers(memberRows);
+          setMembers(memberDirectory.members);
         setRegions(regionRows);
+        });
       })
       .catch(err => message.error(apiError(err)))
       .finally(() => setLoading(false));
@@ -986,7 +988,7 @@ export default function TrainingPage() {
         <div class="meta">
           <div>课程名称：${course.name || ''}</div><div>课程类型：${course.type || ''}${course.subType ? ` / ${course.subType}` : ''}</div>
           <div>课程顾问：${course.teacher || ''}</div><div>打印日期：${dayjs().format('YYYY-MM-DD')}</div>
-          <div>上课日期：</div><div>上课时间：</div><div>课时：${course.sessions || ''}</div><div>应到人数：${rows.length}</div>
+          <div>上课日期：</div><div>上课次间：</div><div>课次：${course.sessions || ''}</div><div>应到人数：${rows.length}</div>
         </div>
         <table><thead><tr><th>序号</th><th>姓名</th><th>手机号</th><th>剩余</th><th>签到核销</th><th>签名</th><th>备注</th></tr></thead>
         <tbody>${Array.from({ length: Math.max(rows.length, 18) }, (_, index) => {
@@ -1099,7 +1101,7 @@ export default function TrainingPage() {
                     { key: 'memberName', title: '姓名' }, { key: 'memberPhone', title: '手机号' }, { key: 'courseName', title: '课程' },
                     { key: 'courseSubType', title: '课程期次' },
                     { key: 'date', title: '缴费日期' }, { key: 'amount', title: '金额' }, { key: 'payment', title: '支付方式' },
-                    { key: 'sales', title: '课程顾问' }, { key: 'remainingSessions', title: '剩余课时' }, { key: 'remark', title: '备注' },
+                    { key: 'sales', title: '课程顾问' }, { key: 'remainingSessions', title: '剩余课次' }, { key: 'remark', title: '备注' },
                   ])}>导出Excel</Button>
                   {selectedPaymentIds.length > 0 && (
                     <Tooltip title={`删除选中 ${selectedPaymentIds.length} 条缴费记录`}>
@@ -1145,7 +1147,7 @@ export default function TrainingPage() {
                     { title: '金额', dataIndex: 'amount', align: 'right' as const, width: 110, render: value => <Text strong style={{ color: '#F72A8A' }}>{money(value)}</Text> },
                     { title: '支付方式', dataIndex: 'payment', width: 90, render: value => value || '-' },
                     { title: '课程顾问', dataIndex: 'sales', width: 100, render: value => value || '-' },
-                    { title: '剩余课时', dataIndex: 'remainingSessions', align: 'right' as const, width: 90, render: value => <Tag color={value > 0 ? 'green' : 'default'}>{value || 0}</Tag> },
+                    { title: '剩余课次', dataIndex: 'remainingSessions', align: 'right' as const, width: 90, render: value => <Tag color={value > 0 ? 'green' : 'default'}>{value || 0}</Tag> },
                     { title: '已核销', align: 'right' as const, width: 80, sorter: (a, b) => compareTableValues(consumedByPayment.get(a.id) || 0, consumedByPayment.get(b.id) || 0), render: (_, record) => consumedByPayment.get(record.id) || 0 },
                     { title: '提交时间', dataIndex: 'created_at', width: 160, render: value => value ? String(value).slice(0, 16) : '-' },
                     { title: '备注', dataIndex: 'remark', ellipsis: true, width: 120 },
@@ -1183,7 +1185,7 @@ export default function TrainingPage() {
               <Card styles={{ body: { padding: 0 } }} extra={<Button icon={<DownloadOutlined />} onClick={() => exportToExcel(filteredCourses.map(course => ({ ...course, ...courseStatsById.get(course.id) })), '课程数据', [
                 { key: 'name', title: '课程名称' }, { key: 'type', title: '课程类型' }, { key: 'subType', title: '课程期次' },
                 { key: 'startDate', title: '开始日期' }, { key: 'endDate', title: '结束日期' }, { key: 'price', title: '价格' },
-                { key: 'sessions', title: '课时数' }, { key: 'studentCount', title: '学员数' }, { key: 'totalAmount', title: '累计费用' },
+                { key: 'sessions', title: '课次数' }, { key: 'studentCount', title: '学员数' }, { key: 'totalAmount', title: '累计费用' },
               ])}>导出</Button>}>
                 <Table<CourseRow>
                   rowKey="id"
@@ -1217,7 +1219,7 @@ export default function TrainingPage() {
                     { title: '开始日期', dataIndex: 'startDate', width: 120, render: dateText },
                     { title: '结束日期', dataIndex: 'endDate', width: 120, render: dateText },
                     { title: '价格', dataIndex: 'price', align: 'right' as const, width: 110, render: value => formatPrice(value) },
-                    { title: '课时', dataIndex: 'sessions', align: 'right' as const, width: 80 },
+                    { title: '课次', dataIndex: 'sessions', align: 'right' as const, width: 80 },
                     { title: '授课教师', dataIndex: 'teacher', width: 110, render: value => value || '-' },
                     { title: '学员数', align: 'right' as const, width: 90, render: (_, record) => courseStatsById.get(record.id)?.studentCount || 0 },
                     { title: '累计费用', align: 'right' as const, width: 120, render: (_, record) => money(courseStatsById.get(record.id)?.totalAmount || 0) },
@@ -1262,7 +1264,7 @@ export default function TrainingPage() {
                     { title: '课程名称', dataIndex: 'courseName', width: 240, className: 'course-name-column' },
                     { title: '核销日期', dataIndex: 'consumeDate', width: 120, render: dateText },
                     { title: '核销次数', dataIndex: 'count', align: 'right' as const, width: 100 },
-                    { title: '剩余课时', dataIndex: 'remainingAfter', align: 'right' as const, width: 100, render: value => <Tag color={value > 0 ? 'green' : 'default'}>{value || 0}</Tag> },
+                    { title: '剩余课次', dataIndex: 'remainingAfter', align: 'right' as const, width: 100, render: value => <Tag color={value > 0 ? 'green' : 'default'}>{value || 0}</Tag> },
                     { title: '操作人', dataIndex: 'operator', width: 110 },
                     { title: '备注', dataIndex: 'remark', ellipsis: true },
                     {
@@ -1272,7 +1274,7 @@ export default function TrainingPage() {
                       render: (_, record) => (
                         <Space>
                           <Button size="small" icon={<EditOutlined />} onClick={() => openConsumeModal(record)}>编辑</Button>
-                          <Button size="small" danger icon={<DeleteOutlined />} title="删除" aria-label="删除" onClick={() => confirmDelete('确定删除此核销记录吗？课时会自动恢复。', () => trainingApi.deleteConsumeRecord(record.id))} />
+                          <Button size="small" danger icon={<DeleteOutlined />} title="删除" aria-label="删除" onClick={() => confirmDelete('确定删除此核销记录吗？课次会自动恢复。', () => trainingApi.deleteConsumeRecord(record.id))} />
                         </Space>
                       ),
                     },
@@ -1320,7 +1322,7 @@ export default function TrainingPage() {
                   <Descriptions.Item label="课程期次">{detailCourse.subType || '-'}</Descriptions.Item>
                   <Descriptions.Item label="课程顾问">{detailCourse.teacher || '-'}</Descriptions.Item>
                   <Descriptions.Item label="价格">{formatPrice(detailCourse.price)}</Descriptions.Item>
-                  <Descriptions.Item label="课时数">{detailCourse.sessions || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="课次数">{detailCourse.sessions || '-'}</Descriptions.Item>
                   <Descriptions.Item label="有效期">{detailCourse.validDays ? `${detailCourse.validDays} 天` : '-'}</Descriptions.Item>
                   <Descriptions.Item label="总学员数">{detailStudents.length} 人</Descriptions.Item>
                   <Descriptions.Item label="课程收入">{money(detailStudents.reduce((sum, student) => sum + student.totalAmount, 0))}</Descriptions.Item>
@@ -1344,7 +1346,7 @@ export default function TrainingPage() {
                   { title: '缴费次数', dataIndex: 'paymentCount', align: 'right' as const, width: 100, render: value => <Tag color={value > 1 ? 'orange' : 'blue'}>{value}次</Tag> },
                   { title: '累计金额', dataIndex: 'totalAmount', align: 'right' as const, width: 120, render: money },
                   { title: '到期日期', dataIndex: 'expireDate', width: 120, render: dateText },
-                  { title: '剩余课时', dataIndex: 'remainingSessions', align: 'right' as const, width: 100, render: value => <Tag color={value > 0 ? 'green' : 'default'}>{value || 0}</Tag> },
+                  { title: '剩余课次', dataIndex: 'remainingSessions', align: 'right' as const, width: 100, render: value => <Tag color={value > 0 ? 'green' : 'default'}>{value || 0}</Tag> },
                   {
                     title: '操作',
                     width: 140,
@@ -1435,7 +1437,7 @@ export default function TrainingPage() {
             <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="startDate" label="开始日期"><DatePicker style={{ width: '100%' }} /></Form.Item></Col>
             <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="endDate" label="结束日期"><DatePicker style={{ width: '100%' }} /></Form.Item></Col>
             <Col className="payment-field-equal" xs={8} md={8}><Form.Item name="price" label="价格"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col className="payment-field-equal" xs={8} md={8}><Form.Item name="sessions" label="课时"><InputNumber min={1} style={{ width: '100%' }} /></Form.Item></Col>
+            <Col className="payment-field-equal" xs={8} md={8}><Form.Item name="sessions" label="课次"><InputNumber min={1} style={{ width: '100%' }} /></Form.Item></Col>
             <Col className="payment-field-equal" xs={8} md={8}><Form.Item name="validDays" label="有效天数"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
             {editingCourse && (
               <Col className="payment-field-remark" span={24}>
@@ -1564,7 +1566,7 @@ export default function TrainingPage() {
       <Modal className="training-payment-modal training-compact-modal training-table-modal" title="添加学员" open={addMembersOpen} onCancel={() => setAddMembersOpen(false)} onOk={confirmAddMembers} confirmLoading={saving} width={760} destroyOnClose>
         <Space direction="vertical" size={12} style={{ width: '100%' }}>
           <Input prefix={<SearchOutlined />} placeholder="搜索姓名或手机号" value={memberSearch} onChange={event => setMemberSearch(event.target.value)} allowClear />
-          <Text type="secondary">{detailCourse?.name || '当前课程'}：可添加 {addableMembers.length} 人，已选 {selectedAddMemberIds.length} 人，默认缴费 {formatPrice(0)}，课时按课程课时写入。</Text>
+          <Text type="secondary">{detailCourse?.name || '当前课程'}：可添加 {addableMembers.length} 人，已选 {selectedAddMemberIds.length} 人，默认缴费 {formatPrice(0)}，课次按课程课次写入。</Text>
           <Table<Member>
             scroll={{ x: 'max-content' }}
             rowKey={(record) => Number(record.id)}
@@ -1630,7 +1632,7 @@ export default function TrainingPage() {
               { title: '手机号', dataIndex: 'memberPhone', width: 130, render: maskPhone },
               { title: '缴费次数', dataIndex: 'paymentCount', align: 'right' as const, width: 100, render: value => <Tag color={value > 1 ? 'orange' : 'blue'}>{value}次</Tag> },
               { title: '累计金额', dataIndex: 'totalAmount', align: 'right' as const, width: 120, render: money },
-              { title: '剩余课时', dataIndex: 'remainingSessions', align: 'right' as const, width: 100, render: value => <Tag color={value > 0 ? 'green' : 'default'}>{value || 0}</Tag> },
+              { title: '剩余课次', dataIndex: 'remainingSessions', align: 'right' as const, width: 100, render: value => <Tag color={value > 0 ? 'green' : 'default'}>{value || 0}</Tag> },
               {
                 title: '证书状态',
                 width: 240,
@@ -1687,7 +1689,7 @@ export default function TrainingPage() {
             columns={sortableColumns<PaymentRow>([
               { title: '姓名', dataIndex: 'memberName', render: value => <Text strong>{value}</Text> },
               { title: '手机号', dataIndex: 'memberPhone' },
-              { title: '剩余课时', dataIndex: 'remainingSessions', align: 'right' as const, render: value => <Tag color="green">剩 {value} 次</Tag> },
+              { title: '剩余课次', dataIndex: 'remainingSessions', align: 'right' as const, render: value => <Tag color="green">剩 {value} 次</Tag> },
             ])}
           />
         </Space>
@@ -1751,7 +1753,7 @@ export default function TrainingPage() {
             <Col className="payment-record-field payment-record-field-small" xs={12} md={12}><Form.Item name="amount" label="实付金额"><InputNumber style={{ width: '100%' }} /></Form.Item></Col>
             <Col className="payment-record-field payment-record-field-small" xs={12} md={12}><Form.Item name="payment" label="支付方式"><Select options={paymentMethods.map(value => ({ value, label: value }))} /></Form.Item></Col>
             <Col className="payment-record-field payment-record-field-small" xs={12} md={12}><Form.Item name="sales" label="课程顾问"><Input /></Form.Item></Col>
-            <Col className="payment-record-field payment-record-field-small" xs={12} md={12}><Form.Item name="remainingSessions" label="剩余课时"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
+            <Col className="payment-record-field payment-record-field-small" xs={12} md={12}><Form.Item name="remainingSessions" label="剩余课次"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
             <Col className="payment-record-field payment-record-field-voucher" xs={12} md={12}>
               <Form.Item label="上传付款凭证">
                 <Space size={8} style={{ width: '100%' }} className="payment-voucher-row">

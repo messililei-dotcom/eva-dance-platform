@@ -1,7 +1,26 @@
 import { cleanText, hasAuth, openTrainingDb, syncMemberDenormalizedFields, today, unauthorized } from '../../training-db';
 import { deleteMemberAvatarFile } from '../_avatar-files';
+import { openAdminDb } from '@/lib/server/admin-db';
 
 export const dynamic = 'force-dynamic';
+
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const routeParams = await params;
+  if (!hasAuth(request)) return unauthorized();
+  const db = openAdminDb({ readonly: true });
+  try {
+    const member = db.prepare(`
+      SELECT *
+      FROM Member
+      WHERE id = ? AND COALESCE(status, 'active') != 'deleted'
+      LIMIT 1
+    `).get(routeParams.id);
+    if (!member) return Response.json({ success: false, error: '学员不存在' }, { status: 404 });
+    return Response.json({ success: true, data: member });
+  } finally {
+    db.close();
+  }
+}
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const routeParams = await params;

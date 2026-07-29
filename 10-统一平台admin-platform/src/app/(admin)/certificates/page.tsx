@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Table, Card, Tag, Space, Button, Input, Row, Col, Statistic, Modal, Form, Select, message, InputNumber, Alert, Typography, Tooltip } from 'antd';
+import { Card, Tag, Space, Button, Input, Row, Col, Statistic, Modal, Form, Select, message, InputNumber, Alert, Typography, Tooltip } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import { PlusOutlined, SearchOutlined, TrophyOutlined, CheckCircleOutlined, CloseCircleOutlined, ReloadOutlined, ThunderboltOutlined, FileImageOutlined, LinkOutlined, SettingOutlined } from '@ant-design/icons';
 import { api, certApi } from '@/lib/api';
 import { sortableColumns } from '@/lib/table-sort';
@@ -103,11 +104,14 @@ export default function CertificatesPage() {
 
   const loadMembers = async () => {
     try {
-      const res = await api.get('/members');
-      setMembers(Array.isArray(res.data) ? res.data : []);
+      const res = await api.get('/members/directory');
+      const rows = Array.isArray(res.data?.members) ? res.data.members : [];
+      setMembers(rows);
+      return rows;
     } catch (err: any) {
       message.error(err?.response?.data?.error || '学员列表加载失败');
       setMembers([]);
+      return [];
     }
   };
 
@@ -116,17 +120,25 @@ export default function CertificatesPage() {
       const res = await api.get('/course/series', { params: { pageSize: 100 } });
       const rows = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
       setSeriesList(rows);
+      return rows;
     } catch (err: any) {
       message.error(err?.response?.data?.error || '课程系列加载失败');
       setSeriesList([]);
+      return [];
     }
   };
 
   useEffect(() => {
     loadCertificates();
-    loadMembers();
-    loadSeries();
   }, []);
+
+  const openIssueModal = async () => {
+    await Promise.all([
+      members.length ? Promise.resolve(members) : loadMembers(),
+      seriesList.length ? Promise.resolve(seriesList) : loadSeries(),
+    ]);
+    setModalVisible(true);
+  };
 
   const handleIssue = async (values: { memberId: number; seriesId: number }) => {
     setIssuing(true);
@@ -176,7 +188,8 @@ export default function CertificatesPage() {
   };
 
   const openTemplateModal = async (seriesId?: number) => {
-    const targetSeriesId = seriesId || selectedSeriesId || seriesList[0]?.id;
+    const availableSeries = seriesList.length ? seriesList : await loadSeries();
+    const targetSeriesId = seriesId || selectedSeriesId || availableSeries[0]?.id;
     if (!targetSeriesId) {
       message.warning('请先创建课程系列');
       return;
@@ -343,7 +356,7 @@ export default function CertificatesPage() {
         <Button icon={<ReloadOutlined />} onClick={loadCertificates} loading={loading}>刷新</Button>
         <Button icon={<ThunderboltOutlined />} onClick={handleAutoIssue} loading={autoIssuing}>自动颁发</Button>
         <Button icon={<FileImageOutlined />} onClick={() => openTemplateModal()}>证书模板</Button>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>颁发证书</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => { void openIssueModal(); }}>颁发证书</Button>
       </Space>}>
         <Table columns={columns} dataSource={filtered} size="middle" loading={loading} pagination={{ pageSize: 20 }} rowKey="id" scroll={{ x: 'max-content' }} />
       </Card>

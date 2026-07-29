@@ -7,9 +7,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return withDb((db) => {
       const seriesId = toPositiveInt(routeParams.id);
       const data = db.prepare(
-        `SELECT cs.id, cs.name, cs.subtitle, cs.cover_image, cs.teacher, cs.price, cs.promo_price,
+        `SELECT cs.id, cs.name, cs.subtitle, cs.category, cs.teacher, cs.price, cs.promo_price,
+                cs.is_free, cs.cover_image, cs.share_image, cs.share_text, cs.description,
+                cs.rich_description, cs.trial_count, cs.sort_order, cs.status,
                 (SELECT COUNT(*) FROM OnlineCourse WHERE series_id=cs.id) as total_courses,
-                cs.rich_description
+                (SELECT COUNT(DISTINCT member_id) FROM CourseAuthorization WHERE series_id=cs.id) as total_students
          FROM CourseSeries cs WHERE cs.id=? AND cs.status='published'`
       ).get(seriesId);
       if (!data) return jsonError('课程不存在', 404);

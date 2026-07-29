@@ -4496,6 +4496,22 @@ textarea.ant-input {
   margin: 8px 12px;
 }
 
+/* 全平台数字输入框仅支持直接填写，隐藏浏览器和 Ant Design 的加减控制。 */
+.ant-input-number-handler-wrap {
+  display: none !important;
+}
+
+input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
 @media (max-width: 768px) {
   .oc-course-detail-page .oc-course-workbench-switchbar-inner {
     align-items: flex-start;

@@ -16,7 +16,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       const payment = db.prepare('SELECT * FROM Payment WHERE id = ?').get(current.paymentId);
       if (!payment) throw new Error('缴费记录不存在');
       const restored = toNumber(payment.remainingSessions) + toNumber(current.count);
-      if (restored < nextCount) throw new Error('剩余课时不足，无法调整核销次数');
+      if (restored < nextCount) throw new Error('剩余课次不足，无法调整核销次数');
       const remainingAfter = restored - nextCount;
       const info = db.prepare(`
         UPDATE ConsumeRecord

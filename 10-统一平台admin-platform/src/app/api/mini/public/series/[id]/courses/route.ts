@@ -12,9 +12,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       if (!series) return jsonError('课程不存在', 404);
       recordSeriesVisit(db, seriesId, getMemberId(new URL(request.url).searchParams, request), 'catalog');
       const courses = db.prepare(
-        `SELECT oc.id, oc.name, oc.description, oc.course_type as type, oc.duration,
+        `SELECT oc.id, oc.series_id, oc.name, oc.description, oc.rich_description, oc.cover_image,
+                oc.share_text, oc.course_type, oc.course_type as type, oc.single_price, oc.duration,
                 (SELECT COUNT(*) FROM CourseVideo cv WHERE cv.course_id=oc.id AND ${VISIBLE_VIDEO_STATUS}) as video_count,
-                oc.is_free_trial, oc.sort_order
+                oc.is_free_trial, oc.sort_order, oc.status
          FROM OnlineCourse oc
          WHERE oc.series_id=? AND oc.status='published'
          ORDER BY oc.sort_order, oc.id`

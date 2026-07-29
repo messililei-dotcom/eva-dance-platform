@@ -293,6 +293,29 @@ export function ensureTrainingTables(db: any) {
     ['ConsumeRecord', 'operator', "TEXT DEFAULT ''"],
     ['ConsumeRecord', 'remark', "TEXT DEFAULT ''"],
   ].forEach(([table, column, definition]) => ensureColumn(db, table, column, definition));
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_member_status_created
+      ON Member(status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_member_name_nocase
+      ON Member(name COLLATE NOCASE);
+    CREATE INDEX IF NOT EXISTS idx_member_phone
+      ON Member(phone);
+    CREATE INDEX IF NOT EXISTS idx_payment_member_date
+      ON Payment(memberId, date DESC);
+    CREATE INDEX IF NOT EXISTS idx_payment_course_member
+      ON Payment(courseId, memberId);
+    CREATE INDEX IF NOT EXISTS idx_consume_member_date
+      ON ConsumeRecord(memberId, consumeDate DESC);
+    CREATE INDEX IF NOT EXISTS idx_orders_effective_date
+      ON orders(COALESCE(NULLIF(paid_at, ''), created_at) DESC, id DESC);
+    CREATE INDEX IF NOT EXISTS idx_orders_status_effective_date
+      ON orders(status, COALESCE(NULLIF(paid_at, ''), created_at) DESC);
+    CREATE INDEX IF NOT EXISTS idx_orders_type_effective_date
+      ON orders(order_type, COALESCE(NULLIF(paid_at, ''), created_at) DESC);
+    CREATE INDEX IF NOT EXISTS idx_orders_member_effective_date
+      ON orders(member_id, COALESCE(NULLIF(paid_at, ''), created_at) DESC);
+  `);
 }
 
 export function cleanText(value: unknown, fallback = '') {

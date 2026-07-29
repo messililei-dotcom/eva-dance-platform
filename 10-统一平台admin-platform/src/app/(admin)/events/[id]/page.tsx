@@ -18,11 +18,11 @@ import {
   Select,
   Space,
   Statistic,
-  Table,
   Tabs,
   Tag,
   Upload,
 } from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {
   AuditOutlined,
   CheckCircleOutlined,
