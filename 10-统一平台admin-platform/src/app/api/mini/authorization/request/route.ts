@@ -16,7 +16,13 @@ export async function POST(request: Request) {
       const series = db.prepare("SELECT id, name FROM CourseSeries WHERE id=? AND status='published'").get<{ id: number; name: string }>(seriesId);
       if (!series) return jsonError('课程不存在或未发布', 404);
 
-      recordSeriesVisit(db, seriesId, memberId, 'auth_request');
+      recordSeriesVisit(db, seriesId, memberId, 'auth_request', request, {
+        referrerMemberId: toPositiveInt(body.referrer_member_id ?? body.share_member_id ?? body.inviter_id),
+        referrerChannel: String(body.referrer_channel ?? body.channel ?? ''),
+        referrerUrl: String(body.referrer_url ?? ''),
+        shareCode: String(body.share_code ?? ''),
+        pageUrl: String(body.page_url ?? ''),
+      });
       const visit = db.prepare(
         `SELECT first_visited_at, last_visited_at, visit_count, source
          FROM CourseSeriesVisit

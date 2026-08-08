@@ -14,7 +14,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         `SELECT c.*, 
                 (SELECT COUNT(*) FROM CourseVideo WHERE course_id=c.id) as video_count,
                 cv.id as cv_id, cv.name as material_name, cv.material_id, cv.duration as video_duration,
-                m.name as material_original_name, m.type as material_type, m.file_path as material_file_path, m.file_url as material_file_url
+                m.name as material_original_name, m.type as material_type, m.file_path as material_file_path,
+                m.file_url as material_file_url, m.vod_video_id as material_vod_video_id
          FROM OnlineCourse c
          LEFT JOIN CourseVideo cv ON cv.course_id=c.id
          LEFT JOIN Material m ON m.id=cv.material_id
@@ -38,6 +39,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             material_type: row.material_type,
             material_file_path: row.material_file_path,
             material_file_url: row.material_file_url,
+            material_vod_video_id: row.material_vod_video_id,
             duration: row.video_duration,
           });
         }

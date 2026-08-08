@@ -296,7 +296,7 @@ Page({
   },
 
   goDetail(event) {
-    wx.navigateTo({ url: `/pages/detail/detail?id=${event.currentTarget.dataset.id}` });
+    wx.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}` });
   },
 
   openAuthorizedCourse(event) {
@@ -326,7 +326,7 @@ Page({
       });
       return;
     }
-    wx.navigateTo({ url: `/pages/detail/detail?id=${id}` });
+    wx.navigateTo({ url: `/pages/player/player?seriesId=${id}` });
   },
 
   onImageError(event) {

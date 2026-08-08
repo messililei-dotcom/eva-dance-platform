@@ -1,6 +1,7 @@
 import type { AdminDb } from '@/lib/server/admin-db';
 import { cleanText, memberToken } from './_helpers';
 import { createWelcomeMessage } from '@/lib/server/inbox';
+import { moveWechatIdentities } from '@/lib/server/wechat-identity';
 
 type MemberRow = Record<string, any> & { id: unknown; phone?: unknown };
 
@@ -28,6 +29,8 @@ function transferWechatIdentity(db: AdminDb, target: MemberRow, source: MemberRo
   const sourceAvatar = cleanText(source.wx_avatar_url);
   const sourceSyncedAt = cleanText(source.wx_profile_synced_at);
   const sourceSessionAt = cleanText(source.wx_session_updated_at);
+
+  moveWechatIdentities(db, target.id, source.id);
 
   if (!cleanText(target.wx_openid) && sourceOpenid) {
     db.prepare(

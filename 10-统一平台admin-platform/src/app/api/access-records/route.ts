@@ -7,6 +7,8 @@ export const dynamic = 'force-dynamic';
 type AccessRecord = {
   id: string;
   category: 'student' | 'admin';
+  memberId: number | string;
+  memberLevel: string;
   visitedAt: string;
   platform: string;
   module: string;
@@ -16,6 +18,11 @@ type AccessRecord = {
   visitorPhone: string;
   visitorKey: string;
   visitorType: string;
+  wxUnionid: string;
+  referralSource: string;
+  visitUrl: string;
+  visitLocation: string;
+  ipAddress: string;
   source: string;
   remark: string;
 };
@@ -104,18 +111,68 @@ function memberLabel(row: Record<string, unknown>) {
   return '未知访客';
 }
 
+function dynamicSelect(db: AdminDb, table: string, column: string, alias: string, fallback = "''") {
+  return hasColumn(db, table, column) ? `${alias}.${column}` : fallback;
+}
+
+function referralLabel(row: Record<string, unknown>) {
+  const referrerId = Number(row.referrer_member_id || 0);
+  const referrerName = cleanText(row.referrer_name);
+  if (referrerId > 0) {
+    return `学员${referrerName || `#${referrerId}`}（Member ID ${referrerId}）转发`;
+  }
+  const channel = cleanText(row.referrer_channel);
+  if (channel) {
+    const labels: Record<string, string> = {
+      wechat_share: '微信好友/群转发',
+      moments: '微信朋友圈转发',
+      official_account: '微信公众号',
+      miniprogram: '微信小程序',
+      website: '官方网站',
+    };
+    return labels[channel.toLowerCase()] || `${channel}渠道`;
+  }
+  const referrerUrl = cleanText(row.referrer_url);
+  if (referrerUrl) {
+    try {
+      return `来自 ${new URL(referrerUrl).hostname}`;
+    } catch {
+      return `来自 ${referrerUrl.slice(0, 80)}`;
+    }
+  }
+  return '直接访问';
+}
+
+function visitLocationLabel(region: unknown, memberCity: unknown) {
+  return cleanText(region) || cleanText(memberCity);
+}
+
 function courseVisitRows(db: AdminDb): AccessRecord[] {
   if (!tableExists(db, 'CourseSeriesVisitLog')) return [];
   ensureCourseSeriesVisitTable(db);
   const platformSelect = hasColumn(db, 'CourseSeriesVisitLog', 'platform') ? 'l.platform' : "'' AS platform";
+  const phoneSelect = dynamicSelect(db, 'CourseSeriesVisitLog', 'phone', 'l', 'NULL');
+  const unionidSelect = dynamicSelect(db, 'CourseSeriesVisitLog', 'wx_unionid', 'l', 'NULL');
+  const pageUrlSelect = dynamicSelect(db, 'CourseSeriesVisitLog', 'page_url', 'l');
+  const ipSelect = dynamicSelect(db, 'CourseSeriesVisitLog', 'ip_address', 'l');
+  const ipRegionSelect = dynamicSelect(db, 'CourseSeriesVisitLog', 'ip_region', 'l');
+  const referrerIdSelect = dynamicSelect(db, 'CourseSeriesVisitLog', 'referrer_member_id', 'l', 'NULL');
+  const referrerChannelSelect = dynamicSelect(db, 'CourseSeriesVisitLog', 'referrer_channel', 'l');
+  const referrerUrlSelect = dynamicSelect(db, 'CourseSeriesVisitLog', 'referrer_url', 'l');
 
   const rows = db.prepare(`
     SELECT
       l.id, l.member_id, l.series_id, l.source, ${platformSelect}, l.visitor_key, l.visitor_label,
-      l.visited_at, cs.name AS series_name, m.name AS member_name, m.phone AS member_phone
+      l.visited_at, cs.name AS series_name, m.name AS member_name, m.level AS member_level,
+      m.city AS member_city, COALESCE(${phoneSelect}, NULLIF(m.phone, '')) AS member_phone,
+      COALESCE(${unionidSelect}, NULLIF(m.wx_unionid, ''), '') AS wx_unionid,
+      ${pageUrlSelect} AS page_url, ${ipSelect} AS ip_address, ${ipRegionSelect} AS ip_region,
+      ${referrerIdSelect} AS referrer_member_id, ${referrerChannelSelect} AS referrer_channel,
+      ${referrerUrlSelect} AS referrer_url, rm.name AS referrer_name
     FROM CourseSeriesVisitLog l
     LEFT JOIN CourseSeries cs ON cs.id = l.series_id
     LEFT JOIN Member m ON m.id = l.member_id AND l.member_id > 0
+    LEFT JOIN Member rm ON rm.id = ${referrerIdSelect}
     ORDER BY datetime(l.visited_at) DESC, l.id DESC
     LIMIT 5000
   `).all<Record<string, unknown>>();
@@ -125,6 +182,8 @@ function courseVisitRows(db: AdminDb): AccessRecord[] {
     return {
       id: `series-${row.id}`,
       category: 'student',
+      memberId: Number(row.member_id || 0) > 0 ? Number(row.member_id) : '',
+      memberLevel: cleanText(row.member_level),
       visitedAt: dateText(row.visited_at),
       platform: normalizePlatform(source, row.platform),
       module: '线上课程',
@@ -134,6 +193,11 @@ function courseVisitRows(db: AdminDb): AccessRecord[] {
       visitorPhone: cleanText(row.member_phone),
       visitorKey: cleanText(row.visitor_key),
       visitorType: Number(row.member_id || 0) > 0 ? '学员' : '游客',
+      wxUnionid: cleanText(row.wx_unionid),
+      referralSource: referralLabel(row),
+      visitUrl: cleanText(row.page_url),
+      visitLocation: visitLocationLabel(row.ip_region, row.member_city),
+      ipAddress: cleanText(row.ip_address),
       source,
       remark: cleanText(row.member_id).startsWith('-') ? '游客访问' : '',
     };
@@ -150,7 +214,8 @@ function videoProgressRows(db: AdminDb): AccessRecord[] {
       ${platformSelect},
       COALESCE(vp.last_play_at, vp.created_at) AS visited_at,
       cv.name AS video_name, cs.name AS series_name,
-      m.name AS member_name, m.phone AS member_phone
+      m.name AS member_name, m.phone AS member_phone, m.level AS member_level,
+      m.wx_unionid AS wx_unionid, m.city AS member_city
     FROM VideoProgress vp
     LEFT JOIN CourseVideo cv ON cv.id = vp.video_id
     LEFT JOIN OnlineCourse oc ON oc.id = cv.course_id
@@ -168,6 +233,8 @@ function videoProgressRows(db: AdminDb): AccessRecord[] {
     return {
       id: `video-${row.id}`,
       category: 'student',
+      memberId: Number(row.member_id || 0) || '',
+      memberLevel: cleanText(row.member_level),
       visitedAt: dateText(row.visited_at),
       platform: normalizePlatform('video_progress', row.platform),
       module: '线上课程',
@@ -177,6 +244,11 @@ function videoProgressRows(db: AdminDb): AccessRecord[] {
       visitorPhone: cleanText(row.member_phone),
       visitorKey: '',
       visitorType: '学员',
+      wxUnionid: cleanText(row.wx_unionid),
+      referralSource: '直接访问',
+      visitUrl: `/online-course/video/${row.video_id}`,
+      visitLocation: cleanText(row.member_city),
+      ipAddress: '',
       source: 'video_progress',
       remark: percent ? `进度 ${percent}%` : '',
     };
@@ -208,6 +280,7 @@ function adminNameMap(db: AdminDb) {
 
 function splitStudentOperation(detail: string, fallbackName: string) {
   const ip = detail.match(/IP\s*:\s*([^\s]+)\s*$/i)?.[1] || '';
+  const visitUrl = detail.match(/https?:\/\/[^\s]+/i)?.[0] || '';
   const withoutIp = detail.replace(/\s*-\s*IP\s*:\s*[^\s]+?\s*$/i, '').trim();
   const parts = withoutIp.split(/\s*-\s*/).map(part => part.trim()).filter(Boolean);
   const visitorPart = parts[0] || fallbackName;
@@ -219,6 +292,7 @@ function splitStudentOperation(detail: string, fallbackName: string) {
     visitorName,
     phone,
     ip,
+    visitUrl,
   };
 }
 
@@ -226,6 +300,12 @@ function operationRows(db: AdminDb): AccessRecord[] {
   if (!tableExists(db, 'OperationLog')) return [];
 
   const names = adminNameMap(db);
+  const membersByPhone = new Map<string, Record<string, unknown>>();
+  if (tableExists(db, 'Member')) {
+    db.prepare("SELECT id, name, phone, level, city, wx_unionid FROM Member WHERE COALESCE(phone,'')<>''")
+      .all<Record<string, unknown>>()
+      .forEach(member => membersByPhone.set(cleanText(member.phone), member));
+  }
   const rows = db.prepare(`
     SELECT id, time, operator, type, module, detail
     FROM OperationLog
@@ -242,9 +322,12 @@ function operationRows(db: AdminDb): AccessRecord[] {
 
     if (module === '学员端') {
       const student = splitStudentOperation(detail, operator);
+      const member = membersByPhone.get(student.phone);
       return {
         id: `operation-student-${row.id}`,
         category: 'student',
+        memberId: Number(member?.id || 0) || '',
+        memberLevel: cleanText(member?.level),
         visitedAt,
         platform: '官网/学员端',
         module,
@@ -254,14 +337,21 @@ function operationRows(db: AdminDb): AccessRecord[] {
         visitorPhone: student.phone,
         visitorKey: '',
         visitorType: '学员',
+        wxUnionid: cleanText(member?.wx_unionid),
+        referralSource: '直接访问',
+        visitUrl: student.visitUrl,
+        visitLocation: cleanText(member?.city),
+        ipAddress: cleanText(student.ip),
         source: 'student_portal',
-        remark: student.ip ? `IP:${student.ip}` : '',
+        remark: '',
       } satisfies AccessRecord;
     }
 
     return {
       id: `admin-${row.id}`,
       category: 'admin',
+      memberId: '',
+      memberLevel: '',
       visitedAt,
       platform: '后台系统',
       module,
@@ -271,6 +361,11 @@ function operationRows(db: AdminDb): AccessRecord[] {
       visitorPhone: '',
       visitorKey: '',
       visitorType: '管理员',
+      wxUnionid: '',
+      referralSource: '后台直接访问',
+      visitUrl: '',
+      visitLocation: '',
+      ipAddress: '',
       source: 'admin',
       remark: '',
     } satisfies AccessRecord;
@@ -293,6 +388,8 @@ function filterRows(rows: AccessRecord[], request: Request) {
     if (!q) return true;
     return [
       row.visitedAt,
+      row.memberId,
+      row.memberLevel,
       row.platform,
       row.module,
       row.action,
@@ -301,6 +398,11 @@ function filterRows(rows: AccessRecord[], request: Request) {
       row.visitorPhone,
       row.visitorKey,
       row.visitorType,
+      row.wxUnionid,
+      row.referralSource,
+      row.visitUrl,
+      row.visitLocation,
+      row.ipAddress,
       row.source,
       row.remark,
     ].join(' ').toLowerCase().includes(q);
@@ -338,7 +440,7 @@ export async function GET(request: Request) {
     const offset = (page - 1) * pageSize;
     const today = shanghaiDateKey();
     const month = today.slice(0, 7);
-    const visitorKeys = new Set(filtered.map(row => row.visitorPhone || row.visitorKey || row.visitorName).filter(Boolean));
+    const visitorKeys = new Set(filtered.map(row => row.memberId || row.visitorPhone || row.wxUnionid || row.visitorKey || row.visitorName).filter(Boolean));
     const byPlatform = countBy(filtered, row => row.platform).map(item => ({ platform: item.key, count: item.count }));
     const byAction = countBy(filtered, row => row.action).map(item => ({ action: item.key, count: item.count }));
     const categoryCounts = {

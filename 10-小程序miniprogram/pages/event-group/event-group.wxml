@@ -1,0 +1,52 @@
+<view class="group-page">
+  <view wx:if="{{loading}}" class="empty-card">组别数据加载中…</view>
+  <block wx:else>
+    <view class="group-hero">
+      <view class="event-name">🏆 {{competition.name}}</view>
+      <view class="group-name">{{group.name}}</view>
+      <view class="group-tags">
+        <text wx:if="{{group.category}}">{{group.category}}</text>
+        <text wx:if="{{group.ageRange}}">{{group.ageRange}}</text>
+        <text wx:if="{{group.danceType}}">{{group.danceType}}</text>
+        <text wx:if="{{group.entryType}}">{{group.entryType}}</text>
+      </view>
+      <view class="group-stats">
+        <view><text>{{players.length}}</text><span>已报名选手</span></view>
+        <view><text>{{group.rankingCount || 0}}</text><span>已公布成绩</span></view>
+      </view>
+    </view>
+
+    <view class="result-heading">
+      <view>
+        <view class="result-title">{{hasPublishedResults ? '公示结果' : '选手列表'}}</view>
+        <view class="result-desc">{{hasPublishedResults ? '成绩由赛事平台审核发布' : players.length + ' 位选手'}}</view>
+      </view>
+      <text>{{players.length}} 位</text>
+    </view>
+
+    <view wx:if="{{players.length}}" class="player-list">
+      <view class="player-row {{hasPublishedResults ? 'ranking-row' : ''}}" wx:for="{{players}}" wx:key="id">
+        <view wx:if="{{hasPublishedResults}}" class="rank-block {{item.rankClass}}">
+          <view class="trophy" wx:if="{{item.rankNo > 0}}">🏆</view>
+          <view class="rank-number" wx:else>—</view>
+          <text>{{item.rankLabel}}</text>
+        </view>
+        <view wx:else class="player-number">{{item.displayNo}}</view>
+
+        <view class="player-avatar">
+          <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+          <text wx:else>{{item.displayInitial}}</text>
+        </view>
+        <view class="player-main">
+          <view class="player-name">{{item.name}}</view>
+          <view class="player-meta">{{item.identityText}}</view>
+        </view>
+        <view wx:if="{{hasPublishedResults}}" class="score-block">
+          <view>{{item.scoreText}}</view>
+          <text>最终得分</text>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="empty-card">该组别暂无已报名选手</view>
+  </block>
+</view>

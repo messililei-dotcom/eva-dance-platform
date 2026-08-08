@@ -1,11 +1,12 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { App, Avatar, Button, Card, Col, DatePicker, Empty, Form, Input, Modal, Row, Select, Space, Spin, Statistic, Tag, Typography } from 'antd';
+import { App, Avatar, Button, Card, Col, DatePicker, Empty, Form, Input, Modal, Row, Select, Space, Spin, Statistic, Tag, Tooltip, Typography } from 'antd';
 import { Table } from '@/components/adaptive-table';
 import { DeleteOutlined, PhoneOutlined, ReloadOutlined, SearchOutlined, TeamOutlined, UserAddOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { platformAdapter } from '@/lib/adapters/platform';
 import { formatPaymentAmount } from '@/lib/money-format';
+import { getMemberIdentity, memberSearchText, shortWxId } from '@/lib/member-search';
 import { sortableColumns } from '@/lib/table-sort';
 import type { Member } from '@/types/domain';
 
@@ -35,6 +36,10 @@ function numberValue(value: unknown) {
 
 function moneyValue(value: unknown) {
   return formatPaymentAmount(value);
+}
+
+function wanMoneyValue(value: unknown) {
+  return `¥${(numberValue(value) / 10000).toFixed(2)}万`;
 }
 
 function dateValue(value?: string) {
@@ -97,7 +102,8 @@ export default function MembersPage() {
   const filtered = useMemo(() => {
     const q = keyword.trim().toLowerCase();
     return members.filter(item => {
-      const matchKeyword = !q || [item.name, item.phone, item.id, item.city, item.raw?.address].some(value => String(value || '').toLowerCase().includes(q));
+      const matchKeyword = !q || [memberSearchText(item), item.city, item.raw?.address]
+        .some(value => String(value || '').toLowerCase().includes(q));
       const matchLevel = level === 'all' || item.level === level;
       const matchCity = city === 'all' || item.city === city;
       const matchActivity = activity === 'all'
@@ -113,8 +119,6 @@ export default function MembersPage() {
   const currentMonth = new Date().toISOString().slice(0, 7);
   const activeCount = members.filter(item => item.totalSpent > 0).length;
   const newThisMonth = members.filter(item => dateValue(item.registerDate).startsWith(currentMonth)).length;
-  const highValueCount = members.filter(item => item.totalSpent >= 5000).length;
-  const avgCourseCount = members.length ? Math.round(members.reduce((sum, item) => sum + numberValue(item.courseCount), 0) / members.length * 10) / 10 : 0;
 
   const openCreate = () => {
     setEditingMember(null);
@@ -259,10 +263,7 @@ export default function MembersPage() {
         <Card className="members-stat-card"><Statistic title="学员总数" value={members.length} prefix={<UserOutlined />} /></Card>
         <Card className="members-stat-card"><Statistic title="活跃学员" value={activeCount} prefix={<TeamOutlined />} valueStyle={{ color: '#22C55E' }} /></Card>
         <Card className="members-stat-card"><Statistic title="本月新增" value={newThisMonth} prefix={<UserAddOutlined />} valueStyle={{ color: '#3B82F6' }} /></Card>
-        <Card className="members-stat-card members-stat-card-wide"><Statistic title="累计消费" value={revenue} prefix={<WalletOutlined />} formatter={value => moneyValue(value)} valueStyle={{ color: '#F72A8A' }} /></Card>
-        <Card className="members-stat-card"><Statistic title="高价值学员" value={highValueCount} suffix="人" valueStyle={{ color: '#7C3AED' }} /></Card>
-        <Card className="members-stat-card members-stat-card-wide"><Statistic title="人均消费" value={moneyValue(members.length ? revenue / members.length : 0)} /></Card>
-        <Card className="members-stat-card"><Statistic title="平均课程数" value={avgCourseCount} suffix="门" /></Card>
+        <Card className="members-stat-card members-stat-card-wide"><Statistic title="累计消费" value={revenue} prefix={<WalletOutlined />} formatter={value => wanMoneyValue(value)} valueStyle={{ color: '#F72A8A' }} /></Card>
       </div>
 
       <Card style={{ marginBottom: 16 }}>
@@ -270,7 +271,7 @@ export default function MembersPage() {
           <Col xs={24} lg={7}>
             <Input
               prefix={<SearchOutlined />}
-              placeholder="搜索姓名、手机号、学员 ID、城市"
+              placeholder="搜索姓名、手机号、Member ID、微信ID、城市"
               value={keyword}
               onChange={event => setKeyword(event.target.value)}
               allowClear
@@ -338,14 +339,32 @@ export default function MembersPage() {
                 </Space>
               ),
             },
+            {
+              title: 'Member ID',
+              dataIndex: 'id',
+              width: 120,
+              render: value => <Text copyable={{ text: String(value || '') }}>{value || '-'}</Text>,
+            },
+            {
+              title: '微信ID',
+              width: 190,
+              render: (_, record) => {
+                const identity = getMemberIdentity(record);
+                const id = identity.wxUnionid;
+                if (!id) return <Text type="secondary">未绑定</Text>;
+                return (
+                  <Tooltip title={`UnionID: ${id}`}>
+                    <Text copyable={{ text: id }}>UnionID: {shortWxId(id)}</Text>
+                  </Tooltip>
+                );
+              },
+            },
             { title: '等级', dataIndex: 'level', width: 120, render: value => <Tag color={levelColors[value] || 'default'}>{displayStudentText(value)}</Tag> },
             { title: '状态', dataIndex: 'status', width: 90, render: value => <Tag color={activeStatuses.has(value) ? 'green' : 'default'}>{activeStatuses.has(value) ? '正常' : value || '-'}</Tag> },
             { title: '城市', dataIndex: 'city', width: 120 },
             { title: '注册日期', dataIndex: 'registerDate', width: 120 },
             { title: '课程数', dataIndex: 'courseCount', align: 'right' as const, width: 90 },
             { title: '累计消费', dataIndex: 'totalSpent', align: 'right' as const, width: 130, render: value => <Text strong style={{ color: '#F72A8A' }}>{moneyValue(value)}</Text> },
-            { title: '最近活动', dataIndex: 'lastActiveAt', width: 150 },
-            { title: '运营标签', width: 150, render: (_, record) => <Space size={4}>{record.totalSpent >= 5000 && <Tag color="purple">高价值</Tag>}{dateValue(record.registerDate).startsWith(currentMonth) && <Tag color="blue">新学员</Tag>}{record.totalSpent <= 0 && <Tag>待转化</Tag>}</Space> },
             {
               title: '操作',
               fixed: 'right',

@@ -19,6 +19,7 @@ export interface Member {
   wxNickname?: string;
   wxAccount?: string;
   wxOpenid?: string;
+  wxUnionid?: string;
   raw?: Record<string, unknown>;
 }
 

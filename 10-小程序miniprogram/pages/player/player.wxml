@@ -1,98 +1,100 @@
-<view class="player-page" wx:if="{{!reviewMode}}">
+<view class="player-page">
   <view class="video-container">
     <video
+      wx:if="{{playUrl}}"
       id="courseVideo"
       class="video"
       src="{{playUrl}}"
+      poster="{{course.cover_image}}"
       title="{{video.name}}"
-      controls
+      controls="{{showVideoControls}}"
+      autoplay="{{hasStartedPlayback}}"
       object-fit="contain"
       show-center-play-btn
-      enable-progress-gesture="{{video.authorized}}"
+      show-fullscreen-btn="{{false}}"
+      enable-progress-gesture
       enable-play-gesture
+      bindtap="onPlayerTap"
+      bindplay="onVideoPlay"
       bindtimeupdate="onTimeUpdate"
+      bindpause="onPause"
       bindended="onEnded"
       binderror="onVideoError"
       playback-rate="{{playbackRate}}"
       picture-in-picture-mode="{{['push', 'pop']}}"
-    >
-    </video>
+    ></video>
 
-    <button class="video-menu-trigger" bindtap="togglePlayerMenu">...</button>
-
-    <view class="player-menu-backdrop" wx:if="{{showPlayerMenu}}" bindtap="closePlayerMenu"></view>
-    <view class="player-menu" wx:if="{{showPlayerMenu}}" catchtap="noop">
-      <view class="player-menu-section">
-        <view class="player-menu-title">清晰度</view>
-        <view class="player-menu-options">
-          <view
-            class="player-menu-option {{currentQuality === item.value ? 'active' : ''}}"
-            wx:for="{{qualityOptions}}"
-            wx:key="value"
-            data-quality="{{item.value}}"
-            bindtap="setQuality"
-          >
-            {{item.label}}
+    <block wx:if="{{playUrl}}">
+      <view class="video-top-controls {{showVideoControls || showPlayerMenu ? 'visible' : ''}}">
+        <button class="video-quality-trigger" catchtap="togglePlayerMenu">{{currentQualityLabel}} <text class="quality-arrow">{{showPlayerMenu ? '‹' : '›'}}</text></button>
+        <button class="video-fullscreen-trigger" catchtap="requestPlayerFullScreen" aria-label="全屏播放">⛶</button>
+      </view>
+      <view class="player-menu-backdrop" wx:if="{{showPlayerMenu}}" bindtap="closePlayerMenu"></view>
+      <view class="player-menu" wx:if="{{showPlayerMenu}}" catchtap="noop">
+        <view class="player-menu-section">
+          <view class="player-menu-title">清晰度</view>
+          <view class="player-menu-options">
+            <view class="player-menu-option {{currentQuality === item.value ? 'active' : ''}}" wx:for="{{qualityOptions}}" wx:key="value" data-quality="{{item.value}}" bindtap="setQuality">{{item.label}}</view>
+          </view>
+        </view>
+        <view class="player-menu-section">
+          <view class="player-menu-title">播放速度</view>
+          <view class="player-menu-options">
+            <view class="player-menu-option {{playbackRate === item ? 'active' : ''}}" wx:for="{{rateOptions}}" wx:key="*this" data-rate="{{item}}" bindtap="setRate">{{item}}x</view>
           </view>
         </view>
       </view>
-      <view class="player-menu-section">
-        <view class="player-menu-title">速度</view>
-        <view class="player-menu-options">
-          <view
-            class="player-menu-option {{playbackRate === item ? 'active' : ''}}"
-            wx:for="{{rateOptions}}"
-            wx:key="*this"
-            data-rate="{{item}}"
-            bindtap="setRate"
-          >
-            {{item}}x
-          </view>
-        </view>
-      </view>
-    </view>
-    
-    <!-- 断点续播提示 -->
-    <view class="resume-overlay" wx:if="{{hasResumePosition}}">
-      <view class="resume-card">
-        <text>上次播放到 {{resumeSeconds}}s</text>
-        <view class="resume-actions">
-          <button class="resume-btn" bindtap="resumeFromPosition">继续播放</button>
-          <button class="restart-btn" bindtap="playFromStart">从头开始</button>
-        </view>
+    </block>
+
+    <view wx:else class="player-placeholder">
+      <image wx:if="{{course.cover_image}}" class="placeholder-cover" src="{{course.cover_image}}" mode="aspectFill"></image>
+      <view class="placeholder-shade"></view>
+      <view class="placeholder-content">
+        <view wx:if="{{loading}}" class="placeholder-text">课程加载中…</view>
+        <button wx:elif="{{authorizationRequired}}" class="authorization-btn" bindtap="requestAuthorization">申请课程授权</button>
+        <view wx:elif="{{playbackError}}" class="playback-error"><text>{{playbackError}}</text><button bindtap="startCurrentVideo">重新加载</button></view>
+        <button wx:else class="start-video-btn" bindtap="startCurrentVideo">播放本节课程</button>
       </view>
     </view>
   </view>
 
   <view class="content">
     <view class="video-card card">
-      <view class="title">{{video.name || '内容详情'}}</view>
-      <view class="meta">内容仅供已确认的用户播放</view>
+      <view class="title">{{video.name || course.name || '课程介绍'}}</view>
+      <view class="meta">{{course.subtitle || course.teacher || '伊娃东方舞线上学院'}}</view>
       <view class="progress-track"><view class="progress-fill" style="width: {{percent}}%;"></view></view>
+      <view class="playback-summary"><text>学习进度 {{percent}}%</text><text wx:if="{{resumeSeconds > 3}}">上次看到 {{resumeSeconds}} 秒</text><button wx:if="{{playUrl}}" bindtap="resumePlayback">继续播放</button></view>
     </view>
 
-    <!-- 内容列表 -->
-    <view class="outline card">
-      <view class="outline-title">内容列表</view>
-      <view class="outline-item {{item.videoId == videoId ? 'current' : ''}}" wx:for="{{outline}}" wx:key="videoId" data-id="{{item.videoId}}" bindtap="switchVideo">
-        <view class="outline-info">
-          <text class="outline-name">{{item.name}}</text>
-        </view>
-        <text class="outline-status">{{item.videoId == videoId ? '当前 ' : ''}}{{item.progressPercent}}%</text>
-      </view>
+    <view class="player-tabs card">
+      <view class="player-tab {{activePanel === 'catalog' ? 'active' : ''}}" data-panel="catalog" bindtap="switchPanel">目录({{outline.length}}节)</view>
+      <view class="player-tab {{activePanel === 'notes' ? 'active' : ''}}" data-panel="notes" bindtap="switchPanel">笔记</view>
+      <view class="player-tab {{activePanel === 'intro' ? 'active' : ''}}" data-panel="intro" bindtap="switchPanel">简介</view>
     </view>
-    <view class="cast-note">请勿转发链接或二次传播内容资料。</view>
-  </view>
-</view>
 
-<view class="player-page" wx:else>
-  <view class="content">
-    <view class="video-card card">
-      <view class="title">内容详情</view>
-      <view class="meta">当前内容用于品牌展示与播放。</view>
-      <view class="actions">
-        <button class="ghost-btn" bindtap="requestAuthorization">查看说明</button>
+    <view wx:if="{{activePanel === 'catalog'}}" class="outline card">
+      <view class="catalog-search"><input value="{{catalogQuery}}" placeholder="搜索课节" confirm-type="search" bindinput="onCatalogSearch"/><button wx:if="{{catalogQuery}}" bindtap="clearCatalogSearch">清空</button></view>
+      <view wx:if="{{catalogResultText}}" class="catalog-result">{{catalogResultText}}</view>
+      <view class="outline-item {{item.videoId == videoId ? 'current' : ''}}" wx:for="{{visibleOutline}}" wx:key="videoId" data-id="{{item.videoId}}" bindtap="switchVideo">
+        <view class="outline-index">{{index + 1}}</view>
+        <view class="outline-info"><text class="outline-name">{{item.name}}</text><text class="outline-duration">{{item.durationText}}</text></view>
+        <text class="outline-status">{{item.progressPercent}}%</text>
       </view>
+      <view wx:if="{{!visibleOutline.length}}" class="panel-empty">{{catalogQuery ? '未找到匹配课节' : '当前课程暂未配置可播放视频'}}</view>
     </view>
+
+    <view wx:if="{{activePanel === 'notes'}}" class="notes-panel card">
+      <view wx:if="{{notes.length}}"><view class="note-item" wx:for="{{notes}}" wx:key="id"><text class="note-time">{{item.timeText}}</text><text class="note-text">{{item.content}}</text></view></view>
+      <view wx:else class="panel-empty">还没有笔记，播放时可记录重点。</view>
+      <textarea class="note-input" value="{{noteContent}}" placeholder="记录当前课节的学习笔记" maxlength="500" bindinput="onNoteInput"></textarea>
+      <button class="save-note-btn" loading="{{savingNote}}" disabled="{{savingNote || !videoId}}" bindtap="addNote">保存笔记</button>
+    </view>
+
+    <view wx:if="{{activePanel === 'intro'}}" class="intro-panel card">
+      <view class="intro-title">{{course.name || '课程简介'}}</view>
+      <rich-text wx:if="{{course.rich_description}}" nodes="{{course.rich_description}}"></rich-text>
+      <view wx:else class="intro-text">{{course.description || course.subtitle || '课程简介正在完善中。'}}</view>
+    </view>
+    <view class="cast-note">请勿转发链接或二次传播课程资料。</view>
   </view>
 </view>

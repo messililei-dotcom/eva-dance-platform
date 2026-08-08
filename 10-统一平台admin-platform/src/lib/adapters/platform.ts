@@ -57,6 +57,12 @@ export function adaptMember(raw: any, index = 0): Member {
     growth: numberValue(raw?.growth ?? raw?.growthValue),
     lastActiveAt: textValue(raw?.updated_at ?? raw?.updatedAt ?? raw?.lastLogin ?? raw?.register_date, '-').slice(0, 16),
     avatar: textValue(raw?.avatar ?? raw?.avatarUrl ?? raw?.avatar_url, ''),
+    wxAvatarUrl: textValue(raw?.wx_avatar_url ?? raw?.wxAvatarUrl, ''),
+    wxName: textValue(raw?.wx_name ?? raw?.wxName, ''),
+    wxNickname: textValue(raw?.wx_nickname ?? raw?.wxNickname, ''),
+    wxAccount: textValue(raw?.wx_account ?? raw?.wxAccount, ''),
+    wxOpenid: textValue(raw?.wx_openid ?? raw?.wxOpenid, ''),
+    wxUnionid: textValue(raw?.wx_unionid ?? raw?.wxUnionid, ''),
     raw,
   };
 }

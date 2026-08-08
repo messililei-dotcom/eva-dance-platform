@@ -461,6 +461,28 @@ function preferPlayInfo(current: VodPlayOption | undefined, next: VodPlayOption)
   return current;
 }
 
+export function normalizeVodPlayUrl(value: string) {
+  const playDomain = String(process.env.ALIYUN_VOD_PLAY_DOMAIN || 'vod.swod.com.cn')
+    .trim()
+    .toLowerCase();
+  const legacyDomains = new Set(
+    String(process.env.ALIYUN_VOD_LEGACY_PLAY_DOMAINS || 'vod.dongfangwuquan.com')
+      .split(',')
+      .map(item => item.trim().toLowerCase())
+      .filter(Boolean),
+  );
+  if (!value || !playDomain || !legacyDomains.size) return value;
+
+  try {
+    const url = new URL(value);
+    if (!legacyDomains.has(url.hostname.toLowerCase())) return value;
+    url.hostname = playDomain;
+    return url.toString();
+  } catch {
+    return value;
+  }
+}
+
 export async function getVodPlayOptions(videoId: string): Promise<VodPlayOption[]> {
   if (!videoId) return [];
   const response = await callVodRpc<any>('GetPlayInfo', {
@@ -478,7 +500,11 @@ export async function getVodPlayOptions(videoId: string): Promise<VodPlayOption[
       const definition = String(item.Definition || '').toLowerCase();
       const format = String(item.Format || '').toLowerCase();
       return {
-        url: String(item.PlayURL || ''),
+        // Older VOD assets can keep returning the retired playback domain even
+        // when PlayConfig requests the current one. The old CDN has no CORS
+        // response and is unreliable outside mainland China, while both
+        // domains address the same signed VOD object.
+        url: normalizeVodPlayUrl(String(item.PlayURL || '')),
         format,
         definition,
         label: vodDefinitionLabel(definition),
@@ -494,9 +520,12 @@ export async function getVodPlayOptions(videoId: string): Promise<VodPlayOption[
     .sort((left, right) => definitionRank(left.definition) - definitionRank(right.definition));
 }
 
-export async function getVodPlayUrl(videoId: string) {
+export async function getVodPlayUrl(videoId: string, formatPolicy: 'default' | 'hls-only' = 'default') {
   if (!videoId) return '';
   const options = await getVodPlayOptions(videoId);
+  if (formatPolicy === 'hls-only') {
+    return options.find(item => item.format === 'm3u8')?.url || '';
+  }
   const preferred = options.find(item => item.format === 'm3u8')
     || options.find(item => item.definition === 'od' || item.definition === 'hd')
     || options.find(item => item.format === 'mp4')

@@ -1,6 +1,7 @@
 import { loginData } from '../_auth';
 import { cleanText, jsonError, withDb } from '../_helpers';
 import { createWelcomeMessage } from '@/lib/server/inbox';
+import { bindWechatIdentity, resolveWechatMember } from '@/lib/server/wechat-identity';
 
 type WechatSession = {
   openid?: string;
@@ -91,35 +92,30 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const session = await getWechatSession(cleanText(body.code));
+    const { appId } = getWechatConfig();
+    const identity = {
+      appId,
+      channel: 'mini_program' as const,
+      openid: session.openid,
+      unionid: session.unionid,
+      metadata: { loginMethod: 'wx.login' },
+    };
 
     return withDb((db) => {
-      let member = db.prepare('SELECT * FROM Member WHERE wx_openid=?').get<any>(session.openid) || null;
-      if (!member && session.unionid) {
-        member = db.prepare("SELECT * FROM Member WHERE wx_unionid=? AND wx_unionid<>'' ORDER BY id DESC LIMIT 1").get<any>(session.unionid) || null;
-      }
+      let member = resolveWechatMember(db, identity).member;
 
       if (!member) {
         const result = db.prepare(
           `INSERT INTO Member (
-             name, phone, source, status, register_date, created_at,
-             wx_openid, wx_unionid, wx_session_key, wx_session_updated_at
+             name, phone, source, status, register_date, created_at
            )
-           VALUES (?, NULL, 'wechat_silent', 'active', date('now','localtime'), datetime('now','localtime'), ?, ?, ?, datetime('now','localtime'))`
-        ).run(wechatName(session.openid), session.openid, session.unionid, session.sessionKey);
+           VALUES (?, NULL, 'wechat_silent', 'active', date('now','localtime'), datetime('now','localtime'))`
+        ).run(wechatName(session.openid));
         member = db.prepare('SELECT * FROM Member WHERE id=?').get<any>(result.lastInsertRowid);
         createWelcomeMessage(db, Number(member.id), cleanText(member.name));
-      } else {
-        db.prepare(
-          `UPDATE Member
-           SET wx_openid=?,
-               wx_unionid=CASE WHEN ?<>'' THEN ? ELSE wx_unionid END,
-               wx_session_key=?,
-               wx_session_updated_at=datetime('now','localtime')
-           WHERE id=?`
-        ).run(session.openid, session.unionid, session.unionid, session.sessionKey, member.id);
-        member = db.prepare('SELECT * FROM Member WHERE id=?').get<any>(member.id);
       }
 
+      member = bindWechatIdentity(db, member.id, identity);
       return Response.json({
         success: true,
         data: loginData(member),

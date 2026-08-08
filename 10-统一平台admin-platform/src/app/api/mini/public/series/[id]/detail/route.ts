@@ -16,7 +16,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       ).get(seriesId);
       if (!data) return jsonError('课程不存在', 404);
       const memberId = getMemberId(new URL(request.url).searchParams, request);
-      recordSeriesVisit(db, seriesId, memberId, 'detail');
+      recordSeriesVisit(db, seriesId, memberId, 'detail', request);
       return memberId ? Response.json({ success: true, data }) : publicShortCacheJson({ success: true, data });
     });
   } catch (err: any) {

@@ -3375,6 +3375,59 @@ textarea.ant-input {
     border-radius: 8px !important;
   }
 
+  .online-course-replica .oc-auth-card > .ant-card-head {
+    min-height: 0;
+    padding: 0 12px !important;
+  }
+
+  .online-course-replica .oc-auth-card > .ant-card-head .ant-card-head-wrapper {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .online-course-replica .oc-auth-card > .ant-card-head .ant-card-head-title {
+    flex: 0 0 100%;
+    padding: 10px 0 6px !important;
+    font-size: 15px;
+  }
+
+  .online-course-replica .oc-auth-card > .ant-card-head .ant-card-extra {
+    flex: 0 0 100%;
+    width: 100%;
+    margin-inline-start: 0;
+    padding: 0 0 12px !important;
+  }
+
+  .online-course-replica .oc-auth-toolbar {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+    width: 100%;
+  }
+
+  .online-course-replica .oc-auth-toolbar > .ant-space-item {
+    min-width: 0;
+  }
+
+  .online-course-replica .oc-auth-toolbar > .ant-space-item:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .online-course-replica .oc-auth-toolbar .ant-select,
+  .online-course-replica .oc-auth-toolbar .ant-input-search,
+  .online-course-replica .oc-auth-toolbar .ant-btn {
+    width: 100% !important;
+  }
+
+  .online-course-replica .oc-auth-toolbar .ant-input-affix-wrapper,
+  .online-course-replica .oc-auth-toolbar .ant-input-search-button,
+  .online-course-replica .oc-auth-toolbar .ant-select-selector,
+  .online-course-replica .oc-auth-toolbar .ant-btn {
+    height: 36px !important;
+    min-height: 36px !important;
+    border-radius: 8px !important;
+  }
+
   .online-course-replica .oc-series-list-table .ant-table-wrapper,
   .online-course-replica .oc-series-list-table {
     overflow-x: auto;

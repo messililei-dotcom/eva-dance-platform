@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
+  Alert,
   App,
   Button,
   Card,
@@ -26,6 +27,7 @@ import {
   Upload,
 } from 'antd';
 import { Table } from '@/components/adaptive-table';
+import { HlsVideo } from '@/components/media/hls-video';
 import {
   AppstoreOutlined,
   ArrowLeftOutlined,
@@ -129,6 +131,7 @@ type LessonRow = {
     material_original_name?: string;
     material_file_path?: string;
     material_file_url?: string;
+    material_vod_video_id?: string;
     name?: string;
     material_type?: string;
     duration?: number;
@@ -154,6 +157,7 @@ type MaterialRow = {
   file_size?: number;
   duration?: number;
   transcode_status?: string;
+  vod_video_id?: string;
   created_at?: string;
 };
 
@@ -258,6 +262,7 @@ function lessonMaterialPreviewRecord(record: LessonRow): MaterialRow | null {
     type: material.material_type,
     file_path: material.material_file_path,
     file_url: material.material_file_url,
+    vod_video_id: material.material_vod_video_id,
     duration: material.duration,
   };
 }
@@ -391,6 +396,7 @@ export default function OnlineCourseEditorPage() {
   const [batchMaterialPickerOpen, setBatchMaterialPickerOpen] = useState(false);
   const [materialPickerLesson, setMaterialPickerLesson] = useState<LessonRow | null>(null);
   const [previewMaterial, setPreviewMaterial] = useState<MaterialRow | null>(null);
+  const [previewError, setPreviewError] = useState('');
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [coverPickerTarget, setCoverPickerTarget] = useState<'series_cover' | 'series_share'>('series_cover');
   const [coverUploading, setCoverUploading] = useState(false);
@@ -402,6 +408,9 @@ export default function OnlineCourseEditorPage() {
   const [editingLesson, setEditingLesson] = useState<LessonRow | null>(null);
   const [selectedLessonIds, setSelectedLessonIds] = useState<number[]>([]);
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<number[]>([]);
+  const [lessonPage, setLessonPage] = useState(1);
+  const [lessonPageSize, setLessonPageSize] = useState(30);
+  const [batchPickerPage, setBatchPickerPage] = useState(1);
   const [keyword, setKeyword] = useState('');
   const [materialKeyword, setMaterialKeyword] = useState('');
   const [materialType, setMaterialType] = useState('all');
@@ -490,14 +499,6 @@ export default function OnlineCourseEditorPage() {
 
   const referencedMaterialIds = useMemo(() => new Set(referencedMaterialIdList), [referencedMaterialIdList]);
 
-  const batchPickerSelectedRowKeys = useMemo(() => {
-    const keys = new Set<number>(referencedMaterialIdList);
-    selectedMaterialIds.forEach(id => {
-      if (!referencedMaterialIds.has(Number(id))) keys.add(Number(id));
-    });
-    return Array.from(keys);
-  }, [referencedMaterialIdList, referencedMaterialIds, selectedMaterialIds]);
-
   const authRowKey = (record: any) => String(record.id || record.member_id || record.phone);
   const selectedAuthRecords = useMemo(() => {
     const selected = new Set(selectedAuthRowKeys.map(String));
@@ -585,6 +586,14 @@ export default function OnlineCourseEditorPage() {
   }, []);
 
   useEffect(() => {
+    setLessonPage(1);
+  }, [keyword, lessonViewMode]);
+
+  useEffect(() => {
+    if (batchMaterialPickerOpen) setBatchPickerPage(1);
+  }, [batchMaterialPickerOpen, materialKeyword, materialType, selectedFolderId]);
+
+  useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && ['lessons', 'batch', 'authorization'].includes(tab)) setActiveTab(tab);
   }, [searchParams]);
@@ -654,11 +663,13 @@ export default function OnlineCourseEditorPage() {
       return;
     }
     ensureMediaAuthCookie();
+    setPreviewError('');
     setPreviewMaterial(record);
   };
 
   const openBatchMaterialPicker = () => {
     setSelectedMaterialIds([]);
+    setBatchPickerPage(1);
     setSelectedFolderId('all');
     setMaterialType('all');
     setMaterialKeyword('');
@@ -1392,7 +1403,17 @@ export default function OnlineCourseEditorPage() {
                     className="oc-lesson-table"
                     dataSource={filteredLessons}
                     rowSelection={{ selectedRowKeys: selectedLessonIds, onChange: keys => setSelectedLessonIds(keys as number[]) }}
-                    pagination={{ defaultPageSize: 30, showSizeChanger: true, pageSizeOptions: [20, 30, 50, 100], showTotal: total => `共 ${total} 条` }}
+                    pagination={{
+                      current: lessonPage,
+                      pageSize: lessonPageSize,
+                      showSizeChanger: true,
+                      pageSizeOptions: [20, 30, 50, 100],
+                      showTotal: total => `共 ${total} 条`,
+                      onChange: (page, pageSize) => {
+                        setLessonPage(page);
+                        setLessonPageSize(pageSize);
+                      },
+                    }}
                     scroll={{ x: 1240, y: 'calc(100dvh - 438px)' }}
                     locale={{ emptyText: <Empty description="暂无课节；可新建或批量创建" /> }}
                     columns={sortableColumns<LessonRow>([
@@ -1722,14 +1743,19 @@ export default function OnlineCourseEditorPage() {
               size="small"
               dataSource={filteredMaterials}
               rowSelection={{
-                selectedRowKeys: batchPickerSelectedRowKeys,
+                selectedRowKeys: selectedMaterialIds,
                 onChange: keys => setSelectedMaterialIds((keys as Array<string | number>).map(Number).filter(id => !referencedMaterialIds.has(id))),
                 getCheckboxProps: record => ({
                   disabled: referencedMaterialIds.has(Number(record.id)),
                   title: referencedMaterialIds.has(Number(record.id)) ? '本课程已引用，不能重复生成课节' : undefined,
                 }),
               }}
-              pagination={{ pageSize: MATERIAL_PICKER_TABLE_PAGE_SIZE, showSizeChanger: false }}
+              pagination={{
+                current: batchPickerPage,
+                pageSize: MATERIAL_PICKER_TABLE_PAGE_SIZE,
+                showSizeChanger: false,
+                onChange: page => setBatchPickerPage(page),
+              }}
               scroll={{ x: 760, y: 900 }}
               locale={{ emptyText: <Empty description="暂无可选素材" /> }}
               columns={[
@@ -1851,8 +1877,14 @@ export default function OnlineCourseEditorPage() {
       <Modal
         title={previewMaterial ? `预览素材：${previewMaterial.name}` : '预览素材'}
         open={!!previewMaterial}
-        onCancel={() => setPreviewMaterial(null)}
-        footer={<Button onClick={() => setPreviewMaterial(null)}>关闭</Button>}
+        onCancel={() => {
+          setPreviewMaterial(null);
+          setPreviewError('');
+        }}
+        footer={<Button onClick={() => {
+          setPreviewMaterial(null);
+          setPreviewError('');
+        }}>关闭</Button>}
         width={920}
         destroyOnClose
       >
@@ -1860,12 +1892,18 @@ export default function OnlineCourseEditorPage() {
           const source = `/api/course/materials/${previewMaterial.id}/file`;
           if (previewMaterial.type === 'video') {
             return (
-              <video
-                src={source}
-                controls
-                autoPlay
-                style={{ width: '100%', maxHeight: '70vh', borderRadius: 8, background: '#000' }}
-              />
+              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                {previewError && <Alert type="warning" showIcon message={previewError} />}
+                <HlsVideo
+                  src={source}
+                  useHls={Boolean(previewMaterial.vod_video_id || String(previewMaterial.file_path || '').startsWith('vod:'))}
+                  controls
+                  autoPlay
+                  preload="metadata"
+                  onPlaybackError={setPreviewError}
+                  style={{ width: '100%', maxHeight: '70vh', borderRadius: 8, background: '#000' }}
+                />
+              </Space>
             );
           }
           if (previewMaterial.type === 'audio') {

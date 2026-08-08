@@ -77,10 +77,11 @@ export function Table<RecordType extends AnyObject = AnyObject>({
     if (pagination === false) return false;
     const configured = pagination && typeof pagination === 'object' ? pagination : {};
     const configuredPageSize = Number(configured.pageSize || configured.defaultPageSize || 0);
-    const total = Number(configured.total || 0);
-    const loadedRows = Array.isArray(dataSource) ? dataSource.length : 0;
-    const serverPaginated = total > loadedRows && loadedRows > 0;
-    const pageSize = serverPaginated && configuredPageSize ? configuredPageSize : adaptivePageSize;
+    const hasConfiguredPageSize = configuredPageSize > 0;
+    // A caller-provided page size is a UI contract. Recalculating it after
+    // resize/selection moves rows between pages while their selected keys stay
+    // active, which makes a selection appear to leak into the next page.
+    const pageSize = hasConfiguredPageSize ? configuredPageSize : adaptivePageSize;
 
     return {
       showSizeChanger: true,

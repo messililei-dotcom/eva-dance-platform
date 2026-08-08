@@ -31,6 +31,7 @@ import {
   Upload,
 } from 'antd';
 import { Table } from '@/components/adaptive-table';
+import { HlsVideo } from '@/components/media/hls-video';
 import {
   CloudUploadOutlined,
   DeleteOutlined,
@@ -150,6 +151,7 @@ type MaterialRow = {
   uploaded_by_name?: string;
   tags?: string;
   transcode_status?: string;
+  vod_video_id?: string;
   risk_status?: string;
   is_referenced?: number;
   created_at?: string;
@@ -483,6 +485,7 @@ export default function OnlineCoursePage() {
   const [authorizedStudents, setAuthorizedStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [authToggleLoadingKey, setAuthToggleLoadingKey] = useState('');
   const [seriesKeyword, setSeriesKeyword] = useState('');
   const [seriesStatus, setSeriesStatus] = useState('all');
   const [lessonKeyword, setLessonKeyword] = useState('');
@@ -1439,6 +1442,10 @@ export default function OnlineCoursePage() {
     });
   };
 
+  const authorizationRowKey = (record: any) => (
+    String(record.auth_row_key || `${record.series_id || authSeriesId}:${record.id || record.phone}`)
+  );
+
   const cancelAuthorization = (record: any) => {
     modal.confirm({
       title: '确定撤销此学员授权吗？',
@@ -1446,6 +1453,8 @@ export default function OnlineCoursePage() {
       okButtonProps: { danger: true },
       cancelText: '取消',
       onOk: async () => {
+        const rowKey = authorizationRowKey(record);
+        setAuthToggleLoadingKey(rowKey);
         try {
           await onlineCourseApi.deauthorizeMember(authSeriesId === 'all' ? record.series_id : authSeriesId, { member_id: record.id, phone: record.phone });
           message.success('已撤销授权');
@@ -1453,13 +1462,16 @@ export default function OnlineCoursePage() {
         } catch (err) {
           message.error(apiError(err));
           throw err;
+        } finally {
+          setAuthToggleLoadingKey('');
         }
       },
     });
   };
 
-  const toggleAuthorization = (record: any) => {
-    if (record.authorized) {
+  const toggleAuthorization = (record: any, nextAuthorized: boolean) => {
+    if (Boolean(record.authorized) === nextAuthorized) return;
+    if (!nextAuthorized) {
       cancelAuthorization(record);
       return;
     }
@@ -1474,6 +1486,8 @@ export default function OnlineCoursePage() {
       okText: '授权',
       cancelText: '取消',
       onOk: async () => {
+        const rowKey = authorizationRowKey(record);
+        setAuthToggleLoadingKey(rowKey);
         try {
           await onlineCourseApi.authorizeMember(seriesId, { member_id: record.id, type: 'admin_grant' });
           message.success('已授权');
@@ -1481,6 +1495,8 @@ export default function OnlineCoursePage() {
         } catch (err) {
           message.error(apiError(err));
           throw err;
+        } finally {
+          setAuthToggleLoadingKey('');
         }
       },
     });
@@ -2237,9 +2253,10 @@ export default function OnlineCoursePage() {
             children: (
               <Space direction="vertical" size={16} style={{ width: '100%' }}>
                 <Card
+                  className="oc-auth-card"
                   title={currentAuthSeries ? `${currentAuthSeries.name} · 授权管理` : '全部课程 · 授权管理'}
                   extra={
-                    <Space wrap>
+                    <Space className="oc-auth-toolbar" wrap>
                       <Select
                         size="small"
                         value={authSeriesId}
@@ -2310,17 +2327,16 @@ export default function OnlineCoursePage() {
                         dataIndex: 'authorized',
                         width: 120,
                         render: (value, record) => {
-                          const label = value ? '取消授权' : '授权';
-                          const color = value ? 'red' : 'green';
+                          const rowKey = authorizationRowKey(record);
                           return (
-                            <Tag
-                              color={color}
-                              onClick={() => toggleAuthorization(record)}
-                              style={{ cursor: 'pointer', userSelect: 'none' }}
-                              title={value ? '点击取消授权' : '点击授权'}
-                            >
-                              {label}
-                            </Tag>
+                            <Switch
+                              checked={Boolean(value)}
+                              checkedChildren="已授权"
+                              unCheckedChildren="未授权"
+                              loading={authToggleLoadingKey === rowKey}
+                              disabled={Boolean(authToggleLoadingKey) && authToggleLoadingKey !== rowKey}
+                              onChange={checked => toggleAuthorization(record, checked)}
+                            />
                           );
                         },
                       },
@@ -2382,11 +2398,13 @@ export default function OnlineCoursePage() {
             return (
               <Space direction="vertical" size={12} style={{ width: '100%' }}>
                 {previewError && <Alert type="warning" showIcon message={previewError} />}
-                <video
+                <HlsVideo
                   src={source}
+                  useHls={Boolean(previewMaterial.vod_video_id || String(previewMaterial.file_path || '').startsWith('vod:'))}
                   controls
                   autoPlay
-                  onError={() => setPreviewError('视频暂时无法播放。若素材为 MOV 或手机原始编码，请等待 VOD 转码完成，或重新上传转码后的 MP4/HLS 文件。')}
+                  preload="metadata"
+                  onPlaybackError={setPreviewError}
                   style={{ width: '100%', maxHeight: '70vh', borderRadius: 8, background: '#000' }}
                 />
               </Space>

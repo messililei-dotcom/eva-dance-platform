@@ -21,7 +21,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
          ORDER BY sort_order, id`
       ).all(id);
       const memberId = getMemberId(new URL(request.url).searchParams, request);
-      recordSeriesVisit(db, id, memberId, 'series');
+      recordSeriesVisit(db, id, memberId, 'series', request);
       const body = { success: true, data: { ...series, courses } };
       return memberId ? Response.json(body) : publicShortCacheJson(body);
     });

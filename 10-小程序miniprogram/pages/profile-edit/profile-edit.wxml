@@ -19,7 +19,7 @@
     <!-- 基本信息 -->
     <view class="form-section card">
       <view class="form-item">
-        <text class="form-label">用户状态</text>
+        <text class="form-label">学员等级</text>
         <text class="form-value readonly">{{levelText}}</text>
       </view>
       <view class="form-item">

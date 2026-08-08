@@ -1,0 +1,15 @@
+ecosystem.config.js
+next.config.js
+package.json
+docs/微信统一身份平滑升级说明.md
+migrations/20260729_wechat_identity.sql
+scripts/members-page.test.mjs
+scripts/wechat-identity.test.mjs
+src/app/(admin)/members/page.tsx
+src/app/api/members/directory/route.ts
+src/app/api/mini/_auth.ts
+src/app/api/mini/silent-login/route.ts
+src/app/api/wechat/identity/sync/route.ts
+src/lib/adapters/platform.ts
+src/lib/server/wechat-identity.ts
+src/types/domain.ts

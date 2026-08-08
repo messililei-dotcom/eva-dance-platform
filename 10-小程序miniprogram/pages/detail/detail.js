@@ -36,9 +36,11 @@ Page({
     if (coverImage && !/^https?:\/\//.test(coverImage)) {
       coverImage = origin + coverImage;
     }
+    const memberId = Number(wx.getStorageSync("memberId") || 0);
+    const referralQuery = memberId ? `&ref_member_id=${memberId}` : "";
     return {
       title: series.name || '伊娃东方舞内容',
-      path: `pages/detail/detail?id=${this.data.id}`,
+      path: `pages/detail/detail?id=${this.data.id}${referralQuery}`,
       imageUrl: coverImage || '/images/logo.png'
     };
   },

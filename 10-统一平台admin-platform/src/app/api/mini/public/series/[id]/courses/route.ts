@@ -10,7 +10,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       const seriesId = toPositiveInt(routeParams.id);
       const series = db.prepare("SELECT id FROM CourseSeries WHERE id=? AND status='published'").get(seriesId);
       if (!series) return jsonError('课程不存在', 404);
-      recordSeriesVisit(db, seriesId, getMemberId(new URL(request.url).searchParams, request), 'catalog');
+      recordSeriesVisit(db, seriesId, getMemberId(new URL(request.url).searchParams, request), 'catalog', request);
       const courses = db.prepare(
         `SELECT oc.id, oc.series_id, oc.name, oc.description, oc.rich_description, oc.cover_image,
                 oc.share_text, oc.course_type, oc.course_type as type, oc.single_price, oc.duration,

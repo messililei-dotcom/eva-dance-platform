@@ -6,6 +6,9 @@ const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
   compress: true,
   poweredByHeader: false,
+  typescript: {
+    ignoreBuildErrors: process.env.ALLOW_BUILD_TYPE_ERRORS === 'true',
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 2678400,

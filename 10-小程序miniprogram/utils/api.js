@@ -31,6 +31,13 @@ function getErrorMessage(body, fallback) {
   return body.message || body.error || body.msg || fallback;
 }
 
+function createRequestError(message, statusCode, code) {
+  const error = new Error(message || "请求失败");
+  error.statusCode = Number(statusCode || 0);
+  error.code = code || (error.statusCode ? `HTTP_${error.statusCode}` : "NETWORK_ERROR");
+  return error;
+}
+
 function shouldEnsureLogin(path, options) {
   if (options.auth === false) return false;
   if (wx.getStorageSync("token")) return false;
@@ -39,10 +46,19 @@ function shouldEnsureLogin(path, options) {
 
 function request(path, options = {}) {
   const app = getMiniApp();
-  if (shouldEnsureLogin(path, options) && app && typeof app.ensureSilentLogin === "function") {
-    return app.ensureSilentLogin().then(() => rawRequest(path, options)).catch(() => rawRequest(path, options));
+  const needsLogin = shouldEnsureLogin(path, options);
+  const run = () => rawRequest(path, options).catch(async err => {
+    if (options.auth === false || options._sessionRetried || Number(err.statusCode) !== 401
+      || !app || typeof app.ensureSilentLogin !== "function") throw err;
+    wx.removeStorageSync("token");
+    const refreshed = await app.ensureSilentLogin(true).catch(() => null);
+    if (!refreshed || !wx.getStorageSync("token")) throw err;
+    return rawRequest(path, { ...options, _sessionRetried: true });
+  });
+  if (needsLogin && app && typeof app.ensureSilentLogin === "function") {
+    return app.ensureSilentLogin().catch(() => null).then(run);
   }
-  return rawRequest(path, options);
+  return run();
 }
 
 function rawRequest(path, options = {}) {
@@ -56,6 +72,10 @@ function rawRequest(path, options = {}) {
     const tryRequest = (index) => {
       const base = bases[index];
       const token = wx.getStorageSync("token");
+      const referral = wx.getStorageSync("referralContext") || {};
+      const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+      const currentPage = pages.length ? pages[pages.length - 1] : null;
+      const pageUrl = currentPage && currentPage.route ? `/${currentPage.route}` : "";
       wx.request({
         url: `${base}${path}`,
         method: options.method || "GET",
@@ -63,6 +83,11 @@ function rawRequest(path, options = {}) {
         timeout: options.timeout || DEFAULT_TIMEOUT,
         header: {
           "content-type": "application/json",
+          "x-client-platform": "miniprogram",
+          ...(pageUrl ? { "x-page-url": pageUrl } : {}),
+          ...(referral.memberId ? { "x-referrer-member-id": String(referral.memberId) } : {}),
+          ...(referral.channel ? { "x-referrer-channel": String(referral.channel) } : {}),
+          ...(referral.shareCode ? { "x-share-code": String(referral.shareCode) } : {}),
           ...(options.header || {}),
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
@@ -76,14 +101,20 @@ function rawRequest(path, options = {}) {
             tryRequest(index + 1);
             return;
           }
-          reject(new Error(getErrorMessage(body, "请求失败")));
+          reject(createRequestError(
+            res.statusCode >= 500
+              ? "服务器暂时繁忙，请稍后重试"
+              : getErrorMessage(body, res.statusCode === 401 ? "登录状态已失效" : "请求失败"),
+            res.statusCode
+          ));
         },
         fail(err) {
           if (index + 1 < bases.length) {
             tryRequest(index + 1);
             return;
           }
-          reject(new Error(err.errMsg || "网络连接失败"));
+          const timeout = /timeout/i.test(err.errMsg || "");
+          reject(createRequestError(timeout ? "网络连接超时，请重新连接" : "网络连接失败，请检查网络后重试", 0, timeout ? "NETWORK_TIMEOUT" : "NETWORK_ERROR"));
         }
       });
     };
@@ -109,6 +140,7 @@ function loginRequest(path, data = {}) {
         timeout: DEFAULT_TIMEOUT,
         header: {
           "content-type": "application/json",
+          "x-client-platform": "miniprogram",
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         success(res) {
@@ -121,18 +153,60 @@ function loginRequest(path, data = {}) {
             tryRequest(index + 1);
             return;
           }
-          reject(new Error(getErrorMessage(body, "请求失败")));
+          reject(createRequestError(
+            res.statusCode >= 500 ? "服务器暂时繁忙，请稍后重试" : getErrorMessage(body, "请求失败"),
+            res.statusCode
+          ));
         },
         fail(err) {
           if (index + 1 < bases.length) {
             tryRequest(index + 1);
             return;
           }
-          reject(new Error(err.errMsg || "网络连接失败"));
+          const timeout = /timeout/i.test(err.errMsg || "");
+          reject(createRequestError(timeout ? "网络连接超时，请稍后重试" : "网络连接失败，请检查网络后重试", 0, timeout ? "NETWORK_TIMEOUT" : "NETWORK_ERROR"));
         }
       });
     };
     tryRequest(0);
+  });
+}
+
+function websiteRequest(path, data = {}) {
+  const base = String(runtimeConfig.pwaAuthBase || runtimeConfig.officialWebsiteUrl || "").replace(/\/$/, "");
+  return new Promise((resolve, reject) => {
+    if (!base) {
+      reject(createRequestError("PWA登录地址未配置", 0, "CONFIG_ERROR"));
+      return;
+    }
+    const token = wx.getStorageSync("token");
+    if (!token) {
+      reject(createRequestError("小程序登录状态已失效", 401));
+      return;
+    }
+    wx.request({
+      url: `${base}${path}`,
+      method: "POST",
+      data,
+      timeout: DEFAULT_TIMEOUT,
+      header: {
+        "content-type": "application/json",
+        "x-client-platform": "miniprogram-pwa-handoff",
+        Authorization: `Bearer ${token}`
+      },
+      success(res) {
+        const body = res.data || {};
+        if (res.statusCode >= 200 && res.statusCode < 300 && body.success !== false) {
+          resolve(body);
+          return;
+        }
+        reject(createRequestError(getErrorMessage(body, "PWA登录确认失败"), res.statusCode));
+      },
+      fail(err) {
+        const timeout = /timeout/i.test(err.errMsg || "");
+        reject(createRequestError(timeout ? "网络连接超时" : "网络连接失败", 0));
+      }
+    });
   });
 }
 
@@ -257,14 +331,63 @@ module.exports = {
   silentLogin(code) {
     return loginRequest("/silent-login", { code });
   },
+  completePwaLoginHandoff(handoffId) {
+    return websiteRequest("/api/wechat/mini-handoff/complete", { handoffId });
+  },
   getSeriesList() {
     return request("/public/series", { auth: false });
   },
   getOfflineCourses() {
     return request("/public/offline-courses", { auth: false });
   },
+  getOfflineOverview() {
+    return request(`/offline/overview?member_id=${getMemberId()}`);
+  },
+  bookOfflineSession(sessionId) {
+    return request(`/offline/bookings?member_id=${getMemberId()}`, {
+      method: "POST",
+      data: { sessionId }
+    });
+  },
+  cancelOfflineBooking(bookingId, reason = "学员小程序取消") {
+    return request(`/offline/bookings/${bookingId}?member_id=${getMemberId()}`, {
+      method: "PATCH",
+      data: { reason }
+    });
+  },
+  checkinOfflineBooking(bookingId, checkinCode) {
+    return request(`/offline/checkin?member_id=${getMemberId()}`, {
+      method: "POST",
+      data: { bookingId, checkinCode }
+    });
+  },
   getHomeStats() {
     return request("/public/home-stats", { auth: false });
+  },
+  getEvents() {
+    return request("/events", { auth: false });
+  },
+  getEventDetail(id) {
+    return request(`/events/${id}`, { auth: false });
+  },
+  getEventGroupDetail(id, groupId) {
+    return request(`/events/${id}/groups/${groupId}`, { auth: false });
+  },
+  getMyEventRegistrations(id) {
+    return request(`/events/${id}/register?member_id=${getMemberId()}`);
+  },
+  registerEvent(id, data) {
+    return request(`/events/${id}/register`, {
+      method: "POST",
+      data: { member_id: getMemberId(), ...data }
+    });
+  },
+  registerEventWithMusic(id, filePath, data) {
+    return upload(`/events/${id}/register`, filePath, "musicFile", {
+      member_id: String(getMemberId()),
+      musicSource: "wechat",
+      ...data
+    });
   },
   getSeriesDetail(id) {
     return request(`/public/series/${id}`, { auth: false });
@@ -274,6 +397,9 @@ module.exports = {
   },
   getSeriesCourses(id) {
     return request(`/public/series/${id}/courses`, { auth: false });
+  },
+  getSeriesProgress(id) {
+    return request(`/public/series/${id}/progress`);
   },
   checkAuthorization(seriesId) {
     return request(`/authorization/check?member_id=${getMemberId()}&series_id=${seriesId}`);
@@ -331,6 +457,15 @@ module.exports = {
   },
   getRecentCourses() {
     return request(`/member/recent-courses?member_id=${getMemberId()}`);
+  },
+  getPayments() {
+    return request(`/member/payments?member_id=${getMemberId()}`);
+  },
+  getConsumeRecords() {
+    return request(`/member/consume-records?member_id=${getMemberId()}`);
+  },
+  getEventRegistrations() {
+    return request(`/member/event-registrations?member_id=${getMemberId()}`);
   },
   getCheckins() {
     return request(`/member/checkins?member_id=${getMemberId()}`);

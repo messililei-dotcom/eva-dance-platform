@@ -1,0 +1,89 @@
+<view class="offline-page">
+  <view class="offline-hero">
+    <view class="hero-kicker">伊娃东方舞线下课程</view>
+    <view class="hero-title">线下课</view>
+    <view class="hero-desc">报名获得课次，预约冻结1课次，到课签到后自动核销。</view>
+    <view class="hero-stats">
+      <view><text>{{availableSessions}}</text><span>可用课次</span></view>
+      <view><text>{{pendingCount}}</text><span>待上课</span></view>
+      <view><text>{{consumedCount}}</text><span>已到课</span></view>
+    </view>
+  </view>
+
+  <view class="rule-strip">
+    <view><text>①</text><span>报名获得课次</span></view>
+    <view><text>②</text><span>预约冻结1课次</span></view>
+    <view><text>③</text><span>签到自动核销</span></view>
+  </view>
+
+  <scroll-view class="offline-tabs" scroll-x enable-flex>
+    <view class="offline-tab {{activeTab === item.key ? 'active' : ''}}" wx:for="{{tabs}}" wx:key="key" data-key="{{item.key}}" bindtap="switchTab">{{item.label}}</view>
+  </scroll-view>
+
+  <view wx:if="{{activeTab === 'courses'}}">
+    <view class="catalog-head">
+      <view><view class="section-title">线下课程</view><text>共 {{visibleCourses.length}} 门课程</text></view>
+      <view class="course-search"><input value="{{keyword}}" placeholder="搜索课程或老师" bindinput="onSearchInput" /></view>
+    </view>
+    <view wx:if="{{loading}}" class="empty-card">课程加载中…</view>
+    <view wx:elif="{{visibleCourses.length}}" class="course-grid">
+      <view class="course-card" wx:for="{{visibleCourses}}" wx:key="id" data-id="{{item.id}}" bindtap="openCourse">
+        <view class="course-cover">
+          <image wx:if="{{item.coverImage}}" src="{{item.coverImage}}" mode="aspectFill" binderror="onImageError" data-path="visibleCourses[{{index}}].coverImage"></image>
+          <view wx:else class="cover-fallback">线下课</view>
+        </view>
+        <view class="course-body">
+          <view class="course-name">{{item.name}}</view>
+          <view class="course-meta">{{item.teacherText}}</view>
+          <view class="course-meta">{{item.dateText}}</view>
+          <view class="course-footer"><text>{{item.sessionsText}}</text><b>{{item.priceText}}</b></view>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="empty-card">暂无线下课程</view>
+  </view>
+
+  <view wx:if="{{activeTab === 'bookings'}}" class="record-list">
+    <view wx:if="{{overviewLoading}}" class="empty-card">预约数据加载中…</view>
+    <view wx:elif="{{bookings.length}}">
+      <view class="record-card" wx:for="{{bookings}}" wx:key="id">
+        <view class="record-head"><view><view class="record-title">{{item.title}}</view><text>第 {{item.session_no}} 课次</text></view><span class="status {{item.status}}">{{item.statusText}}</span></view>
+        <view class="record-meta">📅 {{item.timeText}}</view>
+        <view class="record-meta">👤 {{item.teacher_name || '授课老师待定'}}</view>
+        <view class="record-meta">📍 {{item.locationText}}</view>
+        <view wx:if="{{item.canCheckin}}" class="checkin-box">
+          <text>现场签到码</text>
+          <view><input value="{{item.code}}" placeholder="由老师现场提供" data-index="{{index}}" bindinput="onCheckinCodeInput" /><button data-id="{{item.id}}" data-index="{{index}}" bindtap="checkinBooking">签到</button></view>
+          <button class="cancel-btn" data-id="{{item.id}}" bindtap="cancelBooking">取消预约</button>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="empty-card">暂无预约记录，可前往“去约课”查看开放课次。</view>
+  </view>
+
+  <view wx:if="{{activeTab === 'sessions'}}" class="record-list">
+    <view wx:if="{{overviewLoading}}" class="empty-card">开放课次加载中…</view>
+    <view wx:elif="{{sessions.length}}">
+      <view class="record-card" wx:for="{{sessions}}" wx:key="id">
+        <view class="record-title">{{item.title}}</view><view class="record-sub">第 {{item.session_no}} 课次</view>
+        <view class="record-meta">📅 {{item.timeText}}</view>
+        <view class="record-meta">👤 {{item.teacher_name || '授课老师待定'}}</view>
+        <view class="record-meta">📍 {{item.locationText}}</view>
+        <view class="session-footer"><text>已约 {{item.booked}}/{{item.capacity}}</text><button class="{{item.canBook ? '' : 'disabled'}}" disabled="{{!item.canBook}}" data-id="{{item.id}}" bindtap="bookSession">{{actingId === 'session-' + item.id ? '预约中…' : item.actionText}}</button></view>
+      </view>
+    </view>
+    <view wx:else class="empty-card">当前没有开放预约的课次。</view>
+  </view>
+
+  <view wx:if="{{activeTab === 'rights'}}" class="record-list">
+    <view wx:if="{{overviewLoading}}" class="empty-card">课次权益加载中…</view>
+    <view wx:elif="{{rights.length}}">
+      <view class="record-card" wx:for="{{rights}}" wx:key="id">
+        <view class="record-title">{{item.title}}</view>
+        <view class="rights-stats"><view><text>{{item.available}}</text><span>可用课次</span></view><view><text>{{item.frozen}}</text><span>预约冻结</span></view><view><text>{{item.used}}</text><span>已核销</span></view></view>
+        <view class="valid-date">有效期至 {{item.validUntil}}</view>
+      </view>
+    </view>
+    <view wx:else class="empty-card">暂无可用线下课程权益，报名确认后会自动显示。</view>
+  </view>
+</view>

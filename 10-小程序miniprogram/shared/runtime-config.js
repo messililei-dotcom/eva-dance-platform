@@ -1,10 +1,11 @@
 (function(root) {
   var runtimeConfig = {
-    apiBase: "https://admin.dongfangwuquan.com/api/mini",
-    loginApiBase: "https://admin.dongfangwuquan.com/api/mini",
+    apiBase: "https://admin.swod.com.cn/api/mini",
+    loginApiBase: "https://admin.swod.com.cn/api/mini",
     fallbackApiBases: [],
     fallbackLoginApiBases: [],
-    officialWebsiteUrl: "https://www.dongfangwuquan.com",
+    officialWebsiteUrl: "https://www.swod.com.cn",
+    pwaAuthBase: "https://www.swod.com.cn",
     memberId: null,
     memberName: null,
     reviewMode: false

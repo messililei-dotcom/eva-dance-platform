@@ -1,0 +1,16 @@
+<view class="register-page">
+  <view class="register-head"><view class="register-kicker">赛事报名</view><view class="register-title">{{competition.name || '伊娃东方舞赛事'}}</view><view class="register-note">{{competition.startDate || '比赛日期待定'}} · {{competition.location || '地点待定'}}</view></view>
+  <view class="form-card card">
+    <view class="form-title"><view>填写报名信息</view><text>带 * 为必填项</text></view>
+    <view class="field"><text>参赛组别 *</text><picker range="{{groups}}" range-key="name" value="{{groupIndex}}" bindchange="onGroupChange"><view class="picker-value {{groupIndex < 0 ? 'placeholder' : ''}}">{{groupIndex < 0 ? '请选择组别' : groups[groupIndex].name}} ›</view></picker></view>
+    <view class="field"><text>参赛姓名 *</text><input value="{{name}}" disabled placeholder="请先完善个人资料"></input></view>
+    <view class="field"><text>手机号码 *</text><input value="{{phone}}" type="number" maxlength="11" placeholder="用于接收审核通知" data-field="phone" bindinput="onInput"></input></view>
+    <view class="field"><text>机构 / 舞蹈室</text><input value="{{organization}}" placeholder="选填" data-field="organization" bindinput="onInput"></input></view>
+    <view class="field"><text>指导老师</text><input value="{{teacher}}" placeholder="选填" data-field="teacher" bindinput="onInput"></input></view>
+    <view class="field"><text>参赛曲目 *</text><input value="{{performanceTitle}}" maxlength="120" placeholder="曲目名称" data-field="performanceTitle" bindinput="onInput"></input></view>
+    <view class="music-field"><view class="music-label">上传音乐 *</view><button class="music-button" bindtap="chooseMusic">从微信聊天记录选择</button><view class="music-name">{{musicFileName || '尚未选择音乐文件 · 最大10MB'}}</view></view>
+    <view class="field textarea-field"><text>备注</text><textarea value="{{remark}}" maxlength="500" placeholder="可填写参赛项目、作品或其他说明" data-field="remark" bindinput="onInput"></textarea></view>
+  </view>
+  <button class="submit-btn" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submit">{{submitting ? '正在提交…' : '提交赛事报名'}}</button>
+  <view class="submit-note">提交即表示您同意工作人员使用上述信息联系您确认赛事报名。</view>
+</view>

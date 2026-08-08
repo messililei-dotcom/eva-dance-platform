@@ -3,10 +3,10 @@ import path from 'path';
 import { Readable } from 'stream';
 import { unstable_noStore as noStore } from 'next/cache';
 import { connection } from 'next/server';
+import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-export const fetchCache = 'force-no-store';
 export const runtime = 'nodejs';
 
 const COVER_ROOT = path.join(process.cwd(), 'public', 'uploads', 'online-course', 'series-covers');
@@ -58,11 +58,28 @@ export async function GET(_request: Request, { params }: { params: Promise<{ fil
   if (!filePath) return new Response('Not found', { status: 404 });
 
   const stat = fs.statSync(filePath);
+  const canOptimize = stat.size > 600 * 1024 && /\.(jpe?g|png|webp|bmp)$/i.test(filePath);
+  if (canOptimize) {
+    const optimized = await sharp(filePath)
+      .rotate()
+      .resize({ width: 1200, height: 900, fit: 'inside', withoutEnlargement: true })
+      .flatten({ background: '#f7f3eb' })
+      .jpeg({ quality: 82, mozjpeg: true })
+      .toBuffer();
+    return new Response(new Uint8Array(optimized), {
+      headers: {
+        'Content-Type': 'image/jpeg',
+        'Content-Length': String(optimized.length),
+        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  }
   return new Response(Readable.toWeb(fs.createReadStream(filePath)) as ReadableStream, {
     headers: {
       'Content-Type': contentType(filePath),
       'Content-Length': String(stat.size),
-      'Cache-Control': 'no-cache, max-age=0, must-revalidate',
+      'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
       'X-Content-Type-Options': 'nosniff',
     },
   });

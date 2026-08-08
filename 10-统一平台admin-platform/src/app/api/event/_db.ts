@@ -403,7 +403,8 @@ export function competitionSelectSql() {
       (SELECT COUNT(*) FROM event_groups g WHERE g.competition_id=c.id) AS group_count,
       (SELECT COUNT(*) FROM event_players p WHERE p.competition_id=c.id AND p.status!='cancelled') AS player_count,
       (SELECT COUNT(DISTINCT gj.judge_id) FROM event_group_judges gj WHERE gj.competition_id=c.id AND gj.status='active') AS judge_count,
-      (SELECT COUNT(*) FROM event_players p WHERE p.competition_id=c.id AND p.audit_status='approved' AND p.status!='cancelled') AS approved_player_count
+      (SELECT COUNT(*) FROM event_players p WHERE p.competition_id=c.id AND p.audit_status='approved' AND p.status!='cancelled') AS approved_player_count,
+      (SELECT COUNT(*) FROM event_rankings r WHERE r.competition_id=c.id AND r.status='published') AS ranking_count
     FROM event_competitions c
   `;
 }
@@ -428,6 +429,7 @@ export function mapCompetition(row: any) {
     registrationFee: row.registration_fee || 0,
     groupCount: row.group_count || 0,
     playerCount: row.player_count || 0,
+    rankingCount: row.ranking_count || row.ranked_count || 0,
     judgeCount: row.judge_count || 0,
     approvedPlayerCount: row.approved_player_count || 0,
     createdAt: row.created_at,
@@ -453,6 +455,7 @@ export function mapGroup(row: any) {
     scoringStatus: row.scoring_status || 'unlocked',
     status: row.status || 'active',
     playerCount: row.player_count || 0,
+    rankingCount: row.ranking_count || row.ranked_count || 0,
     judgeCount: row.judge_count || 0,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

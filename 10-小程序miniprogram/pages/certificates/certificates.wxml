@@ -9,7 +9,7 @@
   <view class="empty-state card" wx:elif="{{!certificates.length}}">
     <text class="empty-icon">📜</text>
     <text class="empty-text">暂无记录</text>
-    <text class="empty-hint">播放内容后会显示对应记录</text>
+    <text class="empty-hint">课程结业证书将在这里展示</text>
   </view>
 
   <!-- 记录列表 -->

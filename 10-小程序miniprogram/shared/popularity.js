@@ -1,48 +1,83 @@
-function popularitySeed(item) {
-  return String(item && (item.id || item.source_id || item.name) || "eva-course");
+const PUBLIC_STUDENT_BASE_MIN = 500;
+const PUBLIC_STUDENT_BASE_MAX = 1000;
+const PUBLIC_STUDENT_BASE_RANGE = PUBLIC_STUDENT_BASE_MAX - PUBLIC_STUDENT_BASE_MIN + 1;
+const STORAGE_KEY = "courseStudentDisplayBasesV1";
+
+const baseBySeed = {};
+const seedByBase = {};
+let storageLoaded = false;
+
+function courseSeed(item) {
+  const source = item || {};
+  const id = source.id || source.series_id || source.source_id || "";
+  const name = source.name || source.series_name || "";
+  return `${id}|${name}` || "eva-course";
 }
 
-const MIN_POPULARITY_BASE = 500;
-const MAX_POPULARITY_BASE = 2000;
-const POPULARITY_BASE_RANGE = MAX_POPULARITY_BASE - MIN_POPULARITY_BASE + 1;
-const popularityBaseBySeed = {};
-const usedPopularityBases = {};
+function loadStoredBases() {
+  if (storageLoaded) return;
+  storageLoaded = true;
+  if (typeof wx === "undefined" || typeof wx.getStorageSync !== "function") return;
+  const stored = wx.getStorageSync(STORAGE_KEY) || {};
+  Object.keys(stored).forEach(seed => {
+    const base = Number(stored[seed]);
+    if (!Number.isInteger(base) || base < PUBLIC_STUDENT_BASE_MIN || base > PUBLIC_STUDENT_BASE_MAX) return;
+    if (seedByBase[base] && seedByBase[base] !== seed) return;
+    baseBySeed[seed] = base;
+    seedByBase[base] = seed;
+  });
+}
 
-function stableRandomBase(seed) {
-  if (popularityBaseBySeed[seed] !== undefined) return popularityBaseBySeed[seed];
-
-  let hash = 0;
-  for (let index = 0; index < seed.length; index += 1) {
-    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+function saveStoredBases() {
+  if (typeof wx === "undefined" || typeof wx.setStorageSync !== "function") return;
+  try {
+    wx.setStorageSync(STORAGE_KEY, baseBySeed);
+  } catch (err) {
+    // 存储空间不可用时仍保留当前小程序会话内的稳定基数。
   }
+}
 
-  let base = MIN_POPULARITY_BASE + (hash % POPULARITY_BASE_RANGE);
-  for (let offset = 0; offset < POPULARITY_BASE_RANGE; offset += 1) {
-    if (!usedPopularityBases[base] || usedPopularityBases[base] === seed) {
-      usedPopularityBases[base] = seed;
-      popularityBaseBySeed[seed] = base;
+function hashSeed(seed) {
+  let hash = 2166136261;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash ^= seed.charCodeAt(index);
+    hash = Math.imul(hash, 16777619) >>> 0;
+  }
+  return hash;
+}
+
+function stableStudentBase(item) {
+  loadStoredBases();
+  const seed = courseSeed(item);
+  if (baseBySeed[seed] !== undefined) return baseBySeed[seed];
+
+  let base = PUBLIC_STUDENT_BASE_MIN + (hashSeed(seed) % PUBLIC_STUDENT_BASE_RANGE);
+  for (let offset = 0; offset < PUBLIC_STUDENT_BASE_RANGE; offset += 1) {
+    if (!seedByBase[base] || seedByBase[base] === seed) {
+      baseBySeed[seed] = base;
+      seedByBase[base] = seed;
+      saveStoredBases();
       return base;
     }
-    base = base >= MAX_POPULARITY_BASE ? MIN_POPULARITY_BASE : base + 1;
+    base = base >= PUBLIC_STUDENT_BASE_MAX ? PUBLIC_STUDENT_BASE_MIN : base + 1;
   }
 
-  popularityBaseBySeed[seed] = base;
   return base;
 }
 
-function realAuthorizedCount(item) {
-  return Number(item && (item.total_students || item.students || item.user_count || item.views) || 0);
-}
-
 function popularityValue(item) {
-  return stableRandomBase(popularitySeed(item)) + realAuthorizedCount(item);
+  const realStudentCount = Number(item && item.total_students || 0);
+  return (Number.isFinite(realStudentCount) ? realStudentCount : 0) + stableStudentBase(item);
 }
 
 function popularityText(item) {
-  return `${popularityValue(item)}人气`;
+  return `${popularityValue(item)}名学员`;
 }
 
 module.exports = {
+  PUBLIC_STUDENT_BASE_MIN,
+  PUBLIC_STUDENT_BASE_MAX,
   popularityText,
-  popularityValue
+  popularityValue,
+  stableStudentBase
 };

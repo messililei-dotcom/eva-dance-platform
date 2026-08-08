@@ -31,8 +31,8 @@ Page({
 
   formatLevel(level) {
     const raw = String(level || "").trim();
-    if (!raw) return "普通用户";
-    const map = { vip: "VIP 用户", svip: "SVIP 用户", normal: "普通用户", regular: "普通用户", beginner: "基础用户", advanced: "进阶用户" };
+    if (!raw) return "普通学员";
+    const map = { vip: "VIP 学员", svip: "SVIP 学员", normal: "普通学员", regular: "普通学员", beginner: "基础学员", advanced: "进阶学员" };
     return map[raw.toLowerCase()] || raw;
   },
 

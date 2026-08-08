@@ -35,7 +35,7 @@ Page({
     const memberId = wx.getStorageSync("memberId");
     const token = wx.getStorageSync("token");
     if (memberId && token) {
-      wx.switchTab({ url: "/pages/courses/courses" });
+      wx.switchTab({ url: "/pages/home/home" });
     }
   },
 
@@ -123,7 +123,7 @@ Page({
 
     wx.showToast({ title: "登录成功", icon: "success" });
     setTimeout(() => {
-      wx.switchTab({ url: "/pages/courses/courses" });
+      wx.switchTab({ url: "/pages/home/home" });
     }, 600);
   },
 

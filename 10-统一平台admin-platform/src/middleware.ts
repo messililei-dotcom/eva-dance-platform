@@ -133,7 +133,15 @@ export async function middleware(request: NextRequest) {
 
   const withRobotsHeader = (response: NextResponse) => {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
-    if (pathname.startsWith('/api')) {
+    const isPublicCover = pathname === '/api/course/cover-image'
+      || pathname === '/api/courses/cover-image'
+      || pathname.startsWith('/api/course/series/cover/');
+    if (isPublicCover) {
+      response.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+      response.headers.delete('Pragma');
+      response.headers.delete('Expires');
+      response.headers.delete('Vary');
+    } else if (pathname.startsWith('/api')) {
       response.headers.set('Cache-Control', 'private, no-store, no-cache, max-age=0, s-maxage=0');
       response.headers.set('Pragma', 'no-cache');
       response.headers.set('Expires', '0');

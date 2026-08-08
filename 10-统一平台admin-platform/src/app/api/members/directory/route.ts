@@ -13,11 +13,20 @@ export async function GET(request: Request) {
         member.id,
         member.name,
         COALESCE(member.phone, '') AS phone,
-        COALESCE(member.level, '普通学员') AS level,
+        COALESCE(
+          NULLIF(growth.level_name, '') || ' Lv.' || COALESCE(growth.level_no, 1),
+          '初舞学员 Lv.1'
+        ) AS level,
         COALESCE(member.status, 'active') AS status,
         COALESCE(member.country, '中国') AS country,
         COALESCE(member.city, '') AS city,
         COALESCE(member.avatar, '') AS avatar,
+        COALESCE(member.wx_openid, '') AS wx_openid,
+        COALESCE(member.wx_unionid, '') AS wx_unionid,
+        COALESCE(member.wx_name, '') AS wx_name,
+        COALESCE(member.wx_nickname, '') AS wx_nickname,
+        COALESCE(member.wx_account, '') AS wx_account,
+        COALESCE(member.wx_avatar_url, '') AS wx_avatar_url,
         COALESCE(member.register_date, '') AS register_date,
         member.created_at,
         COALESCE(payment.totalSpent, 0) AS totalSpent,
@@ -33,6 +42,7 @@ export async function GET(request: Request) {
         FROM Payment
         GROUP BY memberId
       ) payment ON payment.memberId = member.id
+      LEFT JOIN StudentGrowthSummary growth ON growth.user_id = member.id
       WHERE COALESCE(member.status, 'active') != 'deleted'
       ORDER BY member.created_at DESC, member.id DESC
     `).all();

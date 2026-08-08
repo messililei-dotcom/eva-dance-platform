@@ -157,9 +157,30 @@ export function ensureCourseSeriesVisitTable(db: AdminDb) {
     visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`).run();
+  const logColumns = new Set(
+    (db.prepare('PRAGMA table_info(CourseSeriesVisitLog)').all() as Array<{ name: string }>).map(column => column.name)
+  );
+  const trackingColumns = [
+    ['platform', "platform TEXT DEFAULT ''"],
+    ['visitor_key', "visitor_key TEXT DEFAULT ''"],
+    ['visitor_label', "visitor_label TEXT DEFAULT ''"],
+    ['phone', "phone TEXT DEFAULT ''"],
+    ['wx_unionid', "wx_unionid TEXT DEFAULT ''"],
+    ['page_url', "page_url TEXT DEFAULT ''"],
+    ['ip_address', "ip_address TEXT DEFAULT ''"],
+    ['ip_region', "ip_region TEXT DEFAULT ''"],
+    ['referrer_member_id', 'referrer_member_id INTEGER'],
+    ['referrer_channel', "referrer_channel TEXT DEFAULT ''"],
+    ['referrer_url', "referrer_url TEXT DEFAULT ''"],
+    ['share_code', "share_code TEXT DEFAULT ''"],
+  ] as const;
+  trackingColumns.forEach(([name, ddl]) => {
+    if (!logColumns.has(name)) db.exec(`ALTER TABLE CourseSeriesVisitLog ADD COLUMN ${ddl}`);
+  });
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_series ON CourseSeriesVisit(series_id, first_visited_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_member ON CourseSeriesVisit(member_id, last_visited_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_log_series_member ON CourseSeriesVisitLog(series_id, member_id, visited_at)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_log_referrer ON CourseSeriesVisitLog(referrer_member_id, visited_at)");
 }
 
 export function ensureAuthorizationAuditColumns(db: AdminDb) {

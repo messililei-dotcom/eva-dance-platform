@@ -13,10 +13,13 @@
 **/.next/
 **/.next-build/
 **/.next-preview/
+**/.turbo/
 **/out/
 **/build/
 **/dist/
 **/coverage/
+**/test-results/
+**/playwright-report/
 **/unpackage/
 **/wxcomponents/
 **/*.tsbuildinfo
@@ -47,6 +50,7 @@
 **/*.pid.lock
 **/*.sock
 **/.pm2/
+**/.eslintcache
 
 # Local databases and backups
 **/*.db
@@ -74,20 +78,33 @@ Thumbs.db
 .idea/
 **/*.swp
 **/*.swo
+**/*~
 **/.WeDrive
 **/project.private.config.json
 **/project.private.config.*
 
-# Temporary scripts and scratch space
+# Python caches and local virtual environments
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.venv/
+**/venv/
+
+# Temporary files and scratch space
 tmp-*.sh
 **/private/
 **/tmp/
 **/.cache/
+**/*.tmp
 
 # Uploaded/private runtime assets
 **/uploads/
 
-# Local archives and generated deliverables
+# Local archives, audits and generated deliverables
+outputs/
+版本检查/
 02-官方网站工程设计/官方网站/
 00-数据库备份/
 已删除开发数据/

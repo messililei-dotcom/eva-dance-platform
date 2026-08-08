@@ -1,337 +1,291 @@
 const api = require("../../utils/api");
-const runtimeConfig = require("../../shared/runtime-config");
 const { cleanText } = require("../../shared/review-text");
+const { findCourseVideoSelection } = require("../../shared/course-video-selection");
 
 Page({
   data: {
-    videoId: null,
-    seriesId: null,
-    courseId: null,
-    video: {},
-    playUrl: "",
-    playbackSource: "",
-    percent: 0,
-    outline: [],
-    reviewMode: !!runtimeConfig.reviewMode,
-    // 倍速播放
-    playbackRate: 1.0,
-    rateOptions: [0.5, 0.75, 1.0, 1.25, 1.5, 2.0],
-    showPlayerMenu: false,
-    qualityOptions: [],
-    currentQuality: "auto",
-    currentQualityLabel: "自动",
-    // 断点续播
-    hasResumePosition: false,
-    resumeSeconds: 0,
-    currentSeconds: 0,
+    videoId: null, seriesId: null, courseId: null, course: {}, video: {},
+    playUrl: "", playbackSource: "", percent: 0, outline: [], visibleOutline: [], activePanel: "catalog",
+    notes: [], noteContent: "", savingNote: false, loading: true,
+    hasStartedPlayback: false, authorizationRequired: false,
+    playbackRate: 1, rateOptions: [0.5, 0.75, 1, 1.25, 1.5, 2],
+    showPlayerMenu: false, showVideoControls: false, qualityOptions: [], currentQuality: "auto",
+    currentQualityLabel: "自动", resumeSeconds: 0, currentSeconds: 0, currentDuration: 0,
+    catalogQuery: "", catalogResultText: "", playbackError: ""
   },
-
   onLoad(options) {
-    if (runtimeConfig.reviewMode) {
-      wx.showModal({
-        title: "暂未开放",
-        content: "当前内容暂不可播放。",
-        confirmText: "返回",
-        showCancel: false,
-        success: () => wx.navigateBack({ delta: 1 })
-      });
-      return;
-    }
     this.videoContext = wx.createVideoContext("courseVideo", this);
-    this.setData({
-      videoId: options.videoId,
-      seriesId: options.seriesId,
-      courseId: options.courseId
-    });
-    this.loadPlayer(options.videoId, options.seriesId);
+    this.setData({ videoId: options.videoId || null, seriesId: options.seriesId, courseId: options.courseId });
+    this.loadCourse(options.seriesId, options.videoId);
   },
-
-  async loadPlayer(videoId, seriesId) {
+  async loadCourse(seriesId, initialVideoId) {
     wx.showLoading({ title: "加载中" });
     try {
-      const [video, progress, courses] = await Promise.all([
-        api.getVideoPlay(videoId),
-        api.getVideoProgress(videoId).catch(() => null),
-        api.getSeriesCourses(seriesId).catch(() => [])
+      const [course, courses, progressRows] = await Promise.all([
+        api.getSeriesMeta(seriesId).catch(() => ({})),
+        api.getSeriesCourses(seriesId).catch(() => []),
+        api.getSeriesProgress(seriesId).catch(() => [])
       ]);
+      const progressMap = (progressRows || []).reduce((map, row) => { map[String(row.video_id)] = row; return map; }, {});
       const outline = [];
-      (courses || []).forEach(course => {
-        (course.videos || []).forEach(item => {
-          outline.push({
-            id: course.id,
-            videoId: item.id,
-            name: cleanText(item.name || course.name, "内容"),
-            duration: Number(item.duration || course.duration || 0),
-            progressPercent: 0
-          });
+      (courses || []).forEach(courseRow => (courseRow.videos || []).forEach(item => {
+        const progress = progressMap[String(item.id)];
+        outline.push({
+          id: item.id, courseId: courseRow.id, videoId: item.id,
+          materialId: item.material_id || item.materialId || null,
+          name: cleanText(item.name || courseRow.name, "未命名课时"),
+          duration: Number(item.duration || courseRow.duration || 0),
+          durationText: this.formatDuration(item.duration || courseRow.duration),
+          progressPercent: this.getProgressPercent(progress, item.duration || courseRow.duration),
+          lastPlayAt: progress && progress.last_play_at || ""
         });
-      });
-      const normalizedVideo = this.normalizeVideo(video || {});
-      const currentOutlineItem = outline.find(item => String(item.videoId) === String(videoId));
-      const percent = this.getProgressPercent(progress, normalizedVideo.duration || (currentOutlineItem && currentOutlineItem.duration));
-      const outlineWithCurrent = outline.map(item => String(item.videoId) === String(videoId)
-        ? { ...item, progressPercent: percent }
-        : item
-      );
-      const hasResume = progress && progress.progress > 10;
-      const resumeSec = hasResume ? progress.progress : 0;
-      
-      this.setData({ 
-        video: normalizedVideo,
-        playUrl: normalizedVideo.playUrl,
-        playbackSource: normalizedVideo.playbackSource,
-        outline: outlineWithCurrent, 
-        percent,
-        hasResumePosition: hasResume,
-        resumeSeconds: resumeSec,
-        qualityOptions: normalizedVideo.qualityOptions,
-        currentQuality: normalizedVideo.currentQuality,
-        currentQualityLabel: normalizedVideo.currentQualityLabel,
-        showPlayerMenu: false,
-        currentSeconds: 0
-      });
-      
-      // 自动跳转到上次观看位置
-      if (hasResume) {
-        setTimeout(() => this.videoContext.seek(resumeSec), 800);
+      }));
+      if (!outline.length) {
+        this.setData({ course, outline: [], loading: false });
+        return wx.showToast({ title: "当前课程暂未配置可播放视频", icon: "none" });
       }
-      if (!normalizedVideo.playUrl) {
-        wx.showToast({ title: "内容处理中，请稍后再试", icon: "none" });
-      }
-      this.loadOutlineProgress(outlineWithCurrent, videoId, percent).then(outlineWithProgress => {
-        if (String(this.data.videoId) === String(videoId)) {
-          this.setData({ outline: outlineWithProgress });
-        }
+      const requested = findCourseVideoSelection(outline, initialVideoId);
+      const resume = outline.filter(item => item.progressPercent > 0).sort((a, b) => String(b.lastPlayAt).localeCompare(String(a.lastPlayAt)))[0];
+      const target = requested || resume || outline[0];
+      this.setData({
+        course, outline, visibleOutline: outline, videoId: target.videoId, courseId: target.courseId,
+        video: { id: target.videoId, name: target.name, duration: target.duration },
+        percent: target.progressPercent, playUrl: "", loading: false,
+        hasStartedPlayback: false, authorizationRequired: false
       });
+      if (initialVideoId) await this.loadVideo(target.videoId);
     } catch (err) {
+      this.setData({ loading: false });
       wx.showToast({ title: err.message || "加载失败", icon: "none" });
-    } finally {
-      wx.hideLoading();
-    }
+    } finally { wx.hideLoading(); }
   },
-
+  async loadVideo(videoId) {
+    wx.showLoading({ title: "加载中" });
+    this.clearPlayerControlsTimer();
+    this.setData({ videoId, playUrl: "", notes: [], authorizationRequired: false, hasStartedPlayback: true, showPlayerMenu: false, showVideoControls: false, playbackError: "" });
+    try {
+      const target = (this.data.outline || []).find(item => String(item.videoId) === String(videoId));
+      const [video, progress, notes] = await Promise.all([
+        api.getVideoPlay(videoId), api.getVideoProgress(videoId).catch(() => null), api.getNotes(videoId).catch(() => [])
+      ]);
+      const normalizedVideo = this.normalizeVideo(video || {});
+      const duration = Number(normalizedVideo.duration || target && target.duration || progress && progress.duration || 0);
+      const percent = this.getProgressPercent(progress, duration);
+      const resumeSeconds = Number(progress && progress.progress || 0);
+      this.setData({
+        courseId: target && target.courseId || this.data.courseId, video: normalizedVideo,
+        playUrl: normalizedVideo.playUrl, playbackSource: normalizedVideo.playbackSource,
+        percent, resumeSeconds, currentSeconds: resumeSeconds, currentDuration: duration,
+        notes: this.normalizeNotes(notes), qualityOptions: normalizedVideo.qualityOptions,
+        currentQuality: normalizedVideo.currentQuality, currentQualityLabel: normalizedVideo.currentQualityLabel, loading: false
+      });
+      if (!normalizedVideo.playUrl) throw new Error("当前课节暂未生成播放地址");
+      this.updateOutlineProgress(videoId, percent);
+      if (resumeSeconds > 3) setTimeout(() => this.videoContext.seek(resumeSeconds), 600);
+    } catch (err) {
+      const message = err.message || "视频加载失败";
+      const authorizationRequired = Number(err && err.statusCode || 0) === 403 || /授权|权限/.test(message);
+      this.setData({ loading: false, playUrl: "", authorizationRequired, playbackError: authorizationRequired ? "" : message });
+      if (!authorizationRequired) wx.showToast({ title: message, icon: "none" });
+    } finally { wx.hideLoading(); }
+  },
+  formatDuration(value) {
+    const seconds = Number(value || 0);
+    if (!seconds) return "--:--";
+    const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), s = Math.floor(seconds % 60);
+    return h ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
+  },
+  formatTimestamp(value) {
+    const seconds = Math.max(0, Math.floor(Number(value || 0)));
+    const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), s = seconds % 60;
+    return h ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
+  },
+  normalizeNotes(notes) {
+    return (notes || []).map(item => ({
+      ...item,
+      timeText: this.formatTimestamp(item.timestamp_seconds || item.timestamp || item.time || 0)
+    }));
+  },
   normalizeVideo(video) {
     const playUrl = video.play_url || video.video_url || video.file_url || video.file_path || video.preview_url || "";
-    const playbackSource = video.playback_source || video.source || (video.vod_video_id ? "vod" : "local");
     const qualityOptions = this.normalizeQualityOptions(video, playUrl);
-    const selectedQuality = qualityOptions.find(item => item.url === playUrl) || qualityOptions[0];
-    const currentQuality = selectedQuality ? selectedQuality.value : "auto";
+    const selected = qualityOptions.find(item => item.url === playUrl) || qualityOptions[0];
     return {
-      ...video,
-      name: cleanText(video.name, "内容详情"),
-      playUrl: (selectedQuality && selectedQuality.url) || playUrl,
-      playbackSource,
-      authorized: video.authorized !== false,
-      qualityOptions,
-      currentQuality,
-      currentQualityLabel: selectedQuality ? selectedQuality.label : "自动",
+      ...video, name: cleanText(video.name, "课程视频"),
+      playUrl: selected && selected.url || playUrl,
+      playbackSource: video.playback_source || video.source || (video.vod_video_id ? "vod" : "local"),
+      authorized: video.authorized !== false, qualityOptions,
+      currentQuality: selected ? selected.value : "auto",
+      currentQualityLabel: selected ? selected.label : "自动"
     };
   },
-
   normalizeQualityOptions(video, fallbackUrl) {
     const options = [];
-    const addOption = (item, index) => {
+    const add = (item, index) => {
       if (!item) return;
       const source = typeof item === "string" ? { url: item } : item;
       const url = source.url || source.play_url || source.playUrl || source.video_url || source.file_url || source.file_path || "";
-      if (!url) return;
-      const rawValue = source.value || source.definition || source.quality || source.key || source.label || source.name || `q${index}`;
-      const value = String(rawValue || `q${index}`);
-      if (options.some(option => option.value === value || option.url === url)) return;
-      options.push({
-        label: source.label || source.name || this.getQualityLabel(value, options.length),
-        value,
-        url
-      });
+      if (!url || options.some(option => option.url === url)) return;
+      const value = String(source.value || source.definition || source.quality || source.key || source.label || `q${index}`);
+      options.push({ label: source.label || source.name || this.getQualityLabel(value, options.length), value, url });
     };
-
     const list = video.qualities || video.quality_options || video.play_info || video.playInfo || [];
-    if (Array.isArray(list)) {
-      list.forEach(addOption);
-    }
-
-    const urlMap = video.play_urls || video.playUrls || video.quality_urls || video.qualityUrls || {};
-    if (urlMap && typeof urlMap === "object" && !Array.isArray(urlMap)) {
-      Object.keys(urlMap).forEach((key, index) => addOption({
-        value: key,
-        label: this.getQualityLabel(key, index),
-        url: urlMap[key]
-      }, index));
-    }
-
-    if (!options.length && fallbackUrl) {
-      options.push({ label: "自动", value: "auto", url: fallbackUrl });
-    }
+    if (Array.isArray(list)) list.forEach(add);
+    const map = video.play_urls || video.playUrls || video.quality_urls || video.qualityUrls || {};
+    if (map && typeof map === "object" && !Array.isArray(map)) Object.keys(map).forEach((key, index) => add({ value: key, label: this.getQualityLabel(key, index), url: map[key] }, index));
+    if (!options.length && fallbackUrl) options.push({ label: "自动", value: "auto", url: fallbackUrl });
     return options;
   },
-
   getQualityLabel(value, index = 0) {
-    const key = String(value || "").toLowerCase();
-    const labels = {
-      auto: "自动",
-      fd: "流畅",
-      ld: "流畅",
-      sd: "标清",
-      hd: "高清",
-      od: "原画",
-      "2k": "2K",
-      "4k": "4K"
-    };
-    return labels[key] || (index === 0 ? "自动" : String(value).toUpperCase());
+    const labels = { auto: "自动", fd: "流畅", ld: "流畅", sd: "标清", hd: "高清", od: "原画", "2k": "2K", "4k": "4K" };
+    return labels[String(value || "").toLowerCase()] || (index === 0 ? "自动" : String(value).toUpperCase());
   },
-
   getProgressPercent(progress, fallbackDuration = 0) {
     if (!progress) return 0;
     if (progress.completed) return 100;
-    const duration = Number(progress.duration || fallbackDuration || 0);
-    const current = Number(progress.progress || 0);
-    if (!duration || !current) return 0;
-    return Math.min(100, Math.round(current / duration * 100));
+    const duration = Number(progress.duration || fallbackDuration || 0), current = Number(progress.progress || 0);
+    return duration && current ? Math.min(100, Math.round(current / duration * 100)) : 0;
   },
-
-  async loadOutlineProgress(outline, currentVideoId, currentPercent) {
-    const progressRows = await Promise.all((outline || []).map(item => {
-      if (String(item.videoId) === String(currentVideoId)) {
-        return Promise.resolve({ item, progressPercent: currentPercent });
-      }
-      return api.getVideoProgress(item.videoId)
-        .then(progress => ({ item, progressPercent: this.getProgressPercent(progress, item.duration) }))
-        .catch(() => ({ item, progressPercent: 0 }));
-    }));
-    return progressRows.map(row => ({
-      ...row.item,
-      progressPercent: row.progressPercent
-    }));
-  },
-
   updateOutlineProgress(videoId, progressPercent) {
-    let changed = false;
-    const outline = (this.data.outline || []).map(item => {
-      if (String(item.videoId) !== String(videoId) || item.progressPercent === progressPercent) return item;
-      changed = true;
-      return {
-        ...item,
-        progressPercent
-      };
-    });
-    if (!changed) return;
-    this.setData({ outline });
+    const outline = (this.data.outline || []).map(item => String(item.videoId) === String(videoId) ? { ...item, progressPercent } : item);
+    this.setData({ outline, visibleOutline: this.filterOutline(outline, this.data.catalogQuery) });
   },
-
   onTimeUpdate(event) {
     const current = Math.floor(event.detail.currentTime || 0);
     const duration = Math.floor(event.detail.duration || this.data.video.duration || 0);
     const percent = duration ? Math.min(100, Math.round(current / duration * 100)) : 0;
-    this.setData({ percent, currentSeconds: current });
+    this.setData({ percent, currentSeconds: current, currentDuration: duration });
     this.updateOutlineProgress(this.data.videoId, percent);
-    if (!this.data.video.authorized && current >= (this.data.video.preview_seconds || 30)) {
-      this.videoContext.pause();
-      this.videoContext.seek(this.data.video.preview_seconds || 30);
-      this.requestAuthorization();
-      return;
-    }
-    if (!this.data.video.authorized) return;
-    if (!this.lastSaveAt || Date.now() - this.lastSaveAt > 5000) {
+    if (!this.lastSaveAt || Date.now() - this.lastSaveAt > 15000) {
       this.lastSaveAt = Date.now();
       api.saveVideoProgress(this.data.videoId, current, duration).catch(() => {});
     }
   },
-
-  onVideoError(event) {
-    console.error("内容播放失败", event.detail || event);
-    const sourceText = "内容";
-    wx.showToast({ title: `${sourceText}暂时无法播放`, icon: "none" });
+  saveCurrentProgress() {
+    const videoId = this.data.videoId, current = Math.floor(this.data.currentSeconds || 0);
+    const duration = Math.floor(this.data.currentDuration || this.data.video.duration || 0);
+    if (videoId && current && duration) api.saveVideoProgress(videoId, current, duration).catch(() => {});
   },
-
+  onPause() { this.saveCurrentProgress(); },
+  onHide() { this.saveCurrentProgress(); },
+  onUnload() { this.clearPlayerControlsTimer(); this.saveCurrentProgress(); this.setData({ catalogQuery: "", catalogResultText: "" }); },
+  onVideoError(event) { console.error("课程视频播放失败", event.detail || event); wx.showToast({ title: "课程视频暂时无法播放", icon: "none" }); },
   onEnded() {
-    if (!this.data.video.authorized) {
-      this.requestAuthorization();
-      return;
-    }
-    api.saveVideoProgress(this.data.videoId, this.data.video.duration || 1, this.data.video.duration || 1).catch(() => {});
+    const duration = this.data.currentDuration || this.data.video.duration || 1;
+    api.saveVideoProgress(this.data.videoId, duration, duration).catch(() => {});
     this.updateOutlineProgress(this.data.videoId, 100);
-    wx.showToast({ title: "本段内容已完成", icon: "success" });
+    wx.showToast({ title: "本节课程已完成", icon: "success" });
   },
-
   requestAuthorization() {
     wx.showModal({
-      title: "内容说明",
-      content: "当前内容用于品牌展示与播放。",
-      confirmText: "知道了",
-      showCancel: false
+      title: "课程权限", content: "请联系客服老师申请课程授权：\n海艳老师 153 6787 0529\n伊琳老师 193 1002 9982",
+      confirmText: "联系客服", cancelText: "稍后", showCancel: true,
+      success: result => {
+        if (!result.confirm) return;
+        wx.showActionSheet({ itemList: ["海艳老师 153 6787 0529", "伊琳老师 193 1002 9982"], success: ({ tapIndex }) => wx.makePhoneCall({ phoneNumber: ["15367870529", "19310029982"][tapIndex] }) });
+      }
     });
   },
-
-  replayPreview() {
-    this.videoContext.seek(0);
-    this.videoContext.play();
-  },
-
-  // 从断点续播
-  resumeFromPosition() {
-    this.videoContext.seek(this.data.resumeSeconds);
-    this.videoContext.play();
-    this.setData({ hasResumePosition: false });
-  },
-
-  // 从头开始
-  playFromStart() {
-    this.videoContext.seek(0);
-    this.videoContext.play();
-    this.setData({ hasResumePosition: false });
-  },
-
   switchVideo(event) {
     const videoId = event.currentTarget.dataset.id;
-    if (String(videoId) === String(this.data.videoId)) return;
-    this.setData({ videoId, percent: 0, hasResumePosition: false, resumeSeconds: 0, showPlayerMenu: false });
-    this.loadPlayer(videoId, this.data.seriesId);
+    if (String(videoId) !== String(this.data.videoId) || !this.data.playUrl) this.loadVideo(videoId);
   },
-
+  startCurrentVideo() {
+    if (this.data.videoId) this.loadVideo(this.data.videoId);
+  },
+  resumePlayback() {
+    if (!this.data.playUrl) return this.startCurrentVideo();
+    const seconds = Number(this.data.resumeSeconds || this.data.currentSeconds || 0);
+    if (seconds > 0) this.videoContext.seek(seconds);
+    this.videoContext.play();
+  },
+  filterOutline(outline, keyword) {
+    const query = String(keyword || "").trim().toLowerCase().replace(/\s+/g, "");
+    if (!query) return outline || [];
+    return (outline || []).filter(item => `${item.name || ""}${item.courseName || ""}`.toLowerCase().replace(/\s+/g, "").includes(query));
+  },
+  onCatalogSearch(event) {
+    const catalogQuery = event.detail.value || "";
+    const visibleOutline = this.filterOutline(this.data.outline, catalogQuery);
+    this.setData({
+      catalogQuery,
+      visibleOutline,
+      catalogResultText: String(catalogQuery).trim() ? `找到 ${visibleOutline.length} 节` : ""
+    });
+  },
+  clearCatalogSearch() {
+    this.setData({ catalogQuery: "", visibleOutline: this.data.outline, catalogResultText: "" });
+  },
+  switchPanel(event) { this.setData({ activePanel: event.currentTarget.dataset.panel }); },
+  onNoteInput(event) { this.setData({ noteContent: event.detail.value || "" }); },
+  async addNote() {
+    const content = String(this.data.noteContent || "").trim();
+    if (!content || !this.data.videoId || this.data.savingNote) return;
+    this.setData({ savingNote: true });
+    try {
+      await api.createNote(this.data.videoId, Math.floor(this.data.currentSeconds || 0), content);
+      const notes = await api.getNotes(this.data.videoId).catch(() => []);
+      this.setData({ notes: this.normalizeNotes(notes), noteContent: "" });
+      wx.showToast({ title: "笔记已保存", icon: "success" });
+    } catch (err) { wx.showToast({ title: err.message || "笔记保存失败", icon: "none" }); }
+    finally { this.setData({ savingNote: false }); }
+  },
   noop() {},
-
-  togglePlayerMenu() {
-    this.setData({ showPlayerMenu: !this.data.showPlayerMenu });
+  clearPlayerControlsTimer() {
+    if (!this.playerControlsTimer) return;
+    clearTimeout(this.playerControlsTimer);
+    this.playerControlsTimer = null;
   },
-
+  schedulePlayerControlsHide() {
+    this.clearPlayerControlsTimer();
+    if (this.data.showPlayerMenu) return;
+    this.playerControlsTimer = setTimeout(() => {
+      this.setData({ showVideoControls: false });
+      this.playerControlsTimer = null;
+    }, 3000);
+  },
+  onPlayerTap() {
+    if (this.data.showPlayerMenu) return;
+    const showVideoControls = !this.data.showVideoControls;
+    this.setData({ showVideoControls });
+    if (showVideoControls) this.schedulePlayerControlsHide();
+    else this.clearPlayerControlsTimer();
+  },
+  togglePlayerMenu() {
+    const showPlayerMenu = !this.data.showPlayerMenu;
+    this.clearPlayerControlsTimer();
+    this.setData({ showPlayerMenu, showVideoControls: true });
+    if (!showPlayerMenu) this.schedulePlayerControlsHide();
+  },
   closePlayerMenu() {
     this.setData({ showPlayerMenu: false });
+    this.schedulePlayerControlsHide();
   },
-
+  requestPlayerFullScreen() {
+    this.setData({ showPlayerMenu: false, showVideoControls: true });
+    this.videoContext.requestFullScreen();
+    this.schedulePlayerControlsHide();
+  },
   setQuality(event) {
-    const value = String(event.currentTarget.dataset.quality || "");
-    const quality = (this.data.qualityOptions || []).find(item => String(item.value) === value);
+    const quality = (this.data.qualityOptions || []).find(item => String(item.value) === String(event.currentTarget.dataset.quality || ""));
     if (!quality || !quality.url) {
       this.setData({ showPlayerMenu: false });
-      return;
-    }
-    if (quality.url === this.data.playUrl) {
-      this.setData({
-        currentQuality: quality.value,
-        currentQualityLabel: quality.label,
-        showPlayerMenu: false
-      });
+      this.schedulePlayerControlsHide();
       return;
     }
     const current = Math.floor(this.data.currentSeconds || 0);
-    this.setData({
-      playUrl: quality.url,
-      currentQuality: quality.value,
-      currentQualityLabel: quality.label,
-      showPlayerMenu: false
-    });
-    setTimeout(() => {
-      if (current > 0) this.videoContext.seek(current);
-      this.videoContext.playbackRate(this.data.playbackRate);
-      this.videoContext.play();
-    }, 500);
-    wx.showToast({ title: `${quality.label} 清晰度`, icon: "none" });
+    this.setData({ playUrl: quality.url, currentQuality: quality.value, currentQualityLabel: quality.label, showPlayerMenu: false });
+    setTimeout(() => { if (current > 0) this.videoContext.seek(current); this.videoContext.playbackRate(this.data.playbackRate); this.videoContext.play(); }, 500);
+    this.schedulePlayerControlsHide();
   },
-
   setRate(event) {
     const rate = parseFloat(event.currentTarget.dataset.rate);
     this.videoContext.playbackRate(rate);
     this.setData({ playbackRate: rate, showPlayerMenu: false });
-    wx.showToast({ title: `${rate}x 倍速`, icon: "none" });
+    this.schedulePlayerControlsHide();
+  },
+  onVideoPlay() {
+    if (this.videoContext && this.videoContext.playbackRate) this.videoContext.playbackRate(this.data.playbackRate);
+    this.schedulePlayerControlsHide();
   }
 });

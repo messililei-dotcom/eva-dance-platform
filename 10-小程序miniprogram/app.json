@@ -1,14 +1,20 @@
 {
   "pages": [
     "pages/home/home",
+    "pages/offline/offline",
+    "pages/offline-detail/offline-detail",
+    "pages/events/events",
+    "pages/event-detail/event-detail",
+    "pages/event-group/event-group",
+    "pages/event-register/event-register",
     "pages/official/official",
     "pages/system/system",
     "pages/practice/practice",
     "pages/courses/courses",
     "pages/profile/profile",
     "pages/login/login",
+    "pages/pwa-return/pwa-return",
     "pages/admin/admin",
-    "pages/detail/detail",
     "pages/certificates/certificates",
     "pages/profile-edit/profile-edit",
     "pages/player/player"
@@ -27,15 +33,21 @@
     "list": [
       {
         "pagePath": "pages/home/home",
-        "text": "首页",
+        "text": "线上学院",
+        "iconPath": "images/tab-courses.png",
+        "selectedIconPath": "images/tab-courses-active.png"
+      },
+      {
+        "pagePath": "pages/offline/offline",
+        "text": "线下课",
         "iconPath": "images/tab-home.png",
         "selectedIconPath": "images/tab-home-active.png"
       },
       {
-        "pagePath": "pages/courses/courses",
-        "text": "开始训练",
-        "iconPath": "images/tab-courses.png",
-        "selectedIconPath": "images/tab-courses-active.png"
+        "pagePath": "pages/events/events",
+        "text": "赛事",
+        "iconPath": "images/tab-practice.png",
+        "selectedIconPath": "images/tab-practice-active.png"
       },
       {
         "pagePath": "pages/profile/profile",

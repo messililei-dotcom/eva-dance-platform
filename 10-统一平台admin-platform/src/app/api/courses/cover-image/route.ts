@@ -126,6 +126,42 @@ function findFallbackCover(source: string, name: string) {
   }) || null;
 }
 
+function escapeXml(value: string) {
+  return value.replace(/[<>&"']/g, character => ({
+    '<': '&lt;',
+    '>': '&gt;',
+    '&': '&amp;',
+    '"': '&quot;',
+    "'": '&apos;',
+  }[character] || character));
+}
+
+function generatedCourseCover(name: string) {
+  const title = escapeXml((name || '伊娃东方舞线下课').trim().slice(0, 18));
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2c1810"/>
+      <stop offset="0.58" stop-color="#5b2420"/>
+      <stop offset="1" stop-color="#9f1d20"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.78" cy="0.18" r="0.72">
+      <stop offset="0" stop-color="#e2c88e" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#e2c88e" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#background)"/>
+  <rect width="1200" height="900" fill="url(#glow)"/>
+  <circle cx="970" cy="160" r="250" fill="none" stroke="#e2c88e" stroke-opacity="0.22" stroke-width="3"/>
+  <circle cx="970" cy="160" r="180" fill="none" stroke="#e2c88e" stroke-opacity="0.16" stroke-width="2"/>
+  <text x="92" y="128" fill="#e2c88e" font-size="34" font-family="sans-serif" letter-spacing="8">EVA ORIENTAL DANCE</text>
+  <text x="92" y="520" fill="#ffffff" font-size="68" font-weight="700" font-family="sans-serif">${title}</text>
+  <line x1="92" y1="580" x2="350" y2="580" stroke="#e2c88e" stroke-width="6"/>
+  <text x="92" y="652" fill="#f3e7cb" font-size="34" font-family="sans-serif" letter-spacing="4">伊娃东方舞 · 线下课程</text>
+</svg>`;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const source = searchParams.get('src') || '';
@@ -138,7 +174,15 @@ export async function GET(request: Request) {
   const filePath = (directPath && fs.existsSync(directPath) && fs.statSync(directPath).isFile() ? directPath : null)
     || findFallbackCover(source, name)
     || (fs.existsSync(GENERIC_COVER) ? GENERIC_COVER : null);
-  if (!filePath) return Response.json({ success: false, message: '图片不存在' }, { status: 404 });
+  if (!filePath) {
+    return new Response(generatedCourseCover(name), {
+      headers: {
+        'Content-Type': 'image/svg+xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  }
 
   const stat = fs.statSync(filePath);
   return new Response(Readable.toWeb(fs.createReadStream(filePath)) as ReadableStream, {

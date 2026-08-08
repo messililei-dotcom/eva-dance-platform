@@ -23,7 +23,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     if (!material) return jsonError('素材不存在', 404);
     if (material.vod_video_id && isVideoMaterial(material)) {
       try {
-        const vodUrl = await getVodPlayUrl(String(material.vod_video_id));
+        // Admin previews must not expose a downloadable MP4 fallback. Safari
+        // plays this HLS URL natively; Chrome and Edge use hls.js.
+        const vodUrl = await getVodPlayUrl(String(material.vod_video_id), 'hls-only');
         if (vodUrl) {
           if (!['success', 'completed'].includes(String(material.transcode_status || '').toLowerCase())) {
             withDb((db) => {

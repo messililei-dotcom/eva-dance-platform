@@ -17,7 +17,7 @@ Page({
     const list = (Array.isArray(certs) ? certs : []).map((cert) => ({
       id: cert.id,
       certificateNo: cert.certificateNo || cert.certificate_no || cert.certNo || "",
-      courseName: cleanText(cert.courseName || cert.course_name || cert.name || "播放记录"),
+      courseName: cleanText(cert.courseName || cert.course_name || cert.name || "课程证书"),
       issueDate: String(cert.issueDate || cert.issue_date || "").slice(0, 10) || "待登记日期",
       pdfUrl: cert.pdfUrl || cert.pdf_url || "",
       verifyUrl: cert.verifyUrl || cert.verify_url || "",

@@ -14,6 +14,8 @@ const { Text, Title } = Typography;
 type AccessRecord = {
   id: string;
   category: 'student' | 'admin';
+  memberId: number | string;
+  memberLevel: string;
   visitedAt: string;
   platform: string;
   module: string;
@@ -23,6 +25,11 @@ type AccessRecord = {
   visitorPhone: string;
   visitorKey: string;
   visitorType: string;
+  wxUnionid: string;
+  referralSource: string;
+  visitUrl: string;
+  visitLocation: string;
+  ipAddress: string;
   source: string;
   remark: string;
 };
@@ -181,10 +188,10 @@ export default function AccessRecordsPage() {
               <Input
                 allowClear
                 prefix={<SearchOutlined />}
-                placeholder={category === 'admin' ? '搜索管理员、模块、操作内容' : '搜索课程、访客、手机号、动作'}
+                placeholder={category === 'admin' ? '搜索管理员、模块、操作内容' : '搜索学员、课程、Member ID、手机号、UnionID、来源'}
                 value={keyword}
                 onChange={event => { setKeyword(event.target.value); resetPage(); }}
-                style={{ width: 280 }}
+                style={{ width: 360 }}
               />
             </Space>
           }
@@ -213,9 +220,25 @@ export default function AccessRecordsPage() {
               { title: '动作', dataIndex: 'action', width: 150, render: value => <Tag color={actionColor(String(value))}>{value}</Tag> },
               { title: '访问对象', dataIndex: 'targetTitle', width: 360, render: value => <Text style={{ whiteSpace: 'normal' }}>{value}</Text> },
               { title: category === 'admin' ? '管理员' : '访客/学员', dataIndex: 'visitorName', width: 150, render: value => <Text strong>{value}</Text> },
-              { title: '身份', dataIndex: 'visitorType', width: 100 },
+              {
+                title: '身份/等级',
+                dataIndex: 'visitorType',
+                width: 150,
+                render: (_, record) => (
+                  <Space size={4}>
+                    <Tag color={record.visitorType === '学员' ? 'blue' : record.visitorType === '管理员' ? 'purple' : 'default'}>
+                      {record.visitorType || '-'}
+                    </Tag>
+                    {record.memberLevel ? <Tag color="gold">{record.memberLevel}</Tag> : null}
+                  </Space>
+                ),
+              },
+              { title: 'Member ID', dataIndex: 'memberId', width: 110, render: value => value || '-' },
               { title: '手机号', dataIndex: 'visitorPhone', width: 130, render: value => value || '-' },
-              { title: '来源标识', dataIndex: 'visitorKey', width: 180, render: value => value || '-' },
+              { title: '微信 UnionID', dataIndex: 'wxUnionid', width: 220, render: value => value || '-' },
+              { title: '访问来源', dataIndex: 'referralSource', width: 250, render: value => <Text style={{ whiteSpace: 'normal' }}>{value || '直接访问'}</Text> },
+              { title: '学员地址', dataIndex: 'visitLocation', width: 180, render: value => value || '-' },
+              { title: '学员IP', dataIndex: 'ipAddress', width: 170, render: value => value ? <Text copyable={{ text: value }}>{value}</Text> : '-' },
               { title: '备注', dataIndex: 'remark', width: 160, render: value => value || '-' },
             ])}
           />

@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { openAdminDb, type AdminDb } from '@/lib/server/admin-db';
+import { ensureWechatIdentityTables } from '@/lib/server/wechat-identity';
 import { isRecord } from '@/lib/data-shape';
 import { verifyLocalToken } from '../_local-auth';
 import { ensureInboxSchema } from '@/lib/server/inbox';
@@ -94,13 +95,101 @@ export function getMemberId(params: URLSearchParams, request?: Request) {
   return token ? verifyMemberToken(token) : 0;
 }
 
-export function recordSeriesVisit(db: AdminDb, seriesId: number, memberId: number, source = 'learn') {
+type VisitTracking = {
+  platform?: string;
+  visitorKey?: string;
+  visitorLabel?: string;
+  phone?: string;
+  wxUnionid?: string;
+  pageUrl?: string;
+  ipAddress?: string;
+  ipRegion?: string;
+  referrerMemberId?: number;
+  referrerChannel?: string;
+  referrerUrl?: string;
+  shareCode?: string;
+};
+
+function firstHeader(request: Request | undefined, names: string[]) {
+  for (const name of names) {
+    const value = cleanText(request?.headers.get(name));
+    if (value) return value;
+  }
+  return '';
+}
+
+function requestVisitTracking(request?: Request): VisitTracking {
+  if (!request) return {};
+  const url = new URL(request.url);
+  const param = (...names: string[]) => {
+    for (const name of names) {
+      const value = cleanText(url.searchParams.get(name));
+      if (value) return value;
+    }
+    return '';
+  };
+  const forwarded = firstHeader(request, ['x-forwarded-for']).split(',')[0]?.trim() || '';
+  const region = [
+    firstHeader(request, ['x-ip-province', 'cf-region', 'x-vercel-ip-country-region']),
+    firstHeader(request, ['x-ip-city', 'cf-ipcity', 'x-vercel-ip-city']),
+  ].filter(Boolean).join(' ');
+  return {
+    platform: firstHeader(request, ['x-client-platform']) || param('platform') || '小程序',
+    pageUrl: firstHeader(request, ['x-page-url', 'referer']) || param('page_url') || url.pathname,
+    ipAddress: forwarded || firstHeader(request, ['x-real-ip']),
+    ipRegion: region || firstHeader(request, ['x-ip-region']),
+    referrerMemberId: toPositiveInt(
+      firstHeader(request, ['x-referrer-member-id']) || param('ref_member_id', 'share_member_id', 'inviter_id', 'ref'),
+      0
+    ),
+    referrerChannel: firstHeader(request, ['x-referrer-channel']) || param('referrer_channel', 'channel', 'utm_source'),
+    referrerUrl: firstHeader(request, ['x-original-referrer']) || param('referrer_url'),
+    shareCode: firstHeader(request, ['x-share-code']) || param('share_code'),
+  };
+}
+
+export function recordSeriesVisit(
+  db: AdminDb,
+  seriesId: number,
+  memberId: number,
+  source = 'learn',
+  request?: Request,
+  tracking: VisitTracking = {}
+) {
   if (!seriesId || !memberId) return;
+  const context = { ...requestVisitTracking(request) };
+  Object.entries(tracking).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      (context as Record<string, unknown>)[key] = value;
+    }
+  });
+  const member = db.prepare(
+    "SELECT phone, wx_unionid, name FROM Member WHERE id=?"
+  ).get<{ phone?: string; wx_unionid?: string; name?: string }>(memberId);
   db.transaction(() => {
     db.prepare(
-      `INSERT INTO CourseSeriesVisitLog (member_id, series_id, source, visited_at, created_at)
-       VALUES (?, ?, ?, datetime('now','localtime'), datetime('now','localtime'))`
-    ).run(memberId, seriesId, source);
+      `INSERT INTO CourseSeriesVisitLog (
+         member_id, series_id, source, platform, visitor_key, visitor_label, phone, wx_unionid,
+         page_url, ip_address, ip_region, referrer_member_id, referrer_channel, referrer_url,
+         share_code, visited_at, created_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULLIF(?, 0), ?, ?, ?, datetime('now','localtime'), datetime('now','localtime'))`
+    ).run(
+      memberId,
+      seriesId,
+      source,
+      cleanText(context.platform, '小程序'),
+      cleanText(context.visitorKey),
+      cleanText(context.visitorLabel, member?.name || ''),
+      cleanText(context.phone, member?.phone || ''),
+      cleanText(context.wxUnionid, member?.wx_unionid || ''),
+      cleanText(context.pageUrl),
+      cleanText(context.ipAddress),
+      cleanText(context.ipRegion),
+      toPositiveInt(context.referrerMemberId, 0),
+      cleanText(context.referrerChannel),
+      cleanText(context.referrerUrl),
+      cleanText(context.shareCode)
+    );
     db.prepare(
       `INSERT INTO CourseSeriesVisit (member_id, series_id, source, first_visited_at, last_visited_at, visit_count)
        VALUES (?, ?, ?, datetime('now','localtime'), datetime('now','localtime'), 1)
@@ -125,6 +214,7 @@ function addColumn(db: AdminDb, table: string, column: string, ddl: string) {
 }
 
 export function ensureMiniTables(db: AdminDb) {
+  ensureWechatIdentityTables(db);
   ensureInboxSchema(db);
   db.prepare(`CREATE TABLE IF NOT EXISTS StudyNote (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -198,7 +288,21 @@ export function ensureMiniTables(db: AdminDb) {
     visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`).run();
+  addColumn(db, 'CourseSeriesVisitLog', 'platform', "platform TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisitLog', 'visitor_key', "visitor_key TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisitLog', 'visitor_label', "visitor_label TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisitLog', 'phone', "phone TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisitLog', 'wx_unionid', "wx_unionid TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisitLog', 'page_url', "page_url TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisitLog', 'ip_address', "ip_address TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisitLog', 'ip_region', "ip_region TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisitLog', 'referrer_member_id', 'referrer_member_id INTEGER');
+  addColumn(db, 'CourseSeriesVisitLog', 'referrer_channel', "referrer_channel TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisitLog', 'referrer_url', "referrer_url TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisitLog', 'share_code', "share_code TEXT DEFAULT ''");
+  addColumn(db, 'Member', 'avatar', "avatar TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_nickname', "wx_nickname TEXT DEFAULT ''");
+  addColumn(db, 'Member', 'wx_name', "wx_name TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_avatar_url', "wx_avatar_url TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_openid', "wx_openid TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_unionid', "wx_unionid TEXT DEFAULT ''");
@@ -216,6 +320,7 @@ export function ensureMiniTables(db: AdminDb) {
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_series ON CourseSeriesVisit(series_id, first_visited_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_member ON CourseSeriesVisit(member_id, last_visited_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_log_series_member ON CourseSeriesVisitLog(series_id, member_id, visited_at)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_visit_log_referrer ON CourseSeriesVisitLog(referrer_member_id, visited_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_series_public ON CourseSeries(status, sort_order, created_at)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_online_course_series_public ON OnlineCourse(series_id, status, sort_order, id)");
   db.exec("CREATE INDEX IF NOT EXISTS idx_course_video_course_public ON CourseVideo(course_id, status, sort_order, id)");
