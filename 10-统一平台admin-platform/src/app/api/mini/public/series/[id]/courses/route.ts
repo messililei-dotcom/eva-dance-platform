@@ -1,5 +1,5 @@
 import { getMemberId, jsonError, recordSeriesVisit, toPositiveInt, withDb } from '../../../../_helpers';
-import { publicShortCacheJson } from '@/lib/http-cache';
+import { noStoreJson } from '@/lib/http-cache';
 
 const VISIBLE_VIDEO_STATUS = "(cv.status IS NULL OR cv.status = '' OR cv.status = 'published')";
 
@@ -23,7 +23,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       const courseIds = courses.map((course: any) => Number(course.id)).filter(Boolean);
       const videoRows = courseIds.length
         ? db.prepare(
-          `SELECT cv.id, cv.material_id, cv.course_id, cv.name, COALESCE(cv.duration, m.duration, 0) as duration
+          `SELECT cv.id, cv.material_id, cv.course_id, cv.name, COALESCE(NULLIF(cv.duration, 0), m.duration, 0) as duration
            FROM CourseVideo cv
            LEFT JOIN Material m ON cv.material_id=m.id
            WHERE cv.course_id IN (${courseIds.map(() => '?').join(',')}) AND ${VISIBLE_VIDEO_STATUS}
@@ -39,10 +39,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       }
       const data = courses.map((course: any) => ({
         ...course,
+        duration: Number(course.duration) > 0 ? course.duration
+          : (videosByCourse.get(Number(course.id)) || []).reduce((sum: number, video: any) => sum + Number(video.duration || 0), 0),
         videos: videosByCourse.get(Number(course.id)) || [],
       }));
       const isPersonalized = getMemberId(new URL(request.url).searchParams, request) > 0;
-      return isPersonalized ? Response.json({ success: true, data }) : publicShortCacheJson({ success: true, data });
+      return isPersonalized ? Response.json({ success: true, data }) : noStoreJson({ success: true, data });
     });
   } catch (err: any) {
     return jsonError(err.message);

@@ -52,12 +52,9 @@ function nextExpenseNo(db: any) {
 }
 
 export async function GET() {
-  const db = openAdminDb({ readonly: true });
+  const db = openAdminDb();
   try {
-    const table = db.prepare(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'FinanceExpense'",
-    ).get();
-    if (!table) return Response.json([]);
+    ensureFinanceExpenseTable(db);
     const columns = getColumns(db);
     const titleExpr = columns.has('title') ? 'title' : "COALESCE(NULLIF(remark, ''), category)";
     const dateExpr = columns.has('expense_date') && columns.has('expenseDate')
@@ -97,7 +94,7 @@ export async function POST(request: Request) {
     const columns = getColumns(db);
     const category = cleanText(body.category, '日常支出');
     const expenseDate = cleanText(body.expense_date ?? body.expenseDate ?? body.date, new Date().toISOString().slice(0, 10));
-    const paymentMethod = cleanText(body.payment_method ?? body.paymentMethod, '微信');
+    const paymentMethod = ''; // Payment method is no longer collected by the platform.
     const remark = cleanText(body.remark ?? body.note);
     const valuesByColumn: Record<string, unknown> = {
       expenseDate,

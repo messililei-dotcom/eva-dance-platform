@@ -1,8 +1,0 @@
-<view class="page">
-  <view class="card">
-    <view class="success-icon">✓</view>
-    <view class="title">微信登录成功</view>
-    <view class="description">身份认证已完成，返回伊娃东方舞后会自动进入网课系统。</view>
-    <button class="return-button" bindtap="returnToPwa">返回网课</button>
-  </view>
-</view>

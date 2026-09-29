@@ -1,3 +1,4 @@
+const share = require("../../shared/share");
 const api = require("../../utils/api");
 const { formatPrice } = require("../../shared/money-format");
 const { groupOfflineCourses } = require("../../shared/offline-catalog");
@@ -61,7 +62,7 @@ function normalizeSession(item, activeBookedIds) {
     booked,
     capacity,
     canBook,
-    actionText: canBook ? "预约" : alreadyBooked ? "已预约" : "不可预约"
+    actionText: canBook ? "预约" : alreadyBooked ? "已预约" : (capacity && booked >= capacity) ? "已满员" : item.booking_reason || "不可预约"
   };
 }
 
@@ -76,10 +77,11 @@ function normalizeRight(item) {
   };
 }
 
-Page({
+Page(share.withShare("offline", {
   data: {
     loading: true,
     overviewLoading: true,
+    courseError: "", overviewError: "", sessionCourseName: "", sessionCourseIds: [],
     activeTab: "courses",
     keyword: "",
     courses: [],
@@ -104,36 +106,49 @@ Page({
       wx.removeStorageSync("offlineTargetTab");
       this.setData({ activeTab: targetTab });
     }
+    const targetCourse = wx.getStorageSync("offlineTargetCourse");
+    if (targetCourse) {
+      wx.removeStorageSync("offlineTargetCourse");
+      this.setData({ sessionCourseName: targetCourse.name || "", sessionCourseIds: targetCourse.ids || [] });
+    }
     this.loadAll();
   },
   onPullDownRefresh() {
     this.loadAll().finally(() => wx.stopPullDownRefresh());
   },
-  async loadAll() {
-    this.setData({ loading: true, overviewLoading: true });
-    const [courseRows, overview] = await Promise.all([
-      api.getOfflineCourses().catch(() => []),
-      api.getOfflineOverview().catch(() => ({ entitlements: [], sessions: [], bookings: [] }))
-    ]);
-    const courses = groupOfflineCourses(courseRows || []).map(normalizeCourse);
-    const bookings = (overview.bookings || []).map(normalizeBooking);
-    const activeBookedIds = new Set(
-      bookings.filter(item => !["cancelled", "consumed"].includes(item.status)).map(item => String(item.session_id))
-    );
-    const sessions = (overview.sessions || []).map(item => normalizeSession(item, activeBookedIds));
-    const rights = (overview.entitlements || []).map(normalizeRight);
-    this.setData({
-      courses,
-      visibleCourses: this.filterCourses(courses, this.data.keyword),
-      bookings,
-      sessions,
-      rights,
-      availableSessions: rights.reduce((sum, item) => sum + item.available, 0),
-      pendingCount: bookings.filter(item => item.status === "booked").length,
-      consumedCount: bookings.filter(item => ["checked_in", "consumed"].includes(item.status)).length,
-      loading: false,
-      overviewLoading: false
-    });
+  loadAll() {
+    return Promise.all([this.loadCourses(), this.loadOverview()]);
+  },
+  async loadCourses() {
+    this.setData({ loading: true, courseError: "" });
+    try {
+      const rows = await api.getOfflineCourses();
+      const courses = groupOfflineCourses(rows || []).map(normalizeCourse);
+      this.setData({ courses, visibleCourses: this.filterCourses(courses, this.data.keyword) });
+    } catch (err) {
+      this.setData({ courseError: err.message || "课程加载失败，请重试" });
+    } finally { this.setData({ loading: false }); }
+  },
+  async loadOverview() {
+    this.setData({ overviewLoading: true, overviewError: "" });
+    try {
+      const overview = await api.getOfflineOverview(this.data.sessionCourseIds || []);
+      const bookings = (overview.bookings || []).map(normalizeBooking);
+      const activeBookedIds = new Set(bookings.filter(item => !["cancelled", "consumed"].includes(item.status)).map(item => String(item.session_id)));
+      const filterIds = this.data.sessionCourseIds || [];
+      const sessions = (overview.sessions || []).filter(item => !filterIds.length || filterIds.includes(String(item.course_id))).map(item => normalizeSession(item, activeBookedIds));
+      const rights = (overview.entitlements || []).map(normalizeRight);
+      this.setData({ bookings, sessions, rights,
+        availableSessions: rights.reduce((sum, item) => sum + item.available, 0),
+        pendingCount: bookings.filter(item => item.status === "booked").length,
+        consumedCount: bookings.filter(item => ["checked_in", "consumed"].includes(item.status)).length });
+    } catch (err) {
+      this.setData({ overviewError: err.message || "个人课次加载失败，请重试" });
+    } finally { this.setData({ overviewLoading: false }); }
+  },
+  clearSessionFilter() {
+    this.setData({ sessionCourseIds: [], sessionCourseName: "" });
+    return this.loadOverview();
   },
   switchTab(event) {
     this.setData({ activeTab: event.currentTarget.dataset.key });
@@ -162,7 +177,7 @@ Page({
     try {
       await api.bookOfflineSession(id);
       wx.showToast({ title: "预约成功，已冻结1课次", icon: "none" });
-      await this.loadAll();
+      await this.loadOverview();
       this.setData({ activeTab: "bookings" });
     } catch (err) {
       wx.showToast({ title: err.message || "预约失败", icon: "none" });
@@ -182,7 +197,7 @@ Page({
         try {
           await api.cancelOfflineBooking(id);
           wx.showToast({ title: "预约已取消，课次已更新", icon: "none" });
-          await this.loadAll();
+          await this.loadOverview();
         } catch (err) {
           wx.showToast({ title: err.message || "取消失败", icon: "none" });
         } finally {
@@ -208,11 +223,11 @@ Page({
     try {
       await api.checkinOfflineBooking(id, code);
       wx.showToast({ title: "签到成功，已核销1课次", icon: "none" });
-      await this.loadAll();
+      await this.loadOverview();
     } catch (err) {
       wx.showToast({ title: err.message || "签到失败", icon: "none" });
     } finally {
       this.setData({ actingId: "" });
     }
   }
-});
+}));

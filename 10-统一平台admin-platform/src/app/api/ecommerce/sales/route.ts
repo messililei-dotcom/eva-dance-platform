@@ -16,8 +16,11 @@ export async function GET(request: Request) {
   if (!hasAuth(request)) return unauthorized();
   const db = openCommerceDb();
   try {
+    return db.transaction(() => {
+      db.prepare('UPDATE shop_products SET stock=stock WHERE id=?').run('');
     const sales = db.prepare('SELECT * FROM shop_sales ORDER BY datetime(created_at) DESC, id DESC').all();
     return Response.json(sales);
+    })();
   } finally {
     db.close();
   }
@@ -33,6 +36,8 @@ export async function POST(request: Request) {
 
   const db = openCommerceDb();
   try {
+    return db.transaction(() => {
+      db.prepare('UPDATE shop_products SET stock=stock WHERE id=?').run('');
     const product = db.prepare('SELECT * FROM shop_products WHERE id = ? AND status != ?').get(productId, 'deleted');
     if (!product) return Response.json({ success: false, error: '商品不存在' }, { status: 404 });
     const beforeStock = toNumber(product.stock);
@@ -91,6 +96,7 @@ export async function POST(request: Request) {
     });
 
     return Response.json({ success: true, id: tx() });
+    })();
   } finally {
     db.close();
   }

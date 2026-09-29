@@ -26,7 +26,7 @@
 
 .filter-tab.active {
   color: #ffffff;
-  background: #ff5b45;
+  background: #9f1d20;
 }
 
 .course-count {
@@ -37,20 +37,21 @@
 
 .system-list {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18rpx;
 }
 
 .system-card {
   display: grid;
-  grid-template-columns: 240rpx 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 22rpx;
   padding: 22rpx;
 }
 
 .cover {
   position: relative;
-  width: 240rpx;
-  height: 180rpx;
+  width: 100%;
+  height: 220rpx;
   aspect-ratio: 4 / 3;
   border-radius: 12rpx;
   overflow: hidden;
@@ -85,7 +86,7 @@
 
 .course-name {
   color: #202124;
-  font-size: 32rpx;
+  font-size: 27rpx;
   line-height: 1.35;
   font-weight: 900;
 }
@@ -116,6 +117,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 14rpx;
   margin-top: 18rpx;
 }

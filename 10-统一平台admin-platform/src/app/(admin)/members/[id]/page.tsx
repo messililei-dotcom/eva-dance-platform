@@ -164,7 +164,6 @@ export default function MemberDetailPage() {
                   columns={sortableColumns<any>([
                     { title: '课程', dataIndex: 'courseName', ellipsis: true, className: 'course-name-column' },
                     { title: '金额', dataIndex: 'amount', width: 120, align: 'right' as const, render: money },
-                    { title: '支付方式', dataIndex: 'payment', width: 120 },
                     { title: '状态', dataIndex: 'paymentStatus', width: 120, render: statusTag },
                     { title: '剩余课次', dataIndex: 'remainingSessions', width: 110 },
                     { title: '日期', dataIndex: 'date', width: 130, render: dateText },

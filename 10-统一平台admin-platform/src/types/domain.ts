@@ -49,6 +49,8 @@ export interface UnifiedOrder {
   id: string;
   orderNo: string;
   orderDate: string;
+  authorizationDate?: string;
+  memberId?: string;
   memberName: string;
   memberPhone: string;
   orderType: string;
@@ -56,7 +58,15 @@ export interface UnifiedOrder {
   amount: number;
   status: OrderStatus | string;
   sourceType: string;
+  sourceId?: string;
   payMethod: string;
+  courseSubType?: string;
+  courseStartDate?: string;
+  courseEndDate?: string;
+  sales?: string;
+  remark?: string;
+  expireDate?: string;
+  remainingSessions?: number;
   raw?: Record<string, unknown>;
 }
 
@@ -93,6 +103,8 @@ export interface FinanceSummary {
   averageOrderAmount: number;
   monthIncome: number;
   refunds: number;
+  yearRefunds?: number;
+  monthRefunds?: number;
   byType: Array<{ label: string; value: number; count: number }>;
   recentOrders: UnifiedOrder[];
   synced?: boolean;

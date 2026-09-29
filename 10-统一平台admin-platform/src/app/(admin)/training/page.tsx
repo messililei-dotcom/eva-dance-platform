@@ -2,8 +2,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
 import {
   App,
+  AutoComplete,
   Button,
   Card,
   Col,
@@ -19,6 +21,7 @@ import {
   Select,
   Space,
   Spin,
+  Switch,
   Tabs,
   Tag,
   Tooltip,
@@ -43,16 +46,21 @@ import {
 } from '@ant-design/icons';
 import writeXlsxFile, { type SheetData } from 'write-excel-file/browser';
 import { platformAdapter } from '@/lib/adapters/platform';
+import { getDefaultRegions } from '@/lib/regions';
 import { trainingApi } from '@/lib/api';
 import { formatPaymentAmount, formatPrice } from '@/lib/money-format';
 import { compareTableValues, sortableColumns } from '@/lib/table-sort';
+import { memberOptionMatchesSearch, normalizeMemberPhone } from '@/lib/member-phone-search';
 import type { Member } from '@/types/domain';
 
 const { Text, Title } = Typography;
 const INTERNATIONAL_PHONE_PATTERN = /^\+?[0-9\s()-]{6,24}$/;
 
+dayjs.locale('zh-cn');
+
 type CourseRow = {
   id: number;
+  templateId?: number;
   name: string;
   type: string;
   series_id?: number;
@@ -73,6 +81,33 @@ type CourseRow = {
   coverImage?: string;
 };
 
+type CourseTemplate = {
+  id: number;
+  name: string;
+  type: string;
+  coverImage?: string;
+  content?: string;
+  periodCount?: number;
+  websiteVisible?: number | boolean;
+  latestPeriodAt?: string;
+  created_at?: string;
+};
+
+function sortCourseTemplates(rows: CourseTemplate[]) {
+  return [...rows].sort((left, right) => {
+    const leftHidden = left.websiteVisible === 0 || left.websiteVisible === false;
+    const rightHidden = right.websiteVisible === 0 || right.websiteVisible === false;
+    if (leftHidden !== rightHidden) return leftHidden ? 1 : -1;
+
+    const leftLatestPeriod = String(left.latestPeriodAt || '');
+    const rightLatestPeriod = String(right.latestPeriodAt || '');
+    if (Boolean(leftLatestPeriod) !== Boolean(rightLatestPeriod)) return leftLatestPeriod ? -1 : 1;
+    return rightLatestPeriod.localeCompare(leftLatestPeriod)
+      || String(right.created_at || '').localeCompare(String(left.created_at || ''))
+      || Number(right.id) - Number(left.id);
+  });
+}
+
 function isOfflineTrainingCourse(course: CourseRow) {
   return Number(course.series_id ?? course.seriesId ?? 0) <= 0;
 }
@@ -89,6 +124,8 @@ type PaymentRow = {
   date: string;
   payment: string;
   sales?: string;
+  commissionRate?: number;
+  commissionAmount?: number;
   remark?: string;
   expireDate?: string;
   remainingSessions: number;
@@ -152,7 +189,6 @@ type CourseCertificateSummary = {
 };
 
 const courseTypes = ['集训', '次卡', '年卡', '传承弟子'];
-const paymentMethods = ['微信', '支付宝', '现金', '刷卡', '转账'];
 const consumableTypes = new Set(['集训', '次卡']);
 
 function money(value: number) {
@@ -169,6 +205,12 @@ function apiError(err: any) {
 
 function memberLabel(member: Member) {
   return `${member.name} ${member.phone ? `(${member.phone})` : ''}`;
+}
+
+function mergeMembers(current: Member[], incoming: Member[]) {
+  const merged = new Map(current.map(member => [String(member.id), member]));
+  incoming.forEach(member => merged.set(String(member.id), member));
+  return Array.from(merged.values());
 }
 
 function courseLabel(course?: CourseRow | null) {
@@ -211,16 +253,18 @@ export default function TrainingPage() {
   const router = useRouter();
   const { message, modal } = App.useApp();
   const [courses, setCourses] = useState<CourseRow[]>([]);
+  const [courseTemplates, setCourseTemplates] = useState<CourseTemplate[]>([]);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [consumeRecords, setConsumeRecords] = useState<ConsumeRow[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
-  const [regions, setRegions] = useState<Array<{ province: string; cities: string[] }>>([]);
+  const [regions, setRegions] = useState(getDefaultRegions);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState('all');
   const [activeTab, setActiveTab] = useState('courses');
   const [courseModalOpen, setCourseModalOpen] = useState(false);
+  const [courseTemplateModalOpen, setCourseTemplateModalOpen] = useState(false);
   const [memberModalOpen, setMemberModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [consumeModalOpen, setConsumeModalOpen] = useState(false);
@@ -228,6 +272,9 @@ export default function TrainingPage() {
   const [batchConsumeOpen, setBatchConsumeOpen] = useState(false);
   const [certificateModalOpen, setCertificateModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<CourseRow | null>(null);
+  const [editingCourseTemplate, setEditingCourseTemplate] = useState<CourseTemplate | null>(null);
+  const [periodListTemplate, setPeriodListTemplate] = useState<CourseTemplate | null>(null);
+  const [updatingVisibilityId, setUpdatingVisibilityId] = useState<number | null>(null);
   const [editingPayment, setEditingPayment] = useState<PaymentRow | null>(null);
   const [editingConsume, setEditingConsume] = useState<ConsumeRow | null>(null);
   const [detailCourse, setDetailCourse] = useState<CourseRow | null>(null);
@@ -241,41 +288,50 @@ export default function TrainingPage() {
   const [certificateSummary, setCertificateSummary] = useState<CourseCertificateSummary>({ total: 0, issued: 0, pending: 0 });
   const [selectedCertificateMemberIds, setSelectedCertificateMemberIds] = useState<number[]>([]);
   const [paymentMemberSearch, setPaymentMemberSearch] = useState('');
+  const [paymentMemberSearching, setPaymentMemberSearching] = useState(false);
+  const [paymentMemberSearchFailed, setPaymentMemberSearchFailed] = useState(false);
   const [paymentCourseSearch, setPaymentCourseSearch] = useState('');
   const [paymentVoucher, setPaymentVoucher] = useState<PaymentVoucherState | null>(null);
   const paymentVoucherInputRef = useRef<HTMLInputElement | null>(null);
+  const paymentMemberSearchRequestRef = useRef(0);
   const [batchForm] = Form.useForm();
   const [memberForm] = Form.useForm();
   const [courseForm] = Form.useForm();
+  const [courseTemplateForm] = Form.useForm();
   const [paymentForm] = Form.useForm();
+  const paymentAmount = Form.useWatch('amount', paymentForm);
+  const paymentCommissionRate = Form.useWatch('commissionRate', paymentForm);
+  useEffect(() => {
+    paymentForm.setFieldsValue({ commissionAmount: Math.round(Number(paymentAmount || 0) * Number(paymentCommissionRate || 0)) / 100 });
+  }, [paymentAmount, paymentCommissionRate, paymentForm]);
   const [consumeForm] = Form.useForm();
   const courseCoverImage = Form.useWatch('coverImage', courseForm);
+  const courseTemplateCoverImage = Form.useWatch('coverImage', courseTemplateForm);
   const memberCountry = Form.useWatch('country', memberForm);
   const memberProvince = Form.useWatch('province', memberForm);
   const consumeMemberId = Form.useWatch('memberId', consumeForm);
 
   const load = () => {
     setLoading(true);
-    return trainingApi.getCourses()
-      .then(courseRows => {
+    // Directory and regions must not delay payment/consumption records.
+    platformAdapter.getMemberLookup()
+      .then(directory => setMembers(directory.members))
+      .catch(err => message.warning(`学员列表加载失败：${apiError(err)}`));
+    platformAdapter.getRegions().then(setRegions).catch(() => setRegions([]));
+    return Promise.all([
+      trainingApi.getCourses(), trainingApi.getCourseTemplates(),
+      trainingApi.getPayments(), trainingApi.getConsumeRecords(),
+    ])
+      .then(([courseRows, templateRows, paymentRows, consumeRows]) => {
         const offlineCourses = courseRows.filter(isOfflineTrainingCourse);
-        setCourses(offlineCourses);
-        setLoading(false);
-        return Promise.all([
-      trainingApi.getPayments(),
-      trainingApi.getConsumeRecords(),
-          platformAdapter.getMemberDirectory().catch(() => ({ members: [], orderRevenue: 0 })),
-      platformAdapter.getRegions().catch(() => []),
-        ]).then(([paymentRows, consumeRows, memberDirectory, regionRows]) => {
         const courseMap = new Map(offlineCourses.map(course => [String(course.id), course]));
+        setCourses(offlineCourses);
+        setCourseTemplates(sortCourseTemplates(templateRows));
         setPayments(paymentRows.map(payment => ({
           ...payment,
           courseSubType: payment.courseSubType || courseMap.get(String(payment.courseId))?.subType || '',
         })));
         setConsumeRecords(consumeRows);
-          setMembers(memberDirectory.members);
-        setRegions(regionRows);
-        });
       })
       .catch(err => message.error(apiError(err)))
       .finally(() => setLoading(false));
@@ -285,6 +341,35 @@ export default function TrainingPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (!paymentModalOpen) return;
+    const query = paymentMemberSearch.trim();
+    if (!query) {
+      setPaymentMemberSearching(false);
+      setPaymentMemberSearchFailed(false);
+      return;
+    }
+
+    const requestId = ++paymentMemberSearchRequestRef.current;
+    const timer = window.setTimeout(() => {
+      setPaymentMemberSearching(true);
+      setPaymentMemberSearchFailed(false);
+      platformAdapter.getMemberLookup(query)
+        .then(directory => {
+          if (paymentMemberSearchRequestRef.current !== requestId) return;
+          setMembers(current => mergeMembers(current, directory.members));
+        })
+        .catch(() => {
+          if (paymentMemberSearchRequestRef.current === requestId) setPaymentMemberSearchFailed(true);
+        })
+        .finally(() => {
+          if (paymentMemberSearchRequestRef.current === requestId) setPaymentMemberSearching(false);
+        });
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [paymentModalOpen, paymentMemberSearch]);
+
   const chinaRegions = useMemo(() => regions.filter(item => item.province !== '海外'), [regions]);
   const overseasCountries = useMemo(() => regions.find(item => item.province === '海外')?.cities || [], [regions]);
   const memberCityOptions = useMemo(() => chinaRegions.find(item => item.province === memberProvince)?.cities || [], [chinaRegions, memberProvince]);
@@ -292,7 +377,7 @@ export default function TrainingPage() {
   useEffect(() => {
     const syncTabFromUrl = () => {
       const tab = new URLSearchParams(window.location.search).get('tab');
-      if (tab && ['courses', 'payments', 'consume'].includes(tab)) setActiveTab(tab);
+      if (tab && ['templates', 'courses', 'payments', 'consume'].includes(tab)) setActiveTab(tab);
       else setActiveTab('courses');
     };
     syncTabFromUrl();
@@ -300,7 +385,7 @@ export default function TrainingPage() {
       const key = (event as CustomEvent<string>).detail || '';
       if (!key.startsWith('/training')) return;
       const tab = new URLSearchParams(key.split('?')[1] || '').get('tab');
-      if (tab && ['courses', 'payments', 'consume'].includes(tab)) setActiveTab(tab);
+      if (tab && ['templates', 'courses', 'payments', 'consume'].includes(tab)) setActiveTab(tab);
       else setActiveTab('courses');
     };
     window.addEventListener('popstate', syncTabFromUrl);
@@ -323,7 +408,18 @@ export default function TrainingPage() {
     return stats;
   }, [courses, payments]);
 
-  const categories = useMemo(() => ['all', ...Array.from(new Set(courses.map(item => item.type).filter(Boolean)))], [courses]);
+  const categories = useMemo(() => ['all', ...Array.from(new Set([
+    ...courses.map(item => item.type),
+    ...courseTemplates.map(item => item.type),
+  ].filter(Boolean)))], [courses, courseTemplates]);
+  const filteredCourseTemplates = useMemo(() => {
+    const q = keyword.trim().toLowerCase();
+    return courseTemplates.filter(item => {
+      const matchKeyword = !q || [item.name, item.type, item.content].some(value => String(value || '').toLowerCase().includes(q));
+      const matchCategory = category === 'all' || item.type === category;
+      return matchKeyword && matchCategory;
+    });
+  }, [courseTemplates, keyword, category]);
   const filteredCourses = useMemo(() => {
     const q = keyword.trim().toLowerCase();
     return courses.filter(item => {
@@ -451,8 +547,38 @@ export default function TrainingPage() {
     }
   };
 
+  const exportCurrentTab = () => {
+    if (activeTab === 'payments') {
+      return exportToExcel(filteredPayments, '缴费记录', [
+        { key: 'memberName', title: '姓名' }, { key: 'memberPhone', title: '手机号' }, { key: 'courseName', title: '课程' },
+        { key: 'courseSubType', title: '课程期次' }, { key: 'date', title: '缴费日期' }, { key: 'amount', title: '金额' },
+        { key: 'sales', title: '课程顾问' }, { key: 'remainingSessions', title: '剩余课次' },
+        { key: 'remark', title: '备注' },
+      ]);
+    }
+    if (activeTab === 'templates') {
+      return exportToExcel(filteredCourseTemplates, '课程列表', [
+        { key: 'name', title: '课程名称' }, { key: 'type', title: '课程类型' },
+        { key: 'periodCount', title: '期次数' }, { key: 'content', title: '课程描述' },
+      ]);
+    }
+    if (activeTab === 'consume') {
+      return exportToExcel(filteredConsumes, '核销记录', [
+        { key: 'memberName', title: '姓名' }, { key: 'courseName', title: '课程' },
+        { key: 'consumeDate', title: '核销日期' }, { key: 'count', title: '核销次数' },
+        { key: 'remainingAfter', title: '剩余课次' }, { key: 'operator', title: '操作人' }, { key: 'remark', title: '备注' },
+      ]);
+    }
+    return exportToExcel(filteredCourses.map(course => ({ ...course, ...courseStatsById.get(course.id) })), '课程期次', [
+      { key: 'name', title: '课程名称' }, { key: 'type', title: '课程类型' }, { key: 'subType', title: '课程期次' },
+      { key: 'startDate', title: '开始日期' }, { key: 'endDate', title: '结束日期' }, { key: 'price', title: '价格' },
+      { key: 'sessions', title: '课次数' }, { key: 'studentCount', title: '学员数' }, { key: 'totalAmount', title: '累计费用' },
+    ]);
+  };
+
   const openCourseModal = (record?: CourseRow | null) => {
     setEditingCourse(record || null);
+    courseForm.resetFields();
     courseForm.setFieldsValue(record ? {
       ...record,
       startDate: record.startDate ? dayjs(record.startDate) : undefined,
@@ -461,12 +587,46 @@ export default function TrainingPage() {
     setCourseModalOpen(true);
   };
 
+  const openCourseTemplateModal = (record?: CourseTemplate | null, name = '') => {
+    setEditingCourseTemplate(record || null);
+    courseTemplateForm.resetFields();
+    courseTemplateForm.setFieldsValue(record ? {
+      name: record.name,
+      type: record.type,
+      coverImage: record.coverImage || '',
+      content: record.content || '',
+    } : { name, type: '集训', coverImage: '', content: '' });
+    setCourseTemplateModalOpen(true);
+  };
+
+  const applyCourseTemplate = (templateId: number) => {
+    const template = courseTemplates.find(item => Number(item.id) === Number(templateId));
+    if (!template) return;
+    courseForm.setFieldsValue({
+      templateId: template.id,
+      name: template.name,
+      type: template.type,
+      coverImage: template.coverImage || '',
+      content: template.content || '',
+    });
+  };
+
   const openCourseCreateFromSearch = (searchText: string) => {
     const name = searchText.trim();
+    const template = courseTemplates.find(item => item.name.trim().toLowerCase() === name.toLowerCase());
+    if (!template) {
+      openCourseTemplateModal(null, name);
+      message.info('请先新建课程，再为课程新建期次');
+      return;
+    }
     setEditingCourse(null);
+    courseForm.resetFields();
     courseForm.setFieldsValue({
-      name,
-      type: '集训',
+      templateId: template.id,
+      name: template.name,
+      type: template.type,
+      coverImage: template.coverImage || '',
+      content: template.content || '',
       sessions: 10,
       price: 0,
       validDays: 365,
@@ -489,7 +649,7 @@ export default function TrainingPage() {
 
   const openMemberModal = (searchText = '') => {
     const keyword = searchText.trim();
-    const looksLikePhone = /^1[3-9]\d{0,9}$/.test(keyword);
+    const looksLikePhone = INTERNATIONAL_PHONE_PATTERN.test(keyword) && normalizeMemberPhone(keyword).length >= 6;
     memberForm.resetFields();
     memberForm.setFieldsValue({
       name: looksLikePhone ? '' : keyword,
@@ -519,8 +679,13 @@ export default function TrainingPage() {
     paymentForm.setFieldsValue(record ? {
       ...record,
       date: record.date ? dayjs(record.date) : dayjs(),
-    } : { date: dayjs(), payment: '微信', amount: 0 });
+      commissionRate: record.commissionRate ?? 0,
+      commissionAmount: record.commissionAmount ?? 0,
+    } : { date: dayjs(), amount: 0, commissionRate: 0, commissionAmount: 0 });
     setPaymentModalOpen(true);
+    platformAdapter.getMemberLookup()
+      .then(directory => setMembers(current => mergeMembers(current, directory.members)))
+      .catch(err => message.warning(`学员列表刷新失败：${apiError(err)}`));
   };
 
   const currentPaymentVoucherContext = (values: any = paymentForm.getFieldsValue()) => {
@@ -661,7 +826,7 @@ export default function TrainingPage() {
       };
       if (editingCourse) await trainingApi.updateCourse(editingCourse.id, payload);
       else await trainingApi.createCourse(payload);
-      message.success(editingCourse ? '课程已更新' : '课程已新建');
+      message.success(editingCourse ? '课程期次已更新' : '课程期次已新建');
       setCourseModalOpen(false);
       load();
     } catch (err) {
@@ -671,11 +836,71 @@ export default function TrainingPage() {
     }
   };
 
+  const saveCourseTemplate = async () => {
+    const values = await courseTemplateForm.validateFields();
+    const duplicate = editingCourseTemplate
+      ? courseTemplates.find(item => Number(item.id) !== Number(editingCourseTemplate.id) && item.name.trim().toLowerCase() === String(values.name || '').trim().toLowerCase())
+      : undefined;
+    const editingTemplateId = editingCourseTemplate?.id;
+    if (duplicate && editingTemplateId) {
+      modal.confirm({
+        title: '课程合并',
+        content: `已存在课程“${duplicate.name}”。确认后，当前课程及其全部期次将合并到该课程，原课程将被删除。`,
+        okText: '确认合并',
+        cancelText: '取消',
+        okButtonProps: { danger: true },
+        onOk: async () => {
+          setSaving(true);
+          try {
+            await trainingApi.updateCourseTemplate(editingTemplateId, { ...values, mergeTargetId: duplicate.id });
+            message.success('课程已合并，全部期次已转入现有课程');
+            setCourseTemplateModalOpen(false);
+            setEditingCourseTemplate(null);
+            await load();
+          } catch (err) {
+            message.error(apiError(err));
+            throw err;
+          } finally {
+            setSaving(false);
+          }
+        },
+      });
+      return;
+    }
+    setSaving(true);
+    try {
+      const result = editingCourseTemplate
+        ? await trainingApi.updateCourseTemplate(editingCourseTemplate.id, values)
+        : await trainingApi.createCourseTemplate(values);
+      message.success(editingCourseTemplate ? '课程已更新，所有期次已同步' : result?.existing ? '该课程已存在，可直接新建期次' : '课程已新建');
+      setCourseTemplateModalOpen(false);
+      setEditingCourseTemplate(null);
+      await load();
+    } catch (err) {
+      message.error(apiError(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const setCourseTemplateVisibility = async (record: CourseTemplate, websiteVisible: boolean) => {
+    setUpdatingVisibilityId(record.id);
+    try {
+      await trainingApi.setCourseTemplateVisibility(record.id, websiteVisible);
+      setCourseTemplates(current => sortCourseTemplates(current.map(item => Number(item.id) === Number(record.id) ? { ...item, websiteVisible } : item)));
+      message.success(websiteVisible ? '已在官网展示' : '已从官网隐藏');
+    } catch (err) {
+      message.error(apiError(err));
+    } finally {
+      setUpdatingVisibilityId(null);
+    }
+  };
+
   const saveMember = async () => {
     const values = await memberForm.validateFields();
     setSaving(true);
     try {
-      await platformAdapter.createMember({
+      const created = await platformAdapter.createMember({
         name: values.name.trim(),
         phone: values.phone.trim(),
         gender: values.gender,
@@ -689,11 +914,27 @@ export default function TrainingPage() {
         address: values.address || '',
         remark: values.remark || '',
       });
-      const memberRows = await platformAdapter.getMembers().catch(() => []);
-      setMembers(memberRows);
-      message.success('学员已新建');
+      const directory = await platformAdapter.getMemberLookup(values.phone.trim());
+      setMembers(current => mergeMembers(current, directory.members));
+      const createdMember = directory.members.find(member => String(member.id) === String(created.id));
+      if (createdMember) paymentForm.setFieldsValue({ memberId: Number(createdMember.id) });
+      message.success(createdMember ? '学员已新建并选中' : '学员已新建');
       setMemberModalOpen(false);
     } catch (err) {
+      const existingMember = (err as any)?.response?.data?.existingMember;
+      if (existingMember?.id) {
+        try {
+          const directory = await platformAdapter.getMemberLookup(existingMember.phone || memberForm.getFieldValue('phone') || '');
+          setMembers(current => mergeMembers(current, directory.members));
+          const matched = directory.members.find(member => String(member.id) === String(existingMember.id));
+          if (matched) {
+            paymentForm.setFieldsValue({ memberId: Number(matched.id) });
+            setMemberModalOpen(false);
+            message.info(`手机号已存在，已为你选中学员“${matched.name}”`);
+            return;
+          }
+        } catch {}
+      }
       message.error(apiError(err));
     } finally {
       setSaving(false);
@@ -908,7 +1149,7 @@ export default function TrainingPage() {
     return Upload.LIST_IGNORE;
   };
 
-  const uploadCourseCover: UploadProps['beforeUpload'] = async (file) => {
+  const uploadCourseTemplateCover: UploadProps['beforeUpload'] = async (file) => {
     if (!file.type.startsWith('image/')) {
       message.error('课程主图仅支持图片文件');
       return Upload.LIST_IGNORE;
@@ -922,12 +1163,12 @@ export default function TrainingPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('courseName', courseForm.getFieldValue('name') || editingCourse?.name || '线下课程');
-      formData.append('oldCoverImage', courseForm.getFieldValue('coverImage') || editingCourse?.coverImage || '');
+      formData.append('courseName', courseTemplateForm.getFieldValue('name') || '线下课程');
+      formData.append('oldCoverImage', courseTemplateForm.getFieldValue('coverImage') || '');
       const res = await trainingApi.uploadCourseCover(formData);
       const coverImage = res?.data?.coverImage || res?.coverImage || '';
       if (!coverImage) throw new Error('上传课程主图失败');
-      courseForm.setFieldValue('coverImage', coverImage);
+      courseTemplateForm.setFieldValue('coverImage', coverImage);
       message.success('课程主图已上传');
     } catch (err) {
       message.error(apiError(err));
@@ -1014,7 +1255,7 @@ export default function TrainingPage() {
         try {
           await onOk();
           message.success('已删除');
-          load();
+          await load();
         } catch (err) {
           message.error(apiError(err));
           throw err;
@@ -1062,8 +1303,10 @@ export default function TrainingPage() {
           <Col>
             <Space wrap>
               <Button className="payment-action-button" icon={<PlusOutlined />} onClick={() => openPaymentModal()}>新建缴费</Button>
-              <Button icon={<PlusOutlined />} onClick={() => openCourseModal()}>新建课程</Button>
+              <Button icon={<PlusOutlined />} onClick={() => openCourseTemplateModal()}>新建课程</Button>
+              <Button className="period-action-button" icon={<PlusOutlined />} onClick={() => openCourseModal()}>新建期次</Button>
               <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => openConsumeModal()}>新建核销</Button>
+              <Button icon={<DownloadOutlined />} onClick={exportCurrentTab}>导出</Button>
             </Space>
           </Col>
         </Row>
@@ -1092,27 +1335,113 @@ export default function TrainingPage() {
         }}
         items={[
           {
+            key: 'templates',
+            label: renderTabButton('templates', '课程', filteredCourseTemplates.length, '#0EA5E9', '#EFF8FF'),
+            children: (
+              <Card styles={{ body: { padding: 0 } }}>
+                <Table<CourseTemplate>
+                  className="training-courses-table"
+                  rowKey="id"
+                  size="middle"
+                  dataSource={filteredCourseTemplates}
+                  adaptiveMinRows={6}
+                  adaptiveMaxRows={30}
+                  adaptiveBottomGap={16}
+                  pagination={{ showSizeChanger: true }}
+                  locale={{ emptyText: <Empty description="暂无课程" /> }}
+                  onRow={(record) => ({ onClick: () => openCourseTemplateModal(record), style: { cursor: 'pointer' } })}
+                  columns={[
+                    {
+                      title: '课程名称',
+                      dataIndex: 'name',
+                      width: 420,
+                      className: 'course-name-column',
+                      render: (value, record) => (
+                        <Space size={10} align="center">
+                          <div className="training-course-list-cover">
+                            {trainingCourseCoverSource(record.coverImage, record.name, true) ? <img src={trainingCourseCoverSource(record.coverImage, record.name, true)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <PictureOutlined style={{ fontSize: 20 }} />}
+                          </div>
+                          <Text strong className="training-course-name-wrap">{value}</Text>
+                        </Space>
+                      ),
+                    },
+                    { title: '课程类型', dataIndex: 'type', width: 140, render: value => <Tag color="magenta">{value}</Tag> },
+                    {
+                      title: '期次数',
+                      dataIndex: 'periodCount',
+                      align: 'right' as const,
+                      width: 120,
+                      render: (value, record) => (
+                        <Button type="link" size="small" onClick={(event) => { event.stopPropagation(); setPeriodListTemplate(record); }}>
+                          {Number(value || 0)}
+                        </Button>
+                      ),
+                    },
+                    { title: '课程描述', dataIndex: 'content', ellipsis: true },
+                    {
+                      title: '官网展示',
+                      dataIndex: 'websiteVisible',
+                      width: 120,
+                      align: 'center' as const,
+                      render: (value, record) => (
+                        <span onClick={event => event.stopPropagation()}>
+                          <Switch
+                            checked={value !== 0 && value !== false}
+                            checkedChildren="展示"
+                            unCheckedChildren="隐藏"
+                            loading={updatingVisibilityId === record.id}
+                            onChange={checked => setCourseTemplateVisibility(record, checked)}
+                          />
+                        </span>
+                      ),
+                    },
+                    {
+                      title: '操作',
+                      width: 150,
+                      align: 'center' as const,
+                      render: (_, record) => {
+                        const hasPeriods = Number(record.periodCount || 0) > 0;
+                        return (
+                          <Space size={4}>
+                            <Button size="small" icon={<EditOutlined />} onClick={(event) => { event.stopPropagation(); openCourseTemplateModal(record); }}>编辑</Button>
+                            <Tooltip title={hasPeriods ? `已有 ${record.periodCount} 个课程期次，不能删除` : '删除空课程'}>
+                              <span>
+                                <Button
+                                  size="small"
+                                  danger
+                                  disabled={hasPeriods}
+                                  icon={<DeleteOutlined />}
+                                  aria-label="删除课程"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    confirmDelete(`确定删除空课程“${record.name}”吗？`, () => trainingApi.deleteCourseTemplate(record.id));
+                                  }}
+                                />
+                              </span>
+                            </Tooltip>
+                          </Space>
+                        );
+                      },
+                    },
+                  ]}
+                />
+              </Card>
+            ),
+          },
+          {
             key: 'payments',
             label: renderTabButton('payments', '缴费', filteredPayments.length, '#22C55E', '#ECFDF3'),
             children: (
-              <Card className="training-payments-card" styles={{ body: { padding: 0 } }} extra={
+              <Card className="training-payments-card" styles={{ body: { padding: 0 } }} extra={selectedPaymentIds.length > 0 ? (
                 <Space>
-                  <Button size="small" icon={<DownloadOutlined />} onClick={() => exportToExcel(filteredPayments, '缴费记录', [
-                    { key: 'memberName', title: '姓名' }, { key: 'memberPhone', title: '手机号' }, { key: 'courseName', title: '课程' },
-                    { key: 'courseSubType', title: '课程期次' },
-                    { key: 'date', title: '缴费日期' }, { key: 'amount', title: '金额' }, { key: 'payment', title: '支付方式' },
-                    { key: 'sales', title: '课程顾问' }, { key: 'remainingSessions', title: '剩余课次' }, { key: 'remark', title: '备注' },
-                  ])}>导出Excel</Button>
-                  {selectedPaymentIds.length > 0 && (
                     <Tooltip title={`删除选中 ${selectedPaymentIds.length} 条缴费记录`}>
                       <Button size="small" danger icon={<DeleteOutlined />} aria-label={`删除选中 ${selectedPaymentIds.length} 条缴费记录`} onClick={() => confirmDelete(`确定批量删除选中的 ${selectedPaymentIds.length} 条缴费记录吗？`, async () => {
                         for (const id of selectedPaymentIds) await trainingApi.deletePayment(id);
                         setSelectedPaymentIds([]);
                       })}>批量删除</Button>
                     </Tooltip>
-                  )}
                 </Space>
-              }>
+              ) : null}>
                 <Table<PaymentRow>
                   className="training-payments-table"
                   rowKey="id"
@@ -1120,7 +1449,10 @@ export default function TrainingPage() {
                   dataSource={filteredPayments}
                   rowSelection={{ selectedRowKeys: selectedPaymentIds, onChange: (keys) => setSelectedPaymentIds(keys as number[]) }}
                   scroll={{ x: 1600 }}
-                  pagination={{ pageSize: 20, showSizeChanger: true }}
+                  adaptiveMinRows={8}
+                  adaptiveMaxRows={50}
+                  adaptiveBottomGap={0}
+                  pagination={{ showSizeChanger: true }}
                   locale={{ emptyText: <Empty description="暂无缴费记录" /> }}
                   columns={sortableColumns<PaymentRow>([
                     { title: '手机号', dataIndex: 'memberPhone', fixed: 'left', width: 120 },
@@ -1145,7 +1477,6 @@ export default function TrainingPage() {
                     { title: '课程期次', dataIndex: 'courseSubType', width: 120, render: value => value || '-' },
                     { title: '缴费日期', dataIndex: 'date', width: 110, render: dateText },
                     { title: '金额', dataIndex: 'amount', align: 'right' as const, width: 110, render: value => <Text strong style={{ color: '#F72A8A' }}>{money(value)}</Text> },
-                    { title: '支付方式', dataIndex: 'payment', width: 90, render: value => value || '-' },
                     { title: '课程顾问', dataIndex: 'sales', width: 100, render: value => value || '-' },
                     { title: '剩余课次', dataIndex: 'remainingSessions', align: 'right' as const, width: 90, render: value => <Tag color={value > 0 ? 'green' : 'default'}>{value || 0}</Tag> },
                     { title: '已核销', align: 'right' as const, width: 80, sorter: (a, b) => compareTableValues(consumedByPayment.get(a.id) || 0, consumedByPayment.get(b.id) || 0), render: (_, record) => consumedByPayment.get(record.id) || 0 },
@@ -1180,19 +1511,19 @@ export default function TrainingPage() {
           },
           {
             key: 'courses',
-            label: renderTabButton('courses', '课程', filteredCourses.length, '#F72A8A', '#FFF0F7'),
+            label: renderTabButton('courses', '课程期次', filteredCourses.length, '#F72A8A', '#FFF0F7'),
             children: (
-              <Card styles={{ body: { padding: 0 } }} extra={<Button icon={<DownloadOutlined />} onClick={() => exportToExcel(filteredCourses.map(course => ({ ...course, ...courseStatsById.get(course.id) })), '课程数据', [
-                { key: 'name', title: '课程名称' }, { key: 'type', title: '课程类型' }, { key: 'subType', title: '课程期次' },
-                { key: 'startDate', title: '开始日期' }, { key: 'endDate', title: '结束日期' }, { key: 'price', title: '价格' },
-                { key: 'sessions', title: '课次数' }, { key: 'studentCount', title: '学员数' }, { key: 'totalAmount', title: '累计费用' },
-              ])}>导出</Button>}>
+              <Card styles={{ body: { padding: 0 } }}>
                 <Table<CourseRow>
+                  className="training-courses-table"
                   rowKey="id"
                   size="middle"
                   dataSource={filteredCourses}
-                  scroll={{ x: 1460 }}
-                  pagination={{ pageSize: 20, showSizeChanger: true }}
+                  scroll={{ x: 1500 }}
+                  adaptiveMinRows={6}
+                  adaptiveMaxRows={30}
+                  adaptiveBottomGap={16}
+                  pagination={{ showSizeChanger: true }}
                   locale={{ emptyText: <Empty description="暂无课程数据" /> }}
                   onRow={(record) => ({ onClick: () => setDetailCourse(record), style: { cursor: 'pointer' } })}
                   columns={[
@@ -1200,12 +1531,12 @@ export default function TrainingPage() {
                       title: '课程名称',
                       dataIndex: 'name',
                       fixed: 'left',
-                      width: 280,
+                      width: 310,
                       align: 'left' as const,
                       className: 'course-name-column',
                       render: (value, record) => (
                         <Space size={10} align="center" onClick={event => event.stopPropagation()}>
-                          <div style={{ width: 42, height: 42, borderRadius: 6, overflow: 'hidden', border: '1px solid #edf0f6', background: '#f7efff', color: '#C026D3', display: 'grid', placeItems: 'center', flex: '0 0 auto' }}>
+                          <div className="training-course-list-cover">
                             {trainingCourseCoverSource(record.coverImage, record.name, true) ? <img src={trainingCourseCoverSource(record.coverImage, record.name, true)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <PictureOutlined style={{ fontSize: 20 }} />}
                           </div>
                           <a onClick={() => setDetailCourse(record)} style={{ minWidth: 0 }}>
@@ -1256,7 +1587,10 @@ export default function TrainingPage() {
                   size="middle"
                   dataSource={filteredConsumes}
                   scroll={{ x: 1220 }}
-                  pagination={{ pageSize: 20, showSizeChanger: true }}
+                  adaptiveMinRows={8}
+                  adaptiveMaxRows={50}
+                  adaptiveBottomGap={0}
+                  pagination={{ showSizeChanger: true }}
                   locale={{ emptyText: <Empty description="暂无核销记录" /> }}
                   columns={sortableColumns<ConsumeRow>([
                     { title: '手机号', dataIndex: 'memberPhone', fixed: 'left', width: 130 },
@@ -1285,6 +1619,34 @@ export default function TrainingPage() {
           },
         ]}
       />
+
+      <Modal
+        title={periodListTemplate ? `${periodListTemplate.name} - 课程期次` : '课程期次'}
+        open={!!periodListTemplate}
+        onCancel={() => setPeriodListTemplate(null)}
+        footer={null}
+        width={920}
+        destroyOnClose
+      >
+        <Table<CourseRow>
+          rowKey="id"
+          size="small"
+          dataSource={periodListTemplate ? courses.filter(course => Number(course.templateId) === Number(periodListTemplate.id)) : []}
+          pagination={false}
+          locale={{ emptyText: <Empty description="暂无课程期次" /> }}
+          onRow={(record) => ({
+            onClick: () => { setPeriodListTemplate(null); setDetailCourse(record); },
+            style: { cursor: 'pointer' },
+          })}
+          columns={[
+            { title: '课程期次', dataIndex: 'subType', render: value => <Button type="link" size="small">{value || '未命名期次'}</Button> },
+            { title: '开始日期', dataIndex: 'startDate', width: 120, render: dateText },
+            { title: '结束日期', dataIndex: 'endDate', width: 120, render: dateText },
+            { title: '授课教师', dataIndex: 'teacher', width: 120, render: value => value || '-' },
+            { title: '学员数', dataIndex: 'studentCount', align: 'right' as const, width: 90, render: value => Number(value || 0) },
+          ]}
+        />
+      </Modal>
 
       <Modal title={detailCourse ? `${detailCourse.name} - 课程详情` : ''} open={!!detailCourse} onCancel={() => setDetailCourse(null)} footer={null} width={980} destroyOnClose>
         {detailCourse && (
@@ -1380,7 +1742,7 @@ export default function TrainingPage() {
 
       <Modal
         className="training-payment-modal training-compact-modal training-course-modal"
-        title={editingCourse ? '编辑课程' : '新建课程'}
+        title={editingCourse ? '编辑课程期次' : '新建课程期次'}
         open={courseModalOpen}
         onCancel={() => setCourseModalOpen(false)}
         onOk={saveCourse}
@@ -1399,46 +1761,39 @@ export default function TrainingPage() {
       >
         <Form form={courseForm} layout="vertical">
           <Row className="payment-modal-grid" gutter={[8, 0]}>
-            <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="name" label="课程名称" rules={[{ required: true, message: '请输入课程名称' }]}><Input /></Form.Item></Col>
-            <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="type" label="课程类型" rules={[{ required: true }]}><Select options={courseTypes.map(value => ({ value, label: value }))} /></Form.Item></Col>
-            <Col className="training-course-cover-field" xs={24} md={8}>
-              <Form.Item label="课程主图">
-                <Upload showUploadList={false} beforeUpload={uploadCourseCover} accept="image/*">
-                  <div
-                    className="training-course-cover-upload"
-                    style={{
-                      width: 180,
-                      height: 135,
-                      border: '1px dashed #d9d9d9',
-                      borderRadius: 8,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      display: 'grid',
-                      placeItems: 'center',
-                      background: '#fafafa',
-                      color: '#8c8c8c',
-                    }}
-                  >
-                    {courseCoverImage ? (
-                      <img src={trainingCourseCoverSource(courseCoverImage, courseForm.getFieldValue('name') || editingCourse?.name)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <Space direction="vertical" size={4} align="center">
-                        <PictureOutlined style={{ fontSize: 28 }} />
-                        <Text type="secondary">点击上传</Text>
-                      </Space>
-                    )}
-                  </div>
-                </Upload>
-                <Form.Item name="coverImage" hidden><Input /></Form.Item>
+            <Col className="payment-field-equal" span={24}>
+              <Form.Item name="templateId" label="选择课程" rules={[{ required: true, message: '请选择课程' }]}>
+                <Select
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="请选择已创建的课程"
+                  options={courseTemplates.map(template => ({ value: template.id, label: `${template.name}（${template.type}）` }))}
+                  onChange={applyCourseTemplate}
+                />
               </Form.Item>
+              <Form.Item name="name" hidden><Input /></Form.Item>
+              <Form.Item name="type" hidden><Input /></Form.Item>
+              <Form.Item name="coverImage" hidden><Input /></Form.Item>
+              <Form.Item name="content" hidden><Input /></Form.Item>
             </Col>
-            <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="subType" label="课程期次"><Input placeholder="如 2026 第一期" /></Form.Item></Col>
-            <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="teacher" label="授课教师"><Input /></Form.Item></Col>
-            <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="startDate" label="开始日期"><DatePicker style={{ width: '100%' }} /></Form.Item></Col>
-            <Col className="payment-field-equal" xs={12} md={12}><Form.Item name="endDate" label="结束日期"><DatePicker style={{ width: '100%' }} /></Form.Item></Col>
-            <Col className="payment-field-equal" xs={8} md={8}><Form.Item name="price" label="价格"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col className="payment-field-equal" xs={8} md={8}><Form.Item name="sessions" label="课次"><InputNumber min={1} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col className="payment-field-equal" xs={8} md={8}><Form.Item name="validDays" label="有效天数"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
+            {courseCoverImage && (
+              <Col span={24}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, padding: 10, background: '#fafafa', borderRadius: 8 }}>
+                  <img src={trainingCourseCoverSource(courseCoverImage, courseForm.getFieldValue('name'))} alt="" style={{ width: 96, height: 54, borderRadius: 6, objectFit: 'cover' }} />
+                  <div><Text strong>{courseForm.getFieldValue('name')}</Text><br /><Text type="secondary">课程基础资料由“新建课程”统一维护</Text></div>
+                </div>
+              </Col>
+            )}
+            <Col className="training-course-detail-fields" span={24}>
+              <Row gutter={[8, 0]}>
+                <Col className="payment-field-equal" xs={12}><Form.Item name="subType" label="课程期次" rules={[{ required: true, message: '请输入课程期次' }]}><Input placeholder="如 2026 第一期" /></Form.Item></Col>
+                <Col className="payment-field-equal" xs={12}><Form.Item name="teacher" label="授课教师"><Input /></Form.Item></Col>
+                <Col className="payment-field-equal" xs={12}><Form.Item name="startDate" label="开始日期"><DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} /></Form.Item></Col>
+                <Col className="payment-field-equal" xs={12}><Form.Item name="endDate" label="结束日期"><DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} /></Form.Item></Col>
+                <Col className="payment-field-equal" xs={12}><Form.Item name="price" label="价格"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
+                <Col className="payment-field-equal" xs={12}><Form.Item name="sessions" label="课次"><InputNumber min={1} style={{ width: '100%' }} /></Form.Item></Col>
+              </Row>
+            </Col>
             {editingCourse && (
               <Col className="payment-field-remark" span={24}>
                 <Card size="small">
@@ -1447,7 +1802,52 @@ export default function TrainingPage() {
                 </Card>
               </Col>
             )}
-            <Col className="payment-field-remark" span={24}><Form.Item name="content" label="课程描述"><Input.TextArea autoSize={{ minRows: 1 }} /></Form.Item></Col>
+          </Row>
+        </Form>
+      </Modal>
+
+      <Modal
+        className="training-payment-modal training-compact-modal training-course-modal"
+        title={editingCourseTemplate ? '编辑课程' : '新建课程'}
+        open={courseTemplateModalOpen}
+        onCancel={() => { setCourseTemplateModalOpen(false); setEditingCourseTemplate(null); }}
+        onOk={saveCourseTemplate}
+        confirmLoading={saving}
+        width={800}
+        destroyOnClose
+      >
+        <Form form={courseTemplateForm} layout="vertical">
+          <Row className="payment-modal-grid" gutter={[12, 0]}>
+            <Col className="payment-field-equal" xs={24} md={16}>
+              <Form.Item name="name" label="课程名称" rules={[{ required: true, message: '请输入课程名称' }]}>
+                <AutoComplete
+                  allowClear
+                  placeholder="输入课程名称，可模糊搜索已有课程"
+                  options={courseTemplates
+                    .filter(template => Number(template.id) !== Number(editingCourseTemplate?.id || 0))
+                    .map(template => ({ value: template.name, label: `${template.name}（${template.type}）` }))}
+                  filterOption={(inputValue, option) => String(option?.label || option?.value || '')
+                    .toLocaleLowerCase('zh-CN')
+                    .includes(inputValue.trim().toLocaleLowerCase('zh-CN'))}
+                />
+              </Form.Item>
+            </Col>
+            <Col className="payment-field-equal" xs={24} md={8}><Form.Item name="type" label="课程类型" rules={[{ required: true }]}><Select options={courseTypes.map(value => ({ value, label: value }))} /></Form.Item></Col>
+            <Col span={24}>
+              <Form.Item label="课程主图">
+                <Upload showUploadList={false} beforeUpload={uploadCourseTemplateCover} accept="image/*">
+                  <div className="training-course-cover-upload" style={{ width: 240, height: 135, border: '1px dashed #d9d9d9', borderRadius: 8, overflow: 'hidden', cursor: 'pointer', display: 'grid', placeItems: 'center', background: '#fafafa', color: '#8c8c8c' }}>
+                    {courseTemplateCoverImage ? (
+                      <img src={trainingCourseCoverSource(courseTemplateCoverImage, courseTemplateForm.getFieldValue('name'))} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <Space direction="vertical" size={4} align="center"><PictureOutlined style={{ fontSize: 28 }} /><Text type="secondary">点击上传</Text></Space>
+                    )}
+                  </div>
+                </Upload>
+                <Form.Item name="coverImage" hidden><Input /></Form.Item>
+              </Form.Item>
+            </Col>
+            <Col className="payment-field-remark" span={24}><Form.Item name="content" label="课程描述"><Input.TextArea autoSize={{ minRows: 2, maxRows: 5 }} /></Form.Item></Col>
           </Row>
         </Form>
       </Modal>
@@ -1704,18 +2104,18 @@ export default function TrainingPage() {
                   className="payment-wide-select"
                   showSearch
                   allowClear
-                  optionFilterProp="label"
+                  filterOption={(input, option) => memberOptionMatchesSearch(input, option?.label)}
                   placeholder="姓名/手机号"
                   onSearch={setPaymentMemberSearch}
                   options={members.map(item => ({ value: Number(item.id), label: memberLabel(item) }))}
-                  notFoundContent={
+                  notFoundContent={paymentMemberSearching ? <Spin size="small" /> : (
                     <div className="payment-select-empty">
-                      <Text type="secondary">未找到学员</Text>
+                      <Text type="secondary">{paymentMemberSearchFailed ? '搜索失败，请重试' : '未找到学员'}</Text>
                       <Button type="primary" size="small" icon={<PlusOutlined />} onMouseDown={event => event.preventDefault()} onClick={() => openMemberModal(paymentMemberSearch)}>
                         新建学员
                       </Button>
                     </div>
-                  }
+                  )}
                 />
               </Form.Item>
             </Col>
@@ -1751,8 +2151,10 @@ export default function TrainingPage() {
             </Col>
             <Col className="payment-record-field payment-record-field-date" xs={12} md={12}><Form.Item name="date" label="缴费日期" rules={[{ required: true }]}><DatePicker style={{ width: '100%' }} /></Form.Item></Col>
             <Col className="payment-record-field payment-record-field-small" xs={12} md={12}><Form.Item name="amount" label="实付金额"><InputNumber style={{ width: '100%' }} /></Form.Item></Col>
-            <Col className="payment-record-field payment-record-field-small" xs={12} md={12}><Form.Item name="payment" label="支付方式"><Select options={paymentMethods.map(value => ({ value, label: value }))} /></Form.Item></Col>
             <Col className="payment-record-field payment-record-field-small" xs={12} md={12}><Form.Item name="sales" label="课程顾问"><Input /></Form.Item></Col>
+            <Col className="payment-record-field payment-record-field-small" xs={12} md={12}><Form.Item name="commissionRate" label="提成比例" rules={[{ required: true, message: '请输入提成比例' }]}><InputNumber min={0} max={100} precision={2} suffix="%" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col className="payment-record-field payment-record-field-small" xs={12} md={12}><Form.Item name="commissionAmount" label="提成金额"><InputNumber disabled precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col span={24}><Typography.Text type="secondary">提成金额按实付金额和提成比例自动计算，保存后同步至奖金提成。</Typography.Text></Col>
             <Col className="payment-record-field payment-record-field-small" xs={12} md={12}><Form.Item name="remainingSessions" label="剩余课次"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
             <Col className="payment-record-field payment-record-field-voucher" xs={12} md={12}>
               <Form.Item label="上传付款凭证">

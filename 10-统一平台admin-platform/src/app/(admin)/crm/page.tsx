@@ -140,7 +140,7 @@ export default function CRMPage() {
   const handleConvertSubmit = async () => {
     try {
       const values = await convertForm.validateFields();
-      message.success(`${values.name} 已成功转为学员，学员等级：${values.level}`);
+      message.success(`${values.name} 已成功转为学员，等级将由系统根据经验自动计算`);
       setLeads((prev) =>
         prev.map((l) =>
           l.key === currentLead?.key
@@ -386,7 +386,7 @@ export default function CRMPage() {
         <Table
           columns={columns}
           dataSource={filteredLeads}
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1200, y: 'calc(100dvh - 390px)' }}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
@@ -417,19 +417,7 @@ export default function CRMPage() {
                 <Input />
               </Form.Item>
             </Col>
-            <Col span={24}>
-              <Form.Item
-                label="学员等级"
-                name="level"
-                rules={[{ required: true, message: '请选择学员等级' }]}
-              >
-                <Select placeholder="请选择学员等级">
-                  <Select.Option value="普通学员">普通学员</Select.Option>
-                  <Select.Option value="VIP学员">VIP学员</Select.Option>
-                  <Select.Option value="黑金学员">黑金学员</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
+            <Col span={24}><Form.Item label="学员等级"><Input value="系统按舞蹈经验自动计算" disabled /></Form.Item></Col>
           </Row>
         </Form>
       </Modal>

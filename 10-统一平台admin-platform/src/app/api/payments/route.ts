@@ -1,5 +1,6 @@
 import { cleanText, hasAuth, jsonError, openTrainingDb, syncPaymentOrder, toNumber, today, unauthorized } from '../training-db';
-import { createPersonalMessage, recordGrowthEvent } from '@/lib/server/inbox';
+import { reconcileOfflinePayment } from '@/lib/server/student-growth';
+import { createPersonalMessage } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +24,9 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const member = { id: toNumber(body.memberId), name: cleanText(body.memberName), phone: cleanText(body.memberPhone) };
   const course = { id: toNumber(body.courseId), name: cleanText(body.courseName) };
+  const amount = toNumber(body.amount);
+  const commissionRate = toNumber(body.commissionRate);
+  const commissionAmount = Math.round((amount * commissionRate / 100) * 100) / 100;
   if (!member.id || !course.id) return Response.json({ success: false, error: '请选择学员和课程' }, { status: 400 });
 
   const db = openTrainingDb();
@@ -32,33 +36,36 @@ export async function POST(request: Request) {
       const dbCourse = db.prepare('SELECT id, name, sessions, endDate FROM Course WHERE id = ?').get(course.id);
       if (!dbMember) throw new Error('学员不存在');
       if (!dbCourse) throw new Error('课程不存在');
+      const remainingSessions = Math.max(0, toNumber(body.remainingSessions, toNumber(dbCourse.sessions)));
       const info = db.prepare(`
         INSERT INTO Payment (
           memberId, memberName, memberPhone, courseId, courseName, amount, date,
           payment, sales, remark, expireDate, remainingSessions, paymentStatus,
-          voucherPath, voucherFilename, voucherUploadedAt
+          voucherPath, voucherFilename, voucherUploadedAt, commissionRate, commissionAmount
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         dbMember.id,
         dbMember.name,
         dbMember.phone || '',
         dbCourse.id,
         dbCourse.name,
-        toNumber(body.amount),
+        amount,
         cleanText(body.date, today()),
-        cleanText(body.payment),
+        '',
         cleanText(body.sales),
         cleanText(body.remark),
         cleanText(body.expireDate, dbCourse.endDate || ''),
-        Math.max(0, toNumber(body.remainingSessions, toNumber(dbCourse.sessions))),
+        remainingSessions,
         cleanText(body.paymentStatus, toNumber(body.amount) > 0 ? 'paid' : 'completed'),
         cleanText(body.voucherPath),
         cleanText(body.voucherFilename),
         cleanText(body.voucherUploadedAt),
+        commissionRate,
+        commissionAmount,
       );
       syncPaymentOrder(db, info.lastInsertRowid);
-      const remainingSessions = Math.max(0, toNumber(body.remainingSessions, toNumber(dbCourse.sessions)));
+      reconcileOfflinePayment(db, Number(info.lastInsertRowid));
       createPersonalMessage(db, Number(dbMember.id), {
         type: 'offline',
         title: '线下课程报名成功',
@@ -69,18 +76,6 @@ export async function POST(request: Request) {
         dedupeKey: `offline-purchase:${info.lastInsertRowid}`,
         priority: 'important',
       });
-      const growthPoints = Math.max(0, Math.trunc(toNumber(body.amount)));
-      if (growthPoints) {
-        recordGrowthEvent(db, {
-          memberId: Number(dbMember.id),
-          eventType: 'offline_purchase',
-          points: growthPoints,
-          sourceType: 'payment',
-          sourceId: info.lastInsertRowid,
-          description: `报名《${dbCourse.name}》，经验值 +${growthPoints}。`,
-          actionUrl: '/dashboard/profile#offline-courses',
-        });
-      }
       return info;
     })();
     return Response.json({ success: true, id: result.lastInsertRowid });

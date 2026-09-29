@@ -72,6 +72,17 @@ export default function MiniprogramPage() {
   const [selectedApp, setSelectedApp] = useState<AppConfig | null>(null);
   const [courseMiniConfig, setCourseMiniConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [savingVideo, setSavingVideo] = useState(false);
+
+  async function setVideoPlayback(enabled: boolean) {
+    setSavingVideo(true);
+    try {
+      const payload = await onlineCourseApi.setMiniVideoPlayback(enabled);
+      setCourseMiniConfig((previous: any) => ({ ...previous, features: pickData(payload) }));
+      message.success(enabled ? '视频播放已开启' : '视频播放已关闭');
+    } catch { message.error('保存失败，请重试'); }
+    finally { setSavingVideo(false); }
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -131,6 +142,15 @@ export default function MiniprogramPage() {
       label: <span><AppstoreOutlined /> 小程序应用</span>,
       children: (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <Card title="小程序视频播放">
+            <Space>
+              <Switch checked={courseMiniConfig?.features?.videoPlaybackEnabled === true}
+                disabled={loading || !courseMiniConfig} loading={savingVideo}
+                checkedChildren="开启" unCheckedChildren="关闭" onChange={setVideoPlayback} />
+              <span>关闭时隐藏播放入口并停止提供新的播放地址，所有用户均生效。</span>
+            </Space>
+            <p style={{ color: '#666', marginBottom: 0 }}>提审版本保持关闭；后续开放前请确认视频服务满足平台审核和类目要求。</p>
+          </Card>
           {/* 统计卡片 */}
           <Row gutter={[16, 16]}>
             <Col xs={12} sm={6}>

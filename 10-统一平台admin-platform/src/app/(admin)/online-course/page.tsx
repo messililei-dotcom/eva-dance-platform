@@ -1,4 +1,5 @@
 'use client';
+import { buildCourseAdvisorOptions, filterCourseAdvisorOption } from '@/lib/course-advisors';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -12,6 +13,8 @@ import {
   Descriptions,
   Empty,
   Form,
+  Image,
+  Grid,
   Input,
   InputNumber,
   Modal,
@@ -43,12 +46,16 @@ import {
   PlayCircleOutlined,
   PlusOutlined,
   StopOutlined,
+  SwapOutlined,
   UnorderedListOutlined,
   UserSwitchOutlined,
 } from '@ant-design/icons';
 import type { RcFile } from 'antd/es/upload';
-import { ensureMediaAuthCookie, onlineCourseApi } from '@/lib/api';
+import type { UploadFile } from 'antd';
+import { api, ensureMediaAuthCookie, onlineCourseApi } from '@/lib/api';
+import { AuthorizationVoucherUpload } from '@/components/online-course/authorization-voucher-upload';
 import { platformAdapter } from '@/lib/adapters/platform';
+import { COURSE_CATEGORY_OPTIONS, normalizeCourseCategory } from '@/lib/course-category';
 import {
   apiError,
   durationText,
@@ -82,6 +89,38 @@ const MAX_UPLOAD_FILE_SIZE = positiveNumber(process.env.NEXT_PUBLIC_MAX_MATERIAL
 const MAX_COURSE_COVER_SIZE = 2 * 1024 * 1024;
 const SERIES_PAGE_SIZE_DEFAULT = 30;
 const SERIES_PAGE_SIZE_OPTIONS = [15, 30, 50, 100];
+const SERIES_FETCH_PARAMS = { all: 1, pageSize: 1000 };
+const MATERIAL_PAGE_SIZE_DEFAULT = 50;
+const MATERIAL_PAGE_SIZE_OPTIONS = [50, 100];
+const REPLACE_MATERIAL_PAGE_SIZE = 8;
+
+type AuthorizationVoucher = {
+  voucherPath: string;
+  voucherFilename?: string;
+  originalName?: string;
+  uploadedAt?: string;
+};
+
+function authorizationVouchers(value: unknown): AuthorizationVoucher[] {
+  try {
+    const rows = Array.isArray(value) ? value : JSON.parse(String(value || '[]'));
+    const legacyPrefix = '/uploads/online-course-authorization-vouchers/';
+    const viewPrefix = '/api/course/authorization-vouchers/';
+    return Array.isArray(rows)
+      ? rows.flatMap(item => {
+        if (!item || typeof item !== 'object') return [];
+        const voucherPath = String(item.voucherPath || item.url || '').trim();
+        if (voucherPath.startsWith(viewPrefix)) return [{ ...item, voucherPath }];
+        if (voucherPath.startsWith(legacyPrefix)) {
+          return [{ ...item, voucherPath: `${viewPrefix}${voucherPath.slice(legacyPrefix.length)}` }];
+        }
+        return [];
+      })
+      : [];
+  } catch {
+    return [];
+  }
+}
 
 type SeriesRow = {
   id: number;
@@ -94,6 +133,7 @@ type SeriesRow = {
   cover_image?: string;
   share_image?: string;
   share_text?: string;
+  source_type?: string;
   price: number;
   promo_price?: number;
   is_free?: number;
@@ -343,6 +383,14 @@ function extractAuthPhone(value: unknown) {
   return normalizeAuthPhone(text.match(/\+?\d[\d\s-]{3,20}\d/)?.[0] || text);
 }
 
+function normalizeAuthSearch(value: unknown) {
+  return String(value || '')
+    .normalize('NFKC')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
 function isValidAuthPhone(value: unknown) {
   const phone = extractAuthPhone(value);
   return /^\+?\d{5,20}$/.test(phone);
@@ -365,6 +413,37 @@ function authActionUser(record: any) {
     || record?.granted_by_name
     || record?.revoked_by_name
     || '-';
+}
+
+function authIdentitySearchValues(item: any) {
+  return [
+    item?.id,
+    item?.member_id,
+    item?.name,
+    item?.phone,
+    item?.wx_openid,
+    item?.wx_unionid,
+    item?.series_name,
+    item?.auth_type,
+    item?.authorization_type,
+    item?.type,
+  ];
+}
+
+function memberAuthIdentityValues(item: any) {
+  return {
+    memberId: item?.id || item?.member_id || item?.raw?.id || item?.raw?.member_id || '',
+    name: item?.name || item?.raw?.name || '',
+    phone: item?.phone || item?.raw?.phone || '',
+    wxOpenid: item?.wxOpenid || item?.wx_openid || item?.raw?.wxOpenid || item?.raw?.wx_openid || '',
+    wxUnionid: item?.wxUnionid || item?.wx_unionid || item?.raw?.wxUnionid || item?.raw?.wx_unionid || '',
+  };
+}
+
+function shortWxId(value: unknown) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  return text.length > 14 ? `${text.slice(0, 8)}...${text.slice(-4)}` : text;
 }
 
 function folderNameError(name: string) {
@@ -458,22 +537,22 @@ export default function OnlineCoursePage() {
   const router = useRouter();
   const pathname = usePathname();
   const { message, modal } = App.useApp();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
   const [series, setSeries] = useState<SeriesRow[]>([]);
   const [lessons, setLessons] = useState<LessonRow[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [orderTotalRows, setOrderTotalRows] = useState(0);
-  const [orderPage, setOrderPage] = useState(1);
-  const [orderPageSize, setOrderPageSize] = useState(20);
   const [materials, setMaterials] = useState<MaterialRow[]>([]);
   const [seriesPage, setSeriesPage] = useState(1);
   const [seriesPageSize, setSeriesPageSize] = useState(SERIES_PAGE_SIZE_DEFAULT);
   const [materialTotalRows, setMaterialTotalRows] = useState(0);
   const [materialPage, setMaterialPage] = useState(1);
-  const [materialPageSize, setMaterialPageSize] = useState(20);
+  const [materialPageSize, setMaterialPageSize] = useState(MATERIAL_PAGE_SIZE_DEFAULT);
   const [materialSortBy, setMaterialSortBy] = useState('created_at');
   const [materialSortOrder, setMaterialSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [materialReferenceFilter, setMaterialReferenceFilter] = useState<'1' | '0' | undefined>();
   const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
   const [folders, setFolders] = useState<FolderRow[]>([]);
+  const [dashboard, setDashboard] = useState<any>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedSeriesId, setSelectedSeriesId] = useState<number | null>(null);
   const [selectedFolderId, setSelectedFolderId] = useState<number | 'all'>('all');
@@ -490,15 +569,23 @@ export default function OnlineCoursePage() {
   const [seriesStatus, setSeriesStatus] = useState('all');
   const [lessonKeyword, setLessonKeyword] = useState('');
   const [authKeyword, setAuthKeyword] = useState('');
+  const [debouncedAuthKeyword, setDebouncedAuthKeyword] = useState('');
   const [materialKeyword, setMaterialKeyword] = useState('');
   const [folderKeyword, setFolderKeyword] = useState('');
   const [materialType, setMaterialType] = useState('all');
   const [lessonStatus, setLessonStatus] = useState('all');
-  const [activeTab, setActiveTab] = useState('series');
+  const [debouncedMaterialKeyword, setDebouncedMaterialKeyword] = useState('');
+  const [activeTab, setActiveTab] = useState(() => tabFromOnlineCoursePath(pathname));
   const [seriesModalOpen, setSeriesModalOpen] = useState(false);
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [batchAuthModalOpen, setBatchAuthModalOpen] = useState(false);
+  const [authVoucherFiles, setAuthVoucherFiles] = useState<UploadFile[]>([]);
+  const [batchAuthVoucherFiles, setBatchAuthVoucherFiles] = useState<UploadFile[]>([]);
+  const [quickAuthRecord, setQuickAuthRecord] = useState<any | null>(null);
+  const [quickAuthVoucherFiles, setQuickAuthVoucherFiles] = useState<UploadFile[]>([]);
+  const [selectedBatchAuthOpen, setSelectedBatchAuthOpen] = useState(false);
+  const [selectedBatchVoucherFiles, setSelectedBatchVoucherFiles] = useState<UploadFile[]>([]);
   const [authMemberModalOpen, setAuthMemberModalOpen] = useState(false);
   const [authEditingMember, setAuthEditingMember] = useState<Member | null>(null);
   const [authMemberSaving, setAuthMemberSaving] = useState(false);
@@ -518,6 +605,7 @@ export default function OnlineCoursePage() {
   const [previewError, setPreviewError] = useState('');
   const [moveModalOpen, setMoveModalOpen] = useState(false);
   const [referenceModalOpen, setReferenceModalOpen] = useState(false);
+  const [replaceModalOpen, setReplaceModalOpen] = useState(false);
   const [editingSeries, setEditingSeries] = useState<SeriesRow | null>(null);
   const [editingLesson, setEditingLesson] = useState<LessonRow | null>(null);
   const [editingMaterial, setEditingMaterial] = useState<MaterialRow | null>(null);
@@ -529,14 +617,30 @@ export default function OnlineCoursePage() {
   const [moveFolderId, setMoveFolderId] = useState<number | null>(null);
   const [referenceRows, setReferenceRows] = useState<any[]>([]);
   const [referenceMaterial, setReferenceMaterial] = useState<MaterialRow | null>(null);
+  const [replaceMaterial, setReplaceMaterial] = useState<MaterialRow | null>(null);
+  const [replaceTargetId, setReplaceTargetId] = useState<number | null>(null);
+  const [replaceCandidates, setReplaceCandidates] = useState<MaterialRow[]>([]);
+  const [replaceCandidatesLoading, setReplaceCandidatesLoading] = useState(false);
+  const [replaceReferenceCount, setReplaceReferenceCount] = useState(0);
+  const [replaceFolderId, setReplaceFolderId] = useState<number | 'all'>('all');
+  const [replaceKeyword, setReplaceKeyword] = useState('');
+  const [replacePage, setReplacePage] = useState(1);
+  const [replaceTotal, setReplaceTotal] = useState(0);
   const thumbnailGeneratingIds = useRef(new Set<number>());
   const uploadAbortControllers = useRef(new Map<string, AbortController>());
   const uploadStopRequestedRef = useRef(false);
   const uploadRunningRef = useRef(false);
+  const materialRequestSeq = useRef(0);
+  const replaceCandidateRequestSeq = useRef(0);
   const [seriesForm] = Form.useForm();
   const [lessonForm] = Form.useForm();
   const [authForm] = Form.useForm();
+  const authActualAmount = Form.useWatch('actual_amount', authForm);
+  useEffect(() => {
+    authForm.setFieldsValue({ commission_amount: Math.round(Number(authActualAmount || 0) * Number(authForm.getFieldValue('commission_rate') || 0)) / 100 });
+  }, [authActualAmount, authForm]);
   const [batchAuthForm] = Form.useForm();
+
   const [authMemberForm] = Form.useForm();
   const [materialForm] = Form.useForm();
   const [folderForm] = Form.useForm();
@@ -548,10 +652,17 @@ export default function OnlineCoursePage() {
       || folders.find(item => Number(item.id) === Number(selectedFolderId));
   const selectedMaterialFolderIds = folderMergedIds(selectedMaterialFolder);
   const selectedMaterialFolderParam = selectedFolderId === 'all' ? 'all' : selectedMaterialFolderIds.join(',');
+  const replaceTargetMaterial = replaceCandidates.find(item => Number(item.id) === Number(replaceTargetId));
   const allMaterialCount = Number(storageStats?.material_count || materialTotalRows || 0);
   const currentMaterialCount = selectedFolderId === 'all'
     ? allMaterialCount
     : Number(selectedMaterialFolder?.material_count || 0);
+
+  const refreshMembers = useCallback(async () => {
+    const rows = await platformAdapter.getMembers();
+    setMembers(rows);
+    return rows;
+  }, []);
 
   const openFolderModal = (parentId?: number) => {
     setEditingFolder(null);
@@ -568,6 +679,8 @@ export default function OnlineCoursePage() {
   };
 
   const loadMaterials = useCallback(async () => {
+    const requestId = materialRequestSeq.current + 1;
+    materialRequestSeq.current = requestId;
     const params = {
       page: materialPage,
       pageSize: materialPageSize,
@@ -575,20 +688,24 @@ export default function OnlineCoursePage() {
       sort_order: materialSortOrder,
       folder_id: selectedMaterialFolderParam,
       type: materialType,
-      keyword: materialKeyword.trim(),
+      is_referenced: materialReferenceFilter,
+      keyword: debouncedMaterialKeyword.trim(),
     };
-    const [materialPayload, storagePayload] = await Promise.all([
-      onlineCourseApi.getMaterials(params).catch(() => ({ data: [], total: 0 })),
+    const materialPayload = await onlineCourseApi.getMaterials(params).catch(() => ({ data: [], total: 0 }));
+    const [folderPayload, storagePayload] = await Promise.all([
+      onlineCourseApi.getMaterialFolders().catch(() => null),
       onlineCourseApi.getMaterialStorage().catch(() => null),
     ]);
+    if (requestId !== materialRequestSeq.current) return;
     setMaterials(pickArray(materialPayload));
     setMaterialTotalRows(Number((materialPayload as any)?.total || 0));
+    if (folderPayload) setFolders(pickFolderRows(folderPayload));
     if (storagePayload) setStorageStats(storagePayload);
-  }, [materialPage, materialPageSize, materialSortBy, materialSortOrder, selectedMaterialFolderParam, materialType, materialKeyword]);
+  }, [materialPage, materialPageSize, materialSortBy, materialSortOrder, selectedMaterialFolderParam, materialType, materialReferenceFilter, debouncedMaterialKeyword]);
 
   const load = () => {
     setLoading(true);
-    onlineCourseApi.getSeries()
+    onlineCourseApi.getSeries(SERIES_FETCH_PARAMS)
       .then((seriesPayload) => {
         const nextSeries = pickArray(seriesPayload);
         setSeries(nextSeries);
@@ -599,6 +716,23 @@ export default function OnlineCoursePage() {
       .finally(() => setLoading(false));
   };
 
+  const openAuthorizationModal = () => {
+    authForm.resetFields();
+    setAuthVoucherFiles([]);
+    const course = series.find(item => item.id === authSeriesId);
+    authForm.setFieldsValue({ series_id: authSeriesId === 'all' ? undefined : authSeriesId, actual_amount: course ? Number(course.promo_price ?? course.price ?? 0) : undefined, commission_rate: 0 });
+    setAuthModalOpen(true);
+    refreshMembers().catch(err => message.warning(`刷新学员列表失败：${apiError(err)}`));
+  };
+
+  const openBatchAuthorizationModal = () => {
+    batchAuthForm.resetFields();
+    setBatchAuthVoucherFiles([]);
+    batchAuthForm.setFieldsValue({ series_ids: authSeriesId === 'all' ? [] : [authSeriesId], actual_amount: 0, commission_rate: 0, commission_amount: 0 });
+    setBatchAuthModalOpen(true);
+    refreshMembers().catch(err => message.warning(`刷新学员列表失败：${apiError(err)}`));
+  };
+
   useEffect(() => {
     ensureMediaAuthCookie();
     load();
@@ -607,36 +741,53 @@ export default function OnlineCoursePage() {
   useEffect(() => {
     if (loading || activeTab !== 'materials') return;
     loadMaterials().catch(err => message.error(apiError(err)));
-  }, [activeTab, loadMaterials, loading]);
+  }, [loading, activeTab, loadMaterials]);
 
   useEffect(() => {
-    if (activeTab !== 'materials') return;
-    onlineCourseApi.getMaterialFolders()
-      .then(payload => setFolders(pickFolderRows(payload)))
-      .catch(() => setFolders([]));
-  }, [activeTab]);
+    const timer = window.setTimeout(() => {
+      setDebouncedMaterialKeyword(materialKeyword.trim());
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [materialKeyword]);
 
   useEffect(() => {
-    if (activeTab !== 'auth') return;
-    onlineCourseApi.getOrders({ page: orderPage, pageSize: orderPageSize })
-      .then((orderPayload) => {
-      setOrders(pickArray(orderPayload));
-        setOrderTotalRows(Number((orderPayload as any)?.total || pickArray(orderPayload).length));
-      })
-      .catch(err => message.error(`授权订单加载失败：${apiError(err)}`));
-  }, [activeTab, orderPage, orderPageSize]);
+    const timer = window.setTimeout(() => {
+      setDebouncedAuthKeyword(authKeyword.trim());
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [authKeyword]);
 
   useEffect(() => {
-    if (activeTab !== 'auth') return;
-    platformAdapter.getMemberDirectory()
-      .then(directory => setMembers(directory.members))
-      .catch(err => message.error(`学员目录加载失败：${apiError(err)}`));
-  }, [activeTab]);
+    if (loading || activeTab !== 'materials') return;
+    const timer = window.setInterval(() => {
+      if (saving || uploadRunningRef.current) return;
+      loadMaterials().catch(() => null);
+    }, 30000);
+    return () => window.clearInterval(timer);
+  }, [activeTab, loading, saving, loadMaterials]);
 
   useEffect(() => {
     setMaterialPage(1);
     setSelectedMaterialIds([]);
-  }, [selectedFolderId, materialType, materialKeyword]);
+  }, [selectedFolderId, materialType, materialReferenceFilter, debouncedMaterialKeyword]);
+
+  const changeMaterialKeyword = (value: string) => {
+    setMaterialKeyword(value);
+    setMaterialPage(1);
+    setSelectedMaterialIds([]);
+  };
+
+  const changeMaterialType = (value: string) => {
+    setMaterialType(value);
+    setMaterialPage(1);
+    setSelectedMaterialIds([]);
+  };
+
+  const changeMaterialFolder = (value: number | 'all') => {
+    setSelectedFolderId(value);
+    setMaterialPage(1);
+    setSelectedMaterialIds([]);
+  };
 
   const syncTabFromUrl = () => {
     const currentPath = window.location.pathname;
@@ -713,50 +864,12 @@ export default function OnlineCoursePage() {
       setAuthorizedStudents([]);
       return;
     }
-    const loadBySeries = async () => {
-      const results = await Promise.allSettled(series.map(item => (
-        onlineCourseApi.getSeriesStudents(item.id, { tab: authFilter })
-      )));
-      const successful = results.filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled');
-      if (!successful.length) {
-        const firstFailure = results.find((result): result is PromiseRejectedResult => result.status === 'rejected');
-        throw firstFailure?.reason || new Error('授权数据加载失败');
-      }
-      return results.flatMap((result, index) => {
-        if (result.status !== 'fulfilled') return [];
-        const sourceSeries = series[index];
-        return pickArray(result.value).map(row => ({
-          ...row,
-          series_id: sourceSeries.id,
-          series_name: row.series_name || sourceSeries.name,
-          auth_row_key: `${sourceSeries.id}:${row.id || row.phone || row.authorization_id || index}`,
-        }));
-      });
-    };
-    if (authSeriesId === 'all') {
-      try {
-        const payload = await onlineCourseApi.getAllSeriesStudents({ tab: authFilter });
-        const rows = pickArray(payload);
-        // 汇总接口曾在生产环境异常返回空数据；数据库有课程时以逐课程接口兜底，
-        // 防止真实授权被静默渲染成“暂无授权学员”。
-        setAuthorizedStudents(rows.length ? rows : await loadBySeries());
-      } catch {
-        setAuthorizedStudents(await loadBySeries());
-      }
-      return;
-    }
-    const sourceSeries = series.find(item => Number(item.id) === Number(authSeriesId));
-    const studentPayload = await onlineCourseApi.getSeriesStudents(authSeriesId, { tab: authFilter });
-    setAuthorizedStudents(pickArray(studentPayload).map(row => ({
-      ...row,
-      series_id: authSeriesId,
-      series_name: row.series_name || sourceSeries?.name,
-      auth_row_key: `${authSeriesId}:${row.id || row.phone || row.authorization_id || ''}`,
-    })));
-  }, [series, authSeriesId, authFilter]);
+    const payload = await onlineCourseApi.getAuthorizations({ tab: authFilter, keyword: debouncedAuthKeyword });
+    setAuthorizedStudents(pickArray(payload).filter(row => authSeriesId === 'all' || Number(row.series_id) === Number(authSeriesId)));
+  }, [series, authSeriesId, authFilter, debouncedAuthKeyword]);
 
   useEffect(() => {
-    if (!selectedSeriesId) return;
+    if (activeTab !== 'series' || !selectedSeriesId) return;
     Promise.all([
       onlineCourseApi.getSeriesCourses(selectedSeriesId).catch(() => ({ data: [] })),
     ]).then(([coursePayload]) => {
@@ -765,7 +878,7 @@ export default function OnlineCoursePage() {
         .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0) || Number(a.id) - Number(b.id));
       setLessons(lessonRows);
     });
-  }, [selectedSeriesId, series]);
+  }, [activeTab, selectedSeriesId, series]);
 
   useEffect(() => {
     if (loading || activeTab !== 'auth') return;
@@ -774,11 +887,13 @@ export default function OnlineCoursePage() {
 
   const filteredSeries = useMemo(() => {
     const q = seriesKeyword.trim().toLowerCase();
-    return series.filter(item => {
-      const matchKeyword = !q || [item.name, item.subtitle, item.category, item.teacher].some(value => String(value || '').toLowerCase().includes(q));
-      const matchStatus = seriesStatus === 'all' || item.status === seriesStatus;
-      return matchKeyword && matchStatus;
-    });
+    return series
+      .filter(item => {
+        const matchKeyword = !q || [item.name, item.subtitle, item.category, item.teacher].some(value => String(value || '').toLowerCase().includes(q));
+        const matchStatus = seriesStatus === 'all' || item.status === seriesStatus;
+        return matchKeyword && matchStatus;
+      })
+      .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')) || Number(b.id || 0) - Number(a.id || 0));
   }, [series, seriesKeyword, seriesStatus]);
 
   const filteredLessons = useMemo(() => {
@@ -798,7 +913,7 @@ export default function OnlineCoursePage() {
     return authorizedStudents
       .filter(item => {
         const matchStatus = authFilter === 'authorized' ? item.authorized : authFilter === 'unauthorized' ? !item.authorized : true;
-        const matchKeyword = !q || [item.name, item.phone, item.series_name, item.auth_type, item.type].some(value => String(value || '').toLowerCase().includes(q));
+        const matchKeyword = !q || authIdentitySearchValues(item).some(value => String(value || '').toLowerCase().includes(q));
         return matchStatus && matchKeyword;
       })
       .sort((a, b) => String(authActionTime(b)).localeCompare(String(authActionTime(a))) || Number(b.authorization_id || 0) - Number(a.authorization_id || 0));
@@ -828,19 +943,17 @@ export default function OnlineCoursePage() {
     };
   }, [members]);
 
-  const openAuthMemberModal = useCallback(async (record: any) => {
-    const directoryMember = findAuthMember(record);
-    if (!directoryMember?.id) {
+  const openAuthMemberModal = useCallback((record: any) => {
+    const member = findAuthMember(record);
+    if (!member?.id) {
       message.warning('未找到该学员档案');
       return;
     }
-    const member = await platformAdapter.getMemberRecord(directoryMember.id).catch(() => directoryMember);
     setAuthEditingMember(member);
     authMemberForm.setFieldsValue({
       name: member.name || record?.name || '',
       phone: member.phone || record?.phone || '',
       gender: String(member.raw?.gender || ''),
-      level: member.level || '普通学员',
       country: member.country || String(member.raw?.country || '中国'),
       province: String(member.raw?.province || ''),
       city: member.city || String(member.raw?.city || ''),
@@ -849,6 +962,36 @@ export default function OnlineCoursePage() {
     });
     setAuthMemberModalOpen(true);
   }, [authMemberForm, findAuthMember, message]);
+
+  const renderAuthMemberLink = useCallback((record: any, value: ReactNode, options?: { color?: string; strong?: boolean }) => {
+    const displayValue = value === undefined || value === null || value === '' ? '-' : value;
+    if (displayValue === '-' && !findAuthMember(record)?.id) return <Text type="secondary">-</Text>;
+
+    return (
+      <span
+        role="button"
+        tabIndex={0}
+        onClick={() => {
+          const selectedText = window.getSelection()?.toString();
+          if (selectedText) return;
+          openAuthMemberModal(record);
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          openAuthMemberModal(record);
+        }}
+        style={{
+          color: options?.color || '#ff6b8a',
+          cursor: 'pointer',
+          userSelect: 'text',
+          fontWeight: options?.strong ? 600 : undefined,
+        }}
+      >
+        {displayValue}
+      </span>
+    );
+  }, [findAuthMember, openAuthMemberModal]);
 
   const saveAuthMemberProfile = async () => {
     const member = authEditingMember;
@@ -863,7 +1006,6 @@ export default function OnlineCoursePage() {
         name: String(values.name || '').trim(),
         phone: String(values.phone || '').trim(),
         gender: values.gender || '',
-        level: values.level || '普通学员',
         country: values.country || '中国',
         province: values.province || '',
         city: values.city || '',
@@ -880,7 +1022,6 @@ export default function OnlineCoursePage() {
           ...item,
           name: payload.name,
           phone: payload.phone,
-          level: payload.level,
           country: payload.country,
           city: payload.city,
           raw: { ...(item.raw || {}), ...payload },
@@ -889,7 +1030,7 @@ export default function OnlineCoursePage() {
       setAuthorizedStudents(prev => prev.map(row => {
         const sameMember = String(row.member_id || row.id || '') === String(member.id);
         const samePhone = normalizeAuthPhone(row.phone) === normalizeAuthPhone(member.phone);
-        return sameMember || samePhone ? { ...row, name: payload.name, phone: payload.phone, level: payload.level } : row;
+        return sameMember || samePhone ? { ...row, name: payload.name, phone: payload.phone } : row;
       }));
       message.success('学员档案已保存');
       setAuthMemberModalOpen(false);
@@ -901,19 +1042,78 @@ export default function OnlineCoursePage() {
     }
   };
 
-  const memberAuthOptions = useMemo(() => members.map(item => ({
-    value: `${item.name || '未命名学员'}${item.phone ? ` · ${item.phone}` : ''}`,
-    label: `${item.name || '未命名学员'}${item.phone ? ` · ${item.phone}` : ''}`,
-    memberId: Number(item.id),
-    searchText: `${item.name || ''} ${item.phone || ''}`,
-  })), [members]);
+  const memberAuthOptions = useMemo(() => members.map(item => {
+    const identity = memberAuthIdentityValues(item);
+    const memberId = Number(identity.memberId || 0);
+    const label = [
+      identity.name || '未命名学员',
+      identity.phone,
+      memberId ? `member_id:${memberId}` : '',
+      identity.wxOpenid ? `openid:${shortWxId(identity.wxOpenid)}` : '',
+      identity.wxUnionid ? `unionid:${shortWxId(identity.wxUnionid)}` : '',
+    ].filter(Boolean).join(' · ');
+    return {
+      value: label,
+      label,
+      memberId,
+      rawSearchText: [
+        identity.name,
+        identity.phone,
+        memberId,
+        `member:${memberId}`,
+        `member_id:${memberId}`,
+        identity.wxOpenid,
+        identity.wxUnionid,
+      ].filter(Boolean).join(' '),
+      searchText: [
+        identity.name,
+        identity.phone,
+        memberId,
+        `member:${memberId}`,
+        `member_id:${memberId}`,
+        identity.wxOpenid,
+        identity.wxUnionid,
+      ].filter(Boolean).map(normalizeAuthSearch).join(' '),
+    };
+  }), [members]);
 
   const resolveAuthSubject = (value: unknown, selectedMemberId?: unknown) => {
     const selectedId = Number(selectedMemberId || 0);
     if (selectedId > 0) return { memberId: selectedId, phone: '' };
     const raw = String(value || '').trim();
+    const normalizedSearch = normalizeAuthSearch(raw);
+    if (normalizedSearch) {
+      const exactOption = memberAuthOptions.find(option => {
+        const rawParts = String((option as any).rawSearchText || '')
+          .split(/\s+/)
+          .map(normalizeAuthSearch)
+          .filter(Boolean);
+        return normalizeAuthSearch(option.value) === normalizedSearch || rawParts.includes(normalizedSearch);
+      });
+      if (exactOption?.memberId) return { memberId: Number(exactOption.memberId), phone: '' };
+
+      const fuzzyOptions = memberAuthOptions.filter(option => String(option.searchText || '').includes(normalizedSearch));
+      if (fuzzyOptions.length === 1 && fuzzyOptions[0]?.memberId) {
+        return { memberId: Number(fuzzyOptions[0].memberId), phone: '' };
+      }
+    }
     const memberMatch = raw.match(/^member:(\d+)$/);
     if (memberMatch) return { memberId: Number(memberMatch[1]), phone: '' };
+    const memberIdInput = raw.match(/(?:member_id|member|id)[:：]\s*(\d+)/i) || raw.match(/^\d+$/);
+    if (memberIdInput) {
+      const rawId = Number(memberIdInput[1] || raw);
+      const matched = members.find(item => Number(memberAuthIdentityValues(item).memberId || 0) === rawId);
+      if (matched) return { memberId: rawId, phone: '' };
+    }
+    const lowered = raw.toLowerCase();
+    if (lowered) {
+      const matchedIdentityMember = members.find(item => {
+        const identity = memberAuthIdentityValues(item);
+        return [identity.wxOpenid, identity.wxUnionid]
+          .some(id => id && String(id).toLowerCase().includes(lowered));
+      });
+      if (matchedIdentityMember?.id) return { memberId: Number(matchedIdentityMember.id), phone: '' };
+    }
 
     const normalized = extractAuthPhone(raw);
     const matchedMember = members.find(item => normalizeAuthPhone(item.phone) === normalized);
@@ -1000,7 +1200,7 @@ export default function OnlineCoursePage() {
     ? '全部素材'
     : folderLabel(currentMaterialFolder);
   const uploadProgressRows = Object.values(uploadProgress);
-  const uploadActiveCount = uploadProgressRows.filter(item => ['preparing', 'uploading'].includes(item.status)).length;
+  const uploadActiveCount = uploadProgressRows.filter(item => ['preparing', 'uploading', 'processing'].includes(item.status)).length;
   const isUploadingMaterials = uploadActiveCount > 0;
   const uploadTargetFolderName = folderLabel(selectedFolderId === 'all' ? defaultMaterialFolder(folders) : folders.find(item => item.id === selectedFolderId));
   const sortTitle = (label: string, key: string) => (
@@ -1019,12 +1219,14 @@ export default function OnlineCoursePage() {
       trial_count: Number(record.trial_count || 0),
       is_free: Boolean(record.is_free),
       status: record.status || 'draft',
+      category: normalizeCourseCategory(record.category, `${record.name || ''} ${record.subtitle || ''} ${record.source_type || ''}`),
     } : {
       name: '',
       subtitle: '',
       description: '',
       rich_description: '',
       cover_image: '',
+      category: COURSE_CATEGORY_OPTIONS[0].value,
       teacher: '伊娃',
       status: 'draft',
       price: 0,
@@ -1210,7 +1412,7 @@ export default function OnlineCoursePage() {
         price: Number(values.price || 0),
         promo_price: Number(values.promo_price || 0),
         share_image: editingSeries?.share_image || '',
-        category: editingSeries?.category || '',
+        category: normalizeCourseCategory(values.category, name),
         trial_count: Number(values.trial_count ?? editingSeries?.trial_count ?? 0),
         is_free: values.is_free ? 1 : 0,
         share_text: editingSeries?.share_text || '',
@@ -1224,9 +1426,15 @@ export default function OnlineCoursePage() {
       seriesForm.resetFields();
       if (savedSeries?.id) {
         const nextRow = { ...(editingSeries || {}), ...savedSeries };
+        setSelectedSeriesId(Number(savedSeries.id));
         setSeries(prev => editingSeries
           ? prev.map(item => item.id === editingSeries.id ? { ...item, ...nextRow } : item)
-          : [nextRow as SeriesRow, ...prev]);
+          : [nextRow as SeriesRow, ...prev.filter(item => item.id !== savedSeries.id)]);
+        if (!editingSeries) {
+          setSeriesKeyword('');
+          setSeriesStatus('all');
+          setSeriesPage(1);
+        }
         setEditingSeries(null);
       } else {
         await load();
@@ -1330,6 +1538,32 @@ export default function OnlineCoursePage() {
     }
   };
 
+  const uploadAuthorizationVouchers = async (
+    files: UploadFile[],
+    subject: string,
+    course: string,
+  ): Promise<AuthorizationVoucher[]> => {
+    if (!files.length) throw new Error('请上传订单凭证');
+    const group = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    const vouchers: AuthorizationVoucher[] = [];
+    for (const [index, uploadFile] of files.entries()) {
+      const file = uploadFile.originFileObj;
+      if (!file) throw new Error('订单凭证文件已失效，请重新选择');
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('subject', subject || '未命名学员');
+      formData.append('course', course || '未命名课程');
+      formData.append('group', group);
+      formData.append('sequence', String(index + 1));
+      const response = await api.post('/course/authorization-vouchers', formData);
+      const payload = response.data;
+      const voucher = payload?.data || payload;
+      if (!voucher?.voucherPath) throw new Error('订单凭证上传失败');
+      vouchers.push(voucher);
+    }
+    return vouchers;
+  };
+
   const saveAuthorization = async () => {
     const values = await authForm.validateFields();
     const subject = resolveAuthSubject(values.member_lookup, values.member_lookup_id);
@@ -1337,12 +1571,19 @@ export default function OnlineCoursePage() {
       message.warning('请选择学员，或输入手机号进行授权');
       return;
     }
+    if (!authVoucherFiles.length) {
+      message.warning('请上传订单凭证');
+      return;
+    }
     setSaving(true);
     try {
-      if (subject.memberId) await onlineCourseApi.authorizeMember(values.series_id, { member_id: subject.memberId, type: 'admin_grant', remark: values.remark || '' });
-      else await onlineCourseApi.authorizePhone(values.series_id, { phone: subject.phone, type: 'admin_grant', remark: values.remark || '' });
+      const courseName = series.find(item => Number(item.id) === Number(values.series_id))?.name || `课程${values.series_id}`;
+      const vouchers = await uploadAuthorizationVouchers(authVoucherFiles, String(values.member_lookup || subject.phone || subject.memberId), courseName);
+      if (subject.memberId) await onlineCourseApi.authorizeMember(values.series_id, { member_id: subject.memberId, type: 'admin_grant', remark: values.remark || '', actual_amount: values.actual_amount, sales: values.sales, commission_rate: values.commission_rate, commission_amount: values.commission_amount, order_vouchers: vouchers });
+      else await onlineCourseApi.authorizePhone(values.series_id, { phone: subject.phone, type: 'admin_grant', remark: values.remark || '', actual_amount: values.actual_amount, sales: values.sales, commission_rate: values.commission_rate, commission_amount: values.commission_amount, order_vouchers: vouchers });
       message.success('授权已生效');
       setAuthModalOpen(false);
+      setAuthVoucherFiles([]);
       setAuthSeriesId(Number(values.series_id));
       await loadAuthRows();
     } catch (err) {
@@ -1364,28 +1605,27 @@ export default function OnlineCoursePage() {
       message.warning('请选择要授权的课程');
       return;
     }
+    if (!batchAuthVoucherFiles.length) {
+      message.warning('请上传订单凭证');
+      return;
+    }
 
     setSaving(true);
     try {
-      if (subject.memberId) {
-        await Promise.all(seriesIds.map((seriesId: number) => (
-          onlineCourseApi.authorizeMember(seriesId, {
-            member_id: subject.memberId,
-            type: 'admin_grant',
-            remark: values.remark || '',
-          })
-        )));
-      } else {
-        await Promise.all(seriesIds.map((seriesId: number) => (
-          onlineCourseApi.authorizePhone(seriesId, {
-            phone: subject.phone,
-            type: 'admin_grant',
-            remark: values.remark || '',
-          })
-        )));
-      }
+      const vouchers = await uploadAuthorizationVouchers(
+        batchAuthVoucherFiles,
+        String(values.member_lookup || subject.phone || subject.memberId),
+        seriesIds.length === 1 ? (series.find(item => Number(item.id) === Number(seriesIds[0]))?.name || `课程${seriesIds[0]}`) : `批量课程${seriesIds.length}门`,
+      );
+      await api.post('/course/authorizations/batch', {
+        member_id: subject.memberId || undefined, phone: subject.phone || undefined,
+        series_ids: seriesIds, actual_amount: 0,
+        sales: values.sales, commission_rate: 0,
+        order_vouchers: vouchers, remark: values.remark || '',
+      });
       message.success(`已批量授权 ${seriesIds.length} 门课程`);
       setBatchAuthModalOpen(false);
+      setBatchAuthVoucherFiles([]);
       batchAuthForm.resetFields();
       await loadAuthRows();
     } catch (err) {
@@ -1395,14 +1635,34 @@ export default function OnlineCoursePage() {
     }
   };
 
-  const batchAuthorizeSelected = async () => {
+  const batchAuthorizeSelected = () => {
     if (authSeriesId === 'all' || selectedAuthIds.length === 0) return;
+    setSelectedBatchVoucherFiles([]);
+    setSelectedBatchAuthOpen(true);
+  };
+
+  const confirmBatchAuthorizeSelected = async () => {
+    if (authSeriesId === 'all' || selectedAuthIds.length === 0) return;
+    if (!selectedBatchVoucherFiles.length) {
+      message.warning('请上传订单凭证');
+      return;
+    }
     setSaving(true);
     try {
-      const member_ids = selectedAuthIds.map(id => Number(id)).filter(Boolean);
-      await onlineCourseApi.batchAuthorizeMembers(authSeriesId, { member_ids, type: 'admin_grant' });
+      const selectedKeys = new Set(selectedAuthIds.map(String));
+      const selectedRows = filteredAuthorizedStudents.filter(record => selectedKeys.has(authorizationRowKey(record)));
+      const member_ids = selectedRows.map(record => Number(record.id || record.member_id)).filter(Boolean);
+      if (!member_ids.length) throw new Error('请选择可授权的学员');
+      const selectedNames = selectedRows
+        .map(record => record.name || record.phone)
+        .filter(Boolean);
+      const courseName = series.find(item => Number(item.id) === Number(authSeriesId))?.name || `课程${authSeriesId}`;
+      const vouchers = await uploadAuthorizationVouchers(selectedBatchVoucherFiles, selectedNames.length === 1 ? selectedNames[0] : `批量学员${member_ids.length}人`, courseName);
+      await onlineCourseApi.batchAuthorizeMembers(authSeriesId, { member_ids, type: 'admin_grant', order_vouchers: vouchers });
       message.success(`已授权 ${member_ids.length} 位学员`);
       setSelectedAuthIds([]);
+      setSelectedBatchAuthOpen(false);
+      setSelectedBatchVoucherFiles([]);
       await loadAuthRows();
     } catch (err) {
       message.error(apiError(err));
@@ -1411,33 +1671,30 @@ export default function OnlineCoursePage() {
     }
   };
 
+  const canCancelAuthorization = (record: any) => record.action_type === 'grant' && record.authorization_status === 'active';
   const batchCancelAuthorization = () => {
-    if (authSeriesId === 'all' || selectedAuthIds.length === 0) return;
     const selectedKeys = new Set(selectedAuthIds.map(String));
-    const rows = filteredAuthorizedStudents.filter(record => selectedKeys.has(String(record.id || record.phone)) && record.authorized);
-    if (!rows.length) {
-      message.warning('请选择已授权的学员');
-      return;
-    }
+    const rows = filteredAuthorizedStudents.filter(record => selectedKeys.has(authorizationRowKey(record)) && canCancelAuthorization(record));
+    if (!rows.length) { message.warning('请选择当前有效的授权记录'); return; }
     modal.confirm({
-      title: `确定取消 ${rows.length} 位学员的授权吗？`,
-      content: '取消后，所选学员将无法继续访问该课程。',
-      okText: '取消授权',
-      okButtonProps: { danger: true },
-      cancelText: '返回',
+      title: `确定取消 ${rows.length} 条课程授权吗？`,
+      content: '取消后，所选学员将无法访问对应课程，授权及取消授权记录会保留。',
+      okText: '取消授权', okButtonProps: { danger: true }, cancelText: '返回',
       onOk: async () => {
         setSaving(true);
         try {
-          await Promise.all(rows.map(record => onlineCourseApi.deauthorizeMember(authSeriesId, { member_id: record.id, phone: record.phone })));
-          message.success(`已取消 ${rows.length} 位学员授权`);
+          const results = await Promise.allSettled(rows.map(record => onlineCourseApi.deauthorizeMember(record.series_id, {
+            member_id: record.id, phone: record.phone, authorization_id: record.authorization_id,
+          })));
+          const cancelled = results.reduce((sum, result) => sum + (result.status === 'fulfilled' ? Number(result.value?.deauthorized || 0) : 0), 0);
+          const failed = results.filter(result => result.status === 'rejected').length;
+          if (failed) message.error(`已取消 ${cancelled} 条授权，${failed} 条失败，请刷新后重试`);
+          else if (cancelled < rows.length) message.info(`已取消 ${cancelled} 条授权，其余记录已失效，无需重复取消`);
+          else message.success(`已取消 ${cancelled} 条课程授权`);
           setSelectedAuthIds([]);
           await loadAuthRows();
-        } catch (err) {
-          message.error(apiError(err));
-          throw err;
-        } finally {
-          setSaving(false);
-        }
+        } catch (err) { message.error(apiError(err)); }
+        finally { setSaving(false); }
       },
     });
   };
@@ -1480,25 +1737,68 @@ export default function OnlineCoursePage() {
       message.warning('请先选择课程');
       return;
     }
-    modal.confirm({
-      title: '确定授权此学员吗？',
-      content: `${record.name || record.phone || '该学员'} 将获得「${record.series_name || currentAuthSeries?.name || '当前课程'}」访问权限。`,
-      okText: '授权',
-      cancelText: '取消',
-      onOk: async () => {
-        const rowKey = authorizationRowKey(record);
-        setAuthToggleLoadingKey(rowKey);
-        try {
-          await onlineCourseApi.authorizeMember(seriesId, { member_id: record.id, type: 'admin_grant' });
-          message.success('已授权');
-          await loadAuthRows();
-        } catch (err) {
-          message.error(apiError(err));
-          throw err;
-        } finally {
-          setAuthToggleLoadingKey('');
-        }
-      },
+    setQuickAuthRecord({ ...record, resolvedSeriesId: seriesId });
+    setQuickAuthVoucherFiles([]);
+  };
+
+  const confirmQuickAuthorization = async () => {
+    if (!quickAuthRecord?.resolvedSeriesId) return;
+    if (!quickAuthVoucherFiles.length) {
+      message.warning('请上传订单凭证');
+      return;
+    }
+    const rowKey = authorizationRowKey(quickAuthRecord);
+    setAuthToggleLoadingKey(rowKey);
+    setSaving(true);
+    try {
+      const vouchers = await uploadAuthorizationVouchers(
+        quickAuthVoucherFiles,
+        quickAuthRecord.name || quickAuthRecord.phone || `学员${quickAuthRecord.id}`,
+        quickAuthRecord.series_name || currentAuthSeries?.name || `课程${quickAuthRecord.resolvedSeriesId}`,
+      );
+      await onlineCourseApi.authorizeMember(quickAuthRecord.resolvedSeriesId, {
+        member_id: quickAuthRecord.id,
+        type: 'admin_grant',
+        order_vouchers: vouchers,
+      });
+      message.success('已授权');
+      setQuickAuthRecord(null);
+      setQuickAuthVoucherFiles([]);
+      await loadAuthRows();
+    } catch (err) {
+      message.error(apiError(err));
+    } finally {
+      setAuthToggleLoadingKey('');
+      setSaving(false);
+    }
+  };
+
+  const viewAuthorizationVouchers = (record: any) => {
+    const vouchers = authorizationVouchers(record.order_vouchers);
+    if (!vouchers.length) {
+      message.info('该历史授权没有订单凭证');
+      return;
+    }
+    modal.info({
+      title: `订单凭证（${vouchers.length} 张）`,
+      width: 760,
+      okText: '关闭',
+      content: (
+        <Image.PreviewGroup>
+          <Space wrap size={12} style={{ marginTop: 12 }}>
+            {vouchers.map((voucher, index) => (
+              <Image
+                key={`${voucher.voucherPath}-${index}`}
+                src={voucher.voucherPath}
+                alt={voucher.originalName || `订单凭证${index + 1}`}
+                width={150}
+                height={110}
+                style={{ objectFit: 'cover', borderRadius: 6 }}
+              />
+            ))}
+          </Space>
+        </Image.PreviewGroup>
+      ),
     });
   };
 
@@ -1616,7 +1916,7 @@ export default function OnlineCoursePage() {
           onUploadProgress: (event: any) => {
             const total = event.total || file.size || 1;
             if (event.loaded >= total) {
-              setUploadProgress(prev => ({ ...prev, [file.uid]: { ...(prev[file.uid] || { uid: file.uid, name: file.name, percent: 0 }), status: 'uploading', percent: Math.max(prev[file.uid]?.percent || 0, 95) } }));
+              setUploadProgress(prev => ({ ...prev, [file.uid]: { ...(prev[file.uid] || { uid: file.uid, name: file.name, percent: 0 }), status: 'processing', percent: Math.max(prev[file.uid]?.percent || 0, 95), message: '浏览器上传完成，正在写入 VOD' } }));
               return;
             }
             const percent = Math.min(90, Math.round((event.loaded / total) * 90));
@@ -1741,6 +2041,105 @@ export default function OnlineCoursePage() {
     }
   };
 
+  const loadReplaceCandidates = async (sourceId: number, options?: {
+    keyword?: string;
+    folderId?: number | 'all';
+    page?: number;
+  }) => {
+    const requestId = replaceCandidateRequestSeq.current + 1;
+    replaceCandidateRequestSeq.current = requestId;
+    setReplaceCandidatesLoading(true);
+    try {
+      const folderId = options?.folderId ?? replaceFolderId;
+      const selectedFolder = folderId === 'all'
+        ? undefined
+        : mergedFolders.find(item => Number(item.id) === Number(folderId))
+          || folders.find(item => Number(item.id) === Number(folderId));
+      const payload = await onlineCourseApi.getMaterials({
+        page: options?.page || 1,
+        pageSize: REPLACE_MATERIAL_PAGE_SIZE,
+        type: 'video',
+        keyword: String(options?.keyword ?? replaceKeyword).trim(),
+        folder_id: folderId === 'all' ? 'all' : folderMergedIds(selectedFolder).join(','),
+        exclude_id: sourceId,
+        sort_by: 'created_at',
+        sort_order: 'desc',
+      });
+      if (requestId !== replaceCandidateRequestSeq.current) return;
+      setReplaceCandidates(pickArray(payload));
+      setReplaceTotal(Number(payload?.total || 0));
+    } catch (err) {
+      if (requestId === replaceCandidateRequestSeq.current) message.error(apiError(err));
+    } finally {
+      if (requestId === replaceCandidateRequestSeq.current) setReplaceCandidatesLoading(false);
+    }
+  };
+
+  const openReplaceMaterialModal = async (record: MaterialRow) => {
+    if (record.type !== 'video') {
+      message.warning('只能替换视频素材的课程引用');
+      return;
+    }
+    setReplaceMaterial(record);
+    setReplaceTargetId(null);
+    setReplaceCandidates([]);
+    setReplaceReferenceCount(0);
+    setReplaceFolderId('all');
+    setReplaceKeyword('');
+    setReplacePage(1);
+    setReplaceTotal(0);
+    setReplaceModalOpen(true);
+    const [, references] = await Promise.all([
+      loadReplaceCandidates(record.id, { folderId: 'all', keyword: '', page: 1 }),
+      onlineCourseApi.getMaterialReferences(record.id).catch(() => null),
+    ]);
+    if (references) setReplaceReferenceCount(Number(references.total ?? pickArray(references).length));
+  };
+
+  const changeReplaceFolder = (folderId: number | 'all') => {
+    setReplaceFolderId(folderId);
+    setReplacePage(1);
+    setReplaceTargetId(null);
+    if (replaceMaterial?.id) {
+      loadReplaceCandidates(replaceMaterial.id, { folderId, keyword: replaceKeyword, page: 1 });
+    }
+  };
+
+  const searchReplaceMaterials = (keyword = replaceKeyword) => {
+    setReplaceKeyword(keyword);
+    setReplacePage(1);
+    setReplaceTargetId(null);
+    if (replaceMaterial?.id) {
+      loadReplaceCandidates(replaceMaterial.id, { folderId: replaceFolderId, keyword, page: 1 });
+    }
+  };
+
+  const changeReplacePage = (page: number) => {
+    setReplacePage(page);
+    setReplaceTargetId(null);
+    if (replaceMaterial?.id) {
+      loadReplaceCandidates(replaceMaterial.id, { folderId: replaceFolderId, keyword: replaceKeyword, page });
+    }
+  };
+
+  const replaceMaterialReferences = async () => {
+    if (!replaceMaterial?.id || !replaceTargetId) return;
+    setSaving(true);
+    try {
+      const result = await onlineCourseApi.replaceMaterialReferences(replaceMaterial.id, replaceTargetId);
+      const count = Number(result?.replaced || 0);
+      message.success(count > 0 ? `已将 ${count} 处课程引用替换到新素材` : '当前素材已无课程引用');
+      setReplaceModalOpen(false);
+      setReplaceMaterial(null);
+      setReplaceTargetId(null);
+      await loadMaterials();
+    } catch (err) {
+      message.error(apiError(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const cancelMaterialReference = (record: any) => {
     if (!referenceMaterial?.id || !record.id) return;
     modal.confirm({
@@ -1801,7 +2200,7 @@ export default function OnlineCoursePage() {
       setEditingFolder(null);
       if (!editingFolder && created?.id) {
         setFolders(prev => prev.some(item => item.id === created.id) ? prev : [...prev, created]);
-        setSelectedFolderId(created.id);
+        changeMaterialFolder(created.id);
       }
       const folderPayload = await onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] }));
       setFolders(pickFolderRows(folderPayload));
@@ -1812,7 +2211,8 @@ export default function OnlineCoursePage() {
         sort_order: materialSortOrder,
         folder_id: selectedMaterialFolderParam,
         type: materialType,
-        keyword: materialKeyword.trim(),
+        is_referenced: materialReferenceFilter,
+        keyword: debouncedMaterialKeyword.trim(),
       }).catch(() => ({ data: [] }));
       setMaterials(pickArray(materialPayload));
       setMaterialTotalRows(Number((materialPayload as any)?.total || 0));
@@ -1827,7 +2227,7 @@ export default function OnlineCoursePage() {
     if (!currentMaterialFolder) return;
     confirmDelete(`确定删除文件夹「${folderLabel(currentMaterialFolder)}」吗？文件夹内存在素材或子文件夹时可能无法删除。`, async () => {
       await onlineCourseApi.deleteMaterialFolder(currentMaterialFolder.id);
-      setSelectedFolderId('all');
+      changeMaterialFolder('all');
     });
   };
 
@@ -1840,8 +2240,9 @@ export default function OnlineCoursePage() {
       onOk: async () => {
         try {
           await onOk();
+          if (activeTab === 'materials') await loadMaterials();
+          else load();
           message.success('已删除');
-          load();
         } catch (err) {
           message.error(apiError(err));
           throw err;
@@ -1906,7 +2307,7 @@ export default function OnlineCoursePage() {
                         value={folderKeyword}
                         onChange={event => setFolderKeyword(event.target.value)}
                       />
-                      <Button block type={selectedFolderId === 'all' ? 'primary' : 'default'} icon={<FolderOutlined />} onClick={() => setSelectedFolderId('all')}>
+                      <Button block type={selectedFolderId === 'all' ? 'primary' : 'default'} icon={<FolderOutlined />} onClick={() => changeMaterialFolder('all')}>
                         <span className="oc-folder-button-content">
                           <span className="oc-folder-button-label">全部素材</span>
                           <span className="oc-folder-button-count">{allMaterialCount}</span>
@@ -1914,7 +2315,7 @@ export default function OnlineCoursePage() {
                       </Button>
                       {filteredFolders.length ? (
                         filteredFolders.map(folder => (
-                          <Button key={folder.id} block type={selectedFolderId === folder.id ? 'primary' : 'default'} icon={<FolderOutlined />} onClick={() => setSelectedFolderId(folder.id)}>
+                          <Button key={folder.id} block type={selectedFolderId === folder.id ? 'primary' : 'default'} icon={<FolderOutlined />} onClick={() => changeMaterialFolder(folder.id)}>
                             <span className="oc-folder-button-content">
                               <span className="oc-folder-button-label">{folderLabel(folder)}</span>
                               <span className="oc-folder-button-count">{Number(folder.material_count || 0)}</span>
@@ -1947,12 +2348,12 @@ export default function OnlineCoursePage() {
                           options={[{ value: 'list', label: '列表' }, { value: 'grid', label: '卡片' }]}
                           optionType="button"
                         />
-                        <Input.Search className="oc-material-search" allowClear size="small" placeholder="搜索素材" value={materialKeyword} onChange={event => setMaterialKeyword(event.target.value)} style={{ width: 180 }} />
+                        <Input.Search className="oc-material-search" allowClear size="small" placeholder="搜索素材" value={materialKeyword} onChange={event => changeMaterialKeyword(event.target.value)} style={{ width: 180 }} />
                         <Select
                           className="oc-material-type-filter"
                           size="small"
                           value={materialType}
-                          onChange={setMaterialType}
+                          onChange={changeMaterialType}
                           style={{ width: 110 }}
                           options={[
                             { value: 'all', label: '全部类型' },
@@ -1977,26 +2378,30 @@ export default function OnlineCoursePage() {
                     }
                     styles={{ body: { padding: 0 } }}
                   >
-                    <div className="oc-material-storage" style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', background: '#fff' }}>
-                      <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                          <Text type="secondary">存储容量</Text>
-                          <Text type="secondary">
-                            已用 {fileSize(storageStats?.used_bytes || storageStats?.material_bytes || 0)}
-                          </Text>
-                        </Space>
-                      </Space>
-                    </div>
                     {materialViewMode === 'list' ? (
                       <Table<MaterialRow>
                         rowKey="id"
                         size="middle"
                         dataSource={filteredMaterials}
                         rowSelection={{ selectedRowKeys: selectedMaterialIds, onChange: keys => setSelectedMaterialIds(keys as number[]) }}
-                        pagination={{ current: materialPage, pageSize: materialPageSize, total: materialTotalRows, showSizeChanger: false, showTotal: total => `共 ${total} 条` }}
-                        onChange={(pagination, _filters, sorter: any) => {
-                          setMaterialPage(Number(pagination.current || 1));
-                          setMaterialPageSize(Number(pagination.pageSize || 20));
+                        pagination={{
+                          current: materialPage,
+                          pageSize: materialPageSize,
+                          pageSizeOptions: MATERIAL_PAGE_SIZE_OPTIONS,
+                          total: materialTotalRows,
+                          showSizeChanger: true,
+                          showTotal: total => `共 ${total} 条`,
+                          onShowSizeChange: (_current, pageSize) => {
+                            setMaterialPage(1);
+                            setMaterialPageSize(pageSize);
+                          },
+                        }}
+                        onChange={(pagination, filters, sorter: any, extra) => {
+                          setMaterialPage(extra.action === 'filter' ? 1 : Number(pagination.current || 1));
+                          setMaterialPageSize(Number(pagination.pageSize || MATERIAL_PAGE_SIZE_DEFAULT));
+                          const nextReferenceFilter = filters.is_referenced?.[0];
+                          setMaterialReferenceFilter(nextReferenceFilter === '1' || nextReferenceFilter === '0' ? nextReferenceFilter : undefined);
+                          setSelectedMaterialIds([]);
                           if (sorter?.field && sorter?.order) {
                             setMaterialSortBy(String(sorter.field));
                             setMaterialSortOrder(sorter.order === 'ascend' ? 'asc' : 'desc');
@@ -2006,7 +2411,7 @@ export default function OnlineCoursePage() {
                             setMaterialSortOrder('desc');
                           }
                         }}
-                        scroll={{ x: 1240, y: 820 }}
+                        scroll={{ x: 1240, y: 'calc(100dvh - 390px)' }}
                         locale={{ emptyText: <Empty description="当前文件夹暂无素材；可点击上传素材" /> }}
                         columns={[
                           {
@@ -2043,16 +2448,35 @@ export default function OnlineCoursePage() {
                           { title: sortTitle('文件夹', 'folder_id'), dataIndex: 'folder_id', width: 130, sorter: true, sortOrder: materialSortBy === 'folder_id' ? (materialSortOrder === 'asc' ? 'ascend' as const : 'descend' as const) : null, render: (_: any, record: MaterialRow) => record.folder_name || folders.find(folder => folder.id === record.folder_id)?.name || '-' },
                           { title: sortTitle('大小', 'file_size'), dataIndex: 'file_size', align: 'right' as const, width: 100, sorter: true, sortOrder: materialSortBy === 'file_size' ? (materialSortOrder === 'asc' ? 'ascend' as const : 'descend' as const) : null, render: fileSize },
                           { title: sortTitle('时长', 'duration'), dataIndex: 'duration', align: 'right' as const, width: 100, sorter: true, sortOrder: materialSortBy === 'duration' ? (materialSortOrder === 'asc' ? 'ascend' as const : 'descend' as const) : null, render: durationText },
-                          { title: sortTitle('引用', 'is_referenced'), dataIndex: 'is_referenced', width: 90, sorter: true, sortOrder: materialSortBy === 'is_referenced' ? (materialSortOrder === 'asc' ? 'ascend' as const : 'descend' as const) : null, render: (value: number, record: MaterialRow) => value ? <Button type="link" size="small" onClick={() => openMaterialReferences(record)}>是</Button> : <Text type="secondary">否</Text> },
+                          {
+                            title: '引用',
+                            dataIndex: 'is_referenced',
+                            width: 90,
+                            filters: [
+                              { text: '是', value: '1' },
+                              { text: '否', value: '0' },
+                            ],
+                            filterMultiple: false,
+                            filteredValue: materialReferenceFilter ? [materialReferenceFilter] : null,
+                            render: (value: number, record: MaterialRow) => value ? <Button type="link" size="small" onClick={() => openMaterialReferences(record)}>是</Button> : <Text type="secondary">否</Text>,
+                          },
                           { title: sortTitle('上传人', 'uploaded_by'), dataIndex: 'uploaded_by', width: 110, sorter: true, sortOrder: materialSortBy === 'uploaded_by' ? (materialSortOrder === 'asc' ? 'ascend' as const : 'descend' as const) : null, render: (_: any, record: MaterialRow) => record.uploaded_by_name || record.uploaded_by || '-' },
                           { title: sortTitle('上传时间', 'created_at'), dataIndex: 'created_at', width: 150, sorter: true, sortOrder: materialSortBy === 'created_at' ? (materialSortOrder === 'asc' ? 'ascend' as const : 'descend' as const) : null, render: (value: string) => value ? String(value).slice(0, 16) : '-' },
                           {
                             title: '操作',
                             fixed: 'right' as const,
-                            width: 120,
+                            width: 190,
                             render: (_: any, record: MaterialRow) => (
                               <Space size={4}>
                                 <Button size="small" icon={<EditOutlined />} title="编辑" aria-label="编辑" onClick={() => openMaterialModal(record)} />
+                                <Button
+                                  size="small"
+                                  icon={<SwapOutlined />}
+                                  title={record.type !== 'video' ? '仅支持视频素材' : !record.is_referenced ? '当前素材暂无引用' : '替换全部课程引用'}
+                                  aria-label="替换"
+                                  disabled={record.type !== 'video' || !record.is_referenced}
+                                  onClick={() => openReplaceMaterialModal(record)}
+                                >替换</Button>
                                 <Button size="small" danger icon={<DeleteOutlined />} title="删除" aria-label="删除" onClick={() => confirmDelete('确定删除此素材吗？已被课程引用的素材不能删除。', () => onlineCourseApi.deleteMaterial(record.id))} />
                               </Space>
                             ),
@@ -2099,6 +2523,7 @@ export default function OnlineCoursePage() {
                                   <Space size={4} style={{ display: 'flex', justifyContent: 'center', marginTop: 6 }}>
                                     <Button size="small" type="text" icon={<EyeOutlined />} title="引用" aria-label="引用" onClick={() => openMaterialReferences(item)} />
                                     <Button size="small" type="text" icon={<EditOutlined />} title="编辑" aria-label="编辑" onClick={() => openMaterialModal(item)} />
+                                    <Button size="small" type="text" icon={<SwapOutlined />} title="替换" aria-label="替换" disabled={item.type !== 'video' || !item.is_referenced} onClick={() => openReplaceMaterialModal(item)} />
                                     <Button size="small" type="text" danger icon={<DeleteOutlined />} title="删除" aria-label="删除" onClick={() => confirmDelete('确定删除此素材吗？已被课程引用的素材不能删除。', () => onlineCourseApi.deleteMaterial(item.id))} />
                                   </Space>
                                 </Card>
@@ -2112,10 +2537,14 @@ export default function OnlineCoursePage() {
                           <Pagination
                             current={materialPage}
                             pageSize={materialPageSize}
+                            pageSizeOptions={MATERIAL_PAGE_SIZE_OPTIONS}
                             total={materialTotalRows}
-                            showSizeChanger={false}
+                            showSizeChanger
                             showTotal={total => `共 ${total} 条`}
-                            onChange={page => setMaterialPage(page)}
+                            onChange={(page, pageSize) => {
+                              setMaterialPage(pageSize === materialPageSize ? page : 1);
+                              setMaterialPageSize(pageSize);
+                            }}
                           />
                         </div>
                       </div>
@@ -2156,7 +2585,7 @@ export default function OnlineCoursePage() {
                     rowKey="id"
                     size="middle"
                     dataSource={filteredSeries}
-                    scroll={{ x: 1380, y: 'calc(100dvh - 320px)' }}
+                    scroll={{ x: 1380, y: 'max(360px, calc(100dvh - 220px))' }}
                     pagination={{
                       current: seriesPage,
                       pageSize: seriesPageSize,
@@ -2221,7 +2650,7 @@ export default function OnlineCoursePage() {
                           );
                         },
                       },
-                      { title: '分类', dataIndex: 'category', width: 120, render: value => <Tag color="purple">{value || '未分类'}</Tag> },
+                      { title: '分类', dataIndex: 'category', width: 120, render: (value, record) => <Tag color="purple">{normalizeCourseCategory(value, `${record.name || ''} ${record.subtitle || ''} ${record.source_type || ''}`)}</Tag> },
                       { title: '授课老师', dataIndex: 'teacher', width: 110, render: value => value ? <Tag color="blue">{value}</Tag> : '-' },
                       { title: '课节', width: 80, align: 'right' as const, render: (_, record) => record.course_count ?? record.total_courses ?? 0 },
                       { title: '学员', dataIndex: 'total_students', align: 'right' as const, width: 80, render: value => Number(value || 0) },
@@ -2251,10 +2680,10 @@ export default function OnlineCoursePage() {
             key: 'auth',
             label: <span>{tabMeta.auth.icon} 学员授权 {totalAuthorizedCount}</span>,
             children: (
-              <Space direction="vertical" size={16} style={{ width: '100%' }}>
+              <Space className="oc-auth-panel" direction="vertical" size={16} style={{ width: '100%' }}>
                 <Card
                   className="oc-auth-card"
-                  title={currentAuthSeries ? `${currentAuthSeries.name} · 授权管理` : '全部课程 · 授权管理'}
+                  title={currentAuthSeries ? `${currentAuthSeries.name} · 授权管理` : '全部课程 · 授权操作记录'}
                   extra={
                     <Space className="oc-auth-toolbar" wrap>
                       <Select
@@ -2273,103 +2702,84 @@ export default function OnlineCoursePage() {
                           ...series.map(item => ({ value: item.id, label: item.name })),
                         ]}
                       />
-                      <Select
-                        size="small"
-                        value={authFilter}
-                        onChange={setAuthFilter}
-                        style={{ width: 120 }}
-	                        options={[
-	                          { value: 'all', label: '全部记录' },
-	                          { value: 'authorized', label: '已授权' },
-	                          { value: 'unauthorized', label: '仅访问未授权' },
-	                        ]}
-                      />
-                      <Input.Search allowClear size="small" placeholder="搜索姓名 / 手机号" value={authKeyword} onChange={event => setAuthKeyword(event.target.value)} style={{ width: 190 }} />
-                      <Button size="small" disabled={!selectedAuthIds.length || authSeriesId === 'all'} onClick={batchAuthorizeSelected}>批量授权</Button>
-                      <Button size="small" danger disabled={!selectedAuthIds.length || authSeriesId === 'all'} onClick={batchCancelAuthorization}>批量取消授权</Button>
-                      <Button type="primary" size="small" icon={<UserSwitchOutlined />} onClick={() => { authForm.resetFields(); authForm.setFieldsValue({ series_id: authSeriesId === 'all' ? undefined : authSeriesId }); setAuthModalOpen(true); }}>新增授权</Button>
-                      <Button type="primary" size="small" ghost icon={<UserSwitchOutlined />} onClick={() => { batchAuthForm.resetFields(); batchAuthForm.setFieldsValue({ series_ids: authSeriesId === 'all' ? [] : [authSeriesId] }); setBatchAuthModalOpen(true); }}>新增批量授权</Button>
+                      {!isMobile && (
+                        <Select
+                          size="small"
+                          value={authFilter}
+                          onChange={setAuthFilter}
+                          style={{ width: 120 }}
+                          options={[
+                            { value: 'all', label: '全部记录' },
+                            { value: 'authorized', label: '授权记录' },
+                            { value: 'unauthorized', label: '取消授权记录' },
+                          ]}
+                        />
+                      )}
+                      <Input.Search allowClear size="small" placeholder="搜索姓名/手机号/member_id/openid/unionid" value={authKeyword} onChange={event => setAuthKeyword(event.target.value)} style={{ width: 300 }} />
+                      <Button size="small" danger loading={saving} disabled={!filteredAuthorizedStudents.some(record => selectedAuthIds.map(String).includes(authorizationRowKey(record)) && canCancelAuthorization(record))} onClick={batchCancelAuthorization}>取消授权{selectedAuthIds.length ? `（${selectedAuthIds.length}）` : ''}</Button>
+                      <Button type="primary" size="small" icon={<UserSwitchOutlined />} onClick={openAuthorizationModal}>新增授权</Button>
+                      <Button type="primary" size="small" ghost icon={<UserSwitchOutlined />} onClick={openBatchAuthorizationModal}>新增批量授权</Button>
                     </Space>
                   }
                   styles={{ body: { padding: 0 } }}
                 >
+                  <style>{`@media (min-width: 768px) { .oc-auth-table .ant-table-tbody > tr > td { padding-top: 8px !important; padding-bottom: 8px !important; white-space: nowrap; } .oc-auth-table .ant-table-tbody .ant-btn { white-space: nowrap; } }`}</style>
                   <Table<any>
+                    className="oc-auth-table"
+                    rowSelection={{
+                      selectedRowKeys: selectedAuthIds,
+                      onChange: keys => setSelectedAuthIds(keys as Array<string | number>),
+                      getCheckboxProps: record => ({ disabled: saving || !canCancelAuthorization(record) }),
+                    }}
+                    adaptiveBottomGap={8}
                     rowKey={(record) => String(record.auth_row_key || `${record.series_id || authSeriesId}:${record.id || record.phone}`)}
-                    size="middle"
+                    size="small"
                     dataSource={filteredAuthorizedStudents}
-                    rowSelection={{ selectedRowKeys: selectedAuthIds, onChange: keys => setSelectedAuthIds(keys as Array<string | number>) }}
-                    scroll={{ x: 860 }}
-                    pagination={{ pageSize: 20 }}
+                    tableLayout={isMobile ? 'fixed' : 'auto'}
+                    scroll={isMobile ? { x: 600, y: 'calc(100dvh - 258px)' } : { x: 1370, y: 'calc(100dvh - 178px)' }}
+                    pagination={{ defaultPageSize: 50, showSizeChanger: true, pageSizeOptions: [20, 50, 100], showTotal: total => `共 ${total} 条` }}
                     locale={{ emptyText: <Empty description="暂无授权学员；可用右上角新增授权" /> }}
-                    columns={[
-                      { title: '学员', dataIndex: 'name', fixed: 'left', width: 130, render: value => <Text strong>{value || '-'}</Text> },
+                    columns={(isMobile ? [
+                      { title: '学员', dataIndex: 'name', width: 130, ellipsis: true, render: (value: any, record: any) => renderAuthMemberLink(record, value || '-', { strong: true }) },
+                      {
+                        title: '课程',
+                        width: 220,
+                        ellipsis: true,
+                        render: (_: unknown, record: any) => {
+                          const courseName = record.series_name || currentAuthSeries?.name || '-';
+                          return <Text ellipsis title={courseName} style={{ display: 'block' }}>{courseName}</Text>;
+                        },
+                      },
+                      { title: '实收金额', dataIndex: 'actual_amount', width: 120, align: 'right' as const, render: (value: unknown) => value !== null && value !== undefined && Number.isFinite(Number(value)) ? `¥${Number(value).toFixed(2)}` : '—' },
+                      { title: '操作记录', dataIndex: 'action_label', width: 150, render: (value: string) => value || '—' },
+                    ] : [
+                      { title: '学员', dataIndex: 'name', fixed: 'left', width: 130, render: (value, record) => renderAuthMemberLink(record, value || '-', { strong: true }) },
                       {
                         title: '手机号',
                         dataIndex: 'phone',
                         width: 140,
-                        render: (value, record) => (
-                          <Button
-                            type="link"
-                            size="small"
-                            onClick={() => openAuthMemberModal(record)}
-                            style={{ padding: 0, height: 'auto' }}
-                          >
-                            {value || '-'}
-                          </Button>
-                        ),
+                        render: (value, record) => renderAuthMemberLink(record, value || '-'),
                       },
                       { title: '授权课程', width: 220, render: (_, record) => record.series_name || currentAuthSeries?.name || '-' },
-                      { title: '访问来源', width: 150, render: (_, record) => accessSourceText(record) },
-                      { title: '授权人', width: 120, render: (_, record) => authActionUser(record) },
-                      { title: '授权时间', width: 160, render: (_, record) => authActionTime(record) ? String(authActionTime(record)).slice(0, 16) : '-' },
+                      { title: '课程顾问', dataIndex: 'sales', width: 120, render: value => String(value || '').trim() || '—' },
+                      { title: '实收金额', dataIndex: 'actual_amount', width: 120, align: 'right' as const, render: (value: unknown) => value !== null && value !== undefined && Number.isFinite(Number(value)) ? `¥${Number(value).toFixed(2)}` : '—' },
+                      { title: '提成金额', dataIndex: 'commission_amount', width: 120, align: 'right', render: value => value !== null && value !== undefined && Number.isFinite(Number(value)) ? `¥${Number(value).toFixed(2)}` : '—' },
+                      { title: '操作人', width: 120, render: (_, record) => authActionUser(record) },
+                      { title: '操作时间', width: 160, render: (_, record) => authActionTime(record) ? String(authActionTime(record)).slice(0, 16) : '-' },
                       {
-                        title: '操作',
-                        dataIndex: 'authorized',
+                        title: '订单凭证',
                         width: 120,
-                        render: (value, record) => {
-                          const rowKey = authorizationRowKey(record);
-                          return (
-                            <Switch
-                              checked={Boolean(value)}
-                              checkedChildren="已授权"
-                              unCheckedChildren="未授权"
-                              loading={authToggleLoadingKey === rowKey}
-                              disabled={Boolean(authToggleLoadingKey) && authToggleLoadingKey !== rowKey}
-                              onChange={checked => toggleAuthorization(record, checked)}
-                            />
-                          );
+                        render: (_, record) => {
+                          const vouchers = authorizationVouchers(record.order_vouchers);
+                          return vouchers.length ? (
+                            <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => viewAuthorizationVouchers(record)}>
+                              查看 {vouchers.length} 张
+                            </Button>
+                          ) : <Text type="secondary">无凭证</Text>;
                         },
                       },
-                    ]}
-                  />
-                </Card>
-                <Card title={`授权订单 ${orderTotalRows}`} styles={{ body: { padding: 0 } }}>
-                  <Table<any>
-                    rowKey={(record) => String(record.id || record.orderNo || record.order_no)}
-                    size="middle"
-                    dataSource={orders}
-                    scroll={{ x: 1080 }}
-                    pagination={{
-                      current: orderPage,
-                      pageSize: orderPageSize,
-                      total: orderTotalRows,
-                      showSizeChanger: true,
-                      onChange: (page, pageSize) => {
-                        setOrderPage(pageSize === orderPageSize ? page : 1);
-                        setOrderPageSize(pageSize);
-                      },
-                    }}
-                    locale={{ emptyText: <Empty description="暂无网课授权订单" /> }}
-                    columns={[
-                      { title: '订单号', width: 160, render: (_, record) => record.order_no || record.orderNo || '-' },
-                      { title: '学员', width: 120, render: (_, record) => record.member_name || record.memberName || '-' },
-                      { title: '手机号', width: 130, render: (_, record) => record.member_phone || record.memberPhone || '-' },
-                      { title: '课程', width: 240, className: 'course-name-column', render: (_, record) => record.series_name || record.title || '-' },
-                      { title: '金额', dataIndex: 'amount', align: 'right' as const, width: 120, render: money },
-                      { title: '支付方式', width: 100, render: (_, record) => record.pay_method || record.payMethod || '-' },
-                      { title: '状态', dataIndex: 'status', width: 100, render: statusTag },
-                      { title: '日期', width: 140, render: (_, record) => String(record.paid_at || record.orderDate || record.created_at || '-').slice(0, 16) },
-                    ]}
+                      { title: '操作记录', dataIndex: 'action_label', width: 150, render: (value: string) => value || '—' },
+                    ])}
                   />
                 </Card>
               </Space>
@@ -2526,6 +2936,7 @@ export default function OnlineCoursePage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 10 }}>
               <Form.Item name="teacher" label="授课老师" style={{ marginBottom: 10 }}><Input /></Form.Item>
               <Form.Item name="status" label="状态" style={{ marginBottom: 10 }}><Select options={[{ value: 'published', label: '已上架' }, { value: 'draft', label: '草稿' }, { value: 'offline', label: '已下架' }]} /></Form.Item>
+              <Form.Item name="category" label="分类" style={{ marginBottom: 10 }} rules={[{ required: true, message: '请选择分类' }]}><Select options={COURSE_CATEGORY_OPTIONS} /></Form.Item>
               <Form.Item name="price" label="原价" style={{ marginBottom: 10 }}><InputNumber min={0} style={{ width: '100%' }} /></Form.Item>
               <Form.Item name="promo_price" label="优惠价" style={{ marginBottom: 10 }}><InputNumber min={0} style={{ width: '100%' }} /></Form.Item>
             </div>
@@ -2656,12 +3067,12 @@ export default function OnlineCoursePage() {
                   const progress = uploadProgress[file.uid];
                   const statusText = progress?.status === 'preparing' ? '准备上传'
                     : progress?.status === 'uploading' ? `${progress.percent}%`
-                    : progress?.status === 'processing' ? '云端上传'
+                    : progress?.status === 'processing' ? '上传至 VOD'
                     : progress?.status === 'done' ? '完成'
                     : progress?.status === 'error' ? progress.message || '失败'
                     : progress?.status === 'cancelled' ? '已停止'
                     : '';
-                  const rowUploading = progress && ['preparing', 'uploading'].includes(progress.status);
+                  const rowUploading = progress && ['preparing', 'uploading', 'processing'].includes(progress.status);
                   return (
                     <div key={file.uid} className="oc-upload-file-row">
                       <Text ellipsis className="oc-upload-file-name">{file.name}</Text>
@@ -2707,6 +3118,9 @@ export default function OnlineCoursePage() {
           <Select
             value={moveFolderId}
             onChange={setMoveFolderId}
+            showSearch
+            allowClear
+            optionFilterProp="label"
             placeholder="选择目标文件夹"
             style={{ width: '100%' }}
             options={folders.filter(item => item.id !== selectedFolderId).map(item => ({ value: item.id, label: folderLabel(item) }))}
@@ -2743,6 +3157,142 @@ export default function OnlineCoursePage() {
         </Space>
       </Modal>
 
+      <Modal
+        title="替换素材引用"
+        open={replaceModalOpen}
+        onCancel={() => { if (!saving) setReplaceModalOpen(false); }}
+        onOk={replaceMaterialReferences}
+        okText="确认替换"
+        cancelText="取消"
+        confirmLoading={saving}
+        okButtonProps={{ disabled: !replaceTargetId }}
+        width={1280}
+        destroyOnClose
+      >
+        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+          <Alert
+            type="warning"
+            showIcon
+            message={`将当前素材的全部 ${replaceReferenceCount} 处课程引用转移到新素材`}
+            description="替换后，当前素材的引用将变为空白；课程的名称、排序、试看等设置保持不变。"
+          />
+          <Descriptions size="small" column={1} bordered>
+            <Descriptions.Item label="当前素材">{replaceMaterial?.name || '-'}</Descriptions.Item>
+          </Descriptions>
+          <Row gutter={12} align="stretch">
+            <Col xs={24} lg={5}>
+              <Card size="small" title="素材文件夹" style={{ height: '100%' }} bodyStyle={{ padding: 8 }}>
+                <Space direction="vertical" size={4} style={{ width: '100%', maxHeight: 470, overflowY: 'auto' }}>
+                  <Button
+                    type={replaceFolderId === 'all' ? 'primary' : 'text'}
+                    icon={<FolderOutlined />}
+                    block
+                    onClick={() => changeReplaceFolder('all')}
+                    style={{ display: 'flex', alignItems: 'center', textAlign: 'left' }}
+                  >
+                    <span style={{ flex: 1 }}>全部素材</span>
+                    <span style={{ opacity: 0.65 }}>{Number(storageStats?.material_count || 0)}</span>
+                  </Button>
+                  {mergedFolders.map(folder => (
+                    <Button
+                      key={folder.id}
+                      type={Number(replaceFolderId) === Number(folder.id) ? 'primary' : 'text'}
+                      icon={<FolderOutlined />}
+                      block
+                      onClick={() => changeReplaceFolder(folder.id)}
+                      style={{ display: 'flex', alignItems: 'center', textAlign: 'left' }}
+                    >
+                      <Tooltip title={folderLabel(folder)} placement="right">
+                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {folderLabel(folder)}
+                        </span>
+                      </Tooltip>
+                      <span style={{ opacity: 0.65 }}>{Number(folder.material_count || 0)}</span>
+                    </Button>
+                  ))}
+                </Space>
+              </Card>
+            </Col>
+            <Col xs={24} lg={12}>
+              <Card size="small" title="视频素材" style={{ height: '100%' }} bodyStyle={{ padding: 12 }}>
+                <Input.Search
+                  value={replaceKeyword}
+                  onChange={event => setReplaceKeyword(event.target.value)}
+                  onSearch={searchReplaceMaterials}
+                  allowClear
+                  enterButton="搜索"
+                  placeholder="输入素材名称搜索"
+                  style={{ marginBottom: 12 }}
+                />
+                <Table
+                  rowKey="id"
+                  size="small"
+                  loading={replaceCandidatesLoading}
+                  dataSource={replaceCandidates}
+                  rowSelection={{
+                    type: 'radio',
+                    selectedRowKeys: replaceTargetId ? [replaceTargetId] : [],
+                    onChange: keys => setReplaceTargetId(Number(keys[0]) || null),
+                  }}
+                  onRow={record => ({
+                    onClick: () => setReplaceTargetId(record.id),
+                    style: { cursor: 'pointer' },
+                  })}
+                  pagination={{
+                    current: replacePage,
+                    pageSize: REPLACE_MATERIAL_PAGE_SIZE,
+                    total: replaceTotal,
+                    showSizeChanger: false,
+                    showTotal: total => `共 ${total} 个视频`,
+                    onChange: changeReplacePage,
+                  }}
+                  locale={{ emptyText: <Empty description="当前文件夹没有可用的视频素材" /> }}
+                  columns={[
+                    {
+                      title: '素材',
+                      dataIndex: 'name',
+                      render: (value: string, record: MaterialRow) => (
+                        <Space size={8} style={{ maxWidth: '100%' }}>
+                          {materialPreview(record, 38)}
+                          <Text ellipsis={{ tooltip: value }} style={{ maxWidth: 250 }}>{value}</Text>
+                        </Space>
+                      ),
+                    },
+                    { title: '时长', dataIndex: 'duration', width: 82, align: 'right' as const, render: durationText },
+                    { title: '大小', dataIndex: 'file_size', width: 88, align: 'right' as const, render: fileSize },
+                  ]}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} lg={7}>
+              <Card size="small" title="素材详情" style={{ height: '100%' }} bodyStyle={{ padding: 12 }}>
+                {replaceTargetMaterial ? (
+                  <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                    <div style={{ width: '100%', aspectRatio: '16 / 9', overflow: 'hidden', borderRadius: 8 }}>
+                      {materialCover(replaceTargetMaterial)}
+                    </div>
+                    <Text strong style={{ fontSize: 15 }}>{replaceTargetMaterial.name}</Text>
+                    <Descriptions size="small" column={1} bordered>
+                      <Descriptions.Item label="文件夹">{replaceTargetMaterial.folder_name || '-'}</Descriptions.Item>
+                      <Descriptions.Item label="大小">{fileSize(replaceTargetMaterial.file_size)}</Descriptions.Item>
+                      <Descriptions.Item label="时长">{durationText(replaceTargetMaterial.duration)}</Descriptions.Item>
+                      <Descriptions.Item label="上传人">{replaceTargetMaterial.uploaded_by_name || replaceTargetMaterial.uploaded_by || '-'}</Descriptions.Item>
+                      <Descriptions.Item label="上传时间">
+                        {replaceTargetMaterial.created_at ? String(replaceTargetMaterial.created_at).slice(0, 16) : '-'}
+                      </Descriptions.Item>
+                    </Descriptions>
+                  </Space>
+                ) : (
+                  <div style={{ minHeight: 330, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Empty description="选择一个视频查看详情" />
+                  </div>
+                )}
+              </Card>
+            </Col>
+          </Row>
+        </Space>
+      </Modal>
+
       <Modal title={editingFolder ? '编辑文件夹' : '新建文件夹'} open={folderModalOpen} onCancel={() => { setFolderModalOpen(false); setEditingFolder(null); folderForm.resetFields(); }} onOk={() => folderForm.submit()} confirmLoading={saving} destroyOnClose forceRender>
         <Form form={folderForm} layout="vertical" initialValues={{ name: '', parent_id: 0 }} onFinish={saveFolder}>
           <Form.Item
@@ -2763,7 +3313,7 @@ export default function OnlineCoursePage() {
           >
             <Input />
           </Form.Item>
-          <Form.Item name="parent_id" label="父级文件夹"><Select options={[{ value: 0, label: '根目录' }, ...folders.filter(item => {
+          <Form.Item name="parent_id" label="父级文件夹"><Select showSearch optionFilterProp="label" options={[{ value: 0, label: '根目录' }, ...folders.filter(item => {
             if (!editingFolder) return true;
             const blockedIds = folderDescendantIds(folders, Number(editingFolder.id));
             blockedIds.add(Number(editingFolder.id));
@@ -2772,21 +3322,41 @@ export default function OnlineCoursePage() {
         </Form>
       </Modal>
 
-      <Modal title="新增学员授权" open={authModalOpen} onCancel={() => setAuthModalOpen(false)} onOk={saveAuthorization} confirmLoading={saving} width={720} destroyOnClose>
-        <Form form={authForm} layout="vertical">
+      <Modal title="新增学员授权" open={authModalOpen} onCancel={() => { setAuthModalOpen(false); setAuthVoucherFiles([]); }} onOk={saveAuthorization} confirmLoading={saving} width={720} destroyOnClose>
+        <Form form={authForm} layout="vertical" onValuesChange={(changed, values) => {
+          const paid = Number(values.actual_amount || 0);
+          if ('commission_amount' in changed) {
+            authForm.setFieldsValue({ commission_rate: paid > 0 ? Math.round(Number(values.commission_amount || 0) / paid * 10000) / 100 : 0 });
+          } else if ('commission_rate' in changed) {
+            authForm.setFieldsValue({ commission_amount: Math.round(paid * Number(values.commission_rate || 0)) / 100 });
+          }
+        }}>
           <Row gutter={12}>
-            <Col xs={24} md={12}><Form.Item name="series_id" label="授权课程" rules={[{ required: true }]}><Select options={series.map(item => ({ value: item.id, label: item.name }))} /></Form.Item></Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="series_id" label="授权课程" rules={[{ required: true }]}>
+                <Select
+                  onChange={id => {
+                    const course = series.find(item => item.id === id);
+                    authForm.setFieldsValue({ actual_amount: Number(course?.promo_price ?? course?.price ?? 0) });
+                  }}
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="输入课程名称搜索"
+                  options={series.map(item => ({ value: item.id, label: item.name }))}
+                />
+              </Form.Item>
+            </Col>
             <Col xs={24} md={12}>
               <Form.Item name="member_lookup_id" hidden><Input /></Form.Item>
               <Form.Item
                 name="member_lookup"
-                label="选择学员 / 输入手机号"
+                label="选择学员 / 输入手机号 / member_id / 微信ID"
                 rules={[
-                  { required: true, message: '请选择学员，或输入手机号' },
+                  { required: true, message: '请选择学员，或输入手机号/member_id/微信ID' },
                   {
                     validator: (_, value) => {
-                      const subject = resolveAuthSubject(value);
-                      return subject.memberId || subject.phone ? Promise.resolve() : Promise.reject(new Error('请选择学员，或输入有效手机号'));
+                      const subject = resolveAuthSubject(value, authForm.getFieldValue('member_lookup_id'));
+                      return subject.memberId || subject.phone ? Promise.resolve() : Promise.reject(new Error('请选择学员，或输入有效手机号/member_id/微信ID'));
                     },
                   },
                 ]}
@@ -2794,14 +3364,25 @@ export default function OnlineCoursePage() {
                 <AutoComplete
                   allowClear
                   options={memberAuthOptions}
-                  filterOption={(inputValue, option) => String((option as any)?.searchText || (option as any)?.label || '').toLowerCase().includes(inputValue.toLowerCase())}
+                  filterOption={(inputValue, option) => String((option as any)?.searchText || '').includes(normalizeAuthSearch(inputValue))}
                   onSelect={(_, option) => authForm.setFieldsValue({ member_lookup_id: (option as any).memberId || '' })}
                   onChange={(value) => {
-                    const matched = memberAuthOptions.find(option => option.value === value);
+                    const normalizedValue = normalizeAuthSearch(value);
+                    const matched = memberAuthOptions.find(option => normalizeAuthSearch(option.value) === normalizedValue);
                     authForm.setFieldsValue({ member_lookup_id: matched?.memberId || '' });
                   }}
-                  placeholder="搜索姓名/手机号；搜不到可直接输入手机号"
+                  placeholder="搜索姓名/手机号/member_id/openid/unionid；搜不到可直接输入手机号"
                 />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}><Form.Item name="actual_amount" label="实收金额" extra="默认使用课程优惠价，可按实际收款修改。" rules={[{ required: true, message: '请输入实收金额' }]}><InputNumber min={0} max={999999999} precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={24} md={12}><Form.Item name="sales" label="课程顾问" rules={[{ required: true, whitespace: true, message: '请选择或输入课程顾问' }]}><AutoComplete allowClear options={buildCourseAdvisorOptions()} filterOption={filterCourseAdvisorOption} placeholder="选择或输入课程顾问" /></Form.Item></Col>
+            <Col xs={12} md={12}><Form.Item name="commission_rate" label="提成比例" rules={[{ required: true, message: '请输入提成比例' }]}><InputNumber min={0} max={100} precision={2} suffix="%" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={12} md={12}><Form.Item name="commission_amount" label="提成金额" rules={[{ required: true, message: '请输入提成金额' }]}><InputNumber min={0} max={Number(authActualAmount || 0)} precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col span={24}><Typography.Text type="secondary">提成比例与金额可互相换算；调整实收金额时按当前比例重算。保存后合并至 <a href="/bonus-commission" target="_blank" rel="noreferrer">奖金提成</a> 统计。</Typography.Text></Col>
+            <Col span={24}>
+              <Form.Item label="订单凭证" required extra="支持多张图片，单张不超过 12MB；授权时必须上传。">
+                <AuthorizationVoucherUpload fileList={authVoucherFiles} onChange={setAuthVoucherFiles} disabled={saving} />
               </Form.Item>
             </Col>
             <Col span={24}><Form.Item name="remark" label="授权备注"><Input.TextArea rows={3} /></Form.Item></Col>
@@ -2812,7 +3393,7 @@ export default function OnlineCoursePage() {
       <Modal
         title="新增批量授权"
         open={batchAuthModalOpen}
-        onCancel={() => setBatchAuthModalOpen(false)}
+        onCancel={() => { setBatchAuthModalOpen(false); setBatchAuthVoucherFiles([]); }}
         onOk={saveBatchCourseAuthorization}
         confirmLoading={saving}
         width={760}
@@ -2824,13 +3405,13 @@ export default function OnlineCoursePage() {
               <Form.Item name="member_lookup_id" hidden><Input /></Form.Item>
               <Form.Item
                 name="member_lookup"
-                label="选择学员 / 输入手机号"
+                label="选择学员 / 输入手机号 / member_id / 微信ID"
                 rules={[
-                  { required: true, message: '请选择学员，或输入手机号' },
+                  { required: true, message: '请选择学员，或输入手机号/member_id/微信ID' },
                   {
                     validator: (_, value) => {
-                      const subject = resolveAuthSubject(value);
-                      return subject.memberId || subject.phone ? Promise.resolve() : Promise.reject(new Error('请选择学员，或输入有效手机号'));
+                      const subject = resolveAuthSubject(value, batchAuthForm.getFieldValue('member_lookup_id'));
+                      return subject.memberId || subject.phone ? Promise.resolve() : Promise.reject(new Error('请选择学员，或输入有效手机号/member_id/微信ID'));
                     },
                   },
                 ]}
@@ -2838,14 +3419,20 @@ export default function OnlineCoursePage() {
                 <AutoComplete
                   allowClear
                   options={memberAuthOptions}
-                  filterOption={(inputValue, option) => String((option as any)?.searchText || (option as any)?.label || '').toLowerCase().includes(inputValue.toLowerCase())}
+                  filterOption={(inputValue, option) => String((option as any)?.searchText || '').includes(normalizeAuthSearch(inputValue))}
                   onSelect={(_, option) => batchAuthForm.setFieldsValue({ member_lookup_id: (option as any).memberId || '' })}
                   onChange={(value) => {
-                    const matched = memberAuthOptions.find(option => option.value === value);
+                    const normalizedValue = normalizeAuthSearch(value);
+                    const matched = memberAuthOptions.find(option => normalizeAuthSearch(option.value) === normalizedValue);
                     batchAuthForm.setFieldsValue({ member_lookup_id: matched?.memberId || '' });
                   }}
-                  placeholder="搜索姓名/手机号；搜不到可直接输入手机号"
+                  placeholder="搜索姓名/手机号/member_id/openid/unionid；搜不到可直接输入手机号"
                 />
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item label="订单凭证" required extra="这组凭证将统一关联到本次所选全部课程。支持多张图片，单张不超过 12MB。">
+                <AuthorizationVoucherUpload fileList={batchAuthVoucherFiles} onChange={setBatchAuthVoucherFiles} disabled={saving} />
               </Form.Item>
             </Col>
             <Col span={24}>
@@ -2858,15 +3445,64 @@ export default function OnlineCoursePage() {
                   placeholder="可搜索并选择多个课程"
                   maxTagCount="responsive"
                   options={series.map(item => ({ value: item.id, label: item.name }))}
+
                 />
               </Form.Item>
             </Col>
+            <Col xs={24} md={12}><Form.Item name="actual_amount" label="实收金额" extra={<Typography.Text style={{ color: '#cf1322', fontWeight: 600 }}>此批量课程为免费赠送课程，提成为0。</Typography.Text>} rules={[{ required: true, message: '请输入实收金额' }]}><InputNumber disabled min={0} max={0} precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={24} md={12}><Form.Item name="sales" label="课程顾问" rules={[{ required: true, whitespace: true, message: '请选择或输入课程顾问' }]}><AutoComplete allowClear options={buildCourseAdvisorOptions()} filterOption={filterCourseAdvisorOption} placeholder="选择或输入课程顾问" /></Form.Item></Col>
+            <Col xs={12}><Form.Item name="commission_rate" label="提成比例" rules={[{ required: true, message: '请输入提成比例' }]}><InputNumber disabled min={0} max={0} precision={2} suffix="%" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={12}><Form.Item name="commission_amount" label="提成金额" required><InputNumber disabled precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
             <Col span={24}>
               <Form.Item name="remark" label="授权备注">
                 <Input.TextArea rows={3} placeholder="可填写本次批量授权说明" />
               </Form.Item>
             </Col>
           </Row>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="确认授权并上传订单凭证"
+        open={Boolean(quickAuthRecord)}
+        onCancel={() => { setQuickAuthRecord(null); setQuickAuthVoucherFiles([]); }}
+        onOk={confirmQuickAuthorization}
+        confirmLoading={saving}
+        okText="确认授权"
+        destroyOnClose
+      >
+        <Alert
+          type="info"
+          showIcon
+          message={`${quickAuthRecord?.name || quickAuthRecord?.phone || '该学员'} 将获得「${quickAuthRecord?.series_name || currentAuthSeries?.name || '当前课程'}」访问权限`}
+          style={{ marginBottom: 16 }}
+        />
+        <Form layout="vertical">
+          <Form.Item label="订单凭证" required extra="支持多张图片，单张不超过 12MB。">
+            <AuthorizationVoucherUpload fileList={quickAuthVoucherFiles} onChange={setQuickAuthVoucherFiles} disabled={saving} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={`批量授权 ${selectedAuthIds.length} 位学员`}
+        open={selectedBatchAuthOpen}
+        onCancel={() => { setSelectedBatchAuthOpen(false); setSelectedBatchVoucherFiles([]); }}
+        onOk={confirmBatchAuthorizeSelected}
+        confirmLoading={saving}
+        okText="确认批量授权"
+        destroyOnClose
+      >
+        <Alert
+          type="info"
+          showIcon
+          message="本次批量授权将统一使用下面同一套订单凭证。"
+          style={{ marginBottom: 16 }}
+        />
+        <Form layout="vertical">
+          <Form.Item label="订单凭证" required extra="支持多张图片，单张不超过 12MB。">
+            <AuthorizationVoucherUpload fileList={selectedBatchVoucherFiles} onChange={setSelectedBatchVoucherFiles} disabled={saving} />
+          </Form.Item>
         </Form>
       </Modal>
 
@@ -2915,15 +3551,7 @@ export default function OnlineCoursePage() {
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="level" label="等级">
-                <Select
-                  options={[
-                    { value: '普通学员', label: '普通学员' },
-                    { value: '体验学员', label: '体验学员' },
-                    { value: 'VIP学员', label: 'VIP学员' },
-                  ]}
-                />
-              </Form.Item>
+              <Form.Item label="等级（系统自动）"><Input value={authEditingMember?.level || '初舞学员 Lv.1'} disabled /></Form.Item>
             </Col>
             <Col xs={24} md={12}>
               <Form.Item name="country" label="国家/地区">
@@ -3103,7 +3731,9 @@ export default function OnlineCoursePage() {
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
           <Descriptions column={2} bordered size="small">
             <Descriptions.Item label="学员">{authDetailRecord?.name || '-'}</Descriptions.Item>
+            <Descriptions.Item label="member_id">{authDetailRecord?.member_id || authDetailRecord?.id || '-'}</Descriptions.Item>
             <Descriptions.Item label="手机号">{authDetailRecord?.phone || '-'}</Descriptions.Item>
+            <Descriptions.Item label="微信 UnionID">{authDetailRecord?.wx_unionid || '-'}</Descriptions.Item>
             <Descriptions.Item label="课程">{authDetailRecord?.series_name || currentSeries?.name || '-'}</Descriptions.Item>
             <Descriptions.Item label="状态">{authDetailRecord?.authorized ? '已授权' : (authDetailRecord?.authorization_status === 'revoked' ? '已取消' : '未授权')}</Descriptions.Item>
             <Descriptions.Item label="访问来源">{accessSourceText(authDetailRecord)}</Descriptions.Item>
@@ -3113,6 +3743,13 @@ export default function OnlineCoursePage() {
             <Descriptions.Item label="撤销时间">{authDetailRecord?.revoked_at ? String(authDetailRecord.revoked_at).slice(0, 16) : '-'}</Descriptions.Item>
             <Descriptions.Item label="授权次数">{authDetailRecord?.grant_history?.grant_count || 0}</Descriptions.Item>
             <Descriptions.Item label="撤销次数">{authDetailRecord?.grant_history?.revoke_count || 0}</Descriptions.Item>
+            <Descriptions.Item label="订单凭证" span={2}>
+              {authorizationVouchers(authDetailRecord?.order_vouchers).length ? (
+                <Button type="link" size="small" onClick={() => viewAuthorizationVouchers(authDetailRecord)}>
+                  查看 {authorizationVouchers(authDetailRecord?.order_vouchers).length} 张凭证
+                </Button>
+              ) : '无凭证'}
+            </Descriptions.Item>
           </Descriptions>
         </Space>
       </Modal>

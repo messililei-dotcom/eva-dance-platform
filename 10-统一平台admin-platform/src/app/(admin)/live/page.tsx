@@ -69,7 +69,7 @@ export default function LivePage() {
           value={searchText} onChange={e => setSearchText(e.target.value)} allowClear />
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>新建直播</Button>
       </Space>}>
-        <Table columns={columns} dataSource={filtered} size="middle" pagination={false} scroll={{ x: 'max-content' }} />
+        <Table columns={columns} dataSource={filtered} size="middle" pagination={false} scroll={{ x: 'max-content', y: 'calc(100dvh - 390px)' }} />
       </Card>
 
       <Modal title="新建直播" open={modalVisible} onCancel={() => setModalVisible(false)} footer={null} width={550}>

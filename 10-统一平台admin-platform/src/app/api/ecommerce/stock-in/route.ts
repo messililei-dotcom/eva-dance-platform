@@ -24,6 +24,8 @@ export async function POST(request: Request) {
 
   const db = openCommerceDb();
   try {
+    return db.transaction(() => {
+      db.prepare('UPDATE shop_products SET stock=stock WHERE id=?').run('');
     const now = new Date().toISOString();
     const hasColor = body.color !== undefined && body.color !== null && String(body.color).trim() !== '';
     const hasSize = body.size !== undefined && body.size !== null && String(body.size).trim() !== '';
@@ -94,6 +96,7 @@ export async function POST(request: Request) {
     );
 
     return Response.json({ success: true });
+    })();
   } finally {
     db.close();
   }

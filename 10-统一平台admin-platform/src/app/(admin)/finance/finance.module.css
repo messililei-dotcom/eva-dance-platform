@@ -1,0 +1,155 @@
+.page :global(.finance-overview-card) {
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.page :global(.finance-period-grid) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.page :global(.finance-period-card) {
+  min-width: 0;
+  padding: 24px;
+}
+
+.page :global(.finance-period-card + .finance-period-card) {
+  border-left: 1px solid #edf0f5;
+}
+
+.page :global(.finance-period-card-head) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.page :global(.finance-period-card-head .ant-tag) {
+  margin: 0;
+}
+
+.page :global(.finance-period-stats) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.page :global(.finance-period-stat) {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.page :global(.finance-period-stat > span) {
+  color: #737b8c;
+  font-size: 13px;
+}
+
+.page :global(.finance-period-stat > strong) {
+  font-size: clamp(16px, 1.4vw, 24px);
+  font-weight: 600;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.page :global(.finance-period-stat > em) {
+  color: #737b8c;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.page :global(.finance-period-stat-income > strong) {
+  color: #15803d;
+}
+
+.page :global(.finance-period-stat-expense > strong) {
+  color: #c2410c;
+}
+
+.page :global(.finance-period-stat-net > strong) {
+  color: #121a3a;
+}
+
+.page :global(.finance-income-subject) {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page :global(.finance-income-subject > .ant-typography) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page :global(.finance-income-subject > .ant-typography-secondary) {
+  font-size: 12px;
+}
+
+.page :global(.finance-clickable-table .ant-table-tbody > tr) {
+  cursor: pointer;
+}
+
+@media (max-width: 1199px) {
+  .page :global(.finance-period-card) {
+    padding: 18px 16px;
+  }
+
+  .page :global(.finance-period-stats) {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 1199px) {
+  .page :global(.finance-period-grid) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page :global(.finance-period-card + .finance-period-card) {
+    border-left: 0;
+    border-top: 1px solid #edf0f5;
+  }
+
+  .page :global(.finance-period-card-head) {
+    margin-bottom: 12px;
+  }
+
+  .page :global(.finance-period-stat > strong) {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page :global(.finance-period-stat > strong) {
+    font-size: clamp(14px, 4vw, 20px);
+  }
+
+  .page:global(.finance-admin-page) {
+    height: auto;
+    min-height: 0;
+  }
+
+  .page :global(.finance-record-tabs.ant-tabs) {
+    height: auto;
+    min-height: 0;
+  }
+
+  .page :global(.finance-record-tabs > .ant-tabs-nav) {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .page :global(.finance-record-tabs > .ant-tabs-nav > .ant-tabs-extra-content) {
+    width: 100%;
+  }
+
+  .page :global(.finance-record-tabs .ant-tabs-extra-content .ant-input-search) {
+    width: 100% !important;
+  }
+}

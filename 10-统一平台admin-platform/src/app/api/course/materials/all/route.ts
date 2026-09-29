@@ -1,5 +1,6 @@
 import { jsonError, withDb } from '../../_materials';
 import { hasAuth, unauthorized } from '../../../training-db';
+import { importMissingVodMaterials } from '../../_vod-sync';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -12,7 +13,8 @@ export async function GET(request: Request) {
   const page = Math.max(1, Number(search.get('page') || 1));
   const pageSize = Math.min(200, Math.max(1, Number(search.get('pageSize') || 50)));
   try {
-    return withDb((db) => {
+    return withDb(async (db) => {
+      await importMissingVodMaterials(db, { minIntervalMs: 15000 });
       let where = 'WHERE 1=1';
       const params: any[] = [];
       if (type && type !== 'all') {

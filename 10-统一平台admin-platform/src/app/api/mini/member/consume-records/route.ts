@@ -1,10 +1,11 @@
-import { getMemberId, jsonError, withDb } from '../../_helpers';
+import { getMemberId, jsonError, linkedMemberIds, sqlIn, withDb } from '../../_helpers';
 
 export async function GET(request: Request) {
   try {
     return withDb((db) => {
       const memberId = getMemberId(new URL(request.url).searchParams, request);
       if (!memberId) return jsonError('未登录', 401);
+      const linked = sqlIn(linkedMemberIds(db, memberId));
 
       const rows = db.prepare(`
         SELECT
@@ -12,9 +13,9 @@ export async function GET(request: Request) {
           COALESCE(c.name, cr.courseName, '') AS resolvedCourseName
         FROM ConsumeRecord cr
         LEFT JOIN Course c ON c.id = cr.courseId
-        WHERE cr.memberId = ?
+        WHERE cr.memberId IN (${linked.clause})
         ORDER BY cr.id DESC
-      `).all(memberId);
+      `).all(...linked.values);
 
       return Response.json({
         success: true,

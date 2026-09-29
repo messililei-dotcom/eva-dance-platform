@@ -1,6 +1,7 @@
 import api from '@/lib/api';
-import { isRecord, pickArray, pickData } from '@/lib/data-shape';
+import { pickArray, pickData } from '@/lib/data-shape';
 import { platformLinkMatrix, platformLinks } from '@/lib/platform-links';
+import { getDefaultRegions } from '@/lib/regions';
 import type {
   Course,
   DataAnalytics,
@@ -42,6 +43,34 @@ function normalizeStatus(status: unknown): string {
   return map[value] || value;
 }
 
+function monthKey(date?: string) {
+  const value = textValue(date, '');
+  return /^\d{4}-\d{2}/.test(value) ? value.slice(0, 7) : '';
+}
+
+function percentValue(value: number, total: number): number {
+  if (!total) return 0;
+  return Math.round((value / total) * 1000) / 10;
+}
+
+function isPaidOrder(order: UnifiedOrder): boolean {
+  const status = textValue(order.status, '').toLowerCase();
+  return ['paid', 'completed', 'success', 'settled'].includes(status);
+}
+
+function isRefundOrder(order: UnifiedOrder): boolean {
+  return textValue(order.status, '').toLowerCase() === 'refunded';
+}
+
+function groupCount<T>(rows: T[], getKey: (row: T) => string, fallback: string) {
+  const map = new Map<string, number>();
+  rows.forEach(row => {
+    const key = getKey(row) || fallback;
+    map.set(key, (map.get(key) || 0) + 1);
+  });
+  return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+}
+
 export function adaptMember(raw: any, index = 0): Member {
   return {
     id: textValue(raw?.id ?? raw?.memberId ?? index),
@@ -55,7 +84,7 @@ export function adaptMember(raw: any, index = 0): Member {
     totalSpent: numberValue(raw?.totalSpent ?? raw?.totalAmount ?? raw?.amount),
     courseCount: numberValue(raw?.courseCount ?? raw?.courses),
     growth: numberValue(raw?.growth ?? raw?.growthValue),
-    lastActiveAt: textValue(raw?.updated_at ?? raw?.updatedAt ?? raw?.lastLogin ?? raw?.register_date, '-').slice(0, 16),
+    lastActiveAt: textValue(raw?.lastActiveAt ?? raw?.last_active_at ?? raw?.updated_at ?? raw?.updatedAt ?? raw?.lastLogin ?? raw?.register_date, '-').slice(0, 16),
     avatar: textValue(raw?.avatar ?? raw?.avatarUrl ?? raw?.avatar_url, ''),
     wxAvatarUrl: textValue(raw?.wx_avatar_url ?? raw?.wxAvatarUrl, ''),
     wxName: textValue(raw?.wx_name ?? raw?.wxName, ''),
@@ -72,6 +101,8 @@ export function adaptOrder(raw: any, index = 0): UnifiedOrder {
     id: textValue(raw?.id ?? raw?.orderId ?? index),
     orderNo: textValue(raw?.orderNo ?? raw?.order_no ?? raw?.paymentNo ?? raw?.id, `ORDER-${index + 1}`),
     orderDate: textValue(raw?.orderDate ?? raw?.date ?? raw?.created_at ?? raw?.createdAt, '-').slice(0, 10),
+    authorizationDate: textValue(raw?.authorizationDate ?? raw?.authorization_date, '').slice(0, 10),
+    memberId: textValue(raw?.memberId ?? raw?.member_id, ''),
     memberName: textValue(raw?.memberName ?? raw?.buyerName ?? raw?.name, '-'),
     memberPhone: textValue(raw?.memberPhone ?? raw?.buyerPhone ?? raw?.phone, ''),
     orderType: textValue(raw?.orderType ?? raw?.type ?? 'training'),
@@ -79,7 +110,15 @@ export function adaptOrder(raw: any, index = 0): UnifiedOrder {
     amount: numberValue(raw?.amount ?? raw?.totalAmount ?? raw?.paidAmount),
     status: normalizeStatus(raw?.status ?? raw?.payStatus),
     sourceType: textValue(raw?.sourceType ?? raw?.source_type ?? 'legacy'),
+    sourceId: textValue(raw?.sourceId ?? raw?.source_id, ''),
     payMethod: textValue(raw?.payMethod ?? raw?.payment ?? raw?.paymentMethod, '-'),
+    courseSubType: textValue(raw?.courseSubType ?? raw?.course_sub_type ?? raw?.subType ?? raw?.period, ''),
+    courseStartDate: textValue(raw?.courseStartDate ?? raw?.startDate ?? raw?.start_date, ''),
+    courseEndDate: textValue(raw?.courseEndDate ?? raw?.endDate ?? raw?.end_date, ''),
+    sales: textValue(raw?.sales ?? raw?.advisor, ''),
+    remark: textValue(raw?.remark ?? raw?.note, ''),
+    expireDate: textValue(raw?.expireDate ?? raw?.expire_date, ''),
+    remainingSessions: numberValue(raw?.remainingSessions ?? raw?.remaining_sessions),
     raw,
   };
 }
@@ -129,7 +168,9 @@ export function adaptOnlineCourse(raw: any, index = 0): Course {
     type: 'online',
     category: textValue(raw?.category, '线上课程'),
     teacher: textValue(raw?.teacher, '-'),
-    price: numberValue(raw?.price ?? raw?.promo_price),
+    price: numberValue(raw?.promo_price) > 0
+      ? numberValue(raw?.promo_price)
+      : numberValue(raw?.price),
     sessions: numberValue(raw?.total_courses ?? raw?.courseCount ?? raw?.lessonCount),
     students: numberValue(raw?.total_students ?? raw?.studentCount),
     capacity: 0,
@@ -211,13 +252,17 @@ export const platformAdapter = {
     return asArray(res.data).map(adaptMember);
   },
 
-  async getMemberDirectory(): Promise<{ members: Member[]; orderRevenue: number }> {
-    const res = await api.get('/members/directory');
+  async getMemberDirectory(search = '', lookup = false): Promise<{ members: Member[]; orderRevenue: number }> {
+    const res = await api.get('/members/directory', { params: { ...(search.trim() ? { q: search.trim() } : {}), ...(lookup ? { mode: 'lookup' } : {}) } });
     const data = pickData<any>(res.data, res.data || {});
     return {
       members: asArray(data?.members).map(adaptMember),
       orderRevenue: numberValue(data?.summary?.orderRevenue),
     };
+  },
+
+  async getMemberLookup(search = ''): Promise<{ members: Member[]; orderRevenue: number }> {
+    return this.getMemberDirectory(search, true);
   },
 
   async getMemberProfile(id: number | string): Promise<MemberProfile360> {
@@ -245,17 +290,17 @@ export const platformAdapter = {
     });
   },
 
-  async getMemberRecord(id: number | string): Promise<Member> {
-    const res = await api.get(`/members/${id}`);
-    return adaptMember(pickData<any>(res.data, {}));
-  },
-
   async getRegions(): Promise<Array<{ province: string; cities: string[] }>> {
-    const res = await api.get('/provinces');
-    return asArray(res.data).map((item: any) => ({
-      province: textValue(item?.province, ''),
-      cities: Array.isArray(item?.cities) ? item.cities.map((city: unknown) => textValue(city, '')).filter(Boolean) : [],
-    })).filter(item => item.province);
+    try {
+      const res = await api.get('/provinces');
+      const regions = asArray(res.data).map((item: any) => ({
+        province: textValue(item?.province, ''),
+        cities: Array.isArray(item?.cities) ? item.cities.map((city: unknown) => textValue(city, '')).filter(Boolean) : [],
+      })).filter(item => item.province);
+      return regions.length ? regions : getDefaultRegions();
+    } catch {
+      return getDefaultRegions();
+    }
   },
 
   async createMember(data: {
@@ -312,32 +357,19 @@ export const platformAdapter = {
   },
 
   async getOrders(params?: Record<string, unknown>): Promise<UnifiedOrder[]> {
-    const res = await api.get('/orders/unified', { params: { pageSize: 200, ...params } });
-    const data = pickData<any>(res.data, res.data || {});
-    return asArray(data?.items || data).map(adaptOrder);
+    const res = await api.get('/orders/unified', { params: { limit: 1000, ...params } });
+    return asArray(res.data).map(adaptOrder);
   },
 
-  async getOrdersPage(params?: Record<string, unknown>): Promise<{
-    items: UnifiedOrder[];
-    total: number;
-    page: number;
-    pageSize: number;
-    allCount: number;
-    totalAmount: number;
-    statusCounts: Record<string, number>;
-    types: string[];
-  }> {
-    const res = await api.get('/orders/unified', { params });
-    const data = pickData<any>(res.data, res.data || {});
+  async getOrderPage(params?: Record<string, unknown>): Promise<{ orders: UnifiedOrder[]; total: number; page: number; pageSize: number; summary: Record<string, number>; types: string[] }> {
+    const res = await api.get('/orders/unified', { params: { paged: 1, ...params } });
     return {
-      items: asArray(data?.items).map(adaptOrder),
-      total: numberValue(data?.total),
-      page: numberValue(data?.page) || 1,
-      pageSize: numberValue(data?.pageSize) || 20,
-      allCount: numberValue(data?.summary?.allCount),
-      totalAmount: numberValue(data?.summary?.totalAmount),
-      statusCounts: isRecord(data?.summary?.statusCounts) ? data.summary.statusCounts as Record<string, number> : {},
-      types: asArray<string>(data?.types),
+      orders: asArray(res.data?.data).map(adaptOrder),
+      total: numberValue(res.data?.total),
+      page: numberValue(res.data?.page) || 1,
+      pageSize: numberValue(res.data?.pageSize) || 20,
+      summary: res.data?.summary || {},
+      types: asArray(res.data?.types).map(value => String(value)),
     };
   },
 
@@ -421,71 +453,123 @@ export const platformAdapter = {
     const res = await api.get('/orders/unified', { params: { financeSummary: 1 } });
     const data = res.data || {};
     return {
-      income: numberValue(data.income),
-      expense: numberValue(data.expense),
-      profit: numberValue(data.profit),
-      orderCount: numberValue(data.orderCount),
-      averageOrderAmount: numberValue(data.averageOrderAmount),
-      monthIncome: numberValue(data.monthIncome),
-      refunds: numberValue(data.refunds),
-      byType: asArray<any>(data.byType).map(item => ({
-        label: textValue(item.label, ''),
-        value: numberValue(item.value),
-        count: numberValue(item.count),
-      })),
-      recentOrders: asArray<any>(data.recentOrders).map(adaptOrder),
+      income: numberValue(data.income), expense: numberValue(data.expense), profit: numberValue(data.profit),
+      orderCount: numberValue(data.orderCount), averageOrderAmount: numberValue(data.averageOrderAmount),
+      monthIncome: numberValue(data.monthIncome), refunds: numberValue(data.refunds),
+      yearRefunds: numberValue(data.yearRefunds), monthRefunds: numberValue(data.monthRefunds),
+      byType: asArray(data.byType).map((item: any) => ({ label: textValue(item.label), value: numberValue(item.value), count: numberValue(item.count) })),
+      recentOrders: asArray(data.recentOrders).map(adaptOrder),
     };
   },
 
   async getDashboardData(): Promise<DashboardData> {
     const res = await api.get('/dashboard/overview');
-    return pickData<DashboardData>(res.data, {
-      totalMembers: 0,
-      activeMembers: 0,
-      totalOrders: 0,
-      totalRevenue: 0,
-      monthRevenue: 0,
-      productCount: 0,
-      lowStockCount: 0,
-      recentMembers: [],
-      recentOrders: [],
-      orderSources: [],
-    });
+    return pickData<DashboardData>(res.data, {} as DashboardData);
   },
 
   async getAnalyticsData(): Promise<DataAnalytics> {
-    const res = await api.get('/analytics/overview');
-    return pickData<DataAnalytics>(res.data, {
-      sales: {
-        monthIncome: 0,
-        previousMonthIncome: 0,
-        growthRate: 0,
-        orderCount: 0,
-        averageOrderAmount: 0,
-        monthly: [],
-      },
-      members: {
-        total: 0,
-        newThisMonth: 0,
-        active: 0,
-        churnRate: 0,
-        byLevel: [],
-        byCity: [],
-      },
-      courses: {
-        onlineCount: 0,
-        offlineCount: 0,
-        totalEnrollments: 0,
-        completionRate: 0,
-        hotCourses: [],
-      },
-      finance: {
+    const overview = await api.get('/analytics/overview').catch(() => null);
+    if (overview?.data?.data) return overview.data.data as DataAnalytics;
+    const [members, orders, courses, finance] = await Promise.all([
+      this.getMembers().catch(() => []),
+      this.getOrders().catch(() => []),
+      this.getCourses().catch(() => ({ offline: [], online: [] })),
+      this.getFinanceSummary().catch(() => ({
         income: 0,
         expense: 0,
         profit: 0,
-        profitRate: 0,
+        orderCount: 0,
+        averageOrderAmount: 0,
+        monthIncome: 0,
+        refunds: 0,
         byType: [],
-      },
+        recentOrders: [],
+      })),
+    ]);
+
+    const now = new Date();
+    const currentMonthKey = now.toISOString().slice(0, 7);
+    const previousMonthKey = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().slice(0, 7);
+    const monthlyKeys = Array.from({ length: 12 }, (_, index) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - 11 + index, 1);
+      return date.toISOString().slice(0, 7);
     });
+    const monthly = monthlyKeys.map(key => ({
+      month: `${Number(key.slice(5, 7))}月`,
+      revenue: orders.filter(order => isPaidOrder(order) && monthKey(order.orderDate) === key).reduce((sum, order) => sum + order.amount, 0),
+    }));
+
+    const currentMonthIncome = monthly.find(item => item.month === `${Number(currentMonthKey.slice(5, 7))}月`)?.revenue || 0;
+    const previousMonthIncome = orders
+      .filter(order => isPaidOrder(order) && monthKey(order.orderDate) === previousMonthKey)
+      .reduce((sum, order) => sum + order.amount, 0);
+    const currentMonthOrders = orders.filter(order => isPaidOrder(order) && monthKey(order.orderDate) === currentMonthKey);
+    const previousMonthMembers = members.filter(member => monthKey(member.registerDate) === previousMonthKey).length;
+    const newThisMonth = members.filter(member => monthKey(member.registerDate) === currentMonthKey).length;
+    const activeMembers = members.filter(member => member.totalSpent > 0 || member.courseCount > 0).length;
+
+    const levelRows = groupCount(members, member => member.level, '未分级')
+      .map(([level, count], index) => ({ key: String(index + 1), level, count, percent: percentValue(count, members.length) }));
+    const cityRows = groupCount(members, member => member.city && member.city !== '-' ? member.city : member.country, '未填写')
+      .slice(0, 8)
+      .map(([city, count], index) => ({ key: String(index + 1), city, count, percent: percentValue(count, members.length) }));
+
+    const allCourses = [...courses.online, ...courses.offline];
+    const totalEnrollments = allCourses.reduce((sum, course) => sum + course.students, 0);
+    const hotCourses = allCourses
+      .slice()
+      .sort((a, b) => b.students - a.students)
+      .slice(0, 10)
+      .map((course, index) => ({
+        key: course.id,
+        rank: index + 1,
+        name: course.name,
+        type: course.type === 'online' ? '线上' as const : '线下' as const,
+        enrollments: course.students,
+        completion: course.capacity ? Math.min(100, Math.round((course.students / course.capacity) * 100)) : 0,
+        rating: 0,
+      }));
+
+    const colors = ['#F72A8A', '#7C3AED', '#3B82F6', '#22C55E', '#F59E0B', '#6B7280'];
+    const byType = finance.byType.map((item, index) => ({
+      key: String(index + 1),
+      category: item.label,
+      amount: item.value,
+      percent: percentValue(item.value, finance.income),
+      color: colors[index % colors.length],
+    }));
+
+    return {
+      sales: {
+        monthIncome: currentMonthIncome,
+        previousMonthIncome,
+        growthRate: previousMonthIncome ? percentValue(currentMonthIncome - previousMonthIncome, previousMonthIncome) : 0,
+        orderCount: currentMonthOrders.length,
+        averageOrderAmount: currentMonthOrders.length ? Math.round(currentMonthIncome / currentMonthOrders.length) : 0,
+        monthly,
+      },
+      members: {
+        total: members.length,
+        newThisMonth,
+        active: activeMembers,
+        churnRate: previousMonthMembers ? percentValue(Math.max(previousMonthMembers - newThisMonth, 0), previousMonthMembers) : 0,
+        byLevel: levelRows,
+        byCity: cityRows,
+      },
+      courses: {
+        onlineCount: courses.online.length,
+        offlineCount: courses.offline.length,
+        totalEnrollments,
+        completionRate: allCourses.length ? Math.round(allCourses.reduce((sum, course) => sum + (course.capacity ? Math.min(100, course.students / course.capacity * 100) : 0), 0) / allCourses.length) : 0,
+        hotCourses,
+      },
+      finance: {
+        income: finance.income,
+        expense: finance.expense,
+        profit: finance.profit,
+        profitRate: finance.income ? percentValue(finance.profit, finance.income) : 0,
+        byType,
+      },
+    };
   },
 };

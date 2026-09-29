@@ -37,6 +37,7 @@ export function Table<RecordType extends AnyObject = AnyObject>({
 }: AdaptiveTableProps<RecordType>) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [adaptivePageSize, setAdaptivePageSize] = useState(10);
+  const [fillHeight, setFillHeight] = useState<number>();
 
   const recalculate = useCallback(() => {
     const host = hostRef.current;
@@ -47,8 +48,11 @@ export function Table<RecordType extends AnyObject = AnyObject>({
 
     const modal = host.closest('.ant-modal-content');
     const boundaryBottom = modal?.getBoundingClientRect().bottom || window.innerHeight;
-    const bottomGap = adaptiveBottomGap ?? (modal ? 84 : 24);
-    const measuredRowHeight = host.querySelector('.ant-table-tbody > tr')?.getBoundingClientRect().height || 0;
+    const bottomGap = adaptiveBottomGap ?? (modal ? 84 : 0);
+    setFillHeight(modal ? undefined : Math.max(0, Math.floor(boundaryBottom - rect.top - bottomGap)));
+    const measuredRowHeight = Array.from(host.querySelectorAll('.ant-table-tbody > tr'))
+      .map((row) => row.getBoundingClientRect().height)
+      .find((height) => height > 0) || 0;
     const measuredHeaderHeight = host.querySelector('.ant-table-thead')?.getBoundingClientRect().height || 0;
     const measuredPagerHeight = host.querySelector('.ant-pagination')?.getBoundingClientRect().height || 0;
     const rowHeight = measuredRowHeight || (size === 'small' ? 36 : 44);
@@ -60,7 +64,7 @@ export function Table<RecordType extends AnyObject = AnyObject>({
 
   useLayoutEffect(() => {
     recalculate();
-  }, [recalculate]);
+  }, [recalculate, dataSource?.length]);
 
   useEffect(() => {
     const handleResize = () => window.requestAnimationFrame(recalculate);
@@ -76,12 +80,12 @@ export function Table<RecordType extends AnyObject = AnyObject>({
   const adaptivePagination = useMemo(() => {
     if (pagination === false) return false;
     const configured = pagination && typeof pagination === 'object' ? pagination : {};
+    const modal = hostRef.current?.closest('.ant-modal-content');
     const configuredPageSize = Number(configured.pageSize || configured.defaultPageSize || 0);
-    const hasConfiguredPageSize = configuredPageSize > 0;
-    // A caller-provided page size is a UI contract. Recalculating it after
-    // resize/selection moves rows between pages while their selected keys stay
-    // active, which makes a selection appear to leak into the next page.
-    const pageSize = hasConfiguredPageSize ? configuredPageSize : adaptivePageSize;
+    const serverControlled = configured.current != null && configured.total != null && typeof configured.onChange === 'function';
+    // Full-page management tables always fill the available viewport. Modal
+    // and server-paginated tables preserve their configured data contract.
+    const pageSize = (modal || serverControlled) && configuredPageSize > 0 ? configuredPageSize : adaptivePageSize;
 
     return {
       showSizeChanger: true,
@@ -93,9 +97,14 @@ export function Table<RecordType extends AnyObject = AnyObject>({
   }, [adaptivePageSize, dataSource, pagination]);
 
   return (
-    <div ref={hostRef} className="admin-adaptive-table">
+    <div
+      ref={hostRef}
+      className="admin-adaptive-table"
+      style={fillHeight ? { minHeight: fillHeight, display: 'flex', flexDirection: 'column' } : undefined}
+    >
       <AntTable<RecordType>
         {...props}
+        style={fillHeight ? { ...props.style, flex: 1, display: 'flex', flexDirection: 'column' } : props.style}
         size={size}
         dataSource={dataSource}
         pagination={adaptivePagination}

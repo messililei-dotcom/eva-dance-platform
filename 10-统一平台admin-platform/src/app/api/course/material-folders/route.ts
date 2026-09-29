@@ -1,5 +1,6 @@
 import { assertValidFolderParent, cleanText, folderRowsWithCounts, jsonError, toPositiveInt, withDb } from '../_materials';
 import { hasAuth, unauthorized } from '../../training-db';
+import { importMissingVodMaterials } from '../_vod-sync';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -7,7 +8,8 @@ export const runtime = 'nodejs';
 export async function GET(request: Request) {
   if (!hasAuth(request)) return unauthorized();
   try {
-    return withDb((db) => {
+    return withDb(async (db) => {
+      await importMissingVodMaterials(db, { minIntervalMs: 15000 });
       const { tree, flat, total } = folderRowsWithCounts(db);
       return Response.json({ success: true, data: tree, flat, total_materials: total });
     });

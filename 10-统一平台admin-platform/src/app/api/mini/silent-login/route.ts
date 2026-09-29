@@ -1,4 +1,4 @@
-import { loginData } from '../_auth';
+import { canonicalMember, loginData } from '../_auth';
 import { cleanText, jsonError, withDb } from '../_helpers';
 import { createWelcomeMessage } from '@/lib/server/inbox';
 import { bindWechatIdentity, resolveWechatMember } from '@/lib/server/wechat-identity';
@@ -11,6 +11,8 @@ type WechatSession = {
   errmsg?: string;
 };
 
+const WECHAT_FETCH_TIMEOUT_MS = 6000;
+
 class SilentLoginError extends Error {
   status: number;
 
@@ -18,6 +20,16 @@ class SilentLoginError extends Error {
     super(message);
     this.name = 'SilentLoginError';
     this.status = status;
+  }
+}
+
+async function fetchWechat(url: URL) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), WECHAT_FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { cache: 'no-store', signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -67,7 +79,7 @@ async function getWechatSession(code: string) {
 
   let res: Response;
   try {
-    res = await fetch(url, { cache: 'no-store' });
+    res = await fetchWechat(url);
   } catch {
     throw new SilentLoginError('微信服务连接失败，请稍后再试', 502);
   }
@@ -115,7 +127,7 @@ export async function POST(request: Request) {
         createWelcomeMessage(db, Number(member.id), cleanText(member.name));
       }
 
-      member = bindWechatIdentity(db, member.id, identity);
+      member = canonicalMember(db, bindWechatIdentity(db, member.id, identity)) || member;
       return Response.json({
         success: true,
         data: loginData(member),

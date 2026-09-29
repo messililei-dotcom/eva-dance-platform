@@ -68,7 +68,7 @@ export function ensureEventTables(db: any) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       code TEXT NOT NULL UNIQUE,
-      status TEXT NOT NULL DEFAULT 'draft',
+      status TEXT NOT NULL DEFAULT 'published',
       registration_status TEXT NOT NULL DEFAULT 'closed',
       start_date TEXT DEFAULT '',
       end_date TEXT DEFAULT '',
@@ -96,6 +96,7 @@ export function ensureEventTables(db: any) {
       entry_type TEXT DEFAULT 'solo',
       sort_order INTEGER NOT NULL DEFAULT 0,
       max_players INTEGER NOT NULL DEFAULT 0,
+      registration_fee REAL NOT NULL DEFAULT 0,
       score_rule_id INTEGER,
       scoring_status TEXT NOT NULL DEFAULT 'unlocked',
       status TEXT NOT NULL DEFAULT 'active',
@@ -165,6 +166,7 @@ export function ensureEventTables(db: any) {
 
     CREATE TABLE IF NOT EXISTS event_judges (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      member_id INTEGER DEFAULT 0,
       name TEXT NOT NULL,
       phone TEXT DEFAULT '',
       title TEXT DEFAULT '',
@@ -203,6 +205,7 @@ export function ensureEventTables(db: any) {
       total_score REAL NOT NULL DEFAULT 100,
       criteria_json TEXT NOT NULL DEFAULT '[]',
       drop_high_low INTEGER NOT NULL DEFAULT 0,
+      judge_anonymous INTEGER NOT NULL DEFAULT 0,
       abnormal_threshold REAL NOT NULL DEFAULT 15,
       decimal_places INTEGER NOT NULL DEFAULT 2,
       publish_mode TEXT NOT NULL DEFAULT 'review_then_publish',
@@ -388,8 +391,28 @@ export function ensureEventTables(db: any) {
     CREATE INDEX IF NOT EXISTS idx_event_groups_competition ON event_groups(competition_id, sort_order);
     CREATE INDEX IF NOT EXISTS idx_event_players_competition ON event_players(competition_id, group_id, status);
     CREATE INDEX IF NOT EXISTS idx_event_scores_group_player ON event_scores(group_id, player_id, judge_id);
+    CREATE INDEX IF NOT EXISTS idx_event_scores_player ON event_scores(player_id);
+    CREATE INDEX IF NOT EXISTS idx_event_scores_judge ON event_scores(judge_id);
     CREATE INDEX IF NOT EXISTS idx_event_group_judges_group ON event_group_judges(group_id, judge_id);
+    CREATE INDEX IF NOT EXISTS idx_event_group_judges_competition ON event_group_judges(competition_id, judge_id);
+    CREATE INDEX IF NOT EXISTS idx_event_group_judges_judge ON event_group_judges(judge_id);
   `);
+
+  const judgeColumns = new Set((db.prepare('PRAGMA table_info(event_judges)').all() as Array<{ name: string }>).map((row) => row.name));
+  if (!judgeColumns.has('member_id')) db.exec('ALTER TABLE event_judges ADD COLUMN member_id INTEGER DEFAULT 0');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_event_judges_member ON event_judges(member_id)');
+
+  const groupColumns = new Set((db.prepare('PRAGMA table_info(event_groups)').all() as Array<{ name: string }>).map((row) => row.name));
+  if (!groupColumns.has('registration_fee')) db.exec('ALTER TABLE event_groups ADD COLUMN registration_fee REAL NOT NULL DEFAULT 0');
+
+  const ruleColumns = new Set((db.prepare('PRAGMA table_info(event_score_rules)').all() as Array<{ name: string }>).map((row) => row.name));
+  if (!ruleColumns.has('judge_anonymous')) db.exec('ALTER TABLE event_score_rules ADD COLUMN judge_anonymous INTEGER NOT NULL DEFAULT 0');
+
+  const rankingColumns = new Set((db.prepare('PRAGMA table_info(event_rankings)').all() as Array<{ name: string }>).map((row) => row.name));
+  if (!rankingColumns.has('manual_total')) db.exec('ALTER TABLE event_rankings ADD COLUMN manual_total REAL');
+  if (!rankingColumns.has('manual_reason')) db.exec("ALTER TABLE event_rankings ADD COLUMN manual_reason TEXT DEFAULT ''");
+  if (!rankingColumns.has('manual_updated_by')) db.exec("ALTER TABLE event_rankings ADD COLUMN manual_updated_by TEXT DEFAULT ''");
+  if (!rankingColumns.has('manual_updated_at')) db.exec("ALTER TABLE event_rankings ADD COLUMN manual_updated_at TEXT DEFAULT ''");
 }
 
 export function generateCode(prefix: string) {
@@ -400,11 +423,10 @@ export function competitionSelectSql() {
   return `
     SELECT
       c.*,
-      (SELECT COUNT(*) FROM event_groups g WHERE g.competition_id=c.id) AS group_count,
-      (SELECT COUNT(*) FROM event_players p WHERE p.competition_id=c.id AND p.status!='cancelled') AS player_count,
-      (SELECT COUNT(DISTINCT gj.judge_id) FROM event_group_judges gj WHERE gj.competition_id=c.id AND gj.status='active') AS judge_count,
-      (SELECT COUNT(*) FROM event_players p WHERE p.competition_id=c.id AND p.audit_status='approved' AND p.status!='cancelled') AS approved_player_count,
-      (SELECT COUNT(*) FROM event_rankings r WHERE r.competition_id=c.id AND r.status='published') AS ranking_count
+      (SELECT COUNT(*) FROM event_groups g WHERE g.competition_id = c.id) AS group_count,
+      (SELECT COUNT(*) FROM event_players p WHERE p.competition_id = c.id) AS player_count,
+      (SELECT COUNT(DISTINCT gj.judge_id) FROM event_group_judges gj WHERE gj.competition_id = c.id) AS judge_count,
+      (SELECT COUNT(*) FROM event_players p WHERE p.competition_id = c.id AND p.audit_status = 'approved') AS approved_player_count
     FROM event_competitions c
   `;
 }
@@ -429,7 +451,6 @@ export function mapCompetition(row: any) {
     registrationFee: row.registration_fee || 0,
     groupCount: row.group_count || 0,
     playerCount: row.player_count || 0,
-    rankingCount: row.ranking_count || row.ranked_count || 0,
     judgeCount: row.judge_count || 0,
     approvedPlayerCount: row.approved_player_count || 0,
     createdAt: row.created_at,
@@ -450,12 +471,12 @@ export function mapGroup(row: any) {
     entryType: row.entry_type || 'solo',
     sortOrder: row.sort_order || 0,
     maxPlayers: row.max_players || 0,
+    registrationFee: Number(row.registration_fee || 0),
     scoreRuleId: row.score_rule_id || null,
     scoreRuleName: row.score_rule_name || '',
     scoringStatus: row.scoring_status || 'unlocked',
     status: row.status || 'active',
     playerCount: row.player_count || 0,
-    rankingCount: row.ranking_count || row.ranked_count || 0,
     judgeCount: row.judge_count || 0,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -473,6 +494,9 @@ export function mapPlayer(row: any) {
     memberId: row.member_id || 0,
     orderId: row.order_id || 0,
     playerNo: row.player_no || '',
+    sequenceNo: Number(row.sequence_no || 0),
+    musicFileId: Number(row.music_file_id || 0),
+    performanceTitle: row.performance_title || '',
     name: row.name,
     phone: row.phone || '',
     gender: row.gender || '',
@@ -496,6 +520,7 @@ export function mapJudge(row: any) {
   return {
     id: row.id,
     key: String(row.id),
+    memberId: row.member_id || 0,
     name: row.name,
     phone: row.phone || '',
     title: row.title || '',
@@ -521,6 +546,7 @@ export function mapScoreRule(row: any) {
     totalScore: row.total_score || 100,
     criteriaJson: row.criteria_json || '[]',
     dropHighLow: Boolean(row.drop_high_low),
+    judgeAnonymous: Boolean(row.judge_anonymous),
     abnormalThreshold: row.abnormal_threshold || 15,
     decimalPlaces: row.decimal_places || 2,
     publishMode: row.publish_mode || 'review_then_publish',
@@ -581,6 +607,10 @@ export function mapRanking(row: any) {
     organization: row.organization || '',
     rawTotal: Number(row.raw_total || 0),
     calculatedTotal: Number(row.calculated_total || 0),
+    manualTotal: row.manual_total == null ? null : Number(row.manual_total),
+    manualReason: row.manual_reason || '',
+    manualUpdatedBy: row.manual_updated_by || '',
+    manualUpdatedAt: row.manual_updated_at || '',
     publishedTotal: row.published_total == null ? null : Number(row.published_total),
     rankNo: row.rank_no || 0,
     status: row.status || 'draft',
@@ -595,12 +625,21 @@ export function mapRanking(row: any) {
 }
 
 export function getRuleForGroup(db: any, groupId: number, ruleId?: number | null) {
-  const row = db.prepare(`
-    SELECT sr.*
-    FROM event_groups g
-    LEFT JOIN event_score_rules sr ON sr.id = COALESCE(?, g.score_rule_id)
-    WHERE g.id = ?
-  `).get(ruleId || null, groupId);
+  const group = db.prepare('SELECT * FROM event_groups WHERE id = ?').get(groupId);
+  const explicitRuleId = Number(ruleId || group?.score_rule_id || 0);
+  let row = explicitRuleId ? db.prepare('SELECT * FROM event_score_rules WHERE id = ?').get(explicitRuleId) : null;
+  if (!row && group?.competition_id) {
+    const competitionRules = db.prepare('SELECT * FROM event_score_rules WHERE competition_id = ? ORDER BY id ASC').all(group.competition_id);
+    if (competitionRules.length === 1) row = competitionRules[0];
+    else if (competitionRules.length > 1) {
+      row = {
+        ...competitionRules[0],
+        total_score: competitionRules.reduce((sum: number, item: any) => sum + Number(item.total_score || 0), 0),
+        criteria_json: JSON.stringify(competitionRules.flatMap((item: any) => safeJsonParse(item.criteria_json, []))),
+        drop_high_low: competitionRules.some((item: any) => Boolean(item.drop_high_low)) ? 1 : 0,
+      };
+    }
+  }
   return row || {
     id: null,
     total_score: 100,
@@ -613,6 +652,14 @@ export function getRuleForGroup(db: any, groupId: number, ruleId?: number | null
 
 export function calculateScore(rule: any, criteriaScores: Record<string, unknown>, rawScore: number) {
   const criteria = safeJsonParse<Array<{ name?: string; score?: number }>>(rule.criteria_json, []);
+  for (const [key, input] of Object.entries(criteriaScores || {})) {
+    const value = Number(input);
+    if (input === null || input === '' || !Number.isFinite(value) || value < 0) throw new Error('分项评分必须是非负数字');
+    const criterion = criteria.find((item: any, index: number) => [item.name, String(item.id ?? item.key ?? `${rule.id || 'rule'}-${index}`)].includes(key));
+    if (criteria.length && !criterion) throw new Error('未知评分项');
+    if (criterion && value > Number((criterion as any).maxScore ?? criterion.score ?? 0)) throw new Error(`${criterion.name || key}超过单项上限`);
+  }
+  if (!Number.isFinite(rawScore)) throw new Error('评分必须是有效数字');
   const criteriaTotal = criteria.reduce((sum, item) => sum + Number(item.score || 0), 0);
   const values = Object.values(criteriaScores || {})
     .map((value) => Number(value))
@@ -655,62 +702,4 @@ export function markAbnormalScore(db: any, groupId: number, playerId: number, ju
   };
 }
 
-export function recalculateGroupRankings(db: any, groupId: number) {
-  const group = db.prepare('SELECT * FROM event_groups WHERE id = ?').get(groupId);
-  if (!group) throw new Error('组别不存在');
-  const rule = getRuleForGroup(db, groupId, group.score_rule_id);
-  const players = db.prepare(`
-    SELECT p.*, COUNT(DISTINCT gj.judge_id) AS judge_count
-    FROM event_players p
-    LEFT JOIN event_group_judges gj ON gj.group_id = p.group_id AND gj.status = 'active'
-    WHERE p.group_id = ? AND p.audit_status = 'approved'
-    GROUP BY p.id
-    ORDER BY p.player_no ASC, p.id ASC
-  `).all(groupId);
-  const now = nowIso();
-  const rows = players.map((player: any) => {
-    const scores = db.prepare(`
-      SELECT s.calculated_score, COALESCE(gj.weight, 1) AS weight
-      FROM event_scores s
-      LEFT JOIN event_group_judges gj ON gj.group_id = s.group_id AND gj.judge_id = s.judge_id
-      WHERE s.group_id = ?
-        AND s.player_id = ?
-        AND s.score_status IN ('submitted', 'reviewed', 'published')
-        AND NOT EXISTS (
-          SELECT 1
-          FROM event_scores newer
-          WHERE newer.group_id = s.group_id
-            AND newer.player_id = s.player_id
-            AND newer.judge_id = s.judge_id
-            AND newer.version > s.version
-            AND newer.score_status IN ('submitted', 'reviewed', 'published')
-        )
-      ORDER BY s.calculated_score ASC
-    `).all(groupId, player.id);
-    const drop = Boolean(rule.drop_high_low) && scores.length >= 3;
-    const usedScores = drop ? scores.slice(1, -1) : scores;
-    const weightSum = usedScores.reduce((sum: number, row: any) => sum + Number(row.weight || 1), 0);
-    const weighted = usedScores.reduce((sum: number, row: any) => sum + Number(row.calculated_score || 0) * Number(row.weight || 1), 0);
-    const total = usedScores.length ? weighted / (weightSum || usedScores.length) : 0;
-    return { player, total: Number(total.toFixed(Number(rule.decimal_places || 2))), scoreCount: scores.length };
-  }).sort((a: any, b: any) => b.total - a.total || String(a.player.player_no || '').localeCompare(String(b.player.player_no || '')));
-
-  rows.forEach((row: any, index: number) => {
-    db.prepare(`
-      INSERT INTO event_rankings (
-        competition_id, group_id, player_id, raw_total, calculated_total,
-        published_total, rank_no, status, recalculated_at, updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, NULL, ?, 'draft', ?, ?)
-      ON CONFLICT(group_id, player_id) DO UPDATE SET
-        raw_total = excluded.raw_total,
-        calculated_total = excluded.calculated_total,
-        rank_no = excluded.rank_no,
-        status = CASE WHEN event_rankings.status = 'published' THEN 'draft' ELSE event_rankings.status END,
-        recalculated_at = excluded.recalculated_at,
-        updated_at = excluded.updated_at
-    `).run(group.competition_id, groupId, row.player.id, row.total, row.total, index + 1, now, now);
-  });
-
-  return rows.length;
-}
+export { recalculateGroupRankings, rerankGroupRankings } from '@/lib/server/event-ranking';

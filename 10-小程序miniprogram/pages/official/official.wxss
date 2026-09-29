@@ -1,5 +1,0 @@
-page {
-  height: 100%;
-  background:#f8f3ea;
-}
-.official-review{min-height:100%;padding:100rpx 50rpx;box-sizing:border-box;text-align:center}.official-review image{width:180rpx;height:180rpx;border-radius:50%;background:#fff}.official-title{margin-top:34rpx;color:#2c1810;font-size:48rpx;font-weight:900;letter-spacing:5rpx}.official-en{margin-top:10rpx;color:#9b793b;font-size:20rpx;letter-spacing:4rpx}.official-copy{margin-top:40rpx;color:#756858;font-size:26rpx;line-height:1.8}.official-notice{margin-top:28rpx;padding:20rpx;border-radius:16rpx;color:#8a6a32;background:#fff4df;font-size:23rpx}.official-review button{height:78rpx;margin-top:34rpx;border-radius:999rpx;color:#fff;background:#9f1d20;font-size:25rpx;line-height:78rpx;font-weight:900}.official-review button::after{border:0}

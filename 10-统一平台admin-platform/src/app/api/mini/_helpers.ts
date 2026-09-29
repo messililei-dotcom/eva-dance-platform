@@ -1,9 +1,8 @@
 import crypto from 'crypto';
 import { openAdminDb, type AdminDb } from '@/lib/server/admin-db';
-import { ensureWechatIdentityTables } from '@/lib/server/wechat-identity';
+import { clientIpFromRequest, displayClientIp } from '@/lib/server/client-ip';
 import { isRecord } from '@/lib/data-shape';
 import { verifyLocalToken } from '../_local-auth';
-import { ensureInboxSchema } from '@/lib/server/inbox';
 
 const MEMBER_SESSION_TTL_MS = 3 * 86400 * 1000;
 
@@ -53,6 +52,27 @@ export function cleanText(value: unknown, fallback = '') {
   return text || fallback;
 }
 
+export function normalizePhoneNumber(value: unknown, countryCode: unknown = '+86') {
+  const raw = cleanText(value);
+  const country = cleanText(countryCode, '+86').replace(/[^\d+]/g, '');
+  if (!raw) return '';
+  if (raw.trim().startsWith('+')) {
+    const digits = raw.replace(/[^\d]/g, '');
+    if (digits.startsWith('86') && digits.length === 13) return digits.slice(2);
+    return digits.length >= 8 && digits.length <= 15 ? `+${digits}` : '';
+  }
+  const local = raw.replace(/[^\d]/g, '');
+  const dialCode = country.startsWith('+') ? country : `+${country || '86'}`;
+  if (dialCode === '+86') return /^1\d{10}$/.test(local) ? local : '';
+  return local.length >= 5 && local.length <= 14 ? `${dialCode}${local}` : '';
+}
+
+export function phoneForSmsGateway(phone: string) {
+  const normalized = normalizePhoneNumber(phone);
+  if (!normalized) return '';
+  return normalized.startsWith('+') ? normalized.slice(1) : normalized;
+}
+
 export function toPositiveInt(value: unknown, fallback = 0) {
   const n = Number(value);
   return Number.isInteger(n) && n > 0 ? n : fallback;
@@ -95,12 +115,108 @@ export function getMemberId(params: URLSearchParams, request?: Request) {
   return token ? verifyMemberToken(token) : 0;
 }
 
+function normalizeMemberPhoneForLink(value: unknown, countryCode: unknown = '+86') {
+  return normalizePhoneNumber(value, countryCode).replace(/^\+86/, '');
+}
+
+function memberIdentityValues(row: Record<string, any> | null | undefined) {
+  if (!row) {
+    return {
+      phones: [] as string[],
+      wxOpenid: '',
+      wxUnionid: '',
+    };
+  }
+  return {
+    phones: [
+      normalizeMemberPhoneForLink(row.phone, row.phone_country_code || '+86'),
+      normalizeMemberPhoneForLink(row.phone_national_number, row.phone_country_code || '+86'),
+    ].filter(Boolean),
+    wxOpenid: cleanText(row.wx_openid),
+    wxUnionid: cleanText(row.wx_unionid),
+  };
+}
+
+function remarkMergedToMemberId(value: unknown) {
+  const match = cleanText(value).match(/member_id\s*=\s*(\d+)/i);
+  return match ? toPositiveInt(match[1], 0) : 0;
+}
+
+export function linkedMemberIds(db: AdminDb, memberId: unknown) {
+  const id = toPositiveInt(memberId, 0);
+  if (!id) return [] as number[];
+  const current = db.prepare('SELECT * FROM Member WHERE id=?').get<Record<string, any>>(id);
+  if (!current) return [id];
+
+  const targetId = toPositiveInt(current.merged_to_member_id, 0) || remarkMergedToMemberId(current.remark) || id;
+  const target = targetId !== id
+    ? db.prepare('SELECT * FROM Member WHERE id=?').get<Record<string, any>>(targetId)
+    : null;
+  const currentIdentity = memberIdentityValues(current);
+  const targetIdentity = memberIdentityValues(target);
+  const phones = new Set([...currentIdentity.phones, ...targetIdentity.phones]);
+  const wxOpenids = new Set([currentIdentity.wxOpenid, targetIdentity.wxOpenid].filter(Boolean));
+  const wxUnionids = new Set([currentIdentity.wxUnionid, targetIdentity.wxUnionid].filter(Boolean));
+  const ids = new Set<number>([id, targetId]);
+
+  db.prepare('SELECT id, phone, phone_country_code, phone_national_number, wx_openid, wx_unionid, merged_to_member_id, remark FROM Member WHERE COALESCE(status, ?) != ?')
+    .all<Record<string, any>>('active', 'deleted')
+    .forEach(row => {
+      const rowId = toPositiveInt(row.id, 0);
+      const rowMergedTo = toPositiveInt(row.merged_to_member_id, 0) || remarkMergedToMemberId(row.remark);
+      const rowIdentity = memberIdentityValues(row);
+      const samePhone = rowIdentity.phones.some(phone => phones.has(phone));
+      const sameWechat = (rowIdentity.wxOpenid && wxOpenids.has(rowIdentity.wxOpenid))
+        || (rowIdentity.wxUnionid && wxUnionids.has(rowIdentity.wxUnionid));
+      if (rowId === id || rowId === targetId || rowMergedTo === id || rowMergedTo === targetId || samePhone || sameWechat) {
+        if (rowId) ids.add(rowId);
+        if (rowMergedTo) ids.add(rowMergedTo);
+      }
+    });
+
+  return Array.from(ids).filter(Boolean);
+}
+
+export function sqlIn(values: unknown[]) {
+  const list = values.length ? values : [0];
+  return {
+    clause: list.map(() => '?').join(','),
+    values: list,
+  };
+}
+
+function visitorIdentity(request?: Request) {
+  const explicit = request?.headers.get('x-visitor-id') || request?.headers.get('x-openid') || '';
+  const forwardedFor = request?.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '';
+  const realIp = request?.headers.get('x-real-ip') || '';
+  const userAgent = request?.headers.get('user-agent') || '';
+  const raw = cleanText(explicit || `${forwardedFor || realIp || 'unknown'}|${userAgent}`, 'anonymous');
+  const hash = crypto.createHash('sha256').update(raw).digest('hex');
+  const syntheticId = -(parseInt(hash.slice(0, 8), 16) || 1);
+  return {
+    memberId: syntheticId,
+    key: hash.slice(0, 24),
+    label: `游客 ${hash.slice(0, 6)}`,
+  };
+}
+
+export function visitPlatform(request?: Request) {
+  const explicit = cleanText(
+    request?.headers.get('x-platform')
+      || request?.headers.get('x-client-platform')
+      || request?.headers.get('x-app-platform'),
+  ).toLowerCase();
+  if (['website', 'web', 'official_site', '官网'].includes(explicit)) return '官网';
+  if (['mini', 'miniprogram', 'wechat_mini', '小程序'].includes(explicit)) return '小程序';
+  const referer = cleanText(request?.headers.get('referer') || request?.headers.get('origin')).toLowerCase();
+  const userAgent = cleanText(request?.headers.get('user-agent')).toLowerCase();
+  const secFetchSite = cleanText(request?.headers.get('sec-fetch-site')).toLowerCase();
+  if (referer.includes('swod.com.cn') && !referer.includes('admin.swod.com.cn')) return '官网';
+  if (userAgent.includes('miniprogram') || userAgent.includes('micromessenger') || secFetchSite === 'none') return '小程序';
+  return '官网';
+}
+
 type VisitTracking = {
-  platform?: string;
-  visitorKey?: string;
-  visitorLabel?: string;
-  phone?: string;
-  wxUnionid?: string;
   pageUrl?: string;
   ipAddress?: string;
   ipRegion?: string;
@@ -128,15 +244,13 @@ function requestVisitTracking(request?: Request): VisitTracking {
     }
     return '';
   };
-  const forwarded = firstHeader(request, ['x-forwarded-for']).split(',')[0]?.trim() || '';
   const region = [
     firstHeader(request, ['x-ip-province', 'cf-region', 'x-vercel-ip-country-region']),
     firstHeader(request, ['x-ip-city', 'cf-ipcity', 'x-vercel-ip-city']),
   ].filter(Boolean).join(' ');
   return {
-    platform: firstHeader(request, ['x-client-platform']) || param('platform') || '小程序',
     pageUrl: firstHeader(request, ['x-page-url', 'referer']) || param('page_url') || url.pathname,
-    ipAddress: forwarded || firstHeader(request, ['x-real-ip']),
+    ipAddress: clientIpFromRequest(request),
     ipRegion: region || firstHeader(request, ['x-ip-region']),
     referrerMemberId: toPositiveInt(
       firstHeader(request, ['x-referrer-member-id']) || param('ref_member_id', 'share_member_id', 'inviter_id', 'ref'),
@@ -156,16 +270,23 @@ export function recordSeriesVisit(
   request?: Request,
   tracking: VisitTracking = {}
 ) {
-  if (!seriesId || !memberId) return;
-  const context = { ...requestVisitTracking(request) };
+  if (!seriesId) return;
+  const visitor = memberId > 0 ? null : visitorIdentity(request);
+  const identityMemberId = memberId > 0 ? memberId : visitor?.memberId || 0;
+  if (!identityMemberId) return;
+  const visitSource = cleanText(source, 'learn').slice(0, 40);
+  const platform = visitPlatform(request);
+  const context: VisitTracking = { ...requestVisitTracking(request) };
   Object.entries(tracking).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
-      (context as Record<string, unknown>)[key] = value;
+      (context as unknown as Record<string, unknown>)[key] = value;
     }
   });
-  const member = db.prepare(
-    "SELECT phone, wx_unionid, name FROM Member WHERE id=?"
-  ).get<{ phone?: string; wx_unionid?: string; name?: string }>(memberId);
+  context.ipAddress = displayClientIp(context.ipAddress);
+  if (!context.ipAddress) context.ipRegion = '';
+  const member = memberId > 0
+    ? db.prepare("SELECT phone, wx_unionid FROM Member WHERE id=?").get<{ phone?: string; wx_unionid?: string }>(memberId)
+    : null;
   db.transaction(() => {
     db.prepare(
       `INSERT INTO CourseSeriesVisitLog (
@@ -174,14 +295,14 @@ export function recordSeriesVisit(
          share_code, visited_at, created_at
        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULLIF(?, 0), ?, ?, ?, datetime('now','localtime'), datetime('now','localtime'))`
     ).run(
-      memberId,
+      identityMemberId,
       seriesId,
-      source,
-      cleanText(context.platform, '小程序'),
-      cleanText(context.visitorKey),
-      cleanText(context.visitorLabel, member?.name || ''),
-      cleanText(context.phone, member?.phone || ''),
-      cleanText(context.wxUnionid, member?.wx_unionid || ''),
+      visitSource,
+      platform,
+      visitor?.key || '',
+      visitor?.label || '',
+      cleanText(member?.phone),
+      cleanText(member?.wx_unionid),
       cleanText(context.pageUrl),
       cleanText(context.ipAddress),
       cleanText(context.ipRegion),
@@ -191,17 +312,20 @@ export function recordSeriesVisit(
       cleanText(context.shareCode)
     );
     db.prepare(
-      `INSERT INTO CourseSeriesVisit (member_id, series_id, source, first_visited_at, last_visited_at, visit_count)
-       VALUES (?, ?, ?, datetime('now','localtime'), datetime('now','localtime'), 1)
+      `INSERT INTO CourseSeriesVisit (member_id, series_id, source, platform, visitor_key, visitor_label, first_visited_at, last_visited_at, visit_count)
+       VALUES (?, ?, ?, ?, ?, ?, datetime('now','localtime'), datetime('now','localtime'), 1)
        ON CONFLICT(member_id, series_id) DO UPDATE SET
          last_visited_at=excluded.last_visited_at,
+         platform=excluded.platform,
+         visitor_key=CASE WHEN excluded.visitor_key<>'' THEN excluded.visitor_key ELSE CourseSeriesVisit.visitor_key END,
+         visitor_label=CASE WHEN excluded.visitor_label<>'' THEN excluded.visitor_label ELSE CourseSeriesVisit.visitor_label END,
          source=CASE
            WHEN excluded.source='auth_request' THEN excluded.source
            WHEN COALESCE(CourseSeriesVisit.source, '')='' THEN excluded.source
            ELSE CourseSeriesVisit.source
          END,
          visit_count=CourseSeriesVisit.visit_count + 1`
-    ).run(memberId, seriesId, source);
+    ).run(identityMemberId, seriesId, visitSource, platform, visitor?.key || '', visitor?.label || '');
   })();
 }
 
@@ -214,8 +338,6 @@ function addColumn(db: AdminDb, table: string, column: string, ddl: string) {
 }
 
 export function ensureMiniTables(db: AdminDb) {
-  ensureWechatIdentityTables(db);
-  ensureInboxSchema(db);
   db.prepare(`CREATE TABLE IF NOT EXISTS StudyNote (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     member_id INTEGER NOT NULL,
@@ -274,6 +396,9 @@ export function ensureMiniTables(db: AdminDb) {
     member_id INTEGER NOT NULL,
     series_id INTEGER NOT NULL,
     source TEXT DEFAULT 'learn',
+    platform TEXT DEFAULT '',
+    visitor_key TEXT DEFAULT '',
+    visitor_label TEXT DEFAULT '',
     first_visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     last_visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     visit_count INTEGER NOT NULL DEFAULT 1,
@@ -285,12 +410,18 @@ export function ensureMiniTables(db: AdminDb) {
     member_id INTEGER NOT NULL,
     series_id INTEGER NOT NULL,
     source TEXT DEFAULT 'learn',
+    platform TEXT DEFAULT '',
+    visitor_key TEXT DEFAULT '',
+    visitor_label TEXT DEFAULT '',
     visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`).run();
-  addColumn(db, 'CourseSeriesVisitLog', 'platform', "platform TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisit', 'visitor_key', "visitor_key TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisit', 'visitor_label', "visitor_label TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisit', 'platform', "platform TEXT DEFAULT ''");
   addColumn(db, 'CourseSeriesVisitLog', 'visitor_key', "visitor_key TEXT DEFAULT ''");
   addColumn(db, 'CourseSeriesVisitLog', 'visitor_label', "visitor_label TEXT DEFAULT ''");
+  addColumn(db, 'CourseSeriesVisitLog', 'platform', "platform TEXT DEFAULT ''");
   addColumn(db, 'CourseSeriesVisitLog', 'phone', "phone TEXT DEFAULT ''");
   addColumn(db, 'CourseSeriesVisitLog', 'wx_unionid', "wx_unionid TEXT DEFAULT ''");
   addColumn(db, 'CourseSeriesVisitLog', 'page_url', "page_url TEXT DEFAULT ''");
@@ -300,15 +431,14 @@ export function ensureMiniTables(db: AdminDb) {
   addColumn(db, 'CourseSeriesVisitLog', 'referrer_channel', "referrer_channel TEXT DEFAULT ''");
   addColumn(db, 'CourseSeriesVisitLog', 'referrer_url', "referrer_url TEXT DEFAULT ''");
   addColumn(db, 'CourseSeriesVisitLog', 'share_code', "share_code TEXT DEFAULT ''");
-  addColumn(db, 'Member', 'avatar', "avatar TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_nickname', "wx_nickname TEXT DEFAULT ''");
-  addColumn(db, 'Member', 'wx_name', "wx_name TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_avatar_url', "wx_avatar_url TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_openid', "wx_openid TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_unionid', "wx_unionid TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_session_key', "wx_session_key TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_session_updated_at', 'wx_session_updated_at DATETIME DEFAULT NULL');
   addColumn(db, 'Member', 'wx_profile_synced_at', 'wx_profile_synced_at DATETIME DEFAULT NULL');
+  addColumn(db, 'Member', 'merged_to_member_id', 'merged_to_member_id INTEGER DEFAULT 0');
 
   // 性能索引
   db.exec("CREATE INDEX IF NOT EXISTS idx_study_note_member ON StudyNote(member_id, video_id, created_at)");

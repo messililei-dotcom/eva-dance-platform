@@ -25,13 +25,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       const groups = db.prepare(`
         SELECT g.*, sr.name AS score_rule_name,
           COUNT(DISTINCT CASE WHEN p.audit_status='approved' THEN p.id END) AS player_count,
-          COUNT(DISTINCT CASE WHEN gj.status='active' THEN gj.judge_id END) AS judge_count,
-          COUNT(DISTINCT CASE WHEN r.status='published' THEN r.player_id END) AS ranking_count
+          COUNT(DISTINCT CASE WHEN gj.status='active' THEN gj.judge_id END) AS judge_count
         FROM event_groups g
         LEFT JOIN event_score_rules sr ON sr.id=g.score_rule_id
         LEFT JOIN event_players p ON p.group_id=g.id
         LEFT JOIN event_group_judges gj ON gj.group_id=g.id
-        LEFT JOIN event_rankings r ON r.group_id=g.id
         WHERE g.competition_id=? AND g.status='active'
         GROUP BY g.id
         ORDER BY g.sort_order, g.id

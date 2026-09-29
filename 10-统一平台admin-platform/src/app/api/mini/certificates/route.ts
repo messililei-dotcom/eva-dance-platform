@@ -1,4 +1,4 @@
-import { getMemberId, jsonError, withDb } from '../_helpers';
+import { getMemberId, jsonError, linkedMemberIds, sqlIn, withDb } from '../_helpers';
 import { certificatePublicUrl, certificateVerifyUrl, ensureCertificateSchema } from '@/lib/server/certificates';
 
 export async function GET(request: Request) {
@@ -7,6 +7,7 @@ export async function GET(request: Request) {
       ensureCertificateSchema(db);
       const memberId = getMemberId(new URL(request.url).searchParams, request);
       if (!memberId) return jsonError('未登录', 401);
+      const linked = sqlIn(linkedMemberIds(db, memberId));
 
       const rows = db.prepare(`
         SELECT
@@ -28,9 +29,9 @@ export async function GET(request: Request) {
         LEFT JOIN Member m ON m.id = c.member_id
         LEFT JOIN CourseSeries cs ON cs.id = c.series_id
         LEFT JOIN Course tc ON c.series_id < 0 AND tc.id = ABS(c.series_id)
-        WHERE c.member_id = ?
+        WHERE c.member_id IN (${linked.clause})
         ORDER BY datetime(c.issue_date) DESC, c.id DESC
-      `).all(memberId);
+      `).all(...linked.values);
 
       return Response.json({
         success: true,

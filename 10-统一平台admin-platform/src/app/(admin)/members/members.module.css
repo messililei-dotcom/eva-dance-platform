@@ -1,0 +1,25 @@
+.page :global(.members-stat-grid) { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; }
+.page :global(.members-stat-item) { padding:10px 18px; border-right:1px solid #eef0f6; }
+.page :global(.members-stat-item:last-child) { border-right:0; }
+.page :global(.members-table .members-student-info) { display:flex; flex-direction:row; align-items:center; justify-content:flex-start; gap:12px; text-align:left; }
+.page :global(.members-table .members-student-info-text) { min-width:0; text-align:left; }
+.page :global(.members-table .members-student-info-cell) { text-align:left; }
+.page :global(.members-table .ant-table-tbody > tr > td) { padding:7px 12px; }
+.page :global(.members-table .ant-avatar) { flex-shrink:0; }
+@media(max-width:760px) { .page :global(.members-stat-grid) { grid-template-columns:repeat(2,minmax(0,1fr)); } .page :global(.members-stat-item) { padding:12px; } }
+
+.page :global(.members-stat-item .ant-statistic) { display:flex; align-items:center; gap:12px; white-space:nowrap; }
+.page :global(.members-stat-item .ant-statistic-title) { margin-bottom:0; }
+.page :global(.members-stat-item .ant-statistic-content) { font-size:20px; line-height:28px; }
+.page :global(.members-table .ant-table-tbody > tr > td) { height:54px; }
+.page :global(.members-student-info-text) { overflow:hidden; }
+.page :global(.members-student-info-text > .ant-typography),
+.page :global(.members-student-info-text > div) { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.page :global(.members-wechat-info) { display:flex; flex-direction:column; align-items:center; gap:2px; }
+.page :global(.members-wechat-info .ant-typography) { white-space:nowrap; font-size:11px; }
+@media(max-width:760px) {
+  .page :global(.members-stat-grid) { display:flex; flex-wrap:nowrap; overflow-x:auto; }
+  .page :global(.members-stat-item) { flex:0 0 auto; padding:8px 12px; }
+  .page :global(.members-stat-item .ant-statistic) { gap:6px; }
+  .page :global(.members-stat-item .ant-statistic-content) { font-size:17px; }
+}

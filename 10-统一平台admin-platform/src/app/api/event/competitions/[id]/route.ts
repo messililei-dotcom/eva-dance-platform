@@ -50,7 +50,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     `).run(
       name,
       cleanText(body.code),
-      cleanText(body.status, 'draft'),
+      'published',
       cleanText(body.registrationStatus ?? body.registration_status, 'closed'),
       cleanText(body.startDate ?? body.start_date),
       cleanText(body.endDate ?? body.end_date),
@@ -77,8 +77,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const body = await request.json().catch(() => ({}));
   const action = cleanText(body.action);
   const statusMap: Record<string, { status?: string; registration_status?: string }> = {
-    publish: { status: 'published', registration_status: 'open' },
-    unpublish: { status: 'offline', registration_status: 'closed' },
     closeRegistration: { registration_status: 'closed' },
     openRegistration: { registration_status: 'open' },
   };
@@ -101,5 +99,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     values.push(routeParams.id);
     db.prepare(`UPDATE event_competitions SET ${sets.join(', ')} WHERE id = ?`).run(...values);
     return Response.json({ success: true });
+  });
+}
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const routeParams = await params;
+  if (!hasAuth(request)) return unauthorized();
+
+  return withEventDb((db) => {
+    const competition = db.prepare('SELECT id, name FROM event_competitions WHERE id = ?').get(routeParams.id);
+    if (!competition) return jsonError('赛事不存在', 404);
+
+    const counts = {
+      groups: Number(db.prepare('SELECT COUNT(*) AS value FROM event_groups WHERE competition_id = ?').get(routeParams.id)?.value || 0),
+      players: Number(db.prepare('SELECT COUNT(*) AS value FROM event_players WHERE competition_id = ?').get(routeParams.id)?.value || 0),
+      scores: Number(db.prepare('SELECT COUNT(*) AS value FROM event_scores WHERE competition_id = ?').get(routeParams.id)?.value || 0),
+    };
+    db.transaction(() => {
+      db.prepare('DELETE FROM event_competitions WHERE id = ?').run(routeParams.id);
+    })();
+
+    return Response.json({ success: true, data: { deleted: competition, counts } });
   });
 }

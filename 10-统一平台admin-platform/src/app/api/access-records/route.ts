@@ -1,5 +1,8 @@
 import { openAdminDb, type AdminDb } from '@/lib/server/admin-db';
-import { requirePermission } from '../training-db';
+import { displayClientIp } from '@/lib/server/client-ip';
+import { visitLocationInsight } from '@/lib/server/location-insights';
+import { parseAdminAuditDetail, safelyRecordAdminAudit } from '@/lib/server/admin-audit';
+import { authPayloadFromRequest, hasAuth, requirePermission, unauthorized } from '../training-db';
 import { ensureCourseSeriesVisitTable } from '../course/series/[id]/_authorization';
 
 export const dynamic = 'force-dynamic';
@@ -22,9 +25,12 @@ type AccessRecord = {
   referralSource: string;
   visitUrl: string;
   visitLocation: string;
+  visitLocationSource: string;
+  visitLocationConfidence: string;
   ipAddress: string;
   source: string;
   remark: string;
+  adminEvent: '' | 'access' | 'operation' | 'security';
 };
 
 function cleanText(value: unknown, fallback = '') {
@@ -143,10 +149,6 @@ function referralLabel(row: Record<string, unknown>) {
   return '直接访问';
 }
 
-function visitLocationLabel(region: unknown, memberCity: unknown) {
-  return cleanText(region) || cleanText(memberCity);
-}
-
 function courseVisitRows(db: AdminDb): AccessRecord[] {
   if (!tableExists(db, 'CourseSeriesVisitLog')) return [];
   ensureCourseSeriesVisitTable(db);
@@ -164,7 +166,7 @@ function courseVisitRows(db: AdminDb): AccessRecord[] {
     SELECT
       l.id, l.member_id, l.series_id, l.source, ${platformSelect}, l.visitor_key, l.visitor_label,
       l.visited_at, cs.name AS series_name, m.name AS member_name, m.level AS member_level,
-      m.city AS member_city, COALESCE(${phoneSelect}, NULLIF(m.phone, '')) AS member_phone,
+      COALESCE(${phoneSelect}, NULLIF(m.phone, '')) AS member_phone,
       COALESCE(${unionidSelect}, NULLIF(m.wx_unionid, ''), '') AS wx_unionid,
       ${pageUrlSelect} AS page_url, ${ipSelect} AS ip_address, ${ipRegionSelect} AS ip_region,
       ${referrerIdSelect} AS referrer_member_id, ${referrerChannelSelect} AS referrer_channel,
@@ -179,6 +181,8 @@ function courseVisitRows(db: AdminDb): AccessRecord[] {
 
   return rows.map(row => {
     const source = cleanText(row.source, 'learn');
+    const ipAddress = displayClientIp(row.ip_address);
+    const visitLocation = visitLocationInsight(ipAddress, row.ip_region);
     return {
       id: `series-${row.id}`,
       category: 'student',
@@ -196,10 +200,13 @@ function courseVisitRows(db: AdminDb): AccessRecord[] {
       wxUnionid: cleanText(row.wx_unionid),
       referralSource: referralLabel(row),
       visitUrl: cleanText(row.page_url),
-      visitLocation: visitLocationLabel(row.ip_region, row.member_city),
-      ipAddress: cleanText(row.ip_address),
+      visitLocation: visitLocation.label,
+      visitLocationSource: visitLocation.source,
+      visitLocationConfidence: visitLocation.confidence,
+      ipAddress,
       source,
       remark: cleanText(row.member_id).startsWith('-') ? '游客访问' : '',
+      adminEvent: '',
     };
   });
 }
@@ -215,7 +222,7 @@ function videoProgressRows(db: AdminDb): AccessRecord[] {
       COALESCE(vp.last_play_at, vp.created_at) AS visited_at,
       cv.name AS video_name, cs.name AS series_name,
       m.name AS member_name, m.phone AS member_phone, m.level AS member_level,
-      m.wx_unionid AS wx_unionid, m.city AS member_city
+      m.wx_unionid AS wx_unionid
     FROM VideoProgress vp
     LEFT JOIN CourseVideo cv ON cv.id = vp.video_id
     LEFT JOIN OnlineCourse oc ON oc.id = cv.course_id
@@ -247,10 +254,13 @@ function videoProgressRows(db: AdminDb): AccessRecord[] {
       wxUnionid: cleanText(row.wx_unionid),
       referralSource: '直接访问',
       visitUrl: `/online-course/video/${row.video_id}`,
-      visitLocation: cleanText(row.member_city),
+      visitLocation: '',
+      visitLocationSource: '',
+      visitLocationConfidence: '',
       ipAddress: '',
       source: 'video_progress',
       remark: percent ? `进度 ${percent}%` : '',
+      adminEvent: '',
     };
   });
 }
@@ -302,25 +312,25 @@ function operationRows(db: AdminDb): AccessRecord[] {
   const names = adminNameMap(db);
   const membersByPhone = new Map<string, Record<string, unknown>>();
   if (tableExists(db, 'Member')) {
-    db.prepare("SELECT id, name, phone, level, city, wx_unionid FROM Member WHERE COALESCE(phone,'')<>''")
+    db.prepare("SELECT id, name, phone, level, wx_unionid FROM Member WHERE COALESCE(phone,'')<>''")
       .all<Record<string, unknown>>()
       .forEach(member => membersByPhone.set(cleanText(member.phone), member));
   }
   const rows = db.prepare(`
     SELECT id, time, operator, type, module, detail
     FROM OperationLog
-    ORDER BY datetime(time) DESC, id DESC
+    ORDER BY datetime(replace(time, '/', '-')) DESC, id DESC
     LIMIT 3000
   `).all<Record<string, unknown>>();
 
   return rows.map(row => {
-    const module = cleanText(row.module, '系统');
+    const auditModule = cleanText(row.module, '系统');
     const type = cleanText(row.type, '后台操作');
     const detail = cleanText(row.detail, '-');
     const operator = cleanText(row.operator, '管理员');
     const visitedAt = dateText(row.time);
 
-    if (module === '学员端') {
+    if (auditModule === '学员端') {
       const student = splitStudentOperation(detail, operator);
       const member = membersByPhone.get(student.phone);
       return {
@@ -330,23 +340,29 @@ function operationRows(db: AdminDb): AccessRecord[] {
         memberLevel: cleanText(member?.level),
         visitedAt,
         platform: '官网/学员端',
-        module,
+        module: auditModule,
         action: student.action,
         targetTitle: student.targetTitle,
-        visitorName: student.visitorName,
+        visitorName: cleanText(member?.name, student.visitorName),
         visitorPhone: student.phone,
         visitorKey: '',
         visitorType: '学员',
         wxUnionid: cleanText(member?.wx_unionid),
         referralSource: '直接访问',
         visitUrl: student.visitUrl,
-        visitLocation: cleanText(member?.city),
-        ipAddress: cleanText(student.ip),
+        visitLocation: '',
+        visitLocationSource: '',
+        visitLocationConfidence: '',
+        ipAddress: displayClientIp(student.ip),
         source: 'student_portal',
         remark: '',
+        adminEvent: '',
       } satisfies AccessRecord;
     }
 
+    const audit = parseAdminAuditDetail(detail);
+    const ipAddress = displayClientIp(audit?.ipAddress);
+    const visitLocation = visitLocationInsight(ipAddress, '');
     return {
       id: `admin-${row.id}`,
       category: 'admin',
@@ -354,20 +370,25 @@ function operationRows(db: AdminDb): AccessRecord[] {
       memberLevel: '',
       visitedAt,
       platform: '后台系统',
-      module,
+      module: auditModule,
       action: type,
-      targetTitle: detail,
+      targetTitle: audit
+        ? [audit.label, `${audit.method} ${audit.path}`, audit.status ? `${audit.result === 'success' ? '成功' : '失败'} ${audit.status}` : ''].filter(Boolean).join(' · ')
+        : detail,
       visitorName: names.get(operator) || operator,
       visitorPhone: '',
       visitorKey: '',
       visitorType: '管理员',
       wxUnionid: '',
-      referralSource: '后台直接访问',
-      visitUrl: '',
-      visitLocation: '',
-      ipAddress: '',
+      referralSource: audit ? '管理员后台' : '后台直接访问',
+      visitUrl: audit?.path || '',
+      visitLocation: visitLocation.label,
+      visitLocationSource: visitLocation.source,
+      visitLocationConfidence: visitLocation.confidence,
+      ipAddress,
       source: 'admin',
-      remark: '',
+      remark: audit?.userAgent ? audit.userAgent.slice(0, 120) : '',
+      adminEvent: audit?.kind || (type.includes('登录') ? 'security' : 'operation'),
     } satisfies AccessRecord;
   });
 }
@@ -379,12 +400,14 @@ function filterRows(rows: AccessRecord[], request: Request) {
   const action = cleanText(url.searchParams.get('action'), 'all');
   const start = cleanText(url.searchParams.get('start'));
   const end = cleanText(url.searchParams.get('end'));
+  const adminEvent = cleanText(url.searchParams.get('adminEvent'), 'all');
 
   return rows.filter(row => {
     if (platform !== 'all' && row.platform !== platform) return false;
     if (action !== 'all' && row.action !== action) return false;
     if (start && row.visitedAt.slice(0, 10) < start) return false;
     if (end && row.visitedAt.slice(0, 10) > end) return false;
+    if (adminEvent !== 'all' && row.adminEvent !== adminEvent) return false;
     if (!q) return true;
     return [
       row.visitedAt,
@@ -402,6 +425,7 @@ function filterRows(rows: AccessRecord[], request: Request) {
       row.referralSource,
       row.visitUrl,
       row.visitLocation,
+      row.visitLocationSource,
       row.ipAddress,
       row.source,
       row.remark,
@@ -475,4 +499,23 @@ export async function GET(request: Request) {
   } finally {
     db.close();
   }
+}
+
+export async function POST(request: Request) {
+  if (!hasAuth(request)) return unauthorized();
+  const actor = authPayloadFromRequest(request);
+  if (!actor?.username && process.env.NODE_ENV === 'production') return unauthorized();
+  const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+  const kind = body.kind === 'operation' ? 'operation' : body.kind === 'security' ? 'security' : 'access';
+  const result = safelyRecordAdminAudit({
+    actor: actor?.username || 'local-admin',
+    kind,
+    method: cleanText(body.method),
+    path: cleanText(body.path),
+    status: Number(body.status || 0),
+    label: cleanText(body.label),
+    request,
+    dedupeSeconds: kind === 'access' ? 60 : 0,
+  });
+  return Response.json({ success: true, inserted: result.inserted });
 }

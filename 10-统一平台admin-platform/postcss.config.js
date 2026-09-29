@@ -1,6 +1,6 @@
 module.exports = {
   plugins: {
-    '@tailwindcss/postcss': {},
+    '@tailwindcss/postcss': { base: require('node:path').join(__dirname, 'src') },
     autoprefixer: {},
   },
 };

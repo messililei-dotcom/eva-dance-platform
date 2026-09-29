@@ -1,3 +1,4 @@
+const share = require("../../shared/share");
 const api = require("../../utils/api");
 
 function dateText(value) {
@@ -23,7 +24,7 @@ function normalizeEvent(item) {
   };
 }
 
-Page({
+Page(share.withShare("events", {
   data: {
     loading: true,
     events: [],
@@ -34,14 +35,10 @@ Page({
     recordCount: 0
   },
   onLoad() {
-    wx.showShareMenu({ withShareTicket: true });
     this.loadEvents();
   },
   onPullDownRefresh() {
     this.loadEvents().finally(() => wx.stopPullDownRefresh());
-  },
-  onShareAppMessage() {
-    return { title: "伊娃东方舞赛事", path: "pages/events/events", imageUrl: "/images/logo.png" };
   },
   async loadEvents() {
     this.setData({ loading: true });
@@ -82,4 +79,4 @@ Page({
   onImageError(event) {
     this.setData({ [`visibleEvents[${Number(event.currentTarget.dataset.index)}].coverUrl`]: "" });
   }
-});
+}));

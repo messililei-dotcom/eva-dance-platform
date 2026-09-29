@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { deleteVodVideos, getVodConfigStatus, getVodPlayUrl, getVodVideoStatus, listVodVideos, uploadLocalVideoToVod, type VodVideoInfo } from '@/lib/server/aliyun-vod';
+import { deleteVodVideos, getVodConfigStatus, getVodPlayOptions, getVodVideoStatus, listVodVideos, uploadLocalVideoToVod, type VodVideoInfo } from '@/lib/server/aliyun-vod';
+import { materialDeletionTombstoneIds } from '@/lib/server/material-deletion-tombstones';
 import { cleanText, deleteLocalMaterialFiles, ensureDefaultMaterialFolder, localMaterialPath } from './_materials';
 
 type VodMaterialRow = {
@@ -11,11 +12,23 @@ type VodMaterialRow = {
   file_url?: string;
   thumbnail?: string;
   vod_video_id?: string;
+  vod_media_id?: string;
   transcode_status?: string;
   is_referenced?: number;
   file_size?: number;
+  duration?: number;
   updated_at?: string;
 };
+
+type VodImportOptions = {
+  limit?: number;
+  minIntervalMs?: number;
+};
+
+const DEFAULT_VOD_AUTO_IMPORT_LIMIT = Math.max(100, Math.min(5000, Number(process.env.ALIYUN_VOD_AUTO_IMPORT_LIMIT || 1000)));
+let lastVodImportAt = 0;
+let lastVodImportLimit = 0;
+let lastVodImportResult: any = null;
 
 function statusFromVodStatus(status: string | null, fallback: string) {
   switch (status) {
@@ -55,6 +68,81 @@ function comparableMaterialName(value: string) {
     .toLowerCase();
 }
 
+function vodFileSize(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
+}
+
+function vodDuration(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : 0;
+}
+
+function updateReferencedCourseVideoDuration(db: any, materialId: number, duration: number) {
+  if (!duration) return;
+  try {
+    db.prepare('UPDATE CourseVideo SET duration=? WHERE material_id=? AND COALESCE(duration,0)=0').run(duration, materialId);
+  } catch {}
+}
+
+function maxPlayOptionValue(options: { size?: number; duration?: number }[], key: 'size' | 'duration') {
+  return Math.max(0, ...options.map(item => Number(item[key] || 0)).filter(value => Number.isFinite(value) && value > 0));
+}
+
+function applyVodMetadata(db: any, row: VodMaterialRow, video: VodVideoInfo, status: string) {
+  const updates: string[] = [];
+  const values: any[] = [];
+  const currentName = String(row.name || '').trim();
+  const nextName = materialNameFromVod(video);
+  const nextFilePath = `vod:${video.videoId}`;
+  const nextFileSize = vodFileSize(video.size);
+  const nextDuration = vodDuration(video.duration);
+  const nextThumbnail = String(video.coverUrl || '').trim();
+  const hadLocalFile = Boolean(localMaterialPath(String(row.file_path || '')) || localMaterialPath(String(row.file_url || '')));
+
+  if ((!currentName || /^vod-/i.test(currentName)) && nextName && currentName !== nextName) {
+    updates.push('name=?');
+    values.push(nextName);
+  }
+  if (String(row.file_path || '') !== nextFilePath) {
+    updates.push('file_path=?');
+    values.push(nextFilePath);
+  }
+  if (String(row.file_url || '')) {
+    updates.push("file_url=''");
+  }
+  if (String(row.vod_video_id || '').trim() !== video.videoId) {
+    updates.push('vod_video_id=?');
+    values.push(video.videoId);
+  }
+  if (String(row.vod_media_id || '').trim() !== video.videoId) {
+    updates.push('vod_media_id=?');
+    values.push(video.videoId);
+  }
+  if (nextFileSize && vodFileSize(row.file_size) !== nextFileSize) {
+    updates.push('file_size=?');
+    values.push(nextFileSize);
+  }
+  if (nextDuration && vodDuration(row.duration) !== nextDuration) {
+    updates.push('duration=?');
+    values.push(nextDuration);
+  }
+  if (nextThumbnail && !String(row.thumbnail || '').trim()) {
+    updates.push('thumbnail=?');
+    values.push(nextThumbnail);
+  }
+  if (status && status !== String(row.transcode_status || '')) {
+    updates.push('transcode_status=?');
+    values.push(status);
+  }
+
+  if (!updates.length) return false;
+  db.prepare(`UPDATE Material SET ${updates.join(', ')}, updated_at=datetime('now','localtime') WHERE id=?`).run(...values, row.id);
+  updateReferencedCourseVideoDuration(db, row.id, nextDuration);
+  if (hadLocalFile) deleteLocalMaterialFiles([row]).catch(() => null);
+  return true;
+}
+
 function localVideoFile(row: VodMaterialRow) {
   const candidates = [row.file_path, row.file_url]
     .map(value => localMaterialPath(String(value || '')))
@@ -87,49 +175,87 @@ async function reuploadLocalVideoToVod(db: any, row: VodMaterialRow) {
   });
   db.prepare(`
     UPDATE Material
-    SET vod_video_id=?,
+    SET file_path=?,
+        file_url='',
+        vod_video_id=?,
         vod_media_id=?,
         transcode_status='processing',
         updated_at=datetime('now','localtime')
     WHERE id=?
-  `).run(uploaded.videoId, uploaded.videoId, row.id);
+  `).run(`vod:${uploaded.videoId}`, uploaded.videoId, uploaded.videoId, row.id);
   if (oldVideoId && oldVideoId !== uploaded.videoId) {
     await deleteVodVideos([oldVideoId]).catch(() => null);
   }
+  await deleteLocalMaterialFiles([row]).catch(() => null);
   return true;
 }
 
 function claimLocalMaterialForVod(db: any, video: VodVideoInfo, name: string, status: string) {
   const targetName = comparableMaterialName(name);
-  if (!targetName || !video.size) return false;
+  if (!targetName) return false;
   const candidates = db.prepare(`
-    SELECT id, name, thumbnail, is_referenced, vod_video_id
+    SELECT id, name, thumbnail, is_referenced, vod_video_id, file_size, file_path, file_url
     FROM Material
     WHERE type='video'
-      AND file_size=?
       AND COALESCE(vod_video_id,'')=''
     ORDER BY is_referenced DESC, id DESC
     LIMIT 20
-  `).all(Math.max(0, Math.floor(video.size || 0)));
-  const match = candidates.find((row: any) => comparableMaterialName(row.name || '') === targetName);
+  `).all();
+  const videoSize = vodFileSize(video.size);
+  const videoDuration = vodDuration(video.duration);
+  const match = candidates.find((row: any) => {
+    if (comparableMaterialName(row.name || '') !== targetName) return false;
+    const rowSize = Math.max(0, Math.floor(Number(row.file_size || 0)));
+    if (videoSize && rowSize === videoSize) return true;
+    return !rowSize && !String(row.file_path || row.file_url || '').trim();
+  });
   if (!match) return false;
   db.prepare(`
     UPDATE Material
     SET name=?,
+        file_path=?,
+        file_url='',
         vod_video_id=?,
         vod_media_id=?,
+        file_size=?,
+        duration=?,
         thumbnail=COALESCE(NULLIF(thumbnail,''), ?),
         transcode_status=?,
         updated_at=datetime('now','localtime')
     WHERE id=?
-  `).run(name, video.videoId, video.videoId, video.coverUrl || '', status, match.id);
+  `).run(name, `vod:${video.videoId}`, video.videoId, video.videoId, videoSize, videoDuration, video.coverUrl || '', status, match.id);
+  updateReferencedCourseVideoDuration(db, match.id, videoDuration);
+  deleteLocalMaterialFiles([match]).catch(() => null);
   return true;
+}
+
+function repairExistingVodMaterials(db: any, videos: VodVideoInfo[]) {
+  if (!videos.length) return 0;
+  const vodById = new Map(videos.map(video => [video.videoId, video]));
+  const rows = db.prepare(`
+    SELECT id, name, file_path, file_url, thumbnail, vod_video_id, vod_media_id, transcode_status, file_size, duration
+    FROM Material
+    WHERE type='video'
+      AND COALESCE(vod_video_id,'') != ''
+  `).all() as VodMaterialRow[];
+  let repaired = 0;
+  const transaction = db.transaction((items: VodMaterialRow[]) => {
+    for (const row of items) {
+      const video = vodById.get(String(row.vod_video_id || '').trim());
+      if (!video) continue;
+      const status = statusFromVodStatus(video.status || null, String(row.transcode_status || 'processing'));
+      if (applyVodMetadata(db, row, video, status)) repaired += 1;
+    }
+  });
+  transaction(rows);
+  return repaired;
 }
 
 function insertMissingVodMaterials(db: any, videos: VodVideoInfo[]) {
   if (!videos.length) return { imported: 0, claimed: 0 };
   const existingRows = db.prepare("SELECT vod_video_id FROM Material WHERE COALESCE(vod_video_id,'') != ''").all();
   const existingIds = new Set(existingRows.map((row: any) => String(row.vod_video_id || '').trim()).filter(Boolean));
+  const tombstonedIds = materialDeletionTombstoneIds(db);
   const defaultFolder = ensureDefaultMaterialFolder(db);
   const insertStmt = db.prepare(`
     INSERT INTO Material (
@@ -145,6 +271,7 @@ function insertMissingVodMaterials(db: any, videos: VodVideoInfo[]) {
   let claimed = 0;
   const transaction = db.transaction((items: VodVideoInfo[]) => {
     for (const video of items) {
+      if (tombstonedIds.has(video.videoId)) continue;
       if (existingIds.has(video.videoId)) continue;
       const name = materialNameFromVod(video);
       const status = statusFromVodStatus(video.status, 'processing');
@@ -157,8 +284,8 @@ function insertMissingVodMaterials(db: any, videos: VodVideoInfo[]) {
         name,
         Number(defaultFolder.id),
         `vod:${video.videoId}`,
-        Math.max(0, Math.floor(video.size || 0)),
-        Math.max(0, Math.round(video.duration || 0)),
+        vodFileSize(video.size),
+        vodDuration(video.duration),
         video.coverUrl || '',
         status,
         video.videoId,
@@ -172,10 +299,19 @@ function insertMissingVodMaterials(db: any, videos: VodVideoInfo[]) {
   return { imported, claimed };
 }
 
-export async function importMissingVodMaterials(db: any, options: { limit?: number } = {}) {
+export async function importMissingVodMaterials(db: any, options: VodImportOptions = {}) {
   const config = getVodConfigStatus();
-  if (!config.ready) return { checked: 0, imported: 0, ready: false, errors: 0 };
-  const limit = Math.max(1, Math.min(500, Number(options.limit || 100)));
+  if (!config.ready) return { checked: 0, imported: 0, claimed: 0, repaired: 0, ready: false, errors: 0 };
+  const limit = Math.max(1, Math.min(5000, Number(options.limit || DEFAULT_VOD_AUTO_IMPORT_LIMIT)));
+  const minIntervalMs = Math.max(0, Number(options.minIntervalMs || 0));
+  if (
+    minIntervalMs > 0
+    && lastVodImportResult
+    && lastVodImportLimit >= limit
+    && Date.now() - lastVodImportAt < minIntervalMs
+  ) {
+    return { ...lastVodImportResult, throttled: true };
+  }
   const pageSize = Math.min(100, limit);
   try {
     const videos: VodVideoInfo[] = [];
@@ -186,11 +322,20 @@ export async function importMissingVodMaterials(db: any, options: { limit?: numb
       if (!vod.videos.length || videos.length >= vod.total) break;
       page += 1;
     }
+    const repaired = repairExistingVodMaterials(db, videos);
     const result = insertMissingVodMaterials(db, videos);
-    return { checked: videos.length, imported: result.imported, claimed: result.claimed, ready: true, errors: 0 };
+    const response = { checked: videos.length, imported: result.imported, claimed: result.claimed, repaired, ready: true, errors: 0 };
+    lastVodImportAt = Date.now();
+    lastVodImportLimit = limit;
+    lastVodImportResult = response;
+    return response;
   } catch (err: any) {
     console.warn(`[VOD-SYNC] 拉取 VOD 文件列表失败：${err?.message || err}`);
-    return { checked: 0, imported: 0, ready: true, errors: 1 };
+    const response = { checked: 0, imported: 0, claimed: 0, repaired: 0, ready: true, errors: 1 };
+    lastVodImportAt = Date.now();
+    lastVodImportLimit = limit;
+    lastVodImportResult = response;
+    return response;
   }
 }
 
@@ -247,11 +392,22 @@ export async function syncVodMaterials(db: any, rows: VodMaterialRow[], options:
       continue;
     }
 
+    let vodInfo: VodVideoInfo = {
+      videoId: String((vod as any).videoId || vodVideoId),
+      title: String((vod as any).title || row.name || `VOD-${vodVideoId}`),
+      status: String(vod.status || ''),
+      coverUrl: String((vod as any).coverUrl || ''),
+      duration: vodDuration((vod as any).duration),
+      size: vodFileSize((vod as any).size),
+      creationTime: String((vod as any).creationTime || ''),
+    };
     let nextStatus = statusFromVodStatus(vod.status, String(row.transcode_status || 'processing'));
-    if (nextStatus === 'processing') {
+    if (!vodInfo.size || !vodInfo.duration || nextStatus === 'processing') {
       try {
-        const playUrl = await getVodPlayUrl(vodVideoId);
-        if (playUrl) nextStatus = 'success';
+        const playOptions = await getVodPlayOptions(vodVideoId);
+        if (!vodInfo.size) vodInfo = { ...vodInfo, size: vodFileSize(maxPlayOptionValue(playOptions, 'size')) };
+        if (!vodInfo.duration) vodInfo = { ...vodInfo, duration: vodDuration(maxPlayOptionValue(playOptions, 'duration')) };
+        if (nextStatus === 'processing' && playOptions.some(item => item.url)) nextStatus = 'success';
       } catch {}
     }
     if (options.repairStaleUploads && vod.status === 'Uploading' && isStaleVodUpload(row)) {
@@ -265,8 +421,7 @@ export async function syncVodMaterials(db: any, rows: VodMaterialRow[], options:
         console.warn(`[VOD-SYNC] 素材 ${row.id}(${vodVideoId}) 卡在上传中，重传失败：${err?.message || err}`);
       }
     }
-    if (nextStatus !== row.transcode_status) {
-      db.prepare("UPDATE Material SET transcode_status=?, updated_at=datetime('now','localtime') WHERE id=?").run(nextStatus, row.id);
+    if (applyVodMetadata(db, row, vodInfo, nextStatus)) {
       updated += 1;
     }
   }

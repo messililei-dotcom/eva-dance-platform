@@ -233,7 +233,24 @@ export function backfillOfflineEntitlements(db: AdminDb) {
           active ? 'active' : 'pending',
         );
         createdEntitlements += 1;
+      } else {
+        // Payment is the authoritative balance; reservations remain frozen separately.
+        const entitlement = db.prepare('SELECT * FROM OfflineEntitlement WHERE payment_id=?').get<Row>(payment.id)!;
+        const active = ['paid', 'completed'].includes(String(payment.paymentStatus || ''));
+        const used = Number(db.prepare("SELECT COALESCE(SUM(count),0) AS count FROM ConsumeRecord WHERE paymentId=? AND COALESCE(status,'active')='active'").get<{ count: number }>(payment.id)?.count || 0);
+        const frozen = Number(entitlement.frozen_sessions || 0);
+        const available = active ? Math.max(0, Number(payment.remainingSessions || 0) - frozen) : 0;
+        const validFrom = payment.date || '';
+        const validUntil = payment.expireDate || '';
+        const status = active ? 'active' : 'pending';
+        if (entitlement.available_sessions !== available || entitlement.used_sessions !== used || entitlement.status !== status || entitlement.valid_from !== validFrom || entitlement.valid_until !== validUntil) {
+          db.prepare(`UPDATE OfflineEntitlement SET total_sessions=?, available_sessions=?, used_sessions=?,
+            valid_from=?, valid_until=?, status=?, version=version+1, updated_at=? WHERE id=?`)
+            .run(available + frozen + used, available, used, validFrom, validUntil, status, shanghaiNowText(), entitlement.id);
+        }
       }
+      const enrollmentStatus = ['paid', 'completed'].includes(String(payment.paymentStatus || '')) ? 'active' : 'pending_payment';
+      if (enrollment!.status !== enrollmentStatus) db.prepare('UPDATE OfflineEnrollment SET status=?, updated_at=? WHERE id=?').run(enrollmentStatus, shanghaiNowText(), enrollment!.id);
     }
   })();
 
@@ -359,9 +376,10 @@ function activeEntitlement(db: AdminDb, memberId: number, courseId: number) {
     SELECT * FROM OfflineEntitlement
     WHERE member_id=? AND course_id=? AND status='active' AND available_sessions>0
       AND (COALESCE(valid_until,'')='' OR substr(valid_until,1,10)>=?)
+      AND (COALESCE(valid_from,'')='' OR substr(valid_from,1,10)<=?)
     ORDER BY CASE WHEN COALESCE(valid_until,'')='' THEN 1 ELSE 0 END, valid_until, id
     LIMIT 1
-  `).get<Row>(memberId, courseId, today);
+  `).get<Row>(memberId, courseId, today, today);
 }
 
 export function createOfflineBooking(db: AdminDb, input: Row) {
@@ -376,6 +394,7 @@ export function createOfflineBooking(db: AdminDb, input: Row) {
     const session = db.prepare('SELECT * FROM OfflineSession WHERE id=?').get<Row>(sessionId);
     if (!session) throw businessError('课次不存在', 404);
     if (!['published', 'checkin_open'].includes(session.status)) throw businessError('该课次尚未开放预约', 409);
+    if (`${session.session_date} ${session.start_time}` <= now) throw businessError('该课次已开始或结束，不能预约', 409);
     if (session.booking_open_at && now < session.booking_open_at) throw businessError('预约尚未开始', 409);
     if (session.booking_close_at && now > session.booking_close_at) throw businessError('预约已经截止', 409);
     const previousBooking = db.prepare('SELECT * FROM OfflineBooking WHERE member_id=? AND session_id=?')
@@ -495,7 +514,7 @@ export function checkinOfflineBooking(db: AdminDb, input: Row) {
     const entitlement = db.prepare('SELECT * FROM OfflineEntitlement WHERE id=?').get<Row>(booking.entitlement_id);
     if (!entitlement || Number(entitlement.frozen_sessions) < 1) throw businessError('预约冻结课次异常，请联系管理员', 409);
     const payment = db.prepare('SELECT * FROM Payment WHERE id=?').get<Row>(entitlement.payment_id);
-    if (!payment || Number(payment.remainingSessions) < 1) throw businessError('剩余课次不足，无法核销', 409);
+    if (!payment || !['paid', 'completed'].includes(String(payment.paymentStatus || '')) || Number(payment.remainingSessions) < 1) throw businessError('剩余课次不足，无法核销', 409);
     const idempotencyKey = `offline-booking:${booking.id}`;
     const existingConsume = db.prepare('SELECT * FROM ConsumeRecord WHERE idempotencyKey=?').get<Row>(idempotencyKey);
     if (existingConsume) {
@@ -593,7 +612,7 @@ export function listOfflineBookings(db: AdminDb, filters: { memberId?: unknown; 
   `).all(...params);
 }
 
-export function memberOfflineOverview(db: AdminDb, memberId: unknown) {
+export function memberOfflineOverview(db: AdminDb, memberId: unknown, filters: { courseIds?: number[] } = {}) {
   ensureOfflineTrainingTables(db);
   backfillOfflineEntitlements(db);
   const id = positiveInt(memberId);
@@ -606,20 +625,33 @@ export function memberOfflineOverview(db: AdminDb, memberId: unknown) {
     WHERE e.member_id=? AND e.status='active'
     ORDER BY e.valid_until, e.id
   `).all(id);
+  const now = shanghaiNowText();
+  const today = now.slice(0, 10);
+  const courseIds = [...new Set((filters.courseIds || []).map(id => positiveInt(id)).filter(Boolean))].slice(0, 200);
   const sessions = db.prepare(`
     SELECT s.*, c.name AS course_name, c.subType AS course_period,
            EXISTS(
              SELECT 1 FROM OfflineEntitlement e
              WHERE e.member_id=? AND e.course_id=s.course_id AND e.status='active'
                AND e.available_sessions>0
-           ) AS can_book
+               AND (COALESCE(e.valid_from,'')='' OR substr(e.valid_from,1,10)<=?)
+               AND (COALESCE(e.valid_until,'')='' OR substr(e.valid_until,1,10)>=?)
+           ) AS has_valid_entitlement
     FROM OfflineSession s
     JOIN Course c ON c.id=s.course_id
-    WHERE s.status IN ('published','checkin_open')
-      AND (s.booking_close_at='' OR s.booking_close_at>=?)
+    WHERE s.status IN ('published','checkin_open') AND s.session_date>=?
+      ${courseIds.length ? `AND s.course_id IN (${courseIds.map(() => '?').join(',')})` : ''}
     ORDER BY s.session_date, s.start_time
     LIMIT 200
-  `).all(id, shanghaiNowText());
+  `).all<Row>(id, today, today, today, ...courseIds).map(session => {
+    const reason = `${session.session_date} ${session.start_time}` <= now ? '已开课'
+      : session.booking_open_at && session.booking_open_at > now ? '预约未开始'
+      : session.booking_close_at && session.booking_close_at < now ? '预约已截止'
+      : Number(session.booked_count) >= Number(session.capacity) ? '已满员'
+      : !Number(session.has_valid_entitlement) ? '无有效可用课次' : '';
+    const { has_valid_entitlement, ...publicSession } = session;
+    return { ...publicSession, can_book: reason ? 0 : 1, booking_reason: reason };
+  });
   const bookings = listOfflineBookings(db, { memberId: id });
   return { entitlements, sessions, bookings };
 }

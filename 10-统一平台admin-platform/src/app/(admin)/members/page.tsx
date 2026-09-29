@@ -1,18 +1,27 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { App, Avatar, Button, Card, Col, DatePicker, Empty, Form, Input, Modal, Row, Select, Space, Spin, Statistic, Tag, Tooltip, Typography } from 'antd';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import styles from './members.module.css';
+import { useRouter } from 'next/navigation';
+import { App, Avatar, Button, Card, Col, DatePicker, Empty, Form, Input, Modal, Progress, Row, Select, Space, Spin, Statistic, Tag, Tooltip, Typography } from 'antd';
 import { Table } from '@/components/adaptive-table';
 import { DeleteOutlined, PhoneOutlined, ReloadOutlined, SearchOutlined, TeamOutlined, UserAddOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { platformAdapter } from '@/lib/adapters/platform';
-import { formatPaymentAmount } from '@/lib/money-format';
+import { getDefaultRegions } from '@/lib/regions';
+import api from '@/lib/api';
 import { getMemberIdentity, memberSearchText, shortWxId } from '@/lib/member-search';
+import { formatPaymentAmount } from '@/lib/money-format';
 import { sortableColumns } from '@/lib/table-sort';
 import type { Member } from '@/types/domain';
 
 const { Text, Title } = Typography;
 
 const levelColors: Record<string, string> = {
+  '卓越舞者 Lv.5': 'gold',
+  '资深舞者 Lv.4': 'magenta',
+  '舞韵学员 Lv.3': 'purple',
+  '律动学员 Lv.2': 'blue',
+  '初舞学员 Lv.1': 'default',
   高级学员: 'magenta',
   中级学员: 'purple',
   初级学员: 'blue',
@@ -58,41 +67,60 @@ function memberAvatarSource(member?: Pick<Member, 'avatar' | 'raw'> | null) {
 
 export default function MembersPage() {
   const { message, modal } = App.useApp();
+  const router = useRouter();
   const [form] = Form.useForm();
   const createCountry = Form.useWatch('country', form);
   const createProvince = Form.useWatch('province', form);
   const avatarPreview = Form.useWatch('avatar', form);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
-  const [regions, setRegions] = useState<Array<{ province: string; cities: string[] }>>([]);
+  const [regions, setRegions] = useState(getDefaultRegions);
   const [orderRevenue, setOrderRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [courseMember, setCourseMember] = useState<Member | null>(null);
+  const [courseRows, setCourseRows] = useState<Array<Record<string, any>>>([]);
+  const [courseLoading, setCourseLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [level, setLevel] = useState('all');
   const [city, setCity] = useState('all');
   const [activity, setActivity] = useState('all');
 
-  const loadMembers = () => {
-    setLoading(true);
-    Promise.all([
-      platformAdapter.getMemberDirectory(),
-      platformAdapter.getRegions().catch(() => []),
-    ])
-      .then(([directory, regionRows]) => {
-        const directoryMembers = directory.members.filter(isMemberDirectoryRecord);
-        setMembers(directoryMembers);
-        setRegions(regionRows);
-        setOrderRevenue(directory.orderRevenue);
-      })
-      .catch(() => message.error('学员列表加载失败'))
-      .finally(() => setLoading(false));
-  };
+  const [syncing, setSyncing] = useState(false);
+  const [syncedAt, setSyncedAt] = useState('');
+  const [syncError, setSyncError] = useState(false);
+  const requestSequence = useRef(0);
+  const inFlight = useRef(false);
+  const loadMembers = useCallback(async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    const sequence = ++requestSequence.current;
+    setSyncing(true);
+    try {
+      const directory = await platformAdapter.getMemberDirectory();
+      if (sequence !== requestSequence.current) return;
+      setMembers(directory.members.filter(isMemberDirectoryRecord));
+      setOrderRevenue(directory.orderRevenue);
+      setSyncedAt(new Date().toLocaleTimeString('zh-CN', { hour12: false }));
+      setSyncError(false);
+    } catch {
+      if (sequence === requestSequence.current) setSyncError(true);
+    } finally {
+      inFlight.current = false;
+      if (sequence === requestSequence.current) { setLoading(false); setSyncing(false); }
+    }
+  }, []);
 
-  useEffect(() => { loadMembers(); }, []);
+  useEffect(() => {
+    void loadMembers();
+    platformAdapter.getRegions().then(setRegions).catch(() => {});
+    return () => {
+      ++requestSequence.current;
+    };
+  }, [loadMembers]);
 
   const levels = useMemo(() => ['all', ...Array.from(new Set(members.map(item => item.level).filter(Boolean)))], [members]);
   const cities = useMemo(() => ['all', ...Array.from(new Set(members.map(item => item.city).filter(item => item && item !== '-')))], [members]);
@@ -102,11 +130,12 @@ export default function MembersPage() {
   const filtered = useMemo(() => {
     const q = keyword.trim().toLowerCase();
     return members.filter(item => {
-      const matchKeyword = !q || [memberSearchText(item), item.city, item.raw?.address]
-        .some(value => String(value || '').toLowerCase().includes(q));
+      if (item.status === 'merged' && activity !== 'merged') return false;
+      const matchKeyword = !q || `${memberSearchText(item)} ${item.city || ''} ${item.raw?.address || ''}`.includes(q);
       const matchLevel = level === 'all' || item.level === level;
       const matchCity = city === 'all' || item.city === city;
       const matchActivity = activity === 'all'
+        || (activity === 'merged' && item.status === 'merged')
         || (activity === 'active' && item.totalSpent > 0)
         || (activity === 'new-month' && dateValue(item.registerDate).startsWith(new Date().toISOString().slice(0, 7)))
         || (activity === 'high-value' && item.totalSpent >= 5000)
@@ -115,15 +144,15 @@ export default function MembersPage() {
     });
   }, [members, keyword, level, city, activity]);
 
-  const revenue = orderRevenue;
   const currentMonth = new Date().toISOString().slice(0, 7);
-  const activeCount = members.filter(item => item.totalSpent > 0).length;
-  const newThisMonth = members.filter(item => dateValue(item.registerDate).startsWith(currentMonth)).length;
+  const currentMembers = members.filter(item => item.status !== 'merged');
+  const activeCount = currentMembers.filter(item => activeStatuses.has(item.status)).length;
+  const newThisMonth = currentMembers.filter(item => dateValue(item.registerDate).startsWith(currentMonth)).length;
 
   const openCreate = () => {
     setEditingMember(null);
     form.resetFields();
-    form.setFieldsValue({ gender: '女', level: '普通学员', country: '中国', avatar: '' });
+    form.setFieldsValue({ gender: '女', country: '中国', avatar: '' });
     setCreateOpen(true);
   };
 
@@ -132,8 +161,7 @@ export default function MembersPage() {
     return text ? dayjs(text) : undefined;
   };
 
-  const openEdit = async (summaryMember: Member) => {
-    const member = await platformAdapter.getMemberRecord(summaryMember.id).catch(() => summaryMember);
+  const openEdit = (member: Member) => {
     const raw = member.raw || {};
     setEditingMember(member);
     form.setFieldsValue({
@@ -141,7 +169,6 @@ export default function MembersPage() {
       phone: member.phone,
       gender: raw.gender || '女',
       birthday: toDatePickerValue(String(raw.birthday || '')),
-      level: member.level || '普通学员',
       country: member.country || '中国',
       province: raw.province || '',
       city: member.city && member.city !== '-' ? member.city : '',
@@ -152,6 +179,21 @@ export default function MembersPage() {
       avatar: memberAvatarSource(member),
     });
     setCreateOpen(true);
+  };
+
+  const openCourseProgress = async (member: Member) => {
+    setCourseMember(member);
+    setCourseRows([]);
+    setCourseLoading(true);
+    try {
+      const profile = await platformAdapter.getMemberProfile(member.id);
+      const courses = (profile as any).courses;
+      setCourseRows(Array.isArray(courses) ? courses : []);
+    } catch (error: any) {
+      message.error(error?.response?.data?.error || error?.message || '课程学习进度加载失败');
+    } finally {
+      setCourseLoading(false);
+    }
   };
 
   const uploadAvatar = async (file?: File) => {
@@ -195,7 +237,6 @@ export default function MembersPage() {
         phone: values.phone.trim(),
         gender: values.gender,
         birthday: values.birthday ? values.birthday.format('YYYY-MM-DD') : '',
-        level: values.level || '普通学员',
         register_date: values.register_date ? values.register_date.format('YYYY-MM-DD') : '',
         country: values.country || '中国',
         province: values.country === '中国' ? values.province || '' : '',
@@ -243,7 +284,7 @@ export default function MembersPage() {
   if (loading) return <div style={{ padding: 80, textAlign: 'center' }}><Spin size="large" /></div>;
 
   return (
-    <div>
+    <div className={styles.page}>
       <div className="page-header">
         <Row justify="space-between" align="middle" gutter={[16, 16]}>
           <Col>
@@ -252,19 +293,22 @@ export default function MembersPage() {
           </Col>
           <Col>
             <Space>
-              <Button icon={<ReloadOutlined />} onClick={loadMembers}>刷新</Button>
+              <Text type={syncError ? 'danger' : 'secondary'}>{syncError ? '同步失败，请重试' : syncedAt ? `已同步 ${syncedAt} · 打开页面或手动刷新时更新` : '正在同步'}</Text>
+              <Button loading={syncing} icon={<ReloadOutlined />} onClick={() => void loadMembers()}>刷新</Button>
               <Button type="primary" icon={<UserAddOutlined />} onClick={openCreate}>新建学员</Button>
             </Space>
           </Col>
         </Row>
       </div>
 
-      <div className="members-stat-grid">
-        <Card className="members-stat-card"><Statistic title="学员总数" value={members.length} prefix={<UserOutlined />} /></Card>
-        <Card className="members-stat-card"><Statistic title="活跃学员" value={activeCount} prefix={<TeamOutlined />} valueStyle={{ color: '#22C55E' }} /></Card>
-        <Card className="members-stat-card"><Statistic title="本月新增" value={newThisMonth} prefix={<UserAddOutlined />} valueStyle={{ color: '#3B82F6' }} /></Card>
-        <Card className="members-stat-card members-stat-card-wide"><Statistic title="累计消费" value={revenue} prefix={<WalletOutlined />} formatter={value => wanMoneyValue(value)} valueStyle={{ color: '#F72A8A' }} /></Card>
-      </div>
+      <Card className="members-stat-summary-card" styles={{ body: { padding: 0 } }}>
+        <div className="members-stat-grid">
+          <div className="members-stat-item"><Statistic title="学员总数" value={currentMembers.length} prefix={<UserOutlined />} /></div>
+          <div className="members-stat-item"><Statistic title="正常账号" value={activeCount} prefix={<TeamOutlined />} valueStyle={{ color: '#22C55E' }} /></div>
+          <div className="members-stat-item"><Statistic title="本月新增" value={newThisMonth} prefix={<UserAddOutlined />} valueStyle={{ color: '#3B82F6' }} /></div>
+          <div className="members-stat-item"><Statistic title="累计消费" value={orderRevenue} prefix={<WalletOutlined />} formatter={value => wanMoneyValue(value)} valueStyle={{ color: '#F72A8A' }} /></div>
+        </div>
+      </Card>
 
       <Card style={{ marginBottom: 16 }}>
         <Row gutter={[12, 12]} align="middle">
@@ -299,7 +343,8 @@ export default function MembersPage() {
               onChange={setActivity}
               style={{ width: '100%' }}
               options={[
-                { value: 'all', label: '全部状态' },
+                { value: 'all', label: '全部学员（不含合并档案）' },
+                { value: 'merged', label: '已合并档案' },
                 { value: 'active', label: '活跃学员' },
                 { value: 'new-month', label: '本月新增' },
                 { value: 'high-value', label: '高价值学员' },
@@ -313,14 +358,16 @@ export default function MembersPage() {
 
       <Card styles={{ body: { padding: 0 } }}>
         <Table
+          className="members-table"
           rowKey="id"
-          size="middle"
+          size="small"
+          adaptiveBottomGap={12}
           dataSource={filtered}
-          scroll={{ x: 1280 }}
+          scroll={{ x: 1300 }}
           pagination={{ pageSize: 20, showSizeChanger: true, showTotal: total => `共 ${total} 位学员` }}
           locale={{ emptyText: <Empty description="暂无学员数据" /> }}
           onRow={record => ({
-            onClick: () => { void openEdit(record); },
+            onClick: () => openEdit(record),
             style: { cursor: 'pointer' },
           })}
           columns={sortableColumns<Member>([
@@ -328,21 +375,23 @@ export default function MembersPage() {
               title: '学员信息',
               dataIndex: 'name',
               fixed: 'left',
-              width: 240,
+              width: 220,
+              className: 'members-student-info-cell',
+              onHeaderCell: () => ({ className: 'members-student-info-cell' }),
               render: (_, record) => (
-                <Space>
-                  <Avatar size={40} src={memberAvatarSource(record) || undefined} style={{ background: 'linear-gradient(135deg,#F72A8A,#7C3AED)' }}>{record.name[0]}</Avatar>
-                  <div>
+                <div className="members-student-info">
+                  <Avatar size={32} src={memberAvatarSource(record) || undefined} style={{ background: 'linear-gradient(135deg,#F72A8A,#7C3AED)' }}>{record.name[0]}</Avatar>
+                  <div className="members-student-info-text">
                     <Text strong>{record.name}</Text>
                     <div><Text type="secondary"><PhoneOutlined /> {record.phone || '-'}</Text></div>
                   </div>
-                </Space>
+                </div>
               ),
             },
             {
               title: 'Member ID',
               dataIndex: 'id',
-              width: 120,
+              width: 112,
               render: value => <Text copyable={{ text: String(value || '') }}>{value || '-'}</Text>,
             },
             {
@@ -350,42 +399,109 @@ export default function MembersPage() {
               width: 190,
               render: (_, record) => {
                 const identity = getMemberIdentity(record);
-                const id = identity.wxUnionid;
+                const id = identity.wxUnionid || identity.wxOpenid;
+                if (record.status === 'merged') return <Button type="link" size="small" disabled={!record.raw?.mergedInto} onClick={event => { event.stopPropagation(); router.push(`/members/${record.raw?.mergedInto}`); }}>已合并至 {String(record.raw?.mergedInto || '主账号')}</Button>;
+                const kind = identity.wxUnionid ? 'UnionID' : 'OpenID';
                 if (!id) return <Text type="secondary">未绑定</Text>;
                 return (
-                  <Tooltip title={`UnionID: ${id}`}>
-                    <Text copyable={{ text: id }}>UnionID: {shortWxId(id)}</Text>
+                  <Tooltip title={`${kind}: ${id}`}>
+                    <div className="members-wechat-info"><Tag color="green">已绑定</Tag><Text copyable={{ text: id }}>{kind}: {shortWxId(id)}</Text></div>
                   </Tooltip>
                 );
               },
             },
-            { title: '等级', dataIndex: 'level', width: 120, render: value => <Tag color={levelColors[value] || 'default'}>{displayStudentText(value)}</Tag> },
-            { title: '状态', dataIndex: 'status', width: 90, render: value => <Tag color={activeStatuses.has(value) ? 'green' : 'default'}>{activeStatuses.has(value) ? '正常' : value || '-'}</Tag> },
-            { title: '城市', dataIndex: 'city', width: 120 },
-            { title: '注册日期', dataIndex: 'registerDate', width: 120 },
-            { title: '课程数', dataIndex: 'courseCount', align: 'right' as const, width: 90 },
-            { title: '累计消费', dataIndex: 'totalSpent', align: 'right' as const, width: 130, render: value => <Text strong style={{ color: '#F72A8A' }}>{moneyValue(value)}</Text> },
+            { title: '等级', dataIndex: 'level', width: 92, render: value => <Tag color={levelColors[value] || 'default'}>{displayStudentText(value)}</Tag> },
+            { title: '状态', dataIndex: 'status', width: 76, render: value => <Tag color={activeStatuses.has(value) ? 'green' : 'default'}>{activeStatuses.has(value) ? '正常' : (({ inactive: '已停用', merged: '已合并' } as Record<string, string>)[String(value)] || value || '-')}</Tag> },
+            { title: '城市', dataIndex: 'city', width: 88, ellipsis: true },
+            { title: '注册日期', dataIndex: 'registerDate', width: 108 },
+            {
+              title: '课程总数',
+              dataIndex: 'courseCount',
+              align: 'right' as const,
+              width: 126,
+              render: (value, record) => (
+                <Button
+                  type="link"
+                  size="small"
+                  disabled={!numberValue(value)}
+                  style={{ height: 'auto', padding: 0 }}
+                  aria-label={`查看 ${record.name} 的课程与学习进度`}
+                  onClick={event => {
+                    event.stopPropagation();
+                    openCourseProgress(record);
+                  }}
+                >
+                  {numberValue(value)}
+                  <div style={{ fontSize: 11, color: '#64748b' }}>线上 {numberValue(record.raw?.onlineCourseCount)} · 线下 {numberValue(record.raw?.offlineCourseCount)}</div>
+                </Button>
+              ),
+            },
+            { title: '累计消费', dataIndex: 'totalSpent', align: 'right' as const, width: 108, render: value => <Text strong style={{ color: '#F72A8A' }}>{moneyValue(value)}</Text> },
             {
               title: '操作',
               fixed: 'right',
-              width: 90,
+              width: 110,
               render: (_, record) => (
-                <Button
-                  size="small"
-                  danger
-                  icon={<DeleteOutlined />}
-                  title="删除"
-                  aria-label={`删除 ${record.name}`}
-                  onClick={event => {
-                    event.stopPropagation();
-                    deleteMember(record);
-                  }}
-                />
+                <Space size={4}>
+                  <Button
+                    size="small"
+                    aria-label={`查看 ${record.name} 详情`}
+                    onClick={event => {
+                      event.stopPropagation();
+                      router.push(`/members/${record.id}`);
+                    }}
+                  >
+                    详情
+                  </Button>
+                  <Button
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    title="删除"
+                    aria-label={`删除 ${record.name}`}
+                    onClick={event => {
+                      event.stopPropagation();
+                      deleteMember(record);
+                    }}
+                  />
+                </Space>
               ),
             },
           ])}
         />
       </Card>
+
+      <Modal
+        title={courseMember ? `${courseMember.name} · 课程与学习进度` : '课程与学习进度'}
+        open={Boolean(courseMember)}
+        onCancel={() => setCourseMember(null)}
+        footer={null}
+        width={900}
+        destroyOnClose
+      >
+        <Table
+          rowKey={record => String(record.id)}
+          size="middle"
+          loading={courseLoading}
+          dataSource={courseRows}
+          scroll={{ x: 760, y: 'min(52dvh, 480px)' }}
+          pagination={false}
+          locale={{ emptyText: <Empty description={courseLoading ? '正在加载课程' : '暂无课程记录'} /> }}
+          columns={[
+            { title: '课程', dataIndex: 'name', width: 260, render: value => <Text strong>{value || '未命名课程'}</Text> },
+            { title: '类型', dataIndex: 'type', width: 90, render: value => <Tag color={value === 'online' ? 'magenta' : 'blue'}>{value === 'online' ? '线上课程' : '线下课程'}</Tag> },
+            { title: '学习进度', dataIndex: 'progressPercent', width: 190, render: value => <Progress percent={numberValue(value)} size="small" /> },
+            {
+              title: '进度明细',
+              width: 130,
+              render: (_, record) => record.type === 'online'
+                ? `${numberValue(record.watchedVideos)} / ${numberValue(record.totalVideos)} 个视频`
+                : `${numberValue(record.completedSessions)} / ${numberValue(record.totalSessions)} 课次`,
+            },
+            { title: '状态', dataIndex: 'statusText', width: 90, render: (value, record) => <Tag color={record.status === 'completed' ? 'green' : record.status === 'learning' ? 'processing' : 'default'}>{value || '未开始'}</Tag> },
+          ]}
+        />
+      </Modal>
 
       <Modal
         title={editingMember ? '编辑学员' : '新建学员'}
@@ -460,13 +576,8 @@ export default function MembersPage() {
               </Form.Item>
             </Col>
             <Col xs={12} sm={12}>
-              <Form.Item name="level" label="等级">
-                <Select options={[
-                  { value: '普通学员', label: '普通学员' },
-                  { value: '初级学员', label: '初级学员' },
-                  { value: '中级学员', label: '中级学员' },
-                  { value: '高级学员', label: '高级学员' },
-                ]} />
+              <Form.Item label="等级（系统自动）">
+                <Input value={editingMember?.level || '初舞学员 Lv.1'} disabled />
               </Form.Item>
             </Col>
           </Row>

@@ -62,6 +62,8 @@ export type VodPlayOption = {
   definition: string;
   label: string;
   value: string;
+  size: number;
+  duration: number;
 };
 
 export type VodVideoInfo = {
@@ -74,8 +76,37 @@ export type VodVideoInfo = {
   creationTime: string;
 };
 
+export type VodCategoryInfo = {
+  cateId: number;
+  cateName: string;
+  parentId: number;
+  level: number;
+  type: string;
+  subTotal: number;
+};
+
 function vodRegion() {
   return process.env.ALIYUN_VOD_REGION || 'cn-shenzhen';
+}
+
+function vodNumber(...values: unknown[]) {
+  for (const value of values) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return 0;
+}
+
+function vodVideoInfoFromRpc(item: any): VodVideoInfo {
+  return {
+    videoId: String(item?.VideoId || item?.VideoID || item?.VideoIDString || '').trim(),
+    title: String(item?.Title || '').trim(),
+    status: String(item?.Status || '').trim(),
+    coverUrl: String(item?.CoverURL || item?.CoverUrl || item?.CoverURLString || '').trim(),
+    duration: vodNumber(item?.Duration, item?.DurationSeconds),
+    size: vodNumber(item?.Size, item?.FileSize, item?.Mezzanine?.FileSize),
+    creationTime: String(item?.CreationTime || item?.CreationDate || item?.CreateTime || '').trim(),
+  };
 }
 
 export function isVodConfigured() {
@@ -323,9 +354,16 @@ export async function getVodVideoStatus(videoId: string) {
   if (!id) return { exists: false, status: null };
   try {
     const response = await callVodRpc<any>('GetVideoInfo', { VideoId: id });
+    const video = response?.Video ? vodVideoInfoFromRpc(response.Video) : null;
     return {
-      exists: Boolean(response?.Video),
-      status: response?.Video?.Status ? String(response.Video.Status) : null,
+      exists: Boolean(video?.videoId || response?.Video),
+      status: video?.status || null,
+      videoId: video?.videoId || id,
+      title: video?.title || '',
+      coverUrl: video?.coverUrl || '',
+      duration: video?.duration || 0,
+      size: video?.size || 0,
+      creationTime: video?.creationTime || '',
     };
   } catch (err) {
     if (isVodVideoMissingError(err)) return { exists: false, status: null };
@@ -341,15 +379,7 @@ export async function listVodVideos(input: { page?: number; pageSize?: number } 
     PageSize: pageSize,
   });
   const videos = asArray(response?.VideoList?.Video)
-    .map((item: any): VodVideoInfo => ({
-      videoId: String(item.VideoId || '').trim(),
-      title: String(item.Title || '').trim(),
-      status: String(item.Status || '').trim(),
-      coverUrl: String(item.CoverURL || item.CoverUrl || '').trim(),
-      duration: Number(item.Duration || 0),
-      size: Number(item.Size || 0),
-      creationTime: String(item.CreationTime || '').trim(),
-    }))
+    .map((item: any): VodVideoInfo => vodVideoInfoFromRpc(item))
     .filter(item => item.videoId);
   return {
     page,
@@ -357,6 +387,54 @@ export async function listVodVideos(input: { page?: number; pageSize?: number } 
     total: Number(response?.Total || response?.TotalCount || 0),
     videos,
   };
+}
+
+function vodCategoryFromRaw(item: any): VodCategoryInfo | null {
+  const cateId = Number(item?.CateId ?? item?.cateId ?? 0);
+  if (!Number.isFinite(cateId) || cateId <= 0) return null;
+  return {
+    cateId,
+    cateName: String(item?.CateName ?? item?.cateName ?? '').trim(),
+    parentId: Number(item?.ParentId ?? item?.parentId ?? -1),
+    level: Number(item?.Level ?? item?.level ?? 0),
+    type: String(item?.Type ?? item?.type ?? ''),
+    subTotal: Number(item?.SubTotal ?? item?.subTotal ?? 0),
+  };
+}
+
+export async function getVodSubCategories(parentId = -1) {
+  const response = await callVodRpc<any>('GetCategories', { CateId: parentId });
+  return asArray(response?.SubCategories?.Category)
+    .map(vodCategoryFromRaw)
+    .filter((item): item is VodCategoryInfo => Boolean(item));
+}
+
+export async function addVodCategory(input: { name: string; parentId?: number }) {
+  const response = await callVodRpc<any>('AddCategory', {
+    CateName: input.name,
+    ParentId: Number.isFinite(Number(input.parentId)) ? Number(input.parentId) : -1,
+  });
+  const category = vodCategoryFromRaw(response?.Category);
+  const cateId = category?.cateId || Number(response?.CateId || 0);
+  if (!cateId) throw new Error('VOD 未返回分类 ID');
+  return cateId;
+}
+
+export async function updateVodCategory(input: { cateId: number; name: string }) {
+  await callVodRpc('UpdateCategory', {
+    CateId: input.cateId,
+    CateName: input.name,
+  });
+  return true;
+}
+
+export async function ensureVodCategory(input: { name: string; parentId?: number }) {
+  const name = String(input.name || '').trim();
+  if (!name) throw new Error('VOD 分类名称不能为空');
+  const parentId = Number.isFinite(Number(input.parentId)) ? Number(input.parentId) : -1;
+  const existing = (await getVodSubCategories(parentId)).find(item => item.cateName === name);
+  if (existing) return existing.cateId;
+  return addVodCategory({ name, parentId });
 }
 
 export async function deleteVodVideos(videoIds: string[]) {
@@ -386,6 +464,7 @@ export async function uploadLocalVideoToVod(input: {
   title?: string;
   description?: string;
   templateGroupId?: string;
+  cateId?: number;
 }): Promise<VodUploadResult> {
   const fileName = input.fileName || path.basename(input.filePath);
   const response = await callVodRpc<{
@@ -400,6 +479,7 @@ export async function uploadLocalVideoToVod(input: {
     StorageLocation: process.env.ALIYUN_VOD_STORAGE_LOCATION,
     AppId: process.env.ALIYUN_VOD_APP_ID,
     TemplateGroupId: input.templateGroupId || process.env.ALIYUN_VOD_TEMPLATE_GROUP_ID,
+    CateId: Number(input.cateId || 0) > 0 ? Number(input.cateId) : undefined,
   });
 
   if (!response.VideoId || !response.UploadAddress || !response.UploadAuth) {
@@ -489,9 +569,6 @@ export async function getVodPlayOptions(videoId: string): Promise<VodPlayOption[
     VideoId: videoId,
     Formats: process.env.ALIYUN_VOD_PLAY_FORMATS || 'm3u8,mp4',
     AuthTimeout: Number(process.env.ALIYUN_VOD_PLAY_AUTH_TIMEOUT || 3600),
-    PlayConfig: JSON.stringify({
-      PlayDomain: process.env.ALIYUN_VOD_PLAY_DOMAIN || 'vod.swod.com.cn',
-    }),
   });
   const playInfo = asArray(response?.PlayInfoList?.PlayInfo);
   const byDefinition = new Map<string, VodPlayOption>();
@@ -509,6 +586,8 @@ export async function getVodPlayOptions(videoId: string): Promise<VodPlayOption[
         definition,
         label: vodDefinitionLabel(definition),
         value: definition || format || 'auto',
+        size: vodNumber(item.Size, item.FileSize),
+        duration: vodNumber(item.Duration),
       };
     })
     .filter(item => item.url)

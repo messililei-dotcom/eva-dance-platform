@@ -13,8 +13,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       if (!courseId) return jsonError('课节不存在', 404);
       const data = db.prepare(
         `SELECT cv.id as assoc_id, cv.id, cv.course_id, cv.material_id, cv.name,
-                cv.duration, cv.is_free, cv.sort_order, cv.status, cv.created_at,
-                m.type, m.file_path, m.file_url, m.thumbnail, m.file_size
+                COALESCE(NULLIF(cv.duration, 0), m.duration, 0) as duration, cv.is_free, cv.sort_order, cv.status, cv.created_at,
+                m.type, m.file_path, m.file_url, m.thumbnail, m.file_size, m.vod_video_id, m.transcode_status
          FROM CourseVideo cv
          LEFT JOIN Material m ON m.id=cv.material_id
          WHERE cv.course_id=?

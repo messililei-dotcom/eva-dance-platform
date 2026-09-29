@@ -22,6 +22,7 @@ import {
   Tag,
   Tooltip,
   Typography,
+  Upload,
 } from 'antd';
 import { Table } from '@/components/adaptive-table';
 import {
@@ -32,7 +33,9 @@ import {
   SearchOutlined,
   ShopOutlined,
   ShoppingCartOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
+import ShopOnlineOrders from '@/components/shop-online-orders';
 import { ecommerceApi } from '@/lib/api';
 import { formatCompactMoney, formatPaymentAmount } from '@/lib/money-format';
 import { compareTableValues, sortableColumns } from '@/lib/table-sort';
@@ -205,6 +208,24 @@ function payloadFromProductForm(values: any) {
   };
 }
 
+async function uploadProductImageRequest(data: FormData) {
+  const token = typeof window === 'undefined'
+    ? ''
+    : localStorage.getItem('admin_token') || localStorage.getItem('token') || '';
+  const response = await fetch('/local-api/ecommerce/products/image', {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: data,
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || result?.success === false) {
+    throw Object.assign(new Error(result?.error || result?.message || '上传商品主图失败'), {
+      response: { data: result },
+    });
+  }
+  return result;
+}
+
 export default function EcommercePage() {
   const { message, modal } = App.useApp();
   const [loading, setLoading] = useState(true);
@@ -219,6 +240,7 @@ export default function EcommercePage() {
   const [activeGroup, setActiveGroup] = useState<ProductGroup | null>(null);
   const [activeRecord, setActiveRecord] = useState<any>(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
   const [productForm] = Form.useForm();
   const [stockForm] = Form.useForm();
   const [saleForm] = Form.useForm();
@@ -348,9 +370,17 @@ export default function EcommercePage() {
 
   const submitProduct = async () => {
     const values = await productForm.validateFields();
+    if (imageUploading) {
+      message.warning('商品主图正在上传，请稍后保存');
+      return;
+    }
+    if (imagePreview.startsWith('data:image/')) {
+      message.error('商品主图还没有上传成功，请重新选择图片后再保存');
+      return;
+    }
     const payload = payloadFromProductForm({ ...values, image: imagePreview });
     if (modalMode === 'editProduct' && activeProduct) {
-      await ecommerceApi.updateProduct(activeProduct.id, payload);
+      await ecommerceApi.updateProduct(activeProduct.id, { ...payload, expectedUpdatedAt: activeProduct.updatedAt });
       message.success('商品已更新');
     } else {
       await ecommerceApi.createProduct(payload);
@@ -503,11 +533,32 @@ export default function EcommercePage() {
     });
   };
 
-  const uploadImage = (file?: File) => {
-    if (!file || !file.type.startsWith('image/')) return false;
-    const reader = new FileReader();
-    reader.onload = () => setImagePreview(String(reader.result || ''));
-    reader.readAsDataURL(file);
+  const uploadImage = async (file?: File) => {
+    if (!file || !file.type.startsWith('image/')) {
+      message.error('请选择图片文件');
+      return false;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      message.error('商品主图不能超过 8MB');
+      return false;
+    }
+    setImageUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('productName', productForm.getFieldValue('name') || activeProduct?.name || 'product');
+      formData.append('oldImage', imagePreview || activeProduct?.image || '');
+      const result = await uploadProductImageRequest(formData);
+      const image = result?.data?.image || result?.data?.url || result?.image || result?.url;
+      if (!image) throw new Error('上传成功但未返回图片地址');
+      setImagePreview(image);
+      productForm.setFieldValue('image', image);
+      message.success('商品主图已上传');
+    } catch (error) {
+      message.error(errorText(error));
+    } finally {
+      setImageUploading(false);
+    }
     return false;
   };
 
@@ -648,6 +699,7 @@ export default function EcommercePage() {
         activeKey={activeTab}
         onChange={setActiveTab}
         items={[
+          { key: 'online-orders', label: '官网商城订单', children: <ShopOnlineOrders /> },
           {
             key: 'workbench',
             label: `工作台 ${groups.length}`,
@@ -722,7 +774,7 @@ export default function EcommercePage() {
                   rowKey="id"
                   dataSource={filteredProducts}
                   size="middle"
-                  scroll={{ x: 1260 }}
+                  scroll={{ x: 1260, y: 'calc(100dvh - 430px)' }}
                   pagination={{ pageSize: 20, showSizeChanger: true, showTotal: total => `共 ${total} 个 SKU` }}
                   locale={{ emptyText: <Empty description="暂无商品库存数据" /> }}
                   columns={productColumns}
@@ -745,7 +797,7 @@ export default function EcommercePage() {
                     rowKey="id"
                     dataSource={stockLogs}
                     size="middle"
-                    scroll={{ x: 1100 }}
+                    scroll={{ x: 1100, y: 'calc(100dvh - 500px)' }}
                     pagination={{ pageSize: 20, showSizeChanger: true }}
                     columns={sortableColumns([
                       { title: '日期', dataIndex: 'date', width: 120, sorter: (a: any, b: any) => compareTableValues(a.date, b.date) },
@@ -779,7 +831,7 @@ export default function EcommercePage() {
                     rowKey="id"
                     dataSource={sales}
                     size="middle"
-                    scroll={{ x: 1120 }}
+                    scroll={{ x: 1120, y: 'calc(100dvh - 500px)' }}
                     pagination={{ pageSize: 20, showSizeChanger: true }}
                     columns={sortableColumns([
                       { title: '日期', dataIndex: 'date', width: 120, sorter: (a: any, b: any) => compareTableValues(a.date, b.date) },
@@ -801,7 +853,7 @@ export default function EcommercePage() {
         ]}
       />
 
-      <Modal title={modalMode === 'editProduct' ? '编辑商品' : '新增商品'} open={modalMode === 'product' || modalMode === 'editProduct'} onCancel={closeModal} onOk={submitProduct} okText="保存" cancelText="取消" width={760}>
+      <Modal title={modalMode === 'editProduct' ? '编辑商品' : '新增商品'} open={modalMode === 'product' || modalMode === 'editProduct'} onCancel={closeModal} onOk={submitProduct} okText="保存" cancelText="取消" width={760} okButtonProps={{ disabled: imageUploading }}>
         <Form form={productForm} layout="vertical">
           <Row gutter={12}>
             <Col xs={24} sm={8}>
@@ -809,6 +861,26 @@ export default function EcommercePage() {
                 <div style={{ width: 160, height: 160, border: '1px dashed #d9d9d9', borderRadius: 8, overflow: 'hidden', display: 'grid', placeItems: 'center', color: '#8c8c8c', background: '#fafafa' }}>
                   {imagePreview ? <img src={imagePreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '暂无图片'}
                 </div>
+                <Upload
+                  showUploadList={false}
+                  accept="image/*"
+                  beforeUpload={(file) => {
+                    void uploadImage(file);
+                    return false;
+                  }}
+                >
+                  <Button icon={<UploadOutlined />} loading={imageUploading} style={{ marginTop: 8, width: 160 }}>
+                    上传主图
+                  </Button>
+                </Upload>
+                {imagePreview ? (
+                  <Button type="link" size="small" danger style={{ paddingInline: 0 }} onClick={() => {
+                    setImagePreview('');
+                    productForm.setFieldValue('image', '');
+                  }}>
+                    清除主图
+                  </Button>
+                ) : null}
               </Form.Item>
             </Col>
             <Col xs={24} sm={16}>

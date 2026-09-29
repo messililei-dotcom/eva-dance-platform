@@ -505,7 +505,7 @@ export default function PermissionsPage() {
         <Col xs={24} md={8}>
           <Card
             actions={[
-              <Button type="link" icon={<EditOutlined />} onClick={() => openRolePermEdit('admin')}>编辑权限</Button>,
+              <Button key="edit-permissions" type="link" icon={<EditOutlined />} onClick={() => openRolePermEdit('admin')}>编辑权限</Button>,
             ]}
           >
             <Statistic
@@ -520,7 +520,7 @@ export default function PermissionsPage() {
         <Col xs={24} md={8}>
           <Card
             actions={[
-              <Button type="link" icon={<EditOutlined />} onClick={() => openRolePermEdit('teacher')}>编辑权限</Button>,
+              <Button key="edit-permissions" type="link" icon={<EditOutlined />} onClick={() => openRolePermEdit('teacher')}>编辑权限</Button>,
             ]}
           >
             <Statistic
@@ -535,7 +535,7 @@ export default function PermissionsPage() {
         <Col xs={24} md={8}>
           <Card
             actions={[
-              <Button type="link" icon={<EditOutlined />} onClick={() => openRolePermEdit('user')}>编辑权限</Button>,
+              <Button key="edit-permissions" type="link" icon={<EditOutlined />} onClick={() => openRolePermEdit('user')}>编辑权限</Button>,
             ]}
           >
             <Statistic

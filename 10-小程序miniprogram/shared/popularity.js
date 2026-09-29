@@ -47,6 +47,8 @@ function hashSeed(seed) {
 }
 
 function stableStudentBase(item) {
+  const configured = Number(item && item.student_display_base);
+  if (Number.isInteger(configured) && configured >= PUBLIC_STUDENT_BASE_MIN && configured <= PUBLIC_STUDENT_BASE_MAX) return configured;
   loadStoredBases();
   const seed = courseSeed(item);
   if (baseBySeed[seed] !== undefined) return baseBySeed[seed];

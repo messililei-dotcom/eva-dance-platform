@@ -101,8 +101,6 @@ export default function OrderCenterPage() {
       render: (v: number) => <span style={{ fontWeight: 600 }}>{formatPaymentAmount(v)}</span> },
     { title: '状态', dataIndex: 'status', key: 'status', width: 100,
       render: (_: any, r: any) => <Tag color={r.statusLabel.color}>{r.statusLabel.label}</Tag> },
-    { title: '支付方式', dataIndex: 'payMethod', key: 'payMethod', width: 90,
-      render: (v: string) => ({ wechat: '微信', alipay: '支付宝', bank: '银行转账', cash: '现金', '-': '-' })[v] || '-' },
     { title: '下单时间', dataIndex: 'createdAt', key: 'createdAt', width: 150, render: (v: string) => <span style={{ fontSize: 12, color: '#666' }}>{v}</span> },
     { title: '操作', key: 'action', width: 80, fixed: 'right' as const,
       render: (_: any, r: any) => <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => showDetail(r)}>详情</Button> },
@@ -138,7 +136,7 @@ export default function OrderCenterPage() {
       </Card>
 
       {/* Table */}
-      <Table columns={columns} dataSource={filtered} scroll={{ x: 1100 }} size="middle"
+      <Table columns={columns} dataSource={filtered} scroll={{ x: 1100, y: 'calc(100dvh - 390px)' }} size="middle"
         pagination={{ pageSize: 20, showSizeChanger: true, showTotal: t => `共 ${t} 条` }} />
 
       {/* Detail Modal */}
@@ -159,7 +157,6 @@ export default function OrderCenterPage() {
                 </span>
               </Descriptions.Item>
               <Descriptions.Item label="状态"><Tag color={detailOrder.statusLabel.color}>{detailOrder.statusLabel.label}</Tag></Descriptions.Item>
-              <Descriptions.Item label="支付方式">{detailOrder.payMethod === '-' ? '未支付' : detailOrder.payMethod}</Descriptions.Item>
               <Descriptions.Item label="下单时间">{detailOrder.createdAt}</Descriptions.Item>
               <Descriptions.Item label="支付时间">{detailOrder.paidAt}</Descriptions.Item>
             </Descriptions>

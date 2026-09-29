@@ -1,3 +1,4 @@
+import { ensureAuthorizationCommissionColumns } from '@/lib/server/authorization-commission';
 import { jsonError, toPositiveInt, withDb } from '../../../_materials';
 import { requirePermission } from '../../../../training-db';
 import { ensureAuthorizationAuditColumns, ensureCourseSeriesVisitTable } from '../_authorization';
@@ -14,16 +15,26 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return withDb((db) => {
       ensureCourseSeriesVisitTable(db);
       ensureAuthorizationAuditColumns(db);
+      ensureAuthorizationCommissionColumns(db);
       const seriesId = toPositiveInt(routeParams.id);
       const url = new URL(request.url);
       const tab = String(url.searchParams.get('tab') || 'all');
       const keyword = String(url.searchParams.get('keyword') || '').trim();
+      const summaryOnly = url.searchParams.get('summary') === '1';
       const values: unknown[] = [seriesId, seriesId, seriesId];
       const where: string[] = [];
 
       if (keyword) {
-        where.push('(m.name LIKE ? OR m.phone LIKE ?)');
-        values.push(`%${keyword}%`, `%${keyword}%`);
+        where.push(`(
+          CAST(m.id AS TEXT) LIKE ?
+          OR m.name LIKE ?
+          OR m.phone LIKE ?
+          OR COALESCE(m.wx_openid, '') LIKE ?
+          OR COALESCE(m.wx_unionid, '') LIKE ?
+          OR COALESCE(ca.wx_openid, '') LIKE ?
+          OR COALESCE(ca.wx_unionid, '') LIKE ?
+        )`);
+        values.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
       }
       if (tab === 'authorized') where.push("ca.status = 'active'");
       if (tab === 'unauthorized') where.push("(ca.id IS NULL OR ca.status <> 'active') AND (ca.id IS NOT NULL OR fv.first_visited_at IS NOT NULL)");
@@ -31,6 +42,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
       const rows = db.prepare(
         `SELECT m.id, m.id as member_id, m.name, m.phone, m.level,
+                COALESCE(NULLIF(m.wx_openid, ''), NULLIF(ca.wx_openid, ''), '') as wx_openid,
+                COALESCE(NULLIF(m.wx_unionid, ''), NULLIF(ca.wx_unionid, ''), '') as wx_unionid,
                 m.source as member_source,
                 ca.id as authorization_id,
                 ca.type as authorization_type,
@@ -39,6 +52,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
                 ca.granted_by,
                 ca.revoked_at,
                 ca.revoked_by,
+                ca.actual_amount,
+                ca.sales,
+                CASE WHEN ca.actual_amount IS NOT NULL THEN ca.commission_amount END AS commission_amount,
+                COALESCE(ca.order_vouchers, '[]') as order_vouchers,
                 COALESCE(NULLIF(u.name, ''), NULLIF(u.username, ''), CASE WHEN ca.id IS NOT NULL THEN '系统记录' ELSE NULL END) as granted_by_name,
                 COALESCE(NULLIF(ru.name, ''), NULLIF(ru.username, ''), '') as revoked_by_name,
                 COALESCE(CASE WHEN ca.status = 'revoked' THEN ca.revoked_at END, ca.granted_at, fv.last_visited_at, fv.first_visited_at) as auth_action_at,
@@ -61,6 +78,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
                AND (
                  ca2.member_id=m.id
                  OR (COALESCE(ca2.phone, '')<>'' AND COALESCE(m.phone, '')<>'' AND ca2.phone=m.phone)
+                 OR (COALESCE(ca2.wx_openid, '')<>'' AND ca2.wx_openid=COALESCE(m.wx_openid, ''))
+                 OR (COALESCE(ca2.wx_unionid, '')<>'' AND ca2.wx_unionid=COALESCE(m.wx_unionid, ''))
                )
              ORDER BY ca2.id DESC
              LIMIT 1
@@ -100,41 +119,68 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
          LIMIT 500`
       ).all(...values);
 
-      const grantHistoryRows = db.prepare(
-        `SELECT
-           COALESCE(member_id, 0) AS member_id,
-           COALESCE(phone, '') AS phone,
-           COUNT(*) AS grant_count,
-           SUM(CASE WHEN status='revoked' THEN 1 ELSE 0 END) AS revoke_count
+      const visitLogStmt = db.prepare(
+        `SELECT id, source, visited_at, '' as visit_object
+         FROM CourseSeriesVisitLog
+         WHERE series_id=? AND member_id=?
+         ORDER BY visited_at DESC, id DESC
+         LIMIT 20`
+      );
+      const videoVisitStmt = db.prepare(
+        `SELECT vp.id,
+                'video' as source,
+                COALESCE(vp.last_play_at, vp.created_at) as visited_at,
+                COALESCE(cv.name, oc.name, '课程视频') as visit_object
+         FROM VideoProgress vp
+         JOIN CourseVideo cv ON cv.id=vp.video_id
+         JOIN OnlineCourse oc ON oc.id=cv.course_id
+         WHERE oc.series_id=? AND vp.member_id=?
+         ORDER BY COALESCE(vp.last_play_at, vp.created_at) DESC, vp.id DESC
+         LIMIT 20`
+      );
+      const grantHistoryStmt = db.prepare(
+        `SELECT COUNT(*) as grant_count,
+                SUM(CASE WHEN status='revoked' THEN 1 ELSE 0 END) as revoke_count
          FROM CourseAuthorization
          WHERE series_id=?
-         GROUP BY COALESCE(member_id, 0), COALESCE(phone, '')`
-      ).all(seriesId) as any[];
-      const grantHistoryByMember = new Map(
-        grantHistoryRows
-          .filter(row => Number(row.member_id || 0) > 0)
-          .map(row => [Number(row.member_id), row]),
+           AND (
+             member_id=?
+             OR (COALESCE(phone, '')<>'' AND COALESCE(?, '')<>'' AND phone=?)
+             OR (COALESCE(wx_openid, '')<>'' AND COALESCE(?, '')<>'' AND wx_openid=?)
+             OR (COALESCE(wx_unionid, '')<>'' AND COALESCE(?, '')<>'' AND wx_unionid=?)
+           )`
       );
-      const grantHistoryByPhone = new Map(
-        grantHistoryRows
-          .filter(row => String(row.phone || ''))
-          .map(row => [String(row.phone), row]),
-      );
-      const enrichedRows = rows.map((row: any) => {
-        const grantHistory = grantHistoryByMember.get(Number(row.id))
-          || grantHistoryByPhone.get(String(row.phone || ''));
+      const enrichedRows = summaryOnly ? rows : rows.map((row: any) => {
+        const visitRecords = [
+          ...visitLogStmt.all(seriesId, row.id),
+          ...videoVisitStmt.all(seriesId, row.id),
+        ]
+          .sort((a: any, b: any) => String(b.visited_at || '').localeCompare(String(a.visited_at || '')))
+          .slice(0, 20);
+        const grantHistory = grantHistoryStmt.get(
+          seriesId,
+          row.id,
+          row.phone || '',
+          row.phone || '',
+          row.wx_openid || '',
+          row.wx_openid || '',
+          row.wx_unionid || '',
+          row.wx_unionid || '',
+        ) as any;
         return {
           ...row,
           grant_history: {
             grant_count: Number(grantHistory?.grant_count || 0),
             revoke_count: Number(grantHistory?.revoke_count || 0),
           },
-          visit_records: row.first_visited_at ? [{
-            id: `summary-${row.id}`,
-            source: row.visit_source || 'learn',
-            visited_at: row.last_visited_at || row.first_visited_at,
-            visit_object: '',
-          }] : [],
+          visit_records: visitRecords.length ? visitRecords : (
+            row.first_visited_at ? [{
+              id: `summary-${row.id}`,
+              source: row.visit_source || 'learn',
+              visited_at: row.last_visited_at || row.first_visited_at,
+              visit_object: '',
+            }] : []
+          ),
         };
       });
 

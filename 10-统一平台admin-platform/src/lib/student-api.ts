@@ -77,6 +77,10 @@ export interface StudentCertificate {
 export interface StudentHomeData {
   member: StudentMember;
   progress: StudentProgressSummary;
+  courseStats: {
+    onlineCourses: number;
+    offlineCourses: number;
+  };
   courses: StudentCourse[];
   sessions: StudentSession[];
   plans: StudentPlan[];
@@ -494,6 +498,18 @@ function normalizeProgress(records: any[], courses: StudentCourse[], payments: S
   };
 }
 
+function uniqueOfflineCourseCount(payments: StudentPayment[]) {
+  const keys = new Set<string>();
+  payments.forEach((payment, index) => {
+    const key = [
+      payment.courseId || payment.courseName || `payment-${payment.id || index}`,
+      payment.date || '',
+    ].join('|');
+    keys.add(key);
+  });
+  return keys.size;
+}
+
 function calculateStreak(days: Set<string>): number {
   if (!days.size) return 0;
   let streak = 0;
@@ -566,7 +582,8 @@ export const studentApi = {
     const payments = paymentRows.map(normalizePayment);
     const consumeRecords = consumeRows.map(normalizeConsumeRecord);
     const mergedAuthorized = mergeAuthorizedSeries(authorizedRows, publicSeriesRows, recentRows);
-    const courses = (mergedAuthorized.length ? mergedAuthorized : recentRows).map(normalizeCourse).slice(0, 8);
+    const courseRows = mergedAuthorized.length ? mergedAuthorized : recentRows;
+    const courses = courseRows.map(normalizeCourse);
     const recommend = publicSeriesRows
       .filter(row => !mergedAuthorized.some(course => String(course.series_id || course.id) === String(row.series_id || row.id)))
       .map(normalizeCourse)
@@ -580,6 +597,10 @@ export const studentApi = {
     return {
       member,
       progress: normalizeProgress(recentRows, courses, payments, consumeRecords),
+      courseStats: {
+        onlineCourses: courseRows.length,
+        offlineCourses: uniqueOfflineCourseCount(payments),
+      },
       courses,
       sessions: payments.filter(payment => payment.status === 'active').slice(0, 3).map((payment, index) => normalizeSession({
         id: `payment-${payment.id}`,

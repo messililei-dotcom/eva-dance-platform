@@ -1,6 +1,7 @@
+const share = require("../../shared/share");
 const api = require("../../utils/api");
 
-Page({
+Page(share.withShare("event-register", {
   data: {
     id: null, competition: {}, groups: [], groupIndex: -1,
     name: "", phone: "", organization: "", teacher: "", performanceTitle: "",
@@ -58,4 +59,4 @@ Page({
       wx.showToast({ title: err.message || "赛事报名失败", icon: "none" });
     } finally { this.setData({ submitting: false }); }
   }
-});
+}));

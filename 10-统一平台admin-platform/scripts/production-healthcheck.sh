@@ -5,7 +5,8 @@ APP_DIR="${APP_DIR:-/www/wwwroot/dongfangwuquan/admin-platform}"
 APP_NAME="${APP_NAME:-admin-platform}"
 APP_PORT="${APP_PORT:-3003}"
 ADMIN_ORIGIN="${ADMIN_ORIGIN:-https://admin.swod.com.cn}"
-MINIAPI_ORIGIN="${MINIAPI_ORIGIN:-https://miniapi.swod.com.cn}"
+API_ORIGIN="${API_ORIGIN:-https://api.swod.com.cn}"
+LEGACY_MINIAPI_ORIGIN="${LEGACY_MINIAPI_ORIGIN:-https://miniapi.swod.com.cn}"
 PUBLIC_HEALTH_PATH="${PUBLIC_HEALTH_PATH:-/api/mini/public/home-stats}"
 MAX_DISK_USED_PERCENT="${MAX_DISK_USED_PERCENT:-85}"
 
@@ -61,9 +62,11 @@ fi
 
 section "External checks"
 run curl -fsS -I --connect-timeout 8 --max-time 15 "${ADMIN_ORIGIN}/login"
+run curl -fsS --connect-timeout 8 --max-time 15 "${API_ORIGIN}${PUBLIC_HEALTH_PATH}" | head -c 500
+printf '\n'
 run curl -fsS --connect-timeout 8 --max-time 15 "${ADMIN_ORIGIN}${PUBLIC_HEALTH_PATH}" | head -c 500
 printf '\n'
-run curl -fsS --connect-timeout 8 --max-time 15 "${MINIAPI_ORIGIN}${PUBLIC_HEALTH_PATH}" | head -c 500
+run curl -fsS --connect-timeout 8 --max-time 15 "${LEGACY_MINIAPI_ORIGIN}${PUBLIC_HEALTH_PATH}" | head -c 500
 printf '\n'
 
 section "Done"

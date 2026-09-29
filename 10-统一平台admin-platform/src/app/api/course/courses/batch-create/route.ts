@@ -5,7 +5,9 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 function lessonNameFromMaterial(name: string) {
-  return String(name || '').replace(/\.[^.\\/]+$/, '').trim() || String(name || '').trim();
+  return String(name || '')
+    .replace(/\.(?:mp4|m4v|mov|avi|wmv|flv|mkv|webm|mp3|m4a|wav|aac|flac|ogg|jpg|jpeg|png|gif|webp|svg|pdf|doc|docx|ppt|pptx)$/i, '')
+    .trim() || String(name || '').trim();
 }
 
 export async function POST(request: Request) {

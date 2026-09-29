@@ -1,5 +1,6 @@
 import { MATERIAL_CENTER_ROOT, diskCapacityFor, jsonError, withDb } from '../../_materials';
 import { hasAuth, unauthorized } from '../../../training-db';
+import { importMissingVodMaterials } from '../../_vod-sync';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -7,7 +8,8 @@ export const runtime = 'nodejs';
 export async function GET(request: Request) {
   if (!hasAuth(request)) return unauthorized();
   try {
-    return withDb((db) => {
+    return withDb(async (db) => {
+      await importMissingVodMaterials(db, { minIntervalMs: 15000 });
       const stats = db.prepare('SELECT COALESCE(SUM(file_size),0) as material_bytes, COUNT(*) as material_count FROM Material').get();
       const diskStats = diskCapacityFor(MATERIAL_CENTER_ROOT);
       return Response.json({

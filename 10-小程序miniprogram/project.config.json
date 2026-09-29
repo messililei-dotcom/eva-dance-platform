@@ -1,5 +1,5 @@
 {
-  "description": "bug修复版本升级",
+  "description": "课程与期次约课同步、站内信息和证书预览、课程界面对齐；小程序视频播放暂未开放",
   "packOptions": {
     "ignore": [
       {
@@ -17,6 +17,14 @@
       {
         "type": "file",
         "value": "README.md"
+      },
+      {
+        "type": "folder",
+        "value": "scripts"
+      },
+      {
+        "type": "file",
+        "value": "images/payments/yiwa-unified-collection-v1.jpg"
       }
     ],
     "include": []
@@ -51,7 +59,7 @@
   "libVersion": "3.7.0",
   "appid": "wxc2878927a69379ef",
   "projectname": "eva-dance-training-miniprogram",
-  "version": "1.0.14",
+  "version": "1.0.22",
   "condition": {},
   "simulatorPluginLibVersion": {},
   "editorSetting": {}

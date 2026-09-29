@@ -1,18 +1,23 @@
+<block wx:if="{{videoPlaybackEnabled}}">
 <view class="player-page">
-  <view class="video-container">
+  <view class="video-container {{isPlayerFullscreen ? 'player-fullscreen' : ''}}">
     <video
       wx:if="{{playUrl}}"
       id="courseVideo"
-      class="video"
+      class="video {{isMirrored ? 'mirrored' : ''}}"
       src="{{playUrl}}"
       poster="{{course.cover_image}}"
       title="{{video.name}}"
-      controls="{{showVideoControls}}"
+      controls="{{false}}"
+      muted="{{isMuted}}"
       autoplay="{{hasStartedPlayback}}"
+      initial-time="{{resumeSeconds}}"
       object-fit="contain"
       show-center-play-btn
       show-fullscreen-btn="{{false}}"
       enable-progress-gesture
+      vslide-gesture="{{isPlayerFullscreen}}"
+      vslide-gesture-in-fullscreen="{{true}}"
       enable-play-gesture
       bindtap="onPlayerTap"
       bindplay="onVideoPlay"
@@ -25,19 +30,33 @@
     ></video>
 
     <block wx:if="{{playUrl}}">
-      <view class="video-top-controls {{showVideoControls || showPlayerMenu ? 'visible' : ''}}">
-        <button class="video-quality-trigger" catchtap="togglePlayerMenu">{{currentQualityLabel}} <text class="quality-arrow">{{showPlayerMenu ? '‹' : '›'}}</text></button>
-        <button class="video-fullscreen-trigger" catchtap="requestPlayerFullScreen" aria-label="全屏播放">⛶</button>
+      <view class="autoplay-countdown" wx:if="{{lessonEnded}}"><text>{{autoplayCountdown ? autoplayCountdown.seconds + ' 秒后播放下一节：' + autoplayCountdown.name : '本节课程已播放完成'}}</text><button catchtap="replayLesson">重播</button><button wx:if="{{autoplayCountdown}}" catchtap="cancelAutoplay">取消连播</button></view>
+      <view class="video-top-controls visible">
+        <button class="video-quality-trigger" catchtap="requestCasting">投屏</button>
+        <button class="video-quality-trigger" data-menu="quality" catchtap="togglePlayerMenu">{{currentQualityLabel}} <text class="quality-arrow">{{showPlayerMenu ? '‹' : '›'}}</text></button>
+        <button class="video-quality-trigger" data-menu="speed" catchtap="togglePlayerMenu">{{playbackRate}}x⌄</button>
+        <button class="video-mirror-trigger {{isMirrored ? 'active' : ''}}" catchtap="toggleMirror">{{isMirrored ? '镜面' : '正面'}}</button>
+        <button class="video-pip-trigger" catchtap="requestSmallWindow" aria-label="画中画播放"><view class="pip-icon"><view></view></view></button>
+        <button class="video-fullscreen-trigger" catchtap="requestPlayerFullScreen" aria-label="{{isPlayerFullscreen ? '退出全屏播放' : '全屏播放'}}">{{isPlayerFullscreen ? '×' : '⛶'}}</button>
+      </view>
+      <view class="video-section-controls {{showVideoControls ? 'visible' : ''}}">
+        <view class="lesson-controls"><button disabled="{{!hasPrevious}}" data-offset="-1" catchtap="adjacentVideo">‹ 上一节</button><button disabled="{{!hasNext}}" data-offset="1" catchtap="adjacentVideo">下一节 ›</button></view>
+      </view>
+      <view class="video-transport {{showVideoControls ? 'visible' : ''}}">
+        <button catchtap="togglePlayback" aria-label="{{isPlaying ? '暂停' : '播放'}}">{{isPlaying ? 'Ⅱ' : '▶'}}</button>
+        <text>{{currentTimeText}} / {{durationText}}</text>
+        <slider min="0" max="{{currentDuration > 0 ? currentDuration : 1}}" value="{{currentSeconds}}" block-size="12" activeColor="#ffffff" backgroundColor="#777777" bindchange="seekPlayback" disabled="{{!currentDuration}}" />
+        <button catchtap="toggleMute" aria-label="{{isMuted ? '恢复声音' : '静音'}}">{{isMuted ? '静音' : '声音'}}</button>
       </view>
       <view class="player-menu-backdrop" wx:if="{{showPlayerMenu}}" bindtap="closePlayerMenu"></view>
       <view class="player-menu" wx:if="{{showPlayerMenu}}" catchtap="noop">
-        <view class="player-menu-section">
+        <view class="player-menu-section" wx:if="{{playerMenu === 'quality'}}">
           <view class="player-menu-title">清晰度</view>
           <view class="player-menu-options">
             <view class="player-menu-option {{currentQuality === item.value ? 'active' : ''}}" wx:for="{{qualityOptions}}" wx:key="value" data-quality="{{item.value}}" bindtap="setQuality">{{item.label}}</view>
           </view>
         </view>
-        <view class="player-menu-section">
+        <view class="player-menu-section" wx:if="{{playerMenu === 'speed'}}">
           <view class="player-menu-title">播放速度</view>
           <view class="player-menu-options">
             <view class="player-menu-option {{playbackRate === item ? 'active' : ''}}" wx:for="{{rateOptions}}" wx:key="*this" data-rate="{{item}}" bindtap="setRate">{{item}}x</view>
@@ -53,7 +72,7 @@
         <view wx:if="{{loading}}" class="placeholder-text">课程加载中…</view>
         <button wx:elif="{{authorizationRequired}}" class="authorization-btn" bindtap="requestAuthorization">申请课程授权</button>
         <view wx:elif="{{playbackError}}" class="playback-error"><text>{{playbackError}}</text><button bindtap="startCurrentVideo">重新加载</button></view>
-        <button wx:else class="start-video-btn" bindtap="startCurrentVideo">播放本节课程</button>
+        <button wx:else class="start-video-btn" bindtap="startCurrentVideo">{{resumeSeconds > 0 ? '续播本节课程' : '播放本节课程'}}</button>
       </view>
     </view>
   </view>
@@ -63,7 +82,7 @@
       <view class="title">{{video.name || course.name || '课程介绍'}}</view>
       <view class="meta">{{course.subtitle || course.teacher || '伊娃东方舞线上学院'}}</view>
       <view class="progress-track"><view class="progress-fill" style="width: {{percent}}%;"></view></view>
-      <view class="playback-summary"><text>学习进度 {{percent}}%</text><text wx:if="{{resumeSeconds > 3}}">上次看到 {{resumeSeconds}} 秒</text><button wx:if="{{playUrl}}" bindtap="resumePlayback">继续播放</button></view>
+      <view class="playback-summary"><text>学习进度 {{percent}}%</text><text wx:if="{{resumeSeconds > 0}}">上次看到 {{resumeSeconds}} 秒</text><button wx:if="{{videoId && !isPlaying && !loading}}" bindtap="resumePlayback">{{resumeSeconds > 0 || currentSeconds > 0 ? '续播' : '播放'}}</button></view>
     </view>
 
     <view class="player-tabs card">
@@ -72,19 +91,29 @@
       <view class="player-tab {{activePanel === 'intro' ? 'active' : ''}}" data-panel="intro" bindtap="switchPanel">简介</view>
     </view>
 
-    <view wx:if="{{activePanel === 'catalog'}}" class="outline card">
+    <view wx:if="{{activePanel === 'catalog'}}" id="courseCatalog" class="outline card">
       <view class="catalog-search"><input value="{{catalogQuery}}" placeholder="搜索课节" confirm-type="search" bindinput="onCatalogSearch"/><button wx:if="{{catalogQuery}}" bindtap="clearCatalogSearch">清空</button></view>
       <view wx:if="{{catalogResultText}}" class="catalog-result">{{catalogResultText}}</view>
+      <view class="catalog-pagination" wx:if="{{catalogPageCount > 1}}">
+        <button disabled="{{catalogPage <= 1}}" data-offset="-1" data-position="top" bindtap="changeCatalogPage" aria-label="上一页课节">‹</button>
+        <text>{{catalogFrom}}–{{catalogTo}} / {{catalogTotal}} · {{catalogPage}}/{{catalogPageCount}}页</text>
+        <button disabled="{{catalogPage >= catalogPageCount}}" data-offset="1" data-position="top" bindtap="changeCatalogPage" aria-label="下一页课节">›</button>
+      </view>
       <view class="outline-item {{item.videoId == videoId ? 'current' : ''}}" wx:for="{{visibleOutline}}" wx:key="videoId" data-id="{{item.videoId}}" bindtap="switchVideo">
-        <view class="outline-index">{{index + 1}}</view>
+        <view class="outline-index">{{item.ordinal}}</view>
         <view class="outline-info"><text class="outline-name">{{item.name}}</text><text class="outline-duration">{{item.durationText}}</text></view>
-        <text class="outline-status">{{item.progressPercent}}%</text>
+<text class="outline-status">{{item.progressPercent}}%</text>
+      </view>
+      <view class="catalog-pagination" wx:if="{{catalogPageCount > 1}}">
+        <button disabled="{{catalogPage <= 1}}" data-offset="-1" data-position="bottom" bindtap="changeCatalogPage" aria-label="上一页课节">‹</button>
+        <text>{{catalogFrom}}–{{catalogTo}} / {{catalogTotal}} · {{catalogPage}}/{{catalogPageCount}}页</text>
+        <button disabled="{{catalogPage >= catalogPageCount}}" data-offset="1" data-position="bottom" bindtap="changeCatalogPage" aria-label="下一页课节">›</button>
       </view>
       <view wx:if="{{!visibleOutline.length}}" class="panel-empty">{{catalogQuery ? '未找到匹配课节' : '当前课程暂未配置可播放视频'}}</view>
     </view>
 
     <view wx:if="{{activePanel === 'notes'}}" class="notes-panel card">
-      <view wx:if="{{notes.length}}"><view class="note-item" wx:for="{{notes}}" wx:key="id"><text class="note-time">{{item.timeText}}</text><text class="note-text">{{item.content}}</text></view></view>
+      <view wx:if="{{notes.length}}"><view class="note-item" wx:for="{{notes}}" wx:key="id" data-id="{{item.id}}" bindtap="seekToNote"><text class="note-time">{{item.timeText}} · {{item.authorText}}{{item.createdText ? " · " + item.createdText : ""}}</text><text class="note-text">{{item.content}}</text></view></view>
       <view wx:else class="panel-empty">还没有笔记，播放时可记录重点。</view>
       <textarea class="note-input" value="{{noteContent}}" placeholder="记录当前课节的学习笔记" maxlength="500" bindinput="onNoteInput"></textarea>
       <button class="save-note-btn" loading="{{savingNote}}" disabled="{{savingNote || !videoId}}" bindtap="addNote">保存笔记</button>
@@ -95,6 +124,9 @@
       <rich-text wx:if="{{course.rich_description}}" nodes="{{course.rich_description}}"></rich-text>
       <view wx:else class="intro-text">{{course.description || course.subtitle || '课程简介正在完善中。'}}</view>
     </view>
-    <view class="cast-note">请勿转发链接或二次传播课程资料。</view>
+    <view class="cast-note">可分享课程邀请朋友学习，播放权限按各自账号授权。</view>
   </view>
 </view>
+
+</block>
+<view wx:else class="page"><view class="empty card">视频播放暂未开放</view></view>

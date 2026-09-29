@@ -110,3 +110,14 @@ outputs/
 已删除开发数据/
 证书-伊娃东方舞/
 10-赛事系统/旧程序数据/
+
+# macOS resource forks created on external disks
+**/._*
+
+# Local recovery snapshots and dated operational evidence
+.local-cleanup-backups/
+ops/
+00-云服务器备份归档/
+.local-db-backups/
+数据库备份/
+backups/

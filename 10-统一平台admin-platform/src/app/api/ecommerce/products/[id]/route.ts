@@ -19,8 +19,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const body = await request.json().catch(() => ({}));
   const db = openCommerceDb();
   try {
+    return db.transaction(() => {
+      db.prepare('UPDATE shop_products SET stock=stock WHERE id=?').run('');
     const product = db.prepare('SELECT * FROM shop_products WHERE id = ? AND status != ?').get(routeParams.id, 'deleted');
     if (!product) return Response.json({ success: false, error: '商品不存在' }, { status: 404 });
+
+    if (body.expectedUpdatedAt !== undefined && body.expectedUpdatedAt !== product.updated_at) return Response.json({ error: '商品或库存已发生变化，请刷新后再编辑' }, { status: 409 });
 
     const name = cleanText(body.name, product.name);
     if (!name) return Response.json({ success: false, error: '请填写商品名称' }, { status: 400 });
@@ -47,6 +51,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       routeParams.id,
     );
     return Response.json({ success: true });
+    })();
   } finally {
     db.close();
   }
@@ -57,6 +62,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!hasAuth(request)) return unauthorized();
   const db = openCommerceDb();
   try {
+    return db.transaction(() => {
+      db.prepare('UPDATE shop_products SET stock=stock WHERE id=?').run('');
     const product = db.prepare('SELECT * FROM shop_products WHERE id = ? AND status != ?').get(routeParams.id, 'deleted');
     if (!product) return Response.json({ success: false, error: '商品不存在' }, { status: 404 });
     if (toNumber(product.stock) > 0) {
@@ -65,6 +72,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     db.prepare('UPDATE shop_products SET status = ?, updated_at = ? WHERE id = ?').run('deleted', new Date().toISOString(), routeParams.id);
     return Response.json({ success: true });
+    })();
   } finally {
     db.close();
   }

@@ -11,11 +11,18 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
   const db = openTrainingDb();
   try {
+    const templateId = Math.max(0, toNumber(body.templateId));
+    const template = templateId ? db.prepare('SELECT * FROM CourseTemplate WHERE id = ?').get(templateId) as any : null;
+    if (templateId && !template) {
+      return Response.json({ success: false, error: '所选课程不存在，请重新选择' }, { status: 400 });
+    }
     const result = db.transaction(() => {
       const current = db.prepare('SELECT id FROM Course WHERE id = ?').get(routeParams.id);
       if (!current) return { changes: 0 };
 
-      const mergeTarget = findMatchingCourseByIdentity(db, name, body.subType, routeParams.id);
+      const courseName = cleanText(template?.name || name);
+      const courseType = cleanText(template?.trainingType || body.type, '集训');
+      const mergeTarget = findMatchingCourseByIdentity(db, courseName, body.subType, routeParams.id);
       if (mergeTarget) {
         const mergeResult = mergeCourseInto(db, routeParams.id, mergeTarget.id);
         return { changes: 1, ...mergeResult };
@@ -24,11 +31,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       const info = db.prepare(`
         UPDATE Course
         SET name = ?, type = ?, subType = ?, startDate = ?, endDate = ?, price = ?,
-            sessions = ?, validDays = ?, teacher = ?, content = ?, coverImage = ?
+            sessions = ?, validDays = ?, teacher = ?, content = ?, coverImage = ?, templateId = ?
         WHERE id = ?
       `).run(
-        name,
-        cleanText(body.type, '集训'),
+        courseName,
+        courseType,
         cleanText(body.subType),
         cleanText(body.startDate),
         cleanText(body.endDate),
@@ -36,8 +43,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         Math.max(1, toNumber(body.sessions, 10)),
         cleanText(body.validDays),
         cleanText(body.teacher),
-        cleanText(body.content),
-        cleanText(body.coverImage),
+        cleanText(template?.content || body.content),
+        cleanText(template?.coverImage || body.coverImage),
+        templateId,
         routeParams.id,
       );
       syncCourseDenormalizedFields(db, routeParams.id);

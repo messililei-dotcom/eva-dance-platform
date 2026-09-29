@@ -6,12 +6,19 @@ function tableExists(db: any, tableName: string) {
   return Boolean(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(tableName));
 }
 
+function hasColumn(db: any, tableName: string, columnName: string) {
+  if (!tableExists(db, tableName)) return false;
+  return db.prepare(`PRAGMA table_info('${String(tableName).replace(/'/g, "''")}')`).all().some((row: any) => row.name === columnName);
+}
+
 export async function GET(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
   const db = openTrainingDb();
   try {
     const hasVideoProgress = tableExists(db, 'VideoProgress');
+    const memberOpenidSelect = hasColumn(db, 'Member', 'wx_openid') ? "COALESCE(m.wx_openid, '')" : "''";
+    const memberUnionidSelect = hasColumn(db, 'Member', 'wx_unionid') ? "COALESCE(m.wx_unionid, '')" : "''";
     const videoProgressJoin = hasVideoProgress
       ? `LEFT JOIN (
            SELECT member_id, COUNT(DISTINCT video_id) AS completedVideos
@@ -24,8 +31,11 @@ export async function GET(request: Request) {
     const rows = db.prepare(`
       SELECT
         m.id,
+        m.id AS member_id,
         m.name,
         COALESCE(m.phone, '') AS phone,
+        ${memberOpenidSelect} AS wx_openid,
+        ${memberUnionidSelect} AS wx_unionid,
         COALESCE(m.level, '普通学员') AS level,
         COALESCE(m.status, 'active') AS status,
         COALESCE(SUM(p.remainingSessions), 0) AS remaining_hours,

@@ -1,4 +1,4 @@
-import { getMemberId, jsonError, shanghaiDateKey, withDb } from '../../_helpers';
+import { getMemberId, jsonError, linkedMemberIds, shanghaiDateKey, sqlIn, withDb } from '../../_helpers';
 
 function tableColumns(db: any, table: string) {
   return db.prepare(`PRAGMA table_info('${table.replace(/'/g, "''")}')`).all().map((row: any) => row.name);
@@ -9,6 +9,7 @@ export async function GET(request: Request) {
     return withDb((db) => {
       const memberId = getMemberId(new URL(request.url).searchParams, request);
       if (!memberId) return jsonError('未登录', 401);
+      const linked = sqlIn(linkedMemberIds(db, memberId));
 
       const today = shanghaiDateKey();
       const courseColumns = tableColumns(db, 'Course');
@@ -29,9 +30,9 @@ export async function GET(request: Request) {
           ), 0) AS todayCheckinCount
         FROM Payment p
         LEFT JOIN Course c ON c.id = p.courseId
-        WHERE p.memberId = ?
+        WHERE p.memberId IN (${linked.clause})
         ORDER BY p.id DESC
-      `).all(today, memberId);
+      `).all(today, ...linked.values);
 
       return Response.json({
         success: true,
@@ -45,8 +46,6 @@ export async function GET(request: Request) {
           course_name: row.resolvedCourseName || row.courseName || '未知学习',
           courseType: row.courseType || '',
           course_type: row.courseType || '',
-          courseSubType: row.courseSubType || '',
-          course_sub_type: row.courseSubType || '',
           courseSessions: Number(row.courseSessions) || 0,
           course_sessions: Number(row.courseSessions) || 0,
           amount: Number(row.amount) || 0,
@@ -55,10 +54,6 @@ export async function GET(request: Request) {
           expire_date: row.expireDate || '',
           remainingSessions: Number(row.remainingSessions) || 0,
           remaining_sessions: Number(row.remainingSessions) || 0,
-          consumedSessions: Math.max(0, (Number(row.courseSessions) || 0) - (Number(row.remainingSessions) || 0)),
-          consumed_sessions: Math.max(0, (Number(row.courseSessions) || 0) - (Number(row.remainingSessions) || 0)),
-          paymentMethod: row.paymentMethod || row.payMethod || '',
-          payment_method: row.paymentMethod || row.payMethod || '',
           courseEndDate: row.courseEndDate || '',
           course_end_date: row.courseEndDate || '',
           todayCheckinCount: Number(row.todayCheckinCount) || 0,

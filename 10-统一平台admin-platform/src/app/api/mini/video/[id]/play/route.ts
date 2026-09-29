@@ -1,6 +1,8 @@
 import fs from 'fs';
+import { isMiniVideoPlaybackBlocked } from '@/lib/server/mini-features';
 import { getMemberId, jsonError, recordSeriesVisit, toPositiveInt, withDb } from '../../../_helpers';
-import { getVodPlayOptions, isVodVideoMissingError } from '@/lib/server/aliyun-vod';
+import { isVodVideoMissingError } from '@/lib/server/aliyun-vod';
+import { getCachedVodPlayOptions } from '@/lib/server/vod-play-cache';
 import {
   isDirectPlayableMediaMaterial,
   localMaterialPath,
@@ -23,6 +25,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const routeParams = await params;
   try {
     return await withDb(async (db) => {
+      if (isMiniVideoPlaybackBlocked(db, request.headers.get('x-client-platform'))) return jsonError('视频播放暂未开放', 403);
       const videoId = toPositiveInt(routeParams.id);
       const memberId = getMemberId(new URL(request.url).searchParams, request);
       if (!memberId) return jsonError('未登录', 401);
@@ -51,7 +54,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       let qualityOptions: Array<{ label: string; value: string; url: string; definition?: string; format?: string }> = [];
       if (video.vod_video_id && !isAudio) {
         try {
-          const vodOptions = await getVodPlayOptions(String(video.vod_video_id));
+          const vodOptions = await getCachedVodPlayOptions(String(video.vod_video_id));
           const preferred = vodOptions.find(item => item.format === 'm3u8')
             || vodOptions.find(item => item.definition === 'od' || item.definition === 'hd')
             || vodOptions.find(item => item.format === 'mp4')
@@ -93,7 +96,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           if (!isDirectPlayableMediaMaterial(video)) {
             return jsonError('该视频源文件格式不适合直接播放，请先转码为 MP4/HLS 或重新上传素材', 415);
           }
-          videoUrl = `${originOf(request)}/api/mini/video/${videoId}/stream?t=${encodeURIComponent(createVideoStreamToken(videoId, memberId))}`;
+          videoUrl = `${originOf(request)}/api/mini/video/${videoId}/stream?t=${encodeURIComponent(createVideoStreamToken(videoId, memberId, undefined, request.headers.get('x-client-platform')?.trim().toLowerCase() || 'web'))}`;
           playbackSource = 'local';
         } else {
           const status = String(video.transcode_status || '');
@@ -130,7 +133,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           file_url: videoUrl,
           duration: video.duration || video.material_duration || 0,
           authorized: true,
-          auth_type: access.auth_type || null,
+          auth_type: 'auth_type' in access ? access.auth_type || null : null,
           access_reason: access.reason,
         },
       });

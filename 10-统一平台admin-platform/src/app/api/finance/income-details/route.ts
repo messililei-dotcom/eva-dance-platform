@@ -1,3 +1,4 @@
+import { AUTHORIZATION_INCOME_SQL, MANUAL_INCOME_PREDICATE } from '@/lib/server/authorization-revenue';
 import { hasAuth, openTrainingDb, unauthorized } from '../../training-db';
 
 export const dynamic = 'force-dynamic';
@@ -48,7 +49,17 @@ const INCOME_LEDGER_SQL = `
     COALESCE(remark, '') AS remark,
     'finance-income' AS sourceKind
   FROM FinanceIncome
-  WHERE date(COALESCE(NULLIF(income_date, ''), NULLIF(incomeDate, ''), created_at)) <= date('now', 'localtime')
+  WHERE ${MANUAL_INCOME_PREDICATE} AND date(COALESCE(NULLIF(income_date, ''), NULLIF(incomeDate, ''), created_at)) <= date('now', 'localtime')
+
+  UNION ALL
+
+  SELECT 'authorization-income-' || id AS id, income_date AS date, category AS source,
+    '学员授权' AS evidence, incomeNo AS referenceNo, title,
+    '授权ID ' || id AS itemMeta, memberName AS subject,
+    'member_id ' || memberId AS subjectMeta, '' AS payMethod, amount,
+    'paid' AS status, remark, 'finance-income' AS sourceKind
+  FROM (${AUTHORIZATION_INCOME_SQL})
+  WHERE date(income_date) <= date('now', 'localtime')
 
   UNION ALL
 
@@ -83,39 +94,50 @@ export async function GET(request: Request) {
   const page = positiveInteger(url.searchParams.get('page'), 1);
   const pageSize = Math.min(100, positiveInteger(url.searchParams.get('pageSize'), 25));
   const keyword = String(url.searchParams.get('keyword') || '').trim();
+  const sourceKind = String(url.searchParams.get('sourceKind') || '').trim();
   const db = openTrainingDb();
 
   try {
-    const whereSql = keyword
-      ? `WHERE date LIKE ? OR source LIKE ? OR evidence LIKE ? OR referenceNo LIKE ?
-         OR title LIKE ? OR itemMeta LIKE ? OR subject LIKE ? OR subjectMeta LIKE ?
-         OR payMethod LIKE ? OR status LIKE ? OR remark LIKE ?`
-      : '';
-    const values = keyword ? Array(11).fill(`%${keyword}%`) : [];
+    const conditions: string[] = [];
+    const values: unknown[] = [];
+    if (keyword) {
+      conditions.push(`(date LIKE ? OR source LIKE ? OR evidence LIKE ? OR referenceNo LIKE ?
+        OR title LIKE ? OR itemMeta LIKE ? OR subject LIKE ? OR subjectMeta LIKE ?
+        OR '' LIKE ? OR status LIKE ? OR remark LIKE ?)`);
+      values.push(...Array(11).fill(`%${keyword}%`));
+    }
+    if (['order', 'finance-income', 'ecommerce-sale'].includes(sourceKind)) {
+      conditions.push('sourceKind = ?');
+      values.push(sourceKind);
+    }
+    const whereSql = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const totalRow = db.prepare(`
       WITH income_ledger AS (${INCOME_LEDGER_SQL})
       SELECT COUNT(*) AS total FROM income_ledger ${whereSql}
     `).get<any>(...values) || {};
-    const summary = db.prepare(`
-      WITH income_ledger AS (${INCOME_LEDGER_SQL})
-      SELECT
-        COUNT(*) AS totalCount,
-        COALESCE(SUM(amount), 0) AS totalAmount,
-        SUM(CASE WHEN substr(date, 1, 4) = strftime('%Y', 'now', 'localtime') THEN 1 ELSE 0 END) AS yearCount,
-        COALESCE(SUM(CASE WHEN substr(date, 1, 4) = strftime('%Y', 'now', 'localtime') THEN amount ELSE 0 END), 0) AS yearAmount,
-        SUM(CASE WHEN substr(date, 1, 7) = strftime('%Y-%m', 'now', 'localtime') THEN 1 ELSE 0 END) AS monthCount,
-        COALESCE(SUM(CASE WHEN substr(date, 1, 7) = strftime('%Y-%m', 'now', 'localtime') THEN amount ELSE 0 END), 0) AS monthAmount,
-        strftime('%Y', 'now', 'localtime') AS currentYear,
-        strftime('%Y-%m', 'now', 'localtime') AS currentMonth
-      FROM income_ledger
-    `).get<any>() || {};
-    const bySource = db.prepare(`
-      WITH income_ledger AS (${INCOME_LEDGER_SQL})
-      SELECT source AS label, COUNT(*) AS count, COALESCE(SUM(amount), 0) AS value
-      FROM income_ledger
-      GROUP BY source
-      ORDER BY value DESC
-    `).all();
+    // The expensive global aggregates are only needed on first load. Pagination and
+    // searches can skip them, keeping navigation responsive as the ledger grows.
+    const includeSummary = url.searchParams.get('includeSummary') !== '0';
+    const summary = includeSummary ? db.prepare(`
+        WITH income_ledger AS (${INCOME_LEDGER_SQL})
+        SELECT
+          COUNT(*) AS totalCount,
+          COALESCE(SUM(amount), 0) AS totalAmount,
+          SUM(CASE WHEN substr(date, 1, 4) = strftime('%Y', 'now', 'localtime') THEN 1 ELSE 0 END) AS yearCount,
+          COALESCE(SUM(CASE WHEN substr(date, 1, 4) = strftime('%Y', 'now', 'localtime') THEN amount ELSE 0 END), 0) AS yearAmount,
+          SUM(CASE WHEN substr(date, 1, 7) = strftime('%Y-%m', 'now', 'localtime') THEN 1 ELSE 0 END) AS monthCount,
+          COALESCE(SUM(CASE WHEN substr(date, 1, 7) = strftime('%Y-%m', 'now', 'localtime') THEN amount ELSE 0 END), 0) AS monthAmount,
+          strftime('%Y', 'now', 'localtime') AS currentYear,
+          strftime('%Y-%m', 'now', 'localtime') AS currentMonth
+        FROM income_ledger
+      `).get<any>() || {} : {};
+    const bySource = includeSummary ? db.prepare(`
+        WITH income_ledger AS (${INCOME_LEDGER_SQL})
+        SELECT source AS label, COUNT(*) AS count, COALESCE(SUM(amount), 0) AS value
+        FROM income_ledger
+        GROUP BY source
+        ORDER BY value DESC
+      `).all() : [];
     const rows = db.prepare(`
       WITH income_ledger AS (${INCOME_LEDGER_SQL})
       SELECT * FROM income_ledger
@@ -129,7 +151,7 @@ export async function GET(request: Request) {
       total: Number(totalRow.total || 0),
       page,
       pageSize,
-      summary: {
+      summary: includeSummary ? {
         totalCount: Number(summary.totalCount || 0),
         totalAmount: Number(summary.totalAmount || 0),
         yearCount: Number(summary.yearCount || 0),
@@ -138,10 +160,10 @@ export async function GET(request: Request) {
         monthAmount: Number(summary.monthAmount || 0),
         currentYear: String(summary.currentYear || ''),
         currentMonth: String(summary.currentMonth || ''),
-      },
+      } : null,
       bySource,
     }, {
-      headers: { 'Cache-Control': 'private, max-age=10, stale-while-revalidate=30' },
+      headers: { 'Cache-Control': 'no-store' },
     });
   } finally {
     db.close();

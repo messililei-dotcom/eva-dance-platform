@@ -1,7 +1,8 @@
+const share = require("../../shared/share");
 const api = require("../../utils/api");
 const app = getApp();
 
-Page({
+Page(share.withShare("profile-edit", {
   data: {
     loading: true,
     name: "",
@@ -145,4 +146,4 @@ Page({
       console.warn("保存失败", err);
     }
   },
-});
+}));

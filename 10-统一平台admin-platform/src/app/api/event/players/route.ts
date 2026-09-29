@@ -1,5 +1,6 @@
 import { cleanText, hasAuth, jsonError, mapPlayer, nowIso, toNumber, unauthorized, withEventDb } from '../_db';
-import { createPersonalMessage, recordGrowthEvent } from '@/lib/server/inbox';
+import { syncEventPlayerToMember } from '@/lib/server/event-member-sync';
+import { createPersonalMessage } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -11,6 +12,9 @@ export async function GET(request: Request) {
   const competitionId = toNumber(url.searchParams.get('competitionId') ?? url.searchParams.get('competition_id'));
   const groupId = toNumber(url.searchParams.get('groupId') ?? url.searchParams.get('group_id'));
   const keyword = cleanText(url.searchParams.get('keyword'));
+  const page = Math.max(1, toNumber(url.searchParams.get('page'), 1));
+  const requestedPageSize = toNumber(url.searchParams.get('pageSize') ?? url.searchParams.get('page_size'));
+  const pageSize = requestedPageSize ? Math.min(200, Math.max(1, requestedPageSize)) : 0;
 
   return withEventDb((db) => {
     let where = 'WHERE 1=1';
@@ -29,24 +33,28 @@ export async function GET(request: Request) {
       params.push(like, like, like, like);
     }
 
+    const total = db.prepare(`SELECT COUNT(*) AS value FROM event_players p ${where}`).get(...params)?.value || 0;
+    const paginationSql = pageSize ? 'LIMIT ? OFFSET ?' : '';
+    const queryParams = pageSize ? [...params, pageSize, (page - 1) * pageSize] : params;
     const rows = db.prepare(`
       SELECT
         p.*,
         c.name AS competition_name,
         g.name AS group_name,
-        COUNT(DISTINCT s.id) AS score_count,
-        COUNT(DISTINCT gj.judge_id) AS judge_count
+        (SELECT ep.sequence_no FROM event_performances ep WHERE ep.player_id = p.id ORDER BY ep.id DESC LIMIT 1) AS sequence_no,
+        (SELECT ep.music_file_id FROM event_performances ep WHERE ep.player_id = p.id ORDER BY ep.id DESC LIMIT 1) AS music_file_id,
+        (SELECT ep.title FROM event_performances ep WHERE ep.player_id = p.id ORDER BY ep.id DESC LIMIT 1) AS performance_title,
+        (SELECT COUNT(*) FROM event_scores s WHERE s.player_id = p.id) AS score_count,
+        (SELECT COUNT(*) FROM event_group_judges gj WHERE gj.group_id = p.group_id) AS judge_count
       FROM event_players p
       LEFT JOIN event_competitions c ON c.id = p.competition_id
       LEFT JOIN event_groups g ON g.id = p.group_id
-      LEFT JOIN event_scores s ON s.player_id = p.id
-      LEFT JOIN event_group_judges gj ON gj.group_id = p.group_id
       ${where}
-      GROUP BY p.id
       ORDER BY datetime(p.registered_at) DESC, p.id DESC
-    `).all(...params);
+      ${paginationSql}
+    `).all(...queryParams);
 
-    return Response.json({ success: true, data: rows.map(mapPlayer) });
+    return Response.json({ success: true, data: rows.map(mapPlayer), total, page, pageSize: pageSize || total });
   });
 }
 
@@ -60,38 +68,48 @@ export async function POST(request: Request) {
   if (!name) return jsonError('选手姓名不能为空');
 
   return withEventDb((db) => {
-    const result = db.prepare(`
-      INSERT INTO event_players (
-        competition_id, group_id, member_id, order_id, player_no, name, phone,
-        gender, birthday, organization, teacher, status, audit_status,
-        paid_status, score_status, remark, updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      competitionId,
-      toNumber(body.groupId ?? body.group_id) || null,
-      toNumber(body.memberId ?? body.member_id),
-      toNumber(body.orderId ?? body.order_id),
-      cleanText(body.playerNo ?? body.player_no),
-      name,
-      cleanText(body.phone),
-      cleanText(body.gender),
-      cleanText(body.birthday),
-      cleanText(body.organization),
-      cleanText(body.teacher),
-      cleanText(body.status, 'pending'),
-      cleanText(body.auditStatus ?? body.audit_status, 'pending'),
-      cleanText(body.paidStatus ?? body.paid_status, 'unpaid'),
-      cleanText(body.scoreStatus ?? body.score_status, 'not_started'),
-      cleanText(body.remark),
-      nowIso(),
-    );
-
-    const memberId = toNumber(body.memberId ?? body.member_id);
-    if (memberId) {
-      const competition = db.prepare('SELECT name FROM event_competitions WHERE id=?')
+    const created = db.transaction(() => {
+      const member = syncEventPlayerToMember(db, {
+        memberId: body.memberId ?? body.member_id,
+        name,
+        phone: body.phone,
+        gender: body.gender,
+        birthday: body.birthday,
+        country: body.country,
+        province: body.province,
+        city: body.city,
+        address: body.address,
+        registeredAt: body.registeredAt ?? body.registered_at,
+      });
+      const result = db.prepare(`
+        INSERT INTO event_players (
+          competition_id, group_id, member_id, order_id, player_no, name, phone,
+          gender, birthday, organization, teacher, status, audit_status,
+          paid_status, score_status, remark, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        competitionId,
+        toNumber(body.groupId ?? body.group_id) || null,
+        member.memberId,
+        toNumber(body.orderId ?? body.order_id),
+        '',
+        name,
+        cleanText(body.phone),
+        cleanText(body.gender),
+        cleanText(body.birthday),
+        cleanText(body.organization),
+        cleanText(body.teacher),
+        cleanText(body.status, 'pending'),
+        cleanText(body.auditStatus ?? body.audit_status, 'pending'),
+        cleanText(body.paidStatus ?? body.paid_status, 'unpaid'),
+        cleanText(body.scoreStatus ?? body.score_status, 'not_started'),
+        cleanText(body.remark),
+        nowIso(),
+      );
+      const competition = db.prepare('SELECT name FROM event_competitions WHERE id = ?')
         .get(competitionId) as { name?: string } | undefined;
-      createPersonalMessage(db, memberId, {
+      createPersonalMessage(db, Number(member.memberId), {
         type: 'event',
         title: '赛事报名已提交',
         content: `你已报名《${competition?.name || '东方舞赛事'}》，可在个人中心关注审核和成绩。`,
@@ -101,17 +119,12 @@ export async function POST(request: Request) {
         dedupeKey: `event-registration:${result.lastInsertRowid}`,
         priority: 'important',
       });
-      recordGrowthEvent(db, {
-        memberId,
-        eventType: 'event_registration',
-        points: 100,
-        sourceType: 'event_player',
-        sourceId: result.lastInsertRowid,
-        description: `完成《${competition?.name || '赛事'}》报名，经验值 +100。`,
-        actionUrl: '/dashboard/events',
-      });
-    }
+      return { playerId: result.lastInsertRowid, member };
+    })();
 
-    return Response.json({ success: true, data: { id: result.lastInsertRowid } });
+    return Response.json({
+      success: true,
+      data: { id: created.playerId, memberId: created.member.memberId, memberCreated: created.member.created },
+    });
   });
 }

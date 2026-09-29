@@ -10,6 +10,7 @@ import {
   Col,
   Empty,
   Form,
+  Grid,
   Input,
   InputNumber,
   Modal,
@@ -56,6 +57,8 @@ import {
 } from '@/lib/online-course-ui';
 import { sortableColumns } from '@/lib/table-sort';
 import type { Member } from '@/types/domain';
+import type { UploadFile } from 'antd';
+import { AuthorizationVoucherUpload } from '@/components/online-course/authorization-voucher-upload';
 
 type MemberRow = Pick<Member, 'id' | 'name' | 'phone' | 'level'>;
 
@@ -63,6 +66,7 @@ const { Text, Title } = Typography;
 const MAX_UPLOAD_FILE_SIZE = 1024 * 1024 * 1024;
 const BATCH_UPLOAD_CONCURRENCY = 2;
 const MATERIAL_PICKER_PAGE_SIZE = 200;
+const MATERIAL_PICKER_FETCH_CONCURRENCY = 4;
 const MATERIAL_PICKER_TABLE_PAGE_SIZE = 20;
 
 function formatVisitTime(value: unknown) {
@@ -183,7 +187,9 @@ function fileExtension(value?: string) {
 }
 
 function stripFileExtension(value?: string) {
-  return String(value || '').replace(/\.[^.\\/]+$/, '').trim();
+  return String(value || '')
+    .replace(/\.(?:mp4|m4v|mov|avi|wmv|flv|mkv|webm|mp3|m4a|wav|aac|flac|ogg|jpg|jpeg|png|gif|webp|svg|pdf|doc|docx|ppt|pptx)$/i, '')
+    .trim();
 }
 
 function folderLabel(folder?: FolderRow) {
@@ -313,6 +319,16 @@ function normalizeLessonRows(rows: LessonRow[], seriesId?: number) {
     .map((item, index) => ({ ...item, sort_order: index + 1 }));
 }
 
+function entityFromPayload(payload: any) {
+  return payload?.data?.data || payload?.data || payload?.item || payload;
+}
+
+function idFromPayload(payload: any) {
+  const entity = entityFromPayload(payload);
+  const id = Number(entity?.id || payload?.id || 0);
+  return Number.isFinite(id) && id > 0 ? id : 0;
+}
+
 function reorderLessonRows(rows: LessonRow[], lessonId: number, sortOrder: number) {
   const ordered = normalizeLessonRows(rows);
   const currentIndex = ordered.findIndex(item => Number(item.id) === Number(lessonId));
@@ -325,44 +341,10 @@ function reorderLessonRows(rows: LessonRow[], lessonId: number, sortOrder: numbe
   return ordered.map((item, index) => ({ ...item, sort_order: index + 1 }));
 }
 
-function CommittedSortInput({
-  value,
-  onCommit,
-  style,
-}: {
-  value: number | null | undefined;
-  onCommit: (value: number) => void | Promise<void>;
-  style?: React.CSSProperties;
-}) {
-  const committedValue = Number.isInteger(Number(value)) && Number(value) > 0 ? Number(value) : 1;
-  const [draftValue, setDraftValue] = useState<number | null>(committedValue);
-
-  useEffect(() => {
-    setDraftValue(committedValue);
-  }, [committedValue]);
-
-  const commit = () => {
-    const nextValue = Math.trunc(Number(draftValue));
-    if (!Number.isInteger(nextValue) || nextValue < 1) {
-      setDraftValue(committedValue);
-      return;
-    }
-    if (nextValue !== committedValue) void onCommit(nextValue);
-  };
-
-  return (
-    <InputNumber
-      min={1}
-      size="small"
-      value={draftValue}
-      controls={false}
-      keyboard={false}
-      onChange={setDraftValue}
-      onPressEnter={commit}
-      onBlur={commit}
-      style={style}
-    />
-  );
+function durationHoursText(value?: number) {
+  const seconds = Math.max(0, Number(value || 0));
+  if (!seconds) return '0小时';
+  return `${(seconds / 3600).toFixed(1)}小时`;
 }
 
 export default function OnlineCourseEditorPage() {
@@ -371,6 +353,8 @@ export default function OnlineCourseEditorPage() {
   const params = useParams<{ id: string }>();
   const seriesId = Number(params.id);
   const { message, modal } = App.useApp();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const [series, setSeries] = useState<SeriesDetail | null>(null);
   const [lessons, setLessons] = useState<LessonRow[]>([]);
@@ -379,6 +363,9 @@ export default function OnlineCourseEditorPage() {
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [materialsLoading, setMaterialsLoading] = useState(false);
+  const [materialsReady, setMaterialsReady] = useState(false);
+  const [membersReady, setMembersReady] = useState(false);
   const [activeTab, setActiveTab] = useState('lessons');
   const [authRows, setAuthRows] = useState<any[]>([]);
   const [authLoading, setAuthLoading] = useState(false);
@@ -391,6 +378,12 @@ export default function OnlineCourseEditorPage() {
   const [authSelectedMemberIds, setAuthSelectedMemberIds] = useState<number[]>([]);
   const [selectedAuthRowKeys, setSelectedAuthRowKeys] = useState<Array<string | number>>([]);
   const [authPhone, setAuthPhone] = useState('');
+  const [authMemberVoucherFiles, setAuthMemberVoucherFiles] = useState<UploadFile[]>([]);
+  const [authPhoneVoucherFiles, setAuthPhoneVoucherFiles] = useState<UploadFile[]>([]);
+  const [singleAuthRecord, setSingleAuthRecord] = useState<any | null>(null);
+  const [singleAuthVoucherFiles, setSingleAuthVoucherFiles] = useState<UploadFile[]>([]);
+  const [batchSelectedAuthOpen, setBatchSelectedAuthOpen] = useState(false);
+  const [batchSelectedVoucherFiles, setBatchSelectedVoucherFiles] = useState<UploadFile[]>([]);
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
   const [lessonMaterialPickerOpen, setLessonMaterialPickerOpen] = useState(false);
   const [batchMaterialPickerOpen, setBatchMaterialPickerOpen] = useState(false);
@@ -411,6 +404,7 @@ export default function OnlineCourseEditorPage() {
   const [lessonPage, setLessonPage] = useState(1);
   const [lessonPageSize, setLessonPageSize] = useState(30);
   const [batchPickerPage, setBatchPickerPage] = useState(1);
+  const [lessonSortDrafts, setLessonSortDrafts] = useState<Record<number, number | null>>({});
   const [keyword, setKeyword] = useState('');
   const [materialKeyword, setMaterialKeyword] = useState('');
   const [materialType, setMaterialType] = useState('all');
@@ -420,6 +414,8 @@ export default function OnlineCourseEditorPage() {
   const [lessonForm] = Form.useForm();
   const batchUploadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const batchUploadFilesRef = useRef<File[]>([]);
+  const materialRequestSeq = useRef(0);
+  const materialLoadKeyRef = useRef('');
   const coverImage = Form.useWatch('cover_image', seriesForm);
 
   const lessonStats = useMemo(() => ({
@@ -509,65 +505,109 @@ export default function OnlineCourseEditorPage() {
     [selectedAuthRecords],
   );
 
-  const loadAllMaterials = async (): Promise<MaterialRow[]> => {
-    const fetchPage = (page: number, pageSize: number) => onlineCourseApi.getMaterials({ page, pageSize });
-    const firstPayload = await fetchPage(1, MATERIAL_PICKER_PAGE_SIZE);
-    const firstRows = materialRowsFromPayload(firstPayload);
-    const total = materialNumberFromPayload(firstPayload, ['total', 'totalCount', 'count'], firstRows.length);
-    const pageSize = Math.min(
-      materialNumberFromPayload(firstPayload, ['pageSize', 'limit'], MATERIAL_PICKER_PAGE_SIZE),
-      MATERIAL_PICKER_PAGE_SIZE,
-    );
-    const pageCount = Math.ceil(total / Math.max(1, pageSize));
-    const payloads = [firstPayload];
+  const loadPickerMaterials = async (input: {
+    keyword?: string;
+    type?: string;
+    folderId?: number | 'all';
+    force?: boolean;
+  } = {}): Promise<MaterialRow[]> => {
+    const keywordValue = input.keyword ?? materialKeyword;
+    const typeValue = input.type ?? (coverPickerOpen ? 'image' : materialType);
+    const folderValue = input.folderId ?? selectedFolderId;
+    const loadKey = [
+      normalizeMaterialText(keywordValue),
+      typeValue || 'all',
+      String(folderValue || 'all'),
+    ].join('|');
 
-    if (pageCount > 1) {
-      const restPayloads = await Promise.all(
-        Array.from({ length: pageCount - 1 }, (_, index) => fetchPage(index + 2, pageSize)),
-      );
-      payloads.push(...restPayloads);
-    } else if (firstRows.length >= pageSize) {
-      for (let page = 2; page <= 20; page += 1) {
-        const payload = await fetchPage(page, pageSize);
-        const rows = materialRowsFromPayload(payload);
-        if (!rows.length) break;
-        payloads.push(payload);
-        if (rows.length < pageSize) break;
+    if (!input.force && materialsReady && materialLoadKeyRef.current === loadKey) return materials;
+
+    const requestId = materialRequestSeq.current + 1;
+    materialRequestSeq.current = requestId;
+    setMaterialsLoading(true);
+    try {
+      const params: Record<string, string | number> = {
+        page: 1,
+        pageSize: MATERIAL_PICKER_PAGE_SIZE,
+        sort_by: 'created_at',
+        sort_order: 'desc',
+        sync: 0,
+      };
+      if (typeValue && typeValue !== 'all') params.type = typeValue;
+      if (normalizeMaterialText(keywordValue)) params.keyword = String(keywordValue).trim();
+      if (folderValue !== 'all') params.folder_id = Number(folderValue);
+
+      const [firstMaterialPayload, folderPayload] = await Promise.all([
+        onlineCourseApi.getMaterials(params),
+        folders.length && !input.force ? Promise.resolve({ flat: folders }) : onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] })),
+      ]);
+      const materialRows = materialRowsFromPayload(firstMaterialPayload);
+      const materialTotal = materialNumberFromPayload(firstMaterialPayload, ['total', 'total_count', 'count'], materialRows.length);
+      const pageCount = Math.ceil(materialTotal / MATERIAL_PICKER_PAGE_SIZE);
+
+      for (let pageStart = 2; pageStart <= pageCount; pageStart += MATERIAL_PICKER_FETCH_CONCURRENCY) {
+        if (requestId !== materialRequestSeq.current) return [];
+        const pages = Array.from(
+          { length: Math.min(MATERIAL_PICKER_FETCH_CONCURRENCY, pageCount - pageStart + 1) },
+          (_, index) => pageStart + index,
+        );
+        const payloads = await Promise.all(
+          pages.map(page => onlineCourseApi.getMaterials({ ...params, page })),
+        );
+        payloads.forEach(payload => materialRows.push(...materialRowsFromPayload(payload)));
       }
-    }
 
-    const seen = new Set<number>();
-    return payloads
-      .flatMap(payload => materialRowsFromPayload(payload))
-      .filter(item => {
-        const id = Number(item?.id || 0);
-        if (!id || seen.has(id)) return false;
-        seen.add(id);
-        return true;
-      });
+      const uniqueMaterialRows = Array.from(new Map(materialRows.map(row => [Number(row.id), row])).values());
+      if (requestId !== materialRequestSeq.current) return materialRows;
+      setMaterials(uniqueMaterialRows);
+      setFolders(pickFolderRows(folderPayload));
+      setMaterialsReady(true);
+      materialLoadKeyRef.current = loadKey;
+      return uniqueMaterialRows;
+    } finally {
+      if (requestId === materialRequestSeq.current) setMaterialsLoading(false);
+    }
+  };
+
+  const refreshLessons = async () => {
+    const payload = await onlineCourseApi.getSeriesCourses(seriesId).catch(() => ({ data: [] }));
+    const rows = normalizeLessonRows(pickArray(payload), seriesId);
+    setLessons(rows);
+    return rows;
+  };
+
+  const ensureMaterialsLoaded = async (force = false) => {
+    return loadPickerMaterials({ force });
+  };
+
+  const ensureMembersLoaded = async () => {
+    if (membersReady) return members;
+    const memberRows = await platformAdapter.getMembers().catch(() => []);
+    setMembers(memberRows);
+    setMembersReady(true);
+    return memberRows;
   };
 
   const loadEditor = async () => {
     if (!seriesId) return;
     setLoading(true);
     try {
-      const [detailPayload, lessonPayload, materialRows, folderPayload, memberRows] = await Promise.all([
+      const [detailPayload, lessonPayload] = await Promise.all([
         onlineCourseApi.getSeriesDetail(seriesId).catch(async () => {
           const all = pickArray(await onlineCourseApi.getSeries());
           return { data: all.find(item => Number(item.id) === seriesId) };
         }),
         onlineCourseApi.getSeriesCourses(seriesId).catch(() => ({ data: [] })),
-        loadAllMaterials().catch(() => []),
-        onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] })),
-        platformAdapter.getMembers().catch(() => []),
       ]);
       const detail = detailPayload?.data || detailPayload;
       setSeries(detail);
       seriesForm.setFieldsValue({ ...detail, is_free: Boolean(detail?.is_free) });
       setLessons(normalizeLessonRows(pickArray(lessonPayload), seriesId));
-      setMaterials(materialRows);
-      setFolders(pickFolderRows(folderPayload));
-      setMembers(memberRows);
+      setMaterials([]);
+      setFolders([]);
+      setMembers([]);
+      setMaterialsReady(false);
+      setMembersReady(false);
     } catch (err) {
       message.error(apiError(err));
     } finally {
@@ -599,6 +639,27 @@ export default function OnlineCourseEditorPage() {
   }, [searchParams]);
 
   useEffect(() => {
+    const pickerActive = activeTab === 'batch' || lessonMaterialPickerOpen || batchMaterialPickerOpen || coverPickerOpen;
+    if (!seriesId || !pickerActive) return;
+    const timer = setTimeout(() => {
+      loadPickerMaterials({
+        force: true,
+        type: coverPickerOpen ? 'image' : materialType,
+      }).catch(err => message.error(apiError(err)));
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [
+    seriesId,
+    activeTab,
+    lessonMaterialPickerOpen,
+    batchMaterialPickerOpen,
+    coverPickerOpen,
+    materialKeyword,
+    materialType,
+    selectedFolderId,
+  ]);
+
+  useEffect(() => {
     if (!seriesId || activeTab !== 'authorization') return;
     setAuthLoading(true);
     onlineCourseApi.getSeriesStudents(seriesId, { tab: authFilter, keyword: authKeyword, related_only: 1 })
@@ -614,9 +675,10 @@ export default function OnlineCourseEditorPage() {
     const values = await seriesForm.validateFields();
     setSaving(true);
     try {
-      await onlineCourseApi.updateSeries(seriesId, { ...values, is_free: values.is_free ? 1 : 0 });
+      const nextValues = { ...values, is_free: values.is_free ? 1 : 0 };
+      await onlineCourseApi.updateSeries(seriesId, nextValues);
+      setSeries(prev => prev ? { ...prev, ...nextValues } : prev);
       message.success('课程信息已保存');
-      await loadEditor();
     } catch (err) {
       message.error(apiError(err));
     } finally {
@@ -654,7 +716,11 @@ export default function OnlineCourseEditorPage() {
 
   const openLessonMaterialPicker = (record: LessonRow) => {
     setMaterialPickerLesson(record);
+    setSelectedFolderId('all');
+    setMaterialType('all');
+    setMaterialKeyword('');
     setLessonMaterialPickerOpen(true);
+    loadPickerMaterials({ force: true, keyword: '', type: 'all', folderId: 'all' }).catch(err => message.error(apiError(err)));
   };
 
   const openMaterialPreview = (record?: MaterialRow | null) => {
@@ -674,6 +740,7 @@ export default function OnlineCourseEditorPage() {
     setMaterialType('all');
     setMaterialKeyword('');
     setBatchMaterialPickerOpen(true);
+    loadPickerMaterials({ force: true, keyword: '', type: 'all', folderId: 'all' }).catch(err => message.error(apiError(err)));
   };
 
   const selectLessonMaterial = async (material: MaterialRow) => {
@@ -681,8 +748,7 @@ export default function OnlineCourseEditorPage() {
     setSaving(true);
     try {
       await replaceLessonMaterial(materialPickerLesson.id, material.id);
-      const payload = await onlineCourseApi.getSeriesCourses(seriesId).catch(() => ({ data: [] }));
-      setLessons(normalizeLessonRows(pickArray(payload), seriesId));
+      await refreshLessons();
       setLessonMaterialPickerOpen(false);
       setMaterialPickerLesson(null);
       message.success(firstMaterial(materialPickerLesson) ? '素材已替换' : '素材已添加');
@@ -705,14 +771,10 @@ export default function OnlineCourseEditorPage() {
       const uploaded = pickArray(result)[0] || result?.data?.[0];
       if (!uploaded?.id) throw new Error('上传成功但未返回素材 ID');
       await replaceLessonMaterial(materialPickerLesson.id, Number(uploaded.id));
-      const [coursePayload, materialRows, folderPayload] = await Promise.all([
-        onlineCourseApi.getSeriesCourses(seriesId).catch(() => ({ data: [] })),
-        loadAllMaterials().catch(() => []),
-        onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] })),
+      await Promise.all([
+        refreshLessons(),
+        ensureMaterialsLoaded(true),
       ]);
-      setLessons(normalizeLessonRows(pickArray(coursePayload), seriesId));
-      setMaterials(materialRows);
-      setFolders(pickFolderRows(folderPayload));
       setLessonMaterialPickerOpen(false);
       setMaterialPickerLesson(null);
       const vodWarning = Array.isArray(result?.warnings) ? result.warnings[0]?.message : '';
@@ -746,15 +808,35 @@ export default function OnlineCourseEditorPage() {
         sort_order: Number(values.sort_order || editingLesson?.sort_order || (lessons.at(-1)?.sort_order || lessons.length) + 1),
         is_free_trial: values.is_free_trial ? 1 : 0,
       };
-      let saved: any;
       if (editingLesson) {
-        saved = await onlineCourseApi.updateCourse(editingLesson.id, payload);
+        await onlineCourseApi.updateCourse(editingLesson.id, payload);
+        setLessons(prev => normalizeLessonRows(
+          prev.map(item => Number(item.id) === Number(editingLesson.id)
+            ? { ...item, ...payload, id: editingLesson.id, videos: item.videos }
+            : item),
+          seriesId,
+        ));
       } else {
-        saved = await onlineCourseApi.createCourse(payload);
+        const result = await onlineCourseApi.createCourse(payload);
+        const createdId = idFromPayload(result);
+        if (createdId) {
+          setLessons(prev => normalizeLessonRows([
+            ...prev,
+            {
+              ...payload,
+              id: createdId,
+              series_id: seriesId,
+              duration: 0,
+              video_count: 0,
+              videos: [],
+            } as LessonRow,
+          ], seriesId));
+        } else {
+          await refreshLessons();
+        }
       }
       message.success(editingLesson ? '课节已更新' : '课节已新建');
       setLessonModalOpen(false);
-      await loadEditor();
     } catch (err) {
       message.error(apiError(err));
     } finally {
@@ -768,8 +850,9 @@ export default function OnlineCourseEditorPage() {
     try {
       await onlineCourseApi.batchUpdateCourseStatus({ ids: selectedLessonIds, status: nextStatus });
       message.success(nextStatus === 'published' ? '已批量上架' : '已批量下架');
+      const targetIds = new Set(selectedLessonIds.map(Number));
+      setLessons(prev => prev.map(item => targetIds.has(Number(item.id)) ? { ...item, status: nextStatus, local_status: nextStatus } : item));
       setSelectedLessonIds([]);
-      await loadEditor();
     } catch (err) {
       message.error(apiError(err));
     } finally {
@@ -788,8 +871,9 @@ export default function OnlineCourseEditorPage() {
         try {
           await onlineCourseApi.batchDeleteCourses({ ids });
           message.success('已删除');
-          setSelectedLessonIds([]);
-          await loadEditor();
+          const deletedIds = new Set(ids.map(Number));
+          setLessons(prev => normalizeLessonRows(prev.filter(item => !deletedIds.has(Number(item.id))), seriesId));
+          setSelectedLessonIds(prev => prev.filter(id => !deletedIds.has(Number(id))));
         } catch (err) {
           message.error(apiError(err));
           throw err;
@@ -811,7 +895,7 @@ export default function OnlineCourseEditorPage() {
       setSelectedMaterialIds([]);
       setBatchMaterialPickerOpen(false);
       setActiveTab('lessons');
-      await loadEditor();
+      await refreshLessons();
     } catch (err) {
       message.error(apiError(err));
     } finally {
@@ -867,7 +951,7 @@ export default function OnlineCourseEditorPage() {
             onUploadProgress: (event: any) => {
               const total = event.total || file.size || 1;
               if (event.loaded >= total) {
-                setBatchUploadItems(prev => ({ ...prev, [uid]: { ...prev[uid], status: 'uploading', percent: Math.max(prev[uid]?.percent || 0, 95) } }));
+                setBatchUploadItems(prev => ({ ...prev, [uid]: { ...prev[uid], status: 'processing', percent: Math.max(prev[uid]?.percent || 0, 95) } }));
                 return;
               }
               const percent = Math.min(90, Math.round((event.loaded / total) * 90));
@@ -914,7 +998,7 @@ export default function OnlineCourseEditorPage() {
       } else {
         message.success(`上传完成！共上传 ${uploadedMaterials.length} 个素材并生成 ${createdCount} 个课节`);
       }
-      await loadEditor();
+      await refreshLessons();
     } catch (err) {
       message.error(apiError(err));
     } finally {
@@ -996,13 +1080,33 @@ export default function OnlineCourseEditorPage() {
     }
   };
 
+  const lessonSortInputValue = (record: LessonRow) => (
+    Object.prototype.hasOwnProperty.call(lessonSortDrafts, record.id)
+      ? lessonSortDrafts[record.id]
+      : record.sort_order || 1
+  );
+
+  const setLessonSortDraft = (record: LessonRow, value: number | null) => {
+    setLessonSortDrafts(prev => ({ ...prev, [record.id]: value }));
+  };
+
+  const commitLessonSort = async (record: LessonRow) => {
+    const draft = lessonSortInputValue(record);
+    setLessonSortDrafts(prev => {
+      const next = { ...prev };
+      delete next[record.id];
+      return next;
+    });
+    await saveLessonSort(record, draft);
+  };
+
   const updateSeriesStatus = async (nextStatus: string) => {
     setSaving(true);
     try {
       const values = seriesForm.getFieldsValue();
       await onlineCourseApi.updateSeries(seriesId, { ...series, ...values, status: nextStatus, is_free: values.is_free ? 1 : 0 });
+      setSeries(prev => prev ? { ...prev, status: nextStatus } : prev);
       message.success(nextStatus === 'published' ? '课程已上架' : '课程已下架');
-      await loadEditor();
     } catch (err) {
       message.error(apiError(err));
     } finally {
@@ -1053,8 +1157,10 @@ export default function OnlineCourseEditorPage() {
 
   const openCoverPicker = (target: 'series_cover' | 'series_share') => {
     setCoverPickerTarget(target);
+    setSelectedFolderId('all');
     setMaterialKeyword('');
     setCoverPickerOpen(true);
+    loadPickerMaterials({ force: true, keyword: '', type: 'image', folderId: 'all' }).catch(err => message.error(apiError(err)));
   };
 
   const persistPickedImage = async (source: string, silent = false) => {
@@ -1127,12 +1233,7 @@ export default function OnlineCourseEditorPage() {
       const source = uploaded?.file_url || uploaded?.file_path || uploaded?.thumbnail;
       if (!source) throw new Error('上传成功，但没有返回图片地址');
       setCoverPickerOpen(false);
-      const [materialRows, folderPayload] = await Promise.all([
-        loadAllMaterials().catch(() => []),
-        onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] })),
-      ]);
-      setMaterials(materialRows);
-      setFolders(pickFolderRows(folderPayload));
+      await ensureMaterialsLoaded(true);
       await persistPickedImage(source, true);
       message.success(`图片已上传到「${folder.name}」并自动保存`);
     } catch (err) {
@@ -1162,35 +1263,69 @@ export default function OnlineCourseEditorPage() {
     });
   };
 
-  const authorizeSingleMember = (record: any) => {
-    modal.confirm({
-      title: '确定授权此学员吗？',
-      okText: '授权',
-      cancelText: '取消',
-      onOk: async () => {
-        try {
-          await onlineCourseApi.authorizeMember(seriesId, { member_id: record.id || record.member_id, type: 'admin_grant' });
-          message.success('已授权');
-          const studentPayload = await onlineCourseApi.getSeriesStudents(seriesId, { tab: authFilter, keyword: authKeyword, related_only: 1 }).catch(() => ({ data: [] }));
-          setAuthRows(pickArray(studentPayload));
-        } catch (err) {
-          message.error(apiError(err));
-          throw err;
-        }
-      },
-    });
+  const uploadAuthorizationVouchers = async (files: UploadFile[], subject: string) => {
+    if (!files.length) throw new Error('请上传订单凭证');
+    const group = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    const vouchers = [];
+    for (const [index, uploadFile] of files.entries()) {
+      if (!uploadFile.originFileObj) throw new Error('订单凭证文件已失效，请重新选择');
+      const formData = new FormData();
+      formData.append('file', uploadFile.originFileObj);
+      formData.append('subject', subject || '未命名学员');
+      formData.append('course', series?.name || `课程${seriesId}`);
+      formData.append('group', group);
+      formData.append('sequence', String(index + 1));
+      const response = await api.post('/course/authorization-vouchers', formData);
+      const payload = response.data;
+      const voucher = payload?.data || payload;
+      if (!voucher?.voucherPath) throw new Error('订单凭证上传失败');
+      vouchers.push(voucher);
+    }
+    return vouchers;
   };
 
-  const batchAuthorizeSelected = async () => {
+  const authorizeSingleMember = (record: any) => {
+    setSingleAuthRecord(record);
+    setSingleAuthVoucherFiles([]);
+  };
+
+  const confirmAuthorizeSingleMember = async () => {
+    if (!singleAuthRecord) return;
+    if (!singleAuthVoucherFiles.length) return void message.warning('请上传订单凭证');
+    setSaving(true);
+    try {
+      const vouchers = await uploadAuthorizationVouchers(singleAuthVoucherFiles, singleAuthRecord.name || singleAuthRecord.phone || `学员${singleAuthRecord.id}`);
+      await onlineCourseApi.authorizeMember(seriesId, { member_id: singleAuthRecord.id || singleAuthRecord.member_id, type: 'admin_grant', order_vouchers: vouchers });
+      message.success('已授权');
+      setSingleAuthRecord(null);
+      setSingleAuthVoucherFiles([]);
+      reloadAuthRecords();
+    } catch (err) {
+      message.error(apiError(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const batchAuthorizeSelected = () => {
     if (!selectedAuthMemberIds.length) {
       message.warning('请选择学员');
       return;
     }
+    setBatchSelectedVoucherFiles([]);
+    setBatchSelectedAuthOpen(true);
+  };
+
+  const confirmBatchAuthorizeSelected = async () => {
+    if (!batchSelectedVoucherFiles.length) return void message.warning('请上传订单凭证');
     setSaving(true);
     try {
-      await onlineCourseApi.batchAuthorizeMembers(seriesId, { member_ids: selectedAuthMemberIds });
+      const vouchers = await uploadAuthorizationVouchers(batchSelectedVoucherFiles, `批量学员${selectedAuthMemberIds.length}人`);
+      await onlineCourseApi.batchAuthorizeMembers(seriesId, { member_ids: selectedAuthMemberIds, order_vouchers: vouchers });
       message.success(`已授权 ${selectedAuthMemberIds.length} 位学员`);
       setSelectedAuthRowKeys([]);
+      setBatchSelectedAuthOpen(false);
+      setBatchSelectedVoucherFiles([]);
       reloadAuthRecords();
     } catch (err) {
       message.error(apiError(err));
@@ -1226,11 +1361,14 @@ export default function OnlineCourseEditorPage() {
   const openAuthMemberModal = () => {
     setAuthMemberSearch('');
     setAuthSelectedMemberIds([]);
+    setAuthMemberVoucherFiles([]);
     setAuthMemberModalOpen(true);
+    ensureMembersLoaded().catch(err => message.error(apiError(err)));
   };
 
   const openAuthPhoneModal = () => {
     setAuthPhone('');
+    setAuthPhoneVoucherFiles([]);
     setAuthPhoneModalOpen(true);
   };
 
@@ -1251,9 +1389,11 @@ export default function OnlineCourseEditorPage() {
       message.warning('请选择学员');
       return;
     }
+    if (!authMemberVoucherFiles.length) return void message.warning('请上传订单凭证');
     setSaving(true);
     try {
-      await onlineCourseApi.batchAuthorizeMembers(seriesId, { member_ids: authSelectedMemberIds });
+      const vouchers = await uploadAuthorizationVouchers(authMemberVoucherFiles, `批量学员${authSelectedMemberIds.length}人`);
+      await onlineCourseApi.batchAuthorizeMembers(seriesId, { member_ids: authSelectedMemberIds, order_vouchers: vouchers });
       message.success(`已授权 ${authSelectedMemberIds.length} 位学员`);
       setAuthMemberModalOpen(false);
       reloadAuthRecords();
@@ -1270,9 +1410,11 @@ export default function OnlineCourseEditorPage() {
       message.warning('请输入正确的手机号');
       return;
     }
+    if (!authPhoneVoucherFiles.length) return void message.warning('请上传订单凭证');
     setSaving(true);
     try {
-      await onlineCourseApi.authorizePhone(seriesId, { phone });
+      const vouchers = await uploadAuthorizationVouchers(authPhoneVoucherFiles, phone);
+      await onlineCourseApi.authorizePhone(seriesId, { phone, order_vouchers: vouchers });
       message.success(`已预授权手机号 ${phone}`);
       setAuthPhoneModalOpen(false);
       reloadAuthRecords();
@@ -1325,7 +1467,6 @@ export default function OnlineCourseEditorPage() {
                 <Title level={2} style={{ margin: 0, lineHeight: 1.15 }}>{series.name}</Title>
                 <Text type="secondary" style={{ fontSize: 13 }}>{series.subtitle || '管理课程信息、课节内容和课程授权'}</Text>
               </Space>
-              <Text type="secondary" style={{ fontSize: 13 }}>课程工作台</Text>
             </Space>
           </Col>
           <Col>
@@ -1352,7 +1493,7 @@ export default function OnlineCourseEditorPage() {
           {activeTab === 'lessons' && (
             <div className="oc-lesson-inline-stats" aria-label="课节统计">
               <span className="oc-lesson-stat-pill"><span>总课节</span><strong>{lessonStats.total}</strong><span>节</span></span>
-              <span className="oc-lesson-stat-pill"><span>总时长</span><strong>{durationText(lessonStats.duration)}</strong></span>
+              <span className="oc-lesson-stat-pill"><span>总时长</span><strong>{durationHoursText(lessonStats.duration)}</strong></span>
               <span className="oc-lesson-stat-pill"><span>已上架</span><strong>{lessonStats.published}</strong><span>节</span></span>
               <span className="oc-lesson-stat-pill"><span>学员数</span><strong>{lessonStats.students}</strong><span>人</span></span>
             </div>
@@ -1414,10 +1555,33 @@ export default function OnlineCourseEditorPage() {
                         setLessonPageSize(pageSize);
                       },
                     }}
-                    scroll={{ x: 1240, y: 'calc(100dvh - 438px)' }}
+                    scroll={{ x: 1240, y: 'calc(100dvh - 390px)' }}
                     locale={{ emptyText: <Empty description="暂无课节；可新建或批量创建" /> }}
                     columns={sortableColumns<LessonRow>([
-                      { title: '排序', dataIndex: 'sort_order', align: 'center' as const, width: 76, render: (value, record) => <CommittedSortInput value={value} onCommit={next => saveLessonSort(record, next)} style={sortInputStyle(value)} /> },
+                      {
+                        title: '排序',
+                        dataIndex: 'sort_order',
+                        align: 'center' as const,
+                        width: isMobile ? 64 : 76,
+                        render: (value, record) => {
+                          const inputValue = lessonSortInputValue(record);
+                          return (
+                            <InputNumber
+                              className="oc-lesson-sort-input"
+                              min={1}
+                              size="small"
+                              controls={false}
+                              value={inputValue}
+                              onChange={next => setLessonSortDraft(record, next)}
+                              onBlur={() => commitLessonSort(record)}
+                              onKeyDown={event => {
+                                if (event.key === 'Enter') event.currentTarget.blur();
+                              }}
+                              style={sortInputStyle(inputValue ?? value)}
+                            />
+                          );
+                        },
+                      },
                       { title: '课节名称', dataIndex: 'name', fixed: 'left', align: 'left' as const, width: 260, className: 'lesson-name-column', render: value => <Text strong style={{ display: 'block', textAlign: 'left' }}>{stripFileExtension(value) || value}</Text> },
                       {
                         title: '对应素材',
@@ -1463,7 +1627,24 @@ export default function OnlineCourseEditorPage() {
                         <Col xs={24} md={12} xl={8} key={item.id}>
                           <Card size="small" hoverable onClick={() => openLessonModal(item)} style={{ height: '100%' }}>
                             <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                              <Space style={{ justifyContent: 'space-between', width: '100%' }}><CommittedSortInput value={item.sort_order} onCommit={next => saveLessonSort(item, next)} style={sortInputStyle(item.sort_order)} /><Text strong ellipsis style={{ maxWidth: 180 }}>{stripFileExtension(item.name) || item.name}</Text>{statusTag(item.local_status || item.status)}</Space>
+                              <Space style={{ justifyContent: 'space-between', width: '100%' }}>
+                                <InputNumber
+                                  min={1}
+                                  size="small"
+                                  controls={false}
+                                  value={lessonSortInputValue(item)}
+                                  onClick={event => event.stopPropagation()}
+                                  onChange={next => setLessonSortDraft(item, next)}
+                                  onBlur={() => commitLessonSort(item)}
+                                  onKeyDown={event => {
+                                    event.stopPropagation();
+                                    if (event.key === 'Enter') event.currentTarget.blur();
+                                  }}
+                                  style={sortInputStyle(lessonSortInputValue(item) ?? item.sort_order)}
+                                />
+                                <Text strong ellipsis style={{ maxWidth: 180 }}>{stripFileExtension(item.name) || item.name}</Text>
+                                {statusTag(item.local_status || item.status)}
+                              </Space>
                               {previewRecord ? (
                                 <button
                                   type="button"
@@ -1506,10 +1687,11 @@ export default function OnlineCourseEditorPage() {
                   <Table<MaterialRow>
                     rowKey="id"
                     size="middle"
+                    loading={materialsLoading}
                     dataSource={filteredMaterials}
                     rowSelection={{ selectedRowKeys: selectedMaterialIds, onChange: keys => setSelectedMaterialIds(keys as number[]) }}
                     pagination={{ pageSize: 20, showSizeChanger: true }}
-                    scroll={{ x: 920 }}
+                    scroll={{ x: 920, y: 'calc(100dvh - 430px)' }}
                     locale={{ emptyText: <Empty description="暂无可选素材" /> }}
                     columns={[
                       {
@@ -1545,7 +1727,7 @@ export default function OnlineCourseEditorPage() {
               title={<Space><span>学员授权</span><Text type="secondary" style={{ fontWeight: 400, fontSize: 13 }}>共 {authRows.length} 条</Text></Space>}
               extra={
                 <Space wrap>
-                  <Input.Search allowClear placeholder="搜索姓名 / 手机号" value={authKeyword} onChange={event => setAuthKeyword(event.target.value)} style={{ width: 200 }} />
+                  <Input.Search allowClear placeholder="搜索姓名/手机号/member_id/openid/unionid" value={authKeyword} onChange={event => setAuthKeyword(event.target.value)} style={{ width: 320 }} />
                   <Select value={authFilter} onChange={setAuthFilter} style={{ width: 110 }} options={[{ value: 'all', label: '全部' }, { value: 'authorized', label: '已授权' }, { value: 'unauthorized', label: '仅浏览' }]} />
                   <Button onClick={batchAuthorizeSelected} disabled={!selectedAuthRowKeys.length} loading={saving}>批量授权</Button>
                   <Button danger onClick={batchCancelAuthorization} disabled={!selectedAuthRowKeys.length}>批量取消授权</Button>
@@ -1562,11 +1744,13 @@ export default function OnlineCourseEditorPage() {
                 dataSource={authRows}
                 rowSelection={{ selectedRowKeys: selectedAuthRowKeys, onChange: keys => setSelectedAuthRowKeys(keys as Array<string | number>) }}
                 pagination={{ pageSize: 20, showTotal: total => `共 ${total} 条` }}
-                scroll={{ x: 1060 }}
+                scroll={{ x: 1520, y: 'calc(100dvh - 390px)' }}
                 locale={{ emptyText: <Empty description="暂无本课程授权或浏览记录" /> }}
                 columns={sortableColumns<any>([
                   { title: '学员', dataIndex: 'name', fixed: 'left', width: 140, sorter: true, render: value => <Text strong>{value || '学员'}</Text> },
+                  { title: 'member_id', dataIndex: 'member_id', width: 100, sorter: true, render: (_, record) => record.member_id || record.id || '-' },
                   { title: '手机号', dataIndex: 'phone', width: 140, sorter: true, render: value => value || '-' },
+                  { title: '微信 UnionID', dataIndex: 'wx_unionid', width: 220, sorter: true, render: value => value || '-' },
                   { title: '访问记录', dataIndex: 'visit_count', width: 180, sorter: true, render: (_, record) => visitRecordText(record) },
                   {
                     title: '来源',
@@ -1659,6 +1843,7 @@ export default function OnlineCourseEditorPage() {
             <Table<MaterialRow>
               rowKey="id"
               size="small"
+              loading={materialsLoading}
               dataSource={filteredMaterials}
               pagination={{ pageSize: 8 }}
               scroll={{ x: 760 }}
@@ -1741,6 +1926,7 @@ export default function OnlineCourseEditorPage() {
               className="batch-material-picker-table"
               rowKey="id"
               size="small"
+              loading={materialsLoading}
               dataSource={filteredMaterials}
               rowSelection={{
                 selectedRowKeys: selectedMaterialIds,
@@ -1806,6 +1992,7 @@ export default function OnlineCourseEditorPage() {
             scroll={{ x: 'max-content' }}
             rowKey="id"
             size="middle"
+            loading={materialsLoading}
             dataSource={filteredImageMaterials}
             pagination={{ pageSize: 8 }}
             locale={{ emptyText: <Empty description="暂无图片素材" /> }}
@@ -1820,7 +2007,7 @@ export default function OnlineCourseEditorPage() {
       </Modal>
 
       {/* 学员授权弹窗 */}
-      <Modal title="选择学员授权" open={authMemberModalOpen} onCancel={() => setAuthMemberModalOpen(false)} onOk={doAuthMember} confirmLoading={saving} width={560} destroyOnClose>
+      <Modal title="选择学员授权" open={authMemberModalOpen} onCancel={() => { setAuthMemberModalOpen(false); setAuthMemberVoucherFiles([]); }} onOk={doAuthMember} confirmLoading={saving} width={560} destroyOnClose>
         <Space direction="vertical" size={12} style={{ width: '100%' }}>
           <Input.Search
             placeholder="搜索学员姓名 / 手机号"
@@ -1850,11 +2037,16 @@ export default function OnlineCourseEditorPage() {
             ]}
           />
           <Text type="secondary">已选 {authSelectedMemberIds.length} 位学员</Text>
+          <div>
+            <Text strong>订单凭证（必填）</Text>
+            <Text type="secondary" style={{ display: 'block', margin: '4px 0 10px' }}>所选学员统一使用同一套凭证，支持多张。</Text>
+            <AuthorizationVoucherUpload fileList={authMemberVoucherFiles} onChange={setAuthMemberVoucherFiles} disabled={saving} />
+          </div>
         </Space>
       </Modal>
 
       {/* 电话预授权弹窗 */}
-      <Modal title="手机号预授权" open={authPhoneModalOpen} onCancel={() => setAuthPhoneModalOpen(false)} onOk={doAuthPhone} confirmLoading={saving} width={420} destroyOnClose>
+      <Modal title="手机号预授权" open={authPhoneModalOpen} onCancel={() => { setAuthPhoneModalOpen(false); setAuthPhoneVoucherFiles([]); }} onOk={doAuthPhone} confirmLoading={saving} width={520} destroyOnClose>
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
           <div>
             <Text strong>课程：</Text>
@@ -1871,7 +2063,42 @@ export default function OnlineCourseEditorPage() {
             />
             <Text type="secondary" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>输入手机号后，该学员将获得本课程的完整访问权限。</Text>
           </div>
+          <div>
+            <Text strong>订单凭证（必填）</Text>
+            <Text type="secondary" style={{ display: 'block', margin: '4px 0 10px' }}>支持多张图片，单张不超过 12MB。</Text>
+            <AuthorizationVoucherUpload fileList={authPhoneVoucherFiles} onChange={setAuthPhoneVoucherFiles} disabled={saving} />
+          </div>
         </Space>
+      </Modal>
+
+      <Modal
+        title="确认授权并上传订单凭证"
+        open={Boolean(singleAuthRecord)}
+        onCancel={() => { setSingleAuthRecord(null); setSingleAuthVoucherFiles([]); }}
+        onOk={confirmAuthorizeSingleMember}
+        confirmLoading={saving}
+        okText="确认授权"
+        destroyOnClose
+      >
+        <Alert type="info" showIcon message={`${singleAuthRecord?.name || singleAuthRecord?.phone || '该学员'} 将获得「${series?.name || '当前课程'}」访问权限`} style={{ marginBottom: 16 }} />
+        <Text strong>订单凭证（必填）</Text>
+        <Text type="secondary" style={{ display: 'block', margin: '4px 0 10px' }}>支持多张图片，单张不超过 12MB。</Text>
+        <AuthorizationVoucherUpload fileList={singleAuthVoucherFiles} onChange={setSingleAuthVoucherFiles} disabled={saving} />
+      </Modal>
+
+      <Modal
+        title={`批量授权 ${selectedAuthMemberIds.length} 位学员`}
+        open={batchSelectedAuthOpen}
+        onCancel={() => { setBatchSelectedAuthOpen(false); setBatchSelectedVoucherFiles([]); }}
+        onOk={confirmBatchAuthorizeSelected}
+        confirmLoading={saving}
+        okText="确认批量授权"
+        destroyOnClose
+      >
+        <Alert type="info" showIcon message="本次批量授权将统一使用下面同一套订单凭证。" style={{ marginBottom: 16 }} />
+        <Text strong>订单凭证（必填）</Text>
+        <Text type="secondary" style={{ display: 'block', margin: '4px 0 10px' }}>支持多张图片，单张不超过 12MB。</Text>
+        <AuthorizationVoucherUpload fileList={batchSelectedVoucherFiles} onChange={setBatchSelectedVoucherFiles} disabled={saving} />
       </Modal>
 
       <Modal
@@ -1987,7 +2214,7 @@ export default function OnlineCourseEditorPage() {
                       }}>
                         {item.status === 'preparing' ? '准备上传' :
                          item.status === 'uploading' ? `${item.percent}%` :
-                         item.status === 'processing' ? '云端上传' :
+                         item.status === 'processing' ? '上传至 VOD' :
                          item.status === 'done' ? '✅ 完成' :
                          item.status === 'error' ? '❌ 失败' :
                          '待上传'}

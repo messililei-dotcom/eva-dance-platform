@@ -1,0 +1,31 @@
+<view class="page">
+  <view class="heading">伊娃文化艺术发展（湖南）有限公司</view>
+  <view class="notice">线上课程、线下课程和伊娃甄选商城商品，目前统一使用官方收款码。付款后请将截图和订单号发给老师或客服微信 yiwa2028 / yiwa2025。管理员核实到账后开通权益或安排发货。已付款请勿重复支付。</view>
+  <view wx:if="{{loading}}" class="notice">正在加载…</view>
+  <view wx:elif="{{error}}" class="error">{{error}}<button bindtap="reload" size="mini">重试</button></view>
+  <view wx:elif="{{!orders.length}}" class="notice">暂无收费订单</view>
+  <block wx:else>
+  <view wx:for="{{orders}}" wx:key="id" class="card">
+    <view class="title">{{item.title}}</view>
+    <view class="amount">¥{{item.amount}} <text class="state">{{item.statusLabel}}</text></view>
+    <view>数量：{{item.quantity}} · 已退款：¥{{item.refund}}</view>
+    <view>权益：{{item.fulfillmentLabel}}</view>
+    <view wx:if="{{item.kind === 'offline_training' && item.session_date}}">预约期次：第{{item.session_no}}期 · {{item.session_date}} {{item.start_time}}</view>
+    <view wx:if="{{item.last_error}}">{{item.last_error}}</view>
+    <view wx:if="{{item.kind === 'shop' && item.tracking_no}}">物流：{{item.carrier}} · {{item.tracking_no}}</view>
+    <view>联系人：{{item.contact_name}} · {{item.contact_phone}}</view>
+    <view>地址：{{item.contact_address}}</view>
+    <view wx:if="{{item.status === 'pending'}}" class="collection">
+      <view class="title">统一收款码 · 应付 ¥{{item.amount}}</view>
+      <view>请手动填写准确金额，并核对收款方。备注：{{item.contact_name}} + {{item.title}}；如长度允许，请附订单号。</view>
+      <image src="{{collectionCodeUrl}}" mode="widthFix" style="width:100%;max-width:360px;display:block;margin:16px auto;" show-menu-by-longpress="{{true}}" bindtap="previewCollectionCode" />
+      <button size="mini" bindtap="previewCollectionCode">查看收款码原图</button>
+      <button size="mini" data-id="{{item.id}}" bindtap="copyPaymentDetails">复制订单付款信息</button>
+      <view class="policy">可长按保存原图；若当前设备无法扫码，请使用另一台设备扫描。截图仅辅助核对，不代表已到账；已付款请等待核实，不要重复付款。</view>
+    </view>
+    <button wx:if="{{item.kind === 'offline_training' && item.status === 'paid'}}" size="mini" data-id="{{item.id}}" bindtap="requestReschedule" disabled="{{sending || item.reschedule_pending}}">{{item.reschedule_pending ? '改期申请处理中' : '联系客服修改约课时间'}}</button>
+    <view class="reference">订单号：{{item.id}}</view>
+    <view class="policy">退款规则：{{item.refund_policy}}</view>
+  </view>
+  </block>
+</view>

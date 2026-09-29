@@ -218,7 +218,7 @@ function normalizeAssets(value, apiBase) {
     || key.indexOf("cover") >= 0
     || key.indexOf("avatar") >= 0
     || key.indexOf("poster") >= 0;
-  const isAssetKey = (key) => isImageKey(key) || key.endsWith("_url") || key.endsWith("_path");
+  const isAssetKey = (key) => isImageKey(key) || /(?:url|path)$/i.test(key);
   const withOrigin = (path) => `${origin}${path}`;
   const normalizeImagePath = (source) => {
     if (source.startsWith("/uploads/online-course/series-covers/")) {
@@ -238,6 +238,11 @@ function normalizeAssets(value, apiBase) {
       if (normalizedPath.startsWith("/api/course/")) return withOrigin(normalizedPath);
     }
     if (trimmed.startsWith("/api/course/") && isImageKey(key)) return withOrigin(trimmed);
+    if (isImageKey(key)) {
+      const path = trimmed.replace(/^https?:\/\/[^/]+/, "");
+      const trustedImageApi = /^\/api\/(?:courses?\/cover-image(?:[?]|$)|platform-offline-courses\/cover\/|course\/series\/cover\/)/.test(path);
+      if (trustedImageApi) return /^https?:\/\//.test(trimmed) ? trimmed : withOrigin(trimmed);
+    }
     if ((trimmed.startsWith("/api/") || apiAssetPattern.test(trimmed)) && isImageKey(key)) return "";
     if (/^https?:\/\//.test(trimmed)) return trimmed;
     if (trimmed.startsWith("//")) return `https:${trimmed}`;
@@ -316,6 +321,7 @@ function upload(path, filePath, name, formData = {}) {
 }
 
 module.exports = {
+  getFeatures() { return request("/public/features", { auth: false }); },
   request,
   // 发送验证码
   sendCode(phone) {
@@ -335,13 +341,14 @@ module.exports = {
     return websiteRequest("/api/wechat/mini-handoff/complete", { handoffId });
   },
   getSeriesList() {
-    return request("/public/series", { auth: false });
+    return request("/public/series", { auth: false }).then(rows => (rows || []).filter(item => item.status === "published"));
   },
   getOfflineCourses() {
-    return request("/public/offline-courses", { auth: false });
+    return request("/public/offline-courses", { auth: false, timeout: 20000 });
   },
-  getOfflineOverview() {
-    return request(`/offline/overview?member_id=${getMemberId()}`);
+  getOfflineOverview(courseIds = []) {
+    const ids = courseIds.map(Number).filter(id => Number.isSafeInteger(id) && id > 0);
+    return request(`/offline/overview?member_id=${getMemberId()}${ids.length ? "&course_ids=" + ids.join(",") : ""}`);
   },
   bookOfflineSession(sessionId) {
     return request(`/offline/bookings?member_id=${getMemberId()}`, {
@@ -407,6 +414,12 @@ module.exports = {
   getAuthorizedSeries() {
     return request(`/member/authorized-series?member_id=${getMemberId()}`);
   },
+  getMessages({ type = '', status = '', cursor = 0 } = {}) {
+    return request(`/member/messages?member_id=${getMemberId()}&limit=20&type=${encodeURIComponent(type)}&status=${encodeURIComponent(status)}&cursor=${Number(cursor) || 0}`);
+  },
+  getUnreadMessageCount() { return request(`/member/messages/unread-count?member_id=${getMemberId()}`); },
+  markMessageRead(id) { return request(`/member/messages/${encodeURIComponent(id)}/read?member_id=${getMemberId()}`, { method: 'PATCH' }); },
+  markAllMessagesRead() { return request(`/member/messages/read-all?member_id=${getMemberId()}`, { method: 'POST' }); },
   getMemberProfile() {
     return request(`/member/profile?member_id=${getMemberId()}`);
   },
@@ -465,7 +478,10 @@ module.exports = {
     return request(`/member/consume-records?member_id=${getMemberId()}`);
   },
   getEventRegistrations() {
-    return request(`/member/event-registrations?member_id=${getMemberId()}`);
+    return request(`/member/events?member_id=${getMemberId()}`).then(data => {
+      const rows = Array.isArray(data) ? data : data && data.entries || [];
+      return rows.map(item => ({ ...item, id: item.id || item.playerId }));
+    });
   },
   getCheckins() {
     return request(`/member/checkins?member_id=${getMemberId()}`);

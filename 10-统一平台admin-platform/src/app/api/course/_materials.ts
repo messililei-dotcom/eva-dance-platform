@@ -208,7 +208,7 @@ export function fileStreamResponse(request: Request, material: any, absolutePath
   const range = request.headers.get('range');
   if (range) {
     const match = range.match(/bytes=(\d*)-(\d*)/);
-    let start = match?.[1] ? parseInt(match[1], 10) : 0;
+    const start = match?.[1] ? parseInt(match[1], 10) : 0;
     let end = match?.[2] ? parseInt(match[2], 10) : total - 1;
     if (!Number.isFinite(start) || start < 0 || start >= total) return new Response(null, { status: 416 });
     if (!Number.isFinite(end) || end < start) end = total - 1;

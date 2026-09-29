@@ -6,6 +6,10 @@ const Database = require('better-sqlite3');
 
 const dbPath = process.env.ADMIN_DB_PATH || new URL('../admin.db', import.meta.url).pathname;
 const db = new Database(dbPath);
+const serverIps = new Set([
+  '8.138.227.61',
+  ...(process.env.SERVER_PUBLIC_IPS || '').split(','),
+].map(value => value.trim()).filter(Boolean));
 
 const provinceNames = {
   Anhui: '安徽省', Beijing: '北京市', Chongqing: '重庆市', Fujian: '福建省',
@@ -52,6 +56,10 @@ function isPublicIp(ip) {
   );
 }
 
+function isClientIp(ip) {
+  return isPublicIp(ip) && !serverIps.has(ip);
+}
+
 function locationLabel(data) {
   const region = String(data.regionName || '').trim();
   const city = String(data.cityName || '').trim();
@@ -63,10 +71,43 @@ function locationLabel(data) {
     }
     return `${provinceLabel}${cityLabel}`.trim();
   }
-  return [String(data.countryName || '').trim(), region, city].filter(Boolean).join(' ');
+  return [String(data.countryName || data.country || '').trim(), region, city].filter(Boolean).join(' ');
+}
+
+async function lookupLocation(ip) {
+  const providers = [
+    `https://free.freeipapi.com/api/json/${encodeURIComponent(ip)}`,
+    `http://ip-api.com/json/${encodeURIComponent(ip)}?lang=zh-CN&fields=status,country,countryCode,regionName,city`,
+  ];
+  let lastError;
+  for (const url of providers) {
+    try {
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(8000),
+        headers: { accept: 'application/json', 'user-agent': 'SWOD-Access-Region-Enricher/1.1' },
+      });
+      if (!response.ok) continue;
+      const data = await response.json();
+      if (data.status === 'fail') continue;
+      const location = locationLabel(data);
+      if (location) return location;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  if (lastError) throw lastError;
+  return '';
 }
 
 try {
+  const placeholders = Array.from(serverIps, () => '?').join(',');
+  const clearedServerRows = serverIps.size
+    ? db.prepare(`
+        UPDATE CourseSeriesVisitLog
+        SET ip_address='', ip_region=''
+        WHERE TRIM(ip_address) IN (${placeholders})
+      `).run(...serverIps).changes
+    : 0;
   const ips = db.prepare(`
     SELECT DISTINCT TRIM(ip_address) AS ip
     FROM CourseSeriesVisitLog
@@ -74,7 +115,7 @@ try {
       AND COALESCE(TRIM(ip_region), '') = ''
     ORDER BY id DESC
     LIMIT 40
-  `).all().map(row => row.ip).filter(isPublicIp);
+  `).all().map(row => row.ip).filter(isClientIp);
 
   const update = db.prepare(`
     UPDATE CourseSeriesVisitLog
@@ -85,19 +126,14 @@ try {
   let updated = 0;
   for (const ip of ips) {
     try {
-      const response = await fetch(`https://free.freeipapi.com/api/json/${encodeURIComponent(ip)}`, {
-        signal: AbortSignal.timeout(8000),
-        headers: { accept: 'application/json', 'user-agent': 'SWOD-Access-Region-Enricher/1.0' },
-      });
-      if (!response.ok) continue;
-      const location = locationLabel(await response.json());
+      const location = await lookupLocation(ip);
       if (!location) continue;
       updated += update.run(location, ip).changes;
     } catch (error) {
       console.error(`IP region lookup failed for ${ip}:`, error instanceof Error ? error.message : error);
     }
   }
-  console.log(`IP region enrichment complete: ${updated} rows updated across ${ips.length} IPs.`);
+  console.log(`IP region enrichment complete: ${updated} rows updated across ${ips.length} IPs; ${clearedServerRows} server-IP rows cleared.`);
 } finally {
   db.close();
 }

@@ -10,7 +10,9 @@ export async function GET(request: Request) {
   const search = new URL(request.url).searchParams;
   const folderId = search.get('folder_id');
   const type = search.get('type');
+  const referenced = search.get('is_referenced');
   const keyword = search.get('keyword') || '';
+  const excludeId = Number(search.get('exclude_id') || 0);
   const page = Math.max(1, Number(search.get('page') || 1));
   const pageSize = Math.min(200, Math.max(1, Number(search.get('pageSize') || 50)));
   const sortBy = allowedSort(search.get('sort_by'));
@@ -35,10 +37,19 @@ export async function GET(request: Request) {
         where += ' AND m.type=?';
         params.push(type);
       }
+      if (referenced === '1') {
+        where += ' AND EXISTS (SELECT 1 FROM CourseVideo reference_filter WHERE reference_filter.material_id=m.id)';
+      } else if (referenced === '0') {
+        where += ' AND NOT EXISTS (SELECT 1 FROM CourseVideo reference_filter WHERE reference_filter.material_id=m.id)';
+      }
       if (keyword.trim()) {
         where += ' AND (m.name LIKE ? OR m.tags LIKE ? OR mf.name LIKE ?)';
         const like = `%${keyword.trim()}%`;
         params.push(like, like, like);
+      }
+      if (Number.isInteger(excludeId) && excludeId > 0) {
+        where += ' AND m.id<>?';
+        params.push(excludeId);
       }
 
       const fetchTotal = () => db.prepare(`

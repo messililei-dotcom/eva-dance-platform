@@ -12,7 +12,7 @@
   }
 
   function courseKey(item) {
-    return cleanText(item && item.name).replace(/\s+/g, " ").toLowerCase();
+    return cleanText(item && (item.group_key || item.name)).replace(/\s+/g, " ").toLowerCase();
   }
 
   function periodYear(item) {
@@ -61,6 +61,8 @@
         ...representative,
         id: representative.id,
         name: cleanText(representative.name) || "线下课程",
+        cover_image: representative.cover_image || (periods.find(item => item.cover_image) || {}).cover_image || "",
+        studentCount: Math.max.apply(null, periods.map(item => Number(item.group_total_students ?? item.total_students ?? 0))),
         periods,
         periodCount: periods.length,
         periodText: `${periods.length} 个期次`,

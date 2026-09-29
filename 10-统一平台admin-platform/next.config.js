@@ -40,7 +40,7 @@ const nextConfig = {
       fallback: [
         {
           source: '/legacy-student-api/:path*',
-          destination: `${legacyStudentApiUrl}/:path*`,
+          destination: process.env.NODE_ENV === 'production' ? '/api/:path*' : `${legacyStudentApiUrl}/:path*`,
         },
       ],
     };

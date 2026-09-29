@@ -1,4 +1,5 @@
 import { openAdminDb } from '@/lib/server/admin-db';
+import { ensureGrowthTables } from '@/lib/server/student-growth';
 import { ensureLocalAuthTables, verifyLocalToken } from './_local-auth';
 
 export const dynamic = 'force-dynamic';
@@ -134,6 +135,25 @@ export function requireSuperAdmin(request: Request, message = '仅超级管理�
   }
 }
 
+export function isSuperAdminRequest(request: Request) {
+  if (isLocalhostRequest(request)) return true;
+  const payload = authPayloadFromRequest(request);
+  if (!payload?.username) return false;
+  if (payload.username === 'lilei') return true;
+
+  const db = openAdminDb();
+  try {
+    ensureLocalAuthTables(db);
+    const user = db.prepare('SELECT username, role, status FROM User WHERE username = ? OR id = ? LIMIT 1')
+      .get(payload.username, payload.id || 0) as { username?: string; role?: string; status?: string } | undefined;
+    return Boolean(user && user.status === 'active' && (user.username === 'lilei' || user.role === 'admin'));
+  } catch {
+    return false;
+  } finally {
+    db.close();
+  }
+}
+
 function permissionByAction(action: unknown) {
   const normalized = cleanText(action, 'view').toLowerCase();
   if (['create', 'add', 'post', 'upload', 'new'].includes(normalized)) return 'permCourseCreate';
@@ -183,6 +203,7 @@ function isSensitiveErrorMessage(message: string) {
 export function openTrainingDb() {
   const db = openAdminDb();
   ensureTrainingTables(db);
+  ensureGrowthTables(db);
   return db;
 }
 
@@ -201,6 +222,19 @@ export function ensureTrainingTables(db: any) {
       type TEXT NOT NULL,
       price INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS CourseTemplate (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      slug TEXT UNIQUE,
+      type TEXT NOT NULL DEFAULT 'offline',
+      trainingType TEXT DEFAULT '集训',
+      coverImage TEXT DEFAULT '',
+      content TEXT DEFAULT '',
+      isActive INTEGER DEFAULT 1,
+      websiteVisible INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     CREATE TABLE IF NOT EXISTS Member (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -257,6 +291,18 @@ export function ensureTrainingTables(db: any) {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+    CREATE TABLE IF NOT EXISTS CommissionSettlement (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      periodType TEXT NOT NULL DEFAULT 'month',
+      period TEXT NOT NULL,
+      advisor TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'unsettled',
+      settledAt TEXT DEFAULT '',
+      settledBy TEXT DEFAULT '',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(periodType, period, advisor)
+    );
   `);
 
   [
@@ -272,6 +318,15 @@ export function ensureTrainingTables(db: any) {
     ['Course', 'attendanceSheetUploadedAt', "TEXT DEFAULT ''"],
     ['Course', 'coverImage', "TEXT DEFAULT ''"],
     ['Course', 'series_id', 'INTEGER DEFAULT 0'],
+    ['Course', 'templateId', 'INTEGER DEFAULT 0'],
+    ['CourseTemplate', 'slug', "TEXT DEFAULT ''"],
+    ['CourseTemplate', 'type', "TEXT DEFAULT '集训'"],
+    ['CourseTemplate', 'trainingType', "TEXT DEFAULT ''"],
+    ['CourseTemplate', 'coverImage', "TEXT DEFAULT ''"],
+    ['CourseTemplate', 'content', "TEXT DEFAULT ''"],
+    ['CourseTemplate', 'isActive', 'INTEGER DEFAULT 1'],
+    ['CourseTemplate', 'websiteVisible', 'INTEGER DEFAULT 1'],
+    ['CourseTemplate', 'updated_at', "DATETIME DEFAULT ''"],
     ['Member', 'province', "TEXT DEFAULT ''"],
     ['Member', 'city', "TEXT DEFAULT ''"],
     ['Member', 'address', "TEXT DEFAULT ''"],
@@ -279,6 +334,9 @@ export function ensureTrainingTables(db: any) {
     ['Member', 'foreignRegion', "TEXT DEFAULT ''"],
     ['Member', 'status', "TEXT DEFAULT 'active'"],
     ['Member', 'avatar', "TEXT DEFAULT ''"],
+    ['Member', 'phone_country_code', "TEXT DEFAULT ''"],
+    ['Member', 'phone_national_number', "TEXT DEFAULT ''"],
+    ['Member', 'merged_to_member_id', 'INTEGER DEFAULT 0'],
     ['Payment', 'memberPhone', "TEXT DEFAULT ''"],
     ['Payment', 'channel', "TEXT DEFAULT 'management'"],
     ['Payment', 'paymentStatus', "TEXT DEFAULT 'paid'"],
@@ -295,6 +353,47 @@ export function ensureTrainingTables(db: any) {
   ].forEach(([table, column, definition]) => ensureColumn(db, table, column, definition));
 
   db.exec(`
+    INSERT INTO CourseTemplate (name, slug, type, trainingType, coverImage, content)
+    SELECT TRIM(c.name), 'legacy-offline-course-' || MIN(c.id),
+           'offline', COALESCE(NULLIF(TRIM(c.type), ''), '集训'),
+           MAX(COALESCE(c.coverImage, '')), MAX(COALESCE(c.content, ''))
+    FROM Course c
+    WHERE COALESCE(c.series_id, 0) <= 0
+      AND COALESCE(TRIM(c.name), '') <> ''
+      AND NOT EXISTS (
+        SELECT 1 FROM CourseTemplate template
+        WHERE LOWER(TRIM(template.name)) = LOWER(TRIM(c.name))
+          AND (LOWER(COALESCE(template.type, '')) = 'offline' OR COALESCE(template.trainingType, '') <> '')
+      )
+    GROUP BY LOWER(TRIM(c.name)), LOWER(TRIM(COALESCE(NULLIF(c.type, ''), '集训')));
+    UPDATE Course
+    SET templateId = COALESCE((
+      SELECT template.id FROM CourseTemplate template
+      WHERE LOWER(TRIM(template.name)) = LOWER(TRIM(Course.name))
+        AND (LOWER(COALESCE(template.type, '')) = 'offline' OR COALESCE(template.trainingType, '') <> '')
+      ORDER BY template.id ASC LIMIT 1
+    ), 0)
+    WHERE COALESCE(templateId, 0) = 0 AND COALESCE(series_id, 0) <= 0;
+    UPDATE CourseTemplate
+    SET trainingType = COALESCE(NULLIF(trainingType, ''), (
+          SELECT COALESCE(NULLIF(c.type, ''), '集训') FROM Course c
+          WHERE c.templateId = CourseTemplate.id ORDER BY c.id ASC LIMIT 1
+        ), '集训'),
+        coverImage = COALESCE(NULLIF(coverImage, ''), (
+          SELECT NULLIF(c.coverImage, '') FROM Course c
+          WHERE c.templateId = CourseTemplate.id AND COALESCE(c.coverImage, '') <> ''
+          ORDER BY c.id DESC LIMIT 1
+        ), ''),
+        content = COALESCE(NULLIF(content, ''), (
+          SELECT NULLIF(c.content, '') FROM Course c
+          WHERE c.templateId = CourseTemplate.id AND COALESCE(c.content, '') <> ''
+          ORDER BY c.id DESC LIMIT 1
+        ), '')
+    WHERE EXISTS (SELECT 1 FROM Course c WHERE c.templateId = CourseTemplate.id);
+    CREATE INDEX IF NOT EXISTS idx_course_template_name_type
+      ON CourseTemplate(name COLLATE NOCASE, type COLLATE NOCASE);
+    CREATE INDEX IF NOT EXISTS idx_course_template_id
+      ON Course(templateId);
     CREATE INDEX IF NOT EXISTS idx_member_status_created
       ON Member(status, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_member_name_nocase
@@ -307,6 +406,8 @@ export function ensureTrainingTables(db: any) {
       ON Payment(courseId, memberId);
     CREATE INDEX IF NOT EXISTS idx_consume_member_date
       ON ConsumeRecord(memberId, consumeDate DESC);
+    CREATE INDEX IF NOT EXISTS idx_consume_course_date
+      ON ConsumeRecord(courseId, consumeDate DESC);
     CREATE INDEX IF NOT EXISTS idx_orders_effective_date
       ON orders(COALESCE(NULLIF(paid_at, ''), created_at) DESC, id DESC);
     CREATE INDEX IF NOT EXISTS idx_orders_status_effective_date
@@ -315,6 +416,8 @@ export function ensureTrainingTables(db: any) {
       ON orders(order_type, COALESCE(NULLIF(paid_at, ''), created_at) DESC);
     CREATE INDEX IF NOT EXISTS idx_orders_member_effective_date
       ON orders(member_id, COALESCE(NULLIF(paid_at, ''), created_at) DESC);
+    CREATE INDEX IF NOT EXISTS idx_orders_source
+      ON orders(source_type, source_id);
   `);
 }
 
@@ -334,6 +437,27 @@ export function today() {
 
 export function nowIso() {
   return new Date().toISOString();
+}
+
+export function commissionAdvisorKey(value: unknown) {
+  return cleanText(value, '未填写顾问');
+}
+
+export function commissionMonthKey(value: unknown) {
+  const text = cleanText(value);
+  return /^\d{4}-\d{2}/.test(text) ? text.slice(0, 7) : '未标记';
+}
+
+export function isCommissionSettlementLocked(db: any, advisor: unknown, period: unknown) {
+  const advisorKey = commissionAdvisorKey(advisor);
+  const periodKey = commissionMonthKey(period);
+  const row = db.prepare(`
+    SELECT status
+    FROM CommissionSettlement
+    WHERE periodType = 'month' AND period = ? AND advisor = ?
+    LIMIT 1
+  `).get(periodKey, advisorKey) as { status?: string } | undefined;
+  return row?.status === 'settled';
 }
 
 export function syncPaymentOrder(db: any, paymentId: number | string) {

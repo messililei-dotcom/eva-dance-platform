@@ -37,16 +37,16 @@ export const platformLinks = {
     label: '网课小程序',
     domain: '微信小程序',
     appId: '',
-    apiBase: 'https://admin.swod.com.cn/api/mini',
-    authBase: 'https://admin.swod.com.cn/api/mini',
+    apiBase: 'https://api.swod.com.cn/api/mini',
+    authBase: 'https://api.swod.com.cn/api/mini',
     adminConfig: 'https://admin.swod.com.cn/miniprogram',
     preview: 'https://admin.swod.com.cn/miniprogram',
   },
   api: {
-    gateway: 'https://admin.swod.com.cn',
-    auth: 'https://admin.swod.com.cn/api/mini',
-    static: 'https://admin.swod.com.cn',
-    miniapi: 'https://admin.swod.com.cn/api/mini',
+    gateway: 'https://api.swod.com.cn',
+    auth: 'https://api.swod.com.cn/api/mini',
+    static: 'https://www.swod.com.cn',
+    miniapi: 'https://api.swod.com.cn/api/mini',
   },
 } as const;
 
@@ -76,7 +76,7 @@ export const platformLinkMatrix: PlatformLinkItem[] = [
     key: 'miniapp-to-api',
     label: '网课小程序 → API',
     url: platformLinks.miniapp.apiBase,
-    description: '小程序只访问 miniapi 与 auth，由 API 网关聚合学习、订单、学习数据。',
+    description: '小程序统一访问 api.swod.com.cn，由 API 网关聚合认证、课程、订单和学习数据。',
     target: 'miniapp',
   },
 ];

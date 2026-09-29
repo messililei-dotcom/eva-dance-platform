@@ -1,29 +1,55 @@
 <view class="profile-page">
   <view class="profile-shell">
     <view class="profile-head">
-      <view class="avatar" wx:if="{{isLoggedIn}}">
-        <image wx:if="{{avatarUrl}}" class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" binderror="onAvatarError"></image>
-        <text wx:else>{{displayInitial}}</text>
-      </view>
-      <view class="avatar" wx:else>伊</view>
+      <button size="mini" wx:if="{{isLoggedIn}}" class="avatar avatar-edit" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" aria-label="更换头像" loading="{{avatarSaving}}">
+        <image wx:if="{{avatarUrl}}" class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" binderror="onAvatarError"></image><text wx:else>{{displayInitial}}</text>
+        <view class="avatar-camera"><image src="/images/profile/camera.svg" /></view>
+      </button>
+      <view wx:else class="avatar">伊</view>
       <view class="profile-main">
         <view class="name">{{wechatName || memberName}}</view>
-        <view class="phone">{{isLoggedIn ? memberLevelText + ' · ' + (memberPhone || '未绑定手机号') : '登录后同步官网个人中心数据'}}</view>
+        <view wx:if="{{isLoggedIn}}" class="phone"><text class="level-text">{{memberLevelText}}</text><text class="phone-dot">·</text><text class="phone-number">{{memberPhone || '未绑定手机号'}}</text></view>
+        <view wx:else class="phone">登录后同步个人资料</view>
+        <view class="profile-caption">个人中心</view>
       </view>
-      <button class="head-action" wx:if="{{!isLoggedIn}}" bindtap="goLogin">登录</button>
-      <button class="head-action" wx:else bindtap="logout">退出</button>
+      <view class="head-actions" wx:if="{{isLoggedIn}}">
+        <button size="mini" class="head-action message-action" bindtap="goMessages" aria-label="信息，{{unreadMessageCount}}条未读"><image class="head-icon" src="/images/profile/bell.svg"/><text>信息</text><text class="message-badge" wx:if="{{unreadMessageCount > 0}}">{{unreadMessageCount > 99 ? '99+' : unreadMessageCount}}</text></button>
+        <button size="mini" class="head-action" bindtap="logout"><image class="head-icon" src="/images/profile/logout.svg"/><text>退出</text></button>
+      </view>
+      <button size="mini" wx:else class="head-action" bindtap="goLogin">登录</button>
     </view>
-
     <view class="stats">
-      <view class="stat-item"><text class="num">{{authorizedCourses.length}}</text><text class="label">线上课</text></view>
-      <view class="stat-item"><text class="num">{{offlineCourses.length}}</text><text class="label">线下课</text></view>
-      <view class="stat-item"><text class="num">{{eventRegistrations.length}}</text><text class="label">比赛</text></view>
-      <view class="stat-item"><text class="num">{{certificates.length}}</text><text class="label">证书</text></view>
+      <view class="stat-item"><image src="/images/profile/book.svg"/><text class="num">{{authorizedCourses.length}}</text><text class="label">线上课</text></view>
+      <view class="stat-item"><image src="/images/profile/calendar.svg"/><text class="num">{{offlineCourses.length}}</text><text class="label">线下课</text></view>
+      <view class="stat-item"><image src="/images/profile/award.svg"/><text class="num">{{eventRegistrations.length}}</text><text class="label">比赛</text></view>
+      <view class="stat-item"><image src="/images/profile/award.svg"/><text class="num">{{certificates.length}}</text><text class="label">证书</text></view>
+    </view>
+    <view class="profile-summary">
+      <button size="mini" class="profile-summary-main" bindtap="toggleProfile" aria-expanded="{{profileOpen}}"><image class="profile-user-icon" src="/images/profile/user.svg"/><view><view class="row-title">个人资料</view><view class="row-desc">微信名、头像、手机号、生日和地址</view></view></button>
+      <text wx:if="{{isLoggedIn && isWechatBound}}" class="bound-pill">✓ 已绑定</text>
+      <button size="mini" wx:elif="{{isLoggedIn}}" class="bind-pill" bindtap="openWechatBinder">绑定微信</button>
+      <button size="mini" class="expand-profile" bindtap="toggleProfile" aria-label="{{profileOpen ? '收起个人资料' : '展开个人资料'}}"><image class="chevron {{profileOpen ? 'expanded' : ''}}" src="/images/profile/chevron.svg"/></button>
+    </view>
+    <view class="profile-form" wx:if="{{isLoggedIn && profileOpen}}">
+      <view class="form-heading"><text>个人资料</text><button size="mini" bindtap="saveProfileFields" disabled="{{profileSaving || profileLoading || !!profileError}}" loading="{{profileSaving}}">{{profileSaving ? '保存中' : '保存'}}</button></view>
+      <view class="profile-fields">
+        <view class="profile-field"><text>姓名</text><input type="nickname" value="{{profileDraft.name}}" data-field="name" bindinput="onProfileFieldInput" placeholder="填写姓名" maxlength="60"/></view>
+        <view class="profile-field"><text>手机号</text><input value="{{memberPhone}}" disabled placeholder="未绑定手机号"/></view>
+        <view class="profile-field wide"><text>微信号</text><input value="{{profileDraft.wxAccount}}" data-field="wxAccount" bindinput="onProfileFieldInput" placeholder="微信号需手动填写" maxlength="60"/></view>
+        <view class="profile-field"><text>性别</text><picker range="{{genderOptions}}" value="{{genderIndex}}" bindchange="onProfileGender"><view class="picker-value">{{profileDraft.gender || '未填写'}}</view></picker></view>
+        <view class="profile-field"><text>生日</text><picker mode="date" value="{{profileDraft.birthday}}" bindchange="onProfileBirthday"><view class="picker-value">{{profileDraft.birthday || '请选择'}}</view></picker></view>
+        <view class="profile-field"><text>国家/地区</text><input value="{{profileDraft.country}}" data-field="country" bindinput="onProfileFieldInput" placeholder="国家/地区"/></view>
+        <view class="profile-field"><text>省份/地区</text><input value="{{profileDraft.province}}" data-field="province" bindinput="onProfileFieldInput" placeholder="省份/地区"/></view>
+        <view class="profile-field"><text>城市</text><input value="{{profileDraft.city}}" data-field="city" bindinput="onProfileFieldInput" placeholder="城市"/></view>
+        <view class="profile-field wide"><text>地址</text><input value="{{profileDraft.address}}" data-field="address" bindinput="onProfileFieldInput" placeholder="详细地址" maxlength="200"/></view>
+      </view>
+      <view class="profile-form-footer"><text>{{wechatIdentityText || '头像和姓名与官网同步'}}</text><button size="mini" bindtap="openWechatBinder">微信资料同步</button></view>
+      <view wx:if="{{profileSaveMessage}}" class="profile-save-message">{{profileSaveMessage}}</view>
     </view>
 
     <view class="connection-card" wx:if="{{isLoggedIn && (profileLoading || profileError)}}">
       <view><view class="row-title">{{profileLoading ? '正在连接个人中心…' : '个人中心连接失败'}}</view><view class="row-desc" wx:if="{{profileError}}">{{profileError}}</view></view>
-      <button wx:if="{{profileError}}" bindtap="reconnectProfile">重新连接</button>
+      <button size="mini" wx:if="{{profileError}}" bindtap="reconnectProfile">重新连接</button>
     </view>
 
     <view class="bind-card" wx:if="{{isLoggedIn && needsPhoneBinding}}" bindtap="goLogin">
@@ -34,27 +60,19 @@
       <text class="row-arrow">去绑定 ›</text>
     </view>
 
-    <view class="bind-card" wx:if="{{isLoggedIn && !needsPhoneBinding && !isWechatBound}}" bindtap="openWechatBinder">
-      <view>
-        <view class="row-title">绑定微信，开启双线路登录</view>
-        <view class="row-desc">微信和手机号都可作为课程授权匹配依据</view>
-      </view>
-      <text class="wechat-action">绑定微信</text>
-    </view>
-
     <view class="wechat-card" wx:if="{{isLoggedIn && showWechatBinder}}">
       <view class="wechat-copy">
         <view class="wechat-title">微信资料</view>
         <view class="wechat-desc">{{wechatIdentityText || '微信身份已登录'}}</view>
       </view>
       <view class="wechat-profile-row">
-        <button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <button size="mini" class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
           <image wx:if="{{avatarUrl}}" class="avatar-picker-img" src="{{avatarUrl}}" mode="aspectFill"></image>
           <text wx:else>{{displayInitial}}</text>
         </button>
         <input class="wechat-input" type="nickname" value="{{wechatNameDraft}}" placeholder="填写微信昵称" bindinput="onWechatNameInput" />
       </view>
-      <button class="sync-btn" bindtap="syncWechatProfile">同步微信资料</button>
+      <button size="mini" class="sync-btn" bindtap="syncWechatProfile">同步微信资料</button>
     </view>
 
     <view class="link-row" bindtap="openEventRegistrations">
@@ -65,10 +83,10 @@
       <text class="row-arrow">›</text>
     </view>
 
-    <view class="link-row" bindtap="goProfileEdit">
+    <view class="link-row" bindtap="goCommerceOrders">
       <view>
-        <view class="row-title">个人资料</view>
-        <view class="row-desc">微信名、头像、手机号、生日和地址</view>
+        <view class="row-title">收费订单</view>
+        <view class="row-desc">查看新收费订单、到账与退款记录</view>
       </view>
       <text class="row-arrow">›</text>
     </view>
@@ -91,7 +109,7 @@
     <view class="content-section">
       <view class="section-heading">
         <view class="content-title">我的线下课程</view>
-        <button class="schedule-link" bindtap="openOfflineSchedule">去约课</button>
+        <button size="mini" class="schedule-link" bindtap="openOfflineSchedule">去约课</button>
       </view>
       <view wx:if="{{offlineCourses.length}}">
         <view class="record-card" wx:for="{{offlineCourses}}" wx:key="id">
@@ -116,7 +134,7 @@
     <view class="content-section">
       <view class="content-title">我的证书</view>
       <view wx:if="{{certificates.length}}">
-        <view class="certificate-row" wx:for="{{certificates}}" wx:key="id" bindtap="viewCertificate" data-url="{{item.openUrl}}">
+        <view class="certificate-row" wx:for="{{certificates}}" wx:key="id" bindtap="viewCertificate" data-url="{{item.openUrl}}" data-id="{{item.id}}">
           <view>
             <view class="record-title">{{item.courseName}}</view>
             <view class="record-meta">编号 {{item.certificateNo || '-'}} · {{item.displayIssueDate}}</view>

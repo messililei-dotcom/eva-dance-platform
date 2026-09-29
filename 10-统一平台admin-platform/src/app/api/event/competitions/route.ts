@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     `).run(
       name,
       code,
-      cleanText(body.status, 'draft'),
+      'published',
       cleanText(body.registrationStatus ?? body.registration_status, 'closed'),
       cleanText(body.startDate ?? body.start_date),
       cleanText(body.endDate ?? body.end_date),

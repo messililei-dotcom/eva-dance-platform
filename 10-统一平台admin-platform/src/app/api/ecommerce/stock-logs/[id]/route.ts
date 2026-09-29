@@ -18,8 +18,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const body = await request.json().catch(() => ({}));
   const db = openCommerceDb();
   try {
+    return db.transaction(() => {
+      db.prepare('UPDATE shop_products SET stock=stock WHERE id=?').run('');
     const log = db.prepare('SELECT * FROM shop_stock_logs WHERE id = ?').get(routeParams.id);
     if (!log) return Response.json({ success: false, error: '流水记录不存在' }, { status: 404 });
+    if (log.operator === '官网商城' && /^EV[a-f0-9]{30}$/.test(log.remark || '')) return Response.json({ error: '官网库存流水不能手工修改，请通过订单操作' }, { status: 409 });
 
     const product = db.prepare('SELECT * FROM shop_products WHERE id = ?').get(log.product_id);
     const oldQty = toNumber(log.quantity);
@@ -44,6 +47,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     );
 
     return Response.json({ success: true });
+    })();
   } finally {
     db.close();
   }
@@ -54,8 +58,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!hasAuth(request)) return unauthorized();
   const db = openCommerceDb();
   try {
+    return db.transaction(() => {
+      db.prepare('UPDATE shop_products SET stock=stock WHERE id=?').run('');
     const log = db.prepare('SELECT * FROM shop_stock_logs WHERE id = ?').get(routeParams.id);
     if (!log) return Response.json({ success: false, error: '流水记录不存在' }, { status: 404 });
+    if (log.operator === '官网商城' && /^EV[a-f0-9]{30}$/.test(log.remark || '')) return Response.json({ error: '官网库存流水不能手工修改，请通过订单操作' }, { status: 409 });
 
     const product = db.prepare('SELECT * FROM shop_products WHERE id = ?').get(log.product_id);
     if (product) {
@@ -65,6 +72,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
     db.prepare('DELETE FROM shop_stock_logs WHERE id = ?').run(routeParams.id);
     return Response.json({ success: true });
+    })();
   } finally {
     db.close();
   }

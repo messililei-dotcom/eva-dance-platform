@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { reportAdminAudit } from '@/lib/api';
 import dayjs from 'dayjs';
 import {
   App,
@@ -93,6 +94,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       ...(options.headers || {}),
     },
   });
+  const method = String(options.method || 'GET').toUpperCase();
+  if (method !== 'GET') reportAdminAudit({ kind: 'operation', path: `/api${path}`, method, status: response.status });
   const body = await response.json().catch(() => ({}));
   if (!response.ok || body.success === false) throw new Error(body.error || body.message || '操作失败');
   return body.data ?? body;

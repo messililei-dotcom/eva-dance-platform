@@ -1,4 +1,5 @@
 import { jsonError, toPositiveInt, withDb } from '../../_materials';
+import { normalizeCourseCategory } from '@/lib/course-category';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -38,7 +39,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       fields.forEach(f => {
         if (body[f] !== undefined) {
           updates.push(`${f}=?`);
-          values.push(f === 'name' ? String(body[f]).trim() : body[f]);
+          values.push(
+            f === 'name'
+              ? String(body[f]).trim()
+              : f === 'category'
+                ? normalizeCourseCategory(body[f], `${body.name || ''} ${body.subtitle || ''} ${body.source_type || ''}`)
+                : body[f]
+          );
         }
       });
       const id = toPositiveInt(routeParams.id);

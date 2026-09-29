@@ -4,6 +4,7 @@ import { Card, Tag, Space, Button, Input, Row, Col, Statistic, Modal, Form, Sele
 import { Table } from '@/components/adaptive-table';
 import { PlusOutlined, SearchOutlined, TrophyOutlined, CheckCircleOutlined, CloseCircleOutlined, ReloadOutlined, ThunderboltOutlined, FileImageOutlined, LinkOutlined, SettingOutlined } from '@ant-design/icons';
 import { api, certApi } from '@/lib/api';
+import { memberOptionLabel, memberSearchText } from '@/lib/member-search';
 import { sortableColumns } from '@/lib/table-sort';
 
 interface CertRecord {
@@ -25,6 +26,10 @@ interface MemberOption {
   id: number;
   name: string;
   phone?: string;
+  wxOpenid?: string;
+  wx_openid?: string;
+  wxUnionid?: string;
+  wx_unionid?: string;
 }
 
 interface SeriesOption {
@@ -104,8 +109,8 @@ export default function CertificatesPage() {
 
   const loadMembers = async () => {
     try {
-      const res = await api.get('/members/directory');
-      const rows = Array.isArray(res.data?.members) ? res.data.members : [];
+      const res = await api.get('/members');
+      const rows = Array.isArray(res.data) ? res.data : [];
       setMembers(rows);
       return rows;
     } catch (err: any) {
@@ -132,12 +137,9 @@ export default function CertificatesPage() {
     loadCertificates();
   }, []);
 
-  const openIssueModal = async () => {
-    await Promise.all([
-      members.length ? Promise.resolve(members) : loadMembers(),
-      seriesList.length ? Promise.resolve(seriesList) : loadSeries(),
-    ]);
-    setModalVisible(true);
+  const ensureIssueOptions = () => {
+    if (!members.length) loadMembers();
+    if (!seriesList.length) loadSeries();
   };
 
   const handleIssue = async (values: { memberId: number; seriesId: number }) => {
@@ -277,8 +279,9 @@ export default function CertificatesPage() {
   const total = data.length;
   const active = data.filter(c => c.status === 'active').length;
   const memberOptions = members.map((member) => ({
-    label: `${member.name}${member.phone ? ` · ${member.phone}` : ''}`,
+    label: memberOptionLabel(member),
     value: member.id,
+    searchText: memberSearchText(member),
   }));
   const seriesOptions = (() => {
     const options = new Map<number, { label: string; value: number }>();
@@ -356,19 +359,19 @@ export default function CertificatesPage() {
         <Button icon={<ReloadOutlined />} onClick={loadCertificates} loading={loading}>刷新</Button>
         <Button icon={<ThunderboltOutlined />} onClick={handleAutoIssue} loading={autoIssuing}>自动颁发</Button>
         <Button icon={<FileImageOutlined />} onClick={() => openTemplateModal()}>证书模板</Button>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { void openIssueModal(); }}>颁发证书</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => { ensureIssueOptions(); setModalVisible(true); }}>颁发证书</Button>
       </Space>}>
-        <Table columns={columns} dataSource={filtered} size="middle" loading={loading} pagination={{ pageSize: 20 }} rowKey="id" scroll={{ x: 'max-content' }} />
+        <Table columns={columns} dataSource={filtered} size="middle" loading={loading} pagination={{ pageSize: 20 }} rowKey="id" scroll={{ x: 'max-content', y: 'calc(100dvh - 390px)' }} />
       </Card>
 
       <Modal title="颁发证书" open={modalVisible} onCancel={() => setModalVisible(false)} footer={null} width={500} destroyOnClose>
         <Form form={form} layout="vertical" onFinish={handleIssue}>
           <Form.Item name="memberId" label="学员" rules={[{ required: true, message: '请选择学员' }]}>
             <Select
-              placeholder="搜索并选择学员"
+              placeholder="搜索姓名/手机号/member_id/微信ID"
               showSearch
               options={memberOptions}
-              optionFilterProp="label"
+              filterOption={(inputValue, option) => String((option as any)?.searchText || (option as any)?.label || '').toLowerCase().includes(inputValue.toLowerCase())}
             />
           </Form.Item>
           <Form.Item name="seriesId" label="课程" rules={[{ required: true, message: '请选择课程系列' }]}>

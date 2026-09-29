@@ -1,4 +1,4 @@
-import { cleanText, getMemberId, jsonError, toPositiveInt, withDb } from '../_helpers';
+import { cleanText, getMemberId, jsonError, linkedMemberIds, sqlIn, toPositiveInt, withDb } from '../_helpers';
 
 export async function GET(request: Request) {
   try {
@@ -8,7 +8,8 @@ export async function GET(request: Request) {
       const videoId = toPositiveInt(url.searchParams.get('video_id'));
       if (!memberId) return jsonError('未登录', 401);
       if (!videoId) return jsonError('视频ID不能为空', 400);
-      const data = db.prepare('SELECT * FROM StudyNote WHERE member_id=? AND video_id=? ORDER BY timestamp_seconds, created_at DESC').all(memberId, videoId);
+      const linked = sqlIn(linkedMemberIds(db, memberId));
+      const data = db.prepare(`SELECT * FROM StudyNote WHERE member_id IN (${linked.clause}) AND video_id=? ORDER BY timestamp_seconds, created_at DESC`).all(...linked.values, videoId);
       return Response.json({ success: true, data });
     });
   } catch (err: any) {

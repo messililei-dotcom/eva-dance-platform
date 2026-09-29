@@ -1,3 +1,4 @@
+const share = require("../../shared/share");
 const api = require("../../utils/api");
 
 function shortDate(value) {
@@ -18,7 +19,7 @@ function normalizeRanking(item) {
   };
 }
 
-Page({
+Page(share.withShare("event-detail", {
   data: {
     id: null, loading: true, competition: {}, groups: [], visibleGroups: [], groupKeyword: "", players: [], judges: [],
     rankings: [], sessions: [], awards: [], registrations: [], activePanel: "overview",
@@ -101,7 +102,4 @@ Page({
     }
     wx.navigateTo({ url: `/pages/event-register/event-register?id=${this.data.id}` });
   },
-  onShareAppMessage() {
-    return { title: this.data.competition.name || "伊娃东方舞赛事", path: `pages/event-detail/event-detail?id=${this.data.id}`, imageUrl: this.data.competition.coverUrl || "/images/logo.png" };
-  }
-});
+}));

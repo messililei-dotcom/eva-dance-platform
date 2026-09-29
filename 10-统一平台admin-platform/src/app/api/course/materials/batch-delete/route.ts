@@ -1,6 +1,7 @@
 import { deleteLocalMaterialFiles, jsonError, toPositiveInt, withDb } from '../../_materials';
 import { hasAuth, unauthorized } from '../../../training-db';
 import { deleteVodVideos } from '@/lib/server/aliyun-vod';
+import { recordMaterialDeletionTombstones } from '@/lib/server/material-deletion-tombstones';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -15,7 +16,10 @@ export async function POST(request: Request) {
       const placeholders = ids.map(() => '?').join(',');
       const refs = db.prepare(`SELECT material_id, COUNT(*) as cnt FROM CourseVideo WHERE material_id IN (${placeholders}) GROUP BY material_id`).all(...ids);
       if (refs.length) return Response.json({ success: false, message: '部分素材被课程引用，请先解除关联', refs }, { status: 400 });
-      const materials = db.prepare(`SELECT id, file_path, file_url, thumbnail, vod_video_id FROM Material WHERE id IN (${placeholders})`).all(...ids);
+      const materials = db.prepare(`SELECT id, name, file_path, file_url, thumbnail, vod_video_id FROM Material WHERE id IN (${placeholders})`).all(...ids);
+      if (materials.length !== ids.length) {
+        return Response.json({ success: false, message: '部分素材已被删除，请刷新列表后重试' }, { status: 409 });
+      }
       return { materials };
     });
     if (checked instanceof Response) return checked;
@@ -26,8 +30,13 @@ export async function POST(request: Request) {
     const materials = (checked as any).materials as any[];
     const response = withDb((db) => {
       const stmt = db.prepare('DELETE FROM Material WHERE id=?');
-      db.transaction((items: any[]) => items.forEach(item => stmt.run(item.id)))(materials);
-      return Response.json({ success: true, deleted: materials.length, vod_synced: vodVideoIds.length });
+      const result = db.transaction((items: any[]) => {
+        const tombstoned = recordMaterialDeletionTombstones(db, items);
+        const deleted = items.reduce((total, item) => total + Number(stmt.run(item.id).changes || 0), 0);
+        if (deleted !== items.length) throw new Error('批量删除未完整执行');
+        return { tombstoned, deleted };
+      })(materials);
+      return Response.json({ success: true, deleted: result.deleted, tombstoned: result.tombstoned, vod_synced: vodVideoIds.length });
     });
     await deleteLocalMaterialFiles(materials);
     return response;

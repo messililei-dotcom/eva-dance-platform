@@ -1,5 +1,6 @@
 {
   "pages": [
+    "pages/profile/profile",
     "pages/home/home",
     "pages/offline/offline",
     "pages/offline-detail/offline-detail",
@@ -7,17 +8,14 @@
     "pages/event-detail/event-detail",
     "pages/event-group/event-group",
     "pages/event-register/event-register",
-    "pages/official/official",
     "pages/system/system",
-    "pages/practice/practice",
-    "pages/courses/courses",
-    "pages/profile/profile",
+    "pages/commerce-orders/commerce-orders",
     "pages/login/login",
-    "pages/pwa-return/pwa-return",
     "pages/admin/admin",
-    "pages/certificates/certificates",
     "pages/profile-edit/profile-edit",
-    "pages/player/player"
+    "pages/player/player",
+    "pages/detail/detail",
+    "pages/messages/messages"
   ],
   "window": {
     "navigationBarTitleText": "伊娃东方舞·东方舞圈",
@@ -27,7 +25,7 @@
   },
   "tabBar": {
     "color": "#8C8172",
-    "selectedColor": "#EF5B45",
+    "selectedColor": "#9F1D20",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "black",
     "list": [

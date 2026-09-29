@@ -82,17 +82,17 @@ scripts/production-healthcheck.sh
 ## 生产域名
 
 ```text
-www.dongfangwuquan.com
-admin.dongfangwuquan.com
-miniapi.dongfangwuquan.com
+www.swod.com.cn
+admin.swod.com.cn
+api.swod.com.cn
 ```
 
 其中：
 
 ```text
-www.dongfangwuquan.com -> 品牌官网
-admin.dongfangwuquan.com -> 统一管理后台
-miniapi.dongfangwuquan.com -> 网课小程序 API
+www.swod.com.cn -> 品牌官网
+admin.swod.com.cn -> 统一管理后台
+api.swod.com.cn -> 统一 API 与网课小程序主接口
 ```
 
 三端链接统一维护在：
@@ -119,7 +119,7 @@ http://localhost:3000/api
 生产期应指向：
 
 ```text
-https://api.dongfangwuquan.com
+https://api.swod.com.cn
 ```
 
 ## 核心文档

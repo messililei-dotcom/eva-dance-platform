@@ -10,8 +10,11 @@ import { sortableColumns } from '@/lib/table-sort';
 
 interface StudentProgress {
   id: number;
+  member_id: number;
   name: string;
   phone: string;
+  wx_openid: string;
+  wx_unionid: string;
   level: string;
   status: string;
   remaining_hours: number;
@@ -42,7 +45,11 @@ export default function StudentProgressPage() {
 
   useEffect(() => { fetchData(); }, []);
 
-  const filtered = data.filter(d => !searchText || d.name.includes(searchText) || d.phone?.includes(searchText));
+  const filtered = data.filter(d => {
+    const q = searchText.trim().toLowerCase();
+    if (!q) return true;
+    return [d.member_id, d.name, d.phone, d.wx_unionid].some(value => String(value || '').toLowerCase().includes(q));
+  });
 
   const columns = sortableColumns<StudentProgress>([
     { title: '学员', key: 'name', width: 120,
@@ -52,7 +59,9 @@ export default function StudentProgressPage() {
         </a>
       )
     },
+    { title: 'member_id', dataIndex: 'member_id', key: 'member_id', width: 90, align: 'right' as const },
     { title: '手机号', dataIndex: 'phone', key: 'phone', width: 120 },
+    { title: '微信 UnionID', dataIndex: 'wx_unionid', key: 'wx_unionid', width: 220, render: (v: string) => v || '-' },
     { title: '等级', dataIndex: 'level', key: 'level', width: 100, render: (v: string) => <Tag>{v}</Tag> },
     { title: '缴费次数', dataIndex: 'totalPayments', key: 'totalPayments', width: 80, align: 'right' as const },
     { title: '缴费总额', dataIndex: 'totalAmount', key: 'totalAmount', width: 100, align: 'right' as const,
@@ -79,12 +88,12 @@ export default function StudentProgressPage() {
       </Row>
 
       <Card size="small" extra={<Space>
-        <Input placeholder="搜索学员姓名/手机号..." prefix={<SearchOutlined />} style={{ width: 220 }}
+        <Input placeholder="搜索姓名/手机号/member_id/openid/unionid" prefix={<SearchOutlined />} style={{ width: 340 }}
           value={searchText} onChange={e => setSearchText(e.target.value)} allowClear />
         <Button icon={<ReloadOutlined />} onClick={fetchData}>刷新</Button>
       </Space>}>
         <Table columns={columns} dataSource={filtered} size="middle" loading={loading}
-          scroll={{ x: 'max-content' }}
+          scroll={{ x: 'max-content', y: 'calc(100dvh - 390px)' }}
           locale={{ emptyText: <Empty description="暂无真实学习进度数据" /> }}
           pagination={{ pageSize: 20 }}
           rowKey="id" />

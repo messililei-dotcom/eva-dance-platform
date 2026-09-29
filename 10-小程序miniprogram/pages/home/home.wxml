@@ -55,7 +55,7 @@
       <view class="row-body">
         <view class="row-badge">{{item.badge}}</view>
         <view class="row-title">{{item.title}}</view>
-        <view class="row-meta">
+<view class="row-meta">
           <text>{{item.lessonText}}</text>
           <text>{{item.popularityText}}</text>
         </view>

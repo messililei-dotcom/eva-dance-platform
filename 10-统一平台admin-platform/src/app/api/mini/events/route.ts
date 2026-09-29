@@ -15,8 +15,8 @@ export async function GET() {
         WHERE c.status IN ('published', 'finished')
         GROUP BY c.id
         ORDER BY
-          CASE WHEN COALESCE(c.start_date, '') = '' THEN 1 ELSE 0 END,
-          datetime(c.start_date) DESC,
+          CASE WHEN c.status = 'published' THEN 0 ELSE 1 END,
+          datetime(c.start_date) ASC,
           c.id DESC
       `).all();
       return Response.json({ success: true, data: rows.map(mapCompetition) });

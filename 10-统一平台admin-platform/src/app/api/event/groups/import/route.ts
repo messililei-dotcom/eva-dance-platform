@@ -41,6 +41,7 @@ export async function POST(request: Request) {
           entryType: cleanText(item.entryType ?? item.entry_type ?? item['参赛形式'], 'solo'),
           sortOrder: toNumber(item.sortOrder ?? item.sort_order ?? item['排序'], ++nextSort),
           maxPlayers: toNumber(item.maxPlayers ?? item.max_players ?? item['人数上限']),
+          registrationFee: toNumber(item.registrationFee ?? item.registration_fee ?? item['报名费']),
           scoreRuleId: toNumber(item.scoreRuleId ?? item.score_rule_id ?? item['评分规则ID']) || null,
           status: cleanText(item.status ?? item['状态'], 'active'),
         };
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
           db.prepare(`
             UPDATE event_groups
             SET name = ?, code = ?, category = ?, age_range = ?, dance_type = ?,
-                entry_type = ?, sort_order = ?, max_players = ?, score_rule_id = ?,
+                entry_type = ?, sort_order = ?, max_players = ?, registration_fee = ?, score_rule_id = ?,
                 status = ?, updated_at = ?
             WHERE id = ?
           `).run(
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
             payload.entryType,
             payload.sortOrder,
             payload.maxPlayers,
+            payload.registrationFee,
             payload.scoreRuleId,
             payload.status,
             nowIso(),
@@ -71,9 +73,9 @@ export async function POST(request: Request) {
         db.prepare(`
           INSERT INTO event_groups (
             competition_id, name, code, category, age_range, dance_type, entry_type,
-            sort_order, max_players, score_rule_id, scoring_status, status, updated_at
+            sort_order, max_players, registration_fee, score_rule_id, scoring_status, status, updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unlocked', ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unlocked', ?, ?)
         `).run(
           competitionId,
           payload.name,
@@ -84,6 +86,7 @@ export async function POST(request: Request) {
           payload.entryType,
           payload.sortOrder,
           payload.maxPlayers,
+          payload.registrationFee,
           payload.scoreRuleId,
           payload.status,
           nowIso(),

@@ -1,4 +1,5 @@
 import { cleanText, hasAuth, jsonError, mapJudge, nowIso, toNumber, unauthorized, withEventDb } from '../_db';
+import { syncAllEventJudgesToMembers } from '@/lib/server/event-judge-member-sync';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -9,6 +10,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const keyword = cleanText(url.searchParams.get('keyword'));
   return withEventDb((db) => {
+    syncAllEventJudgesToMembers(db);
     let where = 'WHERE 1=1';
     const params: any[] = [];
     if (keyword) {
@@ -19,13 +21,10 @@ export async function GET(request: Request) {
     const rows = db.prepare(`
       SELECT
         j.*,
-        COUNT(DISTINCT gj.group_id) AS assigned_group_count,
-        COUNT(DISTINCT s.id) AS score_count
+        (SELECT COUNT(*) FROM event_group_judges gj WHERE gj.judge_id = j.id) AS assigned_group_count,
+        (SELECT COUNT(*) FROM event_scores s WHERE s.judge_id = j.id) AS score_count
       FROM event_judges j
-      LEFT JOIN event_group_judges gj ON gj.judge_id = j.id
-      LEFT JOIN event_scores s ON s.judge_id = j.id
       ${where}
-      GROUP BY j.id
       ORDER BY datetime(j.created_at) DESC, j.id DESC
     `).all(...params);
     return Response.json({ success: true, data: rows.map(mapJudge) });
@@ -42,11 +41,12 @@ export async function POST(request: Request) {
   return withEventDb((db) => {
     const result = db.prepare(`
       INSERT INTO event_judges (
-        name, phone, title, organization, bio, account_user_id,
+        member_id, name, phone, title, organization, bio, account_user_id,
         status, auth_enabled, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
+      toNumber(body.memberId ?? body.member_id),
       name,
       cleanText(body.phone),
       cleanText(body.title),

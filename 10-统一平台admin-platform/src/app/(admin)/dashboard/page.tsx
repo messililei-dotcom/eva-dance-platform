@@ -1,156 +1,61 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
-import { Avatar, Card, Col, Empty, List, Row, Space, Spin, Statistic, Tag, Typography } from 'antd';
-import { Table } from '@/components/adaptive-table';
-import {
-  BarChartOutlined, DollarOutlined, OrderedListOutlined, ShopOutlined,
-  TeamOutlined, UserOutlined,
-} from '@ant-design/icons';
+import {useEffect,useRef,useState} from 'react';
+import {Alert,Button,Card,Col,DatePicker,Drawer,Empty,Row,Select,Space,Spin,Table,Tag,Typography} from 'antd';
+import {ReloadOutlined,ArrowUpOutlined,ArrowDownOutlined} from '@ant-design/icons';
 import dynamic from 'next/dynamic';
-import { platformAdapter } from '@/lib/adapters/platform';
-import { formatCompactMoney, formatPaymentAmount } from '@/lib/money-format';
-import { sortableColumns } from '@/lib/table-sort';
-import type { DashboardData } from '@/types/domain';
-
-const { Text, Title } = Typography;
-const ReactECharts = dynamic(() => import('echarts-for-react'), {
-  ssr: false,
-  loading: () => <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin /></div>,
-});
-
-function sourceLabel(value: string) {
-  const map: Record<string, string> = {
-    offline_payment: '线下缴费',
-    'offline-training': '线下课程',
-    online_course_order: '线上课程',
-    online_course: '线上课程',
-    lizhi: '荔枝微课',
-    finance_order: '财务订单',
-    orders: '统一订单',
-    'commerce-sale': '电商销售',
-  };
-  return map[value] || value || '未知来源';
-}
-
-export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    platformAdapter.getDashboardData()
-      .then(setData)
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const chartOption = useMemo(() => ({
-    tooltip: { trigger: 'axis' },
-    grid: { left: 36, right: 18, top: 28, bottom: 28 },
-    xAxis: { type: 'category', data: ['学员', '订单', '收入', '商品', '低库存'] },
-    yAxis: { type: 'value' },
-    series: [{
-      type: 'bar',
-      data: [
-        data?.totalMembers || 0,
-        data?.totalOrders || 0,
-        Math.round((data?.totalRevenue || 0) / 100),
-        data?.productCount || 0,
-        data?.lowStockCount || 0,
-      ],
-      itemStyle: {
-        borderRadius: [8, 8, 0, 0],
-        color: {
-          type: 'linear',
-          x: 0,
-          y: 0,
-          x2: 0,
-          y2: 1,
-          colorStops: [{ offset: 0, color: '#F72A8A' }, { offset: 1, color: '#7C3AED' }],
-        },
-      },
-    }],
-  }), [data]);
-
-  if (loading) return <div style={{ padding: 80, textAlign: 'center' }}><Spin size="large" /></div>;
-
-  return (
-    <div>
-      <div className="page-header">
-        <Title level={2}>首页总览</Title>
-        <Text type="secondary">统一读取学员、订单、电商库存与财务核心数据。</Text>
-      </div>
-
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} md={8} xl={4}><Card><Statistic title="学员总数" value={data?.totalMembers || 0} prefix={<UserOutlined />} /></Card></Col>
-        <Col xs={24} md={8} xl={4}><Card><Statistic title="活跃学员" value={data?.activeMembers || 0} prefix={<TeamOutlined />} valueStyle={{ color: '#22C55E' }} /></Card></Col>
-        <Col xs={24} md={8} xl={4}><Card><Statistic title="订单总数" value={data?.totalOrders || 0} prefix={<OrderedListOutlined />} /></Card></Col>
-        <Col xs={24} md={8} xl={4}><Card><Statistic title="总成交额" value={formatCompactMoney(data?.totalRevenue || 0)} valueStyle={{ color: '#F72A8A' }} /></Card></Col>
-        <Col xs={24} md={8} xl={4}><Card><Statistic title="本月收入" value={formatCompactMoney(data?.monthRevenue || 0)} valueStyle={{ color: '#7C3AED' }} /></Card></Col>
-        <Col xs={24} md={8} xl={4}><Card><Statistic title="商品总数" value={data?.productCount || 0} prefix={<ShopOutlined />} /></Card></Col>
-      </Row>
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24} xl={14}>
-          <Card title={<Space><BarChartOutlined />运营数据概览</Space>}>
-            <ReactECharts option={chartOption} style={{ height: 300 }} />
-          </Card>
-        </Col>
-        <Col xs={24} xl={10}>
-          <Card title="订单来源占比">
-            {data?.orderSources?.length ? (
-              <List
-                dataSource={data.orderSources}
-                renderItem={item => (
-                  <List.Item>
-                    <Text>{sourceLabel(item.label)}</Text>
-                    <Space>
-                      <Tag color="purple">{item.count} 单</Tag>
-                      <Text strong>{formatPaymentAmount(item.value)}</Text>
-                    </Space>
-                  </List.Item>
-                )}
-              />
-            ) : <Empty description="暂无订单来源数据" />}
-          </Card>
-        </Col>
-        <Col xs={24} xl={12}>
-          <Card title="最近学员">
-            <List
-              dataSource={data?.recentMembers || []}
-              locale={{ emptyText: <Empty description="暂无学员数据" /> }}
-              renderItem={member => (
-                <List.Item>
-                  <Space>
-                    <Avatar style={{ background: 'linear-gradient(135deg,#F72A8A,#7C3AED)' }}>{member.name[0]}</Avatar>
-                    <div>
-                      <Text strong>{member.name}</Text>
-                      <div><Text type="secondary">{member.phone || '-'}</Text></div>
-                    </div>
-                  </Space>
-                  <Tag color="magenta">{member.level}</Tag>
-                </List.Item>
-              )}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} xl={12}>
-          <Card title={<Space><DollarOutlined />最近订单</Space>}>
-            <Table
-              scroll={{ x: 'max-content' }}
-              size="small"
-              rowKey="id"
-              dataSource={data?.recentOrders || []}
-              pagination={false}
-              columns={sortableColumns<any>([
-                { title: '订单', dataIndex: 'orderNo', ellipsis: true },
-                { title: '学员', dataIndex: 'memberName' },
-                { title: '金额', dataIndex: 'amount', render: value => formatPaymentAmount(value), align: 'right' as const },
-              ])}
-              locale={{ emptyText: <Empty description="暂无订单数据" /> }}
-            />
-          </Card>
-        </Col>
-      </Row>
-    </div>
-  );
+import dayjs from 'dayjs';
+import api from '@/lib/api';
+const Chart=dynamic(()=>import('echarts-for-react'),{ssr:false,loading:()=> <Spin/>});
+const {Text,Title}=Typography;
+const money=(v:number)=>'¥'+Number(v||0).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const compact=(v:number)=>Math.abs(v)>=10000?'¥'+(v/10000).toFixed(2)+'万':money(v);
+const pct=(v:number,total:number)=>total?(v/total*100).toFixed(1)+'%':'—';
+function Change({value,base,label,limited}:{value:number;base:number;label:string;limited:boolean}){return <Text type="secondary" style={{fontSize:12}}>{label} {limited?'待核对':value===base?'持平':!base?value?'新增':'持平':<span style={{color:value>=base?'#087f5b':'#b54708'}}>{value>=base?<ArrowUpOutlined/>:<ArrowDownOutlined/>} {Math.abs((value-base)/base*100).toFixed(1)}%</span>}</Text>}
+export default function Dashboard(){
+ const [mode,setMode]=useState('month'),[value,setValue]=useState(dayjs().format('YYYY-MM'));
+ const [dates,setDates]=useState<[string,string]>([dayjs().startOf('month').format('YYYY-MM-DD'),dayjs().format('YYYY-MM-DD')]);
+ const [business,setBusiness]=useState('全部'),[advisor,setAdvisor]=useState('全部'),[channel,setChannel]=useState('全部');
+ const [data,setData]=useState<any>(null),[busy,setBusy]=useState(true),[error,setError]=useState(''),[refresh,setRefresh]=useState(0);
+ const [metric,setMetric]=useState('revenue'),[rank,setRank]=useState('revenue'),[courseRank,setCourseRank]=useState('revenue');
+ const [detail,setDetail]=useState<any>(null),[detailData,setDetailData]=useState<any>(null),[detailPage,setDetailPage]=useState(1),[detailError,setDetailError]=useState('');
+ const seq=useRef(0),detailSeq=useRef(0);
+ const params={mode,value,start:dates[0],end:dates[1],business,advisor,channel};
+ const queryKey=JSON.stringify(params);
+ useEffect(()=>{let live=true;const n=++seq.current;setBusy(true);setError('');api.get('/dashboard/business',{params:JSON.parse(queryKey)}).then(r=>{if(live&&n===seq.current)setData(r.data.data);}).catch(e=>{if(live)setError(e.response?.data?.error||'数据加载失败，请重试');}).finally(()=>{if(live)setBusy(false);});return()=>{live=false;};},[queryKey,refresh]);
+ useEffect(()=>{setDetail(null);},[queryKey]);
+ useEffect(()=>{if(!detail)return;let live=true;const n=++detailSeq.current;setDetailData(null);setDetailError('');api.get('/dashboard/business',{params:{...JSON.parse(queryKey),...detail,page:detailPage}}).then(r=>{if(live&&n===detailSeq.current)setDetailData(r.data.data);}).catch(()=>{if(live)setDetailError('明细加载失败，请关闭后重试');});return()=>{live=false;};},[detail,detailPage,queryKey,refresh]);
+ const open=(title:string,extra:any={})=>{setDetailPage(1);setDetail({title,...extra});};
+ const chartBase={color:['#d92e87','#7661cf','#169e95'],tooltip:{trigger:'axis'},legend:{bottom:0},grid:{left:65,right:25,top:30,bottom:60},xAxis:{type:'category',data:data?.trend.map((r:any)=>r.label)||[]},yAxis:{type:'value',splitLine:{lineStyle:{color:'#eef0f6'}}}};
+ const switchMode=(m:string)=>{setMode(m);setValue(dayjs().format(m==='year'?'YYYY':'YYYY-MM'));};
+ const columns:any[]=[{title:'顾问',dataIndex:'name',fixed:'left',width:120},{title:'实收收入',dataIndex:'revenue',render:money,sorter:(a:any,b:any)=>a.revenue-b.revenue},{title:'线上 / 线下',render:(_:any,r:any)=><>{money(r.online)} / {money(r.offline)}</>},{title:'首次付费人数*',dataIndex:'newBuyers'},{title:'老学员收入*',dataIndex:'oldRevenue',render:money},{title:'提成金额',dataIndex:'commission',render:money,sorter:(a:any,b:any)=>a.commission-b.commission},{title:'提成占比',render:(_:any,r:any)=>pct(r.commission,r.revenue)},{title:'明细',render:(_:any,r:any)=><Button type="link" onClick={()=>open(r.name+' · 业绩明细',{detailBy:'advisor',detailName:r.name})}>查看</Button>}];
+ return <div style={{paddingBottom:24}}>
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:16,flexWrap:'wrap',marginBottom:20}}><div><Title level={2} style={{margin:0}}>经营驾驶舱</Title><Text type="secondary">收入、学员与团队表现 · 用同一口径看经营变化</Text></div><Space><Text type="secondary" style={{fontSize:12}}>{data?'更新于 '+dayjs(data.updatedAt).format('HH:mm:ss'):''}</Text><Button icon={<ReloadOutlined/>} loading={busy} onClick={()=>setRefresh(v=>v+1)}>刷新</Button></Space></div>
+  <Card size="small" style={{marginBottom:16}}><Space wrap size={12}>
+   <Select aria-label="统计周期" value={mode} onChange={switchMode} options={[{value:'month',label:'月度经营'},{value:'year',label:'年度经营'},{value:'custom',label:'自选日期'}]} style={{width:130}}/>
+   {mode==='custom'?<DatePicker.RangePicker value={[dayjs(dates[0]),dayjs(dates[1])]} allowClear={false} disabledDate={d=>d.isAfter(dayjs(),'day')} onChange={d=>{if(d?.[0]&&d[1])setDates([d[0].format('YYYY-MM-DD'),d[1].format('YYYY-MM-DD')]);}}/>:<DatePicker aria-label="选择月份或年份" picker={mode==='year'?'year':'month'} value={dayjs(value+(mode==='year'?'-01-01':'-01'))} allowClear={false} disabledDate={d=>d.isAfter(dayjs(),mode==='year'?'year':'month')} onChange={d=>d&&setValue(d.format(mode==='year'?'YYYY':'YYYY-MM'))}/>}
+   <Select aria-label="业务类型" value={business} onChange={setBusiness} style={{width:130}} options={['全部','线上','线下','其他'].map(v=>({value:v,label:v==='全部'?'全部业务':v}))}/>
+   <Select aria-label="销售渠道" value={channel} onChange={setChannel} style={{width:160}} options={['全部',...(data?.filters.channels||[])].map(v=>({value:v,label:v==='全部'?'全部销售渠道':v}))}/>
+   <Select aria-label="课程顾问筛选" showSearch value={advisor} onChange={setAdvisor} style={{width:150}} options={['全部',...(data?.filters.advisors||[])].map(v=>({value:v,label:v==='全部'?'全部课程顾问':v}))}/>
+   <Button type="link" onClick={()=>open('统计口径',{metric:'rules'})}>统计口径</Button>
+  </Space></Card>
+  {error?<Alert type="error" showIcon message={error} action={<Button onClick={()=>setRefresh(v=>v+1)}>重试</Button>}/>:null}
+  {!data?busy?<div style={{padding:100,textAlign:'center'}}><Spin size="large"/></div>:null:<Spin spinning={busy}><div style={error?{opacity:.5,pointerEvents:'none'}:{}}>
+   <Space wrap style={{marginBottom:12}}><Tag color="purple">{data.range.start} 至 {data.range.end}</Tag><Text type="secondary">同比：{data.range.yearStart} 至 {data.range.yearEnd}{mode!=='year'&&<>　环比：{data.range.previousStart} 至 {data.range.previousEnd}</>}</Text></Space>
+   <Row gutter={[12,12]}>{[
+    ['已知实收收入','revenue',true],['确认成交笔数','deals',false],['首次付费学员*','newBuyers',false],['老学员收入*','oldRevenue',true],['提成金额','commission',true],['已关联付费客单价*','average',true]
+   ].map(([label,key,currency])=><Col key={String(key)} xs={12} lg={8} xl={4}><Card size="small" hoverable onClick={()=>open(String(label)+' · 本期来源明细')} style={{height:'100%',borderTop:'3px solid '+(key==='revenue'?'#d92e87':'#e3dcf5')}}><Text type="secondary">{label}</Text><div style={{fontSize:25,fontWeight:650,margin:'8px 0',color:key==='revenue'?'#c82378':'#20243e'}}>{currency?compact(data.stats[String(key)]):data.stats[String(key)].toLocaleString()}</div><Space direction="vertical" size={0}><Change value={data.stats[String(key)]} base={data.year[String(key)]} label="同比" limited={data.comparisonLimited}/>{mode!=='year'&&<Change value={data.stats[String(key)]} base={data.previous[String(key)]} label="环比" limited={data.comparisonLimited}/>}</Space></Card></Col>)}</Row>
+   <Alert style={{margin:'16px 0'}} type="info" showIcon message="本期经营摘要" description={<Space direction="vertical" size={4}><span>{data.businesses[0]?`${data.businesses[0].name}业务贡献最多已知收入 ${money(data.businesses[0].revenue)}，占本期 ${pct(data.businesses[0].revenue,data.stats.revenue)}。`:'本期暂无收入记录。'} 老学员收入占比 {pct(data.stats.oldRevenue,data.stats.revenue)}。</span><span>确认成交 {data.stats.deals} 笔，另有付费授权 {data.stats.authorizations} 条；赠课／零元记录 {data.stats.gifts} 条。提成占已知收入 {pct(data.stats.commission,data.stats.revenue)}。</span><Text type="secondary">* 学员指标依据已知交易历史。{data.comparisonLimited?'当前筛选的历史覆盖或跨系统关联不完整，对比增长率标记待核对。':'当前对比基于系统已知记录，统计周期按相同进度对齐。'}</Text></Space>}/>
+   <Row gutter={[16,16]}>
+    <Col xs={24} xl={16}><Card title="经营趋势" extra={<Select aria-label="趋势指标" value={metric} onChange={setMetric} options={[{value:'revenue',label:'实收收入'},{value:'deals',label:'确认成交'},{value:'buyers',label:'付费人数'}]} style={{width:130}}/>}><Chart style={{height:300}} option={{...chartBase,series:[{name:'本期'+(metric==='revenue'?'收入（元）':metric==='deals'?'成交（笔）':'付费人数'),type:'line',smooth:true,areaStyle:{opacity:.08},data:data.trend.map((t:any)=>t[metric])},...(metric==='revenue'?[{name:'去年同期已知收入（元）',type:'line',lineStyle:{type:'dashed'},data:data.trend.map((t:any)=>t.yearRevenue)}]:[])]}}/><Text type="secondary">{metric==='revenue'?'金额单位：元。历史线仅展示已知数据，不代表历史完整收入。':metric==='deals'?'单位：确认成交笔数，不包含付费授权记录。':'单位：去重付费人数，日／月人数不可直接相加。'}</Text></Card></Col>
+    <Col xs={24} xl={8}><Card title="线上 · 线下业务结构" style={{height:'100%'}}>{['线上','线下','其他'].map(b=>{const r=data.businesses.find((x:any)=>x.name===b);return <div key={b} style={{padding:'16px 0',borderBottom:'1px solid #f0f0f5'}}><div style={{display:'flex',justifyContent:'space-between'}}><Text strong>{b}</Text><Button size="small" type="link" onClick={()=>open(b+' · 来源明细',{detailBy:'business',detailName:b})}>{money(r?.revenue||0)}</Button></div><Text type="secondary">成交 {r?.deals||0} 笔 · 付费授权 {r?.authorizations||0} 条 · 付费 {r?.buyers||0} 人</Text><div><Text type="secondary">客单价 {money(r?.average||0)}　提成 {money(r?.commission||0)}</Text></div></div>;})}</Card></Col>
+    <Col span={24}><Card title="课程顾问业绩" extra={<Select aria-label="顾问排名依据" value={rank} onChange={setRank} style={{width:160}} options={[{value:'revenue',label:'按实收收入排名'},{value:'newBuyers',label:'按首次付费排名'},{value:'commission',label:'按提成金额排名'}]}/>}><Row gutter={20}><Col xs={24} xl={7}><Chart style={{height:280}} option={{color:['#7661cf'],tooltip:{trigger:'axis'},grid:{left:90,right:40,top:15,bottom:25},xAxis:{type:'value'},yAxis:{type:'category',inverse:true,data:[...data.advisors].sort((a,b)=>b[rank]-a[rank]).slice(0,8).map(r=>r.name)},series:[{type:'bar',barMaxWidth:22,data:[...data.advisors].sort((a,b)=>b[rank]-a[rank]).slice(0,8).map(r=>r[rank])}]}}/></Col><Col xs={24} xl={17}><Table size="small" rowKey="name" scroll={{x:1050}} dataSource={[...data.advisors].sort((a,b)=>b[rank]-a[rank])} columns={columns} pagination={{pageSize:6,showSizeChanger:false}}/></Col></Row><Text type="secondary">顾问别名未经核准不自动合并；未归属业绩单列。金额为应计记录，结算状态请查看奖金提成。</Text></Card></Col>
+    <Col xs={24} xl={12}><Card title="学员增长" extra={<Tag>本期新注册 {data.registrations} 人</Tag>}><Chart style={{height:280}} option={{...chartBase,series:[{name:'全平台新注册',type:'bar',data:data.trend.map((t:any)=>t.registered)},{name:'当前筛选首次付费*',type:'line',data:data.trend.map((t:any)=>t.newBuyers)},{name:'去年同期新注册',type:'line',lineStyle:{type:'dashed'},data:data.trend.map((t:any)=>t.yearRegistered)}]}}/><Text type="secondary">注册人数按可靠注册日期及主账号统计，不受业务／顾问筛选影响；首次付费受筛选影响。两者不是同期转化漏斗。</Text></Card></Col>
+    <Col xs={24} xl={12}><Card title="课程表现" extra={<Select aria-label="课程排名依据" value={courseRank} onChange={setCourseRank} style={{width:150}} options={[{value:'revenue',label:'按实收收入'},{value:'buyers',label:'按付费人数'},{value:'deals',label:'按确认成交'}]}/>}><Table size="small" rowKey="name" scroll={{x:650}} dataSource={[...data.courses].sort((a,b)=>b[courseRank]-a[courseRank])} pagination={{pageSize:6,showSizeChanger:false}} columns={[{title:'课程',dataIndex:'name',ellipsis:true,width:220},{title:'实收',dataIndex:'revenue',render:money},{title:'成交 / 授权',render:(_:any,r:any)=>`${r.deals} / ${r.authorizations}`},{title:'付费人数',dataIndex:'buyers'},{title:'明细',render:(_:any,r:any)=><Button type="link" onClick={()=>open(r.name,{detailBy:'course',detailName:r.name})}>查看</Button>}]}/><Text type="secondary">成交／授权分别展示，赠课不计入付费销量。</Text></Card></Col>
+   </Row>
+   <Card size="small" title="数据核对与追溯" style={{marginTop:16}}><Space wrap size={20}><Button onClick={()=>open('未知实收／未确认付款',{metric:'missing'})}>未知实收／未确认付款 {data.stats.missing} 条</Button><Button onClick={()=>open('未归属顾问',{metric:'unassigned'})}>未归属顾问 {data.unassigned} 条</Button><Button onClick={()=>open('赠课／零元记录',{metric:'gifts'})}>零元记录 {data.stats.gifts} 条</Button><Button onClick={()=>open('全部本期业务记录')}>查看全部明细</Button><Text type="secondary">无有效注册日期 {data.registrationUnknown} 人 · 无有效业务日期 {data.invalidDates} 条</Text></Space></Card>
+  </div></Spin>}
+  <Drawer title={detail?.title} open={!!detail} onClose={()=>setDetail(null)} width="min(1100px, 96vw)">
+   {detail?.metric==='rules'?<Space direction="vertical" size={20}>{data?.notices.map((s:string)=><Typography.Paragraph key={s}>{s}</Typography.Paragraph>)}</Space>:detailError?<Alert type="error" message={detailError}/>:!detailData?<Spin/>:<><Text type="secondary">按当前周期、业务、渠道和顾问筛选。AUTH 是授权记录，不等同成交订单；未知金额不计入收入。</Text><Table style={{marginTop:16}} size="small" rowKey="id" scroll={{x:1000}} dataSource={detailData.details} pagination={{current:detailPage,pageSize:25,total:detailData.detailTotal,showSizeChanger:false,onChange:setDetailPage,showTotal:n=>`共 ${n} 条`}} columns={[{title:'来源编号',dataIndex:'id',width:130},{title:'日期',dataIndex:'date',width:110},{title:'学员',dataIndex:'name',width:110},{title:'课程',dataIndex:'course',width:200},{title:'渠道',dataIndex:'channel',width:110},{title:'顾问',dataIndex:'advisor',width:100},{title:'实收',dataIndex:'amount',render:v=>v==null?<Tag>未知／未确认</Tag>:money(v),width:120},{title:'提成',dataIndex:'commission',render:money,width:100},{title:'来源',render:(_:any,r:any)=><a href={r.href} target="_blank" rel="noreferrer">查看来源</a>,width:90}]}/></>}
+  </Drawer>
+ </div>;
 }

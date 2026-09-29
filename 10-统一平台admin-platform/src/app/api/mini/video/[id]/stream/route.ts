@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { isMiniVideoPlaybackBlocked } from '@/lib/server/mini-features';
 import { getVodPlayUrl } from '@/lib/server/aliyun-vod';
 import {
   fileStreamResponse,
@@ -24,6 +25,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
 
     return await withDb(async (db) => {
+      if (isMiniVideoPlaybackBlocked(db, tokenPayload.channel)) return jsonError('视频播放暂未开放', 403);
       const video = db.prepare(
         `SELECT cv.id, cv.material_id, cv.name, cv.duration,
                 m.name as material_name, m.type, m.file_path, m.file_url, m.vod_video_id, m.transcode_status, m.duration as material_duration,
@@ -36,8 +38,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       ).get(videoId);
       if (!video) return jsonError('视频不存在', 404);
 
-      const member = db.prepare('SELECT phone FROM Member WHERE id=?').get<{ phone?: string }>(tokenPayload.memberId);
-      const auth = video.series_is_free || getActiveAuthorization(db, Number(video.series_id || 0), tokenPayload.memberId, member?.phone || '');
+      const auth = video.series_is_free || getActiveAuthorization(db, Number(video.series_id || 0), tokenPayload.memberId);
       if (!auth) return jsonError('请先申请授权观看完整学习', 403);
 
       if (video.vod_video_id && video.type !== 'audio') {

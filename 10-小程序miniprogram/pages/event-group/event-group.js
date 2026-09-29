@@ -1,3 +1,4 @@
+const share = require("../../shared/share");
 const api = require("../../utils/api");
 
 function formatScore(value) {
@@ -25,7 +26,7 @@ function normalizePlayer(item, index) {
   };
 }
 
-Page({
+Page(share.withShare("event-group", {
   data: {
     competitionId: "",
     groupId: "",
@@ -62,4 +63,4 @@ Page({
       wx.showToast({ title: err.message || "组别选手加载失败", icon: "none" });
     }
   }
-});
+}));

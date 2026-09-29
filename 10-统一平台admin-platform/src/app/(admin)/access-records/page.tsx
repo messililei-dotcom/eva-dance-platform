@@ -29,9 +29,12 @@ type AccessRecord = {
   referralSource: string;
   visitUrl: string;
   visitLocation: string;
+  visitLocationSource: string;
+  visitLocationConfidence: string;
   ipAddress: string;
   source: string;
   remark: string;
+  adminEvent: '' | 'access' | 'operation' | 'security';
 };
 
 type AccessRecordsResponse = {
@@ -75,6 +78,17 @@ function actionColor(action: string) {
   return 'cyan';
 }
 
+function LocationCell({ value, source, confidence }: { value: string; source: string; confidence: string }) {
+  if (!value) return <>-</>;
+  const color = confidence === '高' ? 'green' : confidence === '中' ? 'blue' : 'default';
+  return (
+    <Space size={[4, 2]} wrap>
+      <Text>{value}</Text>
+      {source ? <Tag color={color}>{source}{confidence ? ` · ${confidence}` : ''}</Tag> : null}
+    </Space>
+  );
+}
+
 export default function AccessRecordsPage() {
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
@@ -82,6 +96,7 @@ export default function AccessRecordsPage() {
   const [platform, setPlatform] = useState('all');
   const [action, setAction] = useState('all');
   const [category, setCategory] = useState<'student' | 'admin'>('student');
+  const [adminEvent, setAdminEvent] = useState('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [range, setRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
@@ -95,6 +110,7 @@ export default function AccessRecordsPage() {
         platform,
         action,
         category,
+        adminEvent,
         page: String(page),
         pageSize: String(pageSize),
       };
@@ -112,7 +128,7 @@ export default function AccessRecordsPage() {
   useEffect(() => {
     const timer = window.setTimeout(loadData, keyword.trim() ? 300 : 0);
     return () => window.clearTimeout(timer);
-  }, [keyword, platform, action, category, page, pageSize, range]);
+  }, [keyword, platform, action, category, adminEvent, page, pageSize, range]);
 
   const platformOptions = useMemo(() => [
     { label: '全部平台', value: 'all' },
@@ -128,7 +144,7 @@ export default function AccessRecordsPage() {
 
   const categoryTabs = [
     { key: 'student', label: `学员/游客访问 ${data.summary.student || 0}` },
-    { key: 'admin', label: `管理员访问 ${data.summary.admin || 0}` },
+    { key: 'admin', label: `管理员访问/操作 ${data.summary.admin || 0}` },
   ];
 
   return (
@@ -176,6 +192,7 @@ export default function AccessRecordsPage() {
                 setCategory(key as 'student' | 'admin');
                 setPlatform('all');
                 setAction('all');
+                setAdminEvent('all');
                 setPage(1);
               }}
             />
@@ -184,11 +201,24 @@ export default function AccessRecordsPage() {
             <Space wrap>
               <RangePicker value={range} onChange={(value) => { setRange(value); resetPage(); }} allowClear />
               <Select value={platform} options={platformOptions} onChange={(value) => { setPlatform(value); resetPage(); }} style={{ width: 150 }} />
+              {category === 'admin' ? (
+                <Select
+                  value={adminEvent}
+                  onChange={(value) => { setAdminEvent(value); resetPage(); }}
+                  options={[
+                    { label: '全部管理员记录', value: 'all' },
+                    { label: '页面访问', value: 'access' },
+                    { label: '增删改操作', value: 'operation' },
+                    { label: '登录安全', value: 'security' },
+                  ]}
+                  style={{ width: 150 }}
+                />
+              ) : null}
               <Select value={action} options={actionOptions} onChange={(value) => { setAction(value); resetPage(); }} style={{ width: 180 }} />
               <Input
                 allowClear
                 prefix={<SearchOutlined />}
-                placeholder={category === 'admin' ? '搜索管理员、模块、操作内容' : '搜索学员、课程、Member ID、手机号、UnionID、来源'}
+                placeholder={category === 'admin' ? '搜索管理员、模块、操作内容' : '搜索学员、课程、地区、Member ID、手机号、UnionID、来源'}
                 value={keyword}
                 onChange={event => { setKeyword(event.target.value); resetPage(); }}
                 style={{ width: 360 }}
@@ -237,9 +267,14 @@ export default function AccessRecordsPage() {
               { title: '手机号', dataIndex: 'visitorPhone', width: 130, render: value => value || '-' },
               { title: '微信 UnionID', dataIndex: 'wxUnionid', width: 220, render: value => value || '-' },
               { title: '访问来源', dataIndex: 'referralSource', width: 250, render: value => <Text style={{ whiteSpace: 'normal' }}>{value || '直接访问'}</Text> },
-              { title: '学员地址', dataIndex: 'visitLocation', width: 180, render: value => value || '-' },
-              { title: '学员IP', dataIndex: 'ipAddress', width: 170, render: value => value ? <Text copyable={{ text: value }}>{value}</Text> : '-' },
-              { title: '备注', dataIndex: 'remark', width: 160, render: value => value || '-' },
+              {
+                title: '访问地区',
+                dataIndex: 'visitLocation',
+                width: 220,
+                render: (_, record) => <LocationCell value={record.visitLocation} source={record.visitLocationSource} confidence={record.visitLocationConfidence} />,
+              },
+              { title: category === 'admin' ? '管理员IP' : '学员IP', dataIndex: 'ipAddress', width: 170, render: value => value ? <Text copyable={{ text: value }}>{value}</Text> : '-' },
+              { title: category === 'admin' ? '客户端' : '备注', dataIndex: 'remark', width: 200, render: value => value || '-' },
             ])}
           />
         </Card>

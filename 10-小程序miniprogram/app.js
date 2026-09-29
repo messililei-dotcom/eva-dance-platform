@@ -11,6 +11,7 @@ App({
     memberName: runtimeConfig.memberName,
     silentLoginPromise: null,
     silentLoginTried: false,
+    activePwaHandoffId: "",
     pwaHandoffPromise: null
   },
 
@@ -32,47 +33,51 @@ App({
 
   capturePwaHandoff(options = {}) {
     const id = String((options.query || {}).pwa_handoff || "").trim();
-    if (!/^[0-9a-f-]{36}$/i.test(id)) return;
-    wx.setStorageSync("pwaLoginHandoff", { id, capturedAt: Date.now() });
+    // Only the current explicit web/app login entry may complete a handoff.
+    // Opening the mini-program normally must not consume a previous session's record.
+    if (!/^[0-9a-f-]{36}$/i.test(id) || id === wx.getStorageSync("completedPwaLoginHandoff")) {
+      this.globalData.activePwaHandoffId = "";
+      wx.removeStorageSync("pwaLoginHandoff");
+      return;
+    }
+    this.globalData.activePwaHandoffId = id;
+    const pending = wx.getStorageSync("pwaLoginHandoff") || {};
+    if (pending.id !== id) wx.setStorageSync("pwaLoginHandoff", { id, capturedAt: Date.now() });
   },
 
   completePendingPwaHandoff() {
     if (this.globalData.pwaHandoffPromise) return this.globalData.pwaHandoffPromise;
     const pending = wx.getStorageSync("pwaLoginHandoff") || {};
     const handoffId = String(pending.id || "").trim();
-    if (!/^[0-9a-f-]{36}$/i.test(handoffId)) return Promise.resolve(null);
+    if (!/^[0-9a-f-]{36}$/i.test(handoffId) || this.globalData.activePwaHandoffId !== handoffId) return Promise.resolve(null);
     if (Date.now() - Number(pending.capturedAt || 0) > 10 * 60 * 1000) {
       wx.removeStorageSync("pwaLoginHandoff");
       return Promise.resolve(null);
     }
 
     this.globalData.pwaHandoffPromise = this.ensureSilentLogin()
-      .then(() => api.completePwaLoginHandoff(handoffId))
+      .then(() => this.globalData.activePwaHandoffId === handoffId
+        ? api.completePwaLoginHandoff(handoffId) : null)
       .then(result => {
+        if (!result || this.globalData.activePwaHandoffId !== handoffId) return result;
         wx.removeStorageSync("pwaLoginHandoff");
-        this.returnToPwaAfterHandoff();
+        wx.setStorageSync("completedPwaLoginHandoff", handoffId);
+        this.globalData.activePwaHandoffId = "";
+        wx.showToast({ title: "登录完成，可继续学习", icon: "none" });
         return result;
       })
       .catch(err => {
         const statusCode = Number(err && err.statusCode || 0);
-        if (statusCode === 400 || statusCode === 410) wx.removeStorageSync("pwaLoginHandoff");
+        if ((statusCode === 400 || statusCode === 410) && this.globalData.activePwaHandoffId === handoffId) {
+          wx.removeStorageSync("pwaLoginHandoff");
+          this.globalData.activePwaHandoffId = "";
+        }
         return null;
       })
       .finally(() => {
         this.globalData.pwaHandoffPromise = null;
       });
     return this.globalData.pwaHandoffPromise;
-  },
-
-  returnToPwaAfterHandoff() {
-    const showReturnPage = () => wx.reLaunch({ url: "/pages/pwa-return/pwa-return" });
-    if (!wx.exitMiniProgram) return showReturnPage();
-
-    // 部分微信版本会允许从 URL Scheme 启动后直接返回调用方；
-    // 若当前版本严格要求点击手势，则降级为专用的单次返回按钮。
-    wx.exitMiniProgram({
-      fail: showReturnPage
-    });
   },
 
   captureReferral(options = {}) {

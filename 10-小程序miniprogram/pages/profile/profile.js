@@ -1,10 +1,14 @@
+const share = require("../../shared/share");
+const videoFeature = require("../../shared/video-feature");
 const api = require("../../utils/api");
 const { cleanText } = require("../../shared/review-text");
 const { formatPaymentAmount } = require("../../shared/money-format");
 const app = getApp();
 
-Page({
+Page(share.withShare("profile", videoFeature.withVideoFeature({
   data: {
+    profileOpen: false, profileDraft: {}, profileSaving: false, profileDirty: false, profileSaveMessage: "", avatarSaving: false,
+    genderOptions: ["未填写", "女", "男"], genderIndex: 0,
     memberName: "伊娃学员",
     memberPhone: "",
     memberLevel: "",
@@ -17,32 +21,20 @@ Page({
     showWechatBinder: false,
     needsPhoneBinding: false,
     wechatIdentityText: "",
-    authorizedCount: 0,
-    checkin: { streak: 0 },
-    stats: {
-      learningCount: 0,
-      completedCount: 0,
-      completionRate: 0,
-      orderCount: 0,
-      paidAmount: 0,
-      commissionAmount: 0
-    },
-
-    recentProgress: [],
     authorizedCourses: [],
     offlineCourses: [],
-    payments: [],
-    consumeRecords: [],
     eventRegistrations: [],
-    offlineCourseCount: 0,
     certificates: [],
     isAdmin: false,
     adminRole: "",
+    unreadMessageCount: 0,
     profileLoading: false,
     profileError: ""
   },
 
   onShow() {
+    this.stopUnreadPolling();
+    this.unreadTimer = setInterval(() => { if (this.data.isLoggedIn) this.loadUnreadMessages(); }, 60000);
     const app = getApp();
     if (app && typeof app.ensureSilentLogin === "function") {
       app.ensureSilentLogin().catch(() => null).then(() => this.applyLocalLoginState(true));
@@ -51,6 +43,9 @@ Page({
     this.applyLocalLoginState(true);
   },
 
+  onHide() { this.stopUnreadPolling(); },
+  onUnload() { this.stopUnreadPolling(); },
+  stopUnreadPolling() { if (this.unreadTimer) clearInterval(this.unreadTimer); this.unreadTimer = null; },
   applyLocalLoginState(loadRemote) {
     // 检查登录状态
     const memberId = wx.getStorageSync("memberId");
@@ -65,7 +60,6 @@ Page({
       app.globalData.memberName = null;
     }
     
-    const history = wx.getStorageSync("checkinHistory") || [];
     const storedWechatProfile = this.getStoredWechatProfile(memberId);
     const initialMemberName = app.globalData.memberName || "未登录";
     this.setData(Object.assign({
@@ -75,23 +69,20 @@ Page({
       memberLevel: "",
       memberLevelText: "普通学员",
       isLoggedIn: !!memberId,
-      needsPhoneBinding: false,
-      checkin: { streak: history.length }
+      needsPhoneBinding: false
     }, storedWechatProfile));
     
     if (memberId && loadRemote) {
       this.loadProfile();
       this.loadAdminStatus();
+      this.loadUnreadMessages();
     } else {
       this.setData({
-        authorizedCount: 0,
+        unreadMessageCount: 0,
         authorizedCourses: [],
         offlineCourses: [],
-        payments: [],
-        consumeRecords: [],
-        eventRegistrations: [],
-        offlineCourseCount: 0,
-        certificates: [],
+                eventRegistrations: [],
+            certificates: [],
         showWechatBinder: false
       });
     }
@@ -106,7 +97,7 @@ Page({
       avatarUrl: stored.avatarUrl || "",
       wechatName: stored.nickname || "",
       wechatNameDraft: stored.nickname || "",
-      isWechatBound: !!(stored.avatarUrl || stored.nickname)
+      isWechatBound: !!(wx.getStorageSync("wxOpenid") || wx.getStorageSync("wxUnionid"))
     };
   },
 
@@ -124,28 +115,21 @@ Page({
     return map[raw.toLowerCase()] || raw;
   },
 
-  // 省/州列表（含国外地区）
-
-  // 城市数据（根据省份返回对应城市列表）
-
-
-
-
-
-
   async loadProfile() {
+    const requestId = this.profileRequestId = (this.profileRequestId || 0) + 1;
+    const requestedMember = wx.getStorageSync("memberId");
     this.setData({ profileLoading: true, profileError: "" });
     let profileFailure = null;
-    const [profile, authorized, recent, catalog, payments, consumeRecords, certificates, eventRegistrations] = await Promise.all([
+    const [profile, authorized, recent, catalog, payments, certificates, eventRegistrations] = await Promise.all([
       api.getMemberProfile().catch(err => { profileFailure = err; return null; }),
       api.getAuthorizedSeries().catch(() => []),
       api.getRecentCourses().catch(() => []),
       api.getSeriesList().catch(() => []),
       api.getPayments().catch(() => []),
-      api.getConsumeRecords().catch(() => []),
       api.getCertificates().catch(() => []),
       api.getEventRegistrations().catch(() => [])
     ]);
+    if (requestId !== this.profileRequestId || requestedMember !== wx.getStorageSync("memberId")) return;
     if (profileFailure) {
       this.setData({
         profileLoading: false,
@@ -161,7 +145,7 @@ Page({
       map[String(item.id || item.series_id)] = item;
       return map;
     }, {});
-    let authorizedCourses = (authorized || []).map(item => {
+    let authorizedCourses = (authorized || []).filter(item => catalogMap[String(item.id || item.series_id)]).map(item => {
       const id = item.id || item.series_id;
       const source = catalogMap[String(id)] || {};
       return {
@@ -193,10 +177,6 @@ Page({
         progressPercent: Number(progress.percent || 0)
       };
     });
-    const learning = new Set(normalizedRecent.map(item => String(item.series_id || "")).filter(Boolean));
-    const completed = new Set(normalizedRecent.filter(item => item.completed).map(item => String(item.series_id || "")).filter(Boolean));
-    const completionRate = normalizedRecent.length ? Math.round(normalizedRecent.reduce((sum, item) => sum + item.percent, 0) / normalizedRecent.length) : 0;
-    const paidAmount = (payments || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const offlineKeyword = /线下|集训|师资|门徒|培训|私教|工作坊/;
     const offlineCourses = (payments || []).filter(item => offlineKeyword.test(`${item.courseType || item.course_type || ""} ${item.courseName || item.course_name || ""}`)).map(item => ({
       ...item,
@@ -208,7 +188,6 @@ Page({
       consumedSessions: Number(item.consumedSessions || item.consumed_sessions || 0),
       paymentMethod: cleanText(item.paymentMethod || item.payment_method || "")
     }));
-    const offlineCourseCount = offlineCourses.length;
     const auditStatusMap = { pending: "待审核", approved: "已通过", rejected: "未通过" };
     const paidStatusMap = { unpaid: "待缴费", pending: "待确认", paid: "已缴费", refunded: "已退款" };
     const normalizedEventRegistrations = (eventRegistrations || []).map(item => ({
@@ -223,7 +202,9 @@ Page({
       displayStartDate: String(item.startDate || item.start_date || "").slice(0, 10),
       competitionId: item.competitionId || item.competition_id
     }));
-    const wechatName = member.wx_nickname || this.data.wechatName || "";
+    this.profileMember = member;
+    if (!this.data.profileDirty) this.setData({ profileDraft: this.profileDraftFrom(member), genderIndex: Math.max(0, this.data.genderOptions.indexOf(member.gender || "未填写")) });
+    const wechatName = member.wx_name || member.wx_nickname || this.data.wechatName || "";
     const avatarUrl = member.wx_avatar_url || member.avatar_url || this.data.avatarUrl || "";
     if (memberId && (wechatName || avatarUrl)) {
       wx.setStorageSync(`wechatProfile:${memberId}`, {
@@ -245,24 +226,11 @@ Page({
       avatarUrl,
       isLoggedIn: !!memberId,
       needsPhoneBinding: !member.phone,
-      isWechatBound: !!(wechatName || avatarUrl || member.wx_profile_synced_at),
+      isWechatBound: !!(member.wx_openid || member.wx_unionid),
       wechatIdentityText: (member.wx_unionid || member.wx_openid) ? "微信身份已同步" : "",
-      authorizedCount: authorizedCourses.length,
-      stats: {
-        learningCount: learning.size,
-        completedCount: completed.size,
-        completionRate,
-        orderCount: (payments || []).length,
-        paidAmount: formatPaymentAmount(paidAmount),
-        commissionAmount: formatPaymentAmount(0)
-      },
-      recentProgress: normalizedRecent,
       authorizedCourses,
       offlineCourses,
-      payments: payments || [],
-      consumeRecords: consumeRecords || [],
       eventRegistrations: normalizedEventRegistrations,
-      offlineCourseCount,
       profileLoading: false,
       profileError: "",
       certificates: (certificates || []).map(cert => ({
@@ -282,45 +250,21 @@ Page({
     this.loadProfile();
   },
 
-
-
-  async loadCertificates() {
-    const certificates = await api.getCertificates().catch(() => []);
-    this.setData({
-      certificates: (Array.isArray(certificates) ? certificates : []).map((cert) => ({
-        id: cert.id,
-        certificateNo: cert.certificateNo || cert.certificate_no || cert.certNo || "",
-        courseName: cleanText(cert.courseName || cert.course_name || cert.name || "播放记录"),
-        issueDate: String(cert.issueDate || cert.issue_date || "").slice(0, 10),
-        displayIssueDate: String(cert.issueDate || cert.issue_date || "").slice(0, 10) || "待登记日期",
-        pdfUrl: cert.pdfUrl || cert.pdf_url || "",
-        verifyUrl: cert.verifyUrl || cert.verify_url || "",
-        openUrl: cert.pdfUrl || cert.pdf_url || cert.verifyUrl || cert.verify_url || "",
-        status: cert.status || "active",
-        actionText: (cert.status || "active") === "active" ? "查看" : "已撤销"
-      }))
-    });
-  },
-
   async onChooseAvatar(e) {
     const avatarUrl = e.detail.avatarUrl || "";
-    this.setData({
-      avatarUrl,
-      isWechatBound: !!(avatarUrl || this.data.wechatNameDraft || this.data.wechatName)
-    });
-    if (!avatarUrl || !this.data.isLoggedIn) return;
+    if (!avatarUrl || !this.data.isLoggedIn || this.data.avatarSaving) return;
+    const memberId = wx.getStorageSync("memberId");
+    this.setData({ avatarSaving: true });
     try {
       const result = await api.uploadWechatAvatar(avatarUrl);
-      const uploadedUrl = result.avatar_url || avatarUrl;
-      const memberId = wx.getStorageSync("memberId");
-      wx.setStorageSync(`wechatProfile:${memberId}`, {
-        nickname: this.data.wechatNameDraft || this.data.wechatName || "",
-        avatarUrl: uploadedUrl
-      });
-      this.setData({ avatarUrl: uploadedUrl, isWechatBound: true });
-    } catch (err) {
-      wx.showToast({ title: "头像稍后同步", icon: "none" });
-    }
+      if (memberId !== wx.getStorageSync("memberId")) return;
+      const uploadedUrl = result.avatar_url || result.avatarUrl;
+      if (!uploadedUrl) throw new Error('头像上传失败');
+      wx.setStorageSync(`wechatProfile:${memberId}`, { nickname: this.data.wechatName || "", avatarUrl: uploadedUrl });
+      this.setData({ avatarUrl: uploadedUrl });
+      wx.showToast({ title: '头像已更新', icon: 'success' });
+    } catch (err) { wx.showToast({ title: err.message || '头像上传失败，请重试', icon: 'none' }); }
+    finally { this.setData({ avatarSaving: false }); }
   },
 
   onWechatNameInput(e) {
@@ -332,7 +276,7 @@ Page({
       this.goLogin();
       return;
     }
-    this.setData({ showWechatBinder: !this.data.showWechatBinder });
+    this.setData({ profileOpen: true, showWechatBinder: !this.data.showWechatBinder });
   },
 
   async syncWechatProfile() {
@@ -364,7 +308,7 @@ Page({
         wechatName: nickname,
         wechatNameDraft: nickname,
         avatarUrl: syncedAvatarUrl,
-        isWechatBound: true,
+        isWechatBound: !!(member.wx_openid || member.wx_unionid),
         showWechatBinder: false,
         wechatIdentityText: (member.wx_unionid || member.wx_openid) ? "微信身份已同步" : this.data.wechatIdentityText
       });
@@ -377,7 +321,9 @@ Page({
   },
 
   async loadAdminStatus() {
+    const memberId = wx.getStorageSync("memberId");
     const status = await api.getAdminStatus().catch(() => null);
+    if (memberId !== wx.getStorageSync("memberId")) return;
     this.setData({
       isAdmin: !!status?.is_admin,
       adminRole: status?.admin?.role || ""
@@ -385,19 +331,15 @@ Page({
   },
 
   goAdmin() {
-    wx.navigateTo({ url: "/pages/admin/admin" });
+    videoFeature.navigateTo({ url: "/pages/admin/admin" });
   },
 
-  goCertificates() {
-    wx.navigateTo({ url: "/pages/certificates/certificates" });
-  },
-
-  goCourses() {
-    wx.navigateTo({ url: "/pages/courses/courses" });
+  goCommerceOrders() {
+    videoFeature.navigateTo({ url: "/pages/commerce-orders/commerce-orders" });
   },
 
   openProfileCourse(event) {
-    wx.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}` });
+    videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}` });
   },
 
   openOfflineSchedule() {
@@ -405,22 +347,10 @@ Page({
     wx.switchTab({ url: "/pages/offline/offline" });
   },
 
-  showPayments() {
-    const rows = this.data.payments || [];
-    const content = rows.slice(0, 8).map(item => `${item.courseName || item.course_name || "课程"}  ${formatPaymentAmount(item.amount || 0)}`).join("\n");
-    wx.showModal({ title: `课程与缴费（${rows.length}）`, content: content || "暂无缴费记录", showCancel: false });
-  },
-
-  showConsumeRecords() {
-    const rows = this.data.consumeRecords || [];
-    const content = rows.slice(0, 8).map(item => `${item.courseName || item.course_name || "课程"}  ${Number(item.count || 0)}课时`).join("\n");
-    wx.showModal({ title: `消费记录（${rows.length}）`, content: content || "暂无消费记录", showCancel: false });
-  },
-
   openEventRegistrations() {
     const rows = this.data.eventRegistrations || [];
     if (rows.length === 1) {
-      wx.navigateTo({ url: `/pages/event-detail/event-detail?id=${rows[0].competitionId}` });
+      videoFeature.navigateTo({ url: `/pages/event-detail/event-detail?id=${rows[0].competitionId}` });
       return;
     }
     wx.switchTab({ url: "/pages/events/events" });
@@ -429,23 +359,49 @@ Page({
   openEventRegistration(event) {
     const id = event.currentTarget.dataset.id;
     if (!id) return;
-    wx.navigateTo({ url: `/pages/event-detail/event-detail?id=${id}` });
+    videoFeature.navigateTo({ url: `/pages/event-detail/event-detail?id=${id}` });
   },
 
-  goProfileEdit() {
-    wx.navigateTo({ url: "/pages/profile-edit/profile-edit" });
+  goProfileEdit() { this.toggleProfile(); },
+  toggleProfile() {
+    if (!this.data.isLoggedIn) return this.goLogin();
+    this.setData({ profileOpen: !this.data.profileOpen });
   },
-
-  showDistribution() {
-    wx.showModal({
-      title: "邀请记录",
-      content: "当前版本仅展示舞蹈内容播放与记录信息。",
-      showCancel: false
-    });
+  profileDraftFrom(member) {
+    return { name: member.wx_name || member.wx_nickname || member.name || '', wxAccount: member.wx_account || '', gender: member.gender || '', birthday: String(member.birthday || '').slice(0, 10), country: member.country || '中国', province: member.province || '', city: member.city || '', address: member.address || '' };
   },
-
-  showOrders() {
-    wx.showToast({ title: `笔记 ${this.data.stats.orderCount || 0} 笔`, icon: "none" });
+  onProfileFieldInput(event) {
+    const key = event.currentTarget.dataset.field;
+    if (!['name', 'wxAccount', 'country', 'province', 'city', 'address'].includes(key)) return;
+    this.setData({ profileDraft: { ...this.data.profileDraft, [key]: event.detail.value }, profileDirty: true, profileSaveMessage: '' });
+  },
+  onProfileGender(event) {
+    const index = Number(event.detail.value);
+    if (!Number.isInteger(index) || index < 0 || index >= this.data.genderOptions.length) return;
+    this.setData({ genderIndex: index, profileDraft: { ...this.data.profileDraft, gender: index ? this.data.genderOptions[index] : '' }, profileDirty: true });
+  },
+  onProfileBirthday(event) { this.setData({ profileDraft: { ...this.data.profileDraft, birthday: event.detail.value }, profileDirty: true }); },
+  async saveProfileFields() {
+    if (!this.data.isLoggedIn) return this.goLogin();
+    if (this.data.profileSaving || this.data.profileLoading || this.data.profileError) return;
+    const draftSnapshot = JSON.stringify(this.data.profileDraft);
+    const draft = { ...this.data.profileDraft, name: String(this.data.profileDraft.name || '').trim() };
+    if (!draft.name) return wx.showToast({ title: '请填写姓名', icon: 'none' });
+    const memberId = wx.getStorageSync('memberId');
+    this.setData({ profileSaving: true, profileSaveMessage: '' });
+    try {
+      const response = await api.updateMemberProfile({ ...draft, wxName: draft.name, wxNickname: draft.name, remark: this.profileMember && this.profileMember.remark || '' });
+      if (memberId !== wx.getStorageSync('memberId')) return;
+      const member = response && response.member || response || {};
+      this.profileMember = member;
+      const changedWhileSaving = JSON.stringify(this.data.profileDraft) !== draftSnapshot;
+      this.setData({ memberName: member.name || draft.name, wechatName: member.wx_name || member.wx_nickname || draft.name, wechatNameDraft: member.wx_name || member.wx_nickname || draft.name, profileSaveMessage: '个人资料已保存', profileDirty: changedWhileSaving });
+      if (!changedWhileSaving) this.setData({ profileDraft: this.profileDraftFrom(member) });
+      wx.setStorageSync('memberName', member.name || draft.name);
+      wx.setStorageSync(`wechatProfile:${memberId}`, { nickname: member.wx_name || member.wx_nickname || draft.name, avatarUrl: this.data.avatarUrl });
+      app.globalData.memberName = member.name || draft.name;
+    } catch (err) { this.setData({ profileSaveMessage: err.message || '保存失败，请重试' }); }
+    finally { this.setData({ profileSaving: false }); }
   },
 
   viewCertificate(e) {
@@ -470,24 +426,31 @@ Page({
       });
       return;
     }
-    wx.navigateToMiniProgram ? wx.showModal({
-      title: "记录链接",
-      content: url,
-      showCancel: false
-    }) : wx.showToast({ title: "请在浏览器查看记录", icon: "none" });
-  },
-
-  showSupport() {
-    wx.showModal({
-      title: "联系客服",
-      content: "如内容未显示，请联系伊娃确认登记信息。",
-      showCancel: false
-    });
+    const id = Number(e.currentTarget.dataset.id);
+    const imageUrl = /\.(png|jpe?g|webp)(\?|$)/i.test(url) ? url
+      : Number.isSafeInteger(id) && id > 0
+        ? `${app.globalData.apiBase}/certificates/${id}/preview`
+        : '';
+    if (!imageUrl) { wx.showToast({ title: '证书暂时无法预览', icon: 'none' }); return; }
+    const token = wx.getStorageSync('token');
+    const header = imageUrl.startsWith(app.globalData.apiBase + '/certificates/') && token ? { Authorization: `Bearer ${token}` } : {};
+    wx.downloadFile({ url: imageUrl, header, success(res) {
+      if (res.statusCode === 200) wx.previewImage({ current: res.tempFilePath, urls: [res.tempFilePath] });
+      else wx.showToast({ title: res.statusCode === 401 ? '登录已过期，请重新登录' : '证书不存在或暂未生成', icon: 'none' });
+    }, fail() { wx.showToast({ title: '证书加载失败，请重试', icon: 'none' }); } });
   },
 
   // 去登录
+  async loadUnreadMessages() {
+    const memberId = wx.getStorageSync('memberId');
+    try {
+      const result = await api.getUnreadMessageCount();
+      if (memberId === wx.getStorageSync('memberId')) this.setData({ unreadMessageCount: Number(result.count || 0) });
+    } catch (_) { this.setData({ unreadMessageCount: 0 }); }
+  },
+  goMessages() { wx.navigateTo({ url: '/pages/messages/messages' }); },
   goLogin() {
-    wx.navigateTo({ url: "/pages/login/login" });
+    videoFeature.navigateTo({ url: "/pages/login/login" });
   },
 
   // 退出登录
@@ -497,6 +460,10 @@ Page({
       content: "确定要退出登录吗？",
       success: (res) => {
         if (res.confirm) {
+          this.profileRequestId = (this.profileRequestId || 0) + 1;
+          this.stopUnreadPolling();
+          this.profileMember = null;
+          this.setData({ profileOpen: false, profileDraft: {}, profileDirty: false, profileSaveMessage: "", isAdmin: false, adminRole: "" });
           wx.removeStorageSync("memberId");
           wx.removeStorageSync("memberName");
           wx.removeStorageSync("token");
@@ -518,8 +485,7 @@ Page({
             needsPhoneBinding: false,
             wechatIdentityText: "",
             isLoggedIn: false,
-            authorizedCount: 0,
-            stats: {
+                stats: {
               learningCount: 0,
               completedCount: 0,
               completionRate: 0,
@@ -528,13 +494,11 @@ Page({
               commissionAmount: 0
             },
             recentProgress: [],
-            authorizedCourses: [],
+            unreadMessageCount: 0,
+        authorizedCourses: [],
             offlineCourses: [],
-            payments: [],
-            consumeRecords: [],
-            eventRegistrations: [],
-            offlineCourseCount: 0,
-            certificates: [],
+                            eventRegistrations: [],
+                    certificates: [],
 
           });
           wx.showToast({ title: "已退出登录", icon: "success" });
@@ -546,4 +510,4 @@ Page({
   onAvatarError() {
     this.setData({ avatarUrl: "" });
   }
-});
+})));

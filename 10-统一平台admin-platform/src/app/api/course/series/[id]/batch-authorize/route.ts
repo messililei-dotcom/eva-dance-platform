@@ -17,7 +17,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!seriesId || !memberIds.length) return jsonError('请选择学员', 400);
 
   try {
-    return withDb((db) => Response.json({ success: true, ...authorizeMembers(db, seriesId, memberIds, grantedBy) }));
+    return withDb((db) => Response.json({
+      success: true,
+      ...authorizeMembers(db, seriesId, memberIds, grantedBy, body.order_vouchers, String(body.remark || '')),
+    }));
   } catch (err: any) {
     return jsonError(err?.message || '批量授权失败');
   }

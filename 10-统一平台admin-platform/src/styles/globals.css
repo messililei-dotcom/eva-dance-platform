@@ -113,19 +113,21 @@ textarea.ant-input {
   border: 1px solid #E9ECF5;
 }
 
-.admin-main-layout .ant-table-wrapper {
-  --admin-table-scroll-height: min(680px, calc(100vh - 350px));
-}
-
-.admin-main-layout .ant-card .ant-table-wrapper,
-.admin-main-layout .ant-tabs-tabpane .ant-table-wrapper {
-  --admin-table-scroll-height: min(720px, calc(100vh - 390px));
-}
-
 .admin-main-layout .ant-table-wrapper .ant-table-content,
 .admin-main-layout .ant-table-wrapper .ant-table-body {
-  max-height: var(--admin-table-scroll-height);
+  max-height: none;
   overflow: auto !important;
+}
+
+.admin-main-layout .admin-adaptive-table > .ant-table-wrapper[style*="flex"] .ant-spin-nested-loading,
+.admin-main-layout .admin-adaptive-table > .ant-table-wrapper[style*="flex"] .ant-spin-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-main-layout .admin-adaptive-table > .ant-table-wrapper[style*="flex"] .ant-table-pagination {
+  margin-top: auto;
 }
 
 .admin-main-layout .ant-table-wrapper .ant-table-thead {
@@ -327,6 +329,42 @@ textarea.ant-input {
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+.training-course-list-cover {
+  position: relative;
+  width: 72px;
+  height: 41px;
+  aspect-ratio: 16 / 9;
+  flex: 0 0 72px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #edf0f6;
+  border-radius: 6px;
+  background: #f7efff;
+  color: #c026d3;
+}
+
+.training-course-list-cover img {
+  position: absolute !important;
+  inset: 0 !important;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+.admin-main-layout .training-courses-table .ant-table-content,
+.admin-main-layout .training-courses-table .ant-table-body {
+  max-height: none;
+}
+
+.training-courses-table .ant-table-tbody > tr > td {
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
 }
 
 .ant-table-wrapper .table-cell-link-button {
@@ -561,6 +599,16 @@ textarea.ant-input {
   box-shadow: 0 10px 22px rgba(34, 197, 94, 0.18) !important;
 }
 
+.period-action-button,
+.period-action-button:hover,
+.period-action-button:focus,
+.period-action-button:active {
+  background: #2563EB !important;
+  border-color: #2563EB !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.2) !important;
+}
+
 .training-payment-modal .ant-modal-body {
   padding-top: 12px;
 }
@@ -722,11 +770,23 @@ textarea.ant-input {
   aspect-ratio: 4 / 3;
 }
 
+.training-course-modal .training-course-detail-fields {
+  min-width: 0;
+}
+
+.training-course-modal .training-course-detail-fields > .ant-row {
+  height: 100%;
+}
+
 .training-course-modal .payment-field-equal .ant-form-item,
 .training-course-modal .payment-field-equal .ant-input,
 .training-course-modal .payment-field-equal .ant-input-number,
 .training-course-modal .payment-field-equal .ant-picker,
 .training-course-modal .payment-field-equal .ant-select-single {
+  width: 100% !important;
+}
+
+.training-payment-modal.training-course-modal .payment-field-equal .ant-form-item .ant-input:not(textarea) {
   width: 100% !important;
 }
 
@@ -1345,6 +1405,10 @@ textarea.ant-input {
   .training-course-modal .payment-modal-grid > .training-course-cover-field {
     grid-column: 1 / -1;
     order: -10;
+  }
+
+  .training-course-modal .payment-modal-grid > .training-course-detail-fields {
+    grid-column: 1 / -1;
   }
 
   .training-course-modal .training-course-cover-field .ant-form-item {
@@ -3400,7 +3464,7 @@ textarea.ant-input {
 
   .online-course-replica .oc-auth-toolbar {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 8px !important;
     width: 100%;
   }
@@ -3409,8 +3473,17 @@ textarea.ant-input {
     min-width: 0;
   }
 
-  .online-course-replica .oc-auth-toolbar > .ant-space-item:nth-child(3) {
-    grid-column: 1 / -1;
+  .online-course-replica .oc-auth-toolbar > .ant-space-item:nth-child(1) {
+    grid-column: span 2;
+  }
+
+  .online-course-replica .oc-auth-toolbar > .ant-space-item:nth-child(2) {
+    grid-column: span 4;
+  }
+
+  .online-course-replica .oc-auth-toolbar > .ant-space-item:nth-child(3),
+  .online-course-replica .oc-auth-toolbar > .ant-space-item:nth-child(4) {
+    grid-column: span 3;
   }
 
   .online-course-replica .oc-auth-toolbar .ant-select,
@@ -3827,12 +3900,6 @@ textarea.ant-input {
 
   .training-payments-card.ant-card > .ant-card-head {
     display: none !important;
-  }
-
-  .training-payments-card .training-payments-table .ant-table-body,
-  .training-payments-card .training-payments-table .ant-table-content {
-    max-height: min(72dvh, 630px);
-    overflow-y: auto !important;
   }
 
   .training-filter-card {
@@ -4595,5 +4662,434 @@ input[type='number']::-webkit-outer-spin-button {
   .access-records-table-card,
   .access-records-table-card > .ant-card-body {
     min-height: auto;
+  }
+}
+
+/* ========== 管理端 PWA / 手机工作台最终适配 ========== */
+.admin-mobile-drawer-brand {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 11px;
+  padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+  color: #fff;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.admin-mobile-drawer-brand img {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.admin-mobile-drawer-brand div,
+.admin-mobile-drawer-brand strong,
+.admin-mobile-drawer-brand span {
+  display: block;
+  min-width: 0;
+}
+
+.admin-mobile-drawer-brand strong {
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.admin-mobile-drawer-brand span {
+  margin-top: 3px;
+  color: rgba(255,255,255,.58);
+  font-size: 10px;
+}
+
+.pwa-install-button:not(.is-compact) {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+  html {
+    background: #f0f2f5;
+    overscroll-behavior-y: none;
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+
+  button,
+  a,
+  [role='button'] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .admin-main-layout {
+    min-height: 100dvh !important;
+    background: #f0f2f5;
+  }
+
+  .admin-mobile-header {
+    position: sticky;
+    inset: 0 0 auto;
+    z-index: 30;
+    justify-content: space-between;
+    width: 100%;
+    min-height: calc(58px + env(safe-area-inset-top));
+    padding: calc(8px + env(safe-area-inset-top)) 10px 8px 12px;
+    background: rgba(7, 23, 45, .96);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 7px 22px rgba(7,23,45,.16);
+    backdrop-filter: blur(16px);
+  }
+
+  .admin-mobile-brand {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .admin-mobile-brand > img {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 10px;
+    object-fit: cover;
+  }
+
+  .admin-mobile-title {
+    display: flex;
+  }
+
+  .admin-mobile-title strong {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 750;
+  }
+
+  .admin-mobile-title span {
+    color: rgba(255,255,255,.58);
+    font-size: 10px;
+  }
+
+  .admin-mobile-header .ant-btn,
+  .admin-mobile-header .pwa-install-button.is-compact,
+  .admin-mobile-menu-button.ant-btn {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    margin: 0;
+    color: #fff;
+    border-radius: 12px;
+  }
+
+  .admin-mobile-header .ant-btn:hover,
+  .admin-mobile-header .ant-btn:active {
+    color: #fff !important;
+    background: rgba(255,255,255,.1) !important;
+  }
+
+  .admin-content {
+    width: 100%;
+    min-width: 0;
+    min-height: calc(100dvh - 58px) !important;
+    overflow: clip;
+  }
+
+  .admin-content > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-mobile-tabbar {
+    position: fixed;
+    z-index: 35;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: 8px;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    min-height: 62px;
+    padding: 5px 4px;
+    border: 1px solid rgba(225,229,239,.92);
+    border-radius: 18px;
+    background: rgba(255,255,255,.96);
+    box-shadow: 0 14px 38px rgba(18,26,58,.2);
+    backdrop-filter: blur(18px);
+  }
+
+  .admin-mobile-tabbar button {
+    display: flex;
+    min-width: 0;
+    min-height: 50px;
+    padding: 5px 2px 4px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 3px;
+    color: #7a8199;
+    border: 0;
+    border-radius: 13px;
+    background: transparent;
+    font: inherit;
+  }
+
+  .admin-mobile-tabbar button .anticon {
+    font-size: 19px;
+  }
+
+  .admin-mobile-tabbar button span:last-child {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 10px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-mobile-tabbar button.is-active {
+    color: #c91568;
+    background: linear-gradient(180deg, #fff2f8, #f8f0ff);
+  }
+
+  .admin-content .page-header {
+    margin: -12px -12px 12px;
+    padding: 14px 14px 13px;
+  }
+
+  .admin-content .page-header h2,
+  .admin-content .page-header h2.ant-typography,
+  .ecommerce-admin-page .ecommerce-page-header h2.ant-typography,
+  .finance-admin-page .finance-page-header h2.ant-typography {
+    font-size: 21px !important;
+    line-height: 1.25 !important;
+  }
+
+  .admin-content .page-header .ant-typography-secondary {
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+
+  .admin-content .ant-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-sm) !important;
+  }
+
+  .admin-content .ant-row {
+    row-gap: 10px;
+  }
+
+  .admin-content .ant-row > .ant-col:has(> .ant-card .ant-statistic),
+  .admin-content .ant-row > .ant-col:has(> .stat-card) {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+  }
+
+  .admin-content .ant-card .ant-statistic-content {
+    overflow: hidden;
+    font-size: 19px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-content .ant-card .ant-statistic-content-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-content .ant-card-head-wrapper {
+    min-width: 0;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0 8px;
+  }
+
+  .admin-content .ant-card-head-title,
+  .admin-content .ant-card-extra {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .admin-content .ant-card-extra .ant-space,
+  .admin-content .toolbar .ant-space,
+  .admin-content .page-header .ant-space {
+    width: 100%;
+  }
+
+  .admin-content .ant-space-item:has(> .ant-input-search),
+  .admin-content .ant-space-item:has(> .ant-picker-range) {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .admin-content .ant-input-search,
+  .admin-content .ant-picker-range,
+  .admin-content .ant-space-compact,
+  .admin-content [style*='width: 360px'],
+  .admin-content [style*='width: 240px'],
+  .admin-content [style*='width: 220px'],
+  .admin-content [style*='width: 200px'] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .admin-content .admin-adaptive-table,
+  .admin-content .ant-table-wrapper,
+  .admin-content .ant-table-container,
+  .admin-content .ant-table-content,
+  .admin-content .ant-table-body {
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .admin-content .ant-table-wrapper .ant-table {
+    min-width: max-content;
+  }
+
+  .admin-content .ant-table-wrapper .ant-table-cell-fix-left,
+  .admin-content .ant-table-wrapper .ant-table-cell-fix-right {
+    background-clip: padding-box;
+  }
+
+  .admin-content .ant-pagination {
+    justify-content: center;
+    max-width: 100%;
+  }
+
+  .admin-content .ant-pagination-item,
+  .admin-content .ant-pagination-prev,
+  .admin-content .ant-pagination-next {
+    min-width: 34px;
+    height: 34px;
+    line-height: 32px;
+  }
+
+  .training-filter-card,
+  .training-mobile-hidden-filter,
+  .training-payments-card.ant-card > .ant-card-head {
+    display: block !important;
+  }
+
+  .finance-admin-page .finance-page-header,
+  .finance-admin-page .finance-summary-grid,
+  .finance-admin-page > .ant-row {
+    display: flex !important;
+  }
+
+  .ant-drawer .ant-menu-item,
+  .ant-drawer .ant-menu-submenu-title {
+    min-height: 44px;
+    line-height: 44px !important;
+  }
+
+  .ant-drawer .ant-menu-item-group-title {
+    padding-top: 14px;
+    color: rgba(255,255,255,.42) !important;
+    font-size: 11px;
+    letter-spacing: .08em;
+  }
+
+  .ant-modal-root .ant-modal {
+    top: max(8px, env(safe-area-inset-top)) !important;
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+  }
+
+  .ant-modal-root .ant-modal-content {
+    min-height: auto;
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top));
+    overflow: hidden;
+    border-radius: 16px !important;
+    padding: 14px !important;
+  }
+
+  .ant-modal-root .ant-modal-body {
+    max-height: calc(100dvh - 132px - env(safe-area-inset-top));
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .ant-modal-root .ant-modal-footer {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .ant-modal-root .ant-modal-footer .ant-btn {
+    min-width: 82px;
+    min-height: 40px;
+  }
+
+  /* iOS 会在聚焦小于 16px 的表单控件时自动缩放页面。 */
+  input,
+  textarea,
+  select,
+  .ant-input,
+  .ant-input-number-input,
+  .ant-picker-input > input,
+  .ant-select-selection-search-input {
+    font-size: 16px !important;
+  }
+
+  .online-course-replica .oc-auth-table .ant-table {
+    width: 100% !important;
+    min-width: 480px !important;
+    table-layout: fixed !important;
+  }
+
+  .online-course-replica .oc-auth-table .ant-table-thead > tr > th,
+  .online-course-replica .oc-auth-table .ant-table-tbody > tr > td {
+    overflow: hidden;
+  }
+
+  .online-course-replica .oc-auth-table .ant-table-thead > tr > th:first-child,
+  .online-course-replica .oc-auth-table .ant-table-tbody > tr > td:first-child {
+    text-align: left !important;
+  }
+
+  .online-course-replica .oc-auth-table [role='button'] {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .oc-lesson-table .oc-lesson-sort-input.ant-input-number {
+    width: 52px !important;
+    min-width: 52px;
+    min-height: 34px !important;
+  }
+
+  .oc-lesson-table .oc-lesson-sort-input .ant-input-number-input {
+    height: 32px;
+    padding-inline: 8px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-mobile-title strong {
+    max-width: 150px;
+  }
+
+  .admin-mobile-header .pwa-install-button.is-compact {
+    display: none;
+  }
+}
+
+@media (display-mode: standalone) {
+  body {
+    user-select: none;
+  }
+
+  input,
+  textarea,
+  [contenteditable='true'],
+  .ant-table-cell {
+    user-select: text;
   }
 }

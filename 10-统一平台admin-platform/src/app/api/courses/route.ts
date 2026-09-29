@@ -25,7 +25,16 @@ export async function POST(request: Request) {
 
   const db = openTrainingDb();
   try {
-    const existing = findMatchingCourseByIdentity(db, name, body.subType);
+    const templateId = Math.max(0, toNumber(body.templateId));
+    const template = templateId
+      ? db.prepare('SELECT * FROM CourseTemplate WHERE id = ?').get(templateId) as any
+      : null;
+    if (templateId && !template) {
+      return Response.json({ success: false, error: '所选课程不存在，请重新选择' }, { status: 400 });
+    }
+    const courseName = cleanText(template?.name || name);
+    const courseType = cleanText(template?.trainingType || body.type, '集训');
+    const existing = findMatchingCourseByIdentity(db, courseName, body.subType);
     if (existing) {
       return Response.json({ success: true, id: existing.id, existing: true });
     }
@@ -33,12 +42,12 @@ export async function POST(request: Request) {
     const result = db.prepare(`
       INSERT INTO Course (
         name, type, subType, startDate, endDate, price, sessions, validDays,
-        teacher, content, coverImage, series_id
+        teacher, content, coverImage, series_id, templateId
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
     `).run(
-      name,
-      cleanText(body.type, '集训'),
+      courseName,
+      courseType,
       cleanText(body.subType),
       cleanText(body.startDate),
       cleanText(body.endDate),
@@ -46,8 +55,9 @@ export async function POST(request: Request) {
       Math.max(1, toNumber(body.sessions, 10)),
       cleanText(body.validDays),
       cleanText(body.teacher),
-      cleanText(body.content),
-      cleanText(body.coverImage),
+      cleanText(template?.content || body.content),
+      cleanText(template?.coverImage || body.coverImage),
+      templateId,
     );
     return Response.json({ success: true, id: result.lastInsertRowid });
   } finally {

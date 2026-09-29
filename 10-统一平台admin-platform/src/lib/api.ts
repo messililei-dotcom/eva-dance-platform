@@ -97,6 +97,45 @@ export const api: AxiosInstance = axios.create({ baseURL: API_BASE, timeout: 150
 const legacyStudentApi: AxiosInstance = axios.create({ baseURL: LEGACY_STUDENT_API_BASE, timeout: 20000 });
 const cloudCourseApi: AxiosInstance = axios.create({ baseURL: CLOUD_COURSE_API_BASE, timeout: 20000 });
 
+const AUDIT_EXCLUDED_PATHS = ['/access-records', '/login', '/validate-token'];
+
+function normalizedClientAuditPath(value: unknown) {
+  const raw = String(value || '').trim();
+  if (!raw) return '/';
+  try { return new URL(raw, window.location.origin).pathname; } catch { return raw.split(/[?#]/, 1)[0] || '/'; }
+}
+
+function axiosAuditPath(config?: AxiosRequestConfig) {
+  if (!config) return '/';
+  const url = String(config.url || '');
+  if (/^https?:\/\//i.test(url)) return normalizedClientAuditPath(url);
+  const base = String(config.baseURL || '');
+  if (!base) return normalizedClientAuditPath(url);
+  try {
+    const basePath = new URL(base, window.location.origin).pathname.replace(/\/$/, '');
+    return normalizedClientAuditPath(`${basePath}/${url.replace(/^\//, '')}`);
+  } catch { return normalizedClientAuditPath(url); }
+}
+
+function shouldAuditApiRequest(config?: AxiosRequestConfig) {
+  if (typeof window === 'undefined' || !config) return false;
+  const method = String(config.method || 'GET').toUpperCase();
+  const path = axiosAuditPath(config);
+  return method !== 'GET' && !AUDIT_EXCLUDED_PATHS.some(excluded => path === excluded || path.endsWith(`/api${excluded}`));
+}
+
+export function reportAdminAudit(input: { kind: 'access' | 'operation'; path: string; method?: string; status?: number; label?: string }) {
+  if (typeof window === 'undefined') return;
+  const token = getToken();
+  if (!token) return;
+  void fetch('/api/access-records', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(input),
+    keepalive: true,
+  }).catch(() => {});
+}
+
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = getToken();
   if (token && config.headers) {
@@ -122,8 +161,26 @@ cloudCourseApi.interceptors.request.use((config: InternalAxiosRequestConfig) => 
 });
 
 api.interceptors.response.use(
-  (response: AxiosResponse) => response,
+  (response: AxiosResponse) => {
+    if (shouldAuditApiRequest(response.config)) {
+      reportAdminAudit({
+        kind: 'operation',
+        path: axiosAuditPath(response.config),
+        method: response.config.method,
+        status: response.status,
+      });
+    }
+    return response;
+  },
   async (error) => {
+    if (shouldAuditApiRequest(error.config) && error.response?.status !== 401) {
+      reportAdminAudit({
+        kind: 'operation',
+        path: axiosAuditPath(error.config),
+        method: error.config?.method,
+        status: error.response?.status || 599,
+      });
+    }
     if (error.response?.status === 401) {
       clearAuth();
       if (typeof window !== 'undefined') {
@@ -132,6 +189,21 @@ api.interceptors.response.use(
     }
     return Promise.reject(error);
   }
+);
+
+axios.interceptors.response.use(
+  (response: AxiosResponse) => {
+    if (shouldAuditApiRequest(response.config)) {
+      reportAdminAudit({ kind: 'operation', path: axiosAuditPath(response.config), method: response.config.method, status: response.status });
+    }
+    return response;
+  },
+  (error) => {
+    if (shouldAuditApiRequest(error.config) && error.response?.status !== 401) {
+      reportAdminAudit({ kind: 'operation', path: axiosAuditPath(error.config), method: error.config?.method, status: error.response?.status || 599 });
+    }
+    return Promise.reject(error);
+  },
 );
 
 legacyStudentApi.interceptors.response.use(
@@ -248,6 +320,63 @@ export const certApi = {
 
 // ========== 赛事运营 API ==========
 export const eventApi = {
+  listGroupJudges: async (params?: QueryParams): Promise<any[]> => {
+    const res = await api.get('/event/group-judges', { params });
+    return res.data?.data || [];
+  },
+  listEventMembers: async (params?: QueryParams): Promise<any[]> => {
+    const res = await api.get('/event/members', { params });
+    return res.data?.data || [];
+  },
+  listPlayersPage: async (params?: QueryParams): Promise<{ data: any[]; total: number; page: number; pageSize: number }> => {
+    const res = await api.get('/event/players', { params });
+    return res.data;
+  },
+  deleteCompetition: async (id: number | string): Promise<any> => {
+    const res = await api.delete(`/event/competitions/${id}`);
+    return res.data;
+  },
+  deleteGroup: async (id: number | string): Promise<any> => {
+    const res = await api.delete(`/event/groups/${id}`);
+    return res.data;
+  },
+  exportData: async (): Promise<any> => {
+    const res = await api.get('/event/data-transfer');
+    return res.data;
+  },
+  batchCreatePlayers: async (payload: any): Promise<any> => {
+    const res = await api.post('/event/players/batch', payload);
+    return res.data?.data;
+  },
+  batchUpdatePlayers: async (payload: any): Promise<any> => {
+    const res = await api.patch('/event/players/batch', payload);
+    return res.data?.data;
+  },
+  batchDeletePlayers: async (payload: any): Promise<any> => {
+    const res = await api.delete('/event/players/batch', { data: payload });
+    return res.data?.data;
+  },
+  randomizePlayerSequence: async (payload: any): Promise<any> => {
+    const res = await api.patch('/event/players/batch', { ...payload, action: 'randomize_sequence' });
+    return res.data?.data;
+  },
+  batchUpdateGroupJudges: async (payload: any): Promise<any> => {
+    const res = await api.patch('/event/group-judges', payload);
+    return res.data?.data;
+  },
+  batchDeleteGroupJudges: async (payload: any): Promise<any> => {
+    const res = await api.delete('/event/group-judges', { data: payload });
+    return res.data?.data;
+  },
+  setManualFinalScore: async (payload: any): Promise<any> => {
+    const res = await api.patch('/event/results', { ...payload, action: 'set_manual_score' });
+    return res.data?.data;
+  },
+  clearManualFinalScore: async (payload: any): Promise<any> => {
+    const res = await api.patch('/event/results', { ...payload, action: 'clear_manual_score' });
+    return res.data?.data;
+  },
+
   listCompetitions: async (params?: QueryParams): Promise<any[]> => {
     const res = await api.get('/event/competitions', { params });
     return res.data?.data || [];
@@ -334,7 +463,7 @@ export const eventApi = {
   },
   assignJudge: async (payload: any): Promise<any> => {
     const res = await api.post('/event/group-judges', payload);
-    return res.data;
+    return res.data?.data;
   },
   listScoreRules: async (params?: QueryParams): Promise<any[]> => {
     const res = await api.get('/event/score-rules', { params });
@@ -368,8 +497,8 @@ export const eventApi = {
     const res = await api.patch('/event/results', { groupId, action: 'unpublish' });
     return res.data;
   },
-  verifyData: async (): Promise<any> => {
-    const res = await api.get('/event/verify');
+  verifyData: async (params?: QueryParams): Promise<any> => {
+    const res = await api.get('/event/verify', { params });
     return res.data?.data;
   },
 };
@@ -400,6 +529,26 @@ export const dataApi = {
 
 // ========== 线下培训 API ==========
 export const trainingApi = {
+  getCourseTemplates: async (): Promise<any[]> => {
+    const res = await api.get('/course-templates');
+    return res.data;
+  },
+  createCourseTemplate: async (data: unknown): Promise<any> => {
+    const res = await api.post('/course-templates', data);
+    return res.data;
+  },
+  updateCourseTemplate: async (id: number | string, data: unknown): Promise<any> => {
+    const res = await api.put(`/course-templates/${id}`, data);
+    return res.data;
+  },
+  deleteCourseTemplate: async (id: number | string): Promise<any> => {
+    const res = await api.delete(`/course-templates/${id}`);
+    return res.data;
+  },
+  setCourseTemplateVisibility: async (id: number | string, websiteVisible: boolean): Promise<any> => {
+    const res = await api.patch(`/course-templates/${id}`, { websiteVisible });
+    return res.data;
+  },
   getCourses: async (): Promise<any[]> => {
     const res = await api.get('/courses');
     return res.data;
@@ -434,6 +583,18 @@ export const trainingApi = {
   },
   getPayments: async (): Promise<any[]> => {
     const res = await api.get('/payments');
+    return res.data;
+  },
+  getOnlineAuthorizationCommissions: async (): Promise<any[]> => {
+    const res = await api.get('/course/authorization-commissions');
+    return res.data;
+  },
+  getCommissionSettlements: async (): Promise<Array<{ period: string; advisor: string; status: string }>> => {
+    const res = await api.get('/commission-settlements');
+    return res.data;
+  },
+  updateCommissionSettlement: async (data: { advisor: string; period: string; status: 'settled' | 'unsettled' }): Promise<{ success: boolean }> => {
+    const res = await api.post('/commission-settlements', data);
     return res.data;
   },
   createPayment: async (data: unknown): Promise<any> => {
@@ -474,6 +635,10 @@ export const trainingApi = {
 export const onlineCourseApi = {
   getDashboard: async (): Promise<any> => {
     const res = await api.get('/course/admin/dashboard');
+    return res.data;
+  },
+  setMiniVideoPlayback: async (videoPlaybackEnabled: boolean): Promise<any> => {
+    const res = await api.patch('/mini/admin/miniprogram-config', { videoPlaybackEnabled });
     return res.data;
   },
   getMiniProgramConfig: async (): Promise<any> => {
@@ -572,6 +737,10 @@ export const onlineCourseApi = {
     const res = await api.get('/course/series/students', { params });
     return res.data;
   },
+  getAuthorizations: async (params?: QueryParams): Promise<any> => {
+    const res = await api.get('/course/authorizations', { params });
+    return res.data;
+  },
   authorizeMember: async (seriesId: number | string, data: unknown): Promise<any> => {
     const res = await api.post(`/course/series/${seriesId}/authorize`, data);
     return res.data;
@@ -652,6 +821,10 @@ export const onlineCourseApi = {
   },
   removeMaterialReference: async (materialId: number | string, referenceId: number | string): Promise<any> => {
     const res = await api.delete(`/course/materials/${materialId}/references/${referenceId}`);
+    return res.data;
+  },
+  replaceMaterialReferences: async (id: number | string, targetMaterialId: number | string): Promise<any> => {
+    const res = await api.post(`/course/materials/${id}/replace-references`, { target_material_id: targetMaterialId });
     return res.data;
   },
   generateMaterialThumbnail: async (id: number | string, data: unknown): Promise<any> => {

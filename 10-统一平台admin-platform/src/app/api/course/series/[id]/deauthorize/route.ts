@@ -12,13 +12,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const body = await request.json().catch(() => ({}));
   const seriesId = toPositiveInt(routeParams.id);
+  const authorizationId = toPositiveInt(body.authorization_id);
+  if (body.authorization_id !== undefined && !authorizationId) return jsonError('授权记录无效', 400);
   const memberId = toPositiveInt(body.member_id);
   const phone = String(body.phone || '').trim();
   const revokedBy = toPositiveInt(authPayloadFromRequest(request)?.id) || 1;
   if (!seriesId || (!memberId && !phone)) return jsonError('请选择学员', 400);
 
   try {
-    return withDb((db) => Response.json({ success: true, ...deauthorizeMemberIdentity(db, seriesId, memberId, phone, revokedBy) }));
+    return withDb((db) => Response.json({ success: true, ...deauthorizeMemberIdentity(db, seriesId, memberId, phone, revokedBy, authorizationId) }));
   } catch (err: any) {
     return jsonError(err?.message || '取消授权失败');
   }

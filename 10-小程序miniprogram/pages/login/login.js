@@ -1,3 +1,4 @@
+const share = require("../../shared/share");
 const api = require("../../utils/api");
 
 function showError(message, title = "提示") {
@@ -19,7 +20,7 @@ function requestErrorMessage(err, fallback) {
   return message || fallback;
 }
 
-Page({
+Page(share.withShare("login", {
   data: {
     phone: "",
     code: "",
@@ -29,15 +30,6 @@ Page({
     phoneLogging: false
   },
   countdownTimer: null,
-
-  onLoad() {
-    // 检查是否已登录
-    const memberId = wx.getStorageSync("memberId");
-    const token = wx.getStorageSync("token");
-    if (memberId && token) {
-      wx.switchTab({ url: "/pages/home/home" });
-    }
-  },
 
   onPhoneInput(e) {
     this.setData({ phone: e.detail.value.replace(/\D/g, '').slice(0, 11) });
@@ -122,9 +114,9 @@ Page({
     app.globalData.memberName = member.wx_nickname || member.name || "";
 
     wx.showToast({ title: "登录成功", icon: "success" });
-    setTimeout(() => {
-      wx.switchTab({ url: "/pages/home/home" });
-    }, 600);
+    const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+    if (pages.length > 1) wx.navigateBack({ delta: 1 });
+    else wx.switchTab({ url: "/pages/home/home" });
   },
 
   async login() {
@@ -192,4 +184,4 @@ Page({
   goBack() {
     wx.navigateBack();
   }
-});
+}));

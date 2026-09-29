@@ -5,6 +5,7 @@ type StreamTokenPayload = {
   videoId: number;
   memberId: number;
   exp: number;
+  channel: string;
 };
 
 function streamSecret() {
@@ -17,11 +18,12 @@ function sign(payload: string) {
   return crypto.createHmac('sha256', streamSecret()).update(payload).digest('base64url');
 }
 
-export function createVideoStreamToken(videoId: unknown, memberId: unknown, ttlMs = 10 * 60 * 1000) {
+export function createVideoStreamToken(videoId: unknown, memberId: unknown, ttlMs = 10 * 60 * 1000, channel = 'web') {
   const payload = Buffer.from(JSON.stringify({
     videoId: toPositiveInt(videoId),
     memberId: toPositiveInt(memberId),
     exp: Date.now() + ttlMs,
+    channel: channel === 'miniprogram' ? 'miniprogram' : 'web',
   })).toString('base64url');
   return `${payload}.${sign(payload)}`;
 }
@@ -39,7 +41,7 @@ export function verifyVideoStreamToken(token: string): StreamTokenPayload | null
     const memberId = toPositiveInt(data.memberId);
     const exp = Number(data.exp || 0);
     if (!videoId || !memberId || !Number.isFinite(exp) || exp < Date.now()) return null;
-    return { videoId, memberId, exp };
+    return { videoId, memberId, exp, channel: data.channel === 'miniprogram' ? 'miniprogram' : 'web' };
   } catch {
     return null;
   }

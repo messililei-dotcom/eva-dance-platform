@@ -11,3 +11,7 @@ export function publicShortCacheJson(body: unknown, init?: ResponseInit) {
     },
   });
 }
+
+export function noStoreJson(body: unknown, init?: ResponseInit) {
+  return Response.json(body, { ...init, headers: { ...init?.headers, "Cache-Control": "no-store" } });
+}

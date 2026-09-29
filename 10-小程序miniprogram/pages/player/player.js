@@ -1,42 +1,64 @@
+const share = require("../../shared/share");
+const videoFeature = require("../../shared/video-feature");
 const api = require("../../utils/api");
 const { cleanText } = require("../../shared/review-text");
 const { findCourseVideoSelection } = require("../../shared/course-video-selection");
 
-Page({
+Page(share.withShare("player", videoFeature.withVideoFeature({
   data: {
+    isPlayerFullscreen: false, isMirrored: false, isMuted: false, isPlaying: false,
+    playerMenu: "",
+    currentTimeText: "0:00", durationText: "0:00", hasPrevious: false, hasNext: false,
     videoId: null, seriesId: null, courseId: null, course: {}, video: {},
     playUrl: "", playbackSource: "", percent: 0, outline: [], visibleOutline: [], activePanel: "catalog",
+    autoplayCountdown: null, lessonEnded: false,
     notes: [], noteContent: "", savingNote: false, loading: true,
     hasStartedPlayback: false, authorizationRequired: false,
-    playbackRate: 1, rateOptions: [0.5, 0.75, 1, 1.25, 1.5, 2],
+    playbackRate: 1, rateOptions: [0.75, 1, 1.25, 2],
     showPlayerMenu: false, showVideoControls: false, qualityOptions: [], currentQuality: "auto",
     currentQualityLabel: "自动", resumeSeconds: 0, currentSeconds: 0, currentDuration: 0,
+    catalogPage: 1, catalogPageCount: 1, catalogTotal: 0, catalogFrom: 0, catalogTo: 0,
     catalogQuery: "", catalogResultText: "", playbackError: ""
   },
-  onLoad(options) {
-    this.videoContext = wx.createVideoContext("courseVideo", this);
+  async onLoad(options) {
     this.setData({ videoId: options.videoId || null, seriesId: options.seriesId, courseId: options.courseId });
+    const active = await videoFeature.enabled();
+    this.setData({ videoPlaybackEnabled: active });
+    if (!active) { this.setData({ loading: false }); return; }
+    this.videoContext = wx.createVideoContext("courseVideo", this);
     this.loadCourse(options.seriesId, options.videoId);
+  },
+  async onShow() {
+    if (!this.catalogLoaded || !this.data.seriesId) return;
+    try { await api.getSeriesMeta(this.data.seriesId); }
+    catch (err) {
+      if (Number(err.statusCode) !== 404) return;
+      this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1;
+      if (this.videoContext) this.videoContext.stop();
+      this.setData({ course: {}, video: {}, videoId: null, outline: [], visibleOutline: [], playUrl: '', hasStartedPlayback: false, playbackError: '课程已隐藏或下架' });
+    }
   },
   async loadCourse(seriesId, initialVideoId) {
     wx.showLoading({ title: "加载中" });
     try {
       const [course, courses, progressRows] = await Promise.all([
-        api.getSeriesMeta(seriesId).catch(() => ({})),
-        api.getSeriesCourses(seriesId).catch(() => []),
+        api.getSeriesMeta(seriesId),
+        api.getSeriesCourses(seriesId),
         api.getSeriesProgress(seriesId).catch(() => [])
       ]);
+      this.catalogLoaded = true;
       const progressMap = (progressRows || []).reduce((map, row) => { map[String(row.video_id)] = row; return map; }, {});
       const outline = [];
       (courses || []).forEach(courseRow => (courseRow.videos || []).forEach(item => {
         const progress = progressMap[String(item.id)];
         outline.push({
-          id: item.id, courseId: courseRow.id, videoId: item.id,
+          id: item.id, courseId: courseRow.id, videoId: item.id, ordinal: outline.length + 1,
           materialId: item.material_id || item.materialId || null,
           name: cleanText(item.name || courseRow.name, "未命名课时"),
           duration: Number(item.duration || courseRow.duration || 0),
           durationText: this.formatDuration(item.duration || courseRow.duration),
           progressPercent: this.getProgressPercent(progress, item.duration || courseRow.duration),
+          resumeSeconds: this.getResumeSeconds(progress, item.duration || courseRow.duration),
           lastPlayAt: progress && progress.last_play_at || ""
         });
       }));
@@ -51,43 +73,83 @@ Page({
         course, outline, visibleOutline: outline, videoId: target.videoId, courseId: target.courseId,
         video: { id: target.videoId, name: target.name, duration: target.duration },
         percent: target.progressPercent, playUrl: "", loading: false,
+        resumeSeconds: target.resumeSeconds, currentSeconds: 0, currentDuration: target.duration,
+        currentTimeText: this.formatTimestamp(target.resumeSeconds), durationText: this.formatTimestamp(target.duration),
         hasStartedPlayback: false, authorizationRequired: false
       });
-      if (initialVideoId) await this.loadVideo(target.videoId);
+      this.refreshCatalog(true);
+      // Entering a course only prepares the catalog; playback requires a user action.
     } catch (err) {
-      this.setData({ loading: false });
+      this.setData({ course: {}, outline: [], visibleOutline: [], video: {}, videoId: null, playUrl: "", loading: false, playbackError: Number(err.statusCode) === 404 ? "课程已隐藏或下架" : "课程加载失败，请稍后重试" });
       wx.showToast({ title: err.message || "加载失败", icon: "none" });
     } finally { wx.hideLoading(); }
   },
   async loadVideo(videoId) {
+    this.cancelAutoplay();
+    this.setData({ lessonEnded: false });
+    const requestId = this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1;
+    const active = await videoFeature.enabled();
+    if (requestId !== this.videoLoadRequestId) return;
+    if (!active) {
+      if (this.videoContext) this.videoContext.stop();
+      this.setData({ videoPlaybackEnabled: false, playUrl: "", hasStartedPlayback: false });
+      return;
+    }
     wx.showLoading({ title: "加载中" });
     this.clearPlayerControlsTimer();
-    this.setData({ videoId, playUrl: "", notes: [], authorizationRequired: false, hasStartedPlayback: true, showPlayerMenu: false, showVideoControls: false, playbackError: "" });
+    const index = this.data.outline.findIndex(row => String(row.videoId) === String(videoId));
+    this.setData({ hasPrevious: index > 0, hasNext: index >= 0 && index < this.data.outline.length - 1 });
+    const selected = this.data.outline[index];
+    if (selected) this.setData({ courseId: selected.courseId, video: { id: selected.videoId, name: selected.name, duration: selected.duration } });
+    this.setData({ videoId, playUrl: "", currentSeconds: 0, resumeSeconds: 0, notes: [], authorizationRequired: false, hasStartedPlayback: true, showPlayerMenu: false, showVideoControls: false, playbackError: "" });
+    this.refreshCatalog(true);
     try {
       const target = (this.data.outline || []).find(item => String(item.videoId) === String(videoId));
       const [video, progress, notes] = await Promise.all([
         api.getVideoPlay(videoId), api.getVideoProgress(videoId).catch(() => null), api.getNotes(videoId).catch(() => [])
       ]);
+      if (requestId !== this.videoLoadRequestId) return;
       const normalizedVideo = this.normalizeVideo(video || {});
       const duration = Number(normalizedVideo.duration || target && target.duration || progress && progress.duration || 0);
       const percent = this.getProgressPercent(progress, duration);
-      const resumeSeconds = Number(progress && progress.progress || 0);
+      const resumeSeconds = this.getResumeSeconds(progress, duration);
       this.setData({
         courseId: target && target.courseId || this.data.courseId, video: normalizedVideo,
         playUrl: normalizedVideo.playUrl, playbackSource: normalizedVideo.playbackSource,
         percent, resumeSeconds, currentSeconds: resumeSeconds, currentDuration: duration,
+        currentTimeText: this.formatTimestamp(resumeSeconds), durationText: this.formatTimestamp(duration),
         notes: this.normalizeNotes(notes), qualityOptions: normalizedVideo.qualityOptions,
         currentQuality: normalizedVideo.currentQuality, currentQualityLabel: normalizedVideo.currentQualityLabel, loading: false
       });
       if (!normalizedVideo.playUrl) throw new Error("当前课节暂未生成播放地址");
       this.updateOutlineProgress(videoId, percent);
-      if (resumeSeconds > 3) setTimeout(() => this.videoContext.seek(resumeSeconds), 600);
+
     } catch (err) {
+      if (requestId !== this.videoLoadRequestId) return;
       const message = err.message || "视频加载失败";
+      if (/视频播放暂未开放/.test(message)) {
+        this.videoContext.stop();
+        this.setData({ videoPlaybackEnabled: false, playUrl: "", hasStartedPlayback: false });
+        return;
+      }
       const authorizationRequired = Number(err && err.statusCode || 0) === 403 || /授权|权限/.test(message);
       this.setData({ loading: false, playUrl: "", authorizationRequired, playbackError: authorizationRequired ? "" : message });
       if (!authorizationRequired) wx.showToast({ title: message, icon: "none" });
-    } finally { wx.hideLoading(); }
+    } finally { if (requestId === this.videoLoadRequestId) wx.hideLoading(); }
+  },
+  requestCasting() {
+    if (!this.data.playUrl) return;
+    const video = this.videoContext || wx.createVideoContext('courseVideo', this);
+    if (typeof video.startCasting !== 'function') {
+      wx.showModal({ title: '投屏', content: '请更新微信后重试，或使用手机系统的无线投屏。手机和电视需连接同一 Wi-Fi。', showCancel: false });
+      return;
+    }
+    try {
+      // Must be called directly in the tap handler to open WeChat's device picker.
+      video.startCasting();
+    } catch (error) {
+      wx.showModal({ title: '投屏', content: '暂时无法打开投屏，请检查手机和电视已连接同一 Wi-Fi 后重试。', showCancel: false });
+    }
   },
   formatDuration(value) {
     const seconds = Number(value || 0);
@@ -103,6 +165,8 @@ Page({
   normalizeNotes(notes) {
     return (notes || []).map(item => ({
       ...item,
+      authorText: item.member_name || '学员',
+      createdText: String(item.created_at || '').replace('T', ' ').slice(0,16),
       timeText: this.formatTimestamp(item.timestamp_seconds || item.timestamp || item.time || 0)
     }));
   },
@@ -142,19 +206,25 @@ Page({
   },
   getProgressPercent(progress, fallbackDuration = 0) {
     if (!progress) return 0;
-    if (progress.completed) return 100;
+    if (progress.completed === true || Number(progress.completed) === 1) return 100;
     const duration = Number(progress.duration || fallbackDuration || 0), current = Number(progress.progress || 0);
     return duration && current ? Math.min(100, Math.round(current / duration * 100)) : 0;
   },
+  getResumeSeconds(progress, duration = 0) {
+    if (!progress || this.getProgressPercent(progress, duration) >= 100) return 0;
+    const seconds = Number(progress.progress || 0);
+    return Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
+  },
   updateOutlineProgress(videoId, progressPercent) {
     const outline = (this.data.outline || []).map(item => String(item.videoId) === String(videoId) ? { ...item, progressPercent } : item);
-    this.setData({ outline, visibleOutline: this.filterOutline(outline, this.data.catalogQuery) });
+    this.setData({ outline });
+    this.refreshCatalog();
   },
   onTimeUpdate(event) {
     const current = Math.floor(event.detail.currentTime || 0);
     const duration = Math.floor(event.detail.duration || this.data.video.duration || 0);
     const percent = duration ? Math.min(100, Math.round(current / duration * 100)) : 0;
-    this.setData({ percent, currentSeconds: current, currentDuration: duration });
+    this.setData({ percent, currentSeconds: current, currentDuration: duration, currentTimeText: this.formatTimestamp(current), durationText: this.formatTimestamp(duration) });
     this.updateOutlineProgress(this.data.videoId, percent);
     if (!this.lastSaveAt || Date.now() - this.lastSaveAt > 15000) {
       this.lastSaveAt = Date.now();
@@ -166,15 +236,62 @@ Page({
     const duration = Math.floor(this.data.currentDuration || this.data.video.duration || 0);
     if (videoId && current && duration) api.saveVideoProgress(videoId, current, duration).catch(() => {});
   },
-  onPause() { this.saveCurrentProgress(); },
-  onHide() { this.saveCurrentProgress(); },
-  onUnload() { this.clearPlayerControlsTimer(); this.saveCurrentProgress(); this.setData({ catalogQuery: "", catalogResultText: "" }); },
-  onVideoError(event) { console.error("课程视频播放失败", event.detail || event); wx.showToast({ title: "课程视频暂时无法播放", icon: "none" }); },
+  onPause() { this.setData({ isPlaying: false }); this.saveCurrentProgress(); },
+  onHide() { this.cancelAutoplay(); this.saveCurrentProgress(); },
+  onUnload() { this.cancelAutoplay(); this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1; this.clearPlayerControlsTimer(); this.saveCurrentProgress(); this.setData({ catalogQuery: "", catalogResultText: "" }); },
+  onVideoError(event) { this.cancelAutoplay(); console.error("课程视频播放失败", event.detail || event); wx.showToast({ title: "课程视频暂时无法播放", icon: "none" }); },
   onEnded() {
     const duration = this.data.currentDuration || this.data.video.duration || 1;
     api.saveVideoProgress(this.data.videoId, duration, duration).catch(() => {});
     this.updateOutlineProgress(this.data.videoId, 100);
-    wx.showToast({ title: "本节课程已完成", icon: "success" });
+    this.setData({ isPlaying: false, currentSeconds: 0, resumeSeconds: 0, percent: 100, currentTimeText: "0:00" });
+    const index = this.data.outline.findIndex(row => String(row.videoId) === String(this.data.videoId));
+    const next = index >= 0 ? this.data.outline[index + 1] : null;
+    this.setData({ lessonEnded: true, showVideoControls: true });
+    if (next) this.startAutoplayCountdown(next);
+    else this.cancelAutoplay();
+  },
+  cancelAutoplay() {
+    if (this.autoplayTimer) clearTimeout(this.autoplayTimer);
+    this.autoplayTimer = null;
+    this.setData({ autoplayCountdown: null });
+  },
+  startAutoplayCountdown(target) {
+    this.cancelAutoplay();
+    this.setData({ autoplayCountdown: { seconds: 5, videoId: target.videoId, name: target.name || '本节课程' }, showVideoControls: true });
+    const tick = () => {
+      const pending = this.data.autoplayCountdown;
+      if (!pending) return;
+      if (pending.seconds > 1) {
+        this.setData({ autoplayCountdown: { ...pending, seconds: pending.seconds - 1 } });
+        this.autoplayTimer = setTimeout(tick, 1000);
+      } else {
+        this.cancelAutoplay();
+        this.setData({ lessonEnded: false });
+        this.loadVideo(target.videoId);
+      }
+    };
+    this.autoplayTimer = setTimeout(tick, 1000);
+  },
+  replayLesson() {
+    this.cancelAutoplay();
+    this.setData({ lessonEnded: false, resumeSeconds: 0, currentSeconds: 0, currentTimeText: '0:00', percent: 0 });
+    this.scrollToPlayer();
+    this.videoContext.seek(0);
+    this.videoContext.play();
+  },
+  async seekToNote(event) {
+    const note = this.data.notes.find(item => String(item.id) === String(event.currentTarget.dataset.id));
+    if (!note) return;
+    const seconds = Math.max(0, Number(note.timestamp_seconds ?? note.timestamp ?? note.time ?? 0) || 0);
+    this.cancelAutoplay();
+    this.setData({ lessonEnded: false });
+    this.scrollToPlayer();
+    if (!this.data.playUrl) await this.loadVideo(this.data.videoId);
+    if (!this.data.playUrl || !this.videoContext) return;
+    const position = this.data.currentDuration ? Math.min(seconds, this.data.currentDuration) : seconds;
+    this.videoContext.seek(position);
+    this.setData({ currentSeconds: position, currentTimeText: this.formatTimestamp(position) });
   },
   requestAuthorization() {
     wx.showModal({
@@ -188,15 +305,20 @@ Page({
   },
   switchVideo(event) {
     const videoId = event.currentTarget.dataset.id;
-    if (String(videoId) !== String(this.data.videoId) || !this.data.playUrl) this.loadVideo(videoId);
+    if (String(videoId) !== String(this.data.videoId) || !this.data.playUrl || this.data.percent >= 100) { this.scrollToPlayer(); this.saveCurrentProgress(); this.loadVideo(videoId); }
+    else this.resumePlayback();
   },
   startCurrentVideo() {
-    if (this.data.videoId) this.loadVideo(this.data.videoId);
+    if (this.data.videoId) { this.scrollToPlayer(); this.loadVideo(this.data.videoId); }
+    else if (this.data.seriesId) this.loadCourse(this.data.seriesId, this.shareOptions && this.shareOptions.videoId);
   },
   resumePlayback() {
+    this.cancelAutoplay();
     if (!this.data.playUrl) return this.startCurrentVideo();
-    const seconds = Number(this.data.resumeSeconds || this.data.currentSeconds || 0);
-    if (seconds > 0) this.videoContext.seek(seconds);
+    this.scrollToPlayer();
+    const completed = this.data.percent >= 100;
+    const seconds = completed ? 0 : Number(this.data.currentSeconds ?? this.data.resumeSeconds ?? 0);
+    if (completed || seconds > 0) this.videoContext.seek(seconds);
     this.videoContext.play();
   },
   filterOutline(outline, keyword) {
@@ -204,17 +326,42 @@ Page({
     if (!query) return outline || [];
     return (outline || []).filter(item => `${item.name || ""}${item.courseName || ""}`.toLowerCase().replace(/\s+/g, "").includes(query));
   },
+  refreshCatalog(focusCurrent = false) {
+    const rows = this.filterOutline(this.data.outline, this.data.catalogQuery);
+    const pageCount = Math.max(1, Math.ceil(rows.length / 50));
+    let page = this.data.catalogPage || 1;
+    if (focusCurrent) {
+      const index = rows.findIndex(row => String(row.videoId) === String(this.data.videoId));
+      if (index >= 0) page = Math.floor(index / 50) + 1;
+    }
+    page = Math.max(1, Math.min(pageCount, page));
+    const start = (page - 1) * 50;
+    this.setData({ catalogPage: page, catalogPageCount: pageCount, catalogTotal: rows.length,
+      catalogFrom: rows.length ? start + 1 : 0, catalogTo: Math.min(rows.length, start + 50),
+      visibleOutline: rows.slice(start, start + 50),
+      catalogResultText: String(this.data.catalogQuery || '').trim() ? `找到 ${rows.length} 节` : '' });
+  },
+  changeCatalogPage(event) {
+    const offset = Number(event.currentTarget.dataset.offset);
+    if (offset !== -1 && offset !== 1) return;
+    const page = Math.max(1, Math.min(this.data.catalogPageCount, this.data.catalogPage + offset));
+    if (page === this.data.catalogPage) return;
+    this.setData({ catalogPage: page });
+    this.refreshCatalog();
+    if (event.currentTarget.dataset.position === 'bottom' && typeof wx.pageScrollTo === 'function') {
+      this.setData({}, () => wx.pageScrollTo({ selector: '#courseCatalog', duration: 0 }));
+    }
+  },
+  scrollToPlayer() {
+    if (!this.data.isPlayerFullscreen && typeof wx.pageScrollTo === 'function') wx.pageScrollTo({ scrollTop: 0, duration: 0 });
+  },
   onCatalogSearch(event) {
-    const catalogQuery = event.detail.value || "";
-    const visibleOutline = this.filterOutline(this.data.outline, catalogQuery);
-    this.setData({
-      catalogQuery,
-      visibleOutline,
-      catalogResultText: String(catalogQuery).trim() ? `找到 ${visibleOutline.length} 节` : ""
-    });
+    this.setData({ catalogQuery: event.detail.value || '', catalogPage: 1 });
+    this.refreshCatalog();
   },
   clearCatalogSearch() {
-    this.setData({ catalogQuery: "", visibleOutline: this.data.outline, catalogResultText: "" });
+    this.setData({ catalogQuery: '', catalogPage: 1 });
+    this.refreshCatalog(true);
   },
   switchPanel(event) { this.setData({ activePanel: event.currentTarget.dataset.panel }); },
   onNoteInput(event) { this.setData({ noteContent: event.detail.value || "" }); },
@@ -251,19 +398,49 @@ Page({
     if (showVideoControls) this.schedulePlayerControlsHide();
     else this.clearPlayerControlsTimer();
   },
-  togglePlayerMenu() {
-    const showPlayerMenu = !this.data.showPlayerMenu;
+  togglePlayerMenu(event) {
+    const menu = event && event.currentTarget.dataset.menu || 'quality';
+    const showPlayerMenu = !this.data.showPlayerMenu || this.data.playerMenu !== menu;
     this.clearPlayerControlsTimer();
-    this.setData({ showPlayerMenu, showVideoControls: true });
+    this.setData({ playerMenu: menu, showPlayerMenu, showVideoControls: true });
     if (!showPlayerMenu) this.schedulePlayerControlsHide();
+  },
+  toggleMirror() { this.setData({ isMirrored: !this.data.isMirrored }); },
+  toggleMute() { this.setData({ isMuted: !this.data.isMuted }); },
+  togglePlayback() {
+    if (!this.videoContext || !this.data.playUrl) return;
+    if (this.data.isPlaying) this.videoContext.pause(); else this.resumePlayback();
+    this.schedulePlayerControlsHide();
+  },
+  seekPlayback(event) {
+    this.cancelAutoplay();
+    this.setData({ lessonEnded: false });
+    if (!this.videoContext || !this.data.currentDuration) return;
+    const seconds = Math.max(0, Math.min(this.data.currentDuration, Number(event.detail.value) || 0));
+    this.videoContext.seek(seconds);
+    this.setData({ currentSeconds: seconds, currentTimeText: this.formatTimestamp(seconds) });
+    this.schedulePlayerControlsHide();
+  },
+  adjacentVideo(event) {
+    const offset = Number(event.currentTarget.dataset.offset);
+    if (offset !== -1 && offset !== 1) return;
+    const index = this.data.outline.findIndex(row => String(row.videoId) === String(this.data.videoId));
+    const target = index >= 0 && this.data.outline[index + offset];
+    if (target) { this.scrollToPlayer(); this.saveCurrentProgress(); this.loadVideo(target.videoId); }
   },
   closePlayerMenu() {
     this.setData({ showPlayerMenu: false });
     this.schedulePlayerControlsHide();
   },
+  requestSmallWindow() {
+    this.saveCurrentProgress();
+    const context = this.videoContext;
+    if (!context || typeof context.requestBackgroundPlayback !== "function") return wx.showToast({ title: "当前微信暂不支持小窗播放", icon: "none" });
+    try { context.requestBackgroundPlayback(); } catch (_) {}
+  },
   requestPlayerFullScreen() {
     this.setData({ showPlayerMenu: false, showVideoControls: true });
-    this.videoContext.requestFullScreen();
+    this.setData({ isPlayerFullscreen: !this.data.isPlayerFullscreen });
     this.schedulePlayerControlsHide();
   },
   setQuality(event) {
@@ -280,12 +457,15 @@ Page({
   },
   setRate(event) {
     const rate = parseFloat(event.currentTarget.dataset.rate);
+    if (!this.data.rateOptions.includes(rate) || !this.videoContext) return;
     this.videoContext.playbackRate(rate);
     this.setData({ playbackRate: rate, showPlayerMenu: false });
     this.schedulePlayerControlsHide();
   },
   onVideoPlay() {
+    this.cancelAutoplay();
+    this.setData({ isPlaying: true, lessonEnded: false });
     if (this.videoContext && this.videoContext.playbackRate) this.videoContext.playbackRate(this.data.playbackRate);
     this.schedulePlayerControlsHide();
   }
-});
+})));

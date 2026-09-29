@@ -1,7 +1,8 @@
+const share = require("../../shared/share");
+const videoFeature = require("../../shared/video-feature");
 const api = require("../../utils/api");
-const runtimeConfig = require("../../shared/runtime-config");
 const { popularityText } = require("../../shared/popularity");
-const { cleanText, contentText } = require("../../shared/review-text");
+const { contentText } = require("../../shared/review-text");
 
 function formatDuration(seconds) {
   const value = Number(seconds || 0);
@@ -10,47 +11,30 @@ function formatDuration(seconds) {
   return mins >= 60 ? `${Math.floor(mins / 60)}小时${mins % 60}分` : `${mins}分钟`;
 }
 
-Page({
+Page(share.withShare("detail", videoFeature.withVideoFeature({
   data: {
-    id: null,
-    tab: "intro",
+    id: null, loadError: "",
     series: {},
     courses: [],
-    authorized: false,
-    reviewMode: !!runtimeConfig.reviewMode
+    authorized: false
   },
 
   onLoad(options) {
-    wx.showShareMenu({ withShareTicket: true });
     this.setData({
       id: options.id
     });
-    this.loadDetail(options.id);
+
   },
 
-  onShareAppMessage() {
-    const series = this.data.series || {};
-    const origin = (runtimeConfig.apiBase || '').replace(/\/api\/mini\/?$/,'');
-    let coverImage = series.cover_image || '';
-    // 相对路径转完整URL
-    if (coverImage && !/^https?:\/\//.test(coverImage)) {
-      coverImage = origin + coverImage;
-    }
-    const memberId = Number(wx.getStorageSync("memberId") || 0);
-    const referralQuery = memberId ? `&ref_member_id=${memberId}` : "";
-    return {
-      title: series.name || '伊娃东方舞内容',
-      path: `pages/detail/detail?id=${this.data.id}${referralQuery}`,
-      imageUrl: coverImage || '/images/logo.png'
-    };
-  },
-
+  onShow() { if (this.data.id) return this.loadDetail(this.data.id); },
+  retryDetail() { return this.loadDetail(this.data.id); },
   async loadDetail(id) {
+    this.setData({ loadError: "" });
     wx.showLoading({ title: "加载中" });
     try {
       const [seriesMeta, courses, auth] = await Promise.all([
-        api.getSeriesMeta(id).catch(() => ({})),
-        api.getSeriesCourses(id).catch(() => []),
+        api.getSeriesMeta(id),
+        api.getSeriesCourses(id),
         api.checkAuthorization(id).catch(() => ({ authorized: false }))
       ]);
       const meta = seriesMeta || {};
@@ -79,17 +63,15 @@ Page({
         authorized
       });
     } catch (err) {
+      this.setData({ series: {}, courses: [], authorized: false, loadError: Number(err.statusCode) === 404 ? "课程已隐藏或下架" : "课程加载失败，请稍后重试" });
       wx.showToast({ title: err.message || "加载失败", icon: "none" });
     } finally {
       wx.hideLoading();
     }
   },
 
-  switchTab(event) {
-    this.setData({ tab: event.currentTarget.dataset.tab });
-  },
-
   openCourse(event) {
+    if (!this.data.videoPlaybackEnabled) return;
     const course = this.data.courses[event.currentTarget.dataset.index];
     if (!course) return;
     const video = (course.videos || [])[0];
@@ -97,50 +79,20 @@ Page({
       wx.showToast({ title: "内容正在整理中", icon: "none" });
       return;
     }
-    wx.navigateTo({
+    videoFeature.navigateTo({
       url: `/pages/player/player?videoId=${video.id}&seriesId=${this.data.id}&courseId=${course.id}`
     });
   },
 
   primaryAction() {
-    if (this.data.reviewMode) {
-      this.showReviewContact();
-      return;
-    }
-    if (this.data.authorized || this.data.series.is_free) {
-      const first = this.data.courses.find(item => item.videos && item.videos.length);
-      if (!first) {
-        wx.showToast({ title: "内容正在整理中", icon: "none" });
-        return;
-      }
-      const video = (first.videos || [])[0];
-      wx.navigateTo({
-        url: `/pages/player/player?videoId=${video.id}&seriesId=${this.data.id}&courseId=${first.id}`
-      });
-      return;
-    }
-    const first = this.data.courses.find(item => item.videos && item.videos.length);
-    if (first) {
-      const video = (first.videos || [])[0];
-      wx.navigateTo({
-        url: `/pages/player/player?videoId=${video.id}&seriesId=${this.data.id}&courseId=${first.id}`
-      });
-      return;
-    }
-    wx.showToast({ title: "内容正在整理中", icon: "none" });
-  },
-
-  showReviewContact() {
-    wx.showModal({
-      title: "内容说明",
-      content: "当前内容用于品牌展示与播放。",
-      confirmText: "知道了",
-      showCancel: false
-    });
+    if (!this.data.videoPlaybackEnabled) return;
+    const index = this.data.courses.findIndex(item => item.videos && item.videos.length);
+    if (index < 0) return wx.showToast({ title: "内容正在整理中", icon: "none" });
+    this.openCourse({ currentTarget: { dataset: { index } } });
   },
 
   onImageError(event) {
     const path = event.currentTarget.dataset.path;
     if (path) this.setData({ [path]: "" });
   }
-});
+})));

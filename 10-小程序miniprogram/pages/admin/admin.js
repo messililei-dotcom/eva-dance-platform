@@ -1,3 +1,4 @@
+const share = require("../../shared/share");
 const api = require("../../utils/api");
 const { cleanText } = require("../../shared/review-text");
 
@@ -13,7 +14,7 @@ const roleText = {
   operator: "运营"
 };
 
-Page({
+Page(share.withShare("admin", {
   data: {
     isAdmin: false,
     admin: {},
@@ -160,4 +161,4 @@ Page({
     const path = event.currentTarget.dataset.path;
     if (path) this.setData({ [path]: "" });
   }
-});
+}));

@@ -1,4 +1,5 @@
 import { jsonError, withDb } from '../_materials';
+import { normalizeCourseCategory } from '@/lib/course-category';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -14,8 +15,9 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const keyword = url.searchParams.get('keyword') || '';
     const status = url.searchParams.get('status') || '';
+    const all = url.searchParams.get('all') === '1';
     const page = Math.max(1, Number(url.searchParams.get('page') || 1));
-    const pageSize = Math.min(100, Math.max(1, Number(url.searchParams.get('pageSize') || 50)));
+    const pageSize = Math.min(1000, Math.max(1, Number(url.searchParams.get('pageSize') || 100)));
 
     return withDb((db) => {
       let where = 'WHERE 1=1';
@@ -28,11 +30,16 @@ export async function GET(request: Request) {
       if (status) { where += ' AND status=?'; params.push(status); }
       
       const total = db.prepare(`SELECT COUNT(*) as total FROM CourseSeries ${where}`).get(...params)?.total || 0;
-      const data = db.prepare(
-        `${SERIES_SELECT} ${where}
-         ORDER BY cs.sort_order, cs.created_at DESC
-         LIMIT ? OFFSET ?`
-      ).all(...params, pageSize, (page - 1) * pageSize);
+      const data = all
+        ? db.prepare(
+          `${SERIES_SELECT} ${where}
+           ORDER BY cs.created_at DESC, cs.id DESC`
+        ).all(...params)
+        : db.prepare(
+          `${SERIES_SELECT} ${where}
+           ORDER BY cs.created_at DESC, cs.id DESC
+           LIMIT ? OFFSET ?`
+        ).all(...params, pageSize, (page - 1) * pageSize);
 
       return Response.json({ success: true, data, total, page, pageSize });
     });
@@ -58,7 +65,7 @@ export async function POST(request: Request) {
       ).run(
         name, body.subtitle || '', body.description || '', body.rich_description || '', body.cover_image || '',
         body.teacher || '', Number(body.price || 0), Number(body.promo_price || 0), body.is_free ? 1 : 0,
-        body.category || '', Number(body.trial_count || 0), Number(maxSort?.ms || 0) + 1,
+        normalizeCourseCategory(body.category, `${name} ${body.subtitle || ''} ${body.source_type || ''}`), Number(body.trial_count || 0), Number(maxSort?.ms || 0) + 1,
         body.share_text || '', status
       );
       const data = db.prepare(`${SERIES_SELECT} WHERE cs.id=?`).get(result.lastInsertRowid);

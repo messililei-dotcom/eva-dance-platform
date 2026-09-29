@@ -82,8 +82,9 @@ export async function GET() {
   const regionMap = new Map<string, Set<string>>();
   defaults.forEach(item => regionMap.set(item.province, new Set(item.cities)));
 
-  const db = openAdminDb({ readonly: true });
+  let db: ReturnType<typeof openAdminDb> | undefined;
   try {
+    db = openAdminDb({ readonly: true });
     const rows = db.prepare(`
       SELECT province, city
       FROM Member
@@ -111,12 +112,15 @@ export async function GET() {
         }
       }
     });
-
-    return Response.json(Array.from(regionMap.entries()).map(([province, cities]) => ({
-      province,
-      cities: Array.from(cities).sort(),
-    })));
+  } catch (error) {
+    // 基础省市来自静态数据；数据库仅用于补充历史自定义地区，失败不能让表单无数据可选。
+    console.warn('补充学员历史地区失败，已使用基础省市数据', error);
   } finally {
-    db.close();
+    db?.close();
   }
+
+  return Response.json(Array.from(regionMap.entries()).map(([province, cities]) => ({
+    province,
+    cities: Array.from(cities).sort(),
+  })));
 }

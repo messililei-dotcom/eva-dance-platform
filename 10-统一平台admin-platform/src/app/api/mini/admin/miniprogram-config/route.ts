@@ -1,3 +1,5 @@
+import { getMiniFeatures, setMiniVideoPlayback } from '@/lib/server/mini-features';
+
 import { canManageMini, jsonError, withDb } from '../../_helpers';
 
 function vodStorageOrigin() {
@@ -12,7 +14,7 @@ export async function GET(request: Request) {
     return withDb((db) => {
       if (!canManageMini(db, request)) return jsonError('无权限访问小程序管理配置', 403);
       const queryStart = performance.now();
-      const series = db.prepare(`SELECT *, (SELECT COUNT(*) FROM OnlineCourse WHERE series_id=CourseSeries.id) as course_count FROM CourseSeries WHERE status='published' ORDER BY sort_order, created_at DESC`).all();
+      const series = db.prepare(`SELECT *, (SELECT COUNT(*) FROM OnlineCourse WHERE series_id=CourseSeries.id AND status='published') as course_count FROM CourseSeries WHERE status='published' ORDER BY sort_order, created_at DESC`).all();
       const courses = db.prepare('SELECT * FROM OnlineCourse ORDER BY sort_order, created_at DESC').all();
       const videos = db.prepare('SELECT * FROM CourseVideo').all();
       const activeAuthorizations = db.prepare("SELECT COUNT(*) as cnt FROM CourseAuthorization WHERE status='active'").get() as { cnt: number };
@@ -74,6 +76,7 @@ export async function GET(request: Request) {
       return Response.json({
         success: true,
         data: {
+          features: getMiniFeatures(db),
           stats,
           apps: [app],
           pages: pageDefinitions,
@@ -112,5 +115,18 @@ export async function GET(request: Request) {
     });
   } catch (err: any) {
     return jsonError(err.message);
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    return withDb(db => {
+      if (!canManageMini(db, request)) return jsonError('无权限修改小程序配置', 403);
+      if (!body || typeof body.videoPlaybackEnabled !== 'boolean') return jsonError('视频开关必须为布尔值', 400);
+      return Response.json({ success: true, data: setMiniVideoPlayback(db, body.videoPlaybackEnabled) });
+    });
+  } catch {
+    return jsonError('保存功能配置失败', 500);
   }
 }

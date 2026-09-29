@@ -27,9 +27,6 @@
           <text>{{item.lessonText}}</text>
           <text>{{item.learnerText}}</text>
         </view>
-        <view class="course-bottom">
-          <button class="ghost-btn">查看详情</button>
-        </view>
       </view>
     </view>
   </view>

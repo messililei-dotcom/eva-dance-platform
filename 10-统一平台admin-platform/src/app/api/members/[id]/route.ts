@@ -1,26 +1,8 @@
 import { cleanText, hasAuth, openTrainingDb, syncMemberDenormalizedFields, today, unauthorized } from '../../training-db';
+import { upsertPhoneMember } from '../../mini/_auth';
 import { deleteMemberAvatarFile } from '../_avatar-files';
-import { openAdminDb } from '@/lib/server/admin-db';
 
 export const dynamic = 'force-dynamic';
-
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const routeParams = await params;
-  if (!hasAuth(request)) return unauthorized();
-  const db = openAdminDb({ readonly: true });
-  try {
-    const member = db.prepare(`
-      SELECT *
-      FROM Member
-      WHERE id = ? AND COALESCE(status, 'active') != 'deleted'
-      LIMIT 1
-    `).get(routeParams.id);
-    if (!member) return Response.json({ success: false, error: '学员不存在' }, { status: 404 });
-    return Response.json({ success: true, data: member });
-  } finally {
-    db.close();
-  }
-}
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const routeParams = await params;
@@ -34,19 +16,23 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (!current) return { changes: 0 };
       const name = cleanText(body.name, current.name);
       if (!name) throw new Error('请填写学员姓名');
+      const phone = cleanText(body.phone ?? current.phone);
+      const target = phone
+        ? upsertPhoneMember(db, phone, { sourceMemberId: current.id, source: 'admin_member_edit' })
+        : current;
+      const targetId = target?.id || routeParams.id;
 
       const info = db.prepare(`
         UPDATE Member
-        SET name = ?, phone = ?, gender = ?, birthday = ?, level = ?, register_date = ?,
+        SET name = ?, phone = ?, gender = ?, birthday = ?, register_date = ?,
             country = ?, province = ?, city = ?, foreignRegion = ?, address = ?, remark = ?, avatar = ?,
             status = ?
         WHERE id = ?
       `).run(
         name,
-        cleanText(body.phone ?? current.phone),
+        phone,
         cleanText(body.gender ?? current.gender, '女'),
         cleanText(body.birthday ?? current.birthday),
-        cleanText(body.level ?? current.level, '普通学员'),
         cleanText(body.register_date ?? body.registerDate ?? current.register_date, today()),
         cleanText(body.country ?? current.country, '中国'),
         cleanText(body.province ?? current.province),
@@ -56,12 +42,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         cleanText(body.remark ?? current.remark),
         cleanText(body.avatar ?? current.avatar),
         cleanText(body.status ?? current.status, 'active'),
-        routeParams.id,
+        targetId,
       );
       if (cleanText(body.previousAvatar) && cleanText(body.previousAvatar) !== cleanText(body.avatar)) {
         replacedAvatarPath = cleanText(body.previousAvatar);
       }
-      syncMemberDenormalizedFields(db, routeParams.id);
+      syncMemberDenormalizedFields(db, targetId);
       return info;
     })();
     if (!result.changes) return Response.json({ success: false, error: '学员不存在' }, { status: 404 });

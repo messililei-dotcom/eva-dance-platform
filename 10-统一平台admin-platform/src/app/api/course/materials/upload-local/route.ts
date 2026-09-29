@@ -1,5 +1,6 @@
 import fs from 'fs';
 import fsp from 'fs/promises';
+import os from 'os';
 import path from 'path';
 import crypto from 'crypto';
 import { Readable } from 'stream';
@@ -94,7 +95,7 @@ async function parseUploadRequest(request: Request) {
   const fields = new Map<string, string>();
   const files: ParsedUploadFile[] = [];
   const tempFiles: string[] = [];
-  const tempRoot = path.join(MATERIAL_CENTER_ROOT, '_tmp');
+  const tempRoot = path.join(os.tmpdir(), 'admin-platform-material-uploads');
   await fsp.mkdir(tempRoot, { recursive: true });
 
   const contentLength = Number(request.headers.get('content-length') || 0);
@@ -349,7 +350,10 @@ export async function POST(request: Request) {
           const dir = path.join(MATERIAL_CENTER_ROOT, String(folderId), type);
           const isVideo = type === 'video';
           const vodConfig = isVideo ? getVodConfigStatus() : null;
-          const videoMustUseVod = Boolean(isVideo && vodConfig?.ready);
+          if (isVideo && !vodConfig?.ready) {
+            throw httpError(`视频素材必须上传到 VOD，当前 VOD 未配置完整（缺少 ${vodConfig?.missingRequired.join(' / ') || 'VOD 配置'}）`, 503);
+          }
+          const videoMustUseVod = Boolean(isVideo);
           await fsp.mkdir(dir, { recursive: true });
 
           const diskName = videoMustUseVod ? originalName : await uniqueDiskName(dir, originalName);
@@ -399,11 +403,7 @@ export async function POST(request: Request) {
                 warnings.push({ file: originalName, message: formatWarning });
               }
             } else {
-              warnings.push({
-                file: originalName,
-                message: `VOD 未配置，已保留本地素材（缺少 ${vodConfig?.missingRequired.join(' / ')}）${formatWarning ? `；${formatWarning}` : ''}`,
-              });
-              transcodeStatus = DIRECT_PLAYABLE_VIDEO_EXTENSIONS.has(path.extname(originalName).toLowerCase()) ? 'success' : 'failed';
+              throw httpError('视频素材必须上传到 VOD，不能保存到系统硬盘', 503);
             }
           }
 
@@ -436,7 +436,7 @@ export async function POST(request: Request) {
             transcode_status: transcodeStatus,
           });
 
-          // 记录待后台上传的 VOD 任务
+          // 视频素材必须进入 VOD；这里只记录待上传任务，不生成本地视频素材。
           if (needsVodUpload) {
             pendingVodTasks.push({
               materialId,
@@ -465,17 +465,19 @@ export async function POST(request: Request) {
               title: task.originalName,
             });
             db.prepare(
-              "UPDATE Material SET vod_video_id=?, vod_media_id=?, transcode_status='success', updated_at=datetime('now','localtime') WHERE id=?"
-            ).run(uploaded.videoId, uploaded.videoId, task.materialId);
+              "UPDATE Material SET file_path=?, file_url='', vod_video_id=?, vod_media_id=?, transcode_status='processing', updated_at=datetime('now','localtime') WHERE id=?"
+            ).run(`vod:${uploaded.videoId}`, uploaded.videoId, uploaded.videoId, task.materialId);
             uploadedVodIds.push(uploaded.videoId);
             if (task.tempOnly) {
               await fsp.unlink(task.absolutePath).catch(() => {});
             }
             const item = created.find(row => row.id === task.materialId);
             if (item) {
+              item.file_path = `vod:${uploaded.videoId}`;
+              item.file_url = '';
               item.vod_video_id = uploaded.videoId;
               item.vod_media_id = uploaded.videoId;
-              item.transcode_status = 'success';
+              item.transcode_status = 'processing';
             }
             console.log(`[VOD] 上传完成: ${task.originalName} → ${uploaded.videoId}`);
           } catch (vodErr: any) {
@@ -491,16 +493,6 @@ export async function POST(request: Request) {
               });
               continue;
             }
-            const localStatus = DIRECT_PLAYABLE_VIDEO_EXTENSIONS.has(path.extname(task.originalName).toLowerCase()) ? 'success' : 'failed';
-            db.prepare(
-              "UPDATE Material SET transcode_status=?, updated_at=datetime('now','localtime') WHERE id=?"
-            ).run(localStatus, task.materialId);
-            const item = created.find(row => row.id === task.materialId);
-            if (item) item.transcode_status = localStatus;
-            warnings.push({
-              file: task.originalName,
-              message: `VOD 上传失败，已保留本地素材：${cleanText(vodErr?.message, '请稍后重新同步 VOD')}`,
-            });
           }
         }
       }

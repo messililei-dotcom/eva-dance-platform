@@ -31,16 +31,21 @@
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/**/*.ts",
     ".next-build/types/**/*.ts",
-    "/private/tmp/eva-admin-next-build/types/**/*.ts",
     ".next-build/dev/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    ".next/dev/dev/types/**/*.ts"
+    ".next-build/types/**/*.ts",
+    ".next-build/dev/types/**/*.ts",
+    ".next-legacy-cleanup-20260908/types/**/*.ts",
+    ".next-legacy-cleanup-20260908/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "backups/**/*",
+    "deploy-backups/**/*",
+    "local-backups/**/*",
+    "releases/**/*"
   ]
 }

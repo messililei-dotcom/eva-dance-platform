@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const PUBLIC_API_PATHS = [
   '/api/login',
   '/api/mini/phone-login',
+  '/api/mini/silent-login',
   '/api/mini/student-login',
   '/api/mini/send-code',
   '/api/mini/student-login-v2',
@@ -13,6 +14,7 @@ const PUBLIC_API_PATHS = [
   '/api/courses/cover-image',
   '/api/certificates/verify',
   '/api/inbox/jobs/run',
+  '/api/public/enroll',
 ];
 
 const PUBLIC_API_PREFIXES = [
@@ -125,6 +127,7 @@ async function validateTokenForPath(pathname: string, token: string): Promise<'o
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const apiPath = pathname.replace(/^\/(?:local-api|legacy-student-api)(?=\/)/, '/api');
   const host = request.headers.get('host')?.split(':')[0]?.toLowerCase() || '';
 
   if (host === 'api.swod.com.cn' && pathname === '/') {
@@ -141,7 +144,7 @@ export async function middleware(request: NextRequest) {
       response.headers.delete('Pragma');
       response.headers.delete('Expires');
       response.headers.delete('Vary');
-    } else if (pathname.startsWith('/api')) {
+    } else if (apiPath.startsWith('/api')) {
       response.headers.set('Cache-Control', 'private, no-store, no-cache, max-age=0, s-maxage=0');
       response.headers.set('Pragma', 'no-cache');
       response.headers.set('Expires', '0');
@@ -158,12 +161,12 @@ export async function middleware(request: NextRequest) {
     return response;
   };
 
-  if (!pathname.startsWith('/api')) {
+  if (!apiPath.startsWith('/api')) {
     return withRobotsHeader(NextResponse.next());
   }
 
   // 公开端点放行
-  if (isPublicApiPath(pathname)) {
+  if (isPublicApiPath(apiPath)) {
     return withRobotsHeader(NextResponse.next());
   }
 
@@ -177,7 +180,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // 所有受保护接口必须在统一入口验证 HMAC，route handler 的二次校验作为纵深防御。
-  const tokenState = await validateTokenForPath(pathname, token);
+  const tokenState = await validateTokenForPath(apiPath, token);
   if (tokenState === 'expired') {
     return withRobotsHeader(NextResponse.json(
       { success: false, message: '登录已过期，请重新登录', error: 'token_expired' },

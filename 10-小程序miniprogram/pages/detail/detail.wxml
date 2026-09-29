@@ -1,3 +1,5 @@
+<view wx:if="{{loadError}}" class="page"><view class="empty card">{{loadError}}<button bindtap="retryDetail">重新加载</button></view></view>
+<block wx:else>
 <view class="page detail-page">
   <view class="hero-card card">
     <view class="cover">
@@ -13,31 +15,20 @@
         <text>持续更新</text>
         <text>{{series.popularityText}}</text>
       </view>
-      <view class="auth ok">已确认用户可播放完整内容</view>
+      <view wx:if="{{videoPlaybackEnabled && authorized}}" class="auth ok">已确认用户可播放完整内容</view>
     </view>
   </view>
 
-  <view class="tabs">
-    <view class="tab {{tab === 'intro' ? 'active' : ''}}" bindtap="switchTab" data-tab="intro">介绍</view>
-    <view class="tab {{tab === 'lessons' ? 'active' : ''}}" bindtap="switchTab" data-tab="lessons">内容列表</view>
-  </view>
-
-  <view wx:if="{{tab === 'intro'}}" class="panel card">
+  <view class="panel card">
     <view class="panel-title">内容介绍</view>
     <view class="desc">{{series.description || '伊娃东方舞内容展示，呈现东方舞美学、舞台表达与作品风格。'}}</view>
-    <view class="stage-list">
-      <view>东方舞美学</view>
-      <view>舞台表达</view>
-      <view>作品风格</view>
-      <view>舞感表达</view>
-      <view>组合展示</view>
-      <view>舞台编舞</view>
-    </view>
+
   </view>
 
-  <view wx:if="{{tab === 'lessons'}}" class="lesson-list">
+  <view class="lesson-list">
+    <view class="panel-title">课程目录</view>
     <view wx:if="{{courses.length}}">
-      <view class="lesson card" wx:for="{{courses}}" wx:key="id" bindtap="openCourse" data-index="{{index}}">
+      <view class="lesson card" wx:for="{{courses}}" wx:key="id" bindtap="{{videoPlaybackEnabled ? 'openCourse' : ''}}" data-index="{{index}}">
         <view class="lesson-num">{{index + 1}}</view>
         <view class="lesson-main">
           <view class="lesson-title">{{item.name}}</view>
@@ -48,8 +39,10 @@
     <view wx:else class="empty card">内容正在整理中。</view>
   </view>
 
-  <view class="bottom-bar">
+  <view wx:if="{{videoPlaybackEnabled}}" class="bottom-bar">
     <view class="bottom-price">内容播放</view>
     <button class="primary-btn" bindtap="primaryAction">播放内容</button>
   </view>
 </view>
+
+</block>

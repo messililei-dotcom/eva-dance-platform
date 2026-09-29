@@ -2,10 +2,26 @@ import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { App as AntdApp, ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import { KeyboardEnterSubmit } from '@/components/keyboard-enter-submit';
+import { PwaRegister } from '@/components/pwa-register';
 import { AuthProvider } from '@/lib/auth-context';
 import '@/styles/globals.css';
 
 export const metadata = {
+  title: {
+    default: '伊娃东方舞 · 数字化运营平台',
+    template: '%s · 伊娃东方舞',
+  },
+  description: '伊娃东方舞管理员专用数字化运营平台',
+  applicationName: '伊娃管理端',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent' as const,
+    title: '伊娃管理端',
+  },
+  formatDetection: {
+    telephone: false,
+  },
   robots: {
     index: false,
     follow: false,
@@ -25,11 +41,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-CN">
       <head>
-        <title>伊娃东方舞 · 数字化运营平台</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#07172D" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="shortcut icon" href="/favicon.png" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon-pwa.png" />
       </head>
       <body style={{ margin: 0 }}>
         <AntdRegistry>
@@ -85,6 +102,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             <AntdApp>
               <AuthProvider>
+                <PwaRegister />
                 <KeyboardEnterSubmit />
                 {children}
               </AuthProvider>

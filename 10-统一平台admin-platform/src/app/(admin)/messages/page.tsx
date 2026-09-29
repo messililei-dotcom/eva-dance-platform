@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { App, Button, Card, Col, Form, Input, Row, Select, Space, Statistic, Table, Tag, Typography } from 'antd';
-import { NotificationOutlined, ReloadOutlined, SendOutlined } from '@ant-design/icons';
+import { App, Button, Card, Col, Form, Input, Row, Select, Space, Statistic, Tag, Typography } from 'antd';
+import { NotificationOutlined, PhoneOutlined, ReloadOutlined, SendOutlined } from '@ant-design/icons';
 import { api } from '@/lib/api';
+import { Table } from '@/components/adaptive-table';
 
 const { Title, Text } = Typography;
 
@@ -17,18 +18,35 @@ type AnnouncementRow = {
   unread_count: number;
 };
 
+type StaffMessageRow = {
+  id: number;
+  title: string;
+  name: string;
+  phone: string;
+  interest: string;
+  course_id: number;
+  course_name: string;
+  status: 'unread' | 'read';
+  created_at: string;
+};
+
 export default function MessagesAdminPage() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [rows, setRows] = useState<AnnouncementRow[]>([]);
+  const [staffMessages, setStaffMessages] = useState<StaffMessageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get('/inbox/announcements');
-      setRows(response.data?.data || []);
+      const [announcementsResponse, staffResponse] = await Promise.all([
+        api.get('/inbox/announcements'),
+        api.get('/inbox/staff'),
+      ]);
+      setRows(announcementsResponse.data?.data || []);
+      setStaffMessages(staffResponse.data?.data || []);
     } catch (error: any) {
       message.error(error?.response?.data?.error || '公告记录加载失败');
     } finally {
@@ -69,8 +87,45 @@ export default function MessagesAdminPage() {
     <div>
       <Space direction="vertical" size={2} style={{ marginBottom: 16 }}>
         <Title level={2} style={{ margin: 0 }}>站内消息</Title>
-        <Text type="secondary">发送系统公告，查看投递与未读情况，手动执行课程提醒任务。</Text>
+        <Text type="secondary">接收官网咨询报名，发送系统公告，并查看消息投递情况。</Text>
       </Space>
+
+      <Card
+        title={<Space><PhoneOutlined />免费咨询报名</Space>}
+        extra={<Button icon={<ReloadOutlined />} onClick={load}>刷新</Button>}
+        style={{ marginBottom: 16 }}
+        styles={{ body: { padding: 0 } }}
+      >
+        <Table
+          rowKey="id"
+          loading={loading}
+          dataSource={staffMessages}
+          pagination={{ pageSize: 8 }}
+          locale={{ emptyText: '暂时没有新的咨询报名' }}
+          columns={[
+            {
+              title: '咨询人',
+              dataIndex: 'name',
+              render: (value, row) => (
+                <Space direction="vertical" size={0}>
+                  <Space size={6}>
+                    <Text strong>{value}</Text>
+                    {row.status === 'unread' && <Tag color="red">未读</Tag>}
+                  </Space>
+                  <Text type="secondary">{row.course_name || row.interest}</Text>
+                </Space>
+              ),
+            },
+            {
+              title: '手机号',
+              dataIndex: 'phone',
+              width: 150,
+              render: value => <a href={`tel:${value}`}>{value}</a>,
+            },
+            { title: '提交时间', dataIndex: 'created_at', width: 170 },
+          ]}
+        />
+      </Card>
 
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={9}>

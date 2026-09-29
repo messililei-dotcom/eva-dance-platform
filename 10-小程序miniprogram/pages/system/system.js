@@ -1,3 +1,5 @@
+const share = require("../../shared/share");
+const videoFeature = require("../../shared/video-feature");
 const api = require("../../utils/api");
 const { popularityText } = require("../../shared/popularity");
 const { cleanText, contentText } = require("../../shared/review-text");
@@ -50,7 +52,7 @@ function normalizeCourse(item) {
   };
 }
 
-Page({
+Page(share.withShare("system", videoFeature.withVideoFeature({
   data: {
     tabs,
     activeTab: "all",
@@ -59,8 +61,8 @@ Page({
     courses: []
   },
 
-  onLoad() {
-    this.loadCourses();
+  onShow() {
+    return this.loadCourses();
   },
 
   async loadCourses() {
@@ -95,11 +97,11 @@ Page({
   },
 
   goDetail(event) {
-    wx.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}` });
+    videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}` });
   },
 
   onImageError(event) {
     const path = event.currentTarget.dataset.path;
     if (path) this.setData({ [path]: "" });
   }
-});
+})));

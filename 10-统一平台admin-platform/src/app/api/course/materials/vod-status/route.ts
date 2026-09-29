@@ -46,7 +46,15 @@ export async function POST(request: Request) {
       }
 
       const vod_sync = await syncVodMaterials(db, rows, { limit, repairStaleUploads });
-      return Response.json({ success: true, ...vod_sync, imported: vod_import.imported, import_checked: vod_import.checked, import_errors: vod_import.errors });
+      return Response.json({
+        success: true,
+        ...vod_sync,
+        imported: vod_import.imported,
+        claimed: vod_import.claimed || 0,
+        repaired: vod_import.repaired || 0,
+        import_checked: vod_import.checked,
+        import_errors: vod_import.errors,
+      });
     });
   } catch (err: any) {
     return jsonError(err?.message || 'VOD 状态同步失败');

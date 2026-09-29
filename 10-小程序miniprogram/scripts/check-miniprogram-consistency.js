@@ -28,7 +28,6 @@ const popularityJs = read("shared/popularity.js");
 const playerJs = read("pages/player/player.js");
 const playerWxml = read("pages/player/player.wxml");
 const profileWxml = read("pages/profile/profile.wxml");
-const officialWxml = read("pages/official/official.wxml");
 const runtimeConfigJs = read("shared/runtime-config.js");
 const websiteEcosystem = readWorkspace("02-官方网站工程设计/官方网站/ecosystem.config.js");
 const adminEcosystem = readWorkspace("10-统一平台admin-platform/ecosystem.config.js");
@@ -95,8 +94,8 @@ const checks = [
     message: "线下课需要接入课次、预约、取消和签到核销接口"
   },
   {
-    ok: !appJson.includes("pages/detail/detail"),
-    message: "小程序不应注册课程详情页"
+    ok: appJson.includes("pages/detail/detail"),
+    message: "视频关闭时需要注册图文课程详情页"
   },
   {
     ok: !homeJs.includes("Math.random") && !homeJs.includes("shuffle("),
@@ -128,10 +127,10 @@ const checks = [
     message: "个人中心连接失败后需要提供重新连接入口"
   },
   {
-    ok: !reviewMode && !apiJs.includes("REVIEW_VIDEO_DISABLED") && !playerJs.includes("reviewMode")
-      && playerWxml.includes("<video") && officialWxml.includes("<web-view")
-      && appJson.includes('"pages/profile/profile"') && appJson.includes('"pages/courses/courses"'),
-    message: "发布版必须开放视频播放，并与手机版官网保持同源展示"
+    ok: !reviewMode && apiJs.includes("getFeatures") && playerJs.includes("videoFeature.enabled")
+      && playerWxml.includes("<video")
+      && appJson.includes('"pages/profile/profile"'),
+    message: "发布版保留播放器能力，由后台功能配置控制是否开放"
   }
 ];
 

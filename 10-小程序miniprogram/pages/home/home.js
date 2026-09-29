@@ -1,3 +1,5 @@
+const share = require("../../shared/share");
+const videoFeature = require("../../shared/video-feature");
 const api = require("../../utils/api");
 const { popularityText } = require("../../shared/popularity");
 const { cleanText } = require("../../shared/review-text");
@@ -33,13 +35,9 @@ function filterRows(list, keyword) {
   return list.filter(item => normalizeKeyword([item.title, item.meta, item.category, item.teacher, item.description].filter(Boolean).join(" ")).includes(query));
 }
 
-Page({
+Page(share.withShare("home", videoFeature.withVideoFeature({
   data: { loading: true, carouselCourses: [], allCourseRows: [], searchableCourseRows: [], courseRows: [], searchFocused: false, searchKeyword: "", searchCountText: "" },
-  onLoad() { wx.showShareMenu({ withShareTicket: true }); this.loadHomeSections(); },
-  onShareAppMessage() {
-    const memberId = Number(wx.getStorageSync("memberId") || 0);
-    return { title: "伊娃东方舞线上学院", path: memberId ? `pages/home/home?ref_member_id=${memberId}` : "pages/home/home", imageUrl: "/images/logo.png" };
-  },
+  onShow() { return this.loadHomeSections(); },
   async loadHomeSections() {
     try {
       const list = await api.getSeriesList().catch(() => []);
@@ -57,7 +55,7 @@ Page({
       wx.showToast({ title: err.message || "加载失败", icon: "none" });
     }
   },
-  goSystemCourses() { wx.navigateTo({ url: "/pages/system/system" }); },
+  goSystemCourses() { videoFeature.navigateTo({ url: "/pages/system/system" }); },
   onSearchInput(event) {
     const keyword = event.detail.value || "";
     const rows = normalizeKeyword(keyword) ? filterRows(this.data.searchableCourseRows, keyword) : this.data.allCourseRows;
@@ -76,10 +74,6 @@ Page({
     this.setData({ searchFocused: false });
     wx.showToast({ title: this.data.searchCountText || "未找到课程", icon: "none" });
   },
-  goMyCourses() { wx.navigateTo({ url: "/pages/courses/courses" }); },
-  openOfficialHome() { wx.navigateTo({ url: "/pages/official/official" }); },
-  goCard(event) { wx.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}` }); },
-  openBrand() { wx.showModal({ title: "伊娃东方舞", content: "小程序课程名称、封面、价格、课时、排序与线上学院后台保持一致。", showCancel: false }); },
-  goPractice() { wx.navigateTo({ url: "/pages/practice/practice" }); },
+  goCard(event) { videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}` }); },
   onImageError(event) { const path = event.currentTarget.dataset.path; if (path) this.setData({ [path]: "" }); }
-});
+})));

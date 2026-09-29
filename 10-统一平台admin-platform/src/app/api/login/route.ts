@@ -1,11 +1,12 @@
 import { isLocalAuthEnabled, localLogin } from '../_local-auth';
+import { safelyRecordAdminAudit } from '@/lib/server/admin-audit';
 
 export const dynamic = 'force-dynamic';
 
 const backendBase = process.env.ADMIN_PLATFORM_BACKEND_URL || 'http://127.0.0.1:3000/api';
 
 // 登录频率限制：基于IP，5次失败后锁定15分钟
-const loginRateLimitMap = new Map<string, { count: number; lockUntil: number }>();
+const loginRateLimitMap = new Map<string, { count: number; lockUntil: number; windowUntil: number }>();
 const LOGIN_MAX_ATTEMPTS = 5;
 const LOGIN_LOCK_MINUTES = 15;
 
@@ -19,7 +20,7 @@ function checkLoginRateLimit(ip: string): { allowed: boolean; remainingMinutes?:
       return { allowed: false, remainingMinutes };
     }
     // 锁定已过期，重置计数
-    if (now >= record.lockUntil) {
+    if (now >= (record.lockUntil || record.windowUntil)) {
       loginRateLimitMap.delete(ip);
     }
   }
@@ -29,12 +30,13 @@ function checkLoginRateLimit(ip: string): { allowed: boolean; remainingMinutes?:
 
 function recordLoginFailure(ip: string) {
   const now = Date.now();
-  const record = loginRateLimitMap.get(ip) || { count: 0, lockUntil: 0 };
+  const record = loginRateLimitMap.get(ip) || { count: 0, lockUntil: 0, windowUntil: now + LOGIN_LOCK_MINUTES * 60000 };
 
   // 如果锁定已过期，重置
-  if (now >= record.lockUntil) {
+  if (now >= (record.lockUntil || record.windowUntil)) {
     record.count = 0;
     record.lockUntil = 0;
+    record.windowUntil = now + LOGIN_LOCK_MINUTES * 60000;
   }
 
   record.count += 1;
@@ -55,11 +57,11 @@ function clientIp(request: Request): string {
 setInterval(() => {
   const now = Date.now();
   Array.from(loginRateLimitMap.entries()).forEach(([ip, record]) => {
-    if (now >= record.lockUntil) {
+    if (now >= (record.lockUntil || record.windowUntil)) {
       loginRateLimitMap.delete(ip);
     }
   });
-}, 5 * 60 * 1000);
+}, 5 * 60 * 1000).unref();
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
@@ -85,6 +87,7 @@ export async function POST(request: Request) {
   if (localPayload) {
     // 登录成功后清除该IP的失败记录
     loginRateLimitMap.delete(ip);
+    safelyRecordAdminAudit({ actor: localPayload.user.username, kind: 'security', method: 'POST', path: '/login', status: 200, label: '管理员登录', request });
     return Response.json(localPayload, {
       headers: {
         'Set-Cookie': `token=${localPayload.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`,
@@ -94,6 +97,11 @@ export async function POST(request: Request) {
 
   // 本地登录失败，记录失败次数
   recordLoginFailure(ip);
+
+  if (isLocalAuthEnabled()) {
+    safelyRecordAdminAudit({ actor: username, kind: 'security', method: 'POST', path: '/login', status: 401, label: '管理员登录', request, dedupeSeconds: 10 });
+    return Response.json({ error: '账号或密码错误' }, { status: 401 });
+  }
 
   // 尝试后端转发
   try {
@@ -107,6 +115,7 @@ export async function POST(request: Request) {
 
     if (!backendRes.ok) {
       recordLoginFailure(ip);
+      safelyRecordAdminAudit({ actor: username, kind: 'security', method: 'POST', path: '/login', status: backendRes.status, label: '管理员登录', request, dedupeSeconds: 10 });
       return Response.json(
         { error: payload.error || payload.message || '登录失败，请检查账号和密码' },
         { status: backendRes.status },
@@ -119,9 +128,11 @@ export async function POST(request: Request) {
 
     // 登录成功后清除该IP的失败记录
     loginRateLimitMap.delete(ip);
+    safelyRecordAdminAudit({ actor: String(payload.user.username || payload.user.name || username), kind: 'security', method: 'POST', path: '/login', status: 200, label: '管理员登录', request });
     return Response.json(payload);
   } catch {
     recordLoginFailure(ip);
+    safelyRecordAdminAudit({ actor: username, kind: 'security', method: 'POST', path: '/login', status: 401, label: '管理员登录', request, dedupeSeconds: 10 });
     return Response.json({ error: '账号或密码错误' }, { status: 401 });
   }
 }

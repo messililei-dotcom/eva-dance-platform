@@ -1,4 +1,5 @@
 import { cleanText, hasAuth, jsonError, openTrainingDb, toNumber, today, unauthorized } from '../../training-db';
+import { recalculateMemberGrowth, reconcileOfflineCheckin, reverseDeletedSource } from '@/lib/server/student-growth';
 import { createConsumeMessage, createPersonalMessage } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       const payment = db.prepare('SELECT * FROM Payment WHERE id = ?').get(current.paymentId);
       if (!payment) throw new Error('缴费记录不存在');
       const restored = toNumber(payment.remainingSessions) + toNumber(current.count);
-      if (restored < nextCount) throw new Error('剩余课次不足，无法调整核销次数');
+      if (restored < nextCount) throw new Error('剩余课时不足，无法调整核销次数');
       const remainingAfter = restored - nextCount;
       const info = db.prepare(`
         UPDATE ConsumeRecord
@@ -31,6 +32,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         routeParams.id,
       );
       db.prepare('UPDATE Payment SET remainingSessions = ? WHERE id = ?').run(remainingAfter, payment.id);
+      reconcileOfflineCheckin(db, Number(routeParams.id));
       createPersonalMessage(db, Number(current.memberId), {
         type: 'consume',
         title: '核销记录已调整',
@@ -60,10 +62,12 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const result = db.transaction(() => {
       const current = db.prepare('SELECT * FROM ConsumeRecord WHERE id = ?').get(routeParams.id);
       if (!current) return { changes: 0 };
-      const payment = db.prepare('SELECT remainingSessions FROM Payment WHERE id=?').get(current.paymentId) as any;
+      const payment = db.prepare('SELECT remainingSessions FROM Payment WHERE id = ?').get(current.paymentId);
       const remainingAfter = toNumber(payment?.remainingSessions) + toNumber(current.count);
       db.prepare('UPDATE Payment SET remainingSessions = ? WHERE id = ?').run(remainingAfter, current.paymentId);
+      reverseDeletedSource(db, Number(current.memberId), 'consume_record', current.id, '撤销线下核销并冲正经验');
       const deleted = db.prepare('DELETE FROM ConsumeRecord WHERE id = ?').run(routeParams.id);
+      recalculateMemberGrowth(db, Number(current.memberId), '撤销线下核销');
       createConsumeMessage(db, {
         memberId: Number(current.memberId),
         consumeId: routeParams.id,

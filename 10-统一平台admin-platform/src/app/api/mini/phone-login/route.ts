@@ -28,10 +28,21 @@ class PhoneLoginError extends Error {
 }
 
 const ACCESS_TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
+const WECHAT_FETCH_TIMEOUT_MS = 6000;
 const RETRYABLE_ACCESS_TOKEN_CODES = new Set([40001, 40014, 42001]);
 
 let accessTokenCache: WechatAccessTokenCache | null = null;
 let accessTokenPromise: Promise<string> | null = null;
+
+async function fetchWechat(input: string | URL, init: RequestInit = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), WECHAT_FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 function getWechatConfig() {
   const appId = cleanText(process.env.WECHAT_MINIAPP_APP_ID || process.env.WECHAT_MINIAPP_APPID || process.env.NEXT_PUBLIC_WECHAT_MINIAPP_ID);
@@ -85,7 +96,7 @@ async function fetchAccessToken(appId: string, secret: string) {
 
   let res: Response;
   try {
-    res = await fetch(url, { cache: 'no-store' });
+    res = await fetchWechat(url, { cache: 'no-store' });
   } catch {
     throw new PhoneLoginError('微信服务连接失败，请稍后再试');
   }
@@ -127,7 +138,7 @@ async function getAccessToken(forceRefresh = false) {
 async function requestWechatPhone(code: string, accessToken: string) {
   let res: Response;
   try {
-    res = await fetch(`https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${encodeURIComponent(accessToken)}`, {
+    res = await fetchWechat(`https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${encodeURIComponent(accessToken)}`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ code }),

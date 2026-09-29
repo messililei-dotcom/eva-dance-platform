@@ -13,7 +13,7 @@ const REMEMBER_USER_KEY = 'remembered_username';
 
 function mobileHomePath() {
   if (typeof window === 'undefined') return '/dashboard';
-  return window.matchMedia('(max-width: 767px)').matches ? '/training' : '/dashboard';
+  return window.matchMedia('(max-width: 767px)').matches ? '/online-course/auth' : '/dashboard';
 }
 
 export default function LoginPage() {

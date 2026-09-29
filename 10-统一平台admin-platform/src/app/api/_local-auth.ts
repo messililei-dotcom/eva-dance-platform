@@ -22,6 +22,8 @@ const PERMISSION_COLUMNS = [
   'bonusTraining', 'bonusCard', 'bonusYearly', 'bonusDisciple',
 ] as const;
 
+const ADMIN_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 3;
+
 export function getSessionSecret() {
   const secret = process.env.ADMIN_SESSION_SECRET;
   if (!secret && process.env.NODE_ENV !== 'production') return 'admin-platform-local-dev-session-secret';
@@ -92,7 +94,7 @@ export function createLocalToken(user: LocalUserRow) {
     id: user.id,
     username: user.username,
     role: user.role,
-    exp: Date.now() + 1000 * 60 * 60 * 24,
+    exp: Date.now() + ADMIN_SESSION_TTL_MS,
   }));
   return `local.${payload}.${sign(payload)}`;
 }
