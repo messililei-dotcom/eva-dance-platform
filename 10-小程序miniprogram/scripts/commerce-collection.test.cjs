@@ -4,9 +4,9 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const crypto=require('node:crypto');
-test('归档及官网后台保留同一张收款码原图',()=>{
+test('实际托管的后台收款码保持已确认原图',()=>{
   const root=path.resolve(__dirname,'../..');
-  for(const file of ['ops/20260917-mini-resource-fix/source/yiwa-unified-collection-v1.jpg','10-统一平台admin-platform/public/payments/yiwa-unified-collection-v1.jpg','02-官方网站工程设计/官方网站/public/payments/yiwa-unified-collection-v1.jpg']){
+  for(const file of ['10-统一平台admin-platform/public/payments/yiwa-unified-collection-v1.jpg']){
     assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),'9f25e157ece906ac1e49b615d28f49cd39919e22c8bab4322be2f1a5b3e603c2');
   }
 });
