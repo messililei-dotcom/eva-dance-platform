@@ -131,7 +131,7 @@
     "src/app/api/course/courses/batch-delete/route.ts": "620f7d03ece2ef17bb3dd822485f2640abaf94770e03899490ac6865259b0107",
     "src/app/api/course/courses/batch-status/route.ts": "c7d4dd1f95fcd4bcf114c6df2c7d70c23783d7e47fef212fc6cbe17a1e61eee2",
     "src/app/api/course/courses/route.ts": "ab7f27fd08d4577874322e8d547ff024729948ac3bee40447c9cc4a925e9a2d2",
-    "src/app/api/course/cover-image/route.ts": "47a5b1b791950111c0d495482db1d2b93518a9fc2a9a8cf1a2d025dc0b7cac5c",
+    "src/app/api/course/cover-image/route.ts": "b7f5ece11e656a7f9f19993cb3dba9999b3de4fab8ecf087a8c122fc0df5aff5",
     "src/app/api/course/material-folders/[id]/move/route.ts": "95dfa51028d910059bda88372d34ac8862cd834742c3824aef79fdc3a53221e0",
     "src/app/api/course/material-folders/[id]/route.ts": "5eab2c7d31a3442fab573b43cd1b34af495c94f7102bf8346340900a355722f9",
     "src/app/api/course/material-folders/route.ts": "8477a0240d142d47b447e8ab951ad42537a48f07b06887908ec680cec6c3795d",

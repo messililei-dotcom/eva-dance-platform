@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Certbot supplies RENEWED_LINEAGE only after successful renewal.
+exec /usr/bin/node /usr/local/sbin/eva-certbot-cdn-deploy.cjs

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { Readable } from 'stream';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -90,7 +91,7 @@ export async function GET(request: Request) {
   }
 
   const stat = fs.statSync(filePath);
-  return new Response(fs.createReadStream(filePath) as any, {
+  return new Response(Readable.toWeb(fs.createReadStream(filePath)) as ReadableStream, {
     headers: {
       'Content-Type': contentType(filePath),
       'Content-Length': String(stat.size),
