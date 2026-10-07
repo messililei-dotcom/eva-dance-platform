@@ -95,6 +95,7 @@ Page(share.withShare("event-detail", {
     const groupId = event.currentTarget.dataset.id;
     wx.navigateTo({ url: `/pages/event-group/event-group?id=${this.data.id}&groupId=${groupId}` });
   },
+  goJudge() { wx.navigateTo({ url: `/pages/event-judge/event-judge?id=${this.data.id}` }); },
   goRegister() {
     if (!this.data.competition.registrationOpen) {
       wx.showToast({ title: "赛事报名尚未开放或已经结束", icon: "none" });

@@ -5,6 +5,7 @@ import { Table } from '@/components/adaptive-table';
 import { PlusOutlined, SearchOutlined, TrophyOutlined, CheckCircleOutlined, CloseCircleOutlined, ReloadOutlined, ThunderboltOutlined, FileImageOutlined, LinkOutlined, SettingOutlined } from '@ant-design/icons';
 import { api, certApi } from '@/lib/api';
 import { memberOptionLabel, memberSearchText } from '@/lib/member-search';
+import { certificateBrandOverlay, certificateTextLines, isBrandedCertificate, CERTIFICATE_FONT, certificateWebsiteUrl } from '@/lib/certificate-brand';
 import { sortableColumns } from '@/lib/table-sort';
 
 interface CertRecord {
@@ -64,6 +65,8 @@ function issueMethodLabel(value?: string) {
 export default function CertificatesPage() {
   const [form] = Form.useForm();
   const [templateForm] = Form.useForm();
+  const templateName = Form.useWatch('template_name', templateForm);
+  const [offlineCourses, setOfflineCourses] = useState<SeriesOption[]>([]);
   const templateImageUrl = Form.useWatch('template_image_url', templateForm);
   const templateWidth = Form.useWatch('width', templateForm);
   const templateHeight = Form.useWatch('height', templateForm);
@@ -122,7 +125,8 @@ export default function CertificatesPage() {
 
   const loadSeries = async () => {
     try {
-      const res = await api.get('/course/series', { params: { pageSize: 100 } });
+      const [res, offline] = await Promise.all([api.get('/course/series', { params: { all: 1, pageSize: 1000 } }), api.get('/courses')]);
+      setOfflineCourses((Array.isArray(offline.data) ? offline.data : []).map((row: any) => ({ id: -Math.abs(row.id), name: row.name })));
       const rows = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
       setSeriesList(rows);
       return rows;
@@ -245,7 +249,7 @@ export default function CertificatesPage() {
         height: template.height || 850,
       });
       setTemplateFields(template.fields || templateFields);
-      message.success(template.template_image_url ? 'AI证书模板已生成' : '已启用系统电子证书模板');
+      message.success(template.template_image_url ? '品牌证书模板已就绪' : '已启用系统电子证书模板');
     } catch (err: any) {
       message.error(err?.response?.data?.error || 'AI证书模板生成失败');
     } finally {
@@ -258,7 +262,7 @@ export default function CertificatesPage() {
   };
 
   const previewRef = useRef<HTMLDivElement | null>(null);
-  const moveTemplateField = (event: React.PointerEvent<HTMLElement>, index: number) => {
+  const moveTemplateField = (event: React.PointerEvent<Element>, index: number) => {
     const rect = previewRef.current?.getBoundingClientRect();
     if (!rect) return;
     const x = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
@@ -315,9 +319,9 @@ export default function CertificatesPage() {
   const previewAspectRatio = previewWidth && previewHeight ? `${previewWidth} / ${previewHeight}` : '1200 / 850';
   const previewValues: Record<string, string> = {
     memberName: '王小舞',
-    courseName: seriesList.find(item => item.id === selectedSeriesId)?.name || '课程名称',
-    issueDate: '2026-06-01',
-    certificateNo: 'SWOD-20260601-001',
+    courseName: [...seriesList, ...offlineCourses].find(item => item.id === selectedSeriesId)?.name || '课程名称',
+    issueDate: '2026-09-30',
+    certificateNo: 'EVA-PREVIEW-20260930',
   };
   const textAnchorToTranslate: Record<TemplateField['align'], string> = {
     start: '0',
@@ -359,6 +363,7 @@ export default function CertificatesPage() {
         <Button icon={<ReloadOutlined />} onClick={loadCertificates} loading={loading}>刷新</Button>
         <Button icon={<ThunderboltOutlined />} onClick={handleAutoIssue} loading={autoIssuing}>自动颁发</Button>
         <Button icon={<FileImageOutlined />} onClick={() => openTemplateModal()}>证书模板</Button>
+        <Button icon={<LinkOutlined />} href={certificateWebsiteUrl()} target="_blank" rel="noopener noreferrer">官网查询</Button>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => { ensureIssueOptions(); setModalVisible(true); }}>颁发证书</Button>
       </Space>}>
         <Table columns={columns} dataSource={filtered} size="middle" loading={loading} pagination={{ pageSize: 20 }} rowKey="id" scroll={{ x: 'max-content', y: 'calc(100dvh - 390px)' }} />
@@ -401,7 +406,7 @@ export default function CertificatesPage() {
           <Alert
             type="info"
             showIcon
-            message="每个课程可绑定独立证书模板；没有模板时，系统会自动生成电子证书底图，再把姓名、日期、课程和编号填入留白处。"
+            message="线上课程、成品舞和线下课程独立绑定品牌模板；颁发时自动填入姓名、课程、日期、编号，并附官网查询二维码。"
           />
           <Row gutter={12}>
             <Col span={10}>
@@ -411,12 +416,12 @@ export default function CertificatesPage() {
                 style={{ width: '100%', marginTop: 6 }}
                 showSearch
                 optionFilterProp="label"
-                options={seriesOptions}
+                options={[...seriesOptions.filter(item => item.value > 0), ...offlineCourses.map(item => ({ value: item.id, label: `${item.name} · 线下课 #${Math.abs(item.id)}` }))]}
                 onChange={value => openTemplateModal(value)}
               />
             </Col>
             <Col span={14} style={{ display: 'flex', alignItems: 'end', justifyContent: 'flex-end' }}>
-              <Button icon={<ThunderboltOutlined />} onClick={generateTemplate} loading={templateLoading}>AI生成电子证书模板</Button>
+              <Button icon={<ThunderboltOutlined />} onClick={generateTemplate} loading={templateLoading}>应用品牌证书模板</Button>
             </Col>
           </Row>
           <Form form={templateForm} layout="vertical">
@@ -448,50 +453,16 @@ export default function CertificatesPage() {
                 userSelect: 'none',
               }}
             >
-              {templateImageUrl ? (
-                <img
-                  src={templateImageUrl}
-                  alt="证书模板预览"
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <div style={{ position: 'absolute', inset: 0, background: '#FFF9F0' }}>
-                  <div style={{ position: 'absolute', inset: '5.5%', border: '2px solid #C8A96E', borderRadius: 14 }} />
-                  <div style={{ position: 'absolute', top: '22%', left: 0, right: 0, textAlign: 'center', fontSize: 34, fontWeight: 700, color: '#8B1A1A' }}>结业证书</div>
-                </div>
-              )}
-              {templateFields.map((field, index) => (
-                <div
-                  key={field.key}
-                  title="拖动调整位置"
-                  onPointerDown={event => {
-                    event.preventDefault();
-                    event.currentTarget.setPointerCapture(event.pointerId);
-                    setDraggingFieldIndex(index);
-                    moveTemplateField(event, index);
-                  }}
-                  style={{
-                    position: 'absolute',
-                    left: `${field.x}%`,
-                    top: `${field.y}%`,
-                    transform: `translate(${textAnchorToTranslate[field.align] || '-50%'}, -50%)`,
-                    color: field.color,
-                    fontSize: Math.max(10, Math.round(Number(field.fontSize || 14) * 0.42)),
-                    fontWeight: field.key === 'memberName' ? 700 : 500,
-                    whiteSpace: 'nowrap',
-                    maxWidth: '80%',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    cursor: draggingFieldIndex === index ? 'grabbing' : 'grab',
-                    pointerEvents: 'auto',
-                    padding: '2px 6px',
-                    borderRadius: 4,
-                    background: draggingFieldIndex === index ? 'rgba(59,130,246,0.12)' : 'transparent',
-                  }}
-                >
-                  {previewValues[field.key] || fieldLabels[field.key] || field.key}
-                </div>
-              ))}
+              <svg viewBox={`0 0 ${previewWidth} ${previewHeight}`} width="100%" height="100%">
+                {templateImageUrl ? <image href={templateImageUrl} width={previewWidth} height={previewHeight} preserveAspectRatio="xMidYMid slice" /> : <><rect width="100%" height="100%" fill="#FFF9F0" /><text x="50%" y="28%" textAnchor="middle" fontSize="58" fill="#8B1A1A">结业证书</text></>}
+                {isBrandedCertificate({ template_name: templateName }) && <g transform={`scale(${previewWidth / 1536} ${previewHeight / 1024})`} dangerouslySetInnerHTML={{ __html: certificateBrandOverlay(selectedSeriesId || 0, previewValues.courseName) }} />}
+                {templateFields.map((field, index) => {
+                  const text = isBrandedCertificate({ template_name: templateName }) ? certificateTextLines(previewValues[field.key] || '', field.key, field.fontSize, previewWidth) : { lines: [previewValues[field.key] || ''], fontSize: field.fontSize };
+                  return <text key={field.key} x={`${field.x}%`} y={`${field.y}%`} textAnchor={field.align} fill={field.color} fontFamily={CERTIFICATE_FONT} fontSize={text.fontSize} fontWeight={field.key === 'memberName' ? 700 : 500} style={{ cursor: 'grab' }} onPointerDown={event => {
+                    event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); setDraggingFieldIndex(index); moveTemplateField(event, index);
+                  }}>{text.lines.map((line, i) => <tspan key={i} x={`${field.x}%`} dy={i ? text.fontSize * 1.4 : 0}>{line}</tspan>)}</text>;
+                })}
+              </svg>
             </div>
           </Card>
           <Table

@@ -1,6 +1,9 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <view class="login-container">
   <view class="logo-section">
-    <image class="logo" src="/images/logo.png" mode="aspectFit" />
+    <image class="logo" src="/images/logo-20261005.png" mode="aspectFit" />
     <text class="title">伊娃东方舞</text>
     <text class="subtitle">舞者成长系统</text>
   </view>
@@ -69,3 +72,5 @@
     <text>返回</text>
   </view>
 </view>
+
+</block>

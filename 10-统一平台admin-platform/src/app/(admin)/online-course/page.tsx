@@ -1,7 +1,7 @@
 'use client';
 import { buildCourseAdvisorOptions, filterCourseAdvisorOption } from '@/lib/course-advisors';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Alert,
@@ -27,6 +27,7 @@ import {
   Spin,
   Statistic,
   Switch,
+  Table as AntTable,
   Tabs,
   Tag,
   Tooltip,
@@ -91,7 +92,17 @@ const SERIES_PAGE_SIZE_DEFAULT = 30;
 const SERIES_PAGE_SIZE_OPTIONS = [15, 30, 50, 100];
 const SERIES_FETCH_PARAMS = { all: 1, pageSize: 1000 };
 const MATERIAL_PAGE_SIZE_DEFAULT = 50;
-const MATERIAL_PAGE_SIZE_OPTIONS = [50, 100];
+const ALL_MATERIALS_PAGE_SIZE = 2147483647;
+const MATERIAL_PAGE_SIZE_OPTIONS = [50, 100, ALL_MATERIALS_PAGE_SIZE];
+const MATERIAL_PAGE_SIZE_KEY = 'online-course-material-page-size';
+const MATERIAL_SIZE_CHANGER = {
+  showSearch: false,
+  options: [
+    { value: 50, label: '50 条/页' },
+    { value: 100, label: '100 条/页' },
+    { value: ALL_MATERIALS_PAGE_SIZE, label: '全部' },
+  ],
+};
 const REPLACE_MATERIAL_PAGE_SIZE = 8;
 
 type AuthorizationVoucher = {
@@ -547,6 +558,18 @@ export default function OnlineCoursePage() {
   const [materialTotalRows, setMaterialTotalRows] = useState(0);
   const [materialPage, setMaterialPage] = useState(1);
   const [materialPageSize, setMaterialPageSize] = useState(MATERIAL_PAGE_SIZE_DEFAULT);
+  const materialLayoutRef = useRef<HTMLDivElement>(null);
+  const [materialLayoutHeight, setMaterialLayoutHeight] = useState<number>();
+  const changeMaterialPageSize = (pageSize: number) => {
+    setMaterialPageSize(pageSize);
+    try { sessionStorage.setItem(MATERIAL_PAGE_SIZE_KEY, String(pageSize)); } catch { /* Keep in React state when storage is unavailable. */ }
+  };
+  useEffect(() => {
+    try {
+      const saved = Number(sessionStorage.getItem(MATERIAL_PAGE_SIZE_KEY));
+      if (MATERIAL_PAGE_SIZE_OPTIONS.includes(saved)) setMaterialPageSize(saved);
+    } catch { /* Default to 50 when storage is unavailable. */ }
+  }, []);
   const [materialSortBy, setMaterialSortBy] = useState('created_at');
   const [materialSortOrder, setMaterialSortOrder] = useState<'asc' | 'desc'>('desc');
   const [materialReferenceFilter, setMaterialReferenceFilter] = useState<'1' | '0' | undefined>();
@@ -664,6 +687,17 @@ export default function OnlineCoursePage() {
     return rows;
   }, []);
 
+  useEffect(() => {
+    const layout = materialLayoutRef.current;
+    if (!layout || activeTab !== 'materials' || loading) return;
+    const measure = () => setMaterialLayoutHeight(Math.max(240, window.innerHeight - layout.getBoundingClientRect().top - 16));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(layout);
+    window.addEventListener('resize', measure);
+    return () => { observer.disconnect(); window.removeEventListener('resize', measure); };
+  }, [activeTab, loading]);
+
   const openFolderModal = (parentId?: number) => {
     setEditingFolder(null);
     folderForm.resetFields();
@@ -683,7 +717,7 @@ export default function OnlineCoursePage() {
     materialRequestSeq.current = requestId;
     const params = {
       page: materialPage,
-      pageSize: materialPageSize,
+      pageSize: materialPageSize === ALL_MATERIALS_PAGE_SIZE ? 'all' : materialPageSize,
       sort_by: materialSortBy,
       sort_order: materialSortOrder,
       folder_id: selectedMaterialFolderParam,
@@ -2206,7 +2240,7 @@ export default function OnlineCoursePage() {
       setFolders(pickFolderRows(folderPayload));
       const materialPayload = await onlineCourseApi.getMaterials({
         page: materialPage,
-        pageSize: materialPageSize,
+        pageSize: materialPageSize === ALL_MATERIALS_PAGE_SIZE ? 'all' : materialPageSize,
         sort_by: materialSortBy,
         sort_order: materialSortOrder,
         folder_id: selectedMaterialFolderParam,
@@ -2280,7 +2314,7 @@ export default function OnlineCoursePage() {
             key: 'materials',
             label: <span>{tabMeta.materials.icon} 素材中心 {materialTotalRows || filteredMaterials.length}</span>,
             children: (
-              <Row className="oc-material-layout" gutter={[16, 16]}>
+              <Row ref={materialLayoutRef} className="oc-material-layout" gutter={[16, 16]} style={{ '--oc-material-height': materialLayoutHeight ? `${materialLayoutHeight}px` : undefined } as CSSProperties}>
                 <Col className="oc-material-folder-col" flex="0 0 300px" style={{ maxWidth: '100%' }}>
                   <Card
                     className="oc-material-folder-card"
@@ -2379,7 +2413,7 @@ export default function OnlineCoursePage() {
                     styles={{ body: { padding: 0 } }}
                   >
                     {materialViewMode === 'list' ? (
-                      <Table<MaterialRow>
+                      <AntTable<MaterialRow>
                         rowKey="id"
                         size="middle"
                         dataSource={filteredMaterials}
@@ -2389,16 +2423,17 @@ export default function OnlineCoursePage() {
                           pageSize: materialPageSize,
                           pageSizeOptions: MATERIAL_PAGE_SIZE_OPTIONS,
                           total: materialTotalRows,
-                          showSizeChanger: true,
+                          showSizeChanger: MATERIAL_SIZE_CHANGER,
                           showTotal: total => `共 ${total} 条`,
                           onShowSizeChange: (_current, pageSize) => {
                             setMaterialPage(1);
-                            setMaterialPageSize(pageSize);
+                            changeMaterialPageSize(pageSize);
                           },
                         }}
                         onChange={(pagination, filters, sorter: any, extra) => {
-                          setMaterialPage(extra.action === 'filter' ? 1 : Number(pagination.current || 1));
-                          setMaterialPageSize(Number(pagination.pageSize || MATERIAL_PAGE_SIZE_DEFAULT));
+                          const nextPageSize = Number(pagination.pageSize || MATERIAL_PAGE_SIZE_DEFAULT);
+                          setMaterialPage(extra.action !== 'paginate' || nextPageSize !== materialPageSize ? 1 : Number(pagination.current || 1));
+                          changeMaterialPageSize(nextPageSize);
                           const nextReferenceFilter = filters.is_referenced?.[0];
                           setMaterialReferenceFilter(nextReferenceFilter === '1' || nextReferenceFilter === '0' ? nextReferenceFilter : undefined);
                           setSelectedMaterialIds([]);
@@ -2539,11 +2574,11 @@ export default function OnlineCoursePage() {
                             pageSize={materialPageSize}
                             pageSizeOptions={MATERIAL_PAGE_SIZE_OPTIONS}
                             total={materialTotalRows}
-                            showSizeChanger
+                            showSizeChanger={MATERIAL_SIZE_CHANGER}
                             showTotal={total => `共 ${total} 条`}
                             onChange={(page, pageSize) => {
                               setMaterialPage(pageSize === materialPageSize ? page : 1);
-                              setMaterialPageSize(pageSize);
+                              changeMaterialPageSize(pageSize);
                             }}
                           />
                         </div>
@@ -3139,7 +3174,25 @@ export default function OnlineCoursePage() {
             pagination={false}
             locale={{ emptyText: <Empty description="暂无课程引用" /> }}
             columns={[
-              { title: '课程/课节', className: 'course-name-column lesson-name-column', render: (_, record) => record.course_name || record.series_name || record.name || '-' },
+              {
+                title: '课程/课节',
+                className: 'course-name-column lesson-name-column',
+                render: (_, record) => {
+                  const name = record.course_name || record.series_name || record.name || '-';
+                  const seriesId = Number(record.series_id);
+                  if (!Number.isSafeInteger(seriesId) || seriesId <= 0) return name;
+                  return (
+                    <a
+                      href={`/online-course/${seriesId}?tab=lessons`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="在新标签页打开课节管理"
+                    >
+                      {name}
+                    </a>
+                  );
+                },
+              },
               { title: '类型', width: 100, render: (_, record) => record.type || record.material_type || '-' },
               { title: '引用时间', width: 160, render: (_, record) => record.created_at ? String(record.created_at).slice(0, 16) : '-' },
               {

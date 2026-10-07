@@ -78,35 +78,38 @@ export async function GET(request: Request) {
         .filter((row) => row.ranking_status === 'published')
         .map((row) => Number(row.player_id))
         .filter(Boolean);
-      const scoresByPlayer = new Map<number, Array<{ judgeId: number; judgeName: string; score: number }>>();
+      const scoresByPlayer = new Map<number, Array<{ judgeId: number; judgeName: string; score: number | null }>>();
 
       if (publishedPlayerIds.length) {
         const placeholders = publishedPlayerIds.map(() => '?').join(',');
         const scoreRows = db.prepare(`
           SELECT s.player_id, s.judge_id, COALESCE(j.name, '评委') AS judge_name,
-                 COALESCE(s.published_score, s.calculated_score, s.raw_score, 0) AS score
+                 CASE WHEN c.judge_scores_public=1 THEN SUM(COALESCE(s.published_score, s.calculated_score, 0)) ELSE NULL END AS score
           FROM event_scores s
+          JOIN event_competitions c ON c.id=s.competition_id
           LEFT JOIN event_judges j ON j.id=s.judge_id
           JOIN event_rankings r
             ON r.player_id=s.player_id AND r.group_id=s.group_id AND r.status='published'
           WHERE s.player_id IN (${placeholders})
-            AND s.score_status<>'voided'
+            AND s.score_status='published'
             AND s.version=(
               SELECT MAX(latest.version) FROM event_scores latest
               WHERE latest.group_id=s.group_id
                 AND latest.player_id=s.player_id
                 AND latest.judge_id=s.judge_id
-                AND latest.score_status<>'voided'
+                AND latest.rule_id IS s.rule_id
+                AND latest.score_status='published'
             )
+          GROUP BY s.player_id, s.judge_id, j.name, c.judge_scores_public
           ORDER BY s.player_id, j.name, s.judge_id
-        `).all<{ player_id: number; judge_id: number; judge_name: string; score: number }>(...publishedPlayerIds);
+        `).all<{ player_id: number; judge_id: number; judge_name: string; score: number | null }>(...publishedPlayerIds);
 
         scoreRows.forEach((score) => {
           const list = scoresByPlayer.get(Number(score.player_id)) || [];
           list.push({
             judgeId: Number(score.judge_id),
             judgeName: String(score.judge_name || '评委'),
-            score: Number(score.score || 0),
+            score: score.score === null ? null : Number(score.score || 0),
           });
           scoresByPlayer.set(Number(score.player_id), list);
         });

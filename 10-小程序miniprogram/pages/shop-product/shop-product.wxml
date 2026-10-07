@@ -1,0 +1,12 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
+<view class="shop-page">
+ <view wx:if="{{loading}}" class="empty">正在加载…</view><view wx:elif="{{error}}" class="empty">{{error}}<button class="outline" bindtap="reload">重新加载</button></view>
+ <block wx:else><image wx:if="{{product.image}}" class="hero-image" src="{{product.image}}" mode="aspectFit" bindtap="preview"/><view wx:else class="image-placeholder hero-image">伊娃甄选</view>
+ <view class="panel"><view class="price big">¥{{product.priceText}}</view><view class="brand">{{product.name}}</view><view class="subtitle">{{product.category}} · 快递包邮</view><view class="spec">{{product.specText || '标准款'}}</view><view class="row"><text>库存 {{product.stock}} 件</text><view class="quantity"><button data-delta="-1" bindtap="quantity">−</button><text>{{quantity}}</text><button data-delta="1" bindtap="quantity">＋</button></view></view></view>
+ <view class="panel muted">伊娃甄选官方商城。商品、价格和库存与电商平台同步；订单物流与售后可在“我的订单”查看。</view>
+ <view class="bottom-bar"><button class="outline" bindtap="checkout">购物袋</button><button class="outline" disabled="{{product.stock<1}}" bindtap="add">加入购物袋</button><button class="primary" disabled="{{product.stock<1}}" bindtap="buy">{{product.stock>0?'立即购买':'已售罄'}}</button></view></block>
+</view>
+
+</block>

@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false, "noEmit": true },
+  "include": ["src/lib/server/app-session.ts", "src/lib/server/app-route-map.ts", "src/app/api/app/v1/**/*.ts", "src/middleware.ts"],
+  "exclude": ["node_modules", ".next", ".next-build", ".next-dev"]
+}

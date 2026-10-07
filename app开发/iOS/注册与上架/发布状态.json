@@ -1,0 +1,70 @@
+{
+  "asOf": "2026-10-02",
+  "stage": "local-fullsite-parity-development",
+  "uploaded": false,
+  "submitted": false,
+  "public": false,
+  "gates": [
+    {
+      "id": "appleMembership",
+      "description": "组织会员、Team 与 App ID",
+      "passed": false,
+      "evidence": null
+    },
+    {
+      "id": "xcodeIOSBuild",
+      "description": "完整 Xcode 的 iOS SDK 构建",
+      "passed": true,
+      "evidence": "注册与上架/调试证据-20261002/iphone-simulator-build.log"
+    },
+    {
+      "id": "appSession",
+      "description": "App 会话已通过本地测试，待部署及真实登录联调",
+      "passed": false,
+      "evidence": "注册与上架/调试证据-20261002/backend-tests.log"
+    },
+    {
+      "id": "accountDeletion",
+      "description": "应用内注销及服务端删除流程",
+      "passed": false,
+      "evidence": null
+    },
+    {
+      "id": "deviceAcceptance",
+      "description": "iPhone/iPad 真机播放与权限验收",
+      "passed": false,
+      "evidence": null
+    },
+    {
+      "id": "privacyReview",
+      "description": "隐私政策、清单与数据收集核对",
+      "passed": false,
+      "evidence": null
+    },
+    {
+      "id": "storeAssets",
+      "description": "正式图标、截图、支持页与审核账号",
+      "passed": false,
+      "evidence": null
+    },
+    {
+      "id": "chinaFiling",
+      "description": "中国大陆发行所需备案核验",
+      "passed": false,
+      "evidence": null
+    },
+    {
+      "id": "testFlight",
+      "description": "TestFlight 验收",
+      "passed": false,
+      "evidence": null
+    },
+    {
+      "id": "miniProgramParity",
+      "description": "小程序用户端逐页对齐与增强功能验收",
+      "passed": false,
+      "evidence": "注册与上架/小程序对齐与增强验收-20261002.md"
+    }
+  ],
+  "productRequirement": "界面和功能对齐小程序，在此基础上更全面、更便捷、更智能"
+}

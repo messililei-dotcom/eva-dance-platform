@@ -99,3 +99,5 @@ button::after {
   color: #8c8172;
 }
 
+
+.public-share-preview{padding:40rpx;display:flex;flex-direction:column;gap:28rpx;background:#fff;min-height:80vh;box-sizing:border-box}.public-share-preview-image{width:100%;height:420rpx;background:#f7f3ee;border-radius:20rpx}.public-share-preview-title{font-size:36rpx;line-height:1.7;color:#3b251e;font-weight:600}.public-share-preview-hint{font-size:26rpx;line-height:1.8;color:#8c8172}

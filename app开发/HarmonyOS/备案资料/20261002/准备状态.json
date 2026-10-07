@@ -1,0 +1,12 @@
+{
+  "appName": "伊娃东方舞",
+  "appId": "6917617955633704973",
+  "bundleName": "cn.com.swod.evadance",
+  "publicKey": "04D628C495CC165C278245BB879F47DB731A6C3D6E90291424A20752C67C66217477DD066062B303A9B4085C5F9C08685FB486F364D60B874F6749E7971C6B3ABE",
+  "sha1": "F267462882FD6A99D4A0870609717752662273F7",
+  "certificateStatus": "生效",
+  "expiry": "2029-10-02",
+  "icpStatus": "鸿蒙平台包名、公钥、SHA1已保存草稿，刷新重开核验通过；未提交订单",
+  "smsStatus": "已向阿里云现有负责人手机尾号5558发送验证码",
+  "fieldNote": "阿里云字段仍标注MD5/32位，但已接受并持久保存华为官方备案SHA1/40位；最终提交前需关注校验结果"
+}

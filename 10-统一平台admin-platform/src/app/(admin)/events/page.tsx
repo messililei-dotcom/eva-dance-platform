@@ -97,6 +97,8 @@ export default function EventsPage() {
   const [editingCompetition, setEditingCompetition] = useState<any>(null);
   const [editingPlayer, setEditingPlayer] = useState<any>(null);
   const [editingJudge, setEditingJudge] = useState<any>(null);
+  const [judgePublicUpdatingId, setJudgePublicUpdatingId] = useState<number | string | null>(null);
+  const [publicUpdatingId, setPublicUpdatingId] = useState<number | string | null>(null);
   const [registrationUpdatingId, setRegistrationUpdatingId] = useState<number | string | null>(null);
   const [transferLoading, setTransferLoading] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
@@ -183,6 +185,8 @@ export default function EventsPage() {
         organizer: '伊娃东方舞',
         coverUrl: '',
         registrationStatus: 'closed',
+        registrationPublic: false,
+        judgeScoresPublic: false,
         maxPlayers: 0,
         registrationFee: 0,
       });
@@ -294,6 +298,32 @@ export default function EventsPage() {
     }
   };
 
+  const toggleRegistrationPublic = async (row: any) => {
+    if (publicUpdatingId !== null) return;
+    const next = !row.registrationPublic;
+    setPublicUpdatingId(row.id);
+    try {
+      await eventApi.patchCompetition(row.id, { action: next ? 'showRegistration' : 'hideRegistration' });
+      setCompetitions(current => current.map(item => item.id === row.id ? { ...item, registrationPublic: next } : item));
+      message.success(next ? '报名信息已公开，所有人可查看各组别报名人数及参赛名单' : '报名信息已关闭公开，公众无法查看报名人数及未公示的参赛名单');
+    } catch (err: any) {
+      message.error(err?.response?.data?.error || err?.message || '报名信息公开状态更新失败');
+    } finally { setPublicUpdatingId(null); }
+  };
+
+  const toggleJudgeScoresPublic = async (row: any) => {
+    if (judgePublicUpdatingId !== null) return;
+    const next = !row.judgeScoresPublic;
+    setJudgePublicUpdatingId(row.id);
+    try {
+      await eventApi.patchCompetition(row.id, { action: next ? 'showJudgeScores' : 'hideJudgeScores' });
+      setCompetitions(current => current.map(item => item.id === row.id ? { ...item, judgeScoresPublic: next } : item));
+      message.success(next ? '评委分数已公开' : '评委分数已隐藏，公众仅可查看姓名及***');
+    } catch (err: any) {
+      message.error(err?.response?.data?.error || err?.message || '评委评分公开状态更新失败');
+    } finally { setJudgePublicUpdatingId(null); }
+  };
+
   const competitionColumns = sortableColumns<any>([
     {
       title: '赛事',
@@ -326,7 +356,7 @@ export default function EventsPage() {
       ),
     },
     {
-      title: '报名',
+      title: '开放报名',
       dataIndex: 'registrationStatus',
       width: 80,
       render: (value: string, row: any) => {
@@ -343,6 +373,24 @@ export default function EventsPage() {
           />
         );
       },
+    },
+    {
+      title: '报名信息', dataIndex: 'registrationPublic', width: 130,
+      render: (value: boolean, row: any) => (
+        <Switch size="small" checked={value === true} checkedChildren="公开" unCheckedChildren="关闭"
+          loading={publicUpdatingId === row.id} disabled={publicUpdatingId !== null}
+          aria-label={`${row.name}报名信息公开开关，当前${value ? '公开' : '关闭'}`}
+          onChange={() => toggleRegistrationPublic(row)} />
+      ),
+    },
+    {
+      title: '评委评分', dataIndex: 'judgeScoresPublic', width: 110,
+      render: (value: boolean, row: any) => (
+        <Switch size="small" checked={value === true} checkedChildren="公开" unCheckedChildren="关闭"
+          loading={judgePublicUpdatingId === row.id} disabled={judgePublicUpdatingId !== null}
+          aria-label={`${row.name}评委评分公开开关，当前${value ? '公开' : '关闭'}`}
+          onChange={() => toggleJudgeScoresPublic(row)} />
+      ),
     },
     { title: '组别', dataIndex: 'groupCount', width: 80 },
     { title: '选手', dataIndex: 'playerCount', width: 80 },
@@ -570,7 +618,9 @@ export default function EventsPage() {
           <Row gutter={16}>
             <Col xs={12} sm={6}><Form.Item name="maxPlayers" label="人数上限"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
             <Col xs={12} sm={6}><Form.Item name="registrationFee" label="默认报名费"><InputNumber min={0} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
-            <Col xs={12} sm={12}><Form.Item name="registrationStatus" label="报名状态"><Select options={[{ value: 'open', label: '开放' }, { value: 'closed', label: '关闭' }]} /></Form.Item></Col>
+            <Col xs={12} sm={12}><Form.Item name="registrationPublic" label="报名信息公开" valuePropName="checked" extra="公开各组别报名人数和参赛名单；关闭时仅已公示成绩可查看。"><Switch checkedChildren="公开" unCheckedChildren="关闭" /></Form.Item></Col>
+            <Col xs={12} sm={12}><Form.Item name="judgeScoresPublic" label="评委评分" valuePropName="checked" extra="公开每位评委的分数；关闭时保留姓名和头像，分数显示***。"><Switch checkedChildren="公开" unCheckedChildren="关闭" /></Form.Item></Col>
+            <Col xs={12} sm={12}><Form.Item name="registrationStatus" label="开放报名"><Select options={[{ value: 'open', label: '开放' }, { value: 'closed', label: '关闭' }]} /></Form.Item></Col>
           </Row>
           <Form.Item name="description" label="赛事说明"><Input.TextArea rows={3} /></Form.Item>
         </Form>

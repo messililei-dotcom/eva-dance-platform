@@ -1,3 +1,6 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <view class="page">
   <scroll-view class="tab-scroll" scroll-x>
     <view class="tab-row">
@@ -33,3 +36,5 @@
 
   <view wx:else class="empty card">暂无相关内容，请切换分类查看。</view>
 </view>
+
+</block>

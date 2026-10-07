@@ -1,0 +1,11 @@
+{
+  "applicationID": "cn.com.swod.evadance",
+  "huaweiAppID": "6917617955633704973",
+  "schemeCode": "FC220000013670045",
+  "clientHeader": "harmony",
+  "platform": "harmony",
+  "apiBase": "https://admin.swod.com.cn/api/app/v1",
+  "publicAPIBase": "https://admin.swod.com.cn/api/mini",
+  "configurationOnly": true,
+  "releaseReady": false
+}

@@ -1,0 +1,14 @@
+{
+  "schemeName": "伊娃东方舞Android",
+  "schemeCode": "FC220000013665046",
+  "packageName": "cn.com.swod.app",
+  "certificateMD5": "460ddea3a2119d0c4f11c43c24889b11",
+  "privateConfigPath": "/Users/lilei/.config/eva-app/android-number-auth.json",
+  "createdDate": "2026-10-03",
+  "consoleListVerified": true,
+  "source": "本次控制台创建并核验；发布证书指纹本机重算",
+  "sdkIntegrated": false,
+  "signedPackageVerified": false,
+  "realDeviceVerified": false,
+  "productionEnabled": false
+}

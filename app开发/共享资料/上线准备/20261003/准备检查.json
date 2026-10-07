@@ -1,0 +1,80 @@
+{
+  "asOf": "2026-10-03T17:45:27.628430+08:00",
+  "releaseReady": false,
+  "checks": [
+    {
+      "item": "ios.carrierConfig",
+      "state": "prepared",
+      "detail": "应用标识、方案号、SDK配置存在性核验；不输出密钥"
+    },
+    {
+      "item": "android.carrierConfig",
+      "state": "prepared",
+      "detail": "应用标识、方案号、SDK配置存在性核验；不输出密钥"
+    },
+    {
+      "item": "harmony.carrierConfig",
+      "state": "prepared",
+      "detail": "应用标识、方案号、SDK配置存在性核验；不输出密钥"
+    },
+    {
+      "item": "h5.scheme",
+      "state": "prepared",
+      "detail": "FC220000013785054"
+    },
+    {
+      "item": "xcode",
+      "state": "installed",
+      "detail": "/Applications/Xcode.app"
+    },
+    {
+      "item": "androidStudio",
+      "state": "missing",
+      "detail": "/Applications/Android Studio.app"
+    },
+    {
+      "item": "devecoStudio",
+      "state": "missing",
+      "detail": "/Applications/DevEco-Studio.app"
+    },
+    {
+      "item": "java",
+      "state": "missing",
+      "detail": "java_home 检查"
+    },
+    {
+      "item": "android.clientProject",
+      "state": "missing",
+      "detail": "尚未检出客户端工程"
+    },
+    {
+      "item": "harmony.clientProject",
+      "state": "missing",
+      "detail": "尚未检出客户端工程"
+    },
+    {
+      "item": "publicCourses",
+      "state": "reachable",
+      "detail": {
+        "status": 200,
+        "success": true,
+        "note": "只核验公开接口响应，不代表登录或播放通过"
+      }
+    },
+    {
+      "item": "appConfig",
+      "state": "blocked",
+      "detail": {
+        "status": 401
+      }
+    }
+  ],
+  "notTested": [
+    "真实短信及号码认证",
+    "三端实际安装包签名",
+    "微信登录回调",
+    "付费课程播放及安全离线",
+    "支付退款",
+    "应用商店审核"
+  ]
+}

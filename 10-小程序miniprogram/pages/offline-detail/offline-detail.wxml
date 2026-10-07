@@ -1,3 +1,6 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <view class="detail-page">
   <view wx:if="{{loading}}" class="empty-card">课程加载中…</view>
   <view wx:elif="{{error}}" class="empty-card">{{error}}<button bindtap="retry">重试</button></view>
@@ -47,6 +50,7 @@
             <text>{{item.sessionsText}}</text>
             <text>{{item.total_students}} 位学员</text>
           </view>
+<button wx:if="{{item.price > 0 && (item.period_status === 'active' || item.period_status === 'planned')}}" size="mini" data-id="{{item.source_id}}" bindtap="buyCourse">本期报名并支付</button>
 <button size="mini" class="period-schedule" data-course-id="{{item.source_id}}" bindtap="openSchedule">查看本期课表</button>
         </view>
       </view>
@@ -58,3 +62,5 @@
     </view>
   </block>
 </view>
+
+</block>

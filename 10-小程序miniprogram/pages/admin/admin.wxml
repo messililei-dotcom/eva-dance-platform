@@ -1,3 +1,6 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <view class="page">
   <view wx:if="{{!isAdmin}}" class="empty card">当前登录手机号不是管理员，请在后台“小程序配置”中添加管理员手机号。</view>
 
@@ -76,3 +79,5 @@
     </view>
   </view>
 </view>
+
+</block>

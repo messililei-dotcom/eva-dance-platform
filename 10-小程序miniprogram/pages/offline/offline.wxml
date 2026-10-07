@@ -1,3 +1,6 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <view class="offline-page">
   <view class="offline-hero">
     <view class="hero-kicker">伊娃东方舞线下课程</view>
@@ -93,3 +96,5 @@
     <view wx:else class="empty-card">暂无可用线下课程权益，报名确认后会自动显示。</view>
   </view>
 </view>
+
+</block>

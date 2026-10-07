@@ -12,12 +12,12 @@ export const metadata = {
     template: '%s · 伊娃东方舞',
   },
   description: '伊娃东方舞管理员专用数字化运营平台',
-  applicationName: '伊娃管理端',
-  manifest: '/manifest.webmanifest',
+  applicationName: 'SWOD',
+  manifest: '/manifest.webmanifest?v=20261005',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent' as const,
-    title: '伊娃管理端',
+    title: 'SWOD',
   },
   formatDetection: {
     telephone: false,
@@ -44,9 +44,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="theme-color" content="#07172D" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <link rel="icon" type="image/png" href="/favicon.png" />
-        <link rel="shortcut icon" href="/favicon.png" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon-pwa.png" />
+        <link rel="icon" type="image/png" href="/favicon-20261005.png" />
+        <link rel="shortcut icon" href="/favicon-20261005.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon-pwa-20261005.png" />
       </head>
       <body style={{ margin: 0 }}>
         <AntdRegistry>

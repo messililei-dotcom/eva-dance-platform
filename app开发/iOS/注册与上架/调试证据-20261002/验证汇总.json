@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-02",
+  "xcode": "27.0 (27A266a)",
+  "runtime": "iOS 27.0 (24A434)",
+  "swiftChecks": 14,
+  "backendChecks": 9,
+  "scopedTypecheck": true,
+  "fullRepositoryTypecheck": false,
+  "simulatorBuild": true,
+  "unsignedDeviceReleaseBuild": true,
+  "devices": [
+    {
+      "name": "iPhone 18 Pro",
+      "udid": "AABD227B-C321-4344-BA51-8C8C13CA166F",
+      "processEvidence": [
+        "47140\t0\tUIKitApplication:cn.com.swod.app[c43c][rb-legacy]"
+      ],
+      "uiAcceptance": false
+    },
+    {
+      "name": "iPad Pro 11-inch M5",
+      "udid": "DCB5EC73-1F24-4C92-A05B-B6785A469B4D",
+      "processEvidence": [
+        "47139\t0\tUIKitApplication:cn.com.swod.app[e496][rb-legacy]"
+      ],
+      "uiAcceptance": false
+    }
+  ],
+  "deviceHubUI": "timeoutReached",
+  "productionDeployed": false,
+  "uploaded": false,
+  "submitted": false,
+  "public": false
+}

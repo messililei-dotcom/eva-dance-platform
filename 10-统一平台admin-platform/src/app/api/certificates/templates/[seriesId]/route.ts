@@ -1,3 +1,4 @@
+import { certificateBrandTemplate } from '@/lib/certificate-brand';
 import { hasAuth, unauthorized } from '../../../training-db';
 import { openAdminDb } from '@/lib/server/admin-db';
 import {
@@ -21,7 +22,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ seri
   try {
     ensureCertificateSchema(db);
     const row = db.prepare('SELECT * FROM CertificateTemplate WHERE series_id = ?').get(seriesId);
-    return Response.json({ success: true, data: row ? normalizeTemplate(row, seriesId) : normalizeTemplate({ fields_json: JSON.stringify(DEFAULT_CERTIFICATE_FIELDS) }, seriesId) });
+    const course = db.prepare(seriesId < 0 ? 'SELECT name FROM Course WHERE id = ?' : 'SELECT name FROM CourseSeries WHERE id = ?').get(Math.abs(seriesId)) as { name?: string } | undefined;
+    if (!course) return Response.json({ success: false, error: '课程不存在' }, { status: 404 });
+    return Response.json({ success: true, data: row ? normalizeTemplate(row, seriesId) : certificateBrandTemplate(seriesId, course.name || '课程') });
   } finally {
     db.close();
   }

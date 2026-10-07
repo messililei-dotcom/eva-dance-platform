@@ -20,6 +20,8 @@ export function shopConfig() {
     enabled: get("SHOP_CHECKOUT_ENABLED") === "true",
     origin: "https://www.swod.com.cn",
     wxApp: get("WECHAT_PAY_APP_ID"),
+    wxMiniApp: get("WECHAT_PAY_MINI_APP_ID"),
+    wxMiniEnabled: get("WECHAT_PAY_MINI_ENABLED") === "true",
     wxMerchant: get("WECHAT_PAY_MCH_ID"),
     wxSerial: get("WECHAT_PAY_SERIAL"),
     wxPrivate: pem("WECHAT_PAY_PRIVATE_KEY"),
@@ -50,6 +52,7 @@ export function paymentAvailability(c = shopConfig()) {
     alipay: Boolean(
       c.enabled && c.aliApp && c.aliSeller && c.aliPrivate && c.aliPublic,
     ),
+    miniprogram: Boolean(c.enabled && c.wxMiniEnabled && c.wxMiniApp && c.wxMerchant && c.wxSerial && c.wxPrivate && c.wxPublic && c.wxPublicId && Buffer.byteLength(c.wxV3) === 32),
     shippingFen: 0,
   };
 }
@@ -152,10 +155,11 @@ export async function startPayment(
     wechatBrowser: boolean;
     ip: string;
     openid?: string;
+    miniprogram?: boolean;
   },
   c = shopConfig(),
 ) {
-  if (!paymentAvailability(c)[order.provider])
+  if (!(context.miniprogram ? order.provider === "wechat" && paymentAvailability(c).miniprogram : paymentAvailability(c)[order.provider]))
     throw new ShopError("该支付方式尚未开通，暂时无法付款", 503);
   if (order.expires_at - Date.now() < 65000)
     throw new ShopError("订单即将过期，请取消后重新下单", 409);
@@ -170,7 +174,7 @@ export async function startPayment(
         bizContent: {
           out_trade_no: order.id,
           total_amount: (order.total_fen / 100).toFixed(2),
-          subject: "伊娃甄选商品订单",
+          subject: "伊娃东方舞官方订单",
           product_code: mobile ? "QUICK_WAP_WAY" : "FAST_INSTANT_TRADE_PAY",
           time_expire: new Date(order.expires_at + 8 * 3600000)
             .toISOString()
@@ -181,7 +185,10 @@ export async function startPayment(
     );
     return { kind: "redirect", url };
   }
+  if (context.miniprogram && !context.openid) throw new ShopError('请重新登录小程序后付款',401);
+  const paymentAppId = order.payment_app_id || (context.miniprogram ? c.wxMiniApp : c.wxApp);
   const channel =
+    context.miniprogram ? "jsapi" :
     context.wechatBrowser && c.wxJsapi && context.openid
       ? "jsapi"
       : context.mobile && !context.wechatBrowser && c.wxH5
@@ -191,9 +198,9 @@ export async function startPayment(
     "POST",
     `/v3/pay/transactions/${channel}`,
     {
-      appid: c.wxApp,
+      appid: paymentAppId,
       mchid: c.wxMerchant,
-      description: "伊娃甄选商品订单",
+      description: "伊娃东方舞官方订单",
       out_trade_no: order.id,
       notify_url: `${c.origin}/api/shop/notify/wechat`,
       time_expire: new Date(order.expires_at).toISOString(),
@@ -217,14 +224,14 @@ export async function startPayment(
     const paySign = crypto
       .sign(
         "RSA-SHA256",
-        Buffer.from(`${c.wxApp}\n${timeStamp}\n${nonceStr}\n${pkg}\n`),
+        Buffer.from(`${paymentAppId}\n${timeStamp}\n${nonceStr}\n${pkg}\n`),
         c.wxPrivate,
       )
       .toString("base64");
     return {
-      kind: "jsapi",
+      kind: context.miniprogram ? "miniprogram" : "jsapi",
       params: {
-        appId: c.wxApp,
+        appId: paymentAppId,
         timeStamp,
         nonceStr,
         package: pkg,
@@ -263,7 +270,7 @@ export async function queryPayment(
         c,
       );
       if (
-        data.appid !== c.wxApp ||
+        data.appid !== (order.payment_app_id || c.wxApp) ||
         data.mchid !== c.wxMerchant ||
         data.out_trade_no !== order.id
       )
@@ -311,7 +318,9 @@ export async function closePayment(order: ShopOrder, c = shopConfig()) {
     );
   else await aliCall("alipay.trade.close", { out_trade_no: order.id }, c);
 }
-export async function refundPayment(order: ShopOrder, c = shopConfig()) {
+export async function refundPayment(order: ShopOrder, c = shopConfig(), refund?: {id:string;amountFen:number}) {
+  const refundId=refund?.id || `R${order.id}`, amount=refund?.amountFen ?? order.total_fen;
+  if(!Number.isSafeInteger(amount)||amount<=0||amount>order.total_fen)throw new ShopError("退款金额无效");
   // Deterministic refund id makes network retries safe.
   if (order.provider === "wechat") {
     const data = await wx(
@@ -319,10 +328,10 @@ export async function refundPayment(order: ShopOrder, c = shopConfig()) {
       "/v3/refund/domestic/refunds",
       {
         out_trade_no: order.id,
-        out_refund_no: `R${order.id}`,
+        out_refund_no: refundId,
         reason: "伊娃甄选订单退款",
         amount: {
-          refund: order.total_fen,
+          refund: amount,
           total: order.total_fen,
           currency: "CNY",
         },
@@ -331,7 +340,7 @@ export async function refundPayment(order: ShopOrder, c = shopConfig()) {
     );
     if (
       data.out_trade_no !== order.id ||
-      data.amount?.refund !== order.total_fen ||
+      data.amount?.refund !== amount ||
       data.amount?.total !== order.total_fen
     )
       throw new ShopError("退款信息不匹配", 409);
@@ -341,8 +350,8 @@ export async function refundPayment(order: ShopOrder, c = shopConfig()) {
     "alipay.trade.refund",
     {
       out_trade_no: order.id,
-      out_request_no: `R${order.id}`,
-      refund_amount: (order.total_fen / 100).toFixed(2),
+      out_request_no: refundId,
+      refund_amount: (amount / 100).toFixed(2),
       refund_reason: "伊娃甄选订单退款",
     },
     c,
@@ -350,22 +359,23 @@ export async function refundPayment(order: ShopOrder, c = shopConfig()) {
   if (
     result.out_trade_no !== order.id ||
     result.trade_no !== order.transaction_id ||
-    Math.round(Number(result.refund_fee) * 100) !== order.total_fen
+    Math.round(Number(result.refund_fee) * 100) !== amount
   )
     throw new ShopError("退款信息不匹配", 409);
   return true;
 }
-export async function queryRefund(order: ShopOrder, c = shopConfig()) {
-  if (order.provider === "alipay") return refundPayment(order, c);
+export async function queryRefund(order: ShopOrder, c = shopConfig(), refund?: {id:string;amountFen:number}) {
+  const refundId=refund?.id || `R${order.id}`, amount=refund?.amountFen ?? order.total_fen;
+  if (order.provider === "alipay") return refundPayment(order, c, refund);
   const data = await wx(
     "GET",
-    `/v3/refund/domestic/refunds/R${order.id}`,
+    `/v3/refund/domestic/refunds/${refundId}`,
     undefined,
     c,
   );
   if (
     data.out_trade_no !== order.id ||
-    data.amount?.refund !== order.total_fen ||
+    data.amount?.refund !== amount ||
     data.amount?.total !== order.total_fen ||
     data.amount?.currency !== "CNY"
   )
@@ -400,13 +410,14 @@ export function wechatNotification(
     ]).toString("utf8"),
   );
   if (
-    result.appid !== c.wxApp ||
+    ![c.wxApp, c.wxMiniApp].filter(Boolean).includes(result.appid) ||
     result.mchid !== c.wxMerchant ||
     result.trade_state !== "SUCCESS" ||
     result.amount?.currency !== "CNY"
   )
     throw new ShopError("通知商户或状态不匹配");
   return {
+    appId: result.appid,
     id: result.out_trade_no,
     transactionId: result.transaction_id,
     amountFen: result.amount.total,

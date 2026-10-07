@@ -1,0 +1,23 @@
+.handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #8c8c8c;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.handle:hover, .handle:focus-visible { color: #eb2f96; background: #fff0f6; }
+.handle:focus-visible { outline: 2px solid #eb2f96; outline-offset: 1px; }
+.handle:active { cursor: grabbing; }
+.handle:disabled { cursor: not-allowed; opacity: .35; }
+.moving > td { opacity: .5; }
+.before > td { box-shadow: inset 0 3px #eb2f96 !important; }
+.after > td { box-shadow: inset 0 -3px #eb2f96 !important; }

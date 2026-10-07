@@ -1,10 +1,10 @@
-const CACHE_NAME = 'eva-admin-shell-v1';
+const CACHE_NAME = 'eva-admin-shell-v3-black-pwa-20261005b';
 const STATIC_ASSETS = [
-  '/favicon.png',
-  '/apple-touch-icon-pwa.png',
-  '/pwa-icon-192.png',
-  '/pwa-icon-512.png',
-  '/pwa-icon-maskable-512.png',
+  '/favicon-20261005.png',
+  '/apple-touch-icon-pwa-20261005.png',
+  '/pwa-icon-192-20261005.png',
+  '/pwa-icon-512-20261005.png',
+  '/pwa-icon-maskable-512-20261005.png',
 ];
 
 self.addEventListener('install', event => {

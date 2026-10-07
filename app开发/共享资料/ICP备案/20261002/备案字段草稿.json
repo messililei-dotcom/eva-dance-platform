@@ -1,0 +1,58 @@
+{
+  "状态": "阿里云订单2031841613213草稿已保存；安卓已填并刷新核验；未提交审核",
+  "核对日期": "2026-10-02",
+  "名称": "伊娃东方舞",
+  "运行平台": [
+    "Android",
+    "iOS",
+    "HarmonyOS"
+  ],
+  "语言": "中文",
+  "拟用简介": "伊娃东方舞为学员提供东方舞课程学习服务，支持账号登录、查看已授权课程、视频播放及学习进度管理。",
+  "简介依据": "本地 V3.0 开发方案；最终以实际交付功能及备案页面分类为准",
+  "主体名称": "伊娃文化艺术发展（湖南）有限公司",
+  "主体依据": "2026-10-02阿里云已备案主体页面实查",
+  "后台域名候选": [
+    "admin.swod.com.cn",
+    "vod.swod.com.cn"
+  ],
+  "域名状态": "来自开发方案，待实际 App 配置、阿里云接入及完整网络依赖核对",
+  "android": {
+    "app_name": "伊娃东方舞",
+    "package_name": "cn.com.swod.app",
+    "public_key_modulus": "DB6309B636638DB754175EC984B4234081ABF71FB038F62AC297F636149FE8D098E2650D133B9E7665721D82E5837CE990ADB6CCF2C41A65CB8CCEE0FC08BE776B75C1FED9A783EF3BD5B9CA46EAFA83B6142F72D35183070536815448D408EC6120159B9FE4395EF14758BE879DAC1CB192073D3C54F7DDB3DF1162607590E0DB088A5695246830EB5EE92E4BC10AF817DBB03CBD365D8A4A253BC2B30D5F18BF17CC2E6F41AD47C7F8F462825CF2545ABB2F81BEA9AA379E64A5DA737C822C63B84E3000C48BB73A3A04670B3CB3591260A5EA68A4C4E1F3B686153F152649AEA1B994F04CBC60C23029320B4E0E483225FA461AE527F8A90AD2DFAEC9F0DD",
+    "certificate_md5": "460DDEA3A2119D0C4F11C43C24889B11",
+    "certificate_sha256": "58ECEE1C1CD0ADC08F797AB9BB75DCB45E6A3B747C535939020D8AE8F0D548FE",
+    "alias": "eva-dance-release",
+    "keystore_type": "PKCS12",
+    "status": "新App签名材料已生成；尚无APK；后续Android applicationId必须使用此包名和签名",
+    "private_keystore_path": "/Users/lilei/Library/Application Support/EvaAppSigning/android-release/eva-dance-release.p12",
+    "password_file_path": "/Users/lilei/Library/Application Support/EvaAppSigning/android-release/keystore-password.txt"
+  },
+  "ios": {
+    "bundle_id": null,
+    "certificate_public_key": null,
+    "certificate_sha1": null,
+    "状态": "Apple开发者协议已接受；账户页面确认尚未加入Apple Developer Program；/enroll/要求使用Apple Developer App注册"
+  },
+  "对外提供SDK": null,
+  "第三方SDK": [],
+  "SDK状态": "尚未落地原生 App，需从实际依赖清单确认，不将空数组当作无 SDK 申报",
+  "资料缺口": [
+    "登录阿里云查看订单、主体和实际补件要求",
+    "确认正式双端包标识及长期使用的签名证书",
+    "按页面要求准备真实主体和负责人材料",
+    "根据实际 App 制作运行截图（如要求）",
+    "完成负责人实名认证及短信核验（如要求）"
+  ],
+  "官方参考": [
+    "https://help.aliyun.com/zh/icp-filing/basic-icp-service/user-guide/fill-in-app-information",
+    "https://help.aliyun.com/zh/icp-filing/basic-icp-service/user-guide/fill-in-app-feature-information"
+  ],
+  "harmonyos": {
+    "状态": "华为已登录，进入企业对公银行打款实名认证资料页；已填写公司中文全称，缺企业、银行和联系人真实资料；尚未提交认证或创建证书",
+    "package_name": null,
+    "certificate_public_key": null,
+    "certificate_fingerprint": null
+  }
+}

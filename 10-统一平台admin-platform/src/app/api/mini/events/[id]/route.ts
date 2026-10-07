@@ -1,9 +1,10 @@
 import {
   competitionSelectSql,
-  mapCompetition,
+  mapPublicCompetition,
   mapGroup,
   mapRanking,
   withEventDb,
+
 } from '../../../event/_db';
 
 export const dynamic = 'force-dynamic';
@@ -22,9 +23,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         return Response.json({ success: false, error: '赛事不存在或尚未发布' }, { status: 404 });
       }
 
+      const registrationPublic = Number(competition.registration_public) === 1;
       const groups = db.prepare(`
         SELECT g.*, sr.name AS score_rule_name,
-          COUNT(DISTINCT CASE WHEN p.audit_status='approved' THEN p.id END) AS player_count,
+          COUNT(DISTINCT CASE WHEN p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled') THEN p.id END) AS player_count,
           COUNT(DISTINCT CASE WHEN gj.status='active' THEN gj.judge_id END) AS judge_count
         FROM event_groups g
         LEFT JOIN event_score_rules sr ON sr.id=g.score_rule_id
@@ -33,16 +35,17 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         WHERE g.competition_id=? AND g.status='active'
         GROUP BY g.id
         ORDER BY g.sort_order, g.id
-      `).all(routeParams.id).map(mapGroup);
+      `).all(routeParams.id).map((row: any) => ({ ...mapGroup(row), playerCount: registrationPublic ? Number(row.player_count || 0) : null, registrationPublic }));
 
       const players = db.prepare(`
         SELECT p.id, p.group_id, p.player_no, p.name, p.organization, p.teacher,
           p.score_status, g.name AS group_name
         FROM event_players p
         LEFT JOIN event_groups g ON g.id=p.group_id
-        WHERE p.competition_id=? AND p.audit_status='approved'
+        WHERE p.competition_id=? AND p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled')
+          AND (? = 1 OR EXISTS (SELECT 1 FROM event_rankings r WHERE r.player_id=p.id AND r.group_id=p.group_id AND r.status='published'))
         ORDER BY g.sort_order, p.player_no, p.id
-      `).all(routeParams.id).map((row: any) => ({
+      `).all(routeParams.id, registrationPublic ? 1 : 0).map((row: any) => ({
         id: row.id,
         groupId: row.group_id || null,
         groupName: row.group_name || '',
@@ -110,15 +113,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return Response.json({
         success: true,
         data: {
-          competition: mapCompetition(competition),
-          groups,
+          competition: mapPublicCompetition(competition),
+          groups: groups.map((group: any) => ({ ...group, rankingCount: rankings.filter((rank: any) => rank.groupId === group.id).length })),
           players,
           judges,
           rankings,
           sessions,
           awards,
         },
-      });
+      }, { headers: { "Cache-Control": "private, no-store, max-age=0" } });
     });
   } catch (err: any) {
     return Response.json({ success: false, error: err.message || '赛事详情加载失败' }, { status: 500 });

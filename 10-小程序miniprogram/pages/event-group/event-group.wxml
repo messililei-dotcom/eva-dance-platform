@@ -1,3 +1,6 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <view class="group-page">
   <view wx:if="{{loading}}" class="empty-card">组别数据加载中…</view>
   <block wx:else>
@@ -50,3 +53,5 @@
     <view wx:else class="empty-card">该组别暂无已报名选手</view>
   </block>
 </view>
+
+</block>

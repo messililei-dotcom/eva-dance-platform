@@ -21,11 +21,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
          ORDER BY oc.sort_order, oc.id`
       ).all(seriesId);
       const courseIds = courses.map((course: any) => Number(course.id)).filter(Boolean);
+      const miniClient = request.headers.get('x-client-platform')?.trim().toLowerCase() === 'miniprogram';
       const videoRows = courseIds.length
         ? db.prepare(
-          `SELECT cv.id, cv.material_id, cv.course_id, cv.name, COALESCE(NULLIF(cv.duration, 0), m.duration, 0) as duration
+          `SELECT cv.id, cv.material_id, cv.course_id, ${miniClient ? "COALESCE(NULLIF(TRIM(oc.name), ''), cv.name)" : "cv.name"} as name, COALESCE(NULLIF(cv.duration, 0), m.duration, 0) as duration
            FROM CourseVideo cv
            LEFT JOIN Material m ON cv.material_id=m.id
+           LEFT JOIN OnlineCourse oc ON cv.course_id=oc.id
            WHERE cv.course_id IN (${courseIds.map(() => '?').join(',')}) AND ${VISIBLE_VIDEO_STATUS}
            ORDER BY cv.sort_order, cv.id`
         ).all(...courseIds)

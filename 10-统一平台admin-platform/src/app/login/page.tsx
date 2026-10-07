@@ -255,7 +255,7 @@ export default function LoginPage() {
           <div className="login-card-heading" style={{ textAlign: 'center', marginBottom: 32 }}>
             <div className="login-card-brand-title">
               <span className="login-card-logo">
-                <Image src="/apple-touch-icon.png" alt="伊娃东方舞" width={44} height={44} priority />
+                <Image src="/apple-touch-icon-20261005.png" alt="伊娃东方舞" width={44} height={44} priority />
               </span>
               <Title level={3} style={{ margin: 0, color: '#121A3A' }}>伊娃东方舞</Title>
             </div>

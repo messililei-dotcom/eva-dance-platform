@@ -1,0 +1,13 @@
+{
+  "schemeCreated": true,
+  "sdkDownloaded": true,
+  "sdkIntegrated": true,
+  "sdkVersion": "2.14.19",
+  "simulatorBuild": true,
+  "unsignedDeviceBuild": true,
+  "serverTestsPassed": 11,
+  "productionDeployed": false,
+  "realDeviceCarrierLoginVerified": false,
+  "wechatConfigured": false,
+  "secureOfflineImplemented": false
+}

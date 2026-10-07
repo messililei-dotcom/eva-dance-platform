@@ -13,8 +13,9 @@ export async function GET(request: Request) {
   const referenced = search.get('is_referenced');
   const keyword = search.get('keyword') || '';
   const excludeId = Number(search.get('exclude_id') || 0);
-  const page = Math.max(1, Number(search.get('page') || 1));
-  const pageSize = Math.min(200, Math.max(1, Number(search.get('pageSize') || 50)));
+  const all = search.get('pageSize') === 'all';
+  const page = all ? 1 : Math.max(1, Number(search.get('page') || 1));
+  const pageSize = all ? -1 : Math.min(200, Math.max(1, Number(search.get('pageSize') || 50)));
   const sortBy = allowedSort(search.get('sort_by'));
   const sortOrder = String(search.get('sort_order') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
   const orderExpr = sortBy === 'is_referenced' ? 'is_referenced' : sortBy === 'uploaded_by' ? 'uploaded_by_name' : `m.${sortBy}`;
@@ -74,7 +75,7 @@ export async function GET(request: Request) {
         GROUP BY m.id
         ORDER BY ${orderExpr} ${sortOrder}, m.id DESC
         LIMIT ? OFFSET ?
-      `).all(...params, pageSize, (page - 1) * pageSize);
+      `).all(...params, pageSize, all ? 0 : (page - 1) * pageSize);
 
       const total = fetchTotal();
       const rows = fetchRows();
@@ -82,7 +83,7 @@ export async function GET(request: Request) {
       // Listing materials must remain a database-only operation. VOD reconciliation
       // can make dozens of external requests and is intentionally available through
       // the explicit /materials/vod-status action instead.
-      return Response.json({ success: true, data: rows, total, page, pageSize });
+      return Response.json({ success: true, data: rows, total, page, pageSize: all ? Math.max(1, total) : pageSize });
     });
   } catch (err: any) {
     return jsonError(err?.message || '获取素材失败');

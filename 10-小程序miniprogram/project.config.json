@@ -1,30 +1,38 @@
 {
-  "description": "课程与期次约课同步、站内信息和证书预览、课程界面对齐；小程序视频播放暂未开放",
+  "description": "商城微信支付与订单确认更新；视频播放由后台独立控制，当前关闭；准备提审，尚未上传",
   "packOptions": {
     "ignore": [
       {
-        "type": "folder",
-        "value": "docs"
+        "value": "docs",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "preview"
+        "value": "preview",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "admin-related"
+        "value": "admin-related",
+        "type": "folder"
       },
       {
-        "type": "file",
-        "value": "README.md"
+        "value": "README.md",
+        "type": "file"
       },
       {
-        "type": "folder",
-        "value": "scripts"
+        "value": "scripts",
+        "type": "folder"
       },
       {
-        "type": "file",
-        "value": "images/payments/yiwa-unified-collection-v1.jpg"
+        "value": "images/payments/yiwa-unified-collection-v1.jpg",
+        "type": "file"
+      },
+      {
+        "type": "glob",
+        "value": "**/._*"
+      },
+      {
+        "type": "glob",
+        "value": "**/.DS_Store"
       }
     ],
     "include": []

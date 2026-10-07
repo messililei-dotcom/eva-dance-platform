@@ -1,0 +1,12 @@
+{
+  "origin": "https://www.swod.com.cn",
+  "pageURL": "https://www.swod.com.cn/",
+  "schemeCode": "FC220000013785054",
+  "clientHeader": null,
+  "note": "H5走独立网站认证流程，不直接复用App GetMobile或App平台头",
+  "platform": "h5",
+  "apiBase": "https://admin.swod.com.cn/api/app/v1",
+  "publicAPIBase": "https://admin.swod.com.cn/api/mini",
+  "configurationOnly": true,
+  "releaseReady": false
+}

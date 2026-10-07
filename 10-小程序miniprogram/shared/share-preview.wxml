@@ -1,0 +1,7 @@
+<template name="publicSharePreview">
+  <view class="public-share-preview">
+    <image class="public-share-preview-image" src="{{card.imageUrl}}" mode="aspectFit" />
+    <text class="public-share-preview-title">{{card.title}}</text>
+    <text class="public-share-preview-hint">点击微信下方“前往小程序”，查看完整介绍与服务。</text>
+  </view>
+</template>

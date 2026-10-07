@@ -26,6 +26,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     if (body.expectedUpdatedAt !== undefined && body.expectedUpdatedAt !== product.updated_at) return Response.json({ error: '商品或库存已发生变化，请刷新后再编辑' }, { status: 409 });
 
+    // A visibility-only update must never rewrite stock, price or sales status.
+    if (Object.prototype.hasOwnProperty.call(body, 'hidden')) {
+      if (typeof body.hidden !== 'boolean') return Response.json({ error: '隐藏状态无效' }, { status: 400 });
+      db.prepare('UPDATE shop_products SET is_hidden=?,updated_at=? WHERE id=?').run(body.hidden ? 1 : 0, new Date().toISOString(), routeParams.id);
+      return Response.json({success:true,hidden:body.hidden});
+    }
+
     const name = cleanText(body.name, product.name);
     if (!name) return Response.json({ success: false, error: '请填写商品名称' }, { status: 400 });
 

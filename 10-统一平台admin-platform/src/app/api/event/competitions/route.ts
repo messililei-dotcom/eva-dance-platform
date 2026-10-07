@@ -56,16 +56,18 @@ export async function POST(request: Request) {
     const code = cleanText(body.code, generateCode('SWOD'));
     const result = db.prepare(`
       INSERT INTO event_competitions (
-        name, code, status, registration_status, start_date, end_date,
+        name, code, status, registration_status, registration_public, judge_scores_public, start_date, end_date,
         registration_start, registration_end, location, organizer, description,
         cover_url, max_players, registration_fee, created_by, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       name,
       code,
       'published',
       cleanText(body.registrationStatus ?? body.registration_status, 'closed'),
+      body.registrationPublic === true ? 1 : 0,
+      body.judgeScoresPublic === true ? 1 : 0,
       cleanText(body.startDate ?? body.start_date),
       cleanText(body.endDate ?? body.end_date),
       cleanText(body.registrationStart ?? body.registration_start),

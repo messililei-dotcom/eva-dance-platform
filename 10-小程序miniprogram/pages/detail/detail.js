@@ -84,6 +84,7 @@ Page(share.withShare("detail", videoFeature.withVideoFeature({
     });
   },
 
+  buyCourse(){wx.navigateTo({url:`/pages/course-checkout/course-checkout?kind=online&id=${this.data.id}`});},
   primaryAction() {
     if (!this.data.videoPlaybackEnabled) return;
     const index = this.data.courses.findIndex(item => item.videos && item.videos.length);

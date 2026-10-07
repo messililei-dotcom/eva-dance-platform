@@ -403,6 +403,8 @@ export function createOfflineBooking(db: AdminDb, input: Row) {
 
     const entitlement = activeEntitlement(db, memberId, session.course_id);
     if (!entitlement) throw businessError('没有该课程的可用课次', 409);
+    const receipt = db.prepare('SELECT paymentStatus FROM Payment WHERE id=?').get<Row>(entitlement.payment_id);
+    if (!receipt || !['paid','completed'].includes(receipt.paymentStatus)) throw businessError('课程缴费正在退款或未到账，暂不能预约',409);
     const capacityUpdate = db.prepare(`
       UPDATE OfflineSession SET booked_count=booked_count+1, version=version+1, updated_at=?
       WHERE id=? AND booked_count<capacity

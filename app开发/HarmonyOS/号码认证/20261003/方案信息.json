@@ -1,0 +1,15 @@
+{
+  "schemeName": "伊娃东方舞鸿蒙",
+  "schemeCode": "FC220000013670045",
+  "bundleName": "cn.com.swod.evadance",
+  "appIdentifier": "6917617955633704973",
+  "certificateSHA256": "DB1C6ABF2277AF4AF63D516375F27685A309525CD2E23481D8C18821B673CA06",
+  "privateConfigPath": "/Users/lilei/.config/eva-app/harmony-number-auth.json",
+  "createdDate": "2026-10-03",
+  "consoleListVerified": true,
+  "source": "本次控制台创建并核验；发布证书指纹本机重算",
+  "sdkIntegrated": false,
+  "signedPackageVerified": false,
+  "realDeviceVerified": false,
+  "productionEnabled": false
+}

@@ -70,6 +70,7 @@ export function ensureEventTables(db: any) {
       code TEXT NOT NULL UNIQUE,
       status TEXT NOT NULL DEFAULT 'published',
       registration_status TEXT NOT NULL DEFAULT 'closed',
+      registration_public INTEGER NOT NULL DEFAULT 0,
       start_date TEXT DEFAULT '',
       end_date TEXT DEFAULT '',
       registration_start TEXT DEFAULT '',
@@ -398,6 +399,23 @@ export function ensureEventTables(db: any) {
     CREATE INDEX IF NOT EXISTS idx_event_group_judges_judge ON event_group_judges(judge_id);
   `);
 
+  const competitionColumns = new Set((db.prepare('PRAGMA table_info(event_competitions)').all() as Array<{ name: string }>).map((row) => row.name));
+  if (!competitionColumns.has('registration_public')) {
+    db.transaction(() => {
+      db.exec('ALTER TABLE event_competitions ADD COLUMN registration_public INTEGER NOT NULL DEFAULT 0');
+      // Preserve existing public registration views; new competitions default to private.
+      db.exec('UPDATE event_competitions SET registration_public = 1');
+    })();
+  }
+
+  if (!competitionColumns.has('judge_scores_public')) {
+    db.transaction(() => {
+      db.exec('ALTER TABLE event_competitions ADD COLUMN judge_scores_public INTEGER NOT NULL DEFAULT 0');
+      // Preserve current historical score visibility; new events start private.
+      db.exec('UPDATE event_competitions SET judge_scores_public = 1');
+    })();
+  }
+
   const judgeColumns = new Set((db.prepare('PRAGMA table_info(event_judges)').all() as Array<{ name: string }>).map((row) => row.name));
   if (!judgeColumns.has('member_id')) db.exec('ALTER TABLE event_judges ADD COLUMN member_id INTEGER DEFAULT 0');
   db.exec('CREATE INDEX IF NOT EXISTS idx_event_judges_member ON event_judges(member_id)');
@@ -423,6 +441,7 @@ export function competitionSelectSql() {
   return `
     SELECT
       c.*,
+      (SELECT COUNT(*) FROM event_players p WHERE p.competition_id=c.id AND p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled')) AS active_player_count,
       (SELECT COUNT(*) FROM event_groups g WHERE g.competition_id = c.id) AS group_count,
       (SELECT COUNT(*) FROM event_players p WHERE p.competition_id = c.id) AS player_count,
       (SELECT COUNT(DISTINCT gj.judge_id) FROM event_group_judges gj WHERE gj.competition_id = c.id) AS judge_count,
@@ -439,6 +458,8 @@ export function mapCompetition(row: any) {
     code: row.code,
     status: row.status,
     registrationStatus: row.registration_status,
+    registrationPublic: Number(row.registration_public) === 1,
+    judgeScoresPublic: Number(row.judge_scores_public) === 1,
     startDate: row.start_date || '',
     endDate: row.end_date || '',
     registrationStart: row.registration_start || '',
@@ -456,6 +477,12 @@ export function mapCompetition(row: any) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+export function mapPublicCompetition(row: any) {
+  const value = mapCompetition(row);
+  return { ...value, playerCount: value.registrationPublic ? Number(row.active_player_count || 0) : null,
+    approvedPlayerCount: value.registrationPublic ? value.approvedPlayerCount : null };
 }
 
 export function mapGroup(row: any) {

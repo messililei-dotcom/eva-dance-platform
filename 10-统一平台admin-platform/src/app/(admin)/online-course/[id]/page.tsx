@@ -36,6 +36,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   FolderOutlined,
+  HolderOutlined,
   PlusOutlined,
   UnorderedListOutlined,
   UserSwitchOutlined,
@@ -58,6 +59,8 @@ import {
 import { sortableColumns } from '@/lib/table-sort';
 import type { Member } from '@/types/domain';
 import type { UploadFile } from 'antd';
+import { InlineLessonName } from '@/components/online-course/inline-lesson-name';
+import { useLessonDragSort } from '@/components/online-course/use-lesson-drag-sort';
 import { AuthorizationVoucherUpload } from '@/components/online-course/authorization-voucher-upload';
 
 type MemberRow = Pick<Member, 'id' | 'name' | 'phone' | 'level'>;
@@ -68,6 +71,8 @@ const BATCH_UPLOAD_CONCURRENCY = 2;
 const MATERIAL_PICKER_PAGE_SIZE = 200;
 const MATERIAL_PICKER_FETCH_CONCURRENCY = 4;
 const MATERIAL_PICKER_TABLE_PAGE_SIZE = 20;
+const LESSON_PAGE_SIZE_KEY = 'online-course:lesson-page-size';
+const ALL_LESSONS_PAGE_SIZE = 2147483647;
 
 function formatVisitTime(value: unknown) {
   return value ? String(value).replace('T', ' ').slice(0, 16) : '-';
@@ -402,7 +407,19 @@ export default function OnlineCourseEditorPage() {
   const [selectedLessonIds, setSelectedLessonIds] = useState<number[]>([]);
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<number[]>([]);
   const [lessonPage, setLessonPage] = useState(1);
-  const [lessonPageSize, setLessonPageSize] = useState(30);
+  const [lessonSortSaving, setLessonSortSaving] = useState(false);
+  const [inlineNameEditors, setInlineNameEditors] = useState<number[]>([]);
+  const lessonSortSavingRef = useRef(false);
+  const [lessonColumnSorted, setLessonColumnSorted] = useState(false);
+  const [lessonPageSize, setLessonPageSize] = useState(50);
+  useEffect(() => {
+    try {
+      const saved = Number(sessionStorage.getItem(LESSON_PAGE_SIZE_KEY));
+      if ([50, 100, ALL_LESSONS_PAGE_SIZE].includes(saved)) setLessonPageSize(saved);
+    } catch {
+      // Keep the default when browser storage is unavailable.
+    }
+  }, []);
   const [batchPickerPage, setBatchPickerPage] = useState(1);
   const [lessonSortDrafts, setLessonSortDrafts] = useState<Record<number, number | null>>({});
   const [keyword, setKeyword] = useState('');
@@ -1060,7 +1077,8 @@ export default function OnlineCourseEditorPage() {
     batchUploadLocalLessons(batchUploadFiles);
   };
 
-  const saveLessonSort = async (record: LessonRow, sortOrder: number | null) => {
+  const saveLessonSort = async (record: LessonRow, sortOrder: number | null, notify = false) => {
+    if (lessonSortSavingRef.current || inlineNameEditors.length > 0) return;
     const nextSortOrder = Math.trunc(Number(sortOrder));
     if (!Number.isInteger(nextSortOrder) || nextSortOrder < 1 || nextSortOrder === Number(record.sort_order)) return;
 
@@ -1069,16 +1087,40 @@ export default function OnlineCourseEditorPage() {
     const changed = nextLessons.some((item, index) => Number(item.id) !== Number(previousLessons[index]?.id) || Number(item.sort_order) !== Number(previousLessons[index]?.sort_order));
     if (!changed) return;
 
+    lessonSortSavingRef.current = true;
+    setLessonSortSaving(true);
+    setLessonSortDrafts({});
     setLessons(nextLessons);
     try {
       await onlineCourseApi.reorderSeriesCourses(seriesId, { ids: nextLessons.map(item => item.id) });
       const payload = await onlineCourseApi.getSeriesCourses(seriesId).catch(() => ({ data: nextLessons }));
       setLessons(normalizeLessonRows(pickArray(payload), seriesId));
+      if (notify) message.success('课节排序已保存');
     } catch (err) {
       setLessons(previousLessons);
       message.error(apiError(err));
+    } finally {
+      lessonSortSavingRef.current = false;
+      setLessonSortSaving(false);
     }
   };
+
+  const saveInlineLessonName = async (id: number, name: string) => {
+    const result = await onlineCourseApi.updateCourse(id, { name });
+    if (result?.success === false) throw new Error(result.message || '课节名称保存失败');
+    setLessons(previous => previous.map(item => item.id === id ? { ...item, name } : item));
+    message.success('课节名称已保存');
+  };
+
+  const lessonDragDisabled = inlineNameEditors.length > 0 || lessonSortSaving || Boolean(keyword.trim()) || lessonColumnSorted || lessonViewMode !== 'list';
+  const lessonDrag = useLessonDragSort({
+    ids: normalizeLessonRows(lessons).map(item => item.id),
+    disabled: lessonDragDisabled,
+    onMove: (id, position) => {
+      const record = lessons.find(item => item.id === id);
+      if (record) void saveLessonSort(record, position, true);
+    },
+  });
 
   const lessonSortInputValue = (record: LessonRow) => (
     Object.prototype.hasOwnProperty.call(lessonSortDrafts, record.id)
@@ -1542,17 +1584,35 @@ export default function OnlineCourseEditorPage() {
                     rowKey="id"
                     size="middle"
                     className="oc-lesson-table"
+                    rowClassName={record => lessonDrag.rowClassName(record.id)}
+                    onChange={(_, __, sorter) => setLessonColumnSorted((Array.isArray(sorter) ? sorter : [sorter]).some(item => Boolean(item.order)))}
                     dataSource={filteredLessons}
                     rowSelection={{ selectedRowKeys: selectedLessonIds, onChange: keys => setSelectedLessonIds(keys as number[]) }}
                     pagination={{
                       current: lessonPage,
+                      disabled: lessonSortSaving || lessonDrag.dragging,
+                      total: filteredLessons.length,
                       pageSize: lessonPageSize,
-                      showSizeChanger: true,
-                      pageSizeOptions: [20, 30, 50, 100],
+                      showSizeChanger: {
+                        showSearch: false,
+                        options: [
+                          { value: 50, label: '50 条/页' },
+                          { value: 100, label: '100 条/页' },
+                          { value: ALL_LESSONS_PAGE_SIZE, label: '全部' },
+                        ],
+                      },
+                      pageSizeOptions: [50, 100, ALL_LESSONS_PAGE_SIZE],
                       showTotal: total => `共 ${total} 条`,
                       onChange: (page, pageSize) => {
-                        setLessonPage(page);
-                        setLessonPageSize(pageSize);
+                        setLessonPage(pageSize === lessonPageSize ? page : 1);
+                        if (pageSize !== lessonPageSize) {
+                          setLessonPageSize(pageSize);
+                          try {
+                            sessionStorage.setItem(LESSON_PAGE_SIZE_KEY, String(pageSize));
+                          } catch {
+                            // React state still preserves the selection during navigation within this page.
+                          }
+                        }
                       },
                     }}
                     scroll={{ x: 1240, y: 'calc(100dvh - 390px)' }}
@@ -1562,11 +1622,26 @@ export default function OnlineCourseEditorPage() {
                         title: '排序',
                         dataIndex: 'sort_order',
                         align: 'center' as const,
-                        width: isMobile ? 64 : 76,
+                        width: isMobile ? 100 : 112,
                         render: (value, record) => {
                           const inputValue = lessonSortInputValue(record);
                           return (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <button
+                                type="button"
+                                className={lessonDrag.handleClassName}
+                                disabled={lessonDragDisabled}
+                                aria-label={`拖动排序：${record.name}`}
+                                title={keyword.trim() || lessonColumnSorted ? '清空搜索并取消列排序后可拖动' : '按住拖动排序，靠近上下边缘可持续滚动；Esc取消。也可按上下方向键移动。'}
+                                onPointerDown={event => lessonDrag.start(event, record.id)}
+                                onKeyDown={event => {
+                                  if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+                                  event.preventDefault();
+                                  if (!lessonDragDisabled && !lessonDrag.dragging) void saveLessonSort(record, Number(record.sort_order) + (event.key === 'ArrowUp' ? -1 : 1), true);
+                                }}
+                              ><HolderOutlined /></button>
                             <InputNumber
+                              disabled={lessonSortSaving || lessonDrag.dragging || inlineNameEditors.length > 0}
                               className="oc-lesson-sort-input"
                               min={1}
                               size="small"
@@ -1579,10 +1654,21 @@ export default function OnlineCourseEditorPage() {
                               }}
                               style={sortInputStyle(inputValue ?? value)}
                             />
+                            </span>
                           );
                         },
                       },
-                      { title: '课节名称', dataIndex: 'name', fixed: 'left', align: 'left' as const, width: 260, className: 'lesson-name-column', render: value => <Text strong style={{ display: 'block', textAlign: 'left' }}>{stripFileExtension(value) || value}</Text> },
+                      { title: '课节名称', dataIndex: 'name', fixed: 'left', align: 'left' as const, width: 260, className: 'lesson-name-column', render: (value, record) => (
+                        <InlineLessonName
+                          name={value || ''}
+                          displayName={stripFileExtension(value) || value}
+                          disabled={lessonSortSaving || lessonDrag.dragging}
+                          onSave={name => saveInlineLessonName(record.id, name)}
+                          onEditingChange={editing => setInlineNameEditors(previous => editing
+                            ? previous.includes(record.id) ? previous : [...previous, record.id]
+                            : previous.filter(id => id !== record.id))}
+                        />
+                      ) },
                       {
                         title: '对应素材',
                         width: 280,
@@ -1632,6 +1718,7 @@ export default function OnlineCourseEditorPage() {
                                   min={1}
                                   size="small"
                                   controls={false}
+                                  disabled={lessonSortSaving}
                                   value={lessonSortInputValue(item)}
                                   onClick={event => event.stopPropagation()}
                                   onChange={next => setLessonSortDraft(item, next)}

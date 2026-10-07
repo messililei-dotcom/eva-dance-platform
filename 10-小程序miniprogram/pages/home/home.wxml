@@ -1,3 +1,6 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <view class="page">
   <view class="section-head hero-head">
     <view>
@@ -66,3 +69,5 @@
 
   <button class="bottom-all-btn" bindtap="goSystemCourses">查看全部课程</button>
 </view>
+
+</block>

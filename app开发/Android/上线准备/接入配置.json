@@ -1,0 +1,10 @@
+{
+  "applicationID": "cn.com.swod.app",
+  "schemeCode": "FC220000013665046",
+  "clientHeader": "android",
+  "platform": "android",
+  "apiBase": "https://admin.swod.com.cn/api/app/v1",
+  "publicAPIBase": "https://admin.swod.com.cn/api/mini",
+  "configurationOnly": true,
+  "releaseReady": false
+}

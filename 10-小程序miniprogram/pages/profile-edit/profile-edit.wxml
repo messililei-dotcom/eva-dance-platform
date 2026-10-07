@@ -1,3 +1,6 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <view class="page">
   <view class="loading-container" wx:if="{{loading}}">
     <view class="loading-spinner"></view>
@@ -63,3 +66,5 @@
     </view>
   </block>
 </view>
+
+</block>

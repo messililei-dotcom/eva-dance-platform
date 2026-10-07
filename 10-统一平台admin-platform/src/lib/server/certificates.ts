@@ -1,3 +1,4 @@
+import { certificateBrandTemplate, certificateBrandOverlay, certificateWebsiteUrl, isBrandedCertificate, certificateTextLines, CERTIFICATE_FONT } from '@/lib/certificate-brand';
 import type { AdminDb } from '@/lib/server/admin-db';
 import fs from 'fs';
 import path from 'path';
@@ -91,7 +92,7 @@ export function certificatePublicUrl(id: number | string, no: string) {
 }
 
 export function certificateVerifyUrl(no: string) {
-  return `/api/certificates/verify?no=${encodeURIComponent(no)}`;
+  return certificateWebsiteUrl(no);
 }
 
 export function parseTemplateFields(value: unknown): CertificateFieldConfig[] {
@@ -136,7 +137,10 @@ export function normalizeTemplate(row: any, seriesId?: number): CertificateTempl
 export function getTemplateForSeries(db: AdminDb, seriesId: number): CertificateTemplate {
   ensureCertificateSchema(db);
   const row = db.prepare('SELECT * FROM CertificateTemplate WHERE series_id = ?').get(seriesId);
-  return normalizeTemplate(row, seriesId);
+  if (row) return normalizeTemplate(row, seriesId);
+  const course = db.prepare(seriesId < 0 ? 'SELECT name FROM Course WHERE id = ?' : 'SELECT name FROM CourseSeries WHERE id = ?').get(Math.abs(seriesId)) as { name?: string } | undefined;
+  const brand = certificateBrandTemplate(seriesId, course?.name || '课程');
+  return normalizeTemplate({ ...brand, fields_json: JSON.stringify(brand.fields) }, seriesId);
 }
 
 export async function ensureTemplateForSeries(db: AdminDb, seriesId: number, courseName = '') {
@@ -144,65 +148,14 @@ export async function ensureTemplateForSeries(db: AdminDb, seriesId: number, cou
   const existing = db.prepare('SELECT * FROM CertificateTemplate WHERE series_id = ?').get(seriesId);
   if (existing) return normalizeTemplate(existing, seriesId);
 
-  const generatedImage = await generateCertificateTemplateImage(courseName).catch(() => '');
-  const result = db.prepare(`
+  const branded = certificateBrandTemplate(seriesId, courseName || '课程');
+  db.prepare(`
     INSERT INTO CertificateTemplate (series_id, template_name, template_image_url, width, height, fields_json, status, updated_at)
-    VALUES (?, ?, ?, 1200, 850, ?, 'active', datetime('now','localtime'))
-  `).run(
-    seriesId,
-    courseName ? `${courseName}证书模板` : 'AI电子证书模板',
-    generatedImage,
-    JSON.stringify(DEFAULT_CERTIFICATE_FIELDS),
-  );
-  return normalizeTemplate({
-    id: result.lastInsertRowid,
-    series_id: seriesId,
-    template_name: courseName ? `${courseName}证书模板` : 'AI电子证书模板',
-    template_image_url: generatedImage,
-    width: 1200,
-    height: 850,
-    fields_json: JSON.stringify(DEFAULT_CERTIFICATE_FIELDS),
-    status: 'active',
-  }, seriesId);
-}
-
-export async function generateCertificateTemplateImage(courseName: string) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return '';
-
-  const model = process.env.OPENAI_CERTIFICATE_IMAGE_MODEL || 'image-2';
-  const prompt = [
-    'Generate a refined landscape electronic certificate background for a Chinese oriental dance academy.',
-    'Leave clean blank areas for recipient name, course name, issue date, and certificate number.',
-    'No readable text, no logos, no watermarks. Elegant gold, ivory, and deep burgundy accents.',
-    courseName ? `Course theme: ${courseName}.` : '',
-  ].filter(Boolean).join(' ');
-
-  const response = await fetch('https://api.openai.com/v1/images/generations', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      prompt,
-      size: '1536x1024',
-      n: 1,
-      response_format: 'b64_json',
-    }),
-  });
-
-  if (!response.ok) return '';
-  const payload = await response.json().catch(() => ({}));
-  const b64 = payload?.data?.[0]?.b64_json;
-  if (!b64) return '';
-
-  const dir = path.join(process.cwd(), 'public', 'uploads', 'certificates', 'templates');
-  fs.mkdirSync(dir, { recursive: true });
-  const filename = `ai-template-${Date.now()}.png`;
-  fs.writeFileSync(path.join(dir, filename), Buffer.from(b64, 'base64'));
-  return `/uploads/certificates/templates/${filename}`;
+    VALUES (?, ?, ?, ?, ?, ?, 'active', datetime('now','localtime'))
+    ON CONFLICT(series_id) DO NOTHING
+  `).run(seriesId, branded.template_name, branded.template_image_url, branded.width, branded.height, JSON.stringify(branded.fields));
+  const row = db.prepare('SELECT * FROM CertificateTemplate WHERE series_id = ?').get(seriesId);
+  return normalizeTemplate(row, seriesId);
 }
 
 export function escapeXml(value: unknown) {
@@ -224,19 +177,28 @@ export function renderCertificateSvg(record: any, template: CertificateTemplate)
     certificateNo: String(record.certificate_no || ''),
   };
 
+  const branded = isBrandedCertificate(template);
   const fieldNodes = template.fields.map(field => {
     const x = Math.round(width * field.x / 100);
     const y = Math.round(height * field.y / 100);
-    return `<text x="${x}" y="${y}" text-anchor="${field.align}" font-size="${field.fontSize}" fill="${escapeXml(field.color)}" font-weight="${field.key === 'memberName' ? 700 : 500}" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif">${escapeXml(values[field.key])}</text>`;
+    const text = branded ? certificateTextLines(values[field.key], field.key, field.fontSize, width) : { lines: [values[field.key]], fontSize: field.fontSize };
+    return `<text x="${x}" y="${y}" text-anchor="${field.align}" font-size="${text.fontSize}" fill="${escapeXml(field.color)}" font-weight="${field.key === 'memberName' ? 700 : 500}" font-family="${branded ? escapeXml(CERTIFICATE_FONT) : "'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif"}">${text.lines.map((line, i) => `<tspan x="${x}" dy="${i ? text.fontSize * 1.4 : 0}">${escapeXml(line)}</tspan>`).join('')}</text>`;
   }).join('\n');
 
-  const background = template.template_image_url
-    ? `<image href="${escapeXml(template.template_image_url)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice" />`
+  let image = template.template_image_url;
+  if (branded && image.startsWith('/uploads/certificates/templates/eva-20260930-') && /^\/uploads\/certificates\/templates\/eva-20260930-(online|performance|offline)\.png$/.test(image)) {
+    image = `data:image/png;base64,${fs.readFileSync(path.join(process.cwd(), 'public', image)).toString('base64')}`;
+  }
+  const logo = branded ? `data:image/png;base64,${fs.readFileSync(path.join(process.cwd(), 'public', 'logo-master-transparent-20261004.png')).toString('base64')}` : '';
+  const overlay = branded ? `<g transform="scale(${width / 1536} ${height / 1024})">${certificateBrandOverlay(template.series_id, values.courseName, values.certificateNo, logo)}</g>` : '';
+  const background = image
+    ? `<image href="${escapeXml(image)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice" />`
     : `<rect width="100%" height="100%" fill="#FFF9F0"/><rect x="46" y="46" width="${width - 92}" height="${height - 92}" rx="18" fill="none" stroke="#C8A96E" stroke-width="4"/><text x="${width / 2}" y="${height * 0.28}" text-anchor="middle" font-size="58" fill="#8B1A1A" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif">结业证书</text>`;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   ${background}
+  ${overlay}
   ${fieldNodes}
 </svg>`;
 }

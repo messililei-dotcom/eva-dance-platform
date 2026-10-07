@@ -4,7 +4,7 @@ const videoFeature = require('../../shared/video-feature');
 const { messageTarget } = require('../../shared/message-target');
 const labels = { welcome: '欢迎', growth: '成长', level_up: '升级', course: '线上课程', offline: '线下课程', consume: '核销', certificate: '证书', event: '赛事', system: '系统' };
 function normalize(item) {
-  return { ...item, recipientId: String(item.recipientId), typeLabel: labels[item.type] || '信息', timeText: String(item.createdAt || '').replace('T', ' ').slice(0, 16), target: messageTarget(item) };
+  return { ...item, recipientId: String(item.recipientId), typeLabel: labels[item.type] || '通知', timeText: String(item.createdAt || '').replace('T', ' ').slice(0, 16), target: messageTarget(item) };
 }
 Page(share.withShare('messages', {
   data: { items: [], unreadCount: 0, filter: 'all', nextCursor: 0, hasMore: false, loading: false, error: '', selected: null, marking: false,
@@ -26,7 +26,7 @@ Page(share.withShare('messages', {
       const items = (append ? this.data.items.concat(rows) : rows).filter(item => !seen.has(item.recipientId) && seen.add(item.recipientId));
       this.setData({ items, unreadCount: Number(result.unreadCount || 0), nextCursor: Number(result.nextCursor || 0), hasMore: !!result.hasMore });
     } catch (err) {
-      if (requestId === this.requestId) this.setData({ error: err.message || '信息加载失败，请重试' });
+      if (requestId === this.requestId) this.setData({ error: err.message || '通知加载失败，请重试' });
     } finally { if (requestId === this.requestId) this.setData({ loading: false }); }
   },
   refresh() { return this.loadMessages(); },

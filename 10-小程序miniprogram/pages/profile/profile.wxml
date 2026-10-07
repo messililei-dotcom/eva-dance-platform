@@ -1,3 +1,6 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <view class="profile-page">
   <view class="profile-shell">
     <view class="profile-head">
@@ -13,7 +16,7 @@
         <view class="profile-caption">个人中心</view>
       </view>
       <view class="head-actions" wx:if="{{isLoggedIn}}">
-        <button size="mini" class="head-action message-action" bindtap="goMessages" aria-label="信息，{{unreadMessageCount}}条未读"><image class="head-icon" src="/images/profile/bell.svg"/><text>信息</text><text class="message-badge" wx:if="{{unreadMessageCount > 0}}">{{unreadMessageCount > 99 ? '99+' : unreadMessageCount}}</text></button>
+        <button size="mini" class="head-action message-action" bindtap="goMessages" aria-label="通知，{{unreadMessageCount}}条未读"><image class="head-icon" src="/images/profile/bell.svg"/><text>通知</text><text class="message-badge" wx:if="{{unreadMessageCount > 0}}">{{unreadMessageCount > 99 ? '99+' : unreadMessageCount}}</text></button>
         <button size="mini" class="head-action" bindtap="logout"><image class="head-icon" src="/images/profile/logout.svg"/><text>退出</text></button>
       </view>
       <button size="mini" wx:else class="head-action" bindtap="goLogin">登录</button>
@@ -85,8 +88,8 @@
 
     <view class="link-row" bindtap="goCommerceOrders">
       <view>
-        <view class="row-title">收费订单</view>
-        <view class="row-desc">查看新收费订单、到账与退款记录</view>
+        <view class="row-title">我的订单</view>
+        <view class="row-desc">查看新我的订单、到账与退款记录</view>
       </view>
       <text class="row-arrow">›</text>
     </view>
@@ -151,3 +154,5 @@
     </view>
   </view>
 </view>
+
+</block>

@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-02",
+  "swiftVersion": "6.1.2",
+  "contractChecks": {
+    "command": "swift run --scratch-path /tmp/eva-ios-build-20261002 EvaCoreChecks",
+    "cases": 10,
+    "failed": 0,
+    "data": "URLProtocol fixtures; no production writes"
+  },
+  "sharedUIBuild": {
+    "product": "EvaDancePreview",
+    "platform": "macOS 14+",
+    "status": "passed",
+    "warnings": "onChange old signature retained for iOS 16 compatibility"
+  },
+  "plistSyntax": "passed: project.pbxproj, Info.plist, PrivacyInfo.xcprivacy",
+  "archivedFileHashes": {
+    "checked": 21,
+    "allEqual": true
+  },
+  "iosSDKBuild": "not run: full Xcode unavailable",
+  "simulator": "not run",
+  "physicalDevice": "not run",
+  "releaseCheck": "blocked: 9 required gates",
+  "uploaded": false,
+  "submitted": false,
+  "productionModified": false
+}

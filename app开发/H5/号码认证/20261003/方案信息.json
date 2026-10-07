@@ -1,0 +1,13 @@
+{
+  "platform": "h5",
+  "schemeName": "伊娃东方舞H5",
+  "schemeCode": "FC220000013785054",
+  "pageURL": "https://www.swod.com.cn/",
+  "origin": "https://www.swod.com.cn",
+  "createdDate": "2026-10-03",
+  "consoleListVerified": true,
+  "sdkIntegrated": false,
+  "realDeviceVerified": false,
+  "productionEnabled": false,
+  "operatorNotice": "中国移动方向需要创建方案后的第2个工作日方可调用，实际以运营商审核通过为准。"
+}

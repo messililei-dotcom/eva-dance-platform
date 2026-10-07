@@ -335,7 +335,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
   },
 
   goCommerceOrders() {
-    videoFeature.navigateTo({ url: "/pages/commerce-orders/commerce-orders" });
+    wx.navigateTo({ url: "/pages/shop-orders/shop-orders" });
   },
 
   openProfileCourse(event) {

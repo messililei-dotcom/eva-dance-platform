@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import ExclusiveOrders from '@/components/exclusive-orders';
 import { Button, Card, Col, DatePicker, Empty, Input, Row, Select, Space, Spin, Statistic, Tabs, Tag, Typography } from 'antd';
 import { Table } from '@/components/adaptive-table';
 import { DownloadOutlined, ReloadOutlined, SearchOutlined, ShoppingCartOutlined } from '@ant-design/icons';
@@ -77,12 +78,13 @@ export default function OrdersPage() {
   if (loading) return <div style={{ padding: 80, textAlign: 'center' }}><Spin size="large" /></div>;
 
   return (
-    <div>
+    <div style={{position:"relative"}}>
       <div className="page-header">
         <Title level={2}>订单中心</Title>
         <Text type="secondary">统一聚合线下缴费、网课订单、电商订单和财务订单。</Text>
       </div>
 
+      <ExclusiveOrders />
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={6}><Card><Statistic title="全部订单" value={summary.total || total} prefix={<ShoppingCartOutlined />} /></Card></Col>
         <Col xs={24} md={6}><Card><Statistic title="订单总额" value={formatCompactMoney(summary.totalAmount || 0)} valueStyle={{ color: '#F72A8A' }} /></Card></Col>

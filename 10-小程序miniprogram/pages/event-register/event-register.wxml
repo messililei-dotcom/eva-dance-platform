@@ -1,3 +1,6 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <view class="register-page">
   <view class="register-head"><view class="register-kicker">赛事报名</view><view class="register-title">{{competition.name || '伊娃东方舞赛事'}}</view><view class="register-note">{{competition.startDate || '比赛日期待定'}} · {{competition.location || '地点待定'}}</view></view>
   <view class="form-card card">
@@ -14,3 +17,5 @@
   <button class="submit-btn" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submit">{{submitting ? '正在提交…' : '提交赛事报名'}}</button>
   <view class="submit-note">提交即表示您同意工作人员使用上述信息联系您确认赛事报名。</view>
 </view>
+
+</block>

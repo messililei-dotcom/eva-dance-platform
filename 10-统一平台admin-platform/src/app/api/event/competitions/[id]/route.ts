@@ -37,12 +37,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (!name) return jsonError('赛事名称不能为空');
 
   return withEventDb((db) => {
-    const existing = db.prepare('SELECT id FROM event_competitions WHERE id = ?').get(routeParams.id);
+    const existing = db.prepare('SELECT id, registration_public, judge_scores_public FROM event_competitions WHERE id = ?').get(routeParams.id);
     if (!existing) return jsonError('赛事不存在', 404);
 
     db.prepare(`
       UPDATE event_competitions
-      SET name = ?, code = ?, status = ?, registration_status = ?, start_date = ?,
+      SET name = ?, code = ?, status = ?, registration_status = ?, registration_public = ?, judge_scores_public = ?, start_date = ?,
           end_date = ?, registration_start = ?, registration_end = ?, location = ?,
           organizer = ?, description = ?, cover_url = ?, max_players = ?,
           registration_fee = ?, updated_at = ?
@@ -52,6 +52,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       cleanText(body.code),
       'published',
       cleanText(body.registrationStatus ?? body.registration_status, 'closed'),
+      body.registrationPublic === undefined ? Number(existing.registration_public) : body.registrationPublic === true ? 1 : 0,
+      body.judgeScoresPublic === undefined ? Number(existing.judge_scores_public) : body.judgeScoresPublic === true ? 1 : 0,
       cleanText(body.startDate ?? body.start_date),
       cleanText(body.endDate ?? body.end_date),
       cleanText(body.registrationStart ?? body.registration_start),
@@ -76,7 +78,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const body = await request.json().catch(() => ({}));
   const action = cleanText(body.action);
-  const statusMap: Record<string, { status?: string; registration_status?: string }> = {
+  const statusMap: Record<string, { status?: string; registration_status?: string; registration_public?: number; judge_scores_public?: number }> = {
+    showJudgeScores: { judge_scores_public: 1 },
+    hideJudgeScores: { judge_scores_public: 0 },
+    showRegistration: { registration_public: 1 },
+    hideRegistration: { registration_public: 0 },
     closeRegistration: { registration_status: 'closed' },
     openRegistration: { registration_status: 'open' },
   };
@@ -95,6 +101,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (patch.registration_status) {
       sets.push('registration_status = ?');
       values.push(patch.registration_status);
+    }
+    if (patch.registration_public !== undefined) {
+      sets.push('registration_public = ?');
+      values.push(patch.registration_public);
+    }
+    if (patch.judge_scores_public !== undefined) {
+      sets.push('judge_scores_public = ?');
+      values.push(patch.judge_scores_public);
     }
     values.push(routeParams.id);
     db.prepare(`UPDATE event_competitions SET ${sets.join(', ')} WHERE id = ?`).run(...values);

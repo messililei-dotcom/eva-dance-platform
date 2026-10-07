@@ -1,0 +1,14 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
+<view class="shop-page">
+ <view wx:if="{{loading}}" class="empty">正在加载订单…</view>
+ <view wx:if="{{error}}" class="error">{{error}}<button class="outline" bindtap="reload">重新加载</button></view>
+ <view wx:if="{{!loading && !items.length}}" class="empty">购物袋暂无商品，请到商城选择。</view>
+ <view class="panel" wx:for="{{items}}" wx:key="id"><view class="line-item"><image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill"/><view class="grow"><view class="product-name">{{item.name}}</view><view class="muted">{{item.specText}}</view><view class="price">¥{{item.priceText}}</view><view wx:if="{{item.unavailable}}" class="error">商品已下架或库存不足，请调整</view></view></view><view class="row"><button class="text-button" data-id="{{item.id}}" data-delta="0" bindtap="changeQuantity">移除</button><view class="quantity"><button data-id="{{item.id}}" data-delta="-1" bindtap="changeQuantity">−</button><text>{{item.quantity}}</text><button data-id="{{item.id}}" data-delta="1" bindtap="changeQuantity">＋</button></view></view></view>
+ <view class="panel"><view class="row"><text class="section-title">收货地址</text></view><view class="muted">默认使用个人中心地址，修改后同步保存。</view><input class="field" value="{{recipient}}" data-field="recipient" bindinput="input" bindblur="autoSaveAddress" placeholder="收件人" maxlength="40"/><input class="field" value="{{phone}}" data-field="phone" bindinput="input" bindblur="autoSaveAddress" placeholder="收件手机号" type="text" maxlength="25"/><textarea class="field address" value="{{address}}" data-field="address" bindinput="input" bindblur="autoSaveAddress" placeholder="省、市、区、街道及门牌号" maxlength="300"/><button class="outline" loading="{{busy}}" disabled="{{busy}}" bindtap="saveAddress">保存收货地址</button></view>
+ <view class="panel"><view class="row"><text>配送</text><text>快递包邮</text></view><view class="row"><text>支付方式</text><text>微信支付</text></view><view wx:if="{{!paymentEnabled}}" class="muted">微信支付暂未开通，商品可正常浏览。</view></view>
+ <view class="bottom-bar"><view>合计 <text class="price">¥{{totalText}}</text></view><button class="primary" loading="{{busy}}" disabled="{{busy || loading || !items.length || unavailable || !paymentEnabled}}" bindtap="submit">下单并支付</button></view>
+</view>
+
+</block>

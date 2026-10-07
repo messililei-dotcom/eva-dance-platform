@@ -15,7 +15,13 @@
     "pages/profile-edit/profile-edit",
     "pages/player/player",
     "pages/detail/detail",
-    "pages/messages/messages"
+    "pages/messages/messages",
+    "pages/mall/mall",
+    "pages/shop-product/shop-product",
+    "pages/shop-checkout/shop-checkout",
+    "pages/shop-orders/shop-orders",
+    "pages/course-checkout/course-checkout",
+    "pages/event-judge/event-judge"
   ],
   "window": {
     "navigationBarTitleText": "伊娃东方舞·东方舞圈",
@@ -46,6 +52,12 @@
         "text": "赛事",
         "iconPath": "images/tab-practice.png",
         "selectedIconPath": "images/tab-practice-active.png"
+      },
+      {
+        "pagePath": "pages/mall/mall",
+        "text": "商城",
+        "iconPath": "images/tab-shop.png",
+        "selectedIconPath": "images/tab-shop-active.png"
       },
       {
         "pagePath": "pages/profile/profile",

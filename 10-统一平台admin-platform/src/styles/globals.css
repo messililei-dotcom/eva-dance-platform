@@ -2685,9 +2685,9 @@ textarea.ant-input {
 
 .online-course-replica .oc-material-folder-card,
 .online-course-replica .oc-material-main-card {
-  height: 1080px;
+  height: var(--oc-material-height, calc(100dvh - 144px));
   max-height: none;
-  min-height: 720px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -2787,7 +2787,7 @@ textarea.ant-input {
 }
 
 .online-course-replica .oc-material-main-card .ant-table-body {
-  max-height: 820px !important;
+  max-height: 60dvh !important;
   overflow: auto !important;
 }
 
@@ -5091,5 +5091,24 @@ input[type='number']::-webkit-outer-spin-button {
   [contenteditable='true'],
   .ant-table-cell {
     user-select: text;
+  }
+}
+
+/* Keep material pagination visible while the rows fill the remaining card height. */
+@media (min-width: 768px) {
+  .online-course-replica .oc-material-main-card .ant-table,
+  .online-course-replica .oc-material-main-card .ant-table-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-height: 0;
+  }
+  .online-course-replica .oc-material-main-card .ant-table-header {
+    flex: 0 0 auto;
+  }
+  .online-course-replica .oc-material-main-card .ant-table-body {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none !important;
   }
 }

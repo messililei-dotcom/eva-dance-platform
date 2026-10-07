@@ -1,5 +1,7 @@
 const runtimeConfig = require("../shared/runtime-config");
 
+const { sortEventsNewestFirst } = require("../shared/event-sort");
+
 const DEFAULT_TIMEOUT = 8000;
 
 function getMiniApp() {
@@ -237,6 +239,8 @@ function normalizeAssets(value, apiBase) {
       const normalizedPath = normalizeImagePath(path);
       if (normalizedPath.startsWith("/api/course/")) return withOrigin(normalizedPath);
     }
+    if (isImageKey(key) && /^\/api\/shop\/images\//.test(trimmed)) return runtimeConfig.officialWebsiteUrl + trimmed;
+    if (isImageKey(key) && /^https:\/\/www\.swod\.com\.cn\/api\/shop\/images\//.test(trimmed)) return trimmed;
     if (trimmed.startsWith("/api/course/") && isImageKey(key)) return withOrigin(trimmed);
     if (isImageKey(key)) {
       const path = trimmed.replace(/^https?:\/\/[^/]+/, "");
@@ -372,7 +376,7 @@ module.exports = {
     return request("/public/home-stats", { auth: false });
   },
   getEvents() {
-    return request("/events", { auth: false });
+    return request("/events", { auth: false }).then(sortEventsNewestFirst);
   },
   getEventDetail(id) {
     return request(`/events/${id}`, { auth: false });
@@ -480,7 +484,7 @@ module.exports = {
   getEventRegistrations() {
     return request(`/member/events?member_id=${getMemberId()}`).then(data => {
       const rows = Array.isArray(data) ? data : data && data.entries || [];
-      return rows.map(item => ({ ...item, id: item.id || item.playerId }));
+      return sortEventsNewestFirst(rows.map(item => ({ ...item, id: item.id || item.playerId })));
     });
   },
   getCheckins() {

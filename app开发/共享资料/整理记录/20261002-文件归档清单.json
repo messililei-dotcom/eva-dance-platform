@@ -1,0 +1,111 @@
+{
+  "date": "2026-10-02",
+  "files": [
+    {
+      "from": "app开发/伊娃东方舞网课系统_iOS_Android_APP升级开发实施方案_V3.0.docx",
+      "to": "app开发/共享资料/开发方案/伊娃东方舞网课系统_iOS_Android_APP升级开发实施方案_V3.0.docx",
+      "sha256": "19242b3710c4408c10fd77cf88f0e0c182d887a0686d1763c6b27537d4cf61e0"
+    },
+    {
+      "from": "app开发/伊娃东方舞网课系统_iOS_Android_APP升级开发实施方案_V3.0.md",
+      "to": "app开发/共享资料/开发方案/伊娃东方舞网课系统_iOS_Android_APP升级开发实施方案_V3.0.md",
+      "sha256": "fa8122e6a382fe98dfce7d67e6459b5316f76a8c73e5d8327f88dd4984abb592"
+    },
+    {
+      "from": "app开发/伊娃东方舞网课系统_iOS_Android_APP升级开发实施方案_V2.0.docx",
+      "to": "app开发/共享资料/开发方案/伊娃东方舞网课系统_iOS_Android_APP升级开发实施方案_V2.0.docx",
+      "sha256": "00dc918d16cd9aebc8262066d761878ec5f981c52cb8088bec1a36d0e64d13b0"
+    },
+    {
+      "from": "app开发/Apple开发者组织注册进度.md",
+      "to": "app开发/iOS/注册与上架/Apple开发者组织注册进度.md",
+      "sha256": "749c8398db371479bdcf26e46ec15e4b1faa41a5ccc9ae45c7abdda53e6a5703"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/备案字段草稿.json",
+      "to": "app开发/共享资料/ICP备案/20261002/备案字段草稿.json",
+      "sha256": "e407688f75be870a5caa34c021900262945aab281a1925cc5673b7d116661b22"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/准备状态.txt",
+      "to": "app开发/共享资料/ICP备案/20261002/准备状态.txt",
+      "sha256": "b2ae646e73c26b5f9b3d543e08d60e7c847fbbd59369f51e7636152005db7a35"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/Apple身份信息待填写.png",
+      "to": "app开发/iOS/注册与上架/20261002/Apple身份信息待填写.png",
+      "sha256": "cf0f92dc434731a338f2950d63d312df77a8c77e77d581564c92a13a0c8404bd"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/DUNS申请填写中.jpg",
+      "to": "app开发/iOS/注册与上架/20261002/DUNS申请填写中.jpg",
+      "sha256": "b1419784f69b5b12ee86697a8de7c22043f90ffcc036a1838e4b3506220bd13d"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/Apple组织注册资料.json",
+      "to": "app开发/iOS/注册与上架/20261002/Apple组织注册资料.json",
+      "sha256": "e48b159282c7d7f37840eec6766aef175b98301fc64b29623fbf190e5d8b3b6c"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/Apple注册身份验证说明.png",
+      "to": "app开发/iOS/注册与上架/20261002/Apple注册身份验证说明.png",
+      "sha256": "9f3ed3d6aa98be351657b2b1d142de9573e721794c6c07016d0a882d9e7eb63a"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/android/android-release-certificate.pem",
+      "to": "app开发/Android/备案资料/20261002/android-release-certificate.pem",
+      "sha256": "abdff7ee3d373bf6a36d9b8bb743c3c48a52f08c79eed936b131d3e008d69fd1"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/android/备案特征信息.json",
+      "to": "app开发/Android/备案资料/20261002/备案特征信息.json",
+      "sha256": "d435514719dbd838fa1e1359a656feec78566669e16edd387ca6a6117c55d704"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/harmonyos/EvaDance-HarmonyOS-Release.csr",
+      "to": "app开发/HarmonyOS/备案资料/20261002/EvaDance-HarmonyOS-Release.csr",
+      "sha256": "8909d8f35aa7f110f7e61178ae2daa2712d6c29b2d73a33bfb20492ee155e454"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/harmonyos/发布证书申请待提交.jpg",
+      "to": "app开发/HarmonyOS/备案资料/20261002/发布证书申请待提交.jpg",
+      "sha256": "9e5256fafcf6f0fc2746a7943c2ed5b1d09520cd099fd12684bd44a4b202f498"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/harmonyos/APP-ID已创建.jpg",
+      "to": "app开发/HarmonyOS/备案资料/20261002/APP-ID已创建.jpg",
+      "sha256": "72332aa4a61e703947f5f89a7bf0cc1c169bfc688cef5c94c87a71317b87283b"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/harmonyos/准备状态.json",
+      "to": "app开发/HarmonyOS/备案资料/20261002/准备状态.json",
+      "sha256": "f28eec67bc1aa719114f5f22efff16ebd9e930556acdf9d41c7f32fad36f00ed"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/harmonyos/EvaDance-HarmonyOS-Release-named.csr",
+      "to": "app开发/HarmonyOS/备案资料/20261002/EvaDance-HarmonyOS-Release-named.csr",
+      "sha256": "d07192a43de5330afd4f50db382a7793f5e81631050d88b50f9fba2ed8ff2194"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/harmonyos/EvaDance-HarmonyOS-Release.cer",
+      "to": "app开发/HarmonyOS/备案资料/20261002/EvaDance-HarmonyOS-Release.cer",
+      "sha256": "471f48a6970be3e4674fe9f78035f919feb0703c871c423e507c5acfd492622a"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/harmonyos/release-leaf.pem",
+      "to": "app开发/HarmonyOS/备案资料/20261002/release-leaf.pem",
+      "sha256": "7da1bbb523f76eacf26c98ed12df1bba8ff54551cbd158c9af20f09bd78c89b5"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/harmonyos/备案特征信息.json",
+      "to": "app开发/HarmonyOS/备案资料/20261002/备案特征信息.json",
+      "sha256": "b215fa10bce9892a2e25af02715ffb2bd2d0aac92ad0603e4cb742f7beb2881a"
+    },
+    {
+      "from": "app开发/ICP备案资料_20261002/harmonyos/发布证书备案信息.jpg",
+      "to": "app开发/HarmonyOS/备案资料/20261002/发布证书备案信息.jpg",
+      "sha256": "3d956d62476b1389fcbf44877b83c106a675454e1c7bd25badf88a7ea7ff0185"
+    }
+  ],
+  "verification": "每个文件移动前后 SHA-256 一致"
+}

@@ -53,6 +53,7 @@ Page(share.withShare("offline-detail", {
       this.setData({ loading: false, error: err.message || "课程加载失败" });
     }
   },
+  buyCourse(e){wx.navigateTo({url:`/pages/course-checkout/course-checkout?kind=offline&id=${e.currentTarget.dataset.id}`});},
   openSchedule(event) {
     const selected = event && event.currentTarget && event.currentTarget.dataset.courseId;
     const ids = selected ? [String(selected)] : (this.data.course.periods || []).map(item => String(item.source_id));

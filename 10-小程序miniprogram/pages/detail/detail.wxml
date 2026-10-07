@@ -1,3 +1,6 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <view wx:if="{{loadError}}" class="page"><view class="empty card">{{loadError}}<button bindtap="retryDetail">重新加载</button></view></view>
 <block wx:else>
 <view class="page detail-page">
@@ -25,6 +28,7 @@
 
   </view>
 
+  <button wx:if="{{!authorized && !series.is_free && series.price > 0}}" bindtap="buyCourse">报名并支付</button>
   <view class="lesson-list">
     <view class="panel-title">课程目录</view>
     <view wx:if="{{courses.length}}">
@@ -44,5 +48,7 @@
     <button class="primary-btn" bindtap="primaryAction">播放内容</button>
   </view>
 </view>
+
+</block>
 
 </block>

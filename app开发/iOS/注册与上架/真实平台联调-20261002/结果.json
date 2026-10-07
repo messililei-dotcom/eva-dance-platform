@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-02",
+  "platform": "https://admin.swod.com.cn",
+  "publicCourseRoute": "/api/mini/public/series",
+  "httpStatus": 200,
+  "seriesCount": 58,
+  "appConfigHTTPStatus": 401,
+  "scheme": "EvaDance",
+  "swiftChecks": 15,
+  "iosBuild": true,
+  "xcodeStatus": "Running EvaDance on iPhone 18 Pro Max",
+  "sharedUIVerified": [
+    "真实课程列表",
+    "全力出肌·舞蹈核心风暴详情",
+    "35课节目录"
+  ],
+  "simulatorVisualVerified": false,
+  "deviceHubIssue": "timeoutReached",
+  "productionModified": false
+}

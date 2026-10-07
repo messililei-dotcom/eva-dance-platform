@@ -1,5 +1,7 @@
 // Run the compiled copy from .shop-worker; never seed or replace the production DB.
 const { shopDb, reconcileOrder } = require("./shop-service.js");
+const {ensureExclusive} = require('./exclusive-orders.js');
+const {reconcileExclusiveRefund} = require('./exclusive-refunds.js');
 let stop = false;
 process.on("SIGTERM", () => {
   stop = true;
@@ -8,6 +10,8 @@ process.on("SIGINT", () => {
   stop = true;
 });
 async function tick() {
+  const refunds=shopDb(db=>{ensureExclusive(db);return db.prepare("SELECT id FROM exclusive_refunds WHERE status='pending' ORDER BY created_at LIMIT 100").all()});
+  for(const refund of refunds){if(stop)return;try{await reconcileExclusiveRefund(refund.id)}catch(error){console.error('[exclusive-refund]',refund.id,error.name || 'Error')}}
   const orders = shopDb((db) =>
     db
       .prepare(

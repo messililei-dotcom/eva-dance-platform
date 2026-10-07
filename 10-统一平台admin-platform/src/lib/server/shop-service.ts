@@ -1,6 +1,7 @@
 import { openAdminDb, type AdminDb } from "./admin-db";
 import {
   ensureShop,
+  validateCourseRefund,
   ShopError,
   orderById,
   cancelConfirmed,
@@ -101,19 +102,31 @@ export async function reconcileOrder(id: string, cancel = false) {
 export async function payOrder(
   id: string,
   memberId: number,
-  context: { mobile: boolean; wechatBrowser: boolean; ip: string },
+  context: { mobile: boolean; wechatBrowser: boolean; ip: string; openid?: string; miniprogram?: boolean },
 ) {
   const config = shopConfig();
   const existing = shopDb((db) => orderById(db, id, memberId));
-  if (!paymentAvailability(config)[existing.provider])
+  if (!(context.miniprogram ? existing.provider === "wechat" && paymentAvailability(config).miniprogram : paymentAvailability(config)[existing.provider]))
     throw new ShopError("该支付方式尚未开通", 503);
+  const paymentAppId = context.miniprogram ? config.wxMiniApp : config.wxApp;
+  if (existing.payment_app_id && existing.payment_app_id !== paymentAppId) throw new ShopError('请在原支付渠道继续付款或取消后重新下单',409);
+  let openid = context.openid || "";
+  if (context.miniprogram) {
+    openid = shopDb(db => {
+      try {return db.prepare("SELECT openid FROM WechatIdentity WHERE member_id=? AND app_id=? LIMIT 1").get<{openid:string}>(memberId,paymentAppId)?.openid || "";}
+      catch {return "";}
+    });
+    if(context.miniprogram && !openid) throw new ShopError('请重新登录小程序后付款',401);
+  }
   const order = shopDb((db) =>
     db.transaction(() => {
+      const link=db.prepare('SELECT exclusive_id FROM shop_order_advisors WHERE order_id=?').get<{exclusive_id:string}>(id);
+      if(link){const offer=db.prepare('SELECT status,expires_at FROM exclusive_orders WHERE id=?').get<{status:string;expires_at:number}>(link.exclusive_id);if(!offer||offer.status!=='pending'||(offer.expires_at&&offer.expires_at<=Date.now()))throw new ShopError('专属订单已停止收款，请联系顾问',409);}
       const changed = db
         .prepare(
-          "UPDATE shop_online_orders SET pay_lock_until=?,payment_attempted=1 WHERE id=? AND member_id=? AND status='pending' AND expires_at>? AND pay_lock_until<=?",
+          "UPDATE shop_online_orders SET pay_lock_until=?,payment_attempted=1,payment_app_id=? WHERE id=? AND member_id=? AND status='pending' AND expires_at>? AND pay_lock_until<=? AND (payment_app_id='' OR payment_app_id=?)",
         )
-        .run(Date.now() + 60000, id, memberId, Date.now() + 65000, Date.now());
+        .run(Date.now() + 60000, paymentAppId, id, memberId, Date.now() + 65000, Date.now(),paymentAppId);
       if (!changed.changes)
         throw new ShopError(
           "订单已付款、即将到期或正在处理中，请刷新订单",
@@ -122,22 +135,6 @@ export async function payOrder(
       return orderById(db, id, memberId);
     })(),
   );
-  let openid = "";
-  if (config.wxJsapi && context.wechatBrowser) {
-    openid = shopDb((db) => {
-      try {
-        return (
-          db
-            .prepare(
-              "SELECT openid FROM WechatIdentity WHERE member_id=? AND app_id=? LIMIT 1",
-            )
-            .get<{ openid: string }>(memberId, config.wxApp)?.openid || ""
-        );
-      } catch {
-        return "";
-      }
-    });
-  }
   try {
     return await startPayment(order, { ...context, openid }, config);
   } finally {
@@ -155,6 +152,7 @@ export async function approveRefund(
 ) {
   const order = shopDb((db) =>
     db.transaction(() => {
+      if(db.prepare('SELECT exclusive_id FROM shop_order_advisors WHERE order_id=?').get(id))throw new ShopError('请在订单中心的专属订单详情中办理退款',409);
       db.prepare(
         "UPDATE shop_online_orders SET updated_at=updated_at WHERE id=?",
       ).run(id);
@@ -172,6 +170,7 @@ export async function approveRefund(
       if (current.shipped_at && !returned && current.status !== "refunding")
         throw new ShopError("请先确认退货已收到，再办理退款");
       if (current.status !== "refunding") {
+        validateCourseRefund(db,id);
         db.prepare(
           "UPDATE shop_online_orders SET status='refunding',refund_restock=1,updated_at=? WHERE id=?",
         ).run(Date.now(), id);

@@ -28,6 +28,8 @@ import { Table } from '@/components/adaptive-table';
 import {
   DeleteOutlined,
   EditOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined,
   PlusOutlined,
   ReloadOutlined,
   SearchOutlined,
@@ -55,6 +57,7 @@ type ProductRow = {
   stock: number;
   warningStock: number;
   status: string;
+  hidden: boolean;
   createdAt: string;
   updatedAt: string;
   raw: Record<string, any>;
@@ -105,8 +108,9 @@ function normalizeProduct(raw: any): ProductRow {
     stock: numberValue(raw.stock ?? raw.quantity),
     warningStock: numberValue(raw.warning_stock ?? raw.warningStock, 3),
     status: textValue(raw.status, '在售'),
+    hidden: Number(raw.is_hidden) === 1,
     createdAt: textValue(raw.created_at ?? raw.createdAt, '-').slice(0, 16),
-    updatedAt: textValue(raw.updated_at ?? raw.updatedAt, '-').slice(0, 16),
+    updatedAt: textValue(raw.updated_at ?? raw.updatedAt, '-'),
     raw,
   };
 }
@@ -247,6 +251,7 @@ export default function EcommercePage() {
   const [logForm] = Form.useForm();
   const [saleRecordForm] = Form.useForm();
 
+  const [visibilityBusy, setVisibilityBusy] = useState(false);
   const load = () => {
     setLoading(true);
     ecommerceApi.getOverview()
@@ -459,6 +464,18 @@ export default function EcommercePage() {
     load();
   };
 
+  const toggleVisibility = async (items: ProductRow[], hidden: boolean) => {
+    if (visibilityBusy) return;
+    setVisibilityBusy(true);
+    try {
+      const results = await Promise.allSettled(items.map(item => ecommerceApi.updateProduct(item.id, {hidden, expectedUpdatedAt:item.updatedAt})));
+      const failed = results.filter(result => result.status === 'rejected');
+      if (failed.length) message.error(`${failed.length} 个规格更新失败，请刷新后重试`);
+      else message.success(hidden ? '已隐藏，官网和小程序商城不再展示' : '已恢复显示，仍按商品在售状态展示');
+      load();
+    } finally { setVisibilityBusy(false); }
+  };
+
   const deleteProduct = (product: ProductRow) => {
     if (product.stock > 0) {
       message.warning('该商品仍有库存，不能删除。请先完成销售出库或库存调整。');
@@ -598,7 +615,8 @@ export default function EcommercePage() {
                 {group.minPrice === group.maxPrice ? money(group.minPrice) : `${money(group.minPrice)} - ${money(group.maxPrice)}`}
               </Descriptions.Item>
               <Descriptions.Item label="库存状态">
-                {group.lowStockCount > 0 ? <Tag color="orange">低库存 {group.lowStockCount}</Tag> : <Tag color="green">正常</Tag>}
+                {group.variants.some(item => item.hidden) && <Tag>{group.variants.every(item => item.hidden) ? '已隐藏' : '部分隐藏'}</Tag>}
+                              {group.lowStockCount > 0 ? <Tag color="orange">低库存 {group.lowStockCount}</Tag> : <Tag color="green">正常</Tag>}
               </Descriptions.Item>
             </Descriptions>
           </Space>
@@ -649,15 +667,17 @@ export default function EcommercePage() {
     { title: '库存', dataIndex: 'stock', align: 'right' as const, width: 90, sorter: (a, b) => a.stock - b.stock, render: value => <Text strong style={{ color: '#16A34A' }}>{value}</Text> },
     { title: '预警', dataIndex: 'warningStock', align: 'right' as const, width: 90, sorter: (a, b) => a.warningStock - b.warningStock },
     { title: '售价', dataIndex: 'salePrice', align: 'right' as const, width: 100, sorter: (a, b) => a.salePrice - b.salePrice, render: money },
+    { title: '展示', dataIndex: 'hidden', width: 90, render: value => <Tag color={value ? 'default' : 'green'}>{value ? '已隐藏' : '显示'}</Tag> },
     { title: '状态', dataIndex: 'status', width: 100, sorter: (a, b) => compareTableValues(a.status, b.status), render: value => <Tag color={value === '在售' || value === 'active' ? 'green' : 'default'}>{value}</Tag> },
-    { title: '更新时间', dataIndex: 'updatedAt', width: 150, sorter: (a, b) => compareTableValues(a.updatedAt, b.updatedAt) },
+    { title: '更新时间', dataIndex: 'updatedAt', width: 150, render: value => String(value).slice(0, 16), sorter: (a, b) => compareTableValues(a.updatedAt, b.updatedAt) },
     {
       title: '操作',
       fixed: 'right',
-      width: 190,
+      width: 310,
       render: (_, record) => (
         <Space size={6}>
           <Tooltip title="编辑"><Button icon={<EditOutlined />} onClick={() => openProductModal(record)} /></Tooltip>
+          <Button loading={visibilityBusy} icon={record.hidden ? <EyeOutlined /> : <EyeInvisibleOutlined />} onClick={() => void toggleVisibility([record], !record.hidden)}>{record.hidden ? '显示' : '隐藏'}</Button>
           <Button onClick={() => openStockModal(record)}>入库</Button>
           <Button onClick={() => openSaleModal(record)} disabled={record.stock <= 0}>销售</Button>
           <Tooltip title="删除"><Button danger icon={<DeleteOutlined />} onClick={() => deleteProduct(record)} /></Tooltip>
@@ -710,9 +730,9 @@ export default function EcommercePage() {
                     <Card
                       className="ecommerce-workbench-card"
                       hoverable
-                      styles={{ body: { padding: 12, height: '100%' } }}
+                      styles={{ body: { padding: 12 } }}
                       onClick={() => openGroupDetail(group)}
-                      style={{ cursor: 'pointer', width: WORKBENCH_CARD_WIDTH, maxWidth: '100%', height: WORKBENCH_CARD_HEIGHT }}
+                      style={{ cursor: 'pointer', width: WORKBENCH_CARD_WIDTH, maxWidth: '100%', minHeight: WORKBENCH_CARD_HEIGHT }}
                     >
                       <Space className="ecommerce-product-card-layout" align="start" size={10} style={{ width: '100%', height: '100%' }}>
                         <div className="ecommerce-product-image" style={{
@@ -733,13 +753,14 @@ export default function EcommercePage() {
                             <ShopOutlined style={{ fontSize: 34, color: '#CBD5E1' }} />
                           )}
                         </div>
-                        <Space className="ecommerce-product-content" direction="vertical" style={{ flex: 1, minWidth: 0, height: WORKBENCH_IMAGE_SIZE, justifyContent: 'space-between' }} size={4}>
+                        <Space className="ecommerce-product-content" direction="vertical" style={{ flex: 1, minWidth: 0, minHeight: WORKBENCH_IMAGE_SIZE, justifyContent: 'space-between' }} size={4}>
                           <div>
                             <Space className="ecommerce-product-heading" align="start" style={{ justifyContent: 'space-between', width: '100%' }}>
                               <div style={{ minWidth: 0 }}>
                                 <Text type="secondary">{group.category} · {group.spec}</Text>
                                 <div><Text className="ecommerce-product-name" strong ellipsis style={{ maxWidth: 128 }}>{group.name}</Text></div>
                               </div>
+                              {group.variants.some(item => item.hidden) && <Tag>{group.variants.every(item => item.hidden) ? '已隐藏' : '部分隐藏'}</Tag>}
                               {group.lowStockCount > 0 ? <Tag color="orange">低库存 {group.lowStockCount}</Tag> : <Tag color="green">正常</Tag>}
                             </Space>
                             <Row className="ecommerce-product-stats" gutter={4} style={{ marginTop: 6 }}>
@@ -750,6 +771,7 @@ export default function EcommercePage() {
                           </div>
                           <Space className="ecommerce-card-actions" size={3} wrap onClick={event => event.stopPropagation()}>
                             <Button size="small" onClick={() => openProductModal(group.variants[0])}>编辑</Button>
+                            <Button size="small" loading={visibilityBusy} onClick={() => void toggleVisibility(group.variants, !group.variants.every(item => item.hidden))}>{group.variants.every(item => item.hidden) ? '显示' : '隐藏'}</Button>
                             <Button size="small" onClick={() => openStockModal(group)}>入库</Button>
                             <Button size="small" type="primary" onClick={() => openSaleModal(group)} disabled={group.stock <= 0}>销售</Button>
                             <Tooltip title="删除">

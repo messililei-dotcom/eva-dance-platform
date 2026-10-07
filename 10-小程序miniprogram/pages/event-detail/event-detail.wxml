@@ -1,3 +1,6 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <view class="detail-page">
   <view wx:if="{{loading}}" class="empty-card">赛事加载中…</view>
   <block wx:else>
@@ -6,6 +9,7 @@
       <view class="cover-shade"></view>
       <view class="cover-content"><view class="event-code">{{competition.code}}</view><view class="event-title">{{competition.name}}</view><view class="event-date">{{competition.dateText}} · {{competition.location || '地点待定'}}</view></view>
     </view>
+    <button class="judge-entry" bindtap="goJudge">评委入口</button>
     <view class="summary-card card"><view><text>{{competition.groupCount || groups.length || 0}}</text><text class="summary-label">组别</text></view><view><text>{{competition.approvedPlayerCount || players.length || 0}}</text><text class="summary-label">选手</text></view><view><text>{{competition.judgeCount || judges.length || 0}}</text><text class="summary-label">评委</text></view></view>
     <scroll-view class="panel-tabs" scroll-x enable-flex><view class="panel-tab {{activePanel === item.key ? 'active' : ''}}" wx:for="{{panels}}" wx:key="key" data-key="{{item.key}}" bindtap="switchPanel">{{item.label}}</view></scroll-view>
     <view wx:if="{{activePanel === 'overview'}}">
@@ -20,3 +24,5 @@
     <button class="register-btn {{competition.registrationOpen ? '' : 'disabled'}}" bindtap="goRegister">{{competition.registrationOpen ? '立即报名' : '报名已关闭'}}</button>
   </block>
 </view>
+
+</block>

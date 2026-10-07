@@ -301,7 +301,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 overflow: 'hidden',
               }}>
                 <img
-                  src="/apple-touch-icon.png"
+                  src="/apple-touch-icon-20261005.png"
                   alt="伊娃东方舞"
                   style={{
                     width: 30,
@@ -356,7 +356,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       >
         <div className="sider-brand" style={{ minHeight: '100vh', paddingTop: 8, display: 'flex', flexDirection: 'column' }}>
           <div className="admin-mobile-drawer-brand">
-            <img src="/pwa-icon-192.png" alt="" />
+            <img src="/pwa-icon-192-20261005.png" alt="" />
             <div><strong>伊娃东方舞</strong><span>数字化运营平台</span></div>
           </div>
           <div style={{ flex: 1, overflowY: 'auto' }}>

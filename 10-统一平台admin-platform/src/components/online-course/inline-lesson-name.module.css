@@ -1,0 +1,10 @@
+.cell { display: flex; align-items: center; gap: 4px; width: 100%; text-align: left; min-width: 0; }
+.name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.editButton { flex: 0 0 auto; opacity: 0; transition: opacity .12s; }
+.cell:hover .editButton, .cell:focus-within .editButton { opacity: 1; }
+.editor { width: 100%; min-width: 0; }
+.controls { display: flex; align-items: center; gap: 2px; }
+.controls > input { flex: 1; min-width: 0; }
+.controls > button { flex: 0 0 auto; }
+.error { color: #ff4d4f; font-size: 12px; font-weight: normal; margin-top: 4px; }
+@media (hover: none) { .editButton { opacity: 1; } }

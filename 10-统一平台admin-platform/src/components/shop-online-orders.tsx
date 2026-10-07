@@ -24,6 +24,7 @@ const names: Record<string, string> = {
   refunded: "已退款",
 };
 type Order = {
+  kind?: string;
   id: string;
   memberId: number;
   recipient: string;
@@ -199,7 +200,7 @@ export default function ShopOnlineOrders() {
                         : "default"
                   }
                 >
-                  {names[o.status] || o.status}
+                  {o.kind && o.kind!=='goods' && o.status==='completed' ? '课程已开通' : names[o.status] || o.status}
                 </Tag>
                 {o.refundReason && <div>{o.refundReason}</div>}
               </>

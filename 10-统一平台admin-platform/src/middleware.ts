@@ -15,10 +15,13 @@ const PUBLIC_API_PATHS = [
   '/api/certificates/verify',
   '/api/inbox/jobs/run',
   '/api/public/enroll',
+  '/api/mini/shop/products',
 ];
 
 const PUBLIC_API_PREFIXES = [
   '/api/mini/public/',
+  '/api/mini/shop/images/',
+  '/api/mini/shop/courses/',
   '/api/course/series/cover/',
 ];
 
@@ -165,8 +168,11 @@ export async function middleware(request: NextRequest) {
     return withRobotsHeader(NextResponse.next());
   }
 
+  // Native App routes validate opaque, revocable sessions in their Node route handler.
+  if (apiPath.startsWith("/api/app/v1/")) return withRobotsHeader(NextResponse.next());
+
   // 公开端点放行
-  if (isPublicApiPath(apiPath)) {
+  if (isPublicApiPath(apiPath) || (request.method === 'GET' && /^\/api\/mini\/events(?:\/[1-9][0-9]*(?:\/groups\/[1-9][0-9]*)?)?$/.test(apiPath))) {
     return withRobotsHeader(NextResponse.next());
   }
 

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "appName": "伊娃东方舞",
+  "apiBase": "https://admin.swod.com.cn/api/app/v1",
+  "publicAPIBase": "https://admin.swod.com.cn/api/mini",
+  "privacyURL": "https://www.swod.com.cn/privacy",
+  "termsURL": "https://www.swod.com.cn/terms",
+  "platforms": {
+    "ios": {
+      "applicationID": "cn.com.swod.app",
+      "schemeCode": "FC220000013690074",
+      "clientHeader": "ios"
+    },
+    "android": {
+      "applicationID": "cn.com.swod.app",
+      "schemeCode": "FC220000013665046",
+      "clientHeader": "android"
+    },
+    "harmony": {
+      "applicationID": "cn.com.swod.evadance",
+      "huaweiAppID": "6917617955633704973",
+      "schemeCode": "FC220000013670045",
+      "clientHeader": "harmony"
+    },
+    "h5": {
+      "origin": "https://www.swod.com.cn",
+      "pageURL": "https://www.swod.com.cn/",
+      "schemeCode": "FC220000013785054",
+      "clientHeader": null,
+      "note": "H5走独立网站认证流程，不直接复用App GetMobile或App平台头"
+    }
+  }
+}

@@ -63,6 +63,9 @@ export function ensureCommerceTables(db: any) {
     CREATE INDEX IF NOT EXISTS idx_shop_stock_logs_date ON shop_stock_logs(created_at DESC, id DESC);
     CREATE INDEX IF NOT EXISTS idx_shop_stock_logs_product ON shop_stock_logs(product_id, created_at DESC);
   `);
+  const columns = db.prepare('PRAGMA table_info(shop_products)').all();
+  if (!columns.some((column: any) => column.name === 'is_hidden')) db.exec('ALTER TABLE shop_products ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0');
+
 }
 
 function ensureColumn(db: any, table: string, column: string, definition: string) {

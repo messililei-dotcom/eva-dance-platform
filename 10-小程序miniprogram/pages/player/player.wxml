@@ -1,3 +1,6 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
 <block wx:if="{{videoPlaybackEnabled}}">
 <view class="player-page">
   <view class="video-container {{isPlayerFullscreen ? 'player-fullscreen' : ''}}">
@@ -130,3 +133,5 @@
 
 </block>
 <view wx:else class="page"><view class="empty card">视频播放暂未开放</view></view>
+
+</block>

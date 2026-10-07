@@ -32,7 +32,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       const video = db.prepare(
         `SELECT cv.id, cv.material_id, cv.name, cv.duration,
                 m.name as material_name, m.type, m.file_path, m.file_url, m.vod_video_id, m.transcode_status, m.duration as material_duration,
-                oc.series_id, cs.is_free as series_is_free
+                oc.name as course_name, oc.series_id, cs.is_free as series_is_free
          FROM CourseVideo cv
          LEFT JOIN Material m ON cv.material_id=m.id
          LEFT JOIN OnlineCourse oc ON cv.course_id=oc.id
@@ -119,7 +119,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         success: true,
         data: {
           id: video.id,
-          name: video.name,
+          name: request.headers.get('x-client-platform')?.trim().toLowerCase() === 'miniprogram'
+            ? String(video.course_name || '').trim() || video.name
+            : video.name,
           type: video.type || 'video',
           material_id: video.material_id,
           vod_video_id: video.vod_video_id || '',

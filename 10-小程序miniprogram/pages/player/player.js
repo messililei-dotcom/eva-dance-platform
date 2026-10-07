@@ -30,13 +30,41 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
   },
   async onShow() {
     if (!this.catalogLoaded || !this.data.seriesId) return;
-    try { await api.getSeriesMeta(this.data.seriesId); }
+    try { await this.refreshCourseCatalog(); }
     catch (err) {
       if (Number(err.statusCode) !== 404) return;
       this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1;
       if (this.videoContext) this.videoContext.stop();
       this.setData({ course: {}, video: {}, videoId: null, outline: [], visibleOutline: [], playUrl: '', hasStartedPlayback: false, playbackError: '课程已隐藏或下架' });
     }
+  },
+  async refreshCourseCatalog() {
+    const seriesId = this.data.seriesId;
+    const [course, courses] = await Promise.all([api.getSeriesMeta(seriesId), api.getSeriesCourses(seriesId)]);
+    if (String(seriesId) !== String(this.data.seriesId) || this.catalogDisposed) return;
+    const previous = new Map((this.data.outline || []).map(item => [String(item.videoId), item]));
+    const outline = [];
+    (courses || []).forEach(row => (row.videos || []).forEach(item => {
+      outline.push({
+        ...(previous.get(String(item.id)) || {}),
+        id: item.id, courseId: row.id, videoId: item.id, ordinal: outline.length + 1,
+        materialId: item.material_id || item.materialId || null,
+        name: cleanText(row.name || item.name, "未命名课时"),
+        duration: Number(item.duration || row.duration || 0),
+        durationText: this.formatDuration(item.duration || row.duration)
+      });
+    }));
+    const index = outline.findIndex(item => String(item.videoId) === String(this.data.videoId));
+    const selected = outline[index];
+    this.setData({ course, outline, hasPrevious: index > 0, hasNext: index >= 0 && index < outline.length - 1 });
+    if (selected) this.setData({ courseId: selected.courseId, 'video.name': selected.name });
+    else if (this.data.videoId) {
+      this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1;
+      this.cancelAutoplay();
+      if (this.videoContext) this.videoContext.stop();
+      this.setData({ videoId: null, video: {}, playUrl: '', hasStartedPlayback: false, playbackError: '当前课节已下架，请选择其他课节' });
+    }
+    this.refreshCatalog();
   },
   async loadCourse(seriesId, initialVideoId) {
     wx.showLoading({ title: "加载中" });
@@ -54,7 +82,7 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
         outline.push({
           id: item.id, courseId: courseRow.id, videoId: item.id, ordinal: outline.length + 1,
           materialId: item.material_id || item.materialId || null,
-          name: cleanText(item.name || courseRow.name, "未命名课时"),
+          name: cleanText(courseRow.name || item.name, "未命名课时"),
           duration: Number(item.duration || courseRow.duration || 0),
           durationText: this.formatDuration(item.duration || courseRow.duration),
           progressPercent: this.getProgressPercent(progress, item.duration || courseRow.duration),
@@ -109,7 +137,7 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
         api.getVideoPlay(videoId), api.getVideoProgress(videoId).catch(() => null), api.getNotes(videoId).catch(() => [])
       ]);
       if (requestId !== this.videoLoadRequestId) return;
-      const normalizedVideo = this.normalizeVideo(video || {});
+      const normalizedVideo = this.normalizeVideo({ ...video, name: target && target.name || video && video.name });
       const duration = Number(normalizedVideo.duration || target && target.duration || progress && progress.duration || 0);
       const percent = this.getProgressPercent(progress, duration);
       const resumeSeconds = this.getResumeSeconds(progress, duration);
@@ -238,7 +266,7 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
   },
   onPause() { this.setData({ isPlaying: false }); this.saveCurrentProgress(); },
   onHide() { this.cancelAutoplay(); this.saveCurrentProgress(); },
-  onUnload() { this.cancelAutoplay(); this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1; this.clearPlayerControlsTimer(); this.saveCurrentProgress(); this.setData({ catalogQuery: "", catalogResultText: "" }); },
+  onUnload() { this.catalogDisposed = true; this.cancelAutoplay(); this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1; this.clearPlayerControlsTimer(); this.saveCurrentProgress(); this.setData({ catalogQuery: "", catalogResultText: "" }); },
   onVideoError(event) { this.cancelAutoplay(); console.error("课程视频播放失败", event.detail || event); wx.showToast({ title: "课程视频暂时无法播放", icon: "none" }); },
   onEnded() {
     const duration = this.data.currentDuration || this.data.video.duration || 1;
