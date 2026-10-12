@@ -1,4 +1,4 @@
-import { cleanText, hasAuth, jsonError, mapJudge, nowIso, toNumber, unauthorized, withEventDb } from '../../_db';
+import { cleanText, readEventBody, hasAuth, jsonError, mapJudge, nowIso, toNumber, unauthorized, withRequestEventDb } from '../../_db';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -7,7 +7,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const routeParams = await params;
   if (!hasAuth(request)) return unauthorized();
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const row = db.prepare(`
       SELECT
         j.*,
@@ -38,11 +38,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const routeParams = await params;
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const name = cleanText(body.name);
   if (!name) return jsonError('评委姓名不能为空');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     db.prepare(`
       UPDATE event_judges
       SET name = ?, phone = ?, title = ?, organization = ?, bio = ?,
@@ -68,11 +68,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const routeParams = await params;
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const action = cleanText(body.action);
   if (!['enableAuth', 'disableAuth'].includes(action)) return jsonError('不支持的评委操作');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     db.prepare('UPDATE event_judges SET auth_enabled = ?, updated_at = ? WHERE id = ?')
       .run(action === 'enableAuth' ? 1 : 0, nowIso(), routeParams.id);
     return Response.json({ success: true });

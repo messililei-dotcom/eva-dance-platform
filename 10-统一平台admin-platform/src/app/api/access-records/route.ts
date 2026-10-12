@@ -458,7 +458,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const category = cleanText(url.searchParams.get('category'), 'student') === 'admin' ? 'admin' : 'student';
     const page = clampNumber(url.searchParams.get('page'), 1, 1, 100000);
-    const pageSize = clampNumber(url.searchParams.get('pageSize'), 20, 20, 100);
+    const pageSize = clampNumber(url.searchParams.get('pageSize'), 20, 1, 100);
     const categoryRows = rows.filter(row => row.category === category);
     const filtered = filterRows(categoryRows, request);
     const offset = (page - 1) * pageSize;

@@ -1248,8 +1248,8 @@ export default function TrainingPage() {
   const confirmDelete = (title: string, onOk: () => Promise<any>) => {
     modal.confirm({
       title,
-      okText: '删除',
-      okButtonProps: { danger: true },
+      okText: <DeleteOutlined aria-label="删除" title="删除" />,
+      okButtonProps: { danger: true , 'aria-label': "删除", title: "删除"},
       cancelText: '取消',
       onOk: async () => {
         try {
@@ -1438,7 +1438,7 @@ export default function TrainingPage() {
                       <Button size="small" danger icon={<DeleteOutlined />} aria-label={`删除选中 ${selectedPaymentIds.length} 条缴费记录`} onClick={() => confirmDelete(`确定批量删除选中的 ${selectedPaymentIds.length} 条缴费记录吗？`, async () => {
                         for (const id of selectedPaymentIds) await trainingApi.deletePayment(id);
                         setSelectedPaymentIds([]);
-                      })}>批量删除</Button>
+                      })} title="批量删除"></Button>
                     </Tooltip>
                 </Space>
               ) : null}>

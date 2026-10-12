@@ -23,6 +23,8 @@ type StaffMessageRow = {
   title: string;
   name: string;
   phone: string;
+  type: string;
+  content: string;
   interest: string;
   course_id: number;
   course_name: string;
@@ -99,7 +101,7 @@ export default function MessagesAdminPage() {
         <Table
           rowKey="id"
           loading={loading}
-          dataSource={staffMessages}
+          dataSource={staffMessages.filter(row => row.type === 'consultation')}
           pagination={{ pageSize: 8 }}
           locale={{ emptyText: '暂时没有新的咨询报名' }}
           columns={[
@@ -125,6 +127,14 @@ export default function MessagesAdminPage() {
             { title: '提交时间', dataIndex: 'created_at', width: 170 },
           ]}
         />
+      </Card>
+
+      <Card title="管理员通知" extra={<Button icon={<ReloadOutlined />} onClick={load}>刷新</Button>} style={{ marginBottom: 16 }}>
+        <Table rowKey="id" loading={loading} dataSource={staffMessages.filter(row => row.type !== 'consultation')}
+          pagination={{ pageSize: 8 }} locale={{ emptyText: '暂无管理员通知' }} columns={[
+            { title: '通知', dataIndex: 'title', render: (value, row) => <Space direction="vertical"><Space><Text strong>{value}</Text>{row.status === 'unread' && <Tag color="red">未读</Tag>}</Space><Text style={{ whiteSpace: 'pre-wrap' }}>{row.content}</Text></Space> },
+            { title: '操作时间', dataIndex: 'created_at', width: 170 },
+          ]} />
       </Card>
 
       <Row gutter={[16, 16]}>

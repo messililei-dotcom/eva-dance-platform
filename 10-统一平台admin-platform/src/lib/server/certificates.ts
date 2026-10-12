@@ -61,6 +61,12 @@ export function ensureCertificateSchema(db: AdminDb) {
     );
   `);
 
+  ensureColumn(db, 'Certificate', 'recipient_name', "TEXT NOT NULL DEFAULT ''");
+  db.exec(`CREATE TABLE IF NOT EXISTS CertificateNameChange (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, certificate_id INTEGER NOT NULL,
+    actor_member_id INTEGER NOT NULL, previous_name TEXT NOT NULL,
+    recipient_name TEXT NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`);
   ensureColumn(db, 'Certificate', 'source_platform', "TEXT NOT NULL DEFAULT 'admin'");
   ensureColumn(db, 'Certificate', 'issue_method', "TEXT NOT NULL DEFAULT 'manual'");
   ensureColumn(db, 'Certificate', 'verify_code', 'TEXT DEFAULT ""');
@@ -178,15 +184,18 @@ export function renderCertificateSvg(record: any, template: CertificateTemplate)
   };
 
   const branded = isBrandedCertificate(template);
+  const completion = template.template_name === '国庆集训2026｜高阶师资结业证书';
   const fieldNodes = template.fields.map(field => {
     const x = Math.round(width * field.x / 100);
     const y = Math.round(height * field.y / 100);
-    const text = branded ? certificateTextLines(values[field.key], field.key, field.fontSize, width) : { lines: [values[field.key]], fontSize: field.fontSize };
-    return `<text x="${x}" y="${y}" text-anchor="${field.align}" font-size="${text.fontSize}" fill="${escapeXml(field.color)}" font-weight="${field.key === 'memberName' ? 700 : 500}" font-family="${branded ? escapeXml(CERTIFICATE_FONT) : "'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif"}">${text.lines.map((line, i) => `<tspan x="${x}" dy="${i ? text.fontSize * 1.4 : 0}">${escapeXml(line)}</tspan>`).join('')}</text>`;
+    const text = (branded || completion) ? certificateTextLines(values[field.key], field.key, field.fontSize, completion && field.key === 'memberName' ? Math.min(width, 800) : width) : { lines: [values[field.key]], fontSize: field.fontSize };
+    return `<text x="${x}" y="${y}" text-anchor="${field.align}" font-size="${text.fontSize}" fill="${escapeXml(field.color)}" font-weight="${field.key === 'memberName' ? 700 : 500}" font-family="${(branded || completion) ? escapeXml(CERTIFICATE_FONT) : "'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif"}">${text.lines.map((line, i) => `<tspan x="${x}" dy="${i ? text.fontSize * 1.4 : 0}">${escapeXml(line)}</tspan>`).join('')}</text>`;
   }).join('\n');
 
   let image = template.template_image_url;
-  if (branded && image.startsWith('/uploads/certificates/templates/eva-20260930-') && /^\/uploads\/certificates\/templates\/eva-20260930-(online|performance|offline)\.png$/.test(image)) {
+  // Embed platform-owned template art so SVG downloads and PNG previews use
+  // the same versioned background, including signature and seal impressions.
+  if ((branded || completion) && /^\/uploads\/certificates\/templates\/[a-zA-Z0-9_-]+\.png$/.test(image)) {
     image = `data:image/png;base64,${fs.readFileSync(path.join(process.cwd(), 'public', image)).toString('base64')}`;
   }
   const logo = branded ? `data:image/png;base64,${fs.readFileSync(path.join(process.cwd(), 'public', 'logo-master-transparent-20261004.png')).toString('base64')}` : '';

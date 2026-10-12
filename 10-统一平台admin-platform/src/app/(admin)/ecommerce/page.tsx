@@ -484,8 +484,8 @@ export default function EcommercePage() {
     modal.confirm({
       title: `删除商品 ${product.name}`,
       content: '确认删除这个商品规格？已有销售记录和库存流水会保留，不会被删除。',
-      okText: '删除',
-      okButtonProps: { danger: true },
+      okText: <DeleteOutlined aria-label="删除" title="删除" />,
+      okButtonProps: { danger: true , 'aria-label': "删除", title: "删除"},
       onOk: async () => {
         try {
           await ecommerceApi.deleteProduct(product.id);
@@ -507,8 +507,8 @@ export default function EcommercePage() {
     modal.confirm({
       title: `删除商品 ${group.name}`,
       content: `确认删除此商品下的 ${group.variants.length} 个规格？已有销售记录和库存流水会保留，不会被删除。`,
-      okText: '删除',
-      okButtonProps: { danger: true },
+      okText: <DeleteOutlined aria-label="删除" title="删除" />,
+      okButtonProps: { danger: true , 'aria-label': "删除", title: "删除"},
       onOk: async () => {
         try {
           await Promise.all(group.variants.map(product => ecommerceApi.deleteProduct(product.id)));
@@ -526,8 +526,8 @@ export default function EcommercePage() {
     modal.confirm({
       title: '删除库存流水',
       content: `${record.productName}，${record.direction} ${record.quantity} 件。删除会按后端规则回滚库存。`,
-      okText: '删除',
-      okButtonProps: { danger: true },
+      okText: <DeleteOutlined aria-label="删除" title="删除" />,
+      okButtonProps: { danger: true , 'aria-label': "删除", title: "删除"},
       onOk: async () => {
         await ecommerceApi.deleteStockLog(record.id);
         message.success('流水已删除');
@@ -540,8 +540,8 @@ export default function EcommercePage() {
     modal.confirm({
       title: '删除销售记录',
       content: `${record.productName}，${record.quantity} 件，${money(record.amount)}。删除会按后端规则回滚库存。`,
-      okText: '删除',
-      okButtonProps: { danger: true },
+      okText: <DeleteOutlined aria-label="删除" title="删除" />,
+      okButtonProps: { danger: true , 'aria-label': "删除", title: "删除"},
       onOk: async () => {
         await ecommerceApi.deleteSale(record.id);
         message.success('销售记录已删除');

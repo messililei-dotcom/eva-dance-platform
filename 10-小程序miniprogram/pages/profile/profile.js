@@ -188,10 +188,11 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
       consumedSessions: Number(item.consumedSessions || item.consumed_sessions || 0),
       paymentMethod: cleanText(item.paymentMethod || item.payment_method || "")
     }));
-    const auditStatusMap = { pending: "待审核", approved: "已通过", rejected: "未通过" };
+    const auditStatusMap = { pending: "已报名", approved: "已报名", rejected: "未通过" };
     const paidStatusMap = { unpaid: "待缴费", pending: "待确认", paid: "已缴费", refunded: "已退款" };
     const normalizedEventRegistrations = (eventRegistrations || []).map(item => ({
       ...item,
+      id:item.playerId || item.id,
       competitionName: cleanText(item.competitionName || item.competition_name || "东方舞赛事"),
       groupName: cleanText(item.groupName || item.group_name || "未分组"),
       statusText: auditStatusMap[item.auditStatus || item.audit_status] || item.auditStatus || item.audit_status || "待审核",
@@ -356,6 +357,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     wx.switchTab({ url: "/pages/events/events" });
   },
 
+  payEventRegistration(event) {wx.navigateTo({url:'/pages/course-checkout/course-checkout?kind=event&id='+encodeURIComponent(event.currentTarget.dataset.id)});},
   openEventRegistration(event) {
     const id = event.currentTarget.dataset.id;
     if (!id) return;

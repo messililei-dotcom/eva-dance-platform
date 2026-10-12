@@ -77,6 +77,7 @@ function dateOnly(value: unknown) {
 }
 
 function updateMemberFromEvent(db: AdminDb, memberId: number, input: EventMemberInput) {
+  if ((db as any).eventOwnerId) return;
   const columns = memberColumns(db);
   const current = db.prepare('SELECT * FROM Member WHERE id=?').get<Record<string, any>>(memberId);
   if (!current) return;

@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
-import {Alert,Button,Card,Col,DatePicker,Drawer,Empty,Row,Select,Space,Spin,Table,Tag,Typography} from 'antd';
+import {Alert,Button,Card,Col,DatePicker,Drawer,Empty,Row,Select,Space,Spin,Tag,Typography} from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {ReloadOutlined,ArrowUpOutlined,ArrowDownOutlined} from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import dayjs from 'dayjs';

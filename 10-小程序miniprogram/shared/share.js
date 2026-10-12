@@ -10,7 +10,7 @@ function cover(item = {}) {
     const origin = /^\/api\/shop\/images\//.test(value) ? config.officialWebsiteUrl : config.apiBase.replace(/\/api\/mini\/?$/,'');
     return origin + value;
   }
-  return '/images/logo-20261004.png';
+  return '/images/logo-20261005.png';
 }
 function link(route, params) {
   const query = Object.keys(params || {}).filter(k => params[k] !== undefined && params[k] !== null && params[k] !== '')
@@ -24,6 +24,8 @@ function card(title, route, params, item = {}, detail = '') {
 function intro(item = {}, fallback) { return text(item.descriptionText || item.description || item.summary || item.subtitle || item.introduction) || fallback; }
 function resolveShare(page, route) {
   const d=page.data || {},o=page.shareOptions || {};
+  if (route==='event-judge') return resolveShare({data:{id:d.id,competition:d.competition}},'event-detail');
+  if (route==='course-checkout' && d.kind==='event') return resolveShare({data:{}},'events');
   if (route==='course-checkout') return resolveShare({data:d.kind==='offline'?{courseId:Number(d.id)+900000,course:d.offer}:{id:d.id,series:d.offer}},d.kind==='offline'?'offline-detail':'detail');
   if (route==='shop-product') {
     const p=d.product || {},id=d.id || o.id;
@@ -37,9 +39,9 @@ function resolveShare(page, route) {
     return card(p.name || '东方舞课程','/pages/detail/detail',{id},p,intro(p,p.teacher ? `${p.teacher} · 查看课程介绍和目录` : '查看课程介绍和完整目录'));
   }
   if (route==='offline-detail' && !(d.courseId || o.id)) return resolveShare({data:{}},'offline');
-  if (['event-detail','event-group','event-register'].includes(route) && !(d.id || d.competitionId || o.id)) return resolveShare({data:{}},'events');
+  if (['event-detail','event-group','event-register','event-player'].includes(route) && !(d.id || d.competitionId || o.id)) return resolveShare({data:{}},'events');
   if (route==='offline-detail') return card(d.course?.name || '线下课程','/pages/offline-detail/offline-detail',{id:d.courseId || o.id},d.course || {},intro(d.course,d.course?.teacherText || '查看导师、课程安排和期次'));
-  if (['event-detail','event-group','event-register'].includes(route)) return card(d.competition?.name || '东方舞赛事','/pages/event-detail/event-detail',{id:d.id || d.competitionId || o.id},d.competition || {},intro(d.competition,d.competition?.dateText || '查看赛事介绍、组别与报名安排'));
+  if (['event-detail','event-group','event-register','event-player'].includes(route)) return card(d.competition?.name || '东方舞赛事','/pages/event-detail/event-detail',{id:d.id || d.competitionId || o.id},d.competition || {},intro(d.competition,d.competition?.dateText || '查看赛事介绍、组别与报名安排'));
   const item=route==='mall'?d.visibleProducts?.[0]:route==='home'?d.carouselCourses?.[0]:route==='system'?d.courses?.[0]:route==='offline'?d.visibleCourses?.[0]:route==='events'?d.visibleEvents?.[0]:{};
   return card(titles[route],route==='admin'?HOME:`/pages/${route}/${route}`,{},item || {},descriptions[route]);
 }
@@ -52,7 +54,7 @@ async function preview(page, route, options) {
     const api=require('../utils/api');
     if (id && ['detail','player'].includes(target)) data=target==='player'?{seriesId:id,course:await api.getSeriesMeta(id)}:{id,series:await api.getSeriesMeta(id)};
     else if (id && target==='shop-product') {const result=await api.request('/shop/products',{auth:false});const product=(result.products || []).find(p=>String(p.id)===String(id));data=product?{id,product}:{error:'商品已下架'};}
-    else if (id && ['event-detail','event-group','event-register'].includes(target)) {const result=await api.getEventDetail(id);data={id,competition:result.competition};}
+    else if (id && ['event-detail','event-group','event-register','event-player'].includes(target)) {const result=await api.getEventDetail(id);data={id,competition:result.competition};}
     else if (id && target==='offline-detail') {const rows=await api.getOfflineCourses();const course=(rows || []).find(p=>String(p.id)===String(id));data=course?{courseId:id,course}:{};}
     page.setData({sharePreview:resolveShare({data,shareOptions:{}},target)});
   } catch { /* Keep the public branded preview; do not request a login or private data. */ }

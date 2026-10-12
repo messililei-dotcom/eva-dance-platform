@@ -14,7 +14,7 @@
         <text wx:if="{{group.entryType}}">{{group.entryType}}</text>
       </view>
       <view class="group-stats">
-        <view><text>{{players.length}}</text><span>已报名选手</span></view>
+        <view><text>{{competition.registrationPublic ? players.length : '—'}}</text><span>已报名选手</span></view>
         <view><text>{{group.rankingCount || 0}}</text><span>已公布成绩</span></view>
       </view>
     </view>
@@ -27,8 +27,10 @@
       <text>{{players.length}} 位</text>
     </view>
 
-    <view wx:if="{{players.length}}" class="player-list">
-      <view class="player-row {{hasPublishedResults ? 'ranking-row' : ''}}" wx:for="{{players}}" wx:key="id">
+    <view class="podium" wx:if="{{podium.length}}"><view class="podium-item {{item.rankClass}}" wx:for="{{podium}}" wx:key="id" data-id="{{item.id}}" bindtap="openPlayer"><text>🏆 {{item.rankLabel}}</text><image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"/><b>{{item.name}}</b><text>{{item.scoreText}} 分</text></view></view>
+    <input class="player-search" value="{{playerQuery}}" placeholder="搜索选手、编号或机构" bindinput="onPlayerSearch"/>
+    <view wx:if="{{visiblePlayers.length}}" class="player-list">
+      <view class="player-row {{hasPublishedResults ? 'ranking-row' : ''}}" wx:for="{{visiblePlayers}}" wx:key="id" data-id="{{item.id}}" bindtap="openPlayer">
         <view wx:if="{{hasPublishedResults}}" class="rank-block {{item.rankClass}}">
           <view class="trophy" wx:if="{{item.rankNo > 0}}">🏆</view>
           <view class="rank-number" wx:else>—</view>
@@ -50,7 +52,8 @@
         </view>
       </view>
     </view>
-    <view wx:else class="empty-card">该组别暂无已报名选手</view>
+    <view wx:else class="empty-card">{{playerQuery ? '未找到匹配选手' : competition.registrationPublic ? '该组别暂无报名选手' : '报名信息尚未公开'}}</view>
+<view class="pagination" wx:if="{{playerPageCount > 1}}"><button data-offset="-1" disabled="{{playerPage <= 1}}" bindtap="changePlayerPage">上一页</button><text>{{playerPage}} / {{playerPageCount}}</text><button data-offset="1" disabled="{{playerPage >= playerPageCount}}" bindtap="changePlayerPage">下一页</button></view>
   </block>
 </view>
 

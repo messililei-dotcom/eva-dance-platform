@@ -48,7 +48,7 @@ export async function GET(request: Request) {
     }
     if (paged) {
       const page = Math.max(1, Number(url.searchParams.get('page') || 1));
-      const pageSize = Math.min(100, Math.max(10, Number(url.searchParams.get('pageSize') || 20)));
+      const pageSize = Math.min(100, Math.max(1, Math.floor(Number(url.searchParams.get('pageSize'))) || 20));
       const keyword = String(url.searchParams.get('keyword') || '').trim();
       const type = String(url.searchParams.get('type') || 'all');
       const status = String(url.searchParams.get('status') || 'all');

@@ -1,4 +1,4 @@
-import { cleanText, hasAuth, jsonError, mapJudge, nowIso, toNumber, unauthorized, withEventDb } from '../_db';
+import { cleanText, readEventBody, hasAuth, jsonError, mapJudge, nowIso, toNumber, unauthorized, withRequestEventDb } from '../_db';
 import { syncAllEventJudgesToMembers } from '@/lib/server/event-judge-member-sync';
 
 export const dynamic = 'force-dynamic';
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const keyword = cleanText(url.searchParams.get('keyword'));
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     syncAllEventJudgesToMembers(db);
     let where = 'WHERE 1=1';
     const params: any[] = [];
@@ -34,17 +34,17 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const name = cleanText(body.name);
   if (!name) return jsonError('评委姓名不能为空');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const result = db.prepare(`
       INSERT INTO event_judges (
         member_id, name, phone, title, organization, bio, account_user_id,
-        status, auth_enabled, updated_at
+        status, auth_enabled, owner_user_id, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       toNumber(body.memberId ?? body.member_id),
       name,
@@ -55,6 +55,7 @@ export async function POST(request: Request) {
       toNumber(body.accountUserId ?? body.account_user_id),
       cleanText(body.status, 'active'),
       body.authEnabled ?? body.auth_enabled ? 1 : 0,
+      db.eventActorId || 0,
       nowIso(),
     );
     return Response.json({ success: true, data: { id: result.lastInsertRowid } });

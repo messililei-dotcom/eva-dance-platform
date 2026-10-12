@@ -3,12 +3,13 @@ import {
   competitionSelectSql,
   generateCode,
   hasAuth,
+  readEventBody,
   jsonError,
   mapCompetition,
   nowIso,
   toNumber,
   unauthorized,
-  withEventDb,
+  withRequestEventDb,
 } from '../_db';
 
 export const dynamic = 'force-dynamic';
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
   const keyword = cleanText(url.searchParams.get('keyword'));
   const status = cleanText(url.searchParams.get('status'));
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     let where = 'WHERE 1=1';
     const params: any[] = [];
     if (keyword) {
@@ -48,19 +49,19 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const name = cleanText(body.name);
   if (!name) return jsonError('赛事名称不能为空');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const code = cleanText(body.code, generateCode('SWOD'));
     const result = db.prepare(`
       INSERT INTO event_competitions (
         name, code, status, registration_status, registration_public, judge_scores_public, start_date, end_date,
         registration_start, registration_end, location, organizer, description,
-        cover_url, max_players, registration_fee, created_by, updated_at
+        cover_url, max_players, registration_fee, created_by, owner_user_id, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       name,
       code,
@@ -70,15 +71,16 @@ export async function POST(request: Request) {
       body.judgeScoresPublic === true ? 1 : 0,
       cleanText(body.startDate ?? body.start_date),
       cleanText(body.endDate ?? body.end_date),
-      cleanText(body.registrationStart ?? body.registration_start),
-      cleanText(body.registrationEnd ?? body.registration_end),
+      '',
+      '',
       cleanText(body.location),
       cleanText(body.organizer, '伊娃东方舞'),
       cleanText(body.description),
       cleanText(body.coverUrl ?? body.cover_url),
-      toNumber(body.maxPlayers ?? body.max_players),
-      toNumber(body.registrationFee ?? body.registration_fee),
-      cleanText(body.createdBy ?? body.created_by),
+      0,
+      0,
+      String(db.eventActorId || ''),
+      db.eventActorId || 0,
       nowIso(),
     );
 

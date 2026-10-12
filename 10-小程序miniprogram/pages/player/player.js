@@ -265,7 +265,7 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     if (videoId && current && duration) api.saveVideoProgress(videoId, current, duration).catch(() => {});
   },
   onPause() { this.setData({ isPlaying: false }); this.saveCurrentProgress(); },
-  onHide() { this.cancelAutoplay(); this.saveCurrentProgress(); },
+  onHide() { this.cancelAutoplay(); this.clearPlayerControlsTimer(); this.setData({ showVideoControls: false, showPlayerMenu: false }); this.saveCurrentProgress(); },
   onUnload() { this.catalogDisposed = true; this.cancelAutoplay(); this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1; this.clearPlayerControlsTimer(); this.saveCurrentProgress(); this.setData({ catalogQuery: "", catalogResultText: "" }); },
   onVideoError(event) { this.cancelAutoplay(); console.error("课程视频播放失败", event.detail || event); wx.showToast({ title: "课程视频暂时无法播放", icon: "none" }); },
   onEnded() {
@@ -433,8 +433,8 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     this.setData({ playerMenu: menu, showPlayerMenu, showVideoControls: true });
     if (!showPlayerMenu) this.schedulePlayerControlsHide();
   },
-  toggleMirror() { this.setData({ isMirrored: !this.data.isMirrored }); },
-  toggleMute() { this.setData({ isMuted: !this.data.isMuted }); },
+  toggleMirror() { this.setData({ isMirrored: !this.data.isMirrored }); this.schedulePlayerControlsHide(); },
+  toggleMute() { this.setData({ isMuted: !this.data.isMuted }); this.schedulePlayerControlsHide(); },
   togglePlayback() {
     if (!this.videoContext || !this.data.playUrl) return;
     if (this.data.isPlaying) this.videoContext.pause(); else this.resumePlayback();
@@ -492,7 +492,8 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
   },
   onVideoPlay() {
     this.cancelAutoplay();
-    this.setData({ isPlaying: true, lessonEnded: false });
+    this.clearPlayerControlsTimer();
+    this.setData({ isPlaying: true, lessonEnded: false, showVideoControls: false, showPlayerMenu: false });
     if (this.videoContext && this.videoContext.playbackRate) this.videoContext.playbackRate(this.data.playbackRate);
     this.schedulePlayerControlsHide();
   }

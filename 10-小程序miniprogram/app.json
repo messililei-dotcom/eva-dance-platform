@@ -21,7 +21,8 @@
     "pages/shop-checkout/shop-checkout",
     "pages/shop-orders/shop-orders",
     "pages/course-checkout/course-checkout",
-    "pages/event-judge/event-judge"
+    "pages/event-judge/event-judge",
+    "pages/event-player/event-player"
   ],
   "window": {
     "navigationBarTitleText": "伊娃东方舞·东方舞圈",

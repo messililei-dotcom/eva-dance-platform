@@ -1,3 +1,4 @@
+const eventView=require('../../shared/event-view');
 const share = require("../../shared/share");
 const api = require("../../utils/api");
 
@@ -33,7 +34,7 @@ Page(share.withShare("event-group", {
     loading: true,
     competition: {},
     group: {},
-    players: [],
+    players: [], visiblePlayers: [], podium: [], playerQuery: '', playerPage: 1, playerPageCount: 1,
     hasPublishedResults: false
   },
   onLoad(options) {
@@ -43,6 +44,10 @@ Page(share.withShare("event-group", {
   onPullDownRefresh() {
     this.loadGroup().finally(() => wx.stopPullDownRefresh());
   },
+  onPlayerSearch(event) {this.setData({playerQuery:String(event.detail.value||'')});this.applyPlayerPage(1);},
+  applyPlayerPage(number) {const q=this.data.playerQuery.trim().toLowerCase();const rows=this.data.players.filter(p=>!q||`${p.name} ${p.playerNo||''} ${p.organization||''}`.toLowerCase().includes(q));const page=eventView.page(rows,number);this.setData({visiblePlayers:page.rows,playerPage:page.number,playerPageCount:page.pages});},
+  changePlayerPage(event) {this.applyPlayerPage(this.data.playerPage+Number(event.currentTarget.dataset.offset));},
+  openPlayer(event) {wx.navigateTo({url:`/pages/event-player/event-player?id=${this.data.competitionId}&groupId=${this.data.groupId}&playerId=${event.currentTarget.dataset.id}`});},
   async loadGroup() {
     this.setData({ loading: true });
     try {
@@ -57,6 +62,8 @@ Page(share.withShare("event-group", {
         hasPublishedResults,
         loading: false
       });
+      this.setData({podium:players.filter(p=>p.rankNo>0&&p.rankNo<=3).sort((a,b)=>a.rankNo-b.rankNo)});
+      this.applyPlayerPage(1);
       wx.setNavigationBarTitle({ title: group.name || "赛事组别" });
     } catch (err) {
       this.setData({ loading: false });

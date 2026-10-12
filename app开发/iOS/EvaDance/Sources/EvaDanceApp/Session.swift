@@ -67,18 +67,18 @@ import EvaCore
 @MainActor final class SessionClient {
     unowned let session: Session
     init(session: Session) { self.session = session }
-    func request<T: Decodable>(_ path: String, token: String? = nil, method: String = "GET", body: Data? = nil) async throws -> T {
+    func request<T: Decodable>(_ path: String, token: String? = nil, method: String = "GET", body: Data? = nil, contentType: String = "application/json") async throws -> T {
         if AppPolicy.isSharedPublicRead(path, method: method, hasToken: token != nil) {
             return try await session.publicTransport.request(path, method: method)
         }
         // A supplied token denotes an authenticated call. Always use the latest rotated credential.
         let account = session.accountID
         let credential = token == nil ? nil : session.token
-        do { return try await session.transport.request(path, token: credential, method: method, body: body) }
+        do { return try await session.transport.request(path, token: credential, method: method, body: body, contentType: contentType) }
         catch APIError.sessionExpired {
             guard credential != nil, account == session.accountID else { throw APIError.sessionExpired }
             let renewed = try await session.refresh()
-            return try await session.transport.request(path, token: renewed, method: method, body: body)
+            return try await session.transport.request(path, token: renewed, method: method, body: body, contentType: contentType)
         }
     }
     func optionalProgress(lessonID: Int, token: String) async throws -> ProgressRecord? {

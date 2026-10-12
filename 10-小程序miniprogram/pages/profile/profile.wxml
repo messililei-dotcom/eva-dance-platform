@@ -81,7 +81,7 @@
     <view class="link-row" bindtap="openEventRegistrations">
       <view>
         <view class="row-title">我的比赛</view>
-        <view class="row-desc">{{eventRegistrations.length}} 个报名组别 · 查看审核、缴费和比赛信息</view>
+        <view class="row-desc">{{eventRegistrations.length}} 个报名组别 · 查看报名、缴费和比赛信息</view>
       </view>
       <text class="row-arrow">›</text>
     </view>
@@ -130,7 +130,7 @@
         <view class="record-title">{{item.competitionName}}</view>
         <view class="record-meta">{{item.groupName}}{{item.playerNo ? ' · 选手号 ' + item.playerNo : ''}}</view>
         <view class="record-meta">{{item.statusText}}{{item.paidStatusText ? ' · ' + item.paidStatusText : ''}}{{item.displayStartDate ? ' · ' + item.displayStartDate : ''}}</view>
-        <view class="record-meta">{{item.resultText}}</view>
+        <view class="record-meta">{{item.resultText}}</view><button wx:if="{{item.canPay}}" data-id="{{item.playerId}}" catchtap="payEventRegistration">继续缴费</button>
       </view>
     </view>
 

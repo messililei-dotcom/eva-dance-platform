@@ -16,12 +16,12 @@
       autoplay="{{hasStartedPlayback}}"
       initial-time="{{resumeSeconds}}"
       object-fit="contain"
-      show-center-play-btn
+      show-center-play-btn="{{false}}"
       show-fullscreen-btn="{{false}}"
       enable-progress-gesture
       vslide-gesture="{{isPlayerFullscreen}}"
       vslide-gesture-in-fullscreen="{{true}}"
-      enable-play-gesture
+      enable-play-gesture="{{false}}"
       bindtap="onPlayerTap"
       bindplay="onVideoPlay"
       bindtimeupdate="onTimeUpdate"
@@ -34,7 +34,7 @@
 
     <block wx:if="{{playUrl}}">
       <view class="autoplay-countdown" wx:if="{{lessonEnded}}"><text>{{autoplayCountdown ? autoplayCountdown.seconds + ' 秒后播放下一节：' + autoplayCountdown.name : '本节课程已播放完成'}}</text><button catchtap="replayLesson">重播</button><button wx:if="{{autoplayCountdown}}" catchtap="cancelAutoplay">取消连播</button></view>
-      <view class="video-top-controls visible">
+      <view wx:if="{{showVideoControls || showPlayerMenu}}" class="video-top-controls visible">
         <button class="video-quality-trigger" catchtap="requestCasting">投屏</button>
         <button class="video-quality-trigger" data-menu="quality" catchtap="togglePlayerMenu">{{currentQualityLabel}} <text class="quality-arrow">{{showPlayerMenu ? '‹' : '›'}}</text></button>
         <button class="video-quality-trigger" data-menu="speed" catchtap="togglePlayerMenu">{{playbackRate}}x⌄</button>

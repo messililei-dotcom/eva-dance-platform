@@ -1,4 +1,4 @@
-import { cleanText, hasAuth, jsonError, mapScoreRule, nowIso, toNumber, unauthorized, withEventDb } from '../_db';
+import { cleanText, readEventBody, hasAuth, jsonError, mapScoreRule, nowIso, toNumber, unauthorized, withRequestEventDb } from '../_db';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const competitionId = toNumber(url.searchParams.get('competitionId') ?? url.searchParams.get('competition_id'));
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const rows = competitionId
       ? db.prepare('SELECT * FROM event_score_rules WHERE competition_id = ? ORDER BY id ASC').all(competitionId)
       : db.prepare('SELECT * FROM event_score_rules WHERE competition_id IS NULL ORDER BY id ASC').all();
@@ -19,13 +19,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const competitionId = toNumber(body.competitionId ?? body.competition_id);
   const name = cleanText(body.name);
   if (!competitionId) return jsonError('缺少赛事ID');
   if (!name) return jsonError('评分规则名称不能为空');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const criteria = Array.isArray(body.criteria) ? JSON.stringify(body.criteria) : cleanText(body.criteriaJson ?? body.criteria_json, '[]');
     const existing = db.prepare('SELECT id FROM event_score_rules WHERE competition_id = ? ORDER BY id ASC').all(competitionId);
     const now = nowIso();

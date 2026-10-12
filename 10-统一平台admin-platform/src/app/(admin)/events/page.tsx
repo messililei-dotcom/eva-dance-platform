@@ -175,20 +175,12 @@ export default function EventsPage() {
       competitionForm.setFieldsValue({
         ...row,
         dateRange: row.startDate ? [dayjs(row.startDate), row.endDate ? dayjs(row.endDate) : dayjs(row.startDate)] : undefined,
-        registrationRange: row.registrationStart ? [
-          dayjs(row.registrationStart),
-          row.registrationEnd ? dayjs(row.registrationEnd) : dayjs(row.registrationStart),
-        ] : undefined,
+
       });
     } else {
       competitionForm.setFieldsValue({
         organizer: '伊娃东方舞',
         coverUrl: '',
-        registrationStatus: 'closed',
-        registrationPublic: false,
-        judgeScoresPublic: false,
-        maxPlayers: 0,
-        registrationFee: 0,
       });
     }
     setCompetitionModal(true);
@@ -197,15 +189,15 @@ export default function EventsPage() {
   const saveCompetition = async () => {
     const values = await competitionForm.validateFields();
     const payload = {
-      ...values,
-      status: 'published',
+      name: values.name,
+      code: values.code,
+      coverUrl: values.coverUrl,
+      location: values.location,
+      organizer: values.organizer,
+      description: values.description,
       startDate: values.dateRange?.[0]?.format('YYYY-MM-DD') || '',
       endDate: values.dateRange?.[1]?.format('YYYY-MM-DD') || '',
-      registrationStart: values.registrationRange?.[0]?.format('YYYY-MM-DD') || '',
-      registrationEnd: values.registrationRange?.[1]?.format('YYYY-MM-DD') || '',
     };
-    delete payload.dateRange;
-    delete payload.registrationRange;
     if (editingCompetition) {
       await eventApi.updateCompetition(editingCompetition.id, payload);
     } else {
@@ -569,14 +561,12 @@ export default function EventsPage() {
         )}
       </Card>
 
-      <Modal title={editingCompetition ? '编辑赛事' : '新建赛事'} open={competitionModal} onCancel={() => setCompetitionModal(false)} onOk={saveCompetition} width={760} confirmLoading={coverUploading}>
-        <Form form={competitionForm} layout="vertical">
-          <Row gutter={16}>
-            <Col xs={16} sm={16}><Form.Item name="name" label="赛事名称" rules={[{ required: true, message: '请填写赛事名称' }]}><Input /></Form.Item></Col>
-            <Col xs={8} sm={8}><Form.Item name="code" label="赛事编码"><Input placeholder="自动生成" /></Form.Item></Col>
-          </Row>
+      <Modal title={editingCompetition ? '编辑赛事' : '新建赛事'} open={competitionModal} onCancel={() => setCompetitionModal(false)} onOk={saveCompetition} width={800} centered confirmLoading={coverUploading} styles={{body:{maxHeight:'72vh',overflowY:'auto',overflowX:'hidden',paddingRight:4}}}>
+        <Form form={competitionForm} layout="vertical" style={{marginTop:16}}>
           <Form.Item name="coverUrl" hidden><Input /></Form.Item>
-          <Form.Item label="赛事封面主图" extra="4:3 横版，支持 JPG、PNG、WebP，不超过 8MB。点击图片可上传替换。">
+          <Row gutter={24}>
+            <Col xs={24} sm={8}>
+              <Form.Item label="赛事封面主图" extra="4:3 横版 · JPG / PNG / WebP · 8MB以内">
             <Upload
               accept="image/jpeg,image/png,image/webp"
               showUploadList={false}
@@ -584,7 +574,7 @@ export default function EventsPage() {
               disabled={coverUploading}
             >
               <div style={{
-                width: 320,
+                width: 220,
                 maxWidth: '100%',
                 aspectRatio: '4 / 3',
                 border: '1px dashed #d9d9d9',
@@ -606,21 +596,17 @@ export default function EventsPage() {
                 )}
               </div>
             </Upload>
-          </Form.Item>
-          <Row gutter={16}>
-            <Col xs={24} sm={12}><Form.Item name="dateRange" label="比赛日期"><DatePicker.RangePicker style={{ width: '100%' }} /></Form.Item></Col>
-            <Col xs={24} sm={12}><Form.Item name="registrationRange" label="报名日期"><DatePicker.RangePicker style={{ width: '100%' }} /></Form.Item></Col>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={16}>
+              <Form.Item name="name" label="赛事名称" rules={[{required:true,whitespace:true,message:'请填写赛事名称'}]}><Input placeholder="填写赛事名称" /></Form.Item>
+              <Form.Item name="code" label="赛事编码"><Input placeholder="留空自动生成" /></Form.Item>
+              <Form.Item name="dateRange" label="比赛日期"><DatePicker.RangePicker style={{width:'100%'}} /></Form.Item>
+            </Col>
           </Row>
           <Row gutter={16}>
-            <Col xs={12} sm={12}><Form.Item name="location" label="地点"><Input /></Form.Item></Col>
-            <Col xs={12} sm={12}><Form.Item name="organizer" label="主办方"><Input /></Form.Item></Col>
-          </Row>
-          <Row gutter={16}>
-            <Col xs={12} sm={6}><Form.Item name="maxPlayers" label="人数上限"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col xs={12} sm={6}><Form.Item name="registrationFee" label="默认报名费"><InputNumber min={0} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
-            <Col xs={12} sm={12}><Form.Item name="registrationPublic" label="报名信息公开" valuePropName="checked" extra="公开各组别报名人数和参赛名单；关闭时仅已公示成绩可查看。"><Switch checkedChildren="公开" unCheckedChildren="关闭" /></Form.Item></Col>
-            <Col xs={12} sm={12}><Form.Item name="judgeScoresPublic" label="评委评分" valuePropName="checked" extra="公开每位评委的分数；关闭时保留姓名和头像，分数显示***。"><Switch checkedChildren="公开" unCheckedChildren="关闭" /></Form.Item></Col>
-            <Col xs={12} sm={12}><Form.Item name="registrationStatus" label="开放报名"><Select options={[{ value: 'open', label: '开放' }, { value: 'closed', label: '关闭' }]} /></Form.Item></Col>
+            <Col xs={24} sm={12}><Form.Item name="location" label="地点"><Input /></Form.Item></Col>
+            <Col xs={24} sm={12}><Form.Item name="organizer" label="主办方"><Input /></Form.Item></Col>
           </Row>
           <Form.Item name="description" label="赛事说明"><Input.TextArea rows={3} /></Form.Item>
         </Form>

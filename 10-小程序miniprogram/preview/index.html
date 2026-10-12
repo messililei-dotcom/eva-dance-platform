@@ -844,7 +844,7 @@
     function renderLogin(){
       nav('手机号登录', true);
       document.querySelectorAll('.tabbar button').forEach(b => b.classList.remove('active'));
-      setContent('<section class="login-container"><div><div class="logo-section"><img class="login-logo" src="../images/logo.png" alt="伊娃东方舞"><div class="login-title">伊娃东方舞</div><div class="login-subtitle">舞者成长系统</div></div><div class="form-section"><button class="login-btn" style="background:#1aad19" data-action="phone-auth-login">手机一键登陆</button></div></div><button class="back-login" data-action="profile">返回个人中心</button></section>');
+      setContent('<section class="login-container"><div><div class="logo-section"><img class="login-logo" src="../images/logo-20261005.png" alt="伊娃东方舞"><div class="login-title">伊娃东方舞</div><div class="login-subtitle">舞者成长系统</div></div><div class="form-section"><button class="login-btn" style="background:#1aad19" data-action="phone-auth-login">手机一键登陆</button></div></div><button class="back-login" data-action="profile">返回个人中心</button></section>');
     }
     async function loginPreviewByPhoneAuth(){
       const phone = '13900000000';
@@ -867,7 +867,7 @@
       const synced = Object.assign({}, member, {
         name: member.name || '伊娃学员',
         wx_nickname: '微信学员',
-        wx_avatar_url: '/images/logo.png',
+        wx_avatar_url: '/images/logo-20261005.png',
         wx_profile_synced_at: new Date().toISOString()
       });
       simulatedMember = Object.assign({}, simulatedMember || {}, synced);

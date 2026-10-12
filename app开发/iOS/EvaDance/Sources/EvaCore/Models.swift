@@ -73,6 +73,8 @@ public struct Certificate: Decodable, Identifiable {
     public let issueDate: String
     public let status: String
     public let verifyUrl: String
+    public let pdfUrl: String?
+    public let memberName: String?
 }
 public enum AppPolicy {
     public static let apiBase = URL(string: "https://admin.swod.com.cn/api/app/v1")!
@@ -102,6 +104,13 @@ public enum AppPolicy {
         guard let url = secureMediaURL(raw),
               ["www.swod.com.cn", "admin.swod.com.cn", "swod.com.cn"].contains(url.host ?? ""),
               (url.path == "/certification" || url.path.hasPrefix("/api/public/certificates/")) else { return nil }
+        return url
+    }
+    public static func certificatePreviewURL(_ raw: String) -> URL? {
+        guard let url = secureMediaURL(raw), url.host == apiBase.host,
+              url.port == nil || url.port == 443,
+              url.path.range(of: "^/api/certificates/[1-9][0-9]*/render\\.svg$", options: .regularExpression) != nil,
+              URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.contains(where: { $0.name == "no" && !($0.value ?? "").isEmpty }) == true else { return nil }
         return url
     }
     public static func safeProgress(position: Double, duration: Double) -> [String: Double]? {

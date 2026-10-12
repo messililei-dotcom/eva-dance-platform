@@ -1,0 +1,20 @@
+plugins { id 'com.android.application' }
+def signingFile = rootProject.file('signing.local.properties')
+def signingValues = new Properties()
+if (signingFile.exists()) signingFile.withInputStream { signingValues.load(it) }
+android {
+    namespace 'cn.com.swod.app'
+    compileSdk 36
+    defaultConfig { applicationId 'cn.com.swod.app'; minSdk 26; targetSdk 36; versionCode 3; versionName '1.0.0' }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    signingConfigs {
+        if (signingFile.exists()) release {
+            storeFile file(signingValues['storeFile']); storePassword signingValues['storePassword']
+            keyAlias signingValues['keyAlias']; keyPassword signingValues['keyPassword']; storeType 'PKCS12'
+        }
+    }
+    buildTypes {
+        release { minifyEnabled false; if (signingFile.exists()) signingConfig signingConfigs.release }
+    }
+}
+dependencies { testImplementation 'junit:junit:4.13.2' }

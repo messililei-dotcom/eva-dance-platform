@@ -1,4 +1,4 @@
-import { cleanText, hasAuth, jsonError, mapGroup, nowIso, toNumber, unauthorized, withEventDb } from '../_db';
+import { cleanText, readEventBody, hasAuth, jsonError, mapGroup, nowIso, toNumber, unauthorized, withRequestEventDb } from '../_db';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const competitionId = toNumber(url.searchParams.get('competitionId') ?? url.searchParams.get('competition_id'));
   if (!competitionId) return jsonError('缺少赛事ID');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const rows = db.prepare(`
       SELECT
         g.*,
@@ -33,13 +33,14 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const competitionId = toNumber(body.competitionId ?? body.competition_id);
   const name = cleanText(body.name);
   if (!competitionId) return jsonError('缺少赛事ID');
   if (!name) return jsonError('组别名称不能为空');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
+    if (db.prepare('SELECT id FROM event_groups WHERE competition_id=? AND trim(name)=?').get(competitionId, name)) return jsonError('当前赛事已存在同名组别，请使用不同的组别名称');
     const maxSort = db.prepare('SELECT COALESCE(MAX(sort_order), 0) AS value FROM event_groups WHERE competition_id = ?').get(competitionId)?.value || 0;
     const result = db.prepare(`
       INSERT INTO event_groups (
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
       competitionId,
       name,
       cleanText(body.code),
-      cleanText(body.category),
+      '',
       cleanText(body.ageRange ?? body.age_range),
       cleanText(body.danceType ?? body.dance_type),
       cleanText(body.entryType ?? body.entry_type, 'solo'),

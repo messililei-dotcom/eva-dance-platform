@@ -74,7 +74,7 @@ export function recalculateGroupRankings(db: any, groupId: number) {
     SELECT p.*, COUNT(DISTINCT gj.judge_id) AS judge_count
     FROM event_players p
     LEFT JOIN event_group_judges gj ON gj.group_id = p.group_id AND gj.status = 'active'
-    WHERE p.group_id = ? AND p.audit_status = 'approved' AND p.status NOT IN ('withdrawn','cancelled')
+    WHERE p.group_id = ? AND p.audit_status != 'rejected' AND p.status NOT IN ('withdrawn','cancelled')
     GROUP BY p.id
     ORDER BY p.player_no ASC, p.id ASC
   `).all(groupId);

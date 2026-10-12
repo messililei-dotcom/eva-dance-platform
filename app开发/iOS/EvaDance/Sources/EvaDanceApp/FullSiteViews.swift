@@ -1,5 +1,6 @@
 import SwiftUI
 import EvaCore
+import UniformTypeIdentifiers
 
 @MainActor final class SiteStore: ObservableObject {
     @Published var data: JSONValue = .null
@@ -194,6 +195,7 @@ struct EventsView: View {
     var body: some View {
         List {
             BrandHeader(title: "AiwaRaks赛事平台", subtitle: "赛事、报名、赛程与成绩", icon: "trophy")
+            NavigationLink("工作人员 · 赛事管理") { StaffEventRootView() }
             NavigationLink("我的报名与成绩") { AuthGate { RecordListView(title: "赛事记录", path: "/member/events", collectionKey: "entries", fields: [("赛事","competitionName"),("姓名","name"),("组别","groupName"),("审核","auditStatus"),("成绩","totalScore")]) } }
             LoadState(store: store) { Task { await load() } }
             ForEach(store.data.rows.filter { search.isEmpty || $0.value["name"].text.localizedCaseInsensitiveContains(search) }) { row in
@@ -210,6 +212,7 @@ struct EventDetailView: View {
     @EnvironmentObject var session: Session
     @StateObject private var store = SiteStore()
     let id: String
+    @State private var groupSearch = ""
     var body: some View {
         List {
             LoadState(store: store) { Task { await load() } }
@@ -219,8 +222,16 @@ struct EventDetailView: View {
                 Text(plain(event.firstText("description","introduction")))
             }
             Section("参赛组别") {
-                ForEach(store.data["groups"].scopedRows("groups"), id: \.listID) { group in
-                    NavigationLink(group.value["name"].text) { AuthGate { EventRegistrationView(eventID: id, group: group) } }
+                TextField("搜索完整组别名称", text: $groupSearch)
+                ForEach(store.data["groups"].scopedRows("groups").filter { PracticePlan.matches($0.value, query: groupSearch, fields: ["name"]) }, id: \.listID) { group in
+                    NavigationLink { AuthGate { EventRegistrationView(eventID: id, group: group) } } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(group.value["name"].text).fixedSize(horizontal: false, vertical: true)
+                            if group.value["registrationFee"].number > 0 {
+                                Text("报名费 ¥" + String(format: "%.2f", group.value["registrationFee"].number)).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
                 }
                 Text("能否报名及名额以提交时服务端核验为准。").font(.caption).foregroundStyle(.secondary)
             }
@@ -234,13 +245,19 @@ struct EventDetailView: View {
 }
 struct EventRegistrationView: View {
     @EnvironmentObject var session: Session
-    @StateObject private var store = SiteStore()
     let eventID: String
     let group: SiteRow
     @State private var name = ""
     @State private var phone = ""
     @State private var organization = ""
     @State private var teacher = ""
+    @State private var performanceTitle = ""
+    @State private var remark = ""
+    @State private var musicName = ""
+    @State private var music: Data?
+    @State private var picker = false
+    @State private var busy = false
+    @State private var error: String?
     @State private var result = ""
     @State private var confirm = false
     var body: some View {
@@ -248,15 +265,37 @@ struct EventRegistrationView: View {
             Text(group.value["name"].text).font(.headline)
             TextField("参赛姓名", text: $name); TextField("联系电话", text: $phone)
             TextField("机构（选填）", text: $organization); TextField("指导老师（选填）", text: $teacher)
-            Text("提交后进入审核，报名状态不代表付款或参赛资格已经确认。").font(.caption)
-            Button("提交报名") { confirm = true }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || phone.count < 7 || store.busy || !result.isEmpty)
+            TextField("节目名称", text: $performanceTitle)
+            TextField("备注（选填）", text: $remark)
+            Button(musicName.isEmpty ? "选择参赛音乐" : "更换音乐：" + musicName) { picker = true }.disabled(busy)
+            Text("支持 MP3、WAV、M4A、AAC、FLAC，单个文件不超过10MB。报名、节目与音乐一同提交。").font(.caption)
+            Button("提交报名及音乐") { confirm = true }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || phone.range(of: "^1[3-9][0-9]{9}$", options: .regularExpression) == nil || performanceTitle.trimmingCharacters(in: .whitespaces).isEmpty || music == nil || busy || !result.isEmpty)
+            if busy { ProgressView("正在上传报名与音乐…") }
             if !result.isEmpty { Text(result).foregroundStyle(.green) }
-            if let error = store.error { Text(error).foregroundStyle(.red) }
-        }.evaCompactLayout().navigationTitle("赛事报名").confirmationDialog("确认提交本组报名？", isPresented: $confirm) {
-            Button("确认提交") { Task {
-                if await store.send("/events/\(eventID)/register", body:["groupId":Int(group.id) ?? 0,"name":name,"phone":phone,"organization":organization,"teacher":teacher], session:session) != nil { result = "报名已提交，待审核。可在赛事记录中查看。" }
-            } }
+            if let error { Text(error).foregroundStyle(.red) }
+        }.evaCompactLayout().navigationTitle("赛事报名")
+        .fileImporter(isPresented: $picker, allowedContentTypes: [.audio, .data]) { selection in
+            do {
+                let url = try selection.get()
+                let scope = url.startAccessingSecurityScopedResource(); defer { if scope { url.stopAccessingSecurityScopedResource() } }
+                let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+                guard size > 0, size <= 10 * 1024 * 1024 else { throw APIError.service("音乐文件不能超过10MB") }
+                let bytes = try Data(contentsOf: url)
+                _ = try MultipartMusic(fields: [:], filename: url.lastPathComponent, music: bytes)
+                music = bytes; musicName = url.lastPathComponent; error = nil
+            } catch { self.error = error.localizedDescription }
         }
+        .confirmationDialog("确认提交本组报名、节目名称与音乐？", isPresented: $confirm) { Button("确认上传并报名") { Task { await submit() } } }
+    }
+    private func submit() async {
+        guard !busy, let music else { return }
+        busy = true; error = nil; defer { busy = false }
+        do {
+            let form = try MultipartMusic(fields: ["groupId": group.id, "name": name.trimmingCharacters(in: .whitespacesAndNewlines), "phone": phone, "organization": organization, "teacher": teacher, "performanceTitle": performanceTitle.trimmingCharacters(in: .whitespacesAndNewlines), "remark": remark], filename: musicName, music: music)
+            let submitted: JSONValue = try await session.api.request("/events/\(eventID)/register", token: session.token, method: "POST", body: form.body, contentType: form.contentType)
+            result = submitted["auditStatus"].text == "approved" ? "报名与音乐已提交，付款状态请在赛事记录中查看。" : "报名与音乐已提交，请在赛事记录中查看处理进度。"
+            self.music = nil
+        } catch { self.error = error.localizedDescription; if case APIError.sessionExpired = error { session.handle(error) } }
     }
 }
 struct RecordListView: View {

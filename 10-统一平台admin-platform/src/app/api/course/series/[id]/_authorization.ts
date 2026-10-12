@@ -1,3 +1,4 @@
+import { notifyAuthorizationRevocation } from '@/lib/server/authorization-revocation';
 import { authorizationFinancials, ensureAuthorizationCommissionColumns } from '@/lib/server/authorization-commission';
 import type { AdminDb } from '@/lib/server/admin-db';
 import { reconcileMemberAuthorizations } from '@/lib/server/student-growth';
@@ -595,19 +596,21 @@ export function deauthorizeMembers(db: AdminDb, seriesId: number, memberIds: num
            OR (${normalizedPhoneSql('phone')}<>'' AND ${normalizedPhoneSql('phone')}=?)
            OR (COALESCE(wx_openid, '')<>'' AND wx_openid=?)
            OR (COALESCE(wx_unionid, '')<>'' AND wx_unionid=?)
-         )`
+         ) RETURNING *`
     );
     let count = 0;
     ids.forEach(id => {
       const member = getMember.get(id) as { phone?: string; wx_openid?: string; wx_unionid?: string } | undefined;
-      count += Number(revoke.run(
+      const revoked = revoke.all(
         revokedBy,
         seriesId,
         id,
         normalizePhoneIdentity(member?.phone),
         String(member?.wx_openid || '').trim(),
         String(member?.wx_unionid || '').trim(),
-      ).changes || 0);
+      );
+      notifyAuthorizationRevocation(db, revoked, revokedBy);
+      count += revoked.length;
       reconcileMemberAuthorizations(db, id);
     });
     return { deauthorized: count };
@@ -617,28 +620,31 @@ export function deauthorizeMembers(db: AdminDb, seriesId: number, memberIds: num
 export function deauthorizeMemberIdentity(db: AdminDb, seriesId: number, memberId: number, phone = '', revokedBy = 1, authorizationId = 0) {
   ensureAuthorizationAuditColumns(db);
   if (!seriesId || (!memberId && !phone)) return { deauthorized: 0 };
-  const member = memberId ? db.prepare('SELECT phone, wx_openid, wx_unionid FROM Member WHERE id=?').get<{ phone?: string; wx_openid?: string; wx_unionid?: string }>(memberId) : null;
-  const authPhone = phone || member?.phone || '';
-  const result = db.prepare(
-    `UPDATE CourseAuthorization
-     SET status='revoked', revoked_at=datetime('now','localtime'), revoked_by=?
-     WHERE series_id=? AND status='active' AND (?=0 OR id=?)
-       AND (
-         member_id=?
-         OR (${normalizedPhoneSql('phone')}<>'' AND ${normalizedPhoneSql('phone')}=?)
-         OR (COALESCE(wx_openid, '')<>'' AND wx_openid=?)
-         OR (COALESCE(wx_unionid, '')<>'' AND wx_unionid=?)
-       )`
-  ).run(
-    revokedBy,
-    seriesId,
-    authorizationId,
-    authorizationId,
-    memberId || 0,
-    normalizePhoneIdentity(authPhone),
-    String(member?.wx_openid || '').trim(),
-    String(member?.wx_unionid || '').trim(),
-  );
-  if (memberId) reconcileMemberAuthorizations(db, memberId);
-  return { deauthorized: Number(result.changes || 0) };
+  return db.transaction(() => {
+    const member = memberId ? db.prepare('SELECT phone, wx_openid, wx_unionid FROM Member WHERE id=?').get<{ phone?: string; wx_openid?: string; wx_unionid?: string }>(memberId) : null;
+    const authPhone = phone || member?.phone || '';
+    const result = db.prepare(
+      `UPDATE CourseAuthorization
+       SET status='revoked', revoked_at=datetime('now','localtime'), revoked_by=?
+       WHERE series_id=? AND status='active' AND (?=0 OR id=?)
+         AND (
+           member_id=?
+           OR (${normalizedPhoneSql('phone')}<>'' AND ${normalizedPhoneSql('phone')}=?)
+           OR (COALESCE(wx_openid, '')<>'' AND wx_openid=?)
+           OR (COALESCE(wx_unionid, '')<>'' AND wx_unionid=?)
+         ) RETURNING *`
+    ).all(
+      revokedBy,
+      seriesId,
+      authorizationId,
+      authorizationId,
+      memberId || 0,
+      normalizePhoneIdentity(authPhone),
+      String(member?.wx_openid || '').trim(),
+      String(member?.wx_unionid || '').trim(),
+    );
+    notifyAuthorizationRevocation(db, result, revokedBy);
+    if (memberId) reconcileMemberAuthorizations(db, memberId);
+    return { deauthorized: result.length };
+  })();
 }

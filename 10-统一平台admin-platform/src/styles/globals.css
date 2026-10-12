@@ -119,17 +119,6 @@ textarea.ant-input {
   overflow: auto !important;
 }
 
-.admin-main-layout .admin-adaptive-table > .ant-table-wrapper[style*="flex"] .ant-spin-nested-loading,
-.admin-main-layout .admin-adaptive-table > .ant-table-wrapper[style*="flex"] .ant-spin-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.admin-main-layout .admin-adaptive-table > .ant-table-wrapper[style*="flex"] .ant-table-pagination {
-  margin-top: auto;
-}
-
 .admin-main-layout .ant-table-wrapper .ant-table-thead {
   position: sticky;
   top: 0;
@@ -173,6 +162,12 @@ textarea.ant-input {
   padding: 13px 14px !important;
   text-align: center;
   vertical-align: middle;
+}
+
+/* Compact management rows retain readable text while showing more records. */
+.admin-adaptive-table .ant-table-small .ant-table-thead > tr > th,
+.admin-adaptive-table .ant-table-small .ant-table-tbody > tr > td {
+  padding: 8px 12px !important;
 }
 
 .ant-table-wrapper .ant-table-cell {

@@ -83,6 +83,10 @@ final class EvaCoreTests {
         XCTAssertNotNil(AppPolicy.secureMediaURL("https://vod.swod.com.cn/a.mp4?signature=fixture"))
         XCTAssertNil(AppPolicy.certificateURL("https://evil.example/certificates/1"))
         XCTAssertNotNil(AppPolicy.certificateURL("https://www.swod.com.cn/certification?no=EVA-1"))
+        XCTAssertNotNil(AppPolicy.certificatePreviewURL("/api/certificates/12/render.svg?no=EVA-1"))
+        XCTAssertNil(AppPolicy.certificatePreviewURL("https://evil.example/api/certificates/12/render.svg?no=EVA-1"))
+        XCTAssertNil(AppPolicy.certificatePreviewURL("/api/certificates/12/render.svg"))
+        XCTAssertNil(AppPolicy.certificatePreviewURL("/api/certificates/12/render.svg/evil?no=EVA-1"))
     }
     func testProgressRejectsNonFiniteAndClamps() {
         XCTAssertNil(AppPolicy.safeProgress(position: .nan, duration: 30))
@@ -142,6 +146,33 @@ final class EvaCoreTests {
         XCTAssertEqual(resultWithoutData,.null)
     }
 
+    func testStaffLoginCannotPromoteMemberCredentials() async throws {
+        let result = try await client(#"{"token":"staff-fixture","user":{"id":3,"name":"工作人员","role":"event_admin"}}"#).staffLogin(username: "fixture", password: "test-only")
+        XCTAssertEqual(result.user.role, "event_admin")
+        XCTAssertEqual(StubProtocol.lastRequest?.url?.path, "/api/login")
+        XCTAssertNil(StubProtocol.lastRequest?.value(forHTTPHeaderField: "Authorization"))
+        do { _ = try await client(#"{"token":"fixture","user":{"id":3,"name":"普通会员","role":"member"}}"#).staffLogin(username: "fixture", password: "test-only"); XCTFail() }
+        catch APIError.denied { } catch { XCTFail("Wrong staff role error") }
+    }
+    func testStaffExportsPreserveNumbersAndRejectFormulaInjection() {
+        XCTAssertEqual(StaffPolicy.csvCell("001"), "\"'001\"")
+        XCTAssertEqual(StaffPolicy.csvCell("=HYPERLINK(test)"), "\"'=HYPERLINK(test)\"")
+        XCTAssertNil(StaffPolicy.musicURL(0))
+        XCTAssertEqual(StaffPolicy.musicURL(12)?.path, "/api/event/music/12")
+        XCTAssertFalse(StaffPolicy.allows("member"))
+    }
+
+    func testMultipartMusicRejectsIdentityAndSanitizesHeaders() throws {
+        let upload = try MultipartMusic(fields: ["name": "参赛学员", "performanceTitle": "曲目"], filename: "test\r\n\".mp3", music: Data("ID3-fixture-music".utf8))
+        let body = String(decoding: upload.body, as: UTF8.self)
+        XCTAssertTrue(upload.contentType.hasPrefix("multipart/form-data; boundary=EvaMusic-"))
+        XCTAssertTrue(body.contains("filename=\"test.mp3\""))
+        XCTAssertTrue(body.contains("name=\"performanceTitle\""))
+        do { _ = try MultipartMusic(fields: ["member_id": "999"], filename: "test.mp3", music: Data([1])); XCTFail() } catch { }
+        do { _ = try MultipartMusic(fields: [:], filename: "test.exe", music: Data([1])); XCTFail() } catch { }
+        do { _ = try MultipartMusic(fields: [:], filename: "test.mp3", music: Data()); XCTFail() } catch { }
+    }
+
 }
 
 
@@ -163,7 +194,10 @@ final class EvaCoreTests {
         try await suite.testNativeLoginDTOAndBusinessErrors()
         try suite.testPracticePlanBoundariesAndSearch()
         suite.testSharedPlatformPublicRoutesNeverForwardPrivateRequests()
-        print("15 contract checks; failures=\(failures)")
+        try await suite.testStaffLoginCannotPromoteMemberCredentials()
+        suite.testStaffExportsPreserveNumbersAndRejectFormulaInjection()
+        try suite.testMultipartMusicRejectsIdentityAndSanitizesHeaders()
+        print("18 contract checks; failures=\(failures)")
         if failures > 0 { exit(1) }
     }
 }

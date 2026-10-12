@@ -50,6 +50,6 @@ export function onlineAuthorizationCommissions(db: AdminDb) {
     actual_amount AS amount, substr(granted_at,1,10) AS date,
     sales, commission_rate AS commissionRate, commission_amount AS commissionAmount,
     remark, granted_at AS created_at
-    FROM (${AUTHORIZATION_FINANCIAL_SQL}) WHERE actual_amount IS NOT NULL
+    FROM (${AUTHORIZATION_FINANCIAL_SQL}) WHERE actual_amount IS NOT NULL AND status='active'
     ORDER BY granted_at DESC, id DESC`).all();
 }

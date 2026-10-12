@@ -256,7 +256,7 @@ export default function PermissionsPage() {
           <Text type="danger">此操作不可恢复！</Text>
         </div>
       ),
-      okText: '确认删除',
+      okText: <DeleteOutlined aria-label="确认删除" title="确认删除" />,
       okType: 'danger',
       cancelText: '取消',
       onOk: async () => {

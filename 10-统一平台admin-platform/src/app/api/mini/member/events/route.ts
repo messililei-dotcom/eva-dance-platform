@@ -29,7 +29,7 @@ export async function GET(request: Request) {
       const phone = String(member.phone || '').trim();
       const rows = db.prepare(`
         SELECT
-          p.id AS player_id,
+          p.id AS player_id,p.member_id,p.status AS player_status,p.name AS entrant_name,p.registration_fee,p.paid_amount,p.paid_at,p.submitted_by_member_id,
           p.competition_id,
           c.name AS competition_name,
           c.code AS competition_code,
@@ -63,7 +63,7 @@ export async function GET(request: Request) {
         LEFT JOIN event_rankings r
           ON r.player_id=p.id AND r.group_id=p.group_id AND r.status='published'
         LEFT JOIN event_awards a ON a.id=r.award_id
-        WHERE p.member_id=?
+        WHERE p.member_id=? OR p.submitted_by_member_id=?
           OR (?<>'' AND REPLACE(REPLACE(REPLACE(COALESCE(p.phone,''), ' ', ''), '-', ''), '+86', '')
               = REPLACE(REPLACE(REPLACE(?, ' ', ''), '-', ''), '+86', ''))
         ORDER BY
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
           c.id DESC,
           g.sort_order ASC,
           p.id DESC
-      `).all<EventEntryRow>(memberId, phone, phone);
+      `).all<EventEntryRow>(memberId, memberId, phone, phone);
 
       const publishedPlayerIds = rows
         .filter((row) => row.ranking_status === 'published')
@@ -137,6 +137,7 @@ export async function GET(request: Request) {
           paidStatus: row.paid_status || 'unpaid',
           scoreStatus: row.score_status || 'not_started',
           registeredAt: row.registered_at || '',
+          entrantName:row.entrant_name||'',registrationFee:Number(row.registration_fee||0),paidAmount:Number(row.paid_amount||0),paidAt:row.paid_at||'',canPay:[row.member_id,row.submitted_by_member_id].includes(memberId) && Number(row.registration_fee)>0 && Number(row.paid_amount||0)===0 && row.audit_status!=='rejected' && !['cancelled','withdrawn'].includes(row.player_status),
           resultPublished,
           totalScore: resultPublished && row.published_total != null ? Number(row.published_total) : null,
           rankNo: resultPublished ? Number(row.rank_no || 0) : 0,

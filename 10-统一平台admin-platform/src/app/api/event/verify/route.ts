@@ -1,4 +1,4 @@
-import { hasAuth, unauthorized, withEventDb } from '../_db';
+import { hasAuth, unauthorized, withRequestEventDb } from '../_db';
 import { pagePayload, readPage } from '@/lib/server/pagination';
 
 export const dynamic = 'force-dynamic';
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
   if (!hasAuth(request)) return unauthorized();
   const paging = readPage(new URL(request.url), { pageSize: 20, maxPageSize: 100 });
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const counts = Object.fromEntries(eventTables.map((table) => {
       const row = db.prepare(`SELECT COUNT(*) AS value FROM ${table}`).get();
       return [table, row?.value || 0];
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
         SELECT 'approved_player_without_score' AS type, p.id, p.name AS label
         FROM event_players p
         LEFT JOIN event_scores s ON s.player_id = p.id
-        WHERE p.audit_status = 'approved'
+        WHERE p.audit_status != 'rejected'
         GROUP BY p.id
         HAVING COUNT(s.id) = 0
         UNION ALL

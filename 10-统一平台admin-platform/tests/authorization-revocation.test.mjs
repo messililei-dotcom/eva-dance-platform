@@ -1,0 +1,41 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import ts from 'typescript';
+import { DatabaseSync } from 'node:sqlite';
+function load(path, mocks={}) {
+ const module={exports:{}};
+ const code=ts.transpileModule(fs.readFileSync(new URL(path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+ new Function('require','module','exports',code)(name=>{if(name in mocks)return mocks[name];throw Error(name);},module,module.exports);
+ return module.exports;
+}
+test('取消授权和通知原子提交，重试不重复，提成扣回但收入保留',()=>{
+ const sqlite=new DatabaseSync(':memory:');
+ sqlite.exec(`CREATE TABLE User(id INTEGER,name TEXT,username TEXT,status TEXT,role TEXT);
+ INSERT INTO User VALUES(1,'操作人','op','active','admin'),(2,'管理员','admin','active','admin'),(3,'停用','off','disabled','admin');
+ CREATE TABLE Member(id INTEGER,name TEXT,phone TEXT,wx_openid TEXT,wx_unionid TEXT);
+ INSERT INTO Member VALUES(1,'学员','13800000000','','');
+ CREATE TABLE CourseSeries(id INTEGER,name TEXT); INSERT INTO CourseSeries VALUES(1,'课程');
+ CREATE TABLE CourseOrder(id INTEGER,status TEXT);
+ CREATE TABLE CourseAuthorization(id INTEGER,series_id INTEGER,member_id INTEGER,phone TEXT,wx_openid TEXT,wx_unionid TEXT,status TEXT,revoked_at TEXT,revoked_by INTEGER,granted_at TEXT,remark TEXT,actual_amount REAL,sales TEXT,commission_rate REAL,commission_amount REAL);
+ INSERT INTO CourseAuthorization VALUES(1,1,1,'13800000000','','','active',NULL,NULL,'2026-10-12','','100','顾问',10,10);
+ ALTER TABLE CourseAuthorization ADD COLUMN order_id INTEGER;`);
+ const db={prepare:s=>sqlite.prepare(s),exec:s=>sqlite.exec(s),transaction:fn=>()=>{sqlite.exec('BEGIN');try{const value=fn();sqlite.exec('COMMIT');return value;}catch(e){sqlite.exec('ROLLBACK');throw e;}}};
+ const inbox=load('../src/lib/server/staff-inbox.ts');
+ const notice=load('../src/lib/server/authorization-revocation.ts',{'./staff-inbox':inbox});
+ const financial=load('../src/lib/server/authorization-revenue.ts');
+ const commission=load('../src/lib/server/authorization-commission.ts',{'./authorization-revenue':financial});
+ const auth=load('../src/app/api/course/series/[id]/_authorization.ts',{'@/lib/server/authorization-revocation':notice,'@/lib/server/authorization-commission':commission,'@/lib/server/student-growth':{reconcileMemberAuthorizations(){}},'@/lib/server/inbox':{},'@/lib/server/authorization-vouchers':{}});
+ assert.equal(commission.onlineAuthorizationCommissions(db).length,1);
+ assert.equal(auth.deauthorizeMemberIdentity(db,1,1,'',1,1).deauthorized,1);
+ assert.equal(commission.onlineAuthorizationCommissions(db).length,0);
+ assert.equal(sqlite.prepare(financial.AUTHORIZATION_INCOME_SQL).get().amount,100);
+ assert.match(sqlite.prepare('SELECT content FROM StaffInboxMessage').get().content,/操作人在.*取消了学员.*课程.*请退回提成奖金 ¥10.00/);
+ assert.equal(sqlite.prepare('SELECT user_id FROM StaffInboxRecipient').get().user_id,2);
+ assert.equal(auth.deauthorizeMemberIdentity(db,1,1,'',1,1).deauthorized,0);
+ assert.equal(sqlite.prepare('SELECT count(*) n FROM StaffInboxMessage').get().n,1);
+ sqlite.exec("UPDATE CourseAuthorization SET status='active'; CREATE TRIGGER fail_notice BEFORE INSERT ON StaffInboxMessage BEGIN SELECT RAISE(ABORT,'test failure'); END;");
+ assert.throws(()=>auth.deauthorizeMembers(db,1,[1],1),/test failure/);
+ assert.equal(sqlite.prepare('SELECT status FROM CourseAuthorization').get().status,'active');
+ sqlite.close();
+});

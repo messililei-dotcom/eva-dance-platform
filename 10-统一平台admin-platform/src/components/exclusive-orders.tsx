@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useState,useRef} from 'react';
-import {Button,Card,Modal,Form,Select,Input,InputNumber,DatePicker,Table,Space,Tag,Checkbox,App,Radio,Statistic,Row,Col} from 'antd';
+import {Button,Card,Modal,Form,Select,Input,InputNumber,DatePicker,Space,Tag,Checkbox,App,Radio,Statistic,Row,Col} from 'antd';
+import { Table } from '@/components/adaptive-table';
 import {PlusOutlined,ShareAltOutlined} from '@ant-design/icons';
 import {api} from '@/lib/api';
 const money=(n:number)=>'¥'+(Number(n||0)/100).toFixed(2);

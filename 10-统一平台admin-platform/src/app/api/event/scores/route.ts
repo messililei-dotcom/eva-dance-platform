@@ -3,6 +3,7 @@ import {
   cleanText,
   getRuleForGroup,
   hasAuth,
+  readEventBody,
   jsonError,
   mapScore,
   markAbnormalScore,
@@ -10,7 +11,7 @@ import {
   recalculateGroupRankings,
   toNumber,
   unauthorized,
-  withEventDb,
+  withRequestEventDb,
 } from '../_db';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
   const playerId = toNumber(url.searchParams.get('playerId') ?? url.searchParams.get('player_id'));
   const judgeId = toNumber(url.searchParams.get('judgeId') ?? url.searchParams.get('judge_id'));
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     let where = 'WHERE 1=1';
     const params: any[] = [];
     if (competitionId) {
@@ -62,13 +63,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const groupId = toNumber(body.groupId ?? body.group_id);
   const playerId = toNumber(body.playerId ?? body.player_id);
   const judgeId = toNumber(body.judgeId ?? body.judge_id);
   if (!groupId || !playerId || !judgeId) return jsonError('缺少组别、选手或评委ID');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     try {
       const group = db.prepare('SELECT * FROM event_groups WHERE id = ?').get(groupId);
       if (!group) return jsonError('组别不存在', 404);
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
 
       const player = db.prepare('SELECT * FROM event_players WHERE id = ? AND group_id = ?').get(playerId, groupId);
       if (!player) return jsonError('选手不属于该组别', 404);
-      if (player.audit_status !== 'approved' && !body.overrideAudit) return jsonError('报名未审核通过，不能评分');
+      if (player.audit_status === 'rejected' || ['withdrawn', 'cancelled'].includes(player.status)) return jsonError('该报名已失效，不能评分');
 
       const assignment = db.prepare(`
         SELECT gj.*, j.auth_enabled AS judge_auth_enabled, j.status AS judge_status

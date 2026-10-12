@@ -39,7 +39,7 @@ export async function GET(request: Request) {
         c.template_id,
         c.remark,
         c.created_at,
-        COALESCE(m.name, '') AS member_name,
+        COALESCE(NULLIF(c.recipient_name, ''), m.name, '') AS member_name,
         COALESCE(NULLIF(cs.name, ''), NULLIF(tc.name, ''), '') AS course_name
       FROM Certificate c
       LEFT JOIN Member m ON m.id = c.member_id

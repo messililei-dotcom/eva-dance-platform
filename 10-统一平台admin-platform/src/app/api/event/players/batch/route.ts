@@ -1,4 +1,4 @@
-import { cleanText, hasAuth, jsonError, nowIso, toNumber, unauthorized, withEventDb } from '../../_db';
+import { cleanText, readEventBody, hasAuth, jsonError, nowIso, toNumber, unauthorized, withRequestEventDb } from '../../_db';
 import { syncEventPlayerToMember } from '@/lib/server/event-member-sync';
 
 export const dynamic = 'force-dynamic';
@@ -12,15 +12,15 @@ function normalizeIds(value: unknown) {
 export async function POST(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const competitionId = toNumber(body.competitionId ?? body.competition_id);
   const groupId = toNumber(body.groupId ?? body.group_id);
   const rows = Array.isArray(body.rows) ? body.rows.slice(0, 500) : [];
   if (!competitionId || !groupId) return jsonError('缺少赛事或组别ID');
   if (!rows.length) return jsonError('没有可新增的选手数据');
 
-  return withEventDb((db) => {
-    const group = db.prepare('SELECT id FROM event_groups WHERE id = ? AND competition_id = ?').get(groupId, competitionId);
+  return withRequestEventDb(request, (db) => {
+    const group = db.prepare('SELECT id,registration_fee FROM event_groups WHERE id = ? AND competition_id = ?').get(groupId, competitionId);
     if (!group) return jsonError('组别不存在或不属于当前赛事', 404);
 
     const errors: Array<{ row: number; message: string }> = [];
@@ -29,8 +29,8 @@ export async function POST(request: Request) {
       INSERT INTO event_players (
         competition_id, group_id, member_id, order_id, player_no, name, phone,
         gender, birthday, organization, teacher, status, audit_status,
-        paid_status, score_status, remark, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        paid_status, score_status, remark, updated_at, registration_fee
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     db.transaction(() => {
@@ -60,12 +60,13 @@ export async function POST(request: Request) {
           cleanText(row?.birthday ?? row?.生日),
           cleanText(row?.organization ?? row?.机构),
           cleanText(row?.teacher ?? row?.课程顾问),
-          cleanText(row?.status, 'pending'),
-          cleanText(row?.auditStatus ?? row?.audit_status, 'pending'),
-          cleanText(row?.paidStatus ?? row?.paid_status, 'unpaid'),
+          cleanText(row?.status, 'approved'),
+          'approved',
+          'unpaid',
           cleanText(row?.scoreStatus ?? row?.score_status, 'not_started'),
           cleanText(row?.remark ?? row?.备注),
           nowIso(),
+          Number(group.registration_fee || 0),
         );
         createdIds.push(Number(result.lastInsertRowid));
       });
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const competitionId = toNumber(body.competitionId ?? body.competition_id);
   const groupId = toNumber(body.groupId ?? body.group_id);
   const action = cleanText(body.action);
@@ -86,8 +87,8 @@ export async function PATCH(request: Request) {
   if (action === 'randomize_sequence') {
     if (!competitionId || !groupId) return jsonError('缺少赛事或组别ID');
 
-    return withEventDb((db) => {
-      const group = db.prepare('SELECT id FROM event_groups WHERE id = ? AND competition_id = ?').get(groupId, competitionId);
+    return withRequestEventDb(request, (db) => {
+      const group = db.prepare('SELECT id,registration_fee FROM event_groups WHERE id = ? AND competition_id = ?').get(groupId, competitionId);
       if (!group) return jsonError('组别不存在或不属于当前赛事', 404);
 
       const players = db.prepare(`
@@ -140,11 +141,11 @@ export async function PATCH(request: Request) {
   }
 
   const ids = normalizeIds(body.ids);
+  if (body.patch?.paidStatus !== undefined || body.patch?.paid_status !== undefined) return jsonError('请逐项使用登记缴费功能');
   const patch = body.patch && typeof body.patch === 'object' ? body.patch : {};
   if (!competitionId || !groupId || !ids.length) return jsonError('缺少赛事、组别或选手ID');
 
   const fieldMap: Array<[string, string, (value: unknown) => unknown]> = [
-    ['auditStatus', 'audit_status', (value) => cleanText(value)],
     ['paidStatus', 'paid_status', (value) => cleanText(value)],
     ['scoreStatus', 'score_status', (value) => cleanText(value)],
     ['status', 'status', (value) => cleanText(value)],
@@ -162,7 +163,7 @@ export async function PATCH(request: Request) {
   });
   if (!sets.length) return jsonError('请选择至少一项需要修改的内容');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const placeholders = ids.map(() => '?').join(', ');
     sets.push('updated_at = ?');
     values.push(nowIso(), competitionId, groupId, ...ids);
@@ -178,14 +179,15 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const competitionId = toNumber(body.competitionId ?? body.competition_id);
   const groupId = toNumber(body.groupId ?? body.group_id);
   const ids = normalizeIds(body.ids);
   if (!competitionId || !groupId || !ids.length) return jsonError('缺少赛事、组别或选手ID');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const placeholders = ids.map(() => '?').join(', ');
+    if (db.prepare(`SELECT id FROM event_registration_payments WHERE player_id IN (${placeholders}) LIMIT 1`).get(...ids)) return jsonError('报名已有缴费记录，请保留记录并使用取消报名状态');
     const result = db.prepare(`
       DELETE FROM event_players
       WHERE competition_id = ? AND group_id = ? AND id IN (${placeholders})

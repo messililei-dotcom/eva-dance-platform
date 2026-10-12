@@ -1712,7 +1712,7 @@ export default function OnlineCoursePage() {
     if (!rows.length) { message.warning('请选择当前有效的授权记录'); return; }
     modal.confirm({
       title: `确定取消 ${rows.length} 条课程授权吗？`,
-      content: '取消后，所选学员将无法访问对应课程，授权及取消授权记录会保留。',
+      content: '取消授权会同时退回提成，所选学员将无法访问对应课程。系统会通知其他管理员取消操作人、时间、学员及课程，请退回已发放的提成奖金。授权和提成原始记录会保留。',
       okText: '取消授权', okButtonProps: { danger: true }, cancelText: '返回',
       onOk: async () => {
         setSaving(true);
@@ -1740,6 +1740,7 @@ export default function OnlineCoursePage() {
   const cancelAuthorization = (record: any) => {
     modal.confirm({
       title: '确定撤销此学员授权吗？',
+      content: '取消授权会同时退回提成，所选学员将无法访问对应课程。系统会通知其他管理员取消操作人、时间、学员及课程，请退回已发放的提成奖金。授权和提成原始记录会保留。',
       okText: '撤销',
       okButtonProps: { danger: true },
       cancelText: '取消',
@@ -2268,8 +2269,8 @@ export default function OnlineCoursePage() {
   const confirmDelete = (title: string, onOk: () => Promise<any>) => {
     modal.confirm({
       title,
-      okText: '删除',
-      okButtonProps: { danger: true },
+      okText: <DeleteOutlined aria-label="删除" title="删除" />,
+      okButtonProps: { danger: true , 'aria-label': "删除", title: "删除"},
       cancelText: '取消',
       onOk: async () => {
         try {
@@ -2404,7 +2405,7 @@ export default function OnlineCoursePage() {
                               <Button danger icon={<DeleteOutlined />} aria-label={`批量删除 ${selectedMaterialIds.length} 个素材`} onClick={() => confirmDelete(`确定删除选中的 ${selectedMaterialIds.length} 个素材吗？已被课程引用的素材不能删除。`, async () => {
                                 await onlineCourseApi.batchDeleteMaterials({ ids: selectedMaterialIds });
                                 setSelectedMaterialIds([]);
-                              })}>批量删除</Button>
+                              })} title="批量删除"></Button>
                             </Tooltip>
                           </>
                         )}
@@ -3430,8 +3431,8 @@ export default function OnlineCoursePage() {
             </Col>
             <Col xs={24} md={12}><Form.Item name="actual_amount" label="实收金额" extra="默认使用课程优惠价，可按实际收款修改。" rules={[{ required: true, message: '请输入实收金额' }]}><InputNumber min={0} max={999999999} precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
             <Col xs={24} md={12}><Form.Item name="sales" label="课程顾问" rules={[{ required: true, whitespace: true, message: '请选择或输入课程顾问' }]}><AutoComplete allowClear options={buildCourseAdvisorOptions()} filterOption={filterCourseAdvisorOption} placeholder="选择或输入课程顾问" /></Form.Item></Col>
-            <Col xs={12} md={12}><Form.Item name="commission_rate" label="提成比例" rules={[{ required: true, message: '请输入提成比例' }]}><InputNumber min={0} max={100} precision={2} suffix="%" style={{ width: '100%' }} /></Form.Item></Col>
             <Col xs={12} md={12}><Form.Item name="commission_amount" label="提成金额" rules={[{ required: true, message: '请输入提成金额' }]}><InputNumber min={0} max={Number(authActualAmount || 0)} precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={12} md={12}><Form.Item name="commission_rate" label="提成比例" rules={[{ required: true, message: '请输入提成比例' }]}><InputNumber min={0} max={100} precision={2} suffix="%" style={{ width: '100%' }} /></Form.Item></Col>
             <Col span={24}><Typography.Text type="secondary">提成比例与金额可互相换算；调整实收金额时按当前比例重算。保存后合并至 <a href="/bonus-commission" target="_blank" rel="noreferrer">奖金提成</a> 统计。</Typography.Text></Col>
             <Col span={24}>
               <Form.Item label="订单凭证" required extra="支持多张图片，单张不超过 12MB；授权时必须上传。">
@@ -3504,8 +3505,8 @@ export default function OnlineCoursePage() {
             </Col>
             <Col xs={24} md={12}><Form.Item name="actual_amount" label="实收金额" extra={<Typography.Text style={{ color: '#cf1322', fontWeight: 600 }}>此批量课程为免费赠送课程，提成为0。</Typography.Text>} rules={[{ required: true, message: '请输入实收金额' }]}><InputNumber disabled min={0} max={0} precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
             <Col xs={24} md={12}><Form.Item name="sales" label="课程顾问" rules={[{ required: true, whitespace: true, message: '请选择或输入课程顾问' }]}><AutoComplete allowClear options={buildCourseAdvisorOptions()} filterOption={filterCourseAdvisorOption} placeholder="选择或输入课程顾问" /></Form.Item></Col>
-            <Col xs={12}><Form.Item name="commission_rate" label="提成比例" rules={[{ required: true, message: '请输入提成比例' }]}><InputNumber disabled min={0} max={0} precision={2} suffix="%" style={{ width: '100%' }} /></Form.Item></Col>
             <Col xs={12}><Form.Item name="commission_amount" label="提成金额" required><InputNumber disabled precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={12}><Form.Item name="commission_rate" label="提成比例" rules={[{ required: true, message: '请输入提成比例' }]}><InputNumber disabled min={0} max={0} precision={2} suffix="%" style={{ width: '100%' }} /></Form.Item></Col>
             <Col span={24}>
               <Form.Item name="remark" label="授权备注">
                 <Input.TextArea rows={3} placeholder="可填写本次批量授权说明" />

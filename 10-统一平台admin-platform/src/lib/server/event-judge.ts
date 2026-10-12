@@ -31,7 +31,7 @@ export function resolveJudge(db: AdminDb, memberId: number, competitionId: numbe
 
 export function verifyJudgeGroup(db: AdminDb, competitionId: number, groupId: number, judgeId: number) {
   return db.prepare(`
-    SELECT g.id, g.name, COALESCE(g.category, '') AS category,
+    SELECT g.id, g.name,
            COALESCE(g.scoring_status, '') AS scoring_status, g.score_rule_id
     FROM event_groups g
     JOIN event_group_judges gj ON gj.group_id = g.id AND gj.judge_id = ?
@@ -43,9 +43,9 @@ export function verifyJudgeGroup(db: AdminDb, competitionId: number, groupId: nu
 
 export function loadJudgeGroups(db: AdminDb, competitionId: number, judgeId: number) {
   return db.prepare(`
-    SELECT g.id, g.name, COALESCE(g.category, '') AS category,
-      COUNT(DISTINCT CASE WHEN p.audit_status = 'approved' AND p.status NOT IN ('withdrawn','cancelled') THEN p.id END) AS player_count,
-      COUNT(DISTINCT CASE WHEN p.audit_status = 'approved' AND EXISTS (
+    SELECT g.id, g.name,
+      COUNT(DISTINCT CASE WHEN p.audit_status != 'rejected' AND p.status NOT IN ('withdrawn','cancelled') THEN p.id END) AS player_count,
+      COUNT(DISTINCT CASE WHEN p.audit_status != 'rejected' AND EXISTS (
         SELECT 1 FROM event_scores s
         WHERE s.group_id = g.id AND s.player_id = p.id AND s.judge_id = ?
           AND s.score_status IN ('submitted','reviewed','published')
@@ -81,7 +81,7 @@ export function loadJudgePlayers(db: AdminDb, competitionId: number, groupId: nu
           AND s.score_status!='voided'
         ORDER BY s.version DESC LIMIT 1) AS my_score_status
     FROM event_players p
-    WHERE p.competition_id=? AND p.group_id=? AND p.audit_status='approved'
+    WHERE p.competition_id=? AND p.group_id=? AND p.audit_status!='rejected'
       AND p.status NOT IN ('withdrawn','cancelled')
     ORDER BY p.player_no ASC, p.id ASC
   `).all<Record<string, any>>(judgeId, judgeId, competitionId, groupId);
@@ -136,9 +136,9 @@ export function saveJudgeScore(db: AdminDb, options: {
 }) {
   const { competitionId, group, playerId, judge, criteria, values } = options;
   if (group.scoring_status === 'locked') throw new Error('该组别评分已锁定');
-  const player = db.prepare(`SELECT id FROM event_players WHERE id=? AND group_id=? AND competition_id=? AND audit_status='approved'`)
+  const player = db.prepare(`SELECT id FROM event_players WHERE id=? AND group_id=? AND competition_id=? AND audit_status!='rejected' AND status NOT IN ('withdrawn','cancelled')`)
     .get(playerId, group.id, competitionId);
-  if (!player) throw new Error('选手不存在或报名未审核通过');
+  if (!player) throw new Error('选手不存在或报名已失效');
 
   const normalized: Record<string, number> = {};
   let total = 0;

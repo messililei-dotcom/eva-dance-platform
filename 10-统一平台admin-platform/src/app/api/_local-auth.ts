@@ -107,7 +107,9 @@ export function verifyLocalToken(token: string) {
   try {
     const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
     if (!data?.username || Date.now() > Number(data.exp || 0)) return null;
-    return data as { id: number; username: string; role: string };
+    const user = findLocalUser(String(data.username));
+    if (!user || user.status !== 'active' || Number(user.id) !== Number(data.id) || user.role !== data.role) return null;
+    return { id: user.id, username: user.username, role: user.role };
   } catch {
     return null;
   }

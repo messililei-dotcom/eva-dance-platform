@@ -1,4 +1,4 @@
-import { hasAuth, jsonError, unauthorized, withEventDb } from '../_db';
+import { readEventBody, hasAuth, jsonError, unauthorized, withRequestEventDb } from '../_db';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -34,9 +34,9 @@ function fileName() {
 export async function GET(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const tables = Object.fromEntries(
-      TABLES.map((table) => [table, db.prepare(`SELECT * FROM ${quoted(table)} ORDER BY id`).all()]),
+      TABLES.map((table) => [table, db.prepare(`SELECT * FROM ${quoted(table)} ORDER BY id`).all().map((row: any) => { if (table === 'event_groups') { const { category, ...group } = row; return group; } return row; })]),
     );
     const payload = {
       format: 'eva-event-data',
@@ -58,13 +58,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => null);
+  const body = await readEventBody(request);
   if (!body || body.format !== 'eva-event-data' || Number(body.version) !== 1 || !body.tables) {
     return jsonError('文件格式不正确，请选择赛事管理导出的 JSON 文件');
   }
 
   try {
-    return withEventDb((db) => {
+    return withRequestEventDb(request, (db) => {
       const summary: Record<string, { created: number; updated: number; skipped: number }> = {};
 
       const importAll = db.transaction(() => {
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
               result.skipped += 1;
               continue;
             }
-            const columns = Object.keys(row).filter((column) => allowedColumns.has(column));
+            const columns = Object.keys(row).filter((column) => allowedColumns.has(column) && !(table === 'event_groups' && column === 'category'));
             if (!columns.includes('id') || row.id == null) {
               result.skipped += 1;
               continue;

@@ -881,8 +881,8 @@ export default function OnlineCourseEditorPage() {
     if (!ids.length) return;
     modal.confirm({
       title: `确定删除 ${ids.length} 个课节吗？`,
-      okText: '删除',
-      okButtonProps: { danger: true },
+      okText: <DeleteOutlined aria-label="删除" title="删除" />,
+      okButtonProps: { danger: true , 'aria-label': "删除", title: "删除"},
       cancelText: '取消',
       onOk: async () => {
         try {
@@ -1181,8 +1181,8 @@ export default function OnlineCourseEditorPage() {
     modal.confirm({
       title: '确定删除此课程吗？',
       content: '删除后课程信息和关联课节将不可恢复。',
-      okText: '删除',
-      okButtonProps: { danger: true },
+      okText: <DeleteOutlined aria-label="删除" title="删除" />,
+      okButtonProps: { danger: true , 'aria-label': "删除", title: "删除"},
       cancelText: '取消',
       onOk: async () => {
         try {
@@ -1288,6 +1288,7 @@ export default function OnlineCourseEditorPage() {
   const cancelAuthorization = (record: any) => {
     modal.confirm({
       title: '确定取消此学员授权吗？',
+      content: '取消授权会同时退回提成，所选学员将无法访问对应课程。系统会通知其他管理员取消操作人、时间、学员及课程，请退回已发放的提成奖金。授权和提成原始记录会保留。',
       okText: '取消授权',
       okButtonProps: { danger: true },
       cancelText: '取消',
@@ -1383,6 +1384,7 @@ export default function OnlineCourseEditorPage() {
     }
     modal.confirm({
       title: `确定取消 ${selectedAuthMemberIds.length} 位学员授权吗？`,
+      content: '取消授权会同时退回提成，所选学员将无法访问对应课程。系统会通知其他管理员取消操作人、时间、学员及课程，请退回已发放的提成奖金。授权和提成原始记录会保留。',
       okText: '取消授权',
       okButtonProps: { danger: true },
       cancelText: '取消',
@@ -1573,7 +1575,7 @@ export default function OnlineCourseEditorPage() {
                     <Button disabled={!selectedLessonIds.length} onClick={() => batchUpdateLessons('published')}>批量上架</Button>
                     <Button disabled={!selectedLessonIds.length} onClick={() => batchUpdateLessons('offline')}>批量下架</Button>
                     <Tooltip title={`批量删除 ${selectedLessonIds.length} 个课节`}>
-                      <Button danger icon={<DeleteOutlined />} aria-label={`批量删除 ${selectedLessonIds.length} 个课节`} disabled={!selectedLessonIds.length} onClick={() => deleteLessons(selectedLessonIds)}>批量删除</Button>
+                      <Button danger icon={<DeleteOutlined />} aria-label={`批量删除 ${selectedLessonIds.length} 个课节`} disabled={!selectedLessonIds.length} onClick={() => deleteLessons(selectedLessonIds)} title="批量删除"></Button>
                     </Tooltip>
                   </Space>
                 }

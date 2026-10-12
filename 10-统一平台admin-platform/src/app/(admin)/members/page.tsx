@@ -265,8 +265,8 @@ export default function MembersPage() {
     modal.confirm({
       title: `确定删除学员「${member.name}」吗？`,
       content: '删除后该学员将不再出现在学员列表中；若仍有未核销课时，系统会阻止删除。',
-      okText: '删除',
-      okButtonProps: { danger: true },
+      okText: <DeleteOutlined aria-label="删除" title="删除" />,
+      okButtonProps: { danger: true , 'aria-label': "删除", title: "删除"},
       cancelText: '取消',
       onOk: async () => {
         try {
@@ -546,9 +546,7 @@ export default function MembersPage() {
                 <Button
                   icon={<DeleteOutlined />}
                   onClick={() => form.setFieldValue('avatar', '')}
-                >
-                  清除
-                </Button>
+                 aria-label="清除" title="清除"></Button>
               )}
             </Space>
           </div>

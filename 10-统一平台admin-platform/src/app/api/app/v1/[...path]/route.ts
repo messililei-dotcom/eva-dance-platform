@@ -1,3 +1,4 @@
+import { normalizedMusicForm, MusicUploadError } from '@/lib/server/event-music-upload';
 import { appPlatform, appMemberSource, appDeviceName } from '@/lib/server/app-platform';
 import { appShopPayment } from '@/lib/server/app-shop';
 import { carrierLoginEnabled, getCarrierPhone } from '@/lib/server/app-carrier-auth';
@@ -34,7 +35,8 @@ async function handle(request: Request, context: Context) {
     if (parts.some(p => !p || p.includes('/') || p === '..')) throw new AppError('接口不存在', 404);
     const platform = appPlatform(request.headers);
     const path = parts.join('/'), method = request.method;
-    const body = await readBody(request);
+    const multipart = method === "POST" && /^events\/[1-9]\d*\/register$/.test(path) && request.headers.get("content-type")?.startsWith("multipart/form-data;");
+    const body = multipart ? {} : await readBody(request);
     if (path === 'config' && method === 'GET') return json({
       version: 1, oneTapLogin: carrierLoginEnabled(), offlineDownload: false, digitalPurchase: false, physicalCheckout: Object.values(appShopPayment()).some(Boolean),
       privacyURL: 'https://www.swod.com.cn/privacy', termsURL: 'https://www.swod.com.cn/terms',
@@ -152,9 +154,11 @@ async function handle(request: Request, context: Context) {
       }
       Object.keys(body).forEach(key => delete body[key]); Object.assign(body, merged);
     }
+    const upload = multipart ? await normalizedMusicForm(request) : undefined;
+    if (upload) headers.delete('Content-Type');
     const module = await route.load();
     const handler = (module as any)[method];
-    const result: Response = await handler(new Request(url, {method,headers,...(method !== 'GET' ? {body:JSON.stringify(body)} : {})}), {params:Promise.resolve(route.params)});
+    const result: Response = await handler(new Request(url, {method,headers,...(method !== 'GET' ? {body:upload || JSON.stringify(body)} : {})}), {params:Promise.resolve(route.params)});
     if (/^video\/\d+\/progress$/.test(path) && result.ok && session) {
       const lessonId = Number(parts[1]);
       if (method === 'GET') {
@@ -175,8 +179,8 @@ async function handle(request: Request, context: Context) {
     const responseHeaders = new Headers(result.headers); responseHeaders.set('Cache-Control','private, no-store');
     return new Response(result.body, {status:result.status,headers:responseHeaders});
   } catch (error) {
-    const status = error instanceof AppError ? error.status : 500;
-    return Response.json({success:false,message:error instanceof AppError ? error.message : '服务暂不可用，请稍后重试'}, {status,headers:{'Cache-Control':'private, no-store'}});
+    const status = error instanceof AppError || error instanceof MusicUploadError ? error.status : 500;
+    return Response.json({success:false,message:error instanceof AppError || error instanceof MusicUploadError ? error.message : '服务暂不可用，请稍后重试'}, {status,headers:{'Cache-Control':'private, no-store'}});
   }
 }
 export const GET = handle;

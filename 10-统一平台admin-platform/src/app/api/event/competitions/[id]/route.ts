@@ -2,12 +2,13 @@ import {
   cleanText,
   competitionSelectSql,
   hasAuth,
+  readEventBody,
   jsonError,
   mapCompetition,
   nowIso,
   toNumber,
   unauthorized,
-  withEventDb,
+  withRequestEventDb,
 } from '../../_db';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +18,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const routeParams = await params;
   if (!hasAuth(request)) return unauthorized();
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const row = db.prepare(`
       ${competitionSelectSql()}
       WHERE c.id = ?
@@ -32,38 +33,34 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const routeParams = await params;
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const name = cleanText(body.name);
   if (!name) return jsonError('赛事名称不能为空');
 
-  return withEventDb((db) => {
-    const existing = db.prepare('SELECT id, registration_public, judge_scores_public FROM event_competitions WHERE id = ?').get(routeParams.id);
+  return withRequestEventDb(request, (db) => {
+    const existing = db.prepare('SELECT id, registration_status, registration_public, judge_scores_public FROM event_competitions WHERE id = ?').get(routeParams.id);
     if (!existing) return jsonError('赛事不存在', 404);
 
     db.prepare(`
       UPDATE event_competitions
       SET name = ?, code = ?, status = ?, registration_status = ?, registration_public = ?, judge_scores_public = ?, start_date = ?,
-          end_date = ?, registration_start = ?, registration_end = ?, location = ?,
-          organizer = ?, description = ?, cover_url = ?, max_players = ?,
-          registration_fee = ?, updated_at = ?
+          end_date = ?, location = ?,
+          organizer = ?, description = ?, cover_url = ?,
+          updated_at = ?
       WHERE id = ?
     `).run(
       name,
       cleanText(body.code),
       'published',
-      cleanText(body.registrationStatus ?? body.registration_status, 'closed'),
+      cleanText(body.registrationStatus ?? body.registration_status, existing.registration_status),
       body.registrationPublic === undefined ? Number(existing.registration_public) : body.registrationPublic === true ? 1 : 0,
       body.judgeScoresPublic === undefined ? Number(existing.judge_scores_public) : body.judgeScoresPublic === true ? 1 : 0,
       cleanText(body.startDate ?? body.start_date),
       cleanText(body.endDate ?? body.end_date),
-      cleanText(body.registrationStart ?? body.registration_start),
-      cleanText(body.registrationEnd ?? body.registration_end),
       cleanText(body.location),
       cleanText(body.organizer, '伊娃东方舞'),
       cleanText(body.description),
       cleanText(body.coverUrl ?? body.cover_url),
-      toNumber(body.maxPlayers ?? body.max_players),
-      toNumber(body.registrationFee ?? body.registration_fee),
       nowIso(),
       routeParams.id,
     );
@@ -76,7 +73,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const routeParams = await params;
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const action = cleanText(body.action);
   const statusMap: Record<string, { status?: string; registration_status?: string; registration_public?: number; judge_scores_public?: number }> = {
     showJudgeScores: { judge_scores_public: 1 },
@@ -89,7 +86,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const patch = statusMap[action];
   if (!patch) return jsonError('不支持的赛事操作');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const existing = db.prepare('SELECT id FROM event_competitions WHERE id = ?').get(routeParams.id);
     if (!existing) return jsonError('赛事不存在', 404);
     const sets = ['updated_at = ?'];
@@ -120,7 +117,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const routeParams = await params;
   if (!hasAuth(request)) return unauthorized();
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const competition = db.prepare('SELECT id, name FROM event_competitions WHERE id = ?').get(routeParams.id);
     if (!competition) return jsonError('赛事不存在', 404);
 

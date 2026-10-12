@@ -3,7 +3,9 @@ from pathlib import Path
 import json, shutil, subprocess, ssl, urllib.request, urllib.error, datetime
 ROOT=Path(__file__).resolve().parents[2]
 CONFIG=ROOT/'共享资料/上线准备/平台配置.json'
-OUTPUT=ROOT/'共享资料/上线准备/20261003/准备检查.json'
+today=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).strftime('%Y%m%d')
+OUTPUT=ROOT/'共享资料/上线准备'/today/'准备检查.json'
+OUTPUT.parent.mkdir(parents=True,exist_ok=True)
 config=json.loads(CONFIG.read_text())
 rows=[]
 def record(name,state,detail): rows.append({'item':name,'state':state,'detail':detail})
@@ -21,7 +23,8 @@ for name,path in [('xcode','/Applications/Xcode.app'),('androidStudio','/Applica
     if name=='devecoStudio':found=found or any(Path('/Applications').glob('*DevEco*'))
     record(name,'installed' if found else 'missing',path)
 java=subprocess.run(['/usr/libexec/java_home'],capture_output=True,text=True)
-record('java','installed' if java.returncode==0 else 'missing','java_home 检查')
+jdk=list((Path.home()/'Library/Developer/EvaToolchains').glob('jdk-*/Contents/Home/bin/java'))
+record('java','installed' if java.returncode==0 or jdk else 'missing','java_home 与 EvaToolchains JDK 检查')
 for key,directory in [('android','Android'),('harmony','HarmonyOS')]:
     project=ROOT/directory/'EvaDance'
     record(key+'.clientProject','exists' if project.exists() else 'missing','尚未检出客户端工程' if not project.exists() else str(project))

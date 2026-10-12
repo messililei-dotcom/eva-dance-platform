@@ -1,4 +1,5 @@
-import { cleanText, hasAuth, jsonError, mapRanking, nowIso, recalculateGroupRankings, rerankGroupRankings, toNumber, unauthorized, withEventDb } from '../_db';
+import { cleanText, readEventBody, hasAuth, jsonError, mapRanking, nowIso, recalculateGroupRankings, rerankGroupRankings, toNumber, unauthorized, withRequestEventDb } from '../_db';
+import legacyAvatars from '@/data/event-player-avatars.json';
 import { createPersonalMessage } from '@/lib/server/inbox';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
   const groupId = toNumber(url.searchParams.get('groupId') ?? url.searchParams.get('group_id'));
   if (!competitionId && !groupId) return jsonError('缺少赛事或组别ID');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     let where = 'WHERE 1=1';
     const params: any[] = [];
     if (competitionId) {
@@ -31,12 +32,14 @@ export async function GET(request: Request) {
         p.name AS player_name,
         p.player_no,
         p.organization,
+        COALESCE(NULLIF(m.wx_avatar_url, ''), NULLIF(m.avatar, ''), '') AS avatar_url,
         COUNT(DISTINCT s.judge_id) AS score_count,
         COUNT(DISTINCT gj.judge_id) AS judge_count,
         SUM(CASE WHEN s.is_abnormal = 1 AND s.score_status != 'voided' THEN 1 ELSE 0 END) AS abnormal_count
       FROM event_rankings r
       LEFT JOIN event_groups g ON g.id = r.group_id
       LEFT JOIN event_players p ON p.id = r.player_id
+      LEFT JOIN Member m ON m.id = p.member_id
       LEFT JOIN event_scores s ON s.group_id = r.group_id AND s.player_id = r.player_id AND s.score_status != 'voided'
       LEFT JOIN event_group_judges gj ON gj.group_id = r.group_id AND gj.status = 'active'
       ${where}
@@ -53,18 +56,18 @@ export async function GET(request: Request) {
       LIMIT 50
     `).all(competitionId, competitionId, groupId, groupId);
 
-    return Response.json({ success: true, data: { rankings: rows.map(mapRanking), logs } });
+    return Response.json({ success: true, data: { rankings: rows.map((row: any) => ({ ...mapRanking(row), avatarUrl: row.avatar_url || (legacyAvatars as Record<string, string>)[String(row.player_id)] || '' })), logs } });
   });
 }
 
 export async function POST(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const groupId = toNumber(body.groupId ?? body.group_id);
   if (!groupId) return jsonError('缺少组别ID');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     try {
       const count = recalculateGroupRankings(db, groupId);
       return Response.json({ success: true, data: { count } });
@@ -77,13 +80,13 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   if (!hasAuth(request)) return unauthorized();
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readEventBody(request);
   const groupId = toNumber(body.groupId ?? body.group_id);
   const action = cleanText(body.action);
   if (!groupId) return jsonError('缺少组别ID');
   if (!['publish', 'unpublish', 'set_manual_score', 'clear_manual_score'].includes(action)) return jsonError('不支持的结果操作');
 
-  return withEventDb((db) => {
+  return withRequestEventDb(request, (db) => {
     const group = db.prepare('SELECT * FROM event_groups WHERE id = ?').get(groupId);
     if (!group) return jsonError('组别不存在', 404);
     const now = nowIso();

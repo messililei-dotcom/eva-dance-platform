@@ -7,8 +7,8 @@ type Context = { params: Promise<{ path: string[] }> };
 
 async function forward(request: Request, context: Context) {
   const path = (await context.params).path;
-  const publicRead = request.method === 'GET' && (path.join('/') === 'products' || path[0] === 'images' || (path[0] === 'courses' && path.length === 3));
-  const allowed = publicRead || path.join('/') === 'shipping' ||
+  const publicRead = request.method === 'GET' && (path.join('/') === 'products' || path[0] === 'images' || (path[0] === 'courses' && path.length === 3 && ['online','offline'].includes(path[1])));
+  const allowed = publicRead || (request.method==='GET' && path[0]==='courses' && path.length===3 && path[1]==='event') || path.join('/') === 'shipping' ||
     (path[0] === 'orders' && path.length <= 3 && (!path[2] || ['pay','refresh','cancel','received','refund'].includes(path[2])));
   if (!allowed) return jsonError('接口不存在', 404);
   if (!publicRead && !getMemberId(new URL(request.url).searchParams, request)) return jsonError('请先登录', 401);

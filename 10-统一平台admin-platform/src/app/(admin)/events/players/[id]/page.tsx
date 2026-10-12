@@ -40,7 +40,6 @@ export default function EventPlayerDetailPage() {
           <Descriptions.Item label="组别">{player?.groupName || '-'}</Descriptions.Item>
           <Descriptions.Item label="机构">{player?.organization || '-'}</Descriptions.Item>
           <Descriptions.Item label="课程顾问">{player?.teacher || '-'}</Descriptions.Item>
-          <Descriptions.Item label="审核"><Tag>{player?.auditStatus || '-'}</Tag></Descriptions.Item>
           <Descriptions.Item label="缴费"><Tag>{player?.paidStatus || '-'}</Tag></Descriptions.Item>
           <Descriptions.Item label="评分状态"><Tag>{player?.scoreStatus || '-'}</Tag></Descriptions.Item>
           <Descriptions.Item label="备注">{player?.remark || '-'}</Descriptions.Item>

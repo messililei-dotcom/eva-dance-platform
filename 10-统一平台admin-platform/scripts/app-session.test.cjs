@@ -14,6 +14,7 @@ test('student route allowlist rejects admin, traversal and wrong verbs',()=>{con
 dbtest('App handler validates sessions, strips self-reported identity and blocks unconfigured checkout',async db=>{
  const cred=api.createAppSession(db,1,'a');let forwarded;
  const route=load('src/app/api/app/v1/[...path]/route.ts',name=>{
+ if(name.endsWith('event-music-upload'))return load('src/lib/server/event-music-upload.ts');
  if(name.endsWith('app-session'))return api;
  if(name.endsWith('app-platform'))return load('src/lib/server/app-platform.ts',name=>name==='./app-session'?api:require(name));
  if(name.endsWith('app-shop'))return {appShopPayment:()=>({alipay:false,wechat:false})};
@@ -64,6 +65,7 @@ dbtest('Android and Harmony login keep shared accounts with their own source and
  let sources=[];
  const platform=load('src/lib/server/app-platform.ts',name=>name==='./app-session'?api:require(name));
  const route=load('src/app/api/app/v1/[...path]/route.ts',name=>{
+ if(name.endsWith('event-music-upload'))return load('src/lib/server/event-music-upload.ts');
  if(name.endsWith('app-session'))return api;
  if(name.endsWith('app-platform'))return platform;
  if(name.endsWith('app-shop'))return {appShopPayment:()=>({alipay:false,wechat:false})};

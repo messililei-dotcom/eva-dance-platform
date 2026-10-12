@@ -1,5 +1,5 @@
 {
-  "description": "商城微信支付与订单确认更新；视频播放由后台独立控制，当前关闭；准备提审，尚未上传",
+  "description": "赛事报名缴费、公开成绩及播放控件对齐更新；后台小程序视频开关已关闭；准备提审，尚未上传",
   "packOptions": {
     "ignore": [
       {
@@ -33,6 +33,14 @@
       {
         "type": "glob",
         "value": "**/.DS_Store"
+      },
+      {
+        "type": "file",
+        "value": "images/logo.png"
+      },
+      {
+        "type": "file",
+        "value": "images/logo-20261004.png"
       }
     ],
     "include": []
@@ -67,7 +75,7 @@
   "libVersion": "3.7.0",
   "appid": "wxc2878927a69379ef",
   "projectname": "eva-dance-training-miniprogram",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "condition": {},
   "simulatorPluginLibVersion": {},
   "editorSetting": {}

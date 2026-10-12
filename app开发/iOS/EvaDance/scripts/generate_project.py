@@ -40,7 +40,7 @@ configs=[]; project_configs=[]
 for mode in ['Debug','Release']:
     configs.append(put('target-'+mode, 'XCBuildConfiguration', name=mode, buildSettings={
         'PRODUCT_BUNDLE_IDENTIFIER':'cn.com.swod.app', 'PRODUCT_NAME':'$(TARGET_NAME)',
-        'MARKETING_VERSION':'1.0.0','CURRENT_PROJECT_VERSION':'2', 'IPHONEOS_DEPLOYMENT_TARGET':'16.0',
+        'MARKETING_VERSION':'1.0.0','CURRENT_PROJECT_VERSION':'3', 'IPHONEOS_DEPLOYMENT_TARGET':'16.0',
         'TARGETED_DEVICE_FAMILY':'1,2', 'SDKROOT':'iphoneos','SUPPORTED_PLATFORMS':'iphoneos iphonesimulator',
         'SWIFT_VERSION':'5.0','CODE_SIGN_STYLE':'Automatic','INFOPLIST_FILE':'Resources/Info.plist',
         'GENERATE_INFOPLIST_FILE':'NO', 'SWIFT_OPTIMIZATION_LEVEL':'-Onone' if mode=='Debug' else '-O',

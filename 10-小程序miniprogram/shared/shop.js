@@ -27,7 +27,7 @@ function product(item) {
   return {...item,priceText:money(item.priceFen),image:item.image ? (/^https:\/\//.test(item.image) ? item.image : config.officialWebsiteUrl + item.image) : '',specText:[item.spec,item.size,item.color].filter(Boolean).join(' · ')};
 }
 const labels={pending:'待付款',paid:'待发货',shipped:'待收货',completed:'已完成',cancelled:'已取消',refund_requested:'退款审核中',refunding:'退款处理中',refunded:'已退款'};
-function order(item) { return {...item,totalText:money(item.totalFen),statusText:labels[item.status] || item.status,createdText:new Date(item.createdAt).toLocaleDateString(),items:(item.items || []).map(row=>({...row,priceText:money(row.unit_fen)}))}; }
+function order(item) { return {...item,totalText:money(item.totalFen),statusText:item.kind && item.kind !== 'goods' && item.status==='paid'?'已支付':labels[item.status] || item.status,createdText:new Date(item.createdAt).toLocaleDateString(),items:(item.items || []).map(row=>({...row,priceText:money(row.unit_fen)}))}; }
 function requestKey() { return `mini-${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`; }
 async function pay(id) {
   const data=await api.request(`/shop/orders/${encodeURIComponent(id)}/pay`,{method:'POST',data:{},timeout:30000});

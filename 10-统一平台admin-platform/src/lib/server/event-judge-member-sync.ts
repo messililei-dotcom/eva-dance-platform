@@ -42,6 +42,7 @@ function findMember(db: AdminDb, judge: Record<string, any>) {
 }
 
 function markMemberAsJudge(db: AdminDb, member: Record<string, any>) {
+  if ((db as any).eventOwnerId) return;
   const columns = memberColumns(db);
   const sets: string[] = [];
   const values: unknown[] = [];
@@ -78,6 +79,12 @@ function createMember(db: AdminDb, judge: Record<string, any>) {
   return Number(result.lastInsertRowid);
 }
 
+export function ensureImportedJudgeMember(db: AdminDb, judge: Record<string, any>) {
+  const member = findMember(db, judge);
+  if (member) return Number(member.id);
+  return createMember(db, judge);
+}
+
 export function ensureJudgeForMember(db: AdminDb, memberId: number) {
   const member = db.prepare("SELECT * FROM Member WHERE id=? AND COALESCE(status, 'active')!='deleted'").get(memberId) as Record<string, any> | undefined;
   if (!member) throw new Error('所选学员不存在');
@@ -88,9 +95,9 @@ export function ensureJudgeForMember(db: AdminDb, memberId: number) {
   }
   if (!judge) {
     const result = db.prepare(`
-      INSERT INTO event_judges (member_id, name, phone, status, auth_enabled, updated_at)
-      VALUES (?, ?, ?, 'active', 1, ?)
-    `).run(memberId, text(member.name, '评委'), text(member.phone), new Date().toISOString());
+      INSERT INTO event_judges (member_id, name, phone, status, auth_enabled, owner_user_id, updated_at)
+      VALUES (?, ?, ?, 'active', 1, ?, ?)
+    `).run(memberId, text(member.name, '评委'), text(member.phone), (db as any).eventActorId || 0, new Date().toISOString());
     judge = db.prepare('SELECT * FROM event_judges WHERE id=?').get(Number(result.lastInsertRowid)) as Record<string, any>;
   } else {
     db.prepare(`UPDATE event_judges SET member_id=?, name=?, phone=?, status='active', auth_enabled=1, updated_at=? WHERE id=?`)

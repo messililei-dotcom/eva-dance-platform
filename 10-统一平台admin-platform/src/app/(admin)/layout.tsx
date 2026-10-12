@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
-import { App, Layout, Menu, Avatar, Dropdown, Space, Drawer, Grid } from 'antd';
+import { App, Layout, Menu, Avatar, Dropdown, Space, Drawer, Grid, Result } from 'antd';
 import {
   HomeOutlined, UserOutlined, ShoppingCartOutlined,
   ShopOutlined, DollarOutlined, SettingOutlined, SafetyOutlined,
@@ -118,7 +118,9 @@ const mobilePrimaryItems = [
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
+  const eventOnly = user?.role === 'event_admin';
+  const canView = !eventOnly || pathname === '/events' || pathname?.startsWith('/events/');
   const { message } = App.useApp();
   const screens = useBreakpoint();
   const isMobile = !screens.md;
@@ -199,7 +201,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       theme="dark"
       selectedKeys={[active]}
       defaultOpenKeys={isMobile ? ['grp-core', 'grp-education'] : ['grp-core']}
-      items={menuItems}
+      items={eventOnly ? menuItems.map(item => ({ ...item, children: item.children?.map((child: any) => ({ ...child, label: child.key === '/events' ? child.label : `${child.label} · 无权限查看` })) })) : menuItems}
       onClick={({ key }) => {
         if (key.startsWith('/')) {
           router.push(key);
@@ -378,12 +380,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           background: '#f0f2f5',
           minHeight: '100vh',
         }} className="admin-content">
-          {children}
+          {loading ? null : canView ? children : <Result status="403" title="无权限查看" subTitle="此账号仅可使用赛事管理，管理自己新建的赛事。" />}
         </Content>
 
         {isMobile && (
           <nav className="admin-mobile-tabbar" aria-label="常用功能">
-            {mobilePrimaryItems.map(item => {
+            {(eventOnly ? [{ key: '/events', label: '赛事', icon: <CalendarOutlined /> }] : mobilePrimaryItems).map(item => {
               const selected = active === item.key;
               return (
                 <button key={item.key} type="button" className={selected ? 'is-active' : ''} onClick={() => router.push(item.key)} aria-current={selected ? 'page' : undefined}>

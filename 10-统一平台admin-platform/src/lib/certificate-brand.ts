@@ -1,7 +1,7 @@
 import { QrCode, Ecc } from '@rc-component/qrcode/lib/libs/qrcodegen';
 
 export const CERTIFICATE_BRAND_PREFIX = '伊娃东方舞｜';
-export const CERTIFICATE_ART_ROOT = '/uploads/certificates/templates/eva-20260930-';
+export const CERTIFICATE_ART_ROOT = '/uploads/certificates/templates/eva-sealed-20261008-';
 export const CERTIFICATE_FONT = "'Noto Serif CJK SC','Songti SC','SimSun',serif";
 export function certificateWebsiteUrl(no = '') {
   return `https://www.swod.com.cn/certification${no ? `?no=${encodeURIComponent(no)}` : ''}`;

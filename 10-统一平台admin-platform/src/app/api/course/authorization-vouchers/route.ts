@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
-import sharp from 'sharp';
+import { compressVoucherImage } from '@/lib/server/voucher-image';
+import { randomUUID } from 'crypto';
 import { cleanText, jsonError, nowIso, requirePermission } from '../../training-db';
 import {
   AUTHORIZATION_VOUCHER_UPLOAD_DIR,
@@ -37,14 +38,10 @@ export async function POST(request: Request) {
       String(now.getMinutes()).padStart(2, '0'),
       String(now.getSeconds()).padStart(2, '0'),
     ].join('');
-    const filename = `${timestamp}_${subject}_${course}_${group}_${String(sequence).padStart(2, '0')}.webp`;
+    const filename = `${timestamp}_${subject}_${course}_${group}_${String(sequence).padStart(2, '0')}_${randomUUID()}.webp`;
     await mkdir(AUTHORIZATION_VOUCHER_UPLOAD_DIR, { recursive: true });
     const originalBuffer = Buffer.from(await file.arrayBuffer());
-    const compressedBuffer = await sharp(originalBuffer)
-      .rotate()
-      .resize({ width: 1800, height: 1800, fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 82, effort: 4 })
-      .toBuffer();
+    const compressedBuffer = await compressVoucherImage(originalBuffer);
     await writeFile(path.join(AUTHORIZATION_VOUCHER_UPLOAD_DIR, filename), compressedBuffer);
 
     return Response.json({

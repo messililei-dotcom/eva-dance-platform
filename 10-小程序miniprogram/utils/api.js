@@ -381,11 +381,12 @@ module.exports = {
   getEventDetail(id) {
     return request(`/events/${id}`, { auth: false });
   },
+  getEventPlayerDetail(id, groupId, playerId) { return request(`/events/${id}/groups/${groupId}/players/${playerId}`, { auth: false }); },
   getEventGroupDetail(id, groupId) {
     return request(`/events/${id}/groups/${groupId}`, { auth: false });
   },
   getMyEventRegistrations(id) {
-    return request(`/events/${id}/register?member_id=${getMemberId()}`);
+    return request('/member/events').then(result => (result.entries || []).filter(row => String(row.competitionId) === String(id)).map(row => ({ ...row, id: row.playerId })));
   },
   registerEvent(id, data) {
     return request(`/events/${id}/register`, {

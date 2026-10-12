@@ -1,0 +1,33 @@
+{
+  "asOf": "2026-10-11",
+  "releaseReady": false,
+  "productionDeployed": false,
+  "checks": {
+    "iosCore": {
+      "passed": 18,
+      "failed": 0
+    },
+    "platformApp": {
+      "passed": 28,
+      "failed": 0
+    },
+    "iosSimulatorBuild": "passed",
+    "iosUnsignedDeviceBuild": "passed",
+    "scopedTypeScript": "passed",
+    "androidJavaSyntax": {
+      "files": 6,
+      "errors": 0,
+      "androidTypeChecked": false
+    },
+    "androidBuild": "pendingSDKLicenseAndInstall",
+    "harmonyBuild": "blockedMissingDevEcoStudio"
+  },
+  "requiredFeaturesPending": [
+    "微信移动登录联调",
+    "安卓/鸿蒙号码认证SDK",
+    "三端安全视频离线缓存",
+    "安卓/鸿蒙实际编译与真机",
+    "生产接口部署与权限联调",
+    "签名与商店审核"
+  ]
+}

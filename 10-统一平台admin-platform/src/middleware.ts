@@ -168,11 +168,22 @@ export async function middleware(request: NextRequest) {
     return withRobotsHeader(NextResponse.next());
   }
 
+  // Event administrators have no access to other administrative APIs, including aliases.
+  const localToken = getTokenFromRequest(request);
+  if (localToken && await validateLocalToken(localToken) === 'ok') {
+    const payload = decodeBase64UrlJson(localToken.split('.')[1]);
+    if (payload?.role === 'event_admin'
+      && !apiPath.startsWith('/api/event/')
+      && !['/api/login', '/api/validate-token'].includes(apiPath)) {
+      return withRobotsHeader(NextResponse.json({ success: false, error: '无权限查看', message: '无权限查看' }, { status: 403 }));
+    }
+  }
+
   // Native App routes validate opaque, revocable sessions in their Node route handler.
   if (apiPath.startsWith("/api/app/v1/")) return withRobotsHeader(NextResponse.next());
 
   // 公开端点放行
-  if (isPublicApiPath(apiPath) || (request.method === 'GET' && /^\/api\/mini\/events(?:\/[1-9][0-9]*(?:\/groups\/[1-9][0-9]*)?)?$/.test(apiPath))) {
+  if (isPublicApiPath(apiPath) || (request.method === 'GET' && /^\/api\/mini\/events(?:\/[1-9][0-9]*(?:\/groups\/[1-9][0-9]*(?:\/players\/[1-9][0-9]*)?)?)?$/.test(apiPath))) {
     return withRobotsHeader(NextResponse.next());
   }
 

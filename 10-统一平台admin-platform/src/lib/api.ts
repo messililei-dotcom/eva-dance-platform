@@ -320,6 +320,9 @@ export const certApi = {
 
 // ========== 赛事运营 API ==========
 export const eventApi = {
+  listRegistrationPayments: async (id: number): Promise<any[]> => (await api.get(`/event/players/${id}/payments`)).data?.data || [],
+  recordRegistrationPayment: async (id: number, data: any) => (await api.post(`/event/players/${id}/payments`, data)).data,
+
   listGroupJudges: async (params?: QueryParams): Promise<any[]> => {
     const res = await api.get('/event/group-judges', { params });
     return res.data?.data || [];
@@ -355,6 +358,10 @@ export const eventApi = {
   batchDeletePlayers: async (payload: any): Promise<any> => {
     const res = await api.delete('/event/players/batch', { data: payload });
     return res.data?.data;
+  },
+  randomizeEventSequence: async (competitionId: number): Promise<any> => {
+    const res = await api.post('/event/performances/randomize', { competitionId });
+    return res.data.data;
   },
   randomizePlayerSequence: async (payload: any): Promise<any> => {
     const res = await api.patch('/event/players/batch', { ...payload, action: 'randomize_sequence' });
@@ -413,6 +420,10 @@ export const eventApi = {
     const res = await api.post('/event/groups/import', payload);
     return res.data?.data;
   },
+  reorderGroups: async (payload: { competitionId: number; ids: number[]; previousIds: number[] }): Promise<any> => {
+    const res = await api.post('/event/groups/reorder', payload);
+    return res.data;
+  },
   updateGroup: async (id: number | string, payload: any): Promise<any> => {
     const res = await api.put(`/event/groups/${id}`, payload);
     return res.data;
@@ -428,6 +439,12 @@ export const eventApi = {
   getPlayer: async (id: number | string): Promise<any> => {
     const res = await api.get(`/event/players/${id}`);
     return res.data?.data;
+  },
+  importPlayers: async (payload: any): Promise<any> => {
+    const res = await api.post('/event/players/import', payload); return res.data?.data;
+  },
+  importJudges: async (payload: any): Promise<any> => {
+    const res = await api.post('/event/judges/import', payload); return res.data?.data;
   },
   createPlayer: async (payload: any): Promise<any> => {
     const res = await api.post('/event/players', payload);

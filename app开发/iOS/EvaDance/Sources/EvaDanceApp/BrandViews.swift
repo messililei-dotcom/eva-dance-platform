@@ -30,6 +30,7 @@ struct CourseHero: View {
             RoundedRectangle(cornerRadius: 16).fill(EvaBrand.gradient)
             if let url = AppPolicy.secureMediaURL(course["cover_image"].text) {
                 AsyncImage(url: url) { image in image.resizable().scaledToFill() } placeholder: { Color.clear }
+                    .frame(height: 165).clipped()
             }
             LinearGradient(colors: [.clear, .black.opacity(0.75)], startPoint: .top, endPoint: .bottom)
             VStack(alignment: .leading, spacing: 5) {

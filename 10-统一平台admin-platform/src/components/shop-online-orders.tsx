@@ -9,9 +9,9 @@ import {
   Input,
   Modal,
   Space,
-  Table,
   Tag,
 } from "antd";
+import { Table } from "@/components/adaptive-table";
 import { api } from "@/lib/api";
 const names: Record<string, string> = {
   pending: "待付款",
@@ -45,6 +45,7 @@ export default function ShopOnlineOrders() {
   const [orders, setOrders] = useState<Order[]>([]),
     [total, setTotal] = useState(0),
     [page, setPage] = useState(1),
+    [pageSize, setPageSize] = useState(50),
     [loading, setLoading] = useState(false),
     [busy, setBusy] = useState(false);
   const [payment, setPayment] = useState({ wechat: false, alipay: false }),
@@ -57,7 +58,7 @@ export default function ShopOnlineOrders() {
       if (!quiet) setLoading(true);
       try {
         const { data } = await api.get("/ecommerce/orders", {
-          params: { page },
+          params: { page, pageSize },
         });
         setOrders(data.orders);
         setTotal(data.total);
@@ -68,7 +69,7 @@ export default function ShopOnlineOrders() {
         setLoading(false);
       }
     },
-    [page, message],
+    [page, pageSize, message],
   );
   useEffect(() => {
     void load();
@@ -126,10 +127,10 @@ export default function ShopOnlineOrders() {
         scroll={{ x: 1200 }}
         pagination={{
           current: page,
-          pageSize: 50,
+          pageSize,
           total,
-          onChange: setPage,
-          showSizeChanger: false,
+          onChange: (nextPage, nextSize) => { setPage(nextSize === pageSize ? nextPage : 1); setPageSize(nextSize); },
+          showSizeChanger: true,
         }}
         columns={[
           {

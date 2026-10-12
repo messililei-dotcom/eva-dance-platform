@@ -26,13 +26,14 @@ export async function GET(request: Request) {
     const init = openCommerceDb();
     init.close();
     const query = new URL(request.url).searchParams;
-    const page = Math.max(1, Math.min(10000, Number(query.get("page")) || 1));
+    const page = Math.max(1, Math.min(10000, Math.floor(Number(query.get("page"))) || 1));
+    const pageSize = Math.max(1, Math.min(100, Math.floor(Number(query.get("pageSize"))) || 50));
     const orders = shopDb((db) =>
       db
         .prepare(
-          "SELECT * FROM shop_online_orders ORDER BY created_at DESC LIMIT 50 OFFSET ?",
+          "SELECT * FROM shop_online_orders ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?",
         )
-        .all<ShopOrder>((Math.floor(page) - 1) * 50)
+        .all<ShopOrder>(pageSize, (page - 1) * pageSize)
         .map((order) => ({
           ...publicOrder(db, order),
           memberId: order.member_id,

@@ -19,7 +19,7 @@ test('offline period sharing preserves selected period ID and normalized cover',
 test('account entries never include private account fields or login handoffs',()=>{
  for(const route of ['profile','profile-edit','commerce-orders','admin','login']){
   const result=resolveShare({data:{memberName:'PRIVATE_NAME',phone:'PRIVATE_PHONE',orders:[{id:'SECRET_ORDER'}]},shareOptions:{token:'SECRET_TOKEN',pwa_handoff:'SECRET_HANDOFF',memberId:9}},route);
-  assert.doesNotMatch(JSON.stringify(result),/PRIVATE|SECRET|memberId/);assert.equal(result.imageUrl,'/images/logo.png');
+  assert.doesNotMatch(JSON.stringify(result),/PRIVATE|SECRET|memberId/);assert.match(result.imageUrl,/^\/images\/logo(?:-\d{8})?\.png$/);
  }
 });
 test('timeline carries course landing without lesson identifiers',()=>{

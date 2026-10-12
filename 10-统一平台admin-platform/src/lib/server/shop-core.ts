@@ -1,3 +1,4 @@
+import {ensureEventOnline,eventPaymentOffer,settleEventPayment} from "./event-online";
 import { randomBytes, createHash } from "node:crypto";
 import type { AdminDb } from "./admin-db";
 
@@ -40,6 +41,7 @@ export type ShopItem = {
   unit_fen: number;
 };
 export function ensureShop(db: AdminDb) {
+  ensureEventOnline(db);
   db.exec(`PRAGMA busy_timeout=5000;
     CREATE TABLE IF NOT EXISTS shop_online_orders (
       id TEXT PRIMARY KEY, member_id INTEGER NOT NULL, request_key TEXT NOT NULL,
@@ -425,7 +427,8 @@ export function settleRefund(db: AdminDb, id: string) {
 }
 
 // Courses use the same signed gateway callbacks and order ownership checks as goods.
-export function courseOffer(db: AdminDb, kind: string, target: unknown) {
+export function courseOffer(db: AdminDb, kind: string, target: unknown, actor = 0) {
+  if(kind==='event') {try{return eventPaymentOffer(db,Number(target),actor)}catch(e:any){throw new ShopError(e.message,409)}}
   const id = Number(target);
   if (!['online','offline'].includes(kind) || !Number.isSafeInteger(id) || id <= 0) throw new ShopError('课程参数错误');
   const row = kind === 'online'
@@ -448,12 +451,14 @@ export function createCourseOrder(db: AdminDb, memberId: number, body: any) {
     if(previous){if(previous.request_hash!==hash)throw new ShopError('下单内容已变化，请重新确认',409);return previous;}
     const member=db.prepare('SELECT id,name,phone FROM Member WHERE id=?').get<any>(memberId);
     if(!member)throw new ShopError('请先登录',401);
-    const offer=courseOffer(db,body.kind,body.targetId);
+    const offer=courseOffer(db,body.kind,body.targetId,memberId);
     if(body.expectedTotalFen!==offer.priceFen)throw new ShopError('课程价格已更新，请刷新后确认',409);
     if(offer.kind==='online' && db.prepare("SELECT id FROM CourseAuthorization WHERE (member_id=? OR (phone=? AND ?<>'')) AND series_id=? AND status='active' AND (expire_at IS NULL OR expire_at='' OR datetime(expire_at)>datetime('now','localtime'))").get(memberId,member.phone || '',member.phone || '',offer.id))throw new ShopError('你已拥有该课程，请直接学习',409);
     if(offer.kind==='offline' && db.prepare("SELECT id FROM Payment WHERE memberId=? AND courseId=? AND paymentStatus IN ('paid','completed')").get(memberId,offer.id))throw new ShopError('你已报名本期课程，请查看约课',409);
     const pending=db.prepare("SELECT o.id FROM shop_online_orders o JOIN shop_course_orders c ON c.order_id=o.id WHERE o.member_id=? AND c.kind=? AND c.target_id=? AND o.status IN ('pending','refund_requested','refunding')").get(memberId,offer.kind,offer.id);
+    if(pending && offer.kind==='event')return orderById(db,pending.id,memberId);
     if(pending)throw new ShopError('该课程已有待处理订单，请到我的订单继续付款或取消',409);
+    if(offer.kind==='event' && db.prepare("SELECT o.id FROM shop_online_orders o JOIN shop_course_orders c ON c.order_id=o.id WHERE c.kind='event' AND c.target_id=? AND o.status IN ('pending','refund_requested','refunding')").get(offer.id))throw new ShopError('该报名已有待处理订单',409);
     const count=db.prepare("SELECT COUNT(*) n FROM shop_online_orders WHERE member_id=? AND status='pending'").get<{n:number}>(memberId)!.n;
     if(count>=5)throw new ShopError('请先处理未付款订单',429);
     const reserved=offer.kind==='offline' && offer.capacity>0;
@@ -471,6 +476,7 @@ function releaseCourseSeat(db: AdminDb,id:string){
  const c=courseOrder(db,id);if(c?.reserved){db.prepare('UPDATE Course SET remaining=remaining+1 WHERE id=?').run(c.target_id);db.prepare('UPDATE shop_course_orders SET reserved=0 WHERE order_id=?').run(id);}
 }
 function fulfillCourse(db: AdminDb,order:ShopOrder,c:any){
+ if(c.kind==='event'){settleEventPayment(db,c.target_id,order);db.prepare("UPDATE shop_online_orders SET status='completed' WHERE id=?").run(order.id);return;}
  const offer=JSON.parse(c.snapshot),method=order.provider==='wechat'?'微信':'支付宝',now=new Date().toLocaleString('sv-SE',{timeZone:'Asia/Shanghai'});
  if(c.kind==='online'){
   const receipt=db.prepare("INSERT INTO CourseOrder(order_no,member_id,series_id,amount,status,pay_method,paid_at,remark) VALUES(?,?,?,?,'paid',?,?,?)").run(order.id,order.member_id,c.target_id,order.total_fen/100,method,now,'统一在线支付');
@@ -501,6 +507,7 @@ export function validateCourseRefund(db:AdminDb,id:string){
  db.prepare("UPDATE Payment SET paymentStatus='refunding' WHERE id=?").run(c.receipt_id);
 }
 function refundCourse(db:AdminDb,id:string,c:any){
+ if(c.kind==='event'){settleEventPayment(db,c.target_id,orderById(db,id),true);return;}
  if(c.kind==='online'){
   db.prepare("UPDATE CourseOrder SET status='refunded',updated_at=CURRENT_TIMESTAMP WHERE id=?").run(c.receipt_id);
   db.prepare("UPDATE CourseAuthorization SET status='revoked',revoked_at=CURRENT_TIMESTAMP WHERE order_id=? AND type='purchase'").run(c.receipt_id);

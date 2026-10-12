@@ -1,0 +1,62 @@
+.informationCard { border: 1px solid #e9edf3; border-radius: 14px; }
+.informationCard > :global(.ant-card-body) { padding: 16px; }
+.informationTabs > :global(.ant-tabs-nav) { margin-bottom: 18px; }
+.informationTabs > :global(.ant-tabs-nav)::before { border: 0; }
+.informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-nav-wrap) { overflow: visible !important; }
+.informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-nav-list) { display: grid !important; grid-template-columns: repeat(6, minmax(0, 1fr)); width: 100% !important; min-width: 0 !important; gap: 12px; transform: none !important; }
+.informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-tab) { margin: 0 !important; padding: 12px 16px; min-width: 0; border: 1px solid #e8edf5; border-radius: 12px; background: #f8fafc; transition: background .15s, border-color .15s; }
+.informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-tab:hover) { border-color: #f4b8d5; background: #fff8fc; }
+.informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-tab-active) { background: #fff0f7; border-color: #ed8dbc; box-shadow: 0 3px 12px #c9186610; }
+.informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-tab-btn) { width: 100%; text-shadow: none; }
+.informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-ink-bar), .informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-nav-operations) { display: none !important; }
+.informationLabel { display: flex; flex-direction: column; gap: 5px; color: #64748b; }
+.informationLabel > span { display: flex; align-items: center; gap: 8px; font-size: 13px; white-space: nowrap; }
+.informationLabel strong { font-size: 24px; line-height: 29px; font-weight: 600; color: #17233d; font-variant-numeric: tabular-nums; }
+.informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-tab-active) .informationLabel, .informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-tab-active) .informationLabel strong { color: #c91866; }
+.sectionToolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; width: 100%; }
+.sectionFilters { min-width: 0; }
+@media (max-width: 1100px) { .informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-nav-list) { gap: 8px; } .informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-tab) { padding: 10px; } }
+@media (max-width: 767px) { .informationCard > :global(.ant-card-body) { padding: 12px; } .informationTabs > :global(.ant-tabs-nav) :global(.ant-tabs-nav-list) { grid-template-columns: repeat(3, minmax(0,1fr)); } .informationLabel strong { font-size: 21px; } .sectionToolbar { align-items: flex-start; } }
+
+.groupImportUpload :global(.ant-upload.ant-upload-drag) { padding: 0; }
+.groupImportUpload :global(.ant-upload-btn) { padding: 10px 12px !important; }
+.groupImportUpload :global(.ant-upload-drag-container) { display: flex !important; align-items: center; justify-content: center; gap: 12px; }
+.groupImportUpload :global(.ant-upload-drag-icon), .groupImportUpload :global(.ant-upload-text) { margin: 0 !important; }
+.groupImportUpload :global(.ant-upload-drag-icon .anticon) { font-size: 28px !important; }
+.groupImportPreview { max-height: min(45vh, 420px); overflow: auto; }
+.groupImportPreview :global(.ant-table-thead) { position: sticky; top: 0; z-index: 1; }
+.groupImportPreview :global(.ant-empty-normal) { margin: 12px 0; }
+
+.groupImportPreview :global(.ant-table-wrapper .ant-table-placeholder .ant-table-cell) { padding: 14px 12px !important; }
+
+.templateDownload:global(.ant-btn) {
+  color: #fff !important;
+  background: #15803d !important;
+  border-color: #15803d !important;
+}
+.templateDownload:global(.ant-btn):hover,
+.templateDownload:global(.ant-btn):active {
+  color: #fff !important;
+  background: #166534 !important;
+  border-color: #166534 !important;
+}
+.templateDownload:global(.ant-btn):focus-visible {
+  outline: 3px solid #86efac;
+  outline-offset: 2px;
+}
+
+.judgeArrangementTable :global(.ant-table-cell) { vertical-align: middle; }
+.judgeGroupName { font-weight: 600; overflow-wrap: anywhere; }
+.judgeNameList { line-height: 2; overflow-wrap: anywhere; color: #17233d; }
+.judgeNameSeparator { color: #94a3b8; }
+.judgeRowActions { display: flex !important; justify-content: flex-end; width: 100%; margin-top: 10px; }
+.judgeEmpty { color: #94a3b8; }
+@media (max-width: 767px) { .judgeArrangementTable :global(.ant-table-cell) { padding: 10px 8px !important; } .judgeNameList { line-height: 1.8; } }
+
+/* Keep every judge in an aligned slot, ten names per row. */
+.groupJudgeGrid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 10px 12px; align-items: start; text-align: left; color: #17233d; }
+.groupJudgeName { min-width: 0; line-height: 1.6; overflow-wrap: anywhere; }
+.groupJudgeEmpty { grid-column: 1 / -1; text-align: center; color: #94a3b8; }
+
+.judgeGroupGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px 16px; min-height: 60px; align-items: start; text-align: left; color: #17233d; }
+.judgeGroupItem { min-width: 0; line-height: 1.6; overflow-wrap: anywhere; }

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Card, Tag, Space, Button, Input, Row, Col, Statistic, Modal, Form, Select, message, InputNumber, Alert, Typography, Tooltip } from 'antd';
 import { Table } from '@/components/adaptive-table';
 import { PlusOutlined, SearchOutlined, TrophyOutlined, CheckCircleOutlined, CloseCircleOutlined, ReloadOutlined, ThunderboltOutlined, FileImageOutlined, LinkOutlined, SettingOutlined } from '@ant-design/icons';
+import CertificateBatchModal from '@/components/certificate-batch-modal';
 import { api, certApi } from '@/lib/api';
 import { memberOptionLabel, memberSearchText } from '@/lib/member-search';
 import { certificateBrandOverlay, certificateTextLines, isBrandedCertificate, CERTIFICATE_FONT, certificateWebsiteUrl } from '@/lib/certificate-brand';
@@ -58,6 +59,7 @@ const fieldLabels: Record<string, string> = {
 
 function issueMethodLabel(value?: string) {
   if (value === 'auto') return '自动发放';
+  if (value === 'manual_batch') return '批量发放';
   if (value === 'training_batch') return '线下发放';
   return '手动发放';
 }
@@ -75,6 +77,7 @@ export default function CertificatesPage() {
   const [seriesList, setSeriesList] = useState<SeriesOption[]>([]);
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [batchVisible, setBatchVisible] = useState(false);
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
   const [selectedSeriesId, setSelectedSeriesId] = useState<number>();
   const [templateFields, setTemplateFields] = useState<TemplateField[]>([]);
@@ -364,10 +367,13 @@ export default function CertificatesPage() {
         <Button icon={<ThunderboltOutlined />} onClick={handleAutoIssue} loading={autoIssuing}>自动颁发</Button>
         <Button icon={<FileImageOutlined />} onClick={() => openTemplateModal()}>证书模板</Button>
         <Button icon={<LinkOutlined />} href={certificateWebsiteUrl()} target="_blank" rel="noopener noreferrer">官网查询</Button>
+        <Button icon={<TrophyOutlined />} onClick={() => setBatchVisible(true)}>批量颁发</Button>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => { ensureIssueOptions(); setModalVisible(true); }}>颁发证书</Button>
       </Space>}>
         <Table columns={columns} dataSource={filtered} size="middle" loading={loading} pagination={{ pageSize: 20 }} rowKey="id" scroll={{ x: 'max-content', y: 'calc(100dvh - 390px)' }} />
       </Card>
+
+      <CertificateBatchModal open={batchVisible} onClose={() => setBatchVisible(false)} onIssued={() => { void loadCertificates(); }} />
 
       <Modal title="颁发证书" open={modalVisible} onCancel={() => setModalVisible(false)} footer={null} width={500} destroyOnClose>
         <Form form={form} layout="vertical" onFinish={handleIssue}>
@@ -457,7 +463,7 @@ export default function CertificatesPage() {
                 {templateImageUrl ? <image href={templateImageUrl} width={previewWidth} height={previewHeight} preserveAspectRatio="xMidYMid slice" /> : <><rect width="100%" height="100%" fill="#FFF9F0" /><text x="50%" y="28%" textAnchor="middle" fontSize="58" fill="#8B1A1A">结业证书</text></>}
                 {isBrandedCertificate({ template_name: templateName }) && <g transform={`scale(${previewWidth / 1536} ${previewHeight / 1024})`} dangerouslySetInnerHTML={{ __html: certificateBrandOverlay(selectedSeriesId || 0, previewValues.courseName) }} />}
                 {templateFields.map((field, index) => {
-                  const text = isBrandedCertificate({ template_name: templateName }) ? certificateTextLines(previewValues[field.key] || '', field.key, field.fontSize, previewWidth) : { lines: [previewValues[field.key] || ''], fontSize: field.fontSize };
+                  const text = (isBrandedCertificate({ template_name: templateName }) || templateName === '国庆集训2026｜高阶师资结业证书') ? certificateTextLines(previewValues[field.key] || '', field.key, field.fontSize, templateName === '国庆集训2026｜高阶师资结业证书' && field.key === 'memberName' ? Math.min(previewWidth, 800) : previewWidth) : { lines: [previewValues[field.key] || ''], fontSize: field.fontSize };
                   return <text key={field.key} x={`${field.x}%`} y={`${field.y}%`} textAnchor={field.align} fill={field.color} fontFamily={CERTIFICATE_FONT} fontSize={text.fontSize} fontWeight={field.key === 'memberName' ? 700 : 500} style={{ cursor: 'grab' }} onPointerDown={event => {
                     event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); setDraggingFieldIndex(index); moveTemplateField(event, index);
                   }}>{text.lines.map((line, i) => <tspan key={i} x={`${field.x}%`} dy={i ? text.fontSize * 1.4 : 0}>{line}</tspan>)}</text>;

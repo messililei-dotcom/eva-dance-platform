@@ -1,5 +1,7 @@
 import { openAdminDb } from '@/lib/server/admin-db';
 import { verifyLocalToken } from '../_local-auth';
+import { withRequestEventDb } from './_access';
+export { withRequestEventDb, readEventBody } from './_access';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,7 +17,7 @@ export function hasAuth(request: Request) {
     const cookieToken = cookieHeader
       .split(';')
       .map(c => c.trim())
-      .find(c => c.startsWith('token='))
+      .find(c => c.startsWith('token=') || c.startsWith('admin_media_token='))
       ?.split('=')[1]?.trim();
     if (cookieToken && verifyLocalToken(cookieToken)) return true;
   }
@@ -320,6 +322,11 @@ export function ensureEventTables(db: any) {
       FOREIGN KEY (player_id) REFERENCES event_players(id) ON DELETE CASCADE
     );
 
+CREATE TABLE IF NOT EXISTS event_music_archives (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, competition_id INTEGER NOT NULL, music_file_id INTEGER NOT NULL UNIQUE,
+  vod_id TEXT NOT NULL DEFAULT '', category_id INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'local',
+  FOREIGN KEY(music_file_id) REFERENCES event_music_files(id) ON DELETE CASCADE
+);
     CREATE TABLE IF NOT EXISTS event_music_files (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       competition_id INTEGER NOT NULL,
@@ -399,6 +406,10 @@ export function ensureEventTables(db: any) {
     CREATE INDEX IF NOT EXISTS idx_event_group_judges_judge ON event_group_judges(judge_id);
   `);
 
+  for (const table of ['event_competitions', 'event_judges']) {
+    const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+    if (!columns.some((column: any) => column.name === 'owner_user_id')) db.exec(`ALTER TABLE ${table} ADD COLUMN owner_user_id INTEGER NOT NULL DEFAULT 0`);
+  }
   const competitionColumns = new Set((db.prepare('PRAGMA table_info(event_competitions)').all() as Array<{ name: string }>).map((row) => row.name));
   if (!competitionColumns.has('registration_public')) {
     db.transaction(() => {
@@ -423,6 +434,25 @@ export function ensureEventTables(db: any) {
   const groupColumns = new Set((db.prepare('PRAGMA table_info(event_groups)').all() as Array<{ name: string }>).map((row) => row.name));
   if (!groupColumns.has('registration_fee')) db.exec('ALTER TABLE event_groups ADD COLUMN registration_fee REAL NOT NULL DEFAULT 0');
 
+  const playerColumns = new Set(db.prepare('PRAGMA table_info(event_players)').all().map((row: any) => row.name));
+  db.transaction(() => {
+    if (!playerColumns.has('registration_fee')) {
+      db.exec('ALTER TABLE event_players ADD COLUMN registration_fee REAL NOT NULL DEFAULT 0');
+      db.exec('UPDATE event_players SET registration_fee=COALESCE((SELECT registration_fee FROM event_groups WHERE id=event_players.group_id),0)');
+    }
+    if (!playerColumns.has('paid_amount')) {
+      db.exec('ALTER TABLE event_players ADD COLUMN paid_amount REAL NOT NULL DEFAULT 0');
+      db.exec("UPDATE event_players SET paid_amount=registration_fee WHERE paid_status='paid'");
+    }
+    for (const column of ['paid_at','payment_method']) if (!playerColumns.has(column)) db.exec(`ALTER TABLE event_players ADD COLUMN ${column} TEXT NOT NULL DEFAULT ''`);
+    db.exec(`CREATE TABLE IF NOT EXISTS event_registration_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, competition_id INTEGER NOT NULL, player_id INTEGER NOT NULL,
+      kind TEXT NOT NULL, amount REAL NOT NULL, method TEXT NOT NULL DEFAULT '', paid_at TEXT NOT NULL,
+      remark TEXT NOT NULL DEFAULT '', created_by INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, request_key TEXT NOT NULL,
+      FOREIGN KEY(competition_id) REFERENCES event_competitions(id), FOREIGN KEY(player_id) REFERENCES event_players(id)
+    ); CREATE INDEX IF NOT EXISTS idx_event_registration_payments_player ON event_registration_payments(player_id); CREATE UNIQUE INDEX IF NOT EXISTS idx_event_payment_request ON event_registration_payments(competition_id,request_key)`);
+  })();
+
   const ruleColumns = new Set((db.prepare('PRAGMA table_info(event_score_rules)').all() as Array<{ name: string }>).map((row) => row.name));
   if (!ruleColumns.has('judge_anonymous')) db.exec('ALTER TABLE event_score_rules ADD COLUMN judge_anonymous INTEGER NOT NULL DEFAULT 0');
 
@@ -445,7 +475,7 @@ export function competitionSelectSql() {
       (SELECT COUNT(*) FROM event_groups g WHERE g.competition_id = c.id) AS group_count,
       (SELECT COUNT(*) FROM event_players p WHERE p.competition_id = c.id) AS player_count,
       (SELECT COUNT(DISTINCT gj.judge_id) FROM event_group_judges gj WHERE gj.competition_id = c.id) AS judge_count,
-      (SELECT COUNT(*) FROM event_players p WHERE p.competition_id = c.id AND p.audit_status = 'approved') AS approved_player_count
+      (SELECT COUNT(*) FROM event_players p WHERE p.competition_id = c.id AND p.audit_status != 'rejected') AS approved_player_count
     FROM event_competitions c
   `;
 }
@@ -492,7 +522,6 @@ export function mapGroup(row: any) {
     competitionId: row.competition_id,
     name: row.name,
     code: row.code || '',
-    category: row.category || '',
     ageRange: row.age_range || '',
     danceType: row.dance_type || '',
     entryType: row.entry_type || 'solo',
@@ -523,6 +552,9 @@ export function mapPlayer(row: any) {
     playerNo: row.player_no || '',
     sequenceNo: Number(row.sequence_no || 0),
     musicFileId: Number(row.music_file_id || 0),
+    musicName: row.music_name || '',
+    musicUrl: String(row.music_url || '').startsWith('/uploads/event-music/') ? `/api/event/music/${row.music_file_id}` : row.music_url || '',
+    musicDuration: Number(row.music_duration || 0),
     performanceTitle: row.performance_title || '',
     name: row.name,
     phone: row.phone || '',
@@ -533,6 +565,11 @@ export function mapPlayer(row: any) {
     status: row.status || 'pending',
     auditStatus: row.audit_status || 'pending',
     paidStatus: row.paid_status || 'unpaid',
+    registrationFee: Number(row.registration_fee || 0),
+    paidAmount: Number(row.paid_amount || 0),
+    unpaidAmount: Math.max(0, Math.round((Number(row.registration_fee || 0)-Number(row.paid_amount || 0))*100)/100),
+    paidAt: row.paid_at || '',
+    paymentMethod: row.payment_method || '',
     scoreStatus: row.score_status || 'not_started',
     remark: row.remark || '',
     scoreCount: row.score_count || 0,
@@ -601,6 +638,7 @@ export function mapScore(row: any) {
     groupName: row.group_name || '',
     playerId: row.player_id,
     playerName: row.player_name || '',
+    avatarUrl: row.avatar_url || '',
     playerNo: row.player_no || '',
     judgeId: row.judge_id,
     judgeName: row.judge_name || '',
@@ -630,6 +668,7 @@ export function mapRanking(row: any) {
     groupName: row.group_name || '',
     playerId: row.player_id,
     playerName: row.player_name || '',
+    avatarUrl: row.avatar_url || '',
     playerNo: row.player_no || '',
     organization: row.organization || '',
     rawTotal: Number(row.raw_total || 0),

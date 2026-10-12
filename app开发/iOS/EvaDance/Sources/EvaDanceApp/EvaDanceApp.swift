@@ -242,7 +242,9 @@ struct CertificatesView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(item.courseName).font(.headline)
                     Text(item.certificateNo).font(.caption)
+                    if let name = item.memberName, !name.isEmpty { Text("持证人：\(name)") }
                     Text("\(item.issueDate) · \(item.status == "active" ? "有效" : item.status)")
+                    if item.status == "active", let raw = item.pdfUrl, let url = AppPolicy.certificatePreviewURL(raw) { Link("查看电子证书", destination: url) }
                     if let url = AppPolicy.certificateURL(item.verifyUrl) { Link("查看证书验证结果", destination: url) }
                 }.padding(.vertical, 6)
             }

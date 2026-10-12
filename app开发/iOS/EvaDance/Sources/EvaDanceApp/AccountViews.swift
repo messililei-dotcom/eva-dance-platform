@@ -39,7 +39,8 @@ struct AccountView: View {
                     Button("退出登录",role:.destructive) { logout = true }
                 }
             }
-            Section("关于") { NavigationLink("帮助、品牌与隐私") { InformationView() }; Text("伊娃东方舞 1.0.0 (2)") }
+            Section("工作人员") { NavigationLink("赛事管理工作台") { StaffEventRootView() } }
+            Section("关于") { NavigationLink("帮助、品牌与隐私") { InformationView() }; Text("伊娃东方舞 1.0.0 (3)") }
         }.evaCompactLayout().navigationTitle("个人中心").task(id:session.accountID) { await load() }.refreshable { await load() }
         .confirmationDialog("确认退出当前账号？",isPresented:$logout) { Button("退出登录",role:.destructive) { session.logout() } }
     }
