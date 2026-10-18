@@ -3,15 +3,20 @@ import EvaCore
 
 @main struct EvaDanceApp: App {
     @StateObject private var session = Session()
+    @Environment(\.scenePhase) private var scenePhase
     var body: some Scene {
         WindowGroup {
             MainTabs().id(session.accountID ?? 0)
             .sheet(isPresented: $session.showLogin) { LoginView().environmentObject(session) }
             .environmentObject(session)
-            .safeAreaInset(edge: .top) {
-                if session.isFixture { Text("本地测试数据 · 非真实课程").font(.caption).frame(maxWidth: .infinity).padding(6).background(.yellow.opacity(0.25)) }
+            .tint(EvaBrand.red)
+            .task(id: "\(session.accountID ?? 0)-\(scenePhase)") {
+                guard scenePhase == .active else { return }
+                while !Task.isCancelled {
+                    await session.refreshCourseAccess()
+                    do { try await Task.sleep(nanoseconds: 30_000_000_000) } catch { return }
+                }
             }
-            .tint(Color(red: 0.62, green: 0.11, blue: 0.13))
             .alert("提示", isPresented: Binding(get: { session.error != nil }, set: { if !$0 { session.error = nil } })) {
                 Button("知道了") { session.error = nil }
             } message: { Text(session.error ?? "") }
@@ -131,11 +136,13 @@ struct CoursesView: View {
             }
             Section("我的课程") {
                 ForEach(series) { item in
-                    NavigationLink(item.series_name) { CatalogView(series: item) }
+                    NavigationLink { CatalogView(series: item) } label: {
+                        VStack(alignment: .leading, spacing: 6) { Text(item.series_name); Text("✓ 已解锁").font(.caption).foregroundStyle(.green); Text("继续学习").font(.subheadline).foregroundStyle(.green) }
+                    }
                 }
-                if !loading && series.isEmpty { Text("暂无已授权课程，下拉刷新查看最新内容。").foregroundStyle(.secondary) }
+                if !loading && series.isEmpty { Text("暂无已解锁课程，下拉刷新查看最新内容。").foregroundStyle(.secondary) }
             }
-        }.evaCompactLayout().navigationTitle("线上学院")
+        }.evaCompactLayout().navigationTitle("我的课程")
         .toolbar { Button("刷新") { Task { await load() } }.disabled(loading) }
         .task { await load() }.refreshable { await load() }
     }
@@ -149,31 +156,8 @@ struct CoursesView: View {
     }
 }
 struct CatalogView: View {
-    @EnvironmentObject var session: Session
     let series: Series
-    @State private var units: [CourseUnit] = []
-    @State private var loading = true
-    var body: some View {
-        List {
-            if loading { ProgressView("加载课程目录") }
-            ForEach(units) { unit in
-                Section(unit.name) {
-                    ForEach(unit.videos) { lesson in
-                        // The current mini-program catalog uses the edited OnlineCourse name.
-                        NavigationLink(unit.videos.count == 1 ? unit.name : "\(unit.name) · \(lesson.name)") {
-                            PlayerView(lessonID: lesson.id, title: unit.name, playlist: units.flatMap { $0.videos })
-                        }
-                    }
-                }
-            }
-            if !loading && units.isEmpty { Text("暂无可展示的课节") }
-        }.evaCompactLayout().navigationTitle(series.series_name).task { await load() }.refreshable { await load() }
-    }
-    private func load() async {
-        loading = true; defer { loading = false }
-        do { units = try await session.api.request("/public/series/\(series.id)/courses", token: session.token) }
-        catch { session.handle(error) }
-    }
+    var body: some View { LessonCatalogView(id: series.id, title: series.series_name) }
 }
 struct MessagesView: View {
     @EnvironmentObject var session: Session

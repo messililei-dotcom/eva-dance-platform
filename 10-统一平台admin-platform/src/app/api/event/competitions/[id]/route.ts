@@ -1,3 +1,4 @@
+import { competitionOwner, saveCompetitionAdmins } from '../../_competition-owner';
 import {
   cleanText,
   competitionSelectSql,
@@ -37,15 +38,18 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const name = cleanText(body.name);
   if (!name) return jsonError('赛事名称不能为空');
 
-  return withRequestEventDb(request, (db) => {
-    const existing = db.prepare('SELECT id, registration_status, registration_public, judge_scores_public FROM event_competitions WHERE id = ?').get(routeParams.id);
+  return withRequestEventDb(request, (db) => db.transaction(() => {
+    const existing = db.prepare('SELECT id, owner_user_id, registration_status, registration_public, judge_scores_public FROM event_competitions WHERE id = ?').get(routeParams.id);
     if (!existing) return jsonError('赛事不存在', 404);
+
+    const owner = competitionOwner(request, db, body, existing.owner_user_id);
+    if (owner.error) return jsonError(owner.error, owner.status);
 
     db.prepare(`
       UPDATE event_competitions
       SET name = ?, code = ?, status = ?, registration_status = ?, registration_public = ?, judge_scores_public = ?, start_date = ?,
           end_date = ?, location = ?,
-          organizer = ?, description = ?, cover_url = ?,
+          organizer = ?, description = ?, cover_url = ?, owner_user_id = ?,
           updated_at = ?
       WHERE id = ?
     `).run(
@@ -61,12 +65,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       cleanText(body.organizer, '伊娃东方舞'),
       cleanText(body.description),
       cleanText(body.coverUrl ?? body.cover_url),
+      owner.id,
       nowIso(),
       routeParams.id,
     );
 
+    saveCompetitionAdmins(db, routeParams.id, body, owner);
     return Response.json({ success: true });
-  });
+  })());
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

@@ -54,6 +54,9 @@ export function ensureCommerceTables(db: any) {
   ensureColumn(db, 'shop_sales', 'sale_type', "TEXT DEFAULT '线下'");
   ensureColumn(db, 'shop_sales', 'channel', "TEXT DEFAULT '线下'");
   ensureColumn(db, 'shop_sales', 'customer_phone', "TEXT DEFAULT ''");
+  ensureColumn(db, 'shop_sales', 'sales_advisor', "TEXT NOT NULL DEFAULT ''");
+  ensureColumn(db, 'shop_sales', 'commission_rate', 'REAL NOT NULL DEFAULT 0');
+  ensureColumn(db, 'shop_sales', 'commission_amount', 'REAL NOT NULL DEFAULT 0');
   ensureColumn(db, 'shop_sales', 'operator', "TEXT DEFAULT ''");
   ensureColumn(db, 'shop_stock_logs', 'channel', "TEXT DEFAULT ''");
   ensureColumn(db, 'shop_stock_logs', 'cost_price', 'REAL DEFAULT 0');

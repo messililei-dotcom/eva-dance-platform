@@ -1,5 +1,6 @@
 const share = require("../../shared/share");
 const api = require("../../utils/api");
+const { offlineIntroduction, periodPurchase } = require("../../shared/offline-course-info");
 const { formatPrice } = require("../../shared/money-format");
 const anonymousStudents = count => Array.from({ length: Math.min(30, Math.max(0, Number(count) || 0)) }, (_, index) => ({ label: `匿名学员 ${index + 1}` }));
 const { findOfflineCourseGroup } = require("../../shared/offline-catalog");
@@ -23,6 +24,7 @@ Page(share.withShare("offline-detail", {
       const source = group.periods.find(item => String(item.id) === String(id)) || group.periods[0];
       const periods = group.periods.map(item => ({
         ...item,
+        ...periodPurchase(item),
         coverImage: item.cover_image || "",
         anonymous_students: anonymousStudents(item.total_students),
         teacherText: item.teacher || "伊娃东方舞导师",
@@ -41,7 +43,7 @@ Page(share.withShare("offline-detail", {
         priceText: Number(group.minPrice || 0) > 0
           ? `${formatPrice(group.minPrice)}${group.periodCount > 1 ? "起" : ""}`
           : "请咨询",
-        descriptionText: source.description || source.subtitle || "课程介绍正在完善中，具体安排请联系课程顾问。",
+        ...offlineIntroduction(source),
         periodCount: group.periodCount,
         studentCount: group.studentCount,
         anonymousStudents: anonymousStudents(group.studentCount),
@@ -53,12 +55,20 @@ Page(share.withShare("offline-detail", {
       this.setData({ loading: false, error: err.message || "课程加载失败" });
     }
   },
-  buyCourse(e){wx.navigateTo({url:`/pages/course-checkout/course-checkout?kind=offline&id=${e.currentTarget.dataset.id}`});},
+  buyCourse(e) {
+    const id = String(e.currentTarget.dataset.id);
+    const period = (this.data.course.periods || []).find(item => String(item.source_id) === id);
+    if (!period) return;
+    const availability = periodPurchase(period);
+    if (!availability.canPurchase) return wx.showToast({ title: availability.purchaseReason, icon: "none" });
+    this.setData({ courseId: period.id });
+    wx.navigateTo({ url: `/pages/course-checkout/course-checkout?kind=offline&id=${encodeURIComponent(id)}` });
+  },
   openSchedule(event) {
     const selected = event && event.currentTarget && event.currentTarget.dataset.courseId;
     const ids = selected ? [String(selected)] : (this.data.course.periods || []).map(item => String(item.source_id));
     wx.setStorageSync("offlineTargetCourse", { ids, name: this.data.course.name || "" });
-    wx.setStorageSync("offlineTargetTab", "sessions");
+    wx.setStorageSync("offlineTargetTab", "rights");
     wx.switchTab({ url: "/pages/offline/offline" });
   },
   onImageError() {

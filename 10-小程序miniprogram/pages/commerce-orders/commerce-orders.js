@@ -2,7 +2,7 @@ const share = require("../../shared/share");
 const api = require('../../utils/api');
 const labels = {pending:'待收款',paid:'已收款',partial_refunded:'部分退款',refunded:'已退款',cancelled:'已取消'};
 const fulfillment = {not_started:'未开始',pending:'待开通/交付',completed:'已处理',review_required:'退款后权益处理中'};
-const delivery = {awaiting_payment:'待付款',pending:'正在开通',authorized:'课程已授权，无需发货',booked:'当前期次已预约，无需发货',awaiting_shipment:'实物商品待发货',shipped:'实物商品已发货',needs_support:'请联系客服处理',refund_review:'退款权益处理中'};
+const delivery = {awaiting_payment:'待付款',pending:'正在开通',authorized:'课程已授权，无需发货',booked:'期次课时已开通，无需发货',awaiting_shipment:'实物商品待发货',shipped:'实物商品已发货',needs_support:'请联系客服处理',refund_review:'退款权益处理中'};
 Page(share.withShare("commerce-orders", {
   data:{collectionCodeUrl:'https://admin.swod.com.cn/payments/yiwa-unified-collection-v1.jpg',orders:[],loading:true,error:'',sending:false},
   onShow(){this.reload();},

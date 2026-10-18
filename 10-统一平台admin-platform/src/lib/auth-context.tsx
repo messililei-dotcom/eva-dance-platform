@@ -43,8 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const result = await authApi.validateToken();
           setUser(result.user || storedUser);
         } catch {
-          // Backend not available, use stored data for dev
-          setUser(storedUser);
+          // Production navigation never trusts cached privileges after failed validation.
+          setUser(process.env.NODE_ENV !== 'production' ? storedUser : null);
         }
       } else {
         setUser(null);

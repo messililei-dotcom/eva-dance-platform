@@ -78,41 +78,57 @@
       <button size="mini" class="sync-btn" bindtap="syncWechatProfile">同步微信资料</button>
     </view>
 
-    <view class="link-row" bindtap="openEventRegistrations">
-      <view>
-        <view class="row-title">我的比赛</view>
-        <view class="row-desc">{{eventRegistrations.length}} 个报名组别 · 查看报名、缴费和比赛信息</view>
-      </view>
-      <text class="row-arrow">›</text>
+    <button class="link-row my-events-toggle" bindtap="openEventRegistrations" aria-expanded="{{myEventsOpen}}" aria-label="我的比赛，报名与结果记录">
+      <view><view class="row-title">我的比赛</view><view class="row-desc">{{eventRegistrations.length}} 个报名组别 · 报名、缴费与比赛结果</view></view>
+      <image class="chevron {{myEventsOpen ? 'expanded' : ''}}" src="/images/profile/chevron.svg" />
+    </button>
+    <view class="my-events-panel" wx:if="{{myEventsOpen}}">
+      <view wx:if="{{eventsLoading}}" class="empty-row">比赛记录加载中…</view>
+      <view wx:elif="{{eventsError}}" class="events-feedback"><text>{{eventsError}}</text><button bindtap="loadMyEvents">重新加载</button></view>
+      <block wx:else>
+        <view wx:if="{{!eventRegistrations.length}}" class="empty-row">暂无比赛报名和结果记录</view>
+        <view class="record-card" wx:for="{{eventRegistrations}}" wx:key="id">
+          <view class="record-title">{{item.competitionName}}</view>
+          <view class="record-meta">{{item.groupName}}{{item.playerNo ? ' · 选手号 ' + item.playerNo : ''}}</view>
+          <view wx:if="{{item.entrantName || item.performanceTitle}}" class="record-meta">{{item.entrantName}}{{item.performanceTitle ? ' · 节目：' + item.performanceTitle : ''}}</view>
+          <view class="record-meta">{{item.statusText}}{{item.paidStatusText ? ' · ' + item.paidStatusText : ''}}{{item.displayStartDate ? ' · ' + item.displayStartDate : ''}}</view>
+          <view class="event-result">{{item.resultText}}</view>
+          <view class="my-events-actions">
+            <button wx:if="{{item.competitionId}}" data-id="{{item.competitionId}}" bindtap="openEventRegistration">赛事详情</button>
+            <button wx:if="{{item.canPay === true}}" class="event-pay" data-id="{{item.playerId}}" bindtap="payEventRegistration">继续缴费</button>
+          </view>
+        </view>
+        <button wx:if="{{eventRegistrations.length}}" class="events-refresh" bindtap="loadMyEvents">刷新比赛记录</button>
+      </block>
     </view>
 
     <view class="link-row" bindtap="goCommerceOrders">
       <view>
         <view class="row-title">我的订单</view>
-        <view class="row-desc">查看新我的订单、到账与退款记录</view>
+        <view class="row-desc">查看订单、到账与退款记录</view>
       </view>
       <text class="row-arrow">›</text>
     </view>
 
     <view class="content-section">
-      <view class="content-title">我的线上课程</view>
+      <view class="content-title">我的课程</view>
       <view wx:if="{{authorizedCourses.length}}">
         <view class="online-course" wx:for="{{authorizedCourses}}" wx:key="id" data-id="{{item.id}}" bindtap="openProfileCourse">
           <image wx:if="{{item.cover_image}}" class="course-cover" src="{{item.cover_image}}" mode="aspectFill"></image>
           <view wx:else class="course-cover course-fallback">课</view>
           <view class="course-main">
             <view class="course-name">{{item.name}}</view>
-            <view class="course-meta">{{item.total_courses || 0}} 节 · 已学 {{item.progressPercent || 0}}%</view>
-          </view>
+            <view class="course-meta">{{item.total_courses || 0}} 节 · 已学 {{item.progressPercent || 0}}%</view><view class="course-unlocked">✓ 已解锁</view>
+          </view><text class="course-learn-action">继续学习</text>
         </view>
       </view>
-      <view wx:else class="empty-row">暂无已授权线上课程</view>
+      <view wx:else class="empty-row">暂无已解锁课程</view>
     </view>
 
     <view class="content-section">
       <view class="section-heading">
         <view class="content-title">我的线下课程</view>
-        <button size="mini" class="schedule-link" bindtap="openOfflineSchedule">去约课</button>
+        <button size="mini" class="schedule-link" bindtap="openOfflineSchedule">查看课时</button>
       </view>
       <view wx:if="{{offlineCourses.length}}">
         <view class="record-card" wx:for="{{offlineCourses}}" wx:key="id">
@@ -122,16 +138,6 @@
         </view>
       </view>
       <view wx:else class="empty-row">暂无线下课程记录</view>
-    </view>
-
-    <view class="content-section" wx:if="{{eventRegistrations.length}}">
-      <view class="content-title">比赛报名</view>
-      <view class="record-card event-record" wx:for="{{eventRegistrations}}" wx:key="id" data-id="{{item.competitionId}}" bindtap="openEventRegistration">
-        <view class="record-title">{{item.competitionName}}</view>
-        <view class="record-meta">{{item.groupName}}{{item.playerNo ? ' · 选手号 ' + item.playerNo : ''}}</view>
-        <view class="record-meta">{{item.statusText}}{{item.paidStatusText ? ' · ' + item.paidStatusText : ''}}{{item.displayStartDate ? ' · ' + item.displayStartDate : ''}}</view>
-        <view class="record-meta">{{item.resultText}}</view><button wx:if="{{item.canPay}}" data-id="{{item.playerId}}" catchtap="payEventRegistration">继续缴费</button>
-      </view>
     </view>
 
     <view class="content-section">

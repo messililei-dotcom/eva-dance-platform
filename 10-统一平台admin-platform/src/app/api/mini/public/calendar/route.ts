@@ -1,3 +1,4 @@
+import { getCoursePromotion, courseSalePrice } from '@/lib/server/course-promotion';
 import { jsonError, withDb } from '../../_helpers';
 
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,7 @@ export async function GET(request: Request) {
 
     return withDb((db) => {
       const events: any[] = [];
+      const promotionEnabled = getCoursePromotion(db).enabled;
 
       // 1. 线下培训课程（CourseSession）
       const sessions = db.prepare(`
@@ -66,7 +68,7 @@ export async function GET(request: Request) {
           endDate: '',
           location: '线上',
           teacher: s.teacher || '',
-          price: s.promo_price || s.price || 0,
+          price: courseSalePrice(s, promotionEnabled),
           status: s.status,
           category: s.category || '',
         });

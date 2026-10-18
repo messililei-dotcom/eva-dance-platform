@@ -89,6 +89,7 @@ const PERMISSION_GROUPS = [
 
 const ROLE_OPTIONS = [
   { value: 'admin', label: '管理员' },
+  { value: 'event_admin', label: '赛事管理员' },
   { value: 'teacher', label: '教师' },
   { value: 'user', label: '普通用户' },
 ];
@@ -325,7 +326,7 @@ export default function PermissionsPage() {
       title: '角色', dataIndex: 'role', width: 120,
       render: (value: string) => {
         const colorMap: Record<string, string> = { admin: 'red', teacher: 'blue', user: 'green' };
-        const labelMap: Record<string, string> = { admin: '管理员', teacher: '教师', user: '普通用户' };
+        const labelMap: Record<string, string> = { admin: '管理员', event_admin: '赛事管理员', teacher: '教师', user: '普通用户' };
         return <Tag color={colorMap[value] || 'default'}>{labelMap[value] || value}</Tag>;
       },
     },

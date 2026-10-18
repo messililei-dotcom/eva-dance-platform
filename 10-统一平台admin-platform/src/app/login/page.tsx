@@ -5,6 +5,7 @@ import { UserOutlined, LockOutlined, EyeInvisibleOutlined, EyeTwoTone } from '@a
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { authApi } from '@/lib/api';
+import { adminLandingPage } from '@/lib/admin-feature-access';
 import { apiErrorMessage, isRecord } from '@/lib/data-shape';
 
 const { Title, Text } = Typography;
@@ -12,9 +13,7 @@ const { Title, Text } = Typography;
 const REMEMBER_USER_KEY = 'remembered_username';
 
 function mobileHomePath() {
-  if (authApi.getUser()?.role === 'event_admin') return '/events';
-  if (typeof window === 'undefined') return '/dashboard';
-  return window.matchMedia('(max-width: 767px)').matches ? '/online-course/auth' : '/dashboard';
+  return adminLandingPage(authApi.getUser());
 }
 
 export default function LoginPage() {

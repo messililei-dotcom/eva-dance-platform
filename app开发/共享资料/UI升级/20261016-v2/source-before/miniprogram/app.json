@@ -1,0 +1,74 @@
+{
+  "pages": [
+    "pages/profile/profile",
+    "pages/home/home",
+    "pages/offline/offline",
+    "pages/offline-detail/offline-detail",
+    "pages/events/events",
+    "pages/event-detail/event-detail",
+    "pages/event-group/event-group",
+    "pages/event-register/event-register",
+    "pages/system/system",
+    "pages/commerce-orders/commerce-orders",
+    "pages/login/login",
+    "pages/admin/admin",
+    "pages/profile-edit/profile-edit",
+    "pages/player/player",
+    "pages/detail/detail",
+    "pages/messages/messages",
+    "pages/mall/mall",
+    "pages/shop-product/shop-product",
+    "pages/shop-checkout/shop-checkout",
+    "pages/shop-orders/shop-orders",
+    "pages/course-checkout/course-checkout",
+    "pages/event-judge/event-judge",
+    "pages/event-player/event-player"
+  ],
+  "window": {
+    "navigationBarTitleText": "伊娃东方舞·东方舞圈",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F6F6F6"
+  },
+  "tabBar": {
+    "color": "#8C8172",
+    "selectedColor": "#9F1D20",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "线上学院",
+        "iconPath": "images/tab-courses.png",
+        "selectedIconPath": "images/tab-courses-active.png"
+      },
+      {
+        "pagePath": "pages/offline/offline",
+        "text": "线下课",
+        "iconPath": "images/tab-home.png",
+        "selectedIconPath": "images/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/events/events",
+        "text": "赛事",
+        "iconPath": "images/tab-practice.png",
+        "selectedIconPath": "images/tab-practice-active.png"
+      },
+      {
+        "pagePath": "pages/mall/mall",
+        "text": "商城",
+        "iconPath": "images/tab-shop.png",
+        "selectedIconPath": "images/tab-shop-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "个人中心",
+        "iconPath": "images/tab-profile.png",
+        "selectedIconPath": "images/tab-profile-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -1,6 +1,11 @@
+function courseAccountKey() {
+  if (typeof wx === 'undefined' || typeof wx.getStorageSync !== 'function') return 'guest';
+  return wx.getStorageSync('token') ? String(wx.getStorageSync('memberId') || 'signed-in') : 'guest';
+}
 const share = require("../../shared/share");
 const videoFeature = require("../../shared/video-feature");
 const api = require("../../utils/api");
+const { coursePrice } = require("../../shared/course-price");
 const { popularityText } = require("../../shared/popularity");
 const { contentText } = require("../../shared/review-text");
 
@@ -29,14 +34,17 @@ Page(share.withShare("detail", videoFeature.withVideoFeature({
   onShow() { if (this.data.id) return this.loadDetail(this.data.id); },
   retryDetail() { return this.loadDetail(this.data.id); },
   async loadDetail(id) {
+    const account = courseAccountKey();
+    this.setData({ series: {}, authorized: false });
     this.setData({ loadError: "" });
     wx.showLoading({ title: "加载中" });
     try {
       const [seriesMeta, courses, auth] = await Promise.all([
         api.getSeriesMeta(id),
         api.getSeriesCourses(id),
-        api.checkAuthorization(id).catch(() => ({ authorized: false }))
+        api.checkAuthorization(id).catch(() => ({ authorized: false, unavailable: true }))
       ]);
+      if (account !== courseAccountKey()) return this.loadDetail(id);
       const meta = seriesMeta || {};
       const authorized = !!auth.authorized || !!meta.is_free;
       const normalizedCourses = (courses || []).map(course => {
@@ -52,6 +60,7 @@ Page(share.withShare("detail", videoFeature.withVideoFeature({
       });
       this.setData({
         series: Object.assign({}, meta, {
+          ...coursePrice(meta, auth.unavailable ? null : !!auth.authorized && auth.reason !== "free_series" && Number(meta.is_free) !== 1),
           name: contentText(meta.name, "内容详情"),
           subtitle: contentText(meta.subtitle),
           teacher: contentText(meta.teacher),
@@ -84,8 +93,10 @@ Page(share.withShare("detail", videoFeature.withVideoFeature({
     });
   },
 
-  buyCourse(){wx.navigateTo({url:`/pages/course-checkout/course-checkout?kind=online&id=${this.data.id}`});},
+  buyCourse(){if(this.data.series.unlocked)return this.primaryAction();wx.navigateTo({url:`/pages/course-checkout/course-checkout?kind=online&id=${this.data.id}`});},
   primaryAction() {
+    if (this.data.series.unlocked) return videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${this.data.id}` });
+    if (!this.data.authorized && this.data.series.canPurchase) return this.buyCourse();
     if (!this.data.videoPlaybackEnabled) return;
     const index = this.data.courses.findIndex(item => item.videos && item.videos.length);
     if (index < 0) return wx.showToast({ title: "内容正在整理中", icon: "none" });

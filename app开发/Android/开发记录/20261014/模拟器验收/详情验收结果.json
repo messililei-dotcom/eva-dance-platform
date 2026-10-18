@@ -1,0 +1,7 @@
+{
+  "courseDetail": true,
+  "catalog": true,
+  "unauthenticatedLessonRequiresLogin": true,
+  "productDetailFenPrice": true,
+  "productionBusinessWrites": false
+}

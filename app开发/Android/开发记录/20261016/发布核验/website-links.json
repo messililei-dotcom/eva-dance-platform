@@ -1,0 +1,14 @@
+{
+  "privacy": {
+    "httpStatus": 200,
+    "url": "https://www.swod.com.cn/privacy"
+  },
+  "terms": {
+    "httpStatus": 200,
+    "url": "https://www.swod.com.cn/terms"
+  },
+  "contact": {
+    "httpStatus": 200,
+    "url": "https://www.swod.com.cn/contact"
+  }
+}

@@ -23,7 +23,17 @@ export function Table<RecordType extends AnyObject = AnyObject>({
   adaptiveFillRows = false, pagination, size, dataSource, ...props
 }: AdaptiveTableProps<RecordType>) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [horizontalOverflow, setHorizontalOverflow] = useState(false);
   const [capacity, setCapacity] = useState<number>();
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   const [bodyHeight, setBodyHeight] = useState<number>();
   const [embedded, setEmbedded] = useState(false);
   const [selectedSize, setSelectedSize] = useState<number>();
@@ -35,11 +45,16 @@ export function Table<RecordType extends AnyObject = AnyObject>({
   const configRef = useRef(configured);
   configRef.current = configured;
   // An API-paginated table must request the new slice before displaying its size.
+  const paginationDisabled = pagination === false;
   const controlledSize = configured.pageSize != null && typeof configured.onChange === 'function';
 
   const recalculate = useCallback(() => {
     const host = hostRef.current;
-    if (!host || pagination === false) return;
+    if (!host) return;
+    const scroller = host.querySelector<HTMLElement>('.ant-table-body, .ant-table-content');
+    setHorizontalOverflow(Boolean(scroller && scroller.scrollWidth > scroller.clientWidth + 2));
+    // Let the page scroll on phones; the keyboard must not trigger a new API page size.
+    if (window.matchMedia('(max-width: 767px)').matches || paginationDisabled) return;
     const rect = host.getBoundingClientRect();
     if (!rect.width || rect.top >= window.innerHeight) return;
     const container = host.closest('.ant-modal-content, .ant-drawer-content');
@@ -58,9 +73,9 @@ export function Table<RecordType extends AnyObject = AnyObject>({
     setBodyHeight(Math.floor(available));
     // Round up so the last visible row reaches the bottom; excess rows scroll.
     if (rows.length) setCapacity(Math.min(adaptiveMaxRows, Math.max(adaptiveMinRows, Math.ceil(available / rowHeight))));
-  }, [adaptiveBottomGap, adaptiveMaxRows, adaptiveMinRows, adaptiveFillRows, pagination === false, size]);
+  }, [adaptiveBottomGap, adaptiveMaxRows, adaptiveMinRows, adaptiveFillRows, paginationDisabled, size]);
 
-  useLayoutEffect(() => { recalculate(); }, [recalculate, dataSource, props.columns]);
+  useLayoutEffect(() => { recalculate(); }, [recalculate, dataSource, props.columns, isMobile]);
   useEffect(() => {
     let frame = 0;
     const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(recalculate); };
@@ -72,22 +87,24 @@ export function Table<RecordType extends AnyObject = AnyObject>({
   }, [recalculate]);
 
   useEffect(() => {
-    if (!controlledSize || configRef.current.showSizeChanger === false || embedded || capacity == null || manualSize.current || !dataSource?.length) return;
+    if (isMobile || !controlledSize || configRef.current.showSizeChanger === false || embedded || capacity == null || manualSize.current || !dataSource?.length) return;
     if (Number(configRef.current.pageSize) !== capacity && lastAutoRequest.current !== capacity) {
       lastAutoRequest.current = capacity;
       configRef.current.onChange?.(1, capacity);
     }
-  }, [capacity, controlledSize, embedded, dataSource?.length]);
+  }, [capacity, controlledSize, embedded, dataSource?.length, isMobile]);
 
   const pageSize = controlledSize ? Number(configured.pageSize) : selectedSize ??
-    (embedded ? Number(configured.pageSize || configured.defaultPageSize || 10) : capacity ?? 10);
+    ((embedded || isMobile) ? Number(configured.pageSize || configured.defaultPageSize || 10) : capacity ?? 10);
   const total = Number(configured.total ?? dataSource?.length ?? 0);
   const safeCurrent = Math.min(current, Math.max(1, Math.ceil(total / pageSize)));
   useEffect(() => { setCurrent(safeCurrent); }, [safeCurrent]);
   const adaptivePagination = useMemo(() => {
     if (pagination === false) return false;
     return {
-      showSizeChanger: true, showTotal: (count: number) => `共 ${count} 条`, ...configured,
+      showTotal: (count: number) => `共 ${count} 条`, ...configured,
+      showSizeChanger: isMobile ? false : configured.showSizeChanger ?? true,
+      simple: isMobile ? configured.simple ?? true : configured.simple,
       current: configured.current ?? safeCurrent,
       pageSize, pageSizeOptions: pageSizeOptions(pageSize, configured.pageSizeOptions),
       onChange: (page: number, nextSize: number) => {
@@ -104,12 +121,13 @@ export function Table<RecordType extends AnyObject = AnyObject>({
         configured.onShowSizeChange?.(1, nextSize);
       },
     } satisfies TablePaginationConfig;
-  }, [pagination, configured, safeCurrent, pageSize]);
+  }, [pagination, configured, safeCurrent, pageSize, isMobile]);
 
   return (
     <div ref={hostRef} className="admin-adaptive-table">
+      {isMobile && horizontalOverflow && <div className="admin-table-scroll-hint">左右滑动表格，查看完整信息 <span aria-hidden="true">↔</span></div>}
       <AntTable<RecordType> {...props}
-        scroll={pagination !== false && !embedded && bodyHeight ? { ...props.scroll, y: bodyHeight } : props.scroll}
+        scroll={isMobile ? { ...props.scroll, x: props.scroll?.x ?? 'max-content', y: undefined } : pagination !== false && !embedded && bodyHeight ? { ...props.scroll, y: bodyHeight } : props.scroll}
         size={size} dataSource={dataSource} pagination={adaptivePagination} />
     </div>
   );

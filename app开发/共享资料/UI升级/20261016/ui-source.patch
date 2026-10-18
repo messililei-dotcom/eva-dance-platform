@@ -1,0 +1,847 @@
+--- before/iOS/EvaDanceApp.swift
++++ after/iOS/EvaDanceApp.swift
+@@ -8,10 +8,7 @@
+             MainTabs().id(session.accountID ?? 0)
+             .sheet(isPresented: $session.showLogin) { LoginView().environmentObject(session) }
+             .environmentObject(session)
+-            .safeAreaInset(edge: .top) {
+-                if session.isFixture { Text("本地测试数据 · 非真实课程").font(.caption).frame(maxWidth: .infinity).padding(6).background(.yellow.opacity(0.25)) }
+-            }
+-            .tint(Color(red: 0.62, green: 0.11, blue: 0.13))
++            .tint(EvaBrand.red)
+             .alert("提示", isPresented: Binding(get: { session.error != nil }, set: { if !$0 { session.error = nil } })) {
+                 Button("知道了") { session.error = nil }
+             } message: { Text(session.error ?? "") }
+--- before/iOS/FullSiteViews.swift
++++ after/iOS/FullSiteViews.swift
+@@ -21,8 +21,14 @@
+     @ObservedObject var store: SiteStore
+     var retry: () -> Void
+     var body: some View {
+-        if store.busy { ProgressView("正在加载…") }
+-        if let error = store.error { VStack(alignment: .leading, spacing: 8) { Text(error).foregroundStyle(.red); Button("重试", action: retry) } }
++        if store.busy { HStack(spacing: 12) { ProgressView(); Text("正在加载…").font(.subheadline).foregroundStyle(.secondary) }.frame(maxWidth: .infinity, minHeight: 64) }
++        if let error = store.error {
++            VStack(alignment: .leading, spacing: 12) {
++                Label("内容暂未加载", systemImage: "wifi.exclamationmark").font(.headline)
++                Text(error).font(.subheadline).foregroundStyle(.secondary)
++                Button("重新加载", action: retry).buttonStyle(.bordered).frame(minHeight: 44)
++            }.padding(16).frame(maxWidth: .infinity, alignment: .leading).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14))
++        }
+     }
+ }
+ struct AuthGate<Content: View>: View {
+@@ -30,23 +36,31 @@
+     @ViewBuilder var content: () -> Content
+     var body: some View {
+         if session.token != nil { content() }
+-        else { VStack(spacing: 20) { Image(systemName: "person.crop.circle").font(.system(size: 48)); Text("登录后查看个人学习与服务记录"); Button("手机号登录") { session.showLogin = true }.buttonStyle(.borderedProminent) }.padding() }
++        else { VStack(spacing: 20) { Image(systemName: "person.crop.circle").font(.largeTitle).foregroundStyle(EvaBrand.red); Text("登录后查看个人学习与服务记录").font(.headline).multilineTextAlignment(.center); Button("手机号登录") { session.showLogin = true }.buttonStyle(.borderedProminent).controlSize(.large) }.padding(28).frame(maxWidth: .infinity, maxHeight: .infinity).background(EvaBrand.canvas) }
+     }
+ }
+ struct CourseCard: View {
+     let row: JSONValue
+     var body: some View {
+-        HStack(alignment: .top, spacing: 12) {
+-            if let url = AppPolicy.secureMediaURL(row["cover_image"].text) {
+-                AsyncImage(url: url) { image in image.resizable().scaledToFill() } placeholder: { Color.gray.opacity(0.12) }
+-                    .frame(width: 96, height: 72).clipped().cornerRadius(8).accessibilityHidden(true)
+-            }
+-            VStack(alignment: .leading, spacing: 6) {
+-                Text(row.firstText("name", "title")).font(.headline)
+-                Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary)
++        HStack(alignment: .center, spacing: 14) {
++            ZStack {
++                EvaBrand.softAccent
++                if let url = AppPolicy.secureMediaURL(row["cover_image"].text) {
++                    AsyncImage(url: url) { image in image.resizable().scaledToFill() } placeholder: { Image(systemName: "play.rectangle").font(.title2).foregroundStyle(EvaBrand.red) }
++                } else { Image(systemName: "play.rectangle").font(.title2).foregroundStyle(EvaBrand.red) }
++            }.frame(width: 96, height: 88).clipped().clipShape(RoundedRectangle(cornerRadius: 12)).accessibilityHidden(true)
++            VStack(alignment: .leading, spacing: 7) {
++                Text(row.firstText("name", "title")).font(.headline).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
++                if !row.firstText("subtitle", "teacher", "category").isEmpty {
++                    Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++                }
++                if !row["total_courses"].text.isEmpty {
++                    Text([row["teacher"].text, "\(row["total_courses"].text) 节课"].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
++                }
+                 if !row["location"].text.isEmpty { Label(row["location"].text, systemImage: "mappin").font(.caption) }
+             }
+-        }.padding(.vertical, 3)
++            Spacer(minLength: 0)
++        }.padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
+     }
+ }
+ struct DiscoverView: View {
+@@ -55,18 +69,26 @@
+     @State private var search = ""
+     var rows: [SiteRow] { store.data.rows.filter { row in search.isEmpty || ["name", "subtitle", "teacher", "category"].contains { row.value[$0].text.localizedCaseInsensitiveContains(search) } } }
+     var body: some View {
+-        List {
+-            if search.isEmpty && !store.data.list.isEmpty {
+-                Section("线上学院精选课程") { CourseCarousel(courses: Array(store.data.rows.prefix(5))).listRowInsets(EdgeInsets()) }
+-            }
+-            LearningShortcuts().listRowSeparator(.hidden)
+-            Section(search.isEmpty ? "课程列表 · 全部课程" : "搜索结果") {
++        ScrollView {
++            LazyVStack(alignment: .leading, spacing: 20) {
++                if search.isEmpty {
++                    BrandHeader(title: "伊娃东方舞", subtitle: "线上学院 · 舞蹈作品 · 每天进步一点", icon: "play.rectangle")
++                    LearningShortcuts()
++                }
++                HStack {
++                    Text(search.isEmpty ? "探索课程" : "搜索结果").font(.title3.bold())
++                    Spacer()
++                    if !store.busy && store.error == nil { Text("\(rows.count) 门课程").font(.subheadline).foregroundStyle(.secondary) }
++                }
+                 LoadState(store: store) { Task { await load() } }
+-                ForEach(rows) { row in NavigationLink { PublicCourseView(row: row.value) } label: { CourseCard(row: row.value) } }
+-                if !store.busy && store.error == nil && rows.isEmpty { Text("暂无匹配课程") }
+-            }
+-            Section("品牌与资讯") { NavigationLink("了解伊娃东方舞") { InformationView() } }
+-        }.evaCompactLayout().navigationTitle("线上学院").searchable(text: $search, prompt: "搜索课程、老师或分类")
++                ForEach(rows) { row in NavigationLink { PublicCourseView(row: row.value) } label: {
++                    HStack(spacing: 4) { CourseCard(row: row.value); Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.secondary) }
++                        .padding(.horizontal, 14).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 16))
++                }.buttonStyle(.plain) }
++                if !store.busy && store.error == nil && rows.isEmpty { Label("暂无匹配课程，请换个关键词", systemImage: "magnifyingglass").foregroundStyle(.secondary).padding(.vertical, 24) }
++                NavigationLink { InformationView() } label: { Label("了解伊娃东方舞", systemImage: "info.circle").font(.subheadline).frame(minHeight: 44) }.padding(.top, 4)
++            }.padding(20).frame(maxWidth: 760).frame(maxWidth: .infinity)
++        }.evaHomeLayout().navigationTitle("线上学院").evaSearch(text: $search, prompt: "搜索课程、老师或分类")
+         .task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/public/series", session: session, publicRead: true) }
+@@ -125,7 +147,7 @@
+                 NavigationLink { OfflineCourseDetailView(row: row.value) } label: { CourseCard(row: row.value) }
+             }
+             if !store.busy && store.error == nil && store.data.list.isEmpty { Text("暂无线下课程") }
+-        }.evaCompactLayout().navigationTitle("线下课程").searchable(text: $search, prompt: "搜索课程或期次").task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaHomeLayout().navigationTitle("线下课程").evaSearch(text: $search, prompt: "搜索课程或期次").task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/public/offline-courses", session: session, publicRead: true) }
+ }
+@@ -186,7 +208,7 @@
+                     Text("\(row.value.firstText("startDate","start_date")) · \(row.value.firstText("city","venue"))").foregroundStyle(.secondary)
+                 }.padding(.vertical, 3) }
+             }
+-        }.evaCompactLayout().navigationTitle("东方舞赛事").searchable(text: $search).task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaHomeLayout().navigationTitle("东方舞赛事").evaSearch(text: $search, prompt: "搜索赛事名称").task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/events", session: session, publicRead: true) }
+ }
+--- before/iOS/ShopViews.swift
++++ after/iOS/ShopViews.swift
+@@ -22,7 +22,7 @@
+     var filtered: [SiteRow] { products.filter { (category == "全部" || $0.value["category"].text == category) && (search.isEmpty || $0.value["name"].text.localizedCaseInsensitiveContains(search)) } }
+     var body: some View {
+         ScrollView {
+-            VStack(alignment: .leading, spacing: 10) {
++            VStack(alignment: .leading, spacing: 20) {
+                 BrandHeader(title: "伊娃甄选", subtitle: "东方舞生活 · 官方商城", icon: "bag")
+                 HStack {
+                     NavigationLink("购物袋（\(cart.quantities.values.reduce(0,+))）") { CartView(cart: cart) }
+@@ -41,8 +41,8 @@
+                     }.buttonStyle(.plain) }
+                 }
+                 if !store.busy && store.error == nil && filtered.isEmpty { Text("暂无匹配商品") }
+-            }.padding(12)
+-        }.evaCompactLayout().navigationTitle("商城").searchable(text: $search, prompt: "搜索商品")
++            }.padding(20).frame(maxWidth: 960).frame(maxWidth: .infinity)
++        }.evaHomeLayout().navigationTitle("商城").evaSearch(text: $search, prompt: "搜索商品")
+             .task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/shop/products", session: session, publicRead: true) }
+@@ -52,19 +52,18 @@
+     var body: some View {
+         VStack(alignment: .leading, spacing: 10) {
+             ZStack {
+-                Rectangle().fill(EvaBrand.gold.opacity(0.12))
++                Rectangle().fill(EvaBrand.softAccent)
+                 if let url = AppPolicy.secureMediaURL(product["image"].text) {
+                     AsyncImage(url: url) { image in image.resizable().scaledToFit() } placeholder: { ProgressView() }
+                 } else { Text("伊娃甄选").foregroundStyle(EvaBrand.red).font(.headline) }
+-            }.frame(height: 140).clipped()
++            }.frame(height: 160).clipped()
+             VStack(alignment: .leading, spacing: 8) {
+                 Text(product["name"].text).font(.headline).lineLimit(2)
+                 Text(product["spec"].text).font(.caption).foregroundStyle(.secondary)
+                 Text(money(product["priceFen"].number)).font(.headline).foregroundStyle(EvaBrand.red)
+                 Text(product["stock"].number > 0 ? "有货" : "售罄").font(.caption).foregroundStyle(.secondary)
+             }.padding(.horizontal, 12).padding(.bottom, 12)
+-        }.background(.background, in: RoundedRectangle(cornerRadius: 14))
+-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(.secondary.opacity(0.15)))
++        }.background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14))
+             .clipShape(RoundedRectangle(cornerRadius: 14))
+     }
+ }
+--- before/iOS/AccountViews.swift
++++ after/iOS/AccountViews.swift
+@@ -8,7 +8,10 @@
+     var body: some View {
+         List {
+             if session.token == nil {
+-                Section { Text("欢迎来到伊娃东方舞").font(.title2.bold()); Button("登录 / 注册") { session.showLogin = true } }
++                Section {
++                    BrandHeader(title: "欢迎来到伊娃东方舞", subtitle: "登录后同步课程、比赛、证书与订单", icon: "person.crop.circle")
++                    Button("登录 / 注册") { session.showLogin = true }.buttonStyle(.borderedProminent).foregroundStyle(EvaBrand.onAccent).controlSize(.large).frame(maxWidth: .infinity, minHeight: 48)
++                }
+             } else {
+                 Section {
+                     BrandHeader(title: store.data["name"].text.isEmpty ? "我的学习空间" : store.data["name"].text, subtitle: "个人中心 · 与小程序共用学习账号", icon: "person.crop.circle")
+@@ -41,7 +44,7 @@
+             }
+             Section("工作人员") { NavigationLink("赛事管理工作台") { StaffEventRootView() } }
+             Section("关于") { NavigationLink("帮助、品牌与隐私") { InformationView() }; Text("伊娃东方舞 1.0.0 (3)") }
+-        }.evaCompactLayout().navigationTitle("个人中心").task(id:session.accountID) { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaHomeLayout().navigationTitle("个人中心").task(id:session.accountID) { await load() }.refreshable { await load() }
+         .confirmationDialog("确认退出当前账号？",isPresented:$logout) { Button("退出登录",role:.destructive) { session.logout() } }
+     }
+     private func load() async { if session.token != nil { await store.load("/member/profile",session:session) } }
+--- before/iOS/BrandViews.swift
++++ after/iOS/BrandViews.swift
+@@ -1,26 +1,45 @@
+ import SwiftUI
+ import EvaCore
++#if os(iOS)
++import UIKit
++#endif
+ 
+ enum EvaBrand {
++    #if os(iOS)
++    static let red = Color(uiColor: UIColor { traits in
++        traits.userInterfaceStyle == .dark ? UIColor(red: 1, green: 0.67, blue: 0.66, alpha: 1) : UIColor(red: 0.624, green: 0.114, blue: 0.125, alpha: 1)
++    })
++    #else
+     static let red = Color(red: 0.624, green: 0.114, blue: 0.125)
++    #endif
+     static let gold = Color(red: 0.725, green: 0.588, blue: 0.322)
+     static let gradient = LinearGradient(colors: [red, gold], startPoint: .topLeading, endPoint: .bottomTrailing)
++    #if os(iOS)
++    static let canvas = Color(uiColor: .systemGroupedBackground)
++    static let surface = Color(uiColor: .secondarySystemGroupedBackground)
++    static let onAccent = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .black : .white })
++    #else
++    static let canvas = Color.gray.opacity(0.06)
++    static let surface = Color(nsColor: .controlBackgroundColor)
++    static let onAccent = Color.white
++    #endif
++    static let softAccent = red.opacity(0.07)
+ }
+ struct BrandHeader: View {
++    @ScaledMetric(relativeTo: .title2) private var badgeSize = 44
+     let title: String
+     let subtitle: String
+     var icon = "sparkles"
+     var body: some View {
+-        HStack(alignment: .center, spacing: 10) {
+-            Image(systemName: icon).font(.title2).frame(width: 38, height: 38)
+-                .background(.white.opacity(0.15), in: Circle()).accessibilityHidden(true)
+-            VStack(alignment: .leading, spacing: 5) {
+-                Text(title).font(.headline)
+-                Text(subtitle).font(.caption).fixedSize(horizontal: false, vertical: true)
++        HStack(alignment: .center, spacing: 14) {
++            Image(systemName: icon).font(.title2).foregroundStyle(EvaBrand.red)
++                .frame(width: badgeSize, height: badgeSize).background(EvaBrand.softAccent, in: RoundedRectangle(cornerRadius: 12)).accessibilityHidden(true)
++            VStack(alignment: .leading, spacing: 6) {
++                Text(title).font(.title3.bold()).foregroundStyle(.primary)
++                Text(subtitle).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+             }
+             Spacer(minLength: 0)
+-        }.padding(12).foregroundStyle(.white).frame(maxWidth: .infinity, alignment: .leading)
+-            .background(EvaBrand.gradient, in: RoundedRectangle(cornerRadius: 18))
++        }.padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
+     }
+ }
+ struct CourseHero: View {
+@@ -59,11 +78,13 @@
+     func body(content: Content) -> some View {
+         #if os(iOS)
+         content.navigationBarTitleDisplayMode(.inline)
+-            .listStyle(.plain)
+-            .environment(\.defaultMinListRowHeight, 44)
++            .listStyle(.insetGrouped)
++            .scrollContentBackground(.hidden)
++            .background(EvaBrand.canvas)
++            .environment(\.defaultMinListRowHeight, 52)
+             .environment(\.defaultMinListHeaderHeight, 24)
+         #else
+-        content.listStyle(.plain)
++        content.listStyle(.inset)
+         #endif
+     }
+ }
+@@ -71,16 +92,50 @@
+     func evaCompactLayout() -> some View { modifier(CompactLearningLayout()) }
+ }
+ struct LearningShortcuts: View {
++    @Environment(\.dynamicTypeSize) private var typeSize
+     var body: some View {
+-        HStack(spacing: 5) {
+-            NavigationLink { AuthGate { CoursesView() } } label: { shortcut("继续学习", "play.circle") }
++        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 12)) : AnyLayout(HStackLayout(spacing: 10))
++        layout {
++            NavigationLink { AuthGate { CoursesView() } } label: { shortcut("继续学习", "play.fill", primary: true) }
+             NavigationLink { AuthGate { StudyAssistantView() } } label: { shortcut("学习助手", "sparkles") }
+             NavigationLink { UnifiedSearchView() } label: { shortcut("全站搜索", "magnifyingglass") }
+         }.buttonStyle(.plain)
+     }
+-    private func shortcut(_ title: String, _ icon: String) -> some View {
+-        VStack(spacing: 5) { Image(systemName: icon).foregroundStyle(EvaBrand.red); Text(title).font(.caption) }
+-            .frame(maxWidth: .infinity, minHeight: 48).padding(.vertical, 4)
+-            .background(EvaBrand.red.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
++    private func shortcut(_ title: String, _ icon: String, primary: Bool = false) -> some View {
++        let layout = typeSize.isAccessibilitySize ? AnyLayout(HStackLayout(spacing: 16)) : AnyLayout(VStackLayout(spacing: 9))
++        return layout { Image(systemName: icon).font(.title3); Text(title).font(.subheadline.weight(.medium)) }
++            .foregroundStyle(primary ? EvaBrand.onAccent : EvaBrand.red)
++            .frame(maxWidth: .infinity, minHeight: 80).padding(.vertical, 4)
++            .background(primary ? EvaBrand.red : EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14))
++            .contentShape(RoundedRectangle(cornerRadius: 14))
++            .accessibilityElement(children: .combine)
+     }
+ }
++
++/// A single content-first treatment for the five native destinations.
++struct EvaHomeLayout: ViewModifier {
++    func body(content: Content) -> some View {
++        #if os(iOS)
++        content.navigationBarTitleDisplayMode(.large).background(EvaBrand.canvas)
++            .toolbar {
++                #if DEBUG
++                if ProcessInfo.processInfo.environment["EVA_API_BASE"] != nil {
++                    ToolbarItem(placement: .navigationBarTrailing) { Text("测试数据").font(.caption2).foregroundStyle(.secondary).accessibilityLabel("本地测试数据，非真实课程") }
++                }
++                #endif
++            }
++        #else
++        content.background(EvaBrand.canvas)
++        #endif
++    }
++}
++extension View {
++    func evaHomeLayout() -> some View { modifier(EvaHomeLayout()) }
++    @ViewBuilder func evaSearch(text: Binding<String>, prompt: String) -> some View {
++        #if os(iOS)
++        searchable(text: text, placement: .navigationBarDrawer(displayMode: .always), prompt: prompt)
++        #else
++        searchable(text: text, prompt: prompt)
++        #endif
++    }
++}
+--- before/Android/res/values-night/styles.xml
++++ after/Android/res/values-night/styles.xml
+@@ -0,0 +1,9 @@
++<resources>
++    <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
++        <item name="android:fontFamily">sans</item>
++        <item name="android:colorAccent">#FFACA9</item>
++        <item name="android:windowLightStatusBar">false</item>
++        <item name="android:windowActionModeOverlay">true</item>
++        <item name="android:windowBackground">#141619</item>
++    </style>
++</resources>
+--- before/Android/java/cn/com/swod/app/MainActivity.java
++++ after/Android/java/cn/com/swod/app/MainActivity.java
+@@ -4,8 +4,6 @@
+ import android.app.AlertDialog;
+ import android.os.Bundle;
+ import android.content.Intent;
+-import android.graphics.Color;
+-import android.graphics.drawable.GradientDrawable;
+ import android.net.Uri;
+ import android.text.Editable;
+ import android.text.TextWatcher;
+@@ -28,6 +26,8 @@
+     private Api api;
+     private LinearLayout root, content;
+     private TextView title;
++    private Button backButton;
++    private ScrollView pageScroll;
+     private final Button[] tabButtons = new Button[5];
+     private boolean memberWriteBusy;
+     private boolean authBusy, smsBusy;
+@@ -41,42 +41,47 @@
+     private TextView musicLabel;
+     private int musicPickerGeneration;
+     private boolean registrationBusy;
+-    private final int red = Color.rgb(159,29,32);
++    private int red;
+     @Override public void onCreate(Bundle state) {
+-        super.onCreate(state); api = Api.get(this);
+-        root = column(); root.setBackgroundColor(Color.rgb(250,248,246));
++        super.onCreate(state); api = Api.get(this); red = SwodUi.primary(this);
++        root = column(); root.setBackgroundColor(SwodUi.canvas(this));
+         root.setOnApplyWindowInsetsListener((v, insets) -> {
+             if (android.os.Build.VERSION.SDK_INT >= 30) { android.graphics.Insets safe = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.ime()); root.setPadding(safe.left,safe.top,safe.right,safe.bottom); }
+             else root.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());
+             return insets;
+         });
+-        LinearLayout bar = row(); Button back = button("‹", () -> back()); bar.addView(back,new LinearLayout.LayoutParams(dp(48),dp(48)));
+-        title = text("线上学院",18); title.setGravity(Gravity.CENTER_VERTICAL); bar.addView(title,new LinearLayout.LayoutParams(0,dp(48),1));
+-        Button refresh = button("刷新", () -> { if (page != null) page.run(); }); bar.addView(refresh); root.addView(bar);
+-        ScrollView scroll = new ScrollView(this); content = column(); content.setPadding(dp(12),0,dp(12),dp(12)); scroll.addView(content); root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
++        LinearLayout bar = row(); bar.setPadding(dp(8),dp(6),dp(12),dp(6));bar.setBackgroundColor(SwodUi.surface(this));
++        backButton = button("", () -> back());backButton.setPadding(dp(12),dp(12),dp(12),dp(12));backButton.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"back",red),null,null,null);backButton.setContentDescription("返回上一页"); bar.addView(backButton,new LinearLayout.LayoutParams(dp(48),dp(48)));
++        title = text("线上学院",20);title.setTypeface(null,android.graphics.Typeface.BOLD); title.setGravity(Gravity.CENTER_VERTICAL); bar.addView(title,new LinearLayout.LayoutParams(0,dp(48),1));
++        Button refresh = button("", () -> { if (page != null) page.run(); });refresh.setPadding(dp(12),dp(12),dp(12),dp(12));refresh.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"refresh",red),null,null,null);refresh.setContentDescription("刷新当前页面");bar.addView(refresh,new LinearLayout.LayoutParams(dp(48),dp(48))); root.addView(bar);
++        pageScroll = new ScrollView(this);pageScroll.setFillViewport(true); content = column();int inset=Math.max(16,(getResources().getConfiguration().screenWidthDp-760)/2);content.setPadding(dp(inset),dp(12),dp(inset),dp(24));pageScroll.addView(content);
+         LinearLayout tabs = row(); String[] names={"线上学院","线下课","赛事","商城","我的"};
++        boolean expanded=getResources().getConfiguration().screenWidthDp>=600;if(expanded){tabs.setOrientation(LinearLayout.VERTICAL);tabs.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL);}
++        String[] icons={"learn","calendar","trophy","bag","person"};
+         Runnable[] pages={this::courses,this::offline,this::events,this::shop,this::account};
+-        for(int i=0;i<names.length;i++) { final Runnable p=pages[i]; final int index=i; Button b=button(names[i],()->{history.clear();selectTab(index);page=p;p.run();}); b.setTextSize(11); b.setPadding(0,0,0,0);tabButtons[i]=b; tabs.addView(b,new LinearLayout.LayoutParams(0,dp(56),1)); }
+-        tabs.setBackgroundColor(Color.WHITE);root.addView(tabs);selectTab(0); setContentView(root);if(android.os.Build.VERSION.SDK_INT>=33)getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,()->{if(history.isEmpty())finish();else back();}); page=this::courses; courses();
++        for(int i=0;i<names.length;i++) { final Runnable p=pages[i]; final int index=i; Button b=button(names[i],()->{history.clear();selectTab(index);page=p;p.run();}); b.setTextSize(12);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);b.setCompoundDrawablePadding(dp(6));b.setGravity(Gravity.CENTER);b.setPadding(dp(2),dp(expanded?6:10),dp(2),dp(expanded?6:8));tabButtons[i]=b; tabs.addView(b,expanded?new LinearLayout.LayoutParams(-1,dp(64)):new LinearLayout.LayoutParams(0,dp(76),1)); }
++        tabs.setPadding(dp(6),dp(4),dp(6),dp(4));tabs.setBackgroundColor(SwodUi.surface(this));
++        if(expanded){LinearLayout body=row();body.setGravity(Gravity.TOP);ScrollView rail=new ScrollView(this);rail.setVerticalScrollBarEnabled(false);rail.addView(tabs,new ScrollView.LayoutParams(-1,-2));body.addView(rail,new LinearLayout.LayoutParams(dp(104),-1));body.addView(pageScroll,new LinearLayout.LayoutParams(0,-1,1));root.addView(body,new LinearLayout.LayoutParams(-1,0,1));}
++        else{root.addView(pageScroll,new LinearLayout.LayoutParams(-1,0,1));root.addView(tabs);}
++        selectTab(0); setContentView(root);if(android.os.Build.VERSION.SDK_INT>=33)getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,()->{if(history.isEmpty())finish();else back();}); page=this::courses; courses();
+     }
+     // API 33+ registers OnBackInvokedDispatcher in onCreate; this override serves API 26-32.
+     @android.annotation.SuppressLint("GestureBackNavigation")
+     @Override public void onBackPressed() { if(history.isEmpty()) super.onBackPressed(); else back(); }
+     private void back() { if(!history.isEmpty()) {page=history.pop();page.run();} }
+     private void open(Runnable next) { if(page!=null) history.push(page); page=next; next.run(); }
+-    private void selectTab(int selected){for(int i=0;i<tabButtons.length;i++){Button b=tabButtons[i];if(b!=null){b.setSelected(i==selected);b.setTextColor(i==selected?red:Color.rgb(140,129,114));b.setBackground(round(i==selected?Color.rgb(249,234,232):Color.WHITE,12));}}}
+-    private GradientDrawable round(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
+-    private void hero(String name,String description){LinearLayout box=column();box.setPadding(dp(16),dp(14),dp(16),dp(14));box.setBackground(round(Color.rgb(249,234,232),18));TextView heading=text(name,24);heading.setTextColor(red);box.addView(heading);box.addView(text(description,14));content.addView(box);}
+-    private void section(String name){TextView label=text(name,18);label.setPadding(dp(4),dp(20),dp(4),dp(8));content.addView(label);}
+-    private void begin(String name) { generation++; content.removeAllViews(); title.setText(name); }
++    private void selectTab(int selected){String[] icons={"learn","calendar","trophy","bag","person"};for(int i=0;i<tabButtons.length;i++){Button b=tabButtons[i];if(b!=null){boolean active=i==selected;b.setSelected(active);b.setTextColor(active?red:SwodUi.muted(this));b.setTypeface(null,active?android.graphics.Typeface.BOLD:android.graphics.Typeface.NORMAL);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],active?red:SwodUi.muted(this)),null,null);b.setBackground(SwodUi.touch(this,active?SwodUi.tonal(this):SwodUi.surface(this),14));}}}
++    private void hero(String name,String description){LinearLayout box=column();box.setPadding(dp(4),dp(10),dp(4),dp(18));TextView heading=text(name,26);heading.setTypeface(null,android.graphics.Typeface.BOLD);box.addView(heading);TextView summary=text(description,14);summary.setTextColor(SwodUi.muted(this));box.addView(summary);content.addView(box);}
++    private void section(String name){TextView label=text(name,20);label.setTypeface(null,android.graphics.Typeface.BOLD);label.setPadding(dp(4),dp(24),dp(4),dp(12));content.addView(label);}
++    private void begin(String name) { generation++; content.removeAllViews(); title.setText(name);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
+     private int dp(int x) {return Math.round(x*getResources().getDisplayMetrics().density);}
+     private LinearLayout column(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.VERTICAL);return v;}
+     private LinearLayout row(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.HORIZONTAL);v.setGravity(Gravity.CENTER_VERTICAL);return v;}
+-    private TextView text(String s,int size){TextView v=new TextView(this);v.setText(s);v.setTextSize(size);v.setTextColor(Color.rgb(40,35,35));v.setPadding(dp(4),dp(5),dp(4),dp(5));return v;}
+-    private Button button(String s,Runnable tap){Button b=new Button(this);b.setText(s);b.setTextColor(red);b.setMinHeight(dp(48));b.setAllCaps(false);b.setBackground(round(Color.WHITE,12));b.setOnClickListener(v->tap.run());return b;}
+-    private void action(String s,Runnable tap){LinearLayout.LayoutParams layout=new LinearLayout.LayoutParams(-1,-2);layout.topMargin=dp(6);content.addView(button(s,tap),layout);}
++    private TextView text(String s,int size){TextView v=new TextView(this);v.setText(s);v.setTextSize(size);v.setTextColor(SwodUi.ink(this));v.setPadding(dp(4),dp(5),dp(4),dp(5));return v;}
++    private Button button(String s,Runnable tap){Button b=new Button(this);b.setText(s);b.setTextSize(15);b.setTextColor(new android.content.res.ColorStateList(new int[][]{new int[]{-android.R.attr.state_enabled},new int[]{}},new int[]{SwodUi.muted(this),red}));b.setMinHeight(dp(48));b.setMinimumHeight(dp(48));b.setAllCaps(false);b.setStateListAnimator(null);b.setElevation(0);b.setPadding(dp(16),dp(10),dp(16),dp(10));b.setBackground(SwodUi.touch(this,SwodUi.surface(this),14));b.setOnClickListener(v->tap.run());return b;}
++    private void action(String s,Runnable tap){LinearLayout.LayoutParams layout=new LinearLayout.LayoutParams(-1,-2);layout.topMargin=dp(8);Button b=button(s,tap);b.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);b.setCompoundDrawablesWithIntrinsicBounds(null,null,SwodUi.icon(this,"next",SwodUi.muted(this)),null);content.addView(b,layout);}
+     private void info(String s){content.addView(text(s,14));}
+-    private EditText field(LinearLayout box,String hint, boolean digits){EditText v=new EditText(this);v.setHint(hint);v.setTextSize(15);v.setSingleLine(true);if(digits)v.setInputType(android.text.InputType.TYPE_CLASS_PHONE);box.addView(v,new LinearLayout.LayoutParams(-1,dp(52)));return v;}
++    private EditText field(LinearLayout box,String hint, boolean digits){EditText v=new EditText(this);v.setHint(hint);v.setContentDescription(hint);v.setTextSize(16);v.setTextColor(SwodUi.ink(this));v.setHintTextColor(SwodUi.muted(this));v.setPadding(dp(16),dp(12),dp(16),dp(12));v.setBackground(SwodUi.shape(this,SwodUi.surface(this),12));v.setSingleLine(true);if(digits)v.setInputType(android.text.InputType.TYPE_CLASS_PHONE);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(12);v.setMinimumHeight(dp(52));box.addView(v,p);return v;}
+     private interface Result{void receive(Object value)throws Exception;}
+     private void load(String path,String method,JSONObject body,boolean auth,Result result){
+         if(auth&&!api.loggedIn()){info("登录后查看个人学习和服务记录");action("手机号登录",()->open(this::login));return;}
+@@ -93,7 +98,7 @@
+     private static String first(JSONObject v,String... keys){for(String k:keys){String s=v.optString(k,"");if(!s.isEmpty()&&!s.equals("null"))return s;}return "";}
+     private static JSONObject body(Object... values){JSONObject v=new JSONObject();try{for(int i=0;i<values.length;i+=2)v.put((String)values[i],values[i+1]);}catch(Exception ignored){}return v;}
+     private void confirm(String message,Runnable send){new AlertDialog.Builder(this).setMessage(message).setNegativeButton("取消",null).setPositiveButton("确认",(d,w)->send.run()).show();}
+-    private void card(LinearLayout box,String name,String summary,Runnable tap){LinearLayout item=column();item.setPadding(dp(8),dp(7),dp(8),dp(7));item.setBackground(round(Color.WHITE,14));item.addView(text(name,16));if(!summary.trim().isEmpty())item.addView(text(summary,12));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(7);box.addView(item,p);if(tap!=null){item.setContentDescription(name+"，"+summary+"，查看详情");item.setMinimumHeight(dp(64));item.setFocusable(true);item.setOnClickListener(v->tap.run());}}
++    private void card(LinearLayout box,String name,String summary,Runnable tap){LinearLayout item=column();item.setPadding(dp(14),dp(12),dp(14),dp(12));item.setBackground(SwodUi.touch(this,SwodUi.surface(this),16));TextView heading=text(name,17);heading.setTypeface(null,android.graphics.Typeface.BOLD);item.addView(heading);if(!summary.trim().isEmpty()){TextView detail=text(summary,14);detail.setTextColor(SwodUi.muted(this));item.addView(detail);}LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(12);box.addView(item,p);if(tap!=null){item.setContentDescription(name+"，"+summary+"，查看详情");item.setMinimumHeight(dp(80));item.setFocusable(true);item.setOnClickListener(v->tap.run());}}
+     private interface RowTap{void tap(JSONObject row);}
+     private void searchable(JSONArray rows,String[] fields,RowTap tap){
+         EditText search=field(content,"搜索名称、老师或组别",false); LinearLayout results=column();content.addView(results);
+@@ -106,10 +111,13 @@
+     private void cover(LinearLayout box,String source,boolean goods){
+         String url=source.startsWith("/")?(goods?"https://www.swod.com.cn":"https://admin.swod.com.cn")+source:source;
+         if(!Policy.secureURL(url))return;
+-        ImageView image=new ImageView(this);image.setScaleType(ImageView.ScaleType.CENTER_CROP);image.setContentDescription("封面");box.addView(image,0,new LinearLayout.LayoutParams(-1,dp(goods?220:160)));
+-        int version=generation;imageIO.execute(()->{if(version!=generation)return;try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(!isFinishing()&&version==generation&&bitmap!=null)image.setImageBitmap(bitmap);else if(version==generation)box.removeView(image);});}catch(Exception ignored){runOnUiThread(()->{if(version==generation)box.removeView(image);});}});
+-    }
+-    private void courses(){begin("线上学院");hero("伊娃东方舞","线上学院 · 舞蹈作品 · 每天进步一点");action("继续学习",()->open(()->records("最近学习","/member/recent-courses","",r->play(r.optInt("video_id"),first(r,"course_name","name")))));action("我的课程",()->open(this::myCourses));action("学习助手",()->open(this::assistant));action("东方舞圈 · 官网资讯",()->open(this::website));section("探索课程");load("/public/series","GET",null,false,v->searchable(array(v),new String[]{"name","teacher","category"},r->open(()->course(r))));}
++        ImageView image=new ImageView(this);image.setScaleType(ImageView.ScaleType.CENTER);image.setImageDrawable(SwodUi.icon(this,goods?"bag":"learn",red));image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);image.setBackground(SwodUi.shape(this,SwodUi.tonal(this),12));image.setClipToOutline(true);
++        if(!goods&&box!=content){LinearLayout details=column();while(box.getChildCount()>0){View child=box.getChildAt(0);box.removeViewAt(0);details.addView(child);}box.setOrientation(LinearLayout.HORIZONTAL);box.setGravity(Gravity.CENTER_VERTICAL);LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(dp(104),dp(92));picture.rightMargin=dp(12);box.addView(image,picture);box.addView(details,new LinearLayout.LayoutParams(0,-2,1));}
++        else{LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(-1,dp(goods?220:180));picture.bottomMargin=dp(12);box.addView(image,0,picture);}
++        int version=generation;imageIO.execute(()->{if(version!=generation)return;try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(!isFinishing()&&version==generation&&bitmap!=null){image.setScaleType(ImageView.ScaleType.CENTER_CROP);image.setImageBitmap(bitmap);}});}catch(Exception ignored){/* Keep a stable, non-deceptive cover placeholder. */}});
++    }
++    private void learningShortcuts(){LinearLayout shortcuts=row();String[] labels={"继续学习","我的课程","学习助手"};String[] icons={"play","learn","person"};Runnable[] targets={()->open(()->records("最近学习","/member/recent-courses","",r->play(r.optInt("video_id"),first(r,"course_name","name")))),()->open(this::myCourses),()->open(this::assistant)};for(int i=0;i<labels.length;i++){Button b=button(labels[i],targets[i]);b.setTextSize(14);b.setGravity(Gravity.CENTER);b.setPadding(dp(4),dp(12),dp(4),dp(12));b.setMinimumHeight(dp(88));b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);b.setCompoundDrawablePadding(dp(8));b.setBackground(SwodUi.touch(this,i==0?SwodUi.tonal(this):SwodUi.surface(this),14));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1);if(i<2)p.rightMargin=dp(10);shortcuts.addView(b,p);}content.addView(shortcuts);}
++    private void courses(){begin("线上学院");hero("伊娃东方舞","线上学院 · 舞蹈作品 · 每天进步一点");learningShortcuts();section("探索课程");load("/public/series","GET",null,false,v->{searchable(array(v),new String[]{"name","teacher","category"},r->open(()->course(r)));action("东方舞圈 · 官网资讯",()->open(this::website));});}
+     private void myCourses(){begin("我的线上课程");load("/member/authorized-series","GET",null,true,v->{JSONArray rows=array(v);for(int i=0;i<rows.length();i++){JSONObject r=rows.getJSONObject(i);int id=r.optInt("series_id",r.optInt("id"));card(content,first(r,"series_name","name"),first(r,"teacher","expire_at","expires_at"),()->open(()->catalog(id,first(r,"series_name","name"))));}if(rows.length()==0)info("暂无已授权线上课程");});}
+     private void course(JSONObject r){begin(first(r,"name"));load("/public/series/"+r.optInt("id")+"/detail","GET",null,false,v->{JSONObject detail=object(v);hero(first(detail,"name"),first(detail,"subtitle","teacher"));cover(content,first(detail,"cover_image"),false);info(strip(first(detail,"rich_description","description")));info("共 "+detail.optInt("total_courses")+" 节课程");info((detail.optBoolean("is_free")||detail.optInt("is_free")==1)?"免费课程":"课程价格 ¥"+String.format(Locale.ROOT,"%.2f",detail.optDouble("price")));action("查看课程目录",()->open(()->catalog(detail.optInt("id"),detail.optString("name"))));});}
+     private void website(){begin("东方舞圈与品牌服务");hero("东方舞圈","官网资讯、教学体系与品牌服务");String[] labels={"东方舞圈资讯","关于伊娃","品牌故事","传承弟子","出版著作","证书查询","联系与合作"};String[] paths={"/dance-circle","/about","/about/brand-story","/disciples","/about/publications","/certification","/contact"};for(int i=0;i<labels.length;i++){String url="https://www.swod.com.cn"+paths[i];action(labels[i],()->link(url));}}
+--- before/Android/java/cn/com/swod/app/SwodUi.java
++++ after/Android/java/cn/com/swod/app/SwodUi.java
+@@ -0,0 +1,61 @@
++package cn.com.swod.app;
++
++import android.content.Context;
++import android.content.res.ColorStateList;
++import android.content.res.Configuration;
++import android.graphics.Canvas;
++import android.graphics.Color;
++import android.graphics.ColorFilter;
++import android.graphics.Paint;
++import android.graphics.Path;
++import android.graphics.PixelFormat;
++import android.graphics.drawable.Drawable;
++import android.graphics.drawable.GradientDrawable;
++import android.graphics.drawable.RippleDrawable;
++
++/** Shared native surface roles and a single 24 dp outline icon family. */
++final class SwodUi {
++    private SwodUi() {}
++    static boolean dark(Context c) { return (c.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES; }
++    static int canvas(Context c) { return Color.parseColor(dark(c) ? "#141619" : "#F5F6F8"); }
++    static int surface(Context c) { return Color.parseColor(dark(c) ? "#202328" : "#FFFFFF"); }
++    static int ink(Context c) { return Color.parseColor(dark(c) ? "#F3F4F6" : "#20242B"); }
++    static int muted(Context c) { return Color.parseColor(dark(c) ? "#B5BAC4" : "#626A77"); }
++    static int primary(Context c) { return Color.parseColor(dark(c) ? "#FFACA9" : "#9F1D20"); }
++    static int tonal(Context c) { return Color.parseColor(dark(c) ? "#3C272A" : "#F9EDEC"); }
++    static int line(Context c) { return Color.parseColor(dark(c) ? "#373D46" : "#E2E5EA"); }
++    static GradientDrawable shape(Context c, int color, int radius) {
++        GradientDrawable d = new GradientDrawable(); d.setColor(color);
++        d.setCornerRadius(radius * c.getResources().getDisplayMetrics().density); return d;
++    }
++    static Drawable touch(Context c, int color, int radius) {
++        return new RippleDrawable(ColorStateList.valueOf(dark(c) ? 0x28FFFFFF : 0x189F1D20), shape(c,color,radius), shape(c,Color.WHITE,radius));
++    }
++    static Drawable icon(Context c, String kind, int color) { return new Icon(kind,color,Math.round(24*c.getResources().getDisplayMetrics().density)); }
++    private static final class Icon extends Drawable {
++        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
++        private final String kind; private final int size;
++        Icon(String kind,int color,int size) { this.kind=kind;this.size=size;paint.setColor(color);paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(1.8f);paint.setStrokeCap(Paint.Cap.ROUND);paint.setStrokeJoin(Paint.Join.ROUND); }
++        @Override public int getIntrinsicWidth(){return size;}
++        @Override public int getIntrinsicHeight(){return size;}
++        private void path(Canvas c,float... points){Path p=new Path();p.moveTo(points[0],points[1]);for(int i=2;i<points.length;i+=2)p.lineTo(points[i],points[i+1]);c.drawPath(p,paint);}
++        @Override public void draw(Canvas c) {
++            c.save();c.translate(getBounds().left,getBounds().top);c.scale(getBounds().width()/24f,getBounds().height()/24f);
++            switch(kind){
++                case "learn": c.drawRoundRect(3,4,21,20,3,3,paint);path(c,10,9,16,12,10,15,10,9);break;
++                case "calendar": c.drawRoundRect(3,5,21,21,3,3,paint);path(c,3,10,21,10);path(c,8,3,8,7);path(c,16,3,16,7);path(c,8,15,10,15);path(c,14,15,16,15);break;
++                case "trophy": path(c,7,3,17,3,17,9);c.drawArc(7,4,17,14,0,180,false,paint);path(c,7,4,3,4,3,8,7,11);path(c,17,4,21,4,21,8,17,11);path(c,12,14,12,20);path(c,7,21,17,21);break;
++                case "bag": c.drawRoundRect(4,7,20,21,2,2,paint);c.drawArc(8,2,16,12,180,180,false,paint);break;
++                case "person": c.drawCircle(12,7,4,paint);c.drawArc(4,13,20,27,180,180,false,paint);break;
++                case "back": path(c,15,5,8,12,15,19);break;
++                case "next": path(c,9,6,15,12,9,18);break;
++                case "refresh": c.drawArc(4,4,20,20,45,285,false,paint);path(c,20,4,20,10,14,10);break;
++                default: c.drawCircle(12,12,8,paint);path(c,10,8,16,12,10,16,10,8);
++            }
++            c.restore();
++        }
++        @Override public void setAlpha(int alpha){paint.setAlpha(alpha);invalidateSelf();}
++        @Override public void setColorFilter(ColorFilter filter){paint.setColorFilter(filter);invalidateSelf();}
++        @Override public int getOpacity(){return PixelFormat.TRANSLUCENT;}
++    }
++}
+--- before/HarmonyOS/pages/Index.ets
++++ after/HarmonyOS/pages/Index.ets
+@@ -4,6 +4,7 @@
+ import { picker, fileIo } from '@kit.CoreFileKit';
+ import { Row, WriteBody } from '../services/Models';
+ import { platform, PlatformFailure, secureMedia } from '../services/PlatformApi';
++import { SwodTheme } from '../services/SwodTheme';
+ 
+ interface Route { screen: string; title: string; path: string; auth: boolean; staff: boolean; eventID: number; groupID: number; }
+ interface VideoTime { time: number; }
+@@ -12,6 +13,7 @@
+ @Entry
+ @Component
+ struct Index {
++  @State private activeTab: string = 'home';
+   @State private route: Route = { screen: 'home', title: '线上学院', path: '/public/series', auth: false, staff: false, eventID: 0, groupID: 0 };
+   @State private rows: Row[] = [];
+   @State private detail: Row = {};
+@@ -65,6 +67,7 @@
+     this.route = previous; this.query = ''; this.rows = []; this.detail = {}; this.generation++; this.load();
+   }
+   private tab(screen: string, title: string, path: string, auth: boolean = false): void {
++    this.activeTab = screen;
+     this.history = []; this.go(screen, title, path, auth); this.history = [];
+   }
+   private async load(): Promise<void> {
+@@ -231,13 +234,41 @@
+     this.go('staffPayment', '登记实际缴费 / 退款', '', false, this.route.eventID, 0, true);
+   }
+   @Builder
+-  private action(label: string, submit: () => void) { Button(label).fontSize(14).fontColor('#9F1D20').backgroundColor('#F5EEEE').constraintSize({ minHeight: 48 }).width('100%').margin({ top: 4, bottom: 4 }).onClick(submit).enabled(!this.busy) }
++  private action(label: string, submit: () => void) { Button(label, { type: ButtonType.Normal }).fontSize(16).fontColor(SwodTheme.primary).backgroundColor(SwodTheme.surface).borderRadius(14).padding({ left: 16, right: 16, top: 14, bottom: 14 }).constraintSize({ minHeight: 52 }).width('100%').margin({ top: 4, bottom: 4 }).onClick(submit).enabled(!this.busy).accessibilityText(label) }
++  @Builder
++  private intro(title: string, subtitle: string) {
++    Column({ space: 8 }) {
++      Text(title).fontSize(26).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
++      Text(subtitle).fontSize(14).fontColor(SwodTheme.muted).width('100%')
++    }.alignItems(HorizontalAlign.Start).width('100%').padding({ top: 12, bottom: 16 })
++  }
++  @Builder
++  private shortcut(label: string, icon: Resource, submit: () => void, primary: boolean = false) {
++    Button({ type: ButtonType.Normal }) {
++      Column({ space: 8 }) { Image(icon).width(24).height(24); Text(label).fontSize(14).fontWeight(FontWeight.Medium).fontColor(SwodTheme.primary) }.padding(12)
++    }.layoutWeight(1).constraintSize({ minHeight: 88 }).borderRadius(14).backgroundColor(primary ? SwodTheme.tonal : SwodTheme.surface).onClick(submit).accessibilityText(label)
++  }
++  @Builder
++  private navItem(label: string, screen: string, icon: Resource, title: string, path: string, auth: boolean = false) {
++    Button({ type: ButtonType.Normal }) {
++      Column({ space: 6 }) {
++        Image(icon).width(24).height(24)
++        Text(label).fontSize(12).fontWeight(this.activeTab === screen ? FontWeight.Bold : FontWeight.Normal).fontColor(this.activeTab === screen ? SwodTheme.primary : SwodTheme.muted)
++      }.padding({ top: 10, bottom: 10 })
++    }.layoutWeight(1).constraintSize({ minHeight: 68 }).borderRadius(14).backgroundColor(this.activeTab === screen ? SwodTheme.tonal : SwodTheme.surface).onClick(() => this.tab(screen, title, path, auth)).accessibilityText(label + (this.activeTab === screen ? '，已选中' : ''))
++  }
+   @Builder
+   private card(row: Row) {
+-    Column({ space: 5 }) {
+-      Text(this.title(row)).fontSize(16).fontWeight(FontWeight.Medium).width('100%')
+-      if (this.summary(row)) { Text(this.summary(row)).fontSize(12).fontColor('#6A6262').width('100%') }
+-    }.padding(12).backgroundColor(Color.White).borderRadius(8).width('100%').constraintSize({ minHeight: 64 }).margin({ bottom: 6 }).onClick(() => this.tap(row))
++    Row({ space: 14 }) {
++      if (this.route.screen === 'home' || this.route.screen === 'offline') {
++        if (secureMedia(row.cover_image || '')) { Image(row.cover_image || '').width(96).height(88).objectFit(ImageFit.Cover).borderRadius(12).accessibilityLevel('no') }
++        else { Image($r('app.media.nav_learn_on')).width(96).height(88).objectFit(ImageFit.ScaleDown).backgroundColor(SwodTheme.tonal).borderRadius(12).accessibilityLevel('no') }
++      }
++      Column({ space: 8 }) {
++        Text(this.title(row)).fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
++        if (this.summary(row)) { Text(this.summary(row)).fontSize(14).fontColor(SwodTheme.muted).width('100%') }
++      }.layoutWeight(1).alignItems(HorizontalAlign.Start)
++    }.padding(16).backgroundColor(SwodTheme.surface).borderRadius(16).width('100%').constraintSize({ minHeight: 80 }).margin({ bottom: 8 }).onClick(() => this.tap(row)).accessibilityText(this.title(row) + '，' + this.summary(row) + '，查看详情')
+   }
+   @Builder
+   private loginForm() {
+@@ -282,23 +313,29 @@
+   @Builder
+   private content() {
+     if (this.route.screen === 'home') {
+-      Row({ space: 8 }) { Image($r('app.media.brand_logo')).width(36).height(36); Text('SWOD · 伊娃东方舞').fontSize(16) }.width('100%')
+-      this.action('继续学习', () => this.go('records', '最近学习', '/member/recent-courses', true))
+-      this.action('我的课程', () => this.go('records', '我的课程', '/member/authorized-series', true))
+-      this.action('学习助手 · 30 分钟练习', () => this.go('assistant', '学习助手'))
++      this.intro('伊娃东方舞', '线上学院 · 舞蹈作品 · 每天进步一点')
++      Row({ space: 10 }) {
++        this.shortcut('继续学习', $r('app.media.nav_learn_on'), () => this.go('records', '最近学习', '/member/recent-courses', true), true)
++        this.shortcut('我的课程', $r('app.media.nav_learn_on'), () => this.go('records', '我的课程', '/member/authorized-series', true))
++        this.shortcut('学习助手', $r('app.media.nav_person_on'), () => this.go('assistant', '学习助手'))
++      }.width('100%').margin({ bottom: 12 })
++      Text('探索课程').fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%').margin({ top: 8, bottom: 8 })
+     }
+     if (this.route.screen === 'assistant') { Text('30分钟：热身6 · 技巧18 · 复习6').fontSize(18); this.action('继续上次课程', () => this.go('records', '最近学习', '/member/recent-courses', true)) }
+-    if (this.route.screen === 'offline') { this.action('期次课时与核销', () => this.go('schedule', '期次课时', '/offline/overview', true)) }
++    if (this.route.screen === 'offline') { this.intro('线下课', '专业培训 · 期次课时 · 到课核销'); this.action('期次课时与核销', () => this.go('schedule', '期次课时', '/offline/overview', true)) }
+     if (this.route.screen === 'events') {
++      this.intro('东方舞赛事', '完整组别 · 节目报名 · 赛程与成绩')
+       this.action('我的报名与成绩', () => this.go('myEvents', '赛事记录', '/member/events', true))
+       this.action('工作人员 · 赛事管理', () => this.go(this.staffLoggedIn ? 'staffHome' : 'staffLogin', '赛事管理', this.staffLoggedIn ? '/event/competitions' : '', false, 0, 0, true))
+     }
++    if (this.route.screen === 'shop') { this.intro('伊娃甄选', '东方舞生活 · 官方商城') }
+     if (this.route.screen === 'login') { this.loginForm() }
+     if (this.route.screen === 'staffLogin') { this.staffForm() }
+     if (this.route.screen === 'staffEditor') { this.staffEditor() }
+     if (this.route.screen === 'staffPayment') { this.paymentForm() }
+     if (this.route.screen === 'staffHome') { this.action('退出赛事管理', () => { platform.staff = undefined; this.staffLoggedIn = false; this.go('staffLogin', '工作人员登录'); }) }
+     if (this.route.screen === 'account') {
++      this.intro(this.loggedIn ? '我的学习空间' : '欢迎来到伊娃东方舞', '课程、比赛、证书与订单')
+       if (!this.loggedIn) { this.action('手机号登录', () => this.go('login', '手机号登录')) }
+       else {
+         Text(this.detail.name || '我的学习空间').fontSize(18)
+@@ -388,29 +425,29 @@
+     if (this.route.screen === 'myEvents') { ForEach(this.detail.entries || [], (row: Row) => { this.card(row) }, (row: Row) => String(row.id)) }
+     if (this.route.screen === 'message') { Text(this.detail.content || '').fontSize(16) }
+     if (this.route.screen !== 'catalog' && this.rows.length > 0) {
+-      TextInput({ placeholder: '搜索名称、老师、组别或音乐', text: this.query }).onChange((v: string) => { this.query = v; })
++      TextInput({ placeholder: '搜索名称、老师、组别或音乐', text: this.query }).height(52).fontSize(16).fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).backgroundColor(SwodTheme.surface).borderRadius(12).onChange((v: string) => { this.query = v; })
+       ForEach(this.filtered(), (row: Row) => { this.card(row) }, (row: Row) => String(row.id || row.video_id || row.series_id))
+     }
+     if (this.route.screen === 'messages' && this.detail.hasMore) { this.action('下一页', () => this.go('messages', '学习消息', '/member/messages?limit=20&cursor=' + this.detail.nextCursor, true)) }
+-    if (this.busy) { LoadingProgress().width(32).height(32) }
+-    if (this.error) { Text(this.error).fontSize(14).fontColor('#9F1D20'); this.action('刷新', () => { this.load(); }); if (!this.loggedIn && this.route.auth && !this.route.staff) { this.action('手机号登录', () => this.go('login', '手机号登录')) } }
+-    if (!this.busy && !this.error && this.rows.length === 0 && ['home', 'offline', 'events', 'records', 'certificates'].includes(this.route.screen)) { Text('暂无可展示的记录').fontSize(14) }
++    if (this.busy) { Row({ space: 12 }) { LoadingProgress().width(24).height(24).color(SwodTheme.primary); Text('正在加载…').fontSize(14).fontColor(SwodTheme.muted) }.padding(20).width('100%').justifyContent(FlexAlign.Center) }
++    if (this.error) { Text(this.error).fontSize(14).fontColor(SwodTheme.primary); this.action('重新加载', () => { this.load(); }); if (!this.loggedIn && this.route.auth && !this.route.staff) { this.action('手机号登录', () => this.go('login', '手机号登录')) } }
++    if (!this.busy && !this.error && this.rows.length === 0 && ['home', 'offline', 'events', 'records', 'certificates'].includes(this.route.screen)) { Text('暂无可展示的记录，请稍后刷新').fontSize(14).fontColor(SwodTheme.muted).padding(24) }
+   }
+   build() {
+     Column({ space: 0 }) {
+       Row({ space: 8 }) {
+-        Button('‹').width(44).height(44).backgroundColor(Color.Transparent).fontColor('#9F1D20').onClick(() => this.back())
+-        Text(this.route.title).fontSize(18).fontWeight(FontWeight.Medium).layoutWeight(1)
+-        Button('刷新').height(44).backgroundColor(Color.Transparent).fontColor('#9F1D20').onClick(() => { this.load(); })
+-      }.padding({ left: 8, right: 8 }).width('100%')
+-      Scroll() { Column({ space: 8 }) { this.content() }.padding(12).width('100%') }.layoutWeight(1).width('100%')
+-      Row() {
+-        Button('学院').layoutWeight(1).height(52).fontSize(12).backgroundColor(Color.White).fontColor('#9F1D20').onClick(() => this.tab('home', '线上学院', '/public/series'))
+-        Button('线下课').layoutWeight(1).height(52).fontSize(12).backgroundColor(Color.White).fontColor('#9F1D20').onClick(() => this.tab('offline', '线下课程', '/public/offline-courses'))
+-        Button('赛事').layoutWeight(1).height(52).fontSize(12).backgroundColor(Color.White).fontColor('#9F1D20').onClick(() => this.tab('events', '东方舞赛事', '/events'))
+-        Button('商城').layoutWeight(1).height(52).fontSize(12).backgroundColor(Color.White).fontColor('#9F1D20').onClick(() => this.tab('shop', '商城', '/shop/products'))
+-        Button('我的').layoutWeight(1).height(52).fontSize(12).backgroundColor(Color.White).fontColor('#9F1D20').onClick(() => this.tab('account', '个人中心', platform.credentials ? '/member/profile' : '', true))
+-      }.width('100%')
+-    }.backgroundColor('#FAF8F6').width('100%').height('100%')
++        if (this.history.length > 0) { Button({ type: ButtonType.Normal }) { Image($r('app.media.nav_back_on')).width(24).height(24) }.width(48).height(48).backgroundColor(Color.Transparent).onClick(() => this.back()).accessibilityText('返回上一页') }
++        Text(this.route.title).fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).layoutWeight(1)
++        Button('刷新', { type: ButtonType.Normal }).constraintSize({ minWidth: 48, minHeight: 48 }).backgroundColor(Color.Transparent).fontColor(SwodTheme.primary).onClick(() => { this.load(); })
++      }.padding({ left: 20, right: 12, top: 6, bottom: 6 }).width('100%').backgroundColor(SwodTheme.surface)
++      Scroll() { Column({ space: 12 }) { this.content() }.alignItems(HorizontalAlign.Start).padding({ left: 20, right: 20, top: 12, bottom: 24 }).width('100%').constraintSize({ maxWidth: 760 }) }.layoutWeight(1).width('100%')
++      Row({ space: 4 }) {
++        this.navItem('线上学院', 'home', this.activeTab === 'home' ? $r('app.media.nav_learn_on') : $r('app.media.nav_learn'), '线上学院', '/public/series')
++        this.navItem('线下课', 'offline', this.activeTab === 'offline' ? $r('app.media.nav_calendar_on') : $r('app.media.nav_calendar'), '线下课程', '/public/offline-courses')
++        this.navItem('赛事', 'events', this.activeTab === 'events' ? $r('app.media.nav_trophy_on') : $r('app.media.nav_trophy'), '东方舞赛事', '/events')
++        this.navItem('商城', 'shop', this.activeTab === 'shop' ? $r('app.media.nav_bag_on') : $r('app.media.nav_bag'), '商城', '/shop/products')
++        this.navItem('我的', 'account', this.activeTab === 'account' ? $r('app.media.nav_person_on') : $r('app.media.nav_person'), '个人中心', platform.credentials ? '/member/profile' : '', true)
++      }.padding(6).width('100%').backgroundColor(SwodTheme.surface)
++    }.backgroundColor(SwodTheme.canvas).width('100%').height('100%')
+   }
+ }
+--- before/HarmonyOS/services/SwodTheme.ets
++++ after/HarmonyOS/services/SwodTheme.ets
+@@ -0,0 +1,9 @@
++/** Semantic color roles shared by the native pages and dark appearance. */
++export class SwodTheme {
++  static readonly canvas: ResourceColor = $r('app.color.swod_canvas');
++  static readonly surface: ResourceColor = $r('app.color.swod_surface');
++  static readonly ink: ResourceColor = $r('app.color.swod_ink');
++  static readonly muted: ResourceColor = $r('app.color.swod_muted');
++  static readonly primary: ResourceColor = $r('app.color.swod_primary');
++  static readonly tonal: ResourceColor = $r('app.color.swod_tonal');
++}
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/element/color.json
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/element/color.json
+@@ -3,6 +3,30 @@
+     {
+       "name": "start_window_background",
+       "value": "#FFFFFF"
++    },
++    {
++      "name": "swod_canvas",
++      "value": "#F5F6F8"
++    },
++    {
++      "name": "swod_surface",
++      "value": "#FFFFFF"
++    },
++    {
++      "name": "swod_ink",
++      "value": "#20242B"
++    },
++    {
++      "name": "swod_muted",
++      "value": "#626A77"
++    },
++    {
++      "name": "swod_primary",
++      "value": "#9F1D20"
++    },
++    {
++      "name": "swod_tonal",
++      "value": "#F9EDEC"
+     }
+   ]
+-}+}
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_back.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_back.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#626A77" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_back_on.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_back_on.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9F1D20" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_bag.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_bag.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#626A77" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="14" rx="2"/><path d="M8 7V6a4 4 0 0 1 8 0v1"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_bag_on.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_bag_on.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9F1D20" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="14" rx="2"/><path d="M8 7V6a4 4 0 0 1 8 0v1"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_calendar.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_calendar.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#626A77" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4m8-4v4M8 15h2m4 0h2"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_calendar_on.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_calendar_on.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9F1D20" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4m8-4v4M8 15h2m4 0h2"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_learn.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_learn.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#626A77" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 9 6 3-6 3Z"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_learn_on.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_learn_on.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9F1D20" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 9 6 3-6 3Z"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_person.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_person.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#626A77" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_person_on.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_person_on.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9F1D20" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_trophy.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_trophy.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#626A77" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10v6a5 5 0 0 1-10 0Zm0 1H3v4l4 3m10-7h4v4l-4 3m-5 3v7m-5 0h10"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_trophy_on.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/nav_trophy_on.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9F1D20" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10v6a5 5 0 0 1-10 0Zm0 1H3v4l4 3m10-7h4v4l-4 3m-5 3v7m-5 0h10"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/element/color.json
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/element/color.json
+@@ -3,6 +3,30 @@
+     {
+       "name": "start_window_background",
+       "value": "#000000"
++    },
++    {
++      "name": "swod_canvas",
++      "value": "#141619"
++    },
++    {
++      "name": "swod_surface",
++      "value": "#202328"
++    },
++    {
++      "name": "swod_ink",
++      "value": "#F3F4F6"
++    },
++    {
++      "name": "swod_muted",
++      "value": "#B5BAC4"
++    },
++    {
++      "name": "swod_primary",
++      "value": "#FFACA9"
++    },
++    {
++      "name": "swod_tonal",
++      "value": "#3C272A"
+     }
+   ]
+-}+}
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_back.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_back.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B5BAC4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_back_on.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_back_on.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFACA9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_bag.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_bag.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B5BAC4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="14" rx="2"/><path d="M8 7V6a4 4 0 0 1 8 0v1"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_bag_on.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_bag_on.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFACA9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="14" rx="2"/><path d="M8 7V6a4 4 0 0 1 8 0v1"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_calendar.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_calendar.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B5BAC4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4m8-4v4M8 15h2m4 0h2"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_calendar_on.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_calendar_on.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFACA9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4m8-4v4M8 15h2m4 0h2"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_learn.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_learn.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B5BAC4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 9 6 3-6 3Z"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_learn_on.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_learn_on.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFACA9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 9 6 3-6 3Z"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_person.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_person.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B5BAC4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_person_on.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_person_on.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFACA9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_trophy.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_trophy.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B5BAC4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10v6a5 5 0 0 1-10 0Zm0 1H3v4l4 3m10-7h4v4l-4 3m-5 3v7m-5 0h10"/></svg>
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_trophy_on.svg
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/media/nav_trophy_on.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFACA9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10v6a5 5 0 0 1-10 0Zm0 1H3v4l4 3m10-7h4v4l-4 3m-5 3v7m-5 0h10"/></svg>

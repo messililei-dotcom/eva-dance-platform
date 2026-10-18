@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-16",
+  "style": "简洁明亮，突出课程与内容",
+  "sourceFilesChanged": 36,
+  "nativeScreenshotCount": 20,
+  "nativeComparisonCount": 10,
+  "ios": {
+    "simulatorBuild": true,
+    "unsignedDeviceTargetBuild": true,
+    "iPadScreenshot": true,
+    "darkAppearanceScreenshot": true,
+    "accessibilityLargeScreenshot": true,
+    "released": false
+  },
+  "android": {
+    "unitTests": 6,
+    "failures": 0,
+    "releaseLintErrors": 0,
+    "releaseLintWarnings": 14,
+    "signedCandidate": true,
+    "darkAppearanceScreenshot": true,
+    "fontScale": "1.3",
+    "expandedRailScreenshot": true,
+    "released": false
+  },
+  "harmonyOS": {
+    "sourceUpdated": true,
+    "resourceIssues": [],
+    "svgResourcesChecked": 24,
+    "compiled": false,
+    "runtimeScreenshots": false,
+    "previewIsIllustration": true,
+    "blocker": "DevEco Studio / SDK not installed"
+  },
+  "productionWrites": false,
+  "realDeviceAcceptance": false,
+  "webDetector": "not applicable: product changes are native; comparison HTML checked separately"
+}

@@ -1,0 +1,46 @@
+[
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/CompetitionRecord.swift",
+    "sha256": "c52a8b54b2f8b1f174dbe11f2f8cc6d7a2b848bea1b960125c3d9d3d34375134"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift",
+    "sha256": "ac9568e854d8e37dcb95838955bc4db9959d0e6da00117aa5c873cb913d7e115"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift",
+    "sha256": "3833d87cf76513f7445ca2a2bc0026c2da578f4bfaf7d0a948cf4571cdbb128c"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/MyCompetitionsView.swift",
+    "sha256": "d8116007db2e28754046ed6819af86b94b58bcd9335c8325f6676459cd269c18"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "sha256": "7e5ac05cba0d29e9be0136e45d319a17b9452385e84aba763a0b02ad9835cabe"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "sha256": "bbce4c40eddf1eb121c67aecf6c920a689b88970a6d5c607d01114c24d54b6cd"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/CompetitionRecordTest.java",
+    "sha256": "8e19c6b380118de12992176d94220568c5d5d2d4faab7ef9f11e0b26d84f8c31"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+    "sha256": "caad6bdca4c07d69c5d003f964db482aa380a237d0c8400cc8a6eecf80dbda67"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets",
+    "sha256": "38f24a2cc3f0738d696a46aa7307de0ce5af5f13af638f6556d23af82c795a1c"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj",
+    "sha256": "f403d98997a30f0e7c4aea395eff301542b830b4e1b79f9e7ceecb5b0bbd6199"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Tests/EvaCoreTests/EvaCoreTests.swift",
+    "sha256": "579f6b026dc5324705db150f3d6a335ca7f3230d8da7fb6d8671567f833dcd9f"
+  }
+]

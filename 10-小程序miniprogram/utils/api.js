@@ -354,24 +354,6 @@ module.exports = {
     const ids = courseIds.map(Number).filter(id => Number.isSafeInteger(id) && id > 0);
     return request(`/offline/overview?member_id=${getMemberId()}${ids.length ? "&course_ids=" + ids.join(",") : ""}`);
   },
-  bookOfflineSession(sessionId) {
-    return request(`/offline/bookings?member_id=${getMemberId()}`, {
-      method: "POST",
-      data: { sessionId }
-    });
-  },
-  cancelOfflineBooking(bookingId, reason = "学员小程序取消") {
-    return request(`/offline/bookings/${bookingId}?member_id=${getMemberId()}`, {
-      method: "PATCH",
-      data: { reason }
-    });
-  },
-  checkinOfflineBooking(bookingId, checkinCode) {
-    return request(`/offline/checkin?member_id=${getMemberId()}`, {
-      method: "POST",
-      data: { bookingId, checkinCode }
-    });
-  },
   getHomeStats() {
     return request("/public/home-stats", { auth: false });
   },

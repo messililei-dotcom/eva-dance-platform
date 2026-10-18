@@ -86,6 +86,7 @@ export async function POST(request: Request) {
         WHERE gj.group_id = ? AND gj.judge_id = ?
       `).get(groupId, judgeId);
       if (!assignment) return jsonError('评委未分配到该组别');
+      if (assignment.status !== 'active') return jsonError('评委已退出该组别，不能评分');
       if ((!assignment.auth_enabled || !assignment.judge_auth_enabled || assignment.judge_status !== 'active') && !body.overrideAuth) {
         return jsonError('评委未授权或已停用');
       }

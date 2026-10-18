@@ -2,28 +2,12 @@
 <block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
 <block wx:else>
 <view class="page">
-  <view class="section-head hero-head">
-    <view>
-      <text class="section-kicker">线上学院精选课程</text>
-    </view>
+  <view class="academy-intro"><view class="academy-title">伊娃东方舞</view><view class="academy-desc">线上学院 · 从基础到进阶，找到适合你的课程</view></view>
+  <view class="learning-links">
+    <button bindtap="goMyCourses"><image src="/images/profile/book.svg"/><text>我的课程</text></button>
+    <button bindtap="goOffline"><image src="/images/profile/calendar.svg"/><text>课时与核销</text></button>
+    <button bindtap="goEvents"><image src="/images/profile/award.svg"/><text>报名与成绩</text></button>
   </view>
-
-  <swiper class="course-swiper" autoplay circular display-multiple-items="1" indicator-dots indicator-color="rgba(255,255,255,0.45)" indicator-active-color="#ffffff" wx:if="{{carouselCourses.length}}">
-    <swiper-item wx:for="{{carouselCourses}}" wx:key="id">
-      <view class="hero-slide" bindtap="goCard" data-id="{{item.id}}" data-source="{{item.sourceType}}">
-        <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" binderror="onImageError" data-path="carouselCourses[{{index}}].cover_image"></image>
-        <view wx:else class="cover-fallback">课程</view>
-        <view class="slide-shade"></view>
-        <view class="slide-content">
-          <view class="slide-badge">{{item.badge}}</view>
-          <view class="slide-title">{{item.title}}</view>
-          <view class="slide-meta">{{item.lessonText}} · {{item.popularityText}}</view>
-        </view>
-      </view>
-    </swiper-item>
-  </swiper>
-  <view wx:else class="empty-card">暂无精选课程</view>
-
   <view class="section-head list-head">
     <view>
       <text class="section-kicker">课程列表</text>
@@ -34,7 +18,7 @@
         <input
           class="search-input"
           value="{{searchKeyword}}"
-          placeholder="搜索"
+          placeholder="搜索课程、老师或分类"
           confirm-type="search"
           focus="{{searchFocused}}"
           bindinput="onSearchInput"
@@ -49,7 +33,9 @@
   </view>
   <view class="search-result" wx:if="{{searchCountText}}">{{searchCountText}}</view>
 
-  <view class="course-list" wx:if="{{courseRows.length}}">
+  <view wx:if="{{loading}}" class="empty-card">课程加载中…</view>
+  <view wx:elif="{{error}}" class="empty-card"><text>{{error}}</text><button class="all-btn" bindtap="loadHomeSections">重新加载</button></view>
+  <view class="course-list" wx:elif="{{courseRows.length}}">
     <view class="course-row" wx:for="{{courseRows}}" wx:key="id" bindtap="goCard" data-id="{{item.id}}" data-source="{{item.sourceType}}">
       <view class="row-cover">
         <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" binderror="onImageError" data-path="courseRows[{{index}}].cover_image"></image>
@@ -57,15 +43,16 @@
       </view>
       <view class="row-body">
         <view class="row-badge">{{item.badge}}</view>
-        <view class="row-title">{{item.title}}</view>
+        <view class="row-title">{{item.title}}</view><view class="row-teacher">{{item.meta}}</view>
 <view class="row-meta">
           <text>{{item.lessonText}}</text>
           <text>{{item.popularityText}}</text>
         </view>
+        <view wx:if="{{item.unlocked}}" class="course-unlocked">✓ 已解锁 <text class="course-learn-action">继续学习</text></view><view wx:else class="course-pricing"><text class="course-sale-price">{{item.hasDiscount ? '优惠价 ' : ''}}{{item.priceText}}</text><text wx:if="{{item.hasDiscount}}" class="course-original-price">原价 {{item.originalPriceText}}</text></view>
       </view>
     </view>
   </view>
-  <view wx:else class="empty-card">暂无课程数据</view>
+  <view wx:else class="empty-card">{{searchKeyword ? '没有找到相关课程，请换个关键词' : '课程即将更新，稍后再来看看'}}</view>
 
   <button class="bottom-all-btn" bindtap="goSystemCourses">查看全部课程</button>
 </view>

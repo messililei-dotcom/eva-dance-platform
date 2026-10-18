@@ -15,7 +15,11 @@ const INCOME_LEDGER_SQL = `
       ELSE '线下缴费'
     END AS evidence,
     order_no AS referenceNo,
-    COALESCE(NULLIF(title, ''), order_no) AS title,
+    COALESCE(
+      (SELECT c.name || CASE WHEN trim(COALESCE(c.subType,'')) <> '' THEN ' · ' || c.subType ELSE '' END
+       FROM Payment p JOIN Course c ON c.id=p.courseId
+       WHERE orders.source_type='offline-training' AND CAST(p.id AS TEXT)=orders.source_id),
+      NULLIF(title, ''), order_no) AS title,
     COALESCE(remark, '') AS itemMeta,
     COALESCE(member_name, '') AS subject,
     COALESCE(member_phone, '') AS subjectMeta,
@@ -42,7 +46,7 @@ const INCOME_LEDGER_SQL = `
       ELSE ''
     END AS itemMeta,
     COALESCE(NULLIF(memberName, ''), NULLIF(payer, ''), '') AS subject,
-    CASE WHEN COALESCE(memberId, 0) > 0 THEN 'member_id ' || memberId ELSE '' END AS subjectMeta,
+    '' AS subjectMeta,
     COALESCE(NULLIF(payment_method, ''), NULLIF(account, ''), '') AS payMethod,
     amount,
     'paid' AS status,
@@ -56,7 +60,7 @@ const INCOME_LEDGER_SQL = `
   SELECT 'authorization-income-' || id AS id, income_date AS date, category AS source,
     '学员授权' AS evidence, incomeNo AS referenceNo, title,
     '授权ID ' || id AS itemMeta, memberName AS subject,
-    'member_id ' || memberId AS subjectMeta, '' AS payMethod, amount,
+    '' AS subjectMeta, '' AS payMethod, amount,
     'paid' AS status, remark, 'finance-income' AS sourceKind
   FROM (${AUTHORIZATION_INCOME_SQL})
   WHERE date(income_date) <= date('now', 'localtime')

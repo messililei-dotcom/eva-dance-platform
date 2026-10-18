@@ -21,8 +21,14 @@ struct LoadState: View {
     @ObservedObject var store: SiteStore
     var retry: () -> Void
     var body: some View {
-        if store.busy { ProgressView("正在加载…") }
-        if let error = store.error { VStack(alignment: .leading, spacing: 8) { Text(error).foregroundStyle(.red); Button("重试", action: retry) } }
+        if store.busy { HStack(spacing: 12) { ProgressView(); Text("正在加载…").font(.subheadline).foregroundStyle(.secondary) }.frame(maxWidth: .infinity, minHeight: 64) }
+        if let error = store.error {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("内容暂未加载", systemImage: "wifi.exclamationmark").font(.headline)
+                Text(error).font(.subheadline).foregroundStyle(.secondary)
+                Button("重新加载", action: retry).buttonStyle(.bordered).frame(minHeight: 44)
+            }.padding(16).frame(maxWidth: .infinity, alignment: .leading).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14))
+        }
     }
 }
 struct AuthGate<Content: View>: View {
@@ -30,23 +36,33 @@ struct AuthGate<Content: View>: View {
     @ViewBuilder var content: () -> Content
     var body: some View {
         if session.token != nil { content() }
-        else { VStack(spacing: 20) { Image(systemName: "person.crop.circle").font(.system(size: 48)); Text("登录后查看个人学习与服务记录"); Button("手机号登录") { session.showLogin = true }.buttonStyle(.borderedProminent) }.padding() }
+        else { VStack(spacing: 20) { Image(systemName: "person.crop.circle").font(.largeTitle).foregroundStyle(EvaBrand.red); Text("登录后查看个人学习与服务记录").font(.headline).multilineTextAlignment(.center); Button("手机号登录") { session.showLogin = true }.buttonStyle(.borderedProminent).controlSize(.large) }.padding(28).frame(maxWidth: .infinity, maxHeight: .infinity).background(EvaBrand.canvas) }
     }
 }
 struct CourseCard: View {
+    var online = false
     let row: JSONValue
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            if let url = AppPolicy.secureMediaURL(row["cover_image"].text) {
-                AsyncImage(url: url) { image in image.resizable().scaledToFill() } placeholder: { Color.gray.opacity(0.12) }
-                    .frame(width: 96, height: 72).clipped().cornerRadius(8).accessibilityHidden(true)
-            }
-            VStack(alignment: .leading, spacing: 6) {
-                Text(row.firstText("name", "title")).font(.headline)
-                Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary)
+        HStack(alignment: .center, spacing: 14) {
+            ZStack {
+                EvaBrand.softAccent
+                if let url = AppPolicy.secureMediaURL(row["cover_image"].text) {
+                    AsyncImage(url: url) { image in image.resizable().scaledToFill() } placeholder: { Image(systemName: "play.rectangle").font(.title2).foregroundStyle(EvaBrand.red) }
+                } else { Image(systemName: "play.rectangle").font(.title2).foregroundStyle(EvaBrand.red) }
+            }.frame(width: 96, height: 88).clipped().clipShape(RoundedRectangle(cornerRadius: 12)).accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 7) {
+                Text(row.firstText("name", "title")).font(.headline).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
+                if !row.firstText("subtitle", "teacher", "category").isEmpty {
+                    Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                if !row["total_courses"].text.isEmpty {
+                    Text([row["teacher"].text, "\(row["total_courses"].text) 节课"].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
+                }
                 if !row["location"].text.isEmpty { Label(row["location"].text, systemImage: "mappin").font(.caption) }
+                if row["price"] != .null { CoursePriceLine(online: online, row: row) }
             }
-        }.padding(.vertical, 3)
+            Spacer(minLength: 0)
+        }.padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 struct DiscoverView: View {
@@ -55,62 +71,55 @@ struct DiscoverView: View {
     @State private var search = ""
     var rows: [SiteRow] { store.data.rows.filter { row in search.isEmpty || ["name", "subtitle", "teacher", "category"].contains { row.value[$0].text.localizedCaseInsensitiveContains(search) } } }
     var body: some View {
-        List {
-            if search.isEmpty && !store.data.list.isEmpty {
-                Section("线上学院精选课程") { CourseCarousel(courses: Array(store.data.rows.prefix(5))).listRowInsets(EdgeInsets()) }
-            }
-            LearningShortcuts().listRowSeparator(.hidden)
-            Section(search.isEmpty ? "课程列表 · 全部课程" : "搜索结果") {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 20) {
+                if search.isEmpty {
+                    BrandHeader(title: "伊娃东方舞", subtitle: "线上学院 · 舞蹈作品 · 每天进步一点", icon: "play.rectangle")
+                    LearningShortcuts()
+                }
+                HStack {
+                    Text(search.isEmpty ? "探索课程" : "搜索结果").font(.title3.bold())
+                    Spacer()
+                    if !store.busy && store.error == nil { Text("\(rows.count) 门课程").font(.subheadline).foregroundStyle(.secondary) }
+                }
                 LoadState(store: store) { Task { await load() } }
-                ForEach(rows) { row in NavigationLink { PublicCourseView(row: row.value) } label: { CourseCard(row: row.value) } }
-                if !store.busy && store.error == nil && rows.isEmpty { Text("暂无匹配课程") }
-            }
-            Section("品牌与资讯") { NavigationLink("了解伊娃东方舞") { InformationView() } }
-        }.evaCompactLayout().navigationTitle("线上学院").searchable(text: $search, prompt: "搜索课程、老师或分类")
-        .task { await load() }.refreshable { await load() }
+                ForEach(rows) { row in NavigationLink {
+                    if session.isCourseUnlocked(row.value["id"].text), let id = Int(row.value["id"].text) { CatalogByIDView(id: id, title: row.value["name"].text) }
+                    else { PublicCourseView(row: row.value) }
+                } label: {
+                    HStack(spacing: 4) { CourseCard(online: true, row: row.value); Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.secondary) }
+                        .padding(.horizontal, 14).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 16))
+                }.buttonStyle(.plain) }
+                if !store.busy && store.error == nil && rows.isEmpty { Label("暂无匹配课程，请换个关键词", systemImage: "magnifyingglass").foregroundStyle(.secondary).padding(.vertical, 24) }
+                NavigationLink { InformationView() } label: { Label("了解伊娃东方舞", systemImage: "info.circle").font(.subheadline).frame(minHeight: 44) }.padding(.top, 4)
+            }.padding(20).frame(maxWidth: 760).frame(maxWidth: .infinity)
+        }.evaHomeLayout().navigationTitle("线上学院").evaSearch(text: $search, prompt: "搜索课程、老师或分类")
+        .task(id: session.accountID) { await load() }.refreshable { await load() }
     }
-    private func load() async { await store.load("/public/series", session: session, publicRead: true) }
+    private func load() async { await session.refreshCourseAccess(); await store.load("/public/series", session: session, publicRead: true) }
 }
 struct PublicCourseView: View {
     @EnvironmentObject var session: Session
     let row: JSONValue
     var body: some View {
         List {
-            CourseCard(row: row)
+            CourseCard(online: true, row: row)
             if !row["description"].text.isEmpty { Text(plain(row["description"].text)).textSelection(.enabled) }
             Text("教师：\(row["teacher"].text)")
             Text("课节：\(row["total_courses"].text)")
             if let id = Int(row["id"].text), id > 0 {
-                NavigationLink("查看课程目录") {
+                NavigationLink(session.isCourseUnlocked(row["id"].text) ? "继续学习" : "查看课程目录") {
                     CatalogByIDView(id: id, title: row["name"].text)
                 }
             }
             if session.token == nil { Button("登录查看学习权限") { session.showLogin = true } }
-        }.evaCompactLayout().navigationTitle(row["name"].text)
+        }.evaCompactLayout().navigationTitle(row["name"].text).task(id: session.accountID) { await session.refreshCourseAccess() }
     }
 }
 struct CatalogByIDView: View {
-    @EnvironmentObject var session: Session
-    @StateObject private var store = SiteStore()
     let id: Int
     let title: String
-    var body: some View {
-        List {
-            LoadState(store: store) { Task { await load() } }
-            ForEach(store.data.rows) { unit in
-                Section(unit.value["name"].text) {
-                    ForEach(unit.value["videos"].rows) { lesson in
-                        if let lessonID = Int(lesson.id) {
-                            NavigationLink(unit.value["name"].text + (unit.value["videos"].list.count > 1 ? " · " + lesson.value["name"].text : "")) {
-                                AuthGate { PlayerView(lessonID: lessonID, title: unit.value["name"].text) }
-                            }
-                        }
-                    }
-                }
-            }
-        }.evaCompactLayout().navigationTitle(title).task { await load() }.refreshable { await load() }
-    }
-    private func load() async { await store.load("/public/series/\(id)/courses", session: session, publicRead: true) }
+    var body: some View { LessonCatalogView(id: id, title: title) }
 }
 struct OfflineView: View {
     @EnvironmentObject var session: Session
@@ -118,27 +127,42 @@ struct OfflineView: View {
     @State private var search = ""
     var body: some View {
         List {
-            BrandHeader(title: "线下课", subtitle: "报名获得课次 · 预约冻结课次 · 签到自动核销", icon: "calendar")
-            NavigationLink("我的课次、预约与签到") { AuthGate { OfflineScheduleView() } }
+            BrandHeader(title: "线下课", subtitle: "购买期次课时 · 到课核销扣减", icon: "calendar")
+            NavigationLink("课时余额与核销记录") { AuthGate { OfflineScheduleView() } }
             LoadState(store: store) { Task { await load() } }
-            ForEach(store.data.rows.filter { search.isEmpty || $0.value["name"].text.localizedCaseInsensitiveContains(search) }) { row in
-                NavigationLink { OfflineCourseDetailView(row: row.value) } label: { CourseCard(row: row.value) }
+            ForEach(JSONValue.array(CoursePresentation.grouped(store.data.list)).rows.filter { search.isEmpty || $0.value["name"].text.localizedCaseInsensitiveContains(search) }) { row in
+                NavigationLink { OfflineCourseDetailView(row: row.value, periods: CoursePresentation.periods(store.data.list, for: row.value)) } label: { CourseCard(row: row.value) }
             }
             if !store.busy && store.error == nil && store.data.list.isEmpty { Text("暂无线下课程") }
-        }.evaCompactLayout().navigationTitle("线下课程").searchable(text: $search, prompt: "搜索课程或期次").task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaHomeLayout().navigationTitle("线下课程").evaSearch(text: $search, prompt: "搜索课程或期次").task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/public/offline-courses", session: session, publicRead: true) }
 }
 struct OfflineCourseDetailView: View {
     let row: JSONValue
+    var periods: [JSONValue] = []
+    private var availablePeriods: [JSONValue] { periods.isEmpty ? [row] : periods }
     var body: some View {
         List {
             CourseCard(row: row)
-            Text(plain(row["description"].text))
-            Text("时间：\(row["start_date"].text) — \(row["end_date"].text)")
-            ForEach(Array(row["outline"].list.enumerated()), id: \.offset) { Text($0.element.text) }
-            if row["price"].number > 0 { NavigationLink("本期报名并付款") { AuthGate { OfflineCheckoutView(courseID:row["source_id"].text) } } }
-            NavigationLink("查看可预约课表") { AuthGate { OfflineScheduleView(courseID: row["source_id"].text) } }
+            Section("课程介绍") { Text(plain(CoursePresentation.description(row))).textSelection(.enabled) }
+            let intro = CoursePresentation.introduction(row)
+            if !intro["level"].text.isEmpty { Text("适合级别：\(intro["level"].text)") }
+            let outline = intro["outline"].list.isEmpty ? row["outline"].list : intro["outline"].list
+            if !outline.isEmpty { Section("课程大纲") { ForEach(Array(outline.enumerated()), id: \.offset) { Text("\($0.offset + 1). \($0.element.text)") } } }
+            Section("课程期次 · 共 \(availablePeriods.count) 期") {
+                ForEach(JSONValue.array(availablePeriods).rows) { period in
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(period.value.firstText("subtitle", "start_date")).font(.headline)
+                        Text([period.value["start_date"].text,period.value["end_date"].text,period.value["location"].text].filter { !$0.isEmpty }.joined(separator: " · ")).font(.subheadline).foregroundStyle(.secondary)
+                        Text("\(period.value["total_courses"].text) 课时 · ¥\(period.value["price"].text)")
+                        Text("已报名 \(period.value["total_students"].text) 人（匿名）").font(.caption).foregroundStyle(.secondary)
+                        if CoursePresentation.canPurchase(period.value) { NavigationLink("购买本期课时") { AuthGate { OfflineCheckoutView(courseID:period.value["source_id"].text) } }.frame(minHeight:44) }
+                        else { Text("本期暂不可购买，请查看期次安排或咨询课程顾问").font(.caption).foregroundStyle(.secondary) }
+                        NavigationLink("查看本期课时") { AuthGate { OfflineScheduleView(courseID:period.value["source_id"].text) } }.frame(minHeight:44)
+                    }.padding(.vertical, 8)
+                }
+            }
         }.evaCompactLayout().navigationTitle(row["name"].text)
     }
 }
@@ -146,45 +170,27 @@ struct OfflineScheduleView: View {
     @EnvironmentObject var session: Session
     @StateObject private var store = SiteStore()
     var courseID = ""
-    @State private var selectedBooking: SiteRow?
-    @State private var checkin = ""
-    @State private var confirmation: SiteRow?
     var body: some View {
         List {
             LoadState(store: store) { Task { await load() } }
-            Section("可用课次") {
+            Section("已购期次课时") {
+                Text("购买课程期次的课时，到课后核销扣减，无需预约。")
                 ForEach(store.data["entitlements"].scopedRows("entitlements"), id: \.listID) { row in
-                    LabeledContent(row.value["course_name"].text, value: "\(row.value["available_sessions"].text) 次")
+                    VStack(alignment: .leading) {
+                        Text([row.value["course_name"].text,row.value["course_period"].text].filter { !$0.isEmpty }.joined(separator: " · "))
+                        Text("剩余 \(row.value["available_sessions"].text) 课时 · 已核销 \(row.value["used_sessions"].text) 课时")
+                    }
                 }
             }
-            Section("可预约课表") {
-                ForEach(store.data["sessions"].scopedRows("sessions"), id: \.listID) { row in VStack(alignment: .leading, spacing: 8) {
-                    Text(row.value["course_name"].text).font(.headline)
-                    Text("\(row.value["session_date"].text) \(row.value["start_time"].text) · \(row.value.firstText("teacher", "location"))")
-                    Button(row.value["can_book"].bool ? "预约本节" : row.value["booking_reason"].text) { confirmation = row }
-                        .disabled(!row.value["can_book"].bool || store.busy)
-                } }
-            }
-            Section("我的预约") {
-                ForEach(store.data["bookings"].scopedRows("bookings"), id: \.listID) { row in VStack(alignment: .leading, spacing: 8) {
-                    Text(row.value["course_name"].text).font(.headline)
-                    Text("\(row.value["session_date"].text) \(row.value["start_time"].text) · \(statusLabel(row.value["status"].text))")
-                    if ["booked", "confirmed", "pending"].contains(row.value["status"].text) {
-                        Button("签到或取消预约") { selectedBooking = row }
+            Section("核销记录") {
+                ForEach(store.data["consumes"].scopedRows("consumes"), id: \.listID) { row in
+                    VStack(alignment: .leading) {
+                        Text(row.value["course_name"].text)
+                        Text("\(row.value["consume_date"].text) · 核销 \(row.value["count"].text) 课时")
                     }
-                } }
+                }
             }
-        }.evaCompactLayout().navigationTitle("课表与预约").task { await load() }.refreshable { await load() }
-        .confirmationDialog("确认预约此课程？", isPresented: Binding(get: {confirmation != nil}, set: {if !$0 {confirmation = nil}})) {
-            if let row = confirmation { Button("确认预约") { Task { if await store.send("/offline/bookings", body: ["sessionId":Int(row.id) ?? 0], session: session) != nil { await load() } } } }
-        }
-        .sheet(item: $selectedBooking) { row in NavigationStack { Form {
-            Text(row.value["course_name"].text)
-            TextField("现场签到码", text: $checkin)
-            Button("确认签到") { Task { if await store.send("/offline/checkin", body:["bookingId":Int(row.id) ?? 0,"checkinCode":checkin], session:session) != nil { selectedBooking = nil; await load() } } }.disabled(checkin.isEmpty || store.busy)
-            Button("取消本次预约", role: .destructive) { Task { if await store.send("/offline/bookings/\(row.id)", method:"PATCH", body:["reason":"学员 App 取消"], session:session) != nil { selectedBooking = nil; await load() } } }.disabled(store.busy)
-            if let error = store.error { Text(error).foregroundStyle(.red) }
-        }.evaCompactLayout().navigationTitle("预约管理").toolbar { Button("关闭") { selectedBooking = nil } } } }
+        }.evaCompactLayout().navigationTitle("期次课时").task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/offline/overview" + (courseID.isEmpty ? "" : "?course_ids=\(courseID)"), session: session) }
 }
@@ -196,7 +202,7 @@ struct EventsView: View {
         List {
             BrandHeader(title: "AiwaRaks赛事平台", subtitle: "赛事、报名、赛程与成绩", icon: "trophy")
             NavigationLink("工作人员 · 赛事管理") { StaffEventRootView() }
-            NavigationLink("我的报名与成绩") { AuthGate { RecordListView(title: "赛事记录", path: "/member/events", collectionKey: "entries", fields: [("赛事","competitionName"),("姓名","name"),("组别","groupName"),("审核","auditStatus"),("成绩","totalScore")]) } }
+            NavigationLink("我的比赛") { AuthGate { MyCompetitionsView() } }
             LoadState(store: store) { Task { await load() } }
             ForEach(store.data.rows.filter { search.isEmpty || $0.value["name"].text.localizedCaseInsensitiveContains(search) }) { row in
                 NavigationLink { EventDetailView(id: row.id) } label: { VStack(alignment: .leading, spacing: 6) {
@@ -204,7 +210,7 @@ struct EventsView: View {
                     Text("\(row.value.firstText("startDate","start_date")) · \(row.value.firstText("city","venue"))").foregroundStyle(.secondary)
                 }.padding(.vertical, 3) }
             }
-        }.evaCompactLayout().navigationTitle("东方舞赛事").searchable(text: $search).task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaHomeLayout().navigationTitle("东方舞赛事").evaSearch(text: $search, prompt: "搜索赛事名称").task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/events", session: session, publicRead: true) }
 }

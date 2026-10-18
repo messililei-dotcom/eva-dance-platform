@@ -650,6 +650,8 @@ export const trainingApi = {
 
 // ========== 网课系统 API ==========
 export const onlineCourseApi = {
+  getPromotion: async (): Promise<any> => (await api.get('/course/promotion')).data,
+  setPromotion: async (enabled: boolean, expectedRevision: string): Promise<any> => (await api.patch('/course/promotion', { enabled, expectedRevision })).data,
   getDashboard: async (): Promise<any> => {
     const res = await api.get('/course/admin/dashboard');
     return res.data;
@@ -796,6 +798,14 @@ export const onlineCourseApi = {
   },
   getMaterials: async (params?: QueryParams): Promise<any> => {
     const res = await api.get('/course/materials', { params });
+    return res.data;
+  },
+  getCourseMaterialOptions: async (params?: QueryParams): Promise<any> => {
+    const res = await api.get('/course/material-picker', { params });
+    return res.data;
+  },
+  getCourseMaterialFolderOptions: async (): Promise<any> => {
+    const res = await api.get('/course/material-picker/folders');
     return res.data;
   },
   getMaterialStorage: async (): Promise<any> => {

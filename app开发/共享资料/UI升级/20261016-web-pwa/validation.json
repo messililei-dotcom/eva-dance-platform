@@ -1,0 +1,76 @@
+{
+  "sourceUpdated": true,
+  "productionBuild": true,
+  "buildRuntime": "clean isolated Next 16.3.4 with matching SWC; product package files unchanged",
+  "typecheckPassed": true,
+  "targetedTests": 60,
+  "testFailures": 0,
+  "newComponentsLintPassed": true,
+  "mechanicalDesignScan": [],
+  "browser": {
+    "productionBusinessWrites": false,
+    "pages": [
+      {
+        "name": "home",
+        "status": 200,
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "name": "academy",
+        "status": 200,
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "name": "offline",
+        "status": 200,
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "name": "events",
+        "status": 200,
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "name": "shop",
+        "status": 200,
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "name": "profile",
+        "status": 200,
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "name": "academy",
+        "width": 320,
+        "touchTargets": true
+      },
+      {
+        "name": "academy",
+        "width": 430,
+        "touchTargets": true
+      }
+    ],
+    "errors": [],
+    "fixtures": "local browser responses only; no production login",
+    "searchWorks": true,
+    "errorRetryWorks": true,
+    "desktopPreserved": true,
+    "myCompetitionsPersonalRoute": true,
+    "standaloneLogicSimulated": true,
+    "legacyProfileStyled": true,
+    "passed": true
+  },
+  "pwaStandalone": "simulated display-mode logic; no physical installed-device acceptance",
+  "legacyProfile": "HTML fallback kept and visually synchronized",
+  "productionBusinessWrites": false,
+  "deployed": true,
+  "existingUnresolved": "pwa-auth-flow direct one-tap WeChat action test fails on unchanged baseline; authentication flow is outside this UI update",
+  "deploymentRecord": "deployment.json"
+}

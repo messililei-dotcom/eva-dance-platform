@@ -8,7 +8,10 @@ struct AccountView: View {
     var body: some View {
         List {
             if session.token == nil {
-                Section { Text("欢迎来到伊娃东方舞").font(.title2.bold()); Button("登录 / 注册") { session.showLogin = true } }
+                Section {
+                    BrandHeader(title: "欢迎来到伊娃东方舞", subtitle: "登录后同步课程、比赛、证书与订单", icon: "person.crop.circle")
+                    Button("登录 / 注册") { session.showLogin = true }.buttonStyle(.borderedProminent).foregroundStyle(EvaBrand.onAccent).controlSize(.large).frame(maxWidth: .infinity, minHeight: 48)
+                }
             } else {
                 Section {
                     BrandHeader(title: store.data["name"].text.isEmpty ? "我的学习空间" : store.data["name"].text, subtitle: "个人中心 · 与小程序共用学习账号", icon: "person.crop.circle")
@@ -18,7 +21,7 @@ struct AccountView: View {
                 }
                 Section("我的学习") {
                     NavigationLink("今日练习 · 智能学习助手") { StudyAssistantView() }
-                    NavigationLink("课程与学习记录") { CoursesView() }
+                    NavigationLink("我的课程") { CoursesView() }
                     NavigationLink("学习消息") { MessagesView() }
                     NavigationLink("成长与每日打卡") { GrowthView() }
                     NavigationLink("学习笔记") { StudyItemsView(kind: "notes") }
@@ -26,8 +29,8 @@ struct AccountView: View {
                     NavigationLink("我的证书") { CertificatesView() }
                 }
                 Section("我的服务") {
-                    NavigationLink("线下预约与签到") { OfflineScheduleView() }
-                    NavigationLink("报名与成绩") { RecordListView(title:"赛事记录",path:"/member/events",collectionKey:"entries",fields:[("赛事","competitionName"),("组别","groupName"),("审核","auditStatus"),("成绩","totalScore")]) }
+                    NavigationLink("课时余额与核销记录") { OfflineScheduleView() }
+                    NavigationLink("我的比赛") { MyCompetitionsView() }
                     NavigationLink("商城订单") { ShopOrdersView() }
                     NavigationLink("收货地址") { ShippingView() }
                     NavigationLink("课程缴费记录") { RecordListView(title:"课程缴费记录",path:"/member/payments",fields:[("课程","courseName"),("金额","amount"),("剩余课次","remainingSessions"),("日期","date")]) }
@@ -41,7 +44,7 @@ struct AccountView: View {
             }
             Section("工作人员") { NavigationLink("赛事管理工作台") { StaffEventRootView() } }
             Section("关于") { NavigationLink("帮助、品牌与隐私") { InformationView() }; Text("伊娃东方舞 1.0.0 (3)") }
-        }.evaCompactLayout().navigationTitle("个人中心").task(id:session.accountID) { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaHomeLayout().navigationTitle("个人中心").task(id:session.accountID) { await load() }.refreshable { await load() }
         .confirmationDialog("确认退出当前账号？",isPresented:$logout) { Button("退出登录",role:.destructive) { session.logout() } }
     }
     private func load() async { if session.token != nil { await store.load("/member/profile",session:session) } }

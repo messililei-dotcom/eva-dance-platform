@@ -9,6 +9,7 @@ function isVisible(element: HTMLElement) {
 
 function shouldKeepNativeEnter(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
+  if (target.closest('[data-enter-submit="off"]')) return true;
   if (target.isContentEditable) return true;
   if (target.tagName === 'TEXTAREA') return true;
   return false;

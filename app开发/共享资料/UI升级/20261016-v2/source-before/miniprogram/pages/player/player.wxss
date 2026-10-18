@@ -1,0 +1,293 @@
+.player-page {
+  min-height: 100vh;
+  background: #f5f2ec;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 422rpx;
+  background: #000;
+  overflow: hidden;
+}
+
+.video {
+  width: 100%;
+  height: 422rpx;
+  display: block;
+  background: #000;
+  object-fit: contain;
+}
+
+.video-top-controls {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6rpx);
+  transition: opacity 160ms ease, transform 160ms ease, visibility 160ms;
+  pointer-events: none;
+  z-index: 14;
+}
+
+.video-top-controls.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.video-quality-trigger,
+.video-fullscreen-trigger {
+  height: 64rpx;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 26rpx;
+  line-height: 64rpx;
+  text-align: center;
+  text-shadow: 0 1rpx 5rpx rgba(0, 0, 0, 0.72);
+}
+
+.video-quality-trigger {
+  min-width: 98rpx;
+  padding: 0 8rpx;
+}
+
+.video-fullscreen-trigger {
+  width: 64rpx;
+  font-size: 36rpx;
+}
+
+.quality-arrow {
+  display: inline-block;
+  margin-left: 2rpx;
+  font-size: 30rpx;
+  transform: rotate(90deg);
+}
+
+.video-quality-trigger::after,
+.video-fullscreen-trigger::after {
+  border: none;
+}
+
+.player-menu-backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 11;
+}
+
+.player-menu {
+  position: absolute;
+  top: 96rpx;
+  right: 20rpx;
+  width: 360rpx;
+  max-width: calc(100% - 40rpx);
+  padding: 22rpx;
+  border-radius: 12rpx;
+  background: rgba(18, 18, 18, 0.92);
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.32);
+  z-index: 13;
+}
+
+.player-menu-section + .player-menu-section {
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.16);
+}
+
+.player-menu-title {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 24rpx;
+  margin-bottom: 14rpx;
+}
+
+.player-menu-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.player-menu-option {
+  min-width: 88rpx;
+  padding: 12rpx 16rpx;
+  border-radius: 8rpx;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 24rpx;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.player-menu-option.active {
+  background: #8B1A1A;
+}
+
+/* 断点续播覆盖层 */
+.resume-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.resume-card {
+  background: white;
+  border-radius: 16rpx;
+  padding: 40rpx;
+  text-align: center;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2);
+}
+
+.resume-card text {
+  font-size: 28rpx;
+  color: #666;
+  display: block;
+  margin-bottom: 24rpx;
+}
+
+.resume-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.resume-btn, .restart-btn {
+  flex: 1;
+  padding: 16rpx 24rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+}
+
+.resume-btn {
+  background: #8B1A1A;
+  color: white;
+}
+
+.restart-btn {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* 训练目录 */
+.outline {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  background: white;
+}
+
+.outline-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.outline-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  justify-content: space-between;
+  padding: 20rpx 16rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+  font-size: 28rpx;
+}
+
+.outline-item.current {
+  background: #fff8f5;
+}
+
+.outline-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.outline-name {
+  display: block;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outline-status {
+  color: #999;
+  font-size: 24rpx;
+  flex-shrink: 0;
+  min-width: 92rpx;
+  text-align: right;
+}
+
+.outline-item.current .outline-status {
+  color: #8B1A1A;
+}
+
+.cast-note {
+  text-align: center;
+  color: #999;
+  font-size: 24rpx;
+  padding: 20rpx 0;
+}
+
+.playback-summary{display:flex;align-items:center;gap:18rpx;margin-top:16rpx;color:#7d8490;font-size:22rpx}.playback-summary button{height:52rpx;margin:0 0 0 auto;padding:0 22rpx;border-radius:999rpx;color:#fff;background:#9f1d20;font-size:22rpx;line-height:52rpx;font-weight:800}.playback-summary button::after{border:0}.catalog-search{display:flex;align-items:center;gap:12rpx;margin-bottom:12rpx}.catalog-search input{min-width:0;height:64rpx;flex:1;padding:0 20rpx;border:1rpx solid #e4ddd4;border-radius:999rpx;background:#f8f6f2;font-size:23rpx}.catalog-search button{height:60rpx;margin:0;padding:0 18rpx;color:#9f1d20;background:transparent;font-size:22rpx;line-height:60rpx}.catalog-search button::after{border:0}.catalog-result{padding:4rpx 8rpx 12rpx;color:#8b8174;font-size:21rpx}
+.player-placeholder{position:relative;width:100%;height:100%;min-height:420rpx;overflow:hidden;background:#17191e}.placeholder-cover{width:100%;height:100%}.placeholder-shade{position:absolute;inset:0;background:rgba(14,16,20,.58)}.placeholder-content{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}.placeholder-text{color:#fff;font-size:28rpx;font-weight:800}.start-video-btn,.authorization-btn{padding:18rpx 32rpx;border-radius:999rpx;color:#fff;background:#8b1a1a;font-size:27rpx;font-weight:900}.playback-error{max-width:82%;color:#fff;text-align:center}.playback-error text{display:block;font-size:24rpx;line-height:1.6}.playback-error button{width:210rpx;height:66rpx;margin-top:18rpx;border-radius:999rpx;color:#fff;background:#8b1a1a;font-size:23rpx;line-height:66rpx}.player-tabs{display:grid;grid-template-columns:repeat(3,1fr);margin-top:20rpx;padding:0 12rpx}.player-tab{padding:24rpx 8rpx;text-align:center;color:#7d8490;font-size:25rpx;font-weight:800;border-bottom:4rpx solid transparent}.player-tab.active{color:#8b1a1a;border-bottom-color:#8b1a1a}.outline-index{display:flex;align-items:center;justify-content:center;width:48rpx;height:48rpx;border-radius:50%;color:#fff;background:#3b4654;font-size:22rpx;font-weight:900}.outline-duration{display:block;margin-top:7rpx;color:#999;font-size:21rpx}.notes-panel,.intro-panel{margin-top:20rpx;padding:24rpx}.note-item{display:flex;gap:16rpx;padding:18rpx 0;border-bottom:1rpx solid #eee}.note-time{color:#8b1a1a;font-size:22rpx;font-weight:900}.note-text{flex:1;font-size:25rpx;line-height:1.6}.note-input{box-sizing:border-box;width:100%;height:150rpx;margin-top:20rpx;padding:18rpx;border-radius:14rpx;background:#f5f6f7;font-size:24rpx}.save-note-btn{height:72rpx;margin-top:14rpx;border-radius:999rpx;color:#fff;background:#8b1a1a;font-size:25rpx;line-height:72rpx;font-weight:900}.panel-empty{padding:50rpx 20rpx;color:#9298a1;text-align:center;font-size:24rpx}.intro-title{margin-bottom:16rpx;font-size:30rpx;font-weight:900}.intro-text{color:#666f7a;font-size:25rpx;line-height:1.8}
+
+.video-pip-trigger { display: flex; align-items: center; justify-content: center; width: 64rpx; height: 64rpx; padding: 0; margin: 0; background: rgba(0,0,0,.6); border-radius: 50%; }
+.video-pip-trigger::after { border: none; }
+.pip-icon { width: 32rpx; height: 24rpx; border: 2rpx solid white; position: relative; border-radius: 3rpx; }
+.pip-icon view { position: absolute; right: 3rpx; bottom: 3rpx; width: 13rpx; height: 9rpx; background: white; }
+.video-container.player-fullscreen { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 9999; }
+.player-fullscreen .video { width: 100%; height: 100%; }
+.player-fullscreen .video-top-controls { top: max(20rpx, env(safe-area-inset-top)); }
+
+/* Match the website's mobile toolbar: 40px controls, 16px icons, 12px labels. */
+.video-top-controls { top: 8px; right: 8px; max-width: calc(100% - 16px); gap: 4px; padding: 4px 6px; border-radius: 12px; background: rgba(0,0,0,.7); }
+.video-top-controls button { display: flex; align-items: center; justify-content: center; flex-shrink: 0; height: 40px; min-width: 0; margin: 0; padding: 0 8px; border-radius: 20px; color: white; background: rgba(0,0,0,.6); font-size: 12px; line-height: 40px; font-weight: 600; }
+.video-top-controls .video-quality-trigger { padding: 0 4px; background: transparent; }
+.video-top-controls .video-pip-trigger,.video-top-controls .video-fullscreen-trigger { width: 40px; padding: 0; }
+.video-top-controls .video-fullscreen-trigger { font-size: 22px; }
+.video-top-controls .active { background: #2f80ed; }
+.quality-arrow { font-size: 14px; }
+.pip-icon { width: 16px; height: 12px; border-width: 1px; }
+.pip-icon view { width: 7px; height: 5px; right: 1px; bottom: 1px; }
+.video.mirrored { transform: scaleX(-1); }
+.player-menu { top: 60px; right: 8px; width: 180px; max-height: calc(100% - 68px); overflow-y: auto; padding: 12px; }
+.player-menu-option { min-width: 44px; min-height: 32px; font-size: 12px; }
+.video-section-controls,.video-transport { position: absolute; left: 8px; right: 8px; display: flex; align-items: center; gap: 8px; z-index: 10; opacity: 0; pointer-events: none; }
+.video-section-controls.visible,.video-transport.visible { opacity: 1; pointer-events: auto; }
+.video-section-controls { bottom: 48px; justify-content: space-between; }
+.lesson-controls { display: flex; gap: 4px; padding: 4px; border-radius: 24px; background: rgba(0,0,0,.6); }
+.video-section-controls button,.video-transport button { margin: 0; padding: 0 8px; height: 32px; line-height: 32px; color: white; font-size: 12px; background: transparent; border-radius: 20px; }
+.video-section-controls button[disabled] { opacity: .35; }
+.video-transport { bottom: 4px; height: 40px; padding: 0 4px; border-radius: 8px; color: white; background: rgba(0,0,0,.7); }
+.video-transport text { flex-shrink: 0; font-size: 10px; }
+.video-transport slider { flex: 1; min-width: 0; margin: 0 4px; }
+.video-transport button { flex-shrink: 0; padding: 0 4px; min-width: 32px; }
+.outline-status { min-width: 44rpx; }
+.outline-name { white-space: normal; line-height: 1.5; }
+/* Override WeChat's default full-width button rule inside compact controls. */
+.video-top-controls button,.video-section-controls button,.video-transport button,.playback-summary button { width: auto; flex: 0 0 auto; }
+.video-top-controls .video-pip-trigger,.video-top-controls .video-fullscreen-trigger { width: 40px; }
+
+.catalog-pagination { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; padding: 6px 8px; border: 1px solid #e8ddcb; border-radius: 6px; background: #fffdf8; color: #a98746; font-size: 12px; font-weight: 600; }
+.catalog-pagination button { flex: 0 0 28px; width: 28px; height: 28px; margin: 0; padding: 0; border: 1px solid #e8ddcb; border-radius: 6px; background: #fff; color: #a98746; font-size: 20px; line-height: 26px; }
+.catalog-pagination button[disabled] { opacity: .4; }
+
+.autoplay-countdown{position:absolute;left:12px;right:12px;top:45%;z-index:40;display:flex;align-items:center;gap:10px;padding:12px;color:#fff;background:rgba(0,0,0,.78);border-radius:12px;font-size:12px}.autoplay-countdown text{flex:1}.autoplay-countdown button{width:auto;margin:0;padding:0 12px;font-size:12px;line-height:40px;min-height:40px;background:#9f1d20;color:#fff}.note-time{display:block}

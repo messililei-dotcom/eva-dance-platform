@@ -1,0 +1,3 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<view wx:else class="page"><view wx:if="{{loading}}">正在加载订单…</view><view wx:if="{{error}}" class="error">{{error}}<button bindtap="reload">重新加载</button></view><view wx:if="{{offer}}" class="card"><view class="title">{{offer.name}}</view><view>{{offer.period}}</view><view class="price">¥{{offer.priceText}}</view><view>{{kind === 'event' ? '付款后自动登记本组别报名费用，可到赛事详情或个人中心查看缴费状态。' : kind === 'online' ? '付款后自动开通本账号课程学习权限，无需快递地址。' : '付款后开通本期课次，可到个人中心预约上课。'}}</view><button class="pay" loading="{{busy}}" disabled="{{busy || !paymentEnabled}}" bindtap="submit">微信支付</button></view><button bindtap="orders">我的订单／继续付款</button></view>

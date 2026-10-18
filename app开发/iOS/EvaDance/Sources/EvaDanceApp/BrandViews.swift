@@ -1,26 +1,45 @@
 import SwiftUI
 import EvaCore
+#if os(iOS)
+import UIKit
+#endif
 
 enum EvaBrand {
+    #if os(iOS)
+    static let red = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark ? UIColor(red: 1, green: 0.67, blue: 0.66, alpha: 1) : UIColor(red: 0.624, green: 0.114, blue: 0.125, alpha: 1)
+    })
+    #else
     static let red = Color(red: 0.624, green: 0.114, blue: 0.125)
+    #endif
     static let gold = Color(red: 0.725, green: 0.588, blue: 0.322)
     static let gradient = LinearGradient(colors: [red, gold], startPoint: .topLeading, endPoint: .bottomTrailing)
+    #if os(iOS)
+    static let canvas = Color(uiColor: .systemGroupedBackground)
+    static let surface = Color(uiColor: .secondarySystemGroupedBackground)
+    static let onAccent = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .black : .white })
+    #else
+    static let canvas = Color.gray.opacity(0.06)
+    static let surface = Color(nsColor: .controlBackgroundColor)
+    static let onAccent = Color.white
+    #endif
+    static let softAccent = red.opacity(0.07)
 }
 struct BrandHeader: View {
+    @ScaledMetric(relativeTo: .title2) private var badgeSize = 44
     let title: String
     let subtitle: String
     var icon = "sparkles"
     var body: some View {
-        HStack(alignment: .center, spacing: 10) {
-            Image(systemName: icon).font(.title2).frame(width: 38, height: 38)
-                .background(.white.opacity(0.15), in: Circle()).accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 5) {
-                Text(title).font(.headline)
-                Text(subtitle).font(.caption).fixedSize(horizontal: false, vertical: true)
+        HStack(alignment: .center, spacing: 14) {
+            Image(systemName: icon).font(.title2).foregroundStyle(EvaBrand.red)
+                .frame(width: badgeSize, height: badgeSize).background(EvaBrand.softAccent, in: RoundedRectangle(cornerRadius: 12)).accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title).font(.title3.bold()).foregroundStyle(.primary)
+                Text(subtitle).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
-        }.padding(12).foregroundStyle(.white).frame(maxWidth: .infinity, alignment: .leading)
-            .background(EvaBrand.gradient, in: RoundedRectangle(cornerRadius: 18))
+        }.padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 struct CourseHero: View {
@@ -59,11 +78,13 @@ struct CompactLearningLayout: ViewModifier {
     func body(content: Content) -> some View {
         #if os(iOS)
         content.navigationBarTitleDisplayMode(.inline)
-            .listStyle(.plain)
-            .environment(\.defaultMinListRowHeight, 44)
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(EvaBrand.canvas)
+            .environment(\.defaultMinListRowHeight, 52)
             .environment(\.defaultMinListHeaderHeight, 24)
         #else
-        content.listStyle(.plain)
+        content.listStyle(.inset)
         #endif
     }
 }
@@ -71,16 +92,50 @@ extension View {
     func evaCompactLayout() -> some View { modifier(CompactLearningLayout()) }
 }
 struct LearningShortcuts: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     var body: some View {
-        HStack(spacing: 5) {
-            NavigationLink { AuthGate { CoursesView() } } label: { shortcut("继续学习", "play.circle") }
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 12)) : AnyLayout(HStackLayout(spacing: 10))
+        layout {
+            NavigationLink { AuthGate { CoursesView() } } label: { shortcut("继续学习", "play.fill", primary: true) }
             NavigationLink { AuthGate { StudyAssistantView() } } label: { shortcut("学习助手", "sparkles") }
             NavigationLink { UnifiedSearchView() } label: { shortcut("全站搜索", "magnifyingglass") }
         }.buttonStyle(.plain)
     }
-    private func shortcut(_ title: String, _ icon: String) -> some View {
-        VStack(spacing: 5) { Image(systemName: icon).foregroundStyle(EvaBrand.red); Text(title).font(.caption) }
-            .frame(maxWidth: .infinity, minHeight: 48).padding(.vertical, 4)
-            .background(EvaBrand.red.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+    private func shortcut(_ title: String, _ icon: String, primary: Bool = false) -> some View {
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(HStackLayout(spacing: 16)) : AnyLayout(VStackLayout(spacing: 9))
+        return layout { Image(systemName: icon).font(.title3); Text(title).font(.subheadline.weight(.medium)) }
+            .foregroundStyle(primary ? EvaBrand.onAccent : EvaBrand.red)
+            .frame(maxWidth: .infinity, minHeight: 80).padding(.vertical, 4)
+            .background(primary ? EvaBrand.red : EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14))
+            .contentShape(RoundedRectangle(cornerRadius: 14))
+            .accessibilityElement(children: .combine)
+    }
+}
+
+/// A single content-first treatment for the five native destinations.
+struct EvaHomeLayout: ViewModifier {
+    func body(content: Content) -> some View {
+        #if os(iOS)
+        content.navigationBarTitleDisplayMode(.large).background(EvaBrand.canvas)
+            .toolbar {
+                #if DEBUG
+                if ProcessInfo.processInfo.environment["EVA_API_BASE"] != nil {
+                    ToolbarItem(placement: .navigationBarTrailing) { Text("测试数据").font(.caption2).foregroundStyle(.secondary).accessibilityLabel("本地测试数据，非真实课程") }
+                }
+                #endif
+            }
+        #else
+        content.background(EvaBrand.canvas)
+        #endif
+    }
+}
+extension View {
+    func evaHomeLayout() -> some View { modifier(EvaHomeLayout()) }
+    @ViewBuilder func evaSearch(text: Binding<String>, prompt: String) -> some View {
+        #if os(iOS)
+        searchable(text: text, placement: .navigationBarDrawer(displayMode: .always), prompt: prompt)
+        #else
+        searchable(text: text, prompt: prompt)
+        #endif
     }
 }

@@ -28,10 +28,10 @@
     "navigationBarTitleText": "伊娃东方舞·东方舞圈",
     "navigationBarBackgroundColor": "#FFFFFF",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#F6F6F6"
+    "backgroundColor": "#F6F7F9"
   },
   "tabBar": {
-    "color": "#8C8172",
+    "color": "#616773",
     "selectedColor": "#9F1D20",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "black",

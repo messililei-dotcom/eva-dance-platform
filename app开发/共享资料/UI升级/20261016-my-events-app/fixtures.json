@@ -1,0 +1,31 @@
+{
+  "entries": [
+    {
+      "playerId": "71",
+      "competitionId": "1",
+      "competitionName": "本地测试 · 东方舞交流赛",
+      "groupName": "成人组",
+      "entrantName": "测试学员",
+      "performanceTitle": "基础练习",
+      "auditStatus": "approved",
+      "paidStatus": "paid",
+      "startDate": "2026-11-01",
+      "resultPublished": true,
+      "totalScore": 0,
+      "rankNo": 2
+    },
+    {
+      "playerId": "72",
+      "competitionId": "1",
+      "competitionName": "本地测试 · 东方舞交流赛",
+      "groupName": "进阶组",
+      "entrantName": "测试学员",
+      "auditStatus": "pending",
+      "paidStatus": "unpaid",
+      "startDate": "2026-11-01",
+      "resultPublished": false,
+      "totalScore": 99,
+      "rankNo": 1
+    }
+  ]
+}

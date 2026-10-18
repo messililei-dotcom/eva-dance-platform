@@ -1,0 +1,11 @@
+{
+  "date": "2026-10-16",
+  "platforms": [
+    "iOS",
+    "Android",
+    "HarmonyOS"
+  ],
+  "style": "简洁明亮，突出课程与内容",
+  "workdir": "/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/swod-ui-upgrade-w3j01b73",
+  "evidence": "Before images must match current working tree; HarmonyOS runtime unavailable until verified."
+}

@@ -4,6 +4,7 @@
 <block wx:if="{{videoPlaybackEnabled}}">
 <view class="player-page">
   <view class="video-container {{isPlayerFullscreen ? 'player-fullscreen' : ''}}">
+    <cover-view wx:if="{{holdingSpeed}}" class="hold-speed-hint">2 倍播放 · 松手恢复</cover-view>
     <video
       wx:if="{{playUrl}}"
       id="courseVideo"
@@ -22,6 +23,10 @@
       vslide-gesture="{{isPlayerFullscreen}}"
       vslide-gesture-in-fullscreen="{{true}}"
       enable-play-gesture="{{false}}"
+      bindtouchstart="onHoldStart"
+      bindtouchmove="onHoldMove"
+      bindtouchend="endHoldSpeed"
+      bindtouchcancel="endHoldSpeed"
       bindtap="onPlayerTap"
       bindplay="onVideoPlay"
       bindtimeupdate="onTimeUpdate"
@@ -73,7 +78,7 @@
       <view class="placeholder-shade"></view>
       <view class="placeholder-content">
         <view wx:if="{{loading}}" class="placeholder-text">课程加载中…</view>
-        <button wx:elif="{{authorizationRequired}}" class="authorization-btn" bindtap="requestAuthorization">申请课程授权</button>
+        <button wx:elif="{{authorizationRequired}}" class="authorization-btn" bindtap="requestAuthorization">{{course.canPurchase ? '购买并开通课程' : '申请课程授权'}}</button>
         <view wx:elif="{{playbackError}}" class="playback-error"><text>{{playbackError}}</text><button bindtap="startCurrentVideo">重新加载</button></view>
         <button wx:else class="start-video-btn" bindtap="startCurrentVideo">{{resumeSeconds > 0 ? '续播本节课程' : '播放本节课程'}}</button>
       </view>
@@ -84,33 +89,35 @@
     <view class="video-card card">
       <view class="title">{{video.name || course.name || '课程介绍'}}</view>
       <view class="meta">{{course.subtitle || course.teacher || '伊娃东方舞线上学院'}}</view>
+      <view wx:if="{{course.accessPending}}">学习权益暂无法确认，请刷新</view><view class="course-purchase" wx:if="{{course.priceText || course.unlocked}}"><text wx:if="{{course.unlocked}}" class="course-unlocked">✓ 已解锁</text><block wx:else><view class="course-pricing"><text class="course-sale-price">{{course.hasDiscount ? '优惠价 ' : ''}}{{course.priceText}}</text><text wx:if="{{course.hasDiscount}}" class="course-original-price">原价 {{course.originalPriceText}}</text></view><button wx:if="{{course.canPurchase && !courseAuthorized}}" bindtap="buyCourse">立即购买</button><text wx:elif="{{courseAuthorized}}">免费学习</text></block></view>
       <view class="progress-track"><view class="progress-fill" style="width: {{percent}}%;"></view></view>
       <view class="playback-summary"><text>学习进度 {{percent}}%</text><text wx:if="{{resumeSeconds > 0}}">上次看到 {{resumeSeconds}} 秒</text><button wx:if="{{videoId && !isPlaying && !loading}}" bindtap="resumePlayback">{{resumeSeconds > 0 || currentSeconds > 0 ? '续播' : '播放'}}</button></view>
     </view>
 
     <view class="player-tabs card">
-      <view class="player-tab {{activePanel === 'catalog' ? 'active' : ''}}" data-panel="catalog" bindtap="switchPanel">目录({{outline.length}}节)</view>
-      <view class="player-tab {{activePanel === 'notes' ? 'active' : ''}}" data-panel="notes" bindtap="switchPanel">笔记</view>
-      <view class="player-tab {{activePanel === 'intro' ? 'active' : ''}}" data-panel="intro" bindtap="switchPanel">简介</view>
+      <button class="player-tab {{activePanel === 'catalog' ? 'active' : ''}}" data-panel="catalog" bindtap="switchPanel" aria-label="课程目录，共{{outline.length}}节">目录 <text class="tab-count">{{outline.length}}</text></button>
+      <button class="player-tab {{activePanel === 'notes' ? 'active' : ''}}" data-panel="notes" bindtap="switchPanel">笔记</button>
+      <button class="player-tab {{activePanel === 'intro' ? 'active' : ''}}" data-panel="intro" bindtap="switchPanel">简介</button>
     </view>
 
     <view wx:if="{{activePanel === 'catalog'}}" id="courseCatalog" class="outline card">
-      <view class="catalog-search"><input value="{{catalogQuery}}" placeholder="搜索课节" confirm-type="search" bindinput="onCatalogSearch"/><button wx:if="{{catalogQuery}}" bindtap="clearCatalogSearch">清空</button></view>
+      <view class="catalog-heading"><view><view class="catalog-title">课节目录</view><view class="catalog-caption">共 {{outline.length}} 节<text wx:if="{{selectedOrdinal}}"> · 当前第 {{selectedOrdinal}} 节</text></view></view><button wx:if="{{selectedOrdinal}}" class="locate-lesson" bindtap="locateCurrentLesson">定位当前</button></view>
+      <view class="catalog-search"><view class="catalog-search-icon" aria-hidden="true"></view><input value="{{catalogQuery}}" placeholder="搜索课节名称" aria-label="搜索课节名称" confirm-type="search" bindinput="onCatalogSearch"/><button wx:if="{{catalogQuery}}" bindtap="clearCatalogSearch" aria-label="清空课节搜索">清空</button></view>
       <view wx:if="{{catalogResultText}}" class="catalog-result">{{catalogResultText}}</view>
       <view class="catalog-pagination" wx:if="{{catalogPageCount > 1}}">
-        <button disabled="{{catalogPage <= 1}}" data-offset="-1" data-position="top" bindtap="changeCatalogPage" aria-label="上一页课节">‹</button>
-        <text>{{catalogFrom}}–{{catalogTo}} / {{catalogTotal}} · {{catalogPage}}/{{catalogPageCount}}页</text>
-        <button disabled="{{catalogPage >= catalogPageCount}}" data-offset="1" data-position="top" bindtap="changeCatalogPage" aria-label="下一页课节">›</button>
+        <button disabled="{{catalogPage <= 1}}" data-offset="-1" data-position="top" bindtap="changeCatalogPage" aria-label="上一页课节">上一页</button>
+        <view class="pagination-summary"><text>第 {{catalogPage}} / {{catalogPageCount}} 页</text><text class="pagination-range">{{catalogFrom}}–{{catalogTo}} 节 · 共 {{catalogTotal}} 节</text></view>
+        <button disabled="{{catalogPage >= catalogPageCount}}" data-offset="1" data-position="top" bindtap="changeCatalogPage" aria-label="下一页课节">下一页</button>
       </view>
-      <view class="outline-item {{item.videoId == videoId ? 'current' : ''}}" wx:for="{{visibleOutline}}" wx:key="videoId" data-id="{{item.videoId}}" bindtap="switchVideo">
+      <view id="lesson-{{item.videoId}}" class="outline-item {{item.videoId == videoId ? 'current' : ''}} {{item.progressPercent >= 100 ? 'completed' : ''}}" wx:for="{{visibleOutline}}" wx:key="videoId" data-id="{{item.videoId}}" bindtap="switchVideo" aria-role="button" aria-label="第{{item.ordinal}}节，{{item.name}}，{{item.videoId == videoId ? '当前课节' : item.progressPercent >= 100 ? '已学完' : '选择播放'}}">
         <view class="outline-index">{{item.ordinal}}</view>
-        <view class="outline-info"><text class="outline-name">{{item.name}}</text><text class="outline-duration">{{item.durationText}}</text></view>
-<text class="outline-status">{{item.progressPercent}}%</text>
+        <view class="outline-info"><text class="outline-name">{{item.name}}</text><view class="outline-meta"><text class="outline-duration">{{item.durationText || '时长待更新'}}</text><text wx:if="{{item.videoId == videoId}}" class="current-lesson-label">{{isPlaying ? '播放中' : '当前课节'}}</text></view></view>
+        <text class="outline-status">{{item.progressPercent >= 100 ? '已学完' : item.progressPercent > 0 ? '已学 ' + item.progressPercent + '%' : '未开始'}}</text>
       </view>
       <view class="catalog-pagination" wx:if="{{catalogPageCount > 1}}">
-        <button disabled="{{catalogPage <= 1}}" data-offset="-1" data-position="bottom" bindtap="changeCatalogPage" aria-label="上一页课节">‹</button>
-        <text>{{catalogFrom}}–{{catalogTo}} / {{catalogTotal}} · {{catalogPage}}/{{catalogPageCount}}页</text>
-        <button disabled="{{catalogPage >= catalogPageCount}}" data-offset="1" data-position="bottom" bindtap="changeCatalogPage" aria-label="下一页课节">›</button>
+        <button disabled="{{catalogPage <= 1}}" data-offset="-1" data-position="bottom" bindtap="changeCatalogPage" aria-label="上一页课节">上一页</button>
+        <view class="pagination-summary"><text>第 {{catalogPage}} / {{catalogPageCount}} 页</text><text class="pagination-range">{{catalogFrom}}–{{catalogTo}} 节 · 共 {{catalogTotal}} 节</text></view>
+        <button disabled="{{catalogPage >= catalogPageCount}}" data-offset="1" data-position="bottom" bindtap="changeCatalogPage" aria-label="下一页课节">下一页</button>
       </view>
       <view wx:if="{{!visibleOutline.length}}" class="panel-empty">{{catalogQuery ? '未找到匹配课节' : '当前课程暂未配置可播放视频'}}</view>
     </view>

@@ -1,0 +1,73 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
+<view class="page">
+  <view class="section-head hero-head">
+    <view>
+      <text class="section-kicker">线上学院精选课程</text>
+    </view>
+  </view>
+
+  <swiper class="course-swiper" autoplay circular display-multiple-items="1" indicator-dots indicator-color="rgba(255,255,255,0.45)" indicator-active-color="#ffffff" wx:if="{{carouselCourses.length}}">
+    <swiper-item wx:for="{{carouselCourses}}" wx:key="id">
+      <view class="hero-slide" bindtap="goCard" data-id="{{item.id}}" data-source="{{item.sourceType}}">
+        <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" binderror="onImageError" data-path="carouselCourses[{{index}}].cover_image"></image>
+        <view wx:else class="cover-fallback">课程</view>
+        <view class="slide-shade"></view>
+        <view class="slide-content">
+          <view class="slide-badge">{{item.badge}}</view>
+          <view class="slide-title">{{item.title}}</view>
+          <view class="slide-meta">{{item.lessonText}} · {{item.popularityText}}</view>
+        </view>
+      </view>
+    </swiper-item>
+  </swiper>
+  <view wx:else class="empty-card">暂无精选课程</view>
+
+  <view class="section-head list-head">
+    <view>
+      <text class="section-kicker">课程列表</text>
+    </view>
+    <view class="list-actions">
+      <button class="all-btn" bindtap="goSystemCourses">全部课程</button>
+      <view class="inline-search {{searchKeyword ? 'has-keyword' : ''}}">
+        <input
+          class="search-input"
+          value="{{searchKeyword}}"
+          placeholder="搜索"
+          confirm-type="search"
+          focus="{{searchFocused}}"
+          bindinput="onSearchInput"
+          bindconfirm="onSearchConfirm"
+        />
+        <button wx:if="{{searchKeyword}}" class="search-clear-btn" aria-label="清空搜索" bindtap="onClearSearch">×</button>
+        <button class="search-icon-btn" aria-label="搜索" bindtap="onSearchButtonTap">
+          <view class="search-icon"></view>
+        </button>
+      </view>
+    </view>
+  </view>
+  <view class="search-result" wx:if="{{searchCountText}}">{{searchCountText}}</view>
+
+  <view class="course-list" wx:if="{{courseRows.length}}">
+    <view class="course-row" wx:for="{{courseRows}}" wx:key="id" bindtap="goCard" data-id="{{item.id}}" data-source="{{item.sourceType}}">
+      <view class="row-cover">
+        <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" binderror="onImageError" data-path="courseRows[{{index}}].cover_image"></image>
+        <view wx:else class="cover-fallback">课程</view>
+      </view>
+      <view class="row-body">
+        <view class="row-badge">{{item.badge}}</view>
+        <view class="row-title">{{item.title}}</view>
+<view class="row-meta">
+          <text>{{item.lessonText}}</text>
+          <text>{{item.popularityText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  <view wx:else class="empty-card">暂无课程数据</view>
+
+  <button class="bottom-all-btn" bindtap="goSystemCourses">查看全部课程</button>
+</view>
+
+</block>

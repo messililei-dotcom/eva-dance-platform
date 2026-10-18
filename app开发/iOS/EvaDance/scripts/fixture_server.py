@@ -43,7 +43,7 @@ class Handler(BaseHTTPRequestHandler):
   if path=='/member/messages':return self.reply(dict(items=[dict(id='1',recipientId='9',title='课程更新',content='练习内容已更新。本条为本地测试消息。',status='unread',createdAt='2026-10-02')],unreadCount=1,nextCursor=0,hasMore=False))
   if path=='/certificates':return self.reply([dict(id=1,certificateNo='FIXTURE-001',courseName='基础训练结业',issueDate='2026-10-02',status='active',verifyUrl='')])
   if path=='/member/growth':return self.reply(dict(growth=dict(level_display='初学者',experience_total=120),ledger=[dict(id=1,description='完成练习',points_delta=10,occurred_at='2026-10-02')]))
-  if path=='/offline/overview':return self.reply(dict(entitlements=[dict(id=1,course_name='周末集训',available_sessions=3)],sessions=[dict(id=1,course_name='周末集训',session_date='2026-10-10',start_time='10:00',can_book=1,teacher='测试老师')],bookings=[]))
+  if path=='/offline/overview':return self.reply(dict(entitlements=[dict(id=1,course_name='周末集训',course_period='2026年10月',available_sessions=3,used_sessions=1)],consumes=[dict(id=1,course_name='周末集训',consume_date='2026-10-10',count=1)]))
   if path=='/shop/shipping':
    if method=='PUT':shipping.update(body)
    return self.reply(dict(shipping=shipping))

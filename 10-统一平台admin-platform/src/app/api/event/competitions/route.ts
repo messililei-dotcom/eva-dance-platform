@@ -1,3 +1,4 @@
+import { competitionOwner, saveCompetitionAdmins } from '../_competition-owner';
 import {
   cleanText,
   competitionSelectSql,
@@ -53,7 +54,9 @@ export async function POST(request: Request) {
   const name = cleanText(body.name);
   if (!name) return jsonError('赛事名称不能为空');
 
-  return withRequestEventDb(request, (db) => {
+  return withRequestEventDb(request, (db) => db.transaction(() => {
+    const owner = competitionOwner(request, db, body, db.eventActorId || 0);
+    if (owner.error) return jsonError(owner.error, owner.status);
     const code = cleanText(body.code, generateCode('SWOD'));
     const result = db.prepare(`
       INSERT INTO event_competitions (
@@ -80,10 +83,11 @@ export async function POST(request: Request) {
       0,
       0,
       String(db.eventActorId || ''),
-      db.eventActorId || 0,
+      owner.id,
       nowIso(),
     );
 
+    saveCompetitionAdmins(db, result.lastInsertRowid, body, owner);
     return Response.json({ success: true, data: { id: result.lastInsertRowid } });
-  });
+  })());
 }

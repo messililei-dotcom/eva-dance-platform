@@ -26,7 +26,7 @@
       <button size="mini" data-id="{{item.id}}" bindtap="copyPaymentDetails">复制订单付款信息</button>
       <view class="policy">可长按保存原图；若当前设备无法扫码，请使用另一台设备扫描。截图仅辅助核对，不代表已到账；已付款请等待核实，不要重复付款。</view>
     </view>
-    <button wx:if="{{item.kind === 'offline_training' && item.status === 'paid'}}" size="mini" data-id="{{item.id}}" bindtap="requestReschedule" disabled="{{sending || item.reschedule_pending}}">{{item.reschedule_pending ? '改期申请处理中' : '联系客服修改约课时间'}}</button>
+    <button wx:if="{{item.kind === 'offline_training' && item.status === 'paid'}}" size="mini" data-id="{{item.id}}" bindtap="requestReschedule" disabled="{{sending || item.reschedule_pending}}">{{item.reschedule_pending ? '改期申请处理中' : '联系客服咨询期次'}}</button>
     <view class="reference">订单号：{{item.id}}</view>
     <view class="policy">退款规则：{{item.refund_policy}}</view>
   </view>

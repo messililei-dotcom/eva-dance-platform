@@ -1,0 +1,55 @@
+{
+  "status": "NOT_READY",
+  "packageName": "cn.com.swod.app",
+  "versionName": "1.0.0",
+  "versionCode": 5,
+  "productionWrites": false,
+  "checks": {
+    "manifest": {
+      "passed": true
+    },
+    "resourceXML": {
+      "passed": true
+    },
+    "sdk": {
+      "passed": true,
+      "licenseAccepted": true
+    },
+    "privateSigningConfig": {
+      "passed": true
+    },
+    "signedAPK": {
+      "passed": true,
+      "path": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/Android/发布准备包/20261016/installers/SWOD-1.0.0-5-release.apk",
+      "apkExists": true,
+      "sha256": "90a4a51f5121b0f796f11d131ad6c7fe1af20e8d3937a2ca76f1cc8a5c5a8b4e",
+      "certificateMatchesFiling": true
+    },
+    "publicCourses": {
+      "passed": true,
+      "httpStatus": 200
+    },
+    "appConfig": {
+      "passed": true,
+      "httpStatus": 200
+    },
+    "appProducts": {
+      "passed": true,
+      "httpStatus": 200
+    },
+    "invalidSessionDenied": {
+      "passed": true,
+      "httpStatus": 401
+    },
+    "deviceAcceptance": {
+      "passed": false
+    },
+    "filingAndStoreMaterial": {
+      "passed": false
+    }
+  },
+  "blockers": [
+    "deviceAcceptance",
+    "filingAndStoreMaterial"
+  ]
+}

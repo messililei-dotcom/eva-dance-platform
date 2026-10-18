@@ -1,0 +1,27 @@
+{
+  "线下课": {
+    "titleVisible": true,
+    "visibleTextCount": 16
+  },
+  "赛事": {
+    "titleVisible": true,
+    "visibleTextCount": 20
+  },
+  "商城": {
+    "titleVisible": true,
+    "visibleTextCount": 20
+  },
+  "个人中心": {
+    "titleVisible": true,
+    "visibleTextCount": 17
+  },
+  "loginConsentValidation": true,
+  "backNavigation": true,
+  "fatalException": false,
+  "ANR": false,
+  "productionBusinessWrites": false,
+  "physicalDeviceVerified": false,
+  "testedPackage": "cn.com.swod.app",
+  "testedAPK": "1.0.0 (5) Release",
+  "androidAPI": 36
+}

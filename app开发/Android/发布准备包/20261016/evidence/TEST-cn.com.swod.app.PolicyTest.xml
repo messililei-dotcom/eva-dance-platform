@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.com.swod.app.PolicyTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-16T07:02:42.761Z" hostname="Eva-Mac-mini.local" time="0.001">
+  <properties/>
+  <testcase name="neverRouteAccountOrWritesToPublicAPI" classname="cn.com.swod.app.PolicyTest" time="0.001"/>
+  <testcase name="rejectMissingAndMultiplyEncodedRoutes" classname="cn.com.swod.app.PolicyTest" time="0.0"/>
+  <testcase name="rejectUnsafePlaybackAndCertificateLinks" classname="cn.com.swod.app.PolicyTest" time="0.0"/>
+  <testcase name="acceptOnlyCompleteAppSessionTokens" classname="cn.com.swod.app.PolicyTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

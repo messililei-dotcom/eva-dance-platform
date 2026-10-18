@@ -1,0 +1,542 @@
+--- before/public/sw.js
++++ after/public/sw.js
+@@ -1,7 +1,7 @@
+ /* 伊娃东方舞 PWA Service Worker
+  * 原则：只缓存公开页面与静态资源；登录、学习进度、视频和 API 始终走网络。
+  */
+-const VERSION = 'swod-pwa-v11-black-pwa-20261006';
++const VERSION = 'swod-pwa-v12-content-ui-20261016';
+ const STATIC_CACHE = `${VERSION}-static`;
+ const PAGE_CACHE = `${VERSION}-pages`;
+ const OFFLINE_URL = '/offline.html';
+--- before/public/manifest.json
++++ after/public/manifest.json
+@@ -13,8 +13,8 @@
+     "minimal-ui"
+   ],
+   "orientation": "any",
+-  "background_color": "#ffffff",
+-  "theme_color": "#140304",
++  "background_color": "#f6f7f9",
++  "theme_color": "#ffffff",
+   "categories": [
+     "education",
+     "lifestyle"
+@@ -74,4 +74,4 @@
+       ]
+     }
+   ]
+-}+}
+--- before/public/manifest-20261006.json
++++ after/public/manifest-20261006.json
+@@ -13,8 +13,8 @@
+     "minimal-ui"
+   ],
+   "orientation": "any",
+-  "background_color": "#ffffff",
+-  "theme_color": "#140304",
++  "background_color": "#f6f7f9",
++  "theme_color": "#ffffff",
+   "categories": [
+     "education",
+     "lifestyle"
+@@ -74,4 +74,4 @@
+       ]
+     }
+   ]
+-}+}
+--- before/scripts/mobile-navigation.test.mjs
++++ after/scripts/mobile-navigation.test.mjs
+@@ -3,7 +3,8 @@
+ import test from 'node:test';
+ 
+ const read = path => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
+-const navbar = read('src/components/Navbar_v2.tsx');
++// Ignore type-only annotations while checking the navigation behavior.
++const navbar = read('src/components/Navbar_v2.tsx').replaceAll(': MouseEvent<HTMLAnchorElement>', '');
+ const floatingToolbar = read('src/components/FloatingToolbar.tsx');
+ const navigation = read('src/config/navigation.ts');
+ const profilePage = read('src/app/dashboard/profile/page.tsx');
+--- before/src/app/layout.tsx
++++ after/src/app/layout.tsx
+@@ -1,5 +1,7 @@
++import BottomNav from '@/components/BottomNav';
+ import type { Metadata } from 'next';
+ import './globals.css';
++import './mobile-app.css';
+ import Navbar from '@/components/Navbar_v2';
+ import Footer from '@/components/Footer_v2';
+ import FloatingToolbar from '@/components/FloatingToolbar';
+@@ -55,7 +57,7 @@
+   return (
+     <html lang="zh-CN">
+       <head>
+-        <meta name="theme-color" content="#140304" />
++        <meta name="theme-color" content="#ffffff" />
+         <meta name="mobile-web-app-capable" content="yes" />
+         <link rel="apple-touch-startup-image" href="/splash/iphone-1290x2796-20261005.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
+         <link rel="apple-touch-startup-image" href="/splash/iphone-1179x2556-20261005.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" />
+@@ -76,6 +78,7 @@
+         <WechatShareBridge />
+         <PWAInstallPrompt />
+         <main className="site-main overflow-x-hidden">{children}</main>
++        <BottomNav />
+         <Footer />
+       </body>
+     </html>
+--- before/src/app/page.tsx
++++ after/src/app/page.tsx
+@@ -1,3 +1,4 @@
++import MobileAcademy from '@/components/MobileAcademy';
+ import StatsMapSection from '@/components/sections/StatsMapSection';
+ import BrandStorySection from '@/components/sections/BrandStorySection';
+ import QuickCardsSection from '@/components/sections/QuickCardsSection';
+@@ -19,6 +20,8 @@
+   const initialStats = await getPlatformHomeStats();
+ 
+   return (
++    <>
++    <div className="md:hidden"><MobileAcademy limit={8} /></div>
+     <div className="home-complete-shell">
+         {/* 1. Stats & Map - 用数字说话（核心数据 + 学员分布地图） */}
+         <StatsMapSection initialStats={initialStats} discipleCount={disciples.length} />
+@@ -53,5 +56,6 @@
+         {/* 11. CTA */}
+         <CTASection />
+     </div>
++    </>
+   );
+ }
+--- before/src/components/Navbar_v2.tsx
++++ after/src/components/Navbar_v2.tsx
+@@ -265,7 +265,7 @@
+   const mobileUserButton = mobileStudent ? (
+     <Link
+       href="/dashboard/profile"
+-      onClick={(event) => navigateFromMobileMenu(event, '/dashboard/profile')}
++      onClick={(event: MouseEvent<HTMLAnchorElement>) => navigateFromMobileMenu(event, '/dashboard/profile')}
+       className="mobile-user-action relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/70 bg-white/55 text-[#8B1A1A] shadow-sm backdrop-blur-md transition-colors hover:bg-white"
+       aria-label="进入个人中心"
+     >
+@@ -294,11 +294,11 @@
+ 
+   return (
+     <>
+-      <header className="fixed inset-x-0 top-0 z-[10060] px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)] md:hidden">
+-        <div className="flex h-12 items-center justify-between rounded-2xl border border-white/55 bg-white/68 px-2.5 shadow-[0_10px_30px_rgba(44,24,16,0.12)] backdrop-blur-xl">
++      <header className="mobile-site-header fixed inset-x-0 top-0 z-[10060] px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)] md:hidden">
++        <div className="mobile-site-header-inner flex h-12 items-center justify-between rounded-2xl border border-white/55 bg-white/68 px-2.5 shadow-[0_10px_30px_rgba(44,24,16,0.12)] backdrop-blur-xl">
+           <Link
+             href="/"
+-            onClick={(event) => navigateFromMobileMenu(event, '/')}
++            onClick={(event: MouseEvent<HTMLAnchorElement>) => navigateFromMobileMenu(event, '/')}
+             className="flex min-w-0 items-center gap-2"
+             aria-label="伊娃东方舞首页"
+           >
+@@ -548,7 +548,7 @@
+                   <div className="flex items-center gap-2">
+                     <Link
+                       href="/dashboard/profile"
+-                      onClick={(event) => navigateFromMobileMenu(event, '/dashboard/profile')}
++                      onClick={(event: MouseEvent<HTMLAnchorElement>) => navigateFromMobileMenu(event, '/dashboard/profile')}
+                       className="flex min-w-0 flex-1 items-center gap-2"
+                       aria-label="进入个人中心"
+                     >
+@@ -573,7 +573,7 @@
+                     </Link>
+                     <Link
+                       href="/dashboard/messages"
+-                      onClick={(event) => navigateFromMobileMenu(event, '/dashboard/messages')}
++                      onClick={(event: MouseEvent<HTMLAnchorElement>) => navigateFromMobileMenu(event, '/dashboard/messages')}
+                       className="mobile-student-message-link relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#9F1D20] transition hover:bg-white"
+                       aria-label={unreadMessageCount ? `我的消息，${unreadMessageCount}条未读` : '我的消息'}
+                     >
+@@ -603,7 +603,7 @@
+                       >
+                         <Link
+                           href={item.href}
+-                          onClick={(event) => navigateFromMobileMenu(event, item.href)}
++                          onClick={(event: MouseEvent<HTMLAnchorElement>) => navigateFromMobileMenu(event, item.href)}
+                           className="flex min-h-10 flex-1 items-center px-3 py-2 text-sm font-semibold"
+                         >
+                           <span>{item.label}</span>
+@@ -621,7 +621,7 @@
+                     ) : (
+                       <Link
+                         href={item.href}
+-                        onClick={(event) => navigateFromMobileMenu(event, item.href)}
++                        onClick={(event: MouseEvent<HTMLAnchorElement>) => navigateFromMobileMenu(event, item.href)}
+                         className={cn(
+                           'flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold transition-colors',
+                           isActive ? 'bg-[#F8F3EA] text-[#9F1D20]' : 'hover:bg-[#F8F3EA]'
+@@ -645,7 +645,7 @@
+                           <Link
+                             key={child.label}
+                             href={child.href}
+-                            onClick={(event) => navigateFromMobileMenu(event, child.href)}
++                            onClick={(event: MouseEvent<HTMLAnchorElement>) => navigateFromMobileMenu(event, child.href)}
+                             className="block rounded-lg px-3 py-1.5 text-xs font-medium text-[#7B6B5B] transition-colors hover:bg-[#F8F3EA] hover:text-[#9F1D20]"
+                           >
+                             {child.label}
+--- before/src/components/BottomNav.tsx
++++ after/src/components/BottomNav.tsx
+@@ -1,57 +1,22 @@
+-'use client';
+-
++"use client";
+ import { usePathname } from 'next/navigation';
+ import Link from 'next/link';
+-import { cn } from '@/lib/utils';
+-
+-const navItems = [
+-  { href: '/', icon: '🏠', label: '首页' },
+-  { href: '/courses', icon: '📚', label: '课程' },
+-  { href: '/offline', icon: '🏫', label: '线下' },
+-  { href: '/about', icon: '✨', label: '关于' },
+-  { href: '/contact', icon: '📞', label: '联系' },
++import { BookOpen, CalendarDays, Trophy, ShoppingBag, UserRound } from 'lucide-react';
++import { activeMobileTab, type MobileTab } from '@/lib/mobile-app-navigation';
++const items: {key:MobileTab;href:string;label:string;icon:typeof BookOpen}[] = [
++  {key:'academy',href:'/courses',label:'线上学院',icon:BookOpen},
++  {key:'offline',href:'/offline',label:'线下课',icon:CalendarDays},
++  {key:'events',href:'/events',label:'赛事',icon:Trophy},
++  {key:'shop',href:'/shop',label:'商城',icon:ShoppingBag},
++  {key:'profile',href:'/dashboard/profile',label:'个人中心',icon:UserRound},
+ ];
+-
+-export default function BottomNav() {
+-  const pathname = usePathname();
+-  const hideOnVideoLearning = /^\/courses\/[^/]+\/videos(?:\/|$)/.test(pathname || '');
+-
+-  if (hideOnVideoLearning) return null;
+-
+-  return (
+-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#1A1A1A]/95 backdrop-blur-xl border-t border-white/10 md:hidden safe-area-bottom">
+-      <div className="flex items-center justify-around h-14 px-2">
+-        {navItems.map((item) => {
+-          const isActive = pathname === item.href || 
+-            (item.href !== '/' && pathname?.startsWith(item.href));
+-          
+-          return (
+-            <Link
+-              key={item.href}
+-              href={item.href}
+-              className={cn(
+-                'flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 px-2 rounded-lg transition-all duration-200',
+-                isActive 
+-                  ? 'text-[#C8A96E]' 
+-                  : 'text-gray-400 hover:text-gray-200'
+-              )}
+-            >
+-              <span className={cn(
+-                'text-lg leading-none transition-transform duration-200',
+-                isActive && 'scale-110'
+-              )}>
+-                {item.icon}
+-              </span>
+-              <span className={cn(
+-                'text-[10px] font-medium leading-none',
+-                isActive && 'font-semibold'
+-              )}>
+-                {item.label}
+-              </span>
+-            </Link>
+-          );
+-        })}
+-      </div>
+-    </nav>
+-  );
++export default function BottomNav(){
++  const pathname=usePathname() || '/';
++  if (/^\/courses\/[^/]+\/videos(?:\/|$)/.test(pathname)) return null;
++  const active=activeMobileTab(pathname);
++  return <nav className="mobile-app-tabbar" aria-label="主要功能导航">
++    {items.map(item=><Link key={item.key} href={item.href} aria-current={active===item.key?'page':undefined} className={active===item.key?'is-active':''}>
++      <item.icon aria-hidden="true" size={23} strokeWidth={1.8}/><span>{item.label}</span>
++    </Link>)}
++  </nav>;
+ }
+--- before/src/components/OfflineHub.tsx
++++ after/src/components/OfflineHub.tsx
+@@ -7,7 +7,7 @@
+   const [entry, setEntry] = useState(() => parseOfflineEntry(''));
+   useEffect(() => { const sync = () => setEntry(parseOfflineEntry(window.location.search)); sync(); window.addEventListener('popstate', sync); return () => window.removeEventListener('popstate', sync); }, []);
+   function update(tab: OfflineTab, courseIds = entry.courseIds) { const next = {tab,courseIds}; setEntry(next); window.history.pushState(null, '', offlineEntryUrl(next)); }
+-  return <div className="pt-20 md:pt-24">
++  return <div data-mobile-surface="offline" className="mobile-offline-surface pt-20 md:pt-24">
+     <nav aria-label="线下课程功能" className="mx-auto grid max-w-5xl grid-cols-3 gap-2 px-4">
+       {([{key:'courses',label:'全部课程'},{key:'consumes',label:'核销记录'},{key:'rights',label:'我的课时'}] as const).map(item => <button key={item.key} onClick={() => update(item.key)} className={`rounded-full py-3 text-sm font-semibold ${entry.tab===item.key?'bg-[#9F1D20] text-white':'border border-[#E8DDCB] bg-white text-[#7B6B5B]'}`}>{item.label}</button>)}
+     </nav>
+--- before/src/components/OfflineCourseCatalog.tsx
++++ after/src/components/OfflineCourseCatalog.tsx
+@@ -196,7 +196,7 @@
+   };
+ 
+   return (
+-    <div>
++    <div className="mobile-offline-catalog">
+       {/* Header */}
+       <section className="relative overflow-hidden bg-gradient-to-br from-crimson via-crimson-dark to-gold-dark pb-10 pt-8 md:pb-14 md:pt-10">
+         <div className="absolute inset-0 opacity-20">
+@@ -211,9 +211,10 @@
+                 🏆 SWOD 线下培训系统
+               </span>
+               <h1 className="font-serif text-3xl md:text-5xl font-bold text-white mb-4">
+-                把线上学到的体系，练成身体里的能力
++                <span className="md:hidden">线下课</span><span className="hidden md:inline">把线上学到的体系，练成身体里的能力</span>
+               </h1>
+ 
++              <p className="mb-5 text-sm leading-6 text-[#616773] md:hidden">购买课程期次的课时，到课后核销扣减，无需预约。</p>
+               {/* 快捷统计 */}
+               <div className="flex justify-center gap-4 md:gap-8">
+                 <div className="text-center">
+--- before/src/app/courses/page.tsx
++++ after/src/app/courses/page.tsx
+@@ -1,4 +1,6 @@
+ 'use client';
++
++import MobileAcademy from '@/components/MobileAcademy';
+ 
+ import { useEffect, useMemo, useState } from 'react';
+ import { BookOpen, CheckCircle2, Sparkles, Users } from 'lucide-react';
+@@ -26,6 +28,8 @@
+   const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
+   const [homepageMembers, setHomepageMembers] = useState<number | null>(null);
+   const [coursesLoading, setCoursesLoading] = useState(true);
++  const [coursesError, setCoursesError] = useState('');
++  const [reloadKey, setReloadKey] = useState(0);
+   const [platformReady, setPlatformReady] = useState(false);
+ 
+   // 学员变化数据
+@@ -42,7 +46,7 @@
+     let mounted = true;
+ 
+     async function loadPlatformCourses() {
+-      setCoursesLoading(true);
++      setCoursesLoading(true); setCoursesError('');
+       try {
+         const [res, homepageStats] = await Promise.all([
+           fetch('/api/platform-courses', { cache: 'no-store' }),
+@@ -50,7 +54,9 @@
+             .then((response) => response.ok ? response.json() : null)
+             .catch(() => null),
+         ]);
++        if (!res.ok) throw Error('课程加载失败，请重试');
+         const data = await res.json();
++        if (data?.success === false) throw Error(data.message || '课程加载失败，请重试');
+         if (!mounted) return;
+         const rows = Array.isArray(data) ? data : data.data || [];
+         const memberCount = Number(homepageStats?.data?.members);
+@@ -61,6 +67,7 @@
+       } catch (error) {
+         console.error('加载数字化平台课程失败:', error);
+         if (mounted) {
++          setCoursesError('课程暂时无法加载，请重试');
+           setPlatformCourses([]);
+           setPlatformStats(null);
+           setHomepageMembers(null);
+@@ -73,7 +80,7 @@
+ 
+     loadPlatformCourses();
+     return () => { mounted = false; };
+-  }, []);
++  }, [reloadKey]);
+ 
+   const displayedCourses = useMemo(() => {
+     const source = platformCourses.length
+@@ -123,6 +130,7 @@
+   ];
+   return (
+     <div className="courses-mobile-only">
++      <div className="md:hidden"><MobileAcademy courses={platformCourses} loading={coursesLoading} error={coursesError} onRetry={()=>setReloadKey(v=>v+1)}/></div>
+       {/* ===== Hero ===== */}
+       <section className="relative hidden overflow-hidden bg-gradient-to-br from-gold-dark via-gold to-crimson-dark pb-9 pt-28 md:block">
+         <div className="absolute inset-0 opacity-20">
+@@ -190,7 +198,7 @@
+       </section>
+ 
+       {/* ===== 数字化平台课程卡片墙 ===== */}
+-      <section className="bg-white pb-5 pt-[calc(env(safe-area-inset-top)+4.5rem)] md:py-6">
++      <section className="hidden bg-white pb-5 md:block pt-[calc(env(safe-area-inset-top)+4.5rem)] md:py-6">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+           <ScrollAnimation>
+             <div className="mb-5 grid grid-cols-4 gap-1.5">
+--- before/src/app/events-news/page.tsx
++++ after/src/app/events-news/page.tsx
+@@ -38,7 +38,7 @@
+   const totalScores = news.reduce((sum, item) => sum + item.stats.scores, 0);
+ 
+   return (
+-    <div className="min-h-screen bg-warm-white">
++    <div data-mobile-surface="events" className="mobile-events-surface min-h-screen bg-warm-white">
+       <section className="bg-[#1A1A1A] text-white">
+         <div className="mx-auto grid max-w-7xl gap-4 px-4 pb-6 pt-20 sm:px-6 md:gap-8 md:pb-14 md:pt-28 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
+           <div>
+--- before/src/app/shop/storefront.tsx
++++ after/src/app/shop/storefront.tsx
+@@ -488,7 +488,7 @@
+       void loadProducts(true);
+     });
+   return (
+-    <div className="min-h-screen bg-[#faf9f5] pb-20 text-stone-800">
++    <div data-mobile-surface="shop" className="mobile-shop-surface min-h-screen bg-[#faf9f5] pb-20 text-stone-800">
+       <section className="bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-800 px-4 pb-14 pt-40 text-white md:pb-20 md:pt-48">
+         <div className="mx-auto max-w-7xl">
+           <div className="mt-8 flex flex-col justify-between gap-8 md:flex-row md:items-end">
+--- before/src/app/dashboard/events/page.tsx
++++ after/src/app/dashboard/events/page.tsx
+@@ -95,7 +95,7 @@
+   const podiumCount = entries.filter((entry) => entry.rankNo > 0 && entry.rankNo <= 3).length;
+ 
+   return (
+-    <main className="min-h-screen bg-[#F8F3EA] px-3 pb-12 pt-2 text-[#2C1810] md:px-5 md:pt-4">
++    <main data-mobile-surface="personal-events" className="mobile-personal-events min-h-screen bg-[#F8F3EA] px-3 pb-12 pt-2 text-[#2C1810] md:px-5 md:pt-4">
+       <div className="mx-auto max-w-4xl">
+         <div className="mb-3 flex items-center justify-between">
+           <Link
+--- before/public/compat/profile.html
++++ after/public/compat/profile.html
+@@ -7,6 +7,8 @@
+   <title>个人中心 - 伊娃东方舞</title>
+   <style>
+     *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#f8f3ea;color:#2c1810;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}button,a{font:inherit}.shell{max-width:760px;margin:0 auto;padding:10px 12px 40px}.top{display:flex;align-items:center;justify-content:space-between;height:48px}.back,.logout{border:0;background:rgba(255,255,255,.82);color:#87672f;border-radius:22px;padding:9px 14px;text-decoration:none}.mode{font-size:11px;color:#9b8b78}.card{overflow:hidden;border-radius:16px;background:#fff;box-shadow:0 4px 18px rgba(91,59,26,.07)}.hero{display:flex;align-items:center;justify-content:space-between;padding:18px;background:linear-gradient(135deg,#8b1a1a,#b99652);color:#fff}.identity{display:flex;align-items:center;min-width:0}.avatar{display:flex;align-items:center;justify-content:center;width:58px;height:58px;margin-right:12px;border-radius:50%;background:rgba(255,255,255,.2);font-size:25px;font-weight:700}.name{margin:0 0 5px;font-size:22px}.meta{margin:0;color:rgba(255,255,255,.8);font-size:13px}.stats{display:flex;padding:10px 4px;border-bottom:1px solid #f1e7d8}.stat{width:33.333%;text-align:center}.stat strong{display:block;font-size:18px}.stat span{font-size:11px;color:#8a7a68}.notice{margin:0;padding:10px 14px;background:#fff8e8;color:#8a641f;font-size:13px;line-height:1.6;border-bottom:1px solid #f1e7d8}.section{padding:14px;border-bottom:1px solid #f1e7d8}.section:last-child{border-bottom:0}.section h2{margin:0 0 10px;font-size:17px}.empty{padding:12px;border-radius:11px;background:#f8f3ea;color:#8a7a68;font-size:13px}.item{display:block;margin-top:8px;padding:11px;border-radius:11px;background:#fbf8f2;color:#2c1810;text-decoration:none}.item:first-of-type{margin-top:0}.item-title{font-size:14px;font-weight:650;line-height:1.5}.item-meta{margin-top:4px;color:#8a7a68;font-size:12px;line-height:1.5}.loading,.error{padding:90px 24px;text-align:center}.spinner{width:28px;height:28px;margin:0 auto 14px;border:3px solid #e5d6bc;border-top-color:#b99652;border-radius:50%;-webkit-animation:spin .8s linear infinite;animation:spin .8s linear infinite}@-webkit-keyframes spin{to{-webkit-transform:rotate(360deg)}}@keyframes spin{to{transform:rotate(360deg)}}.error-icon{font-size:36px;color:#a64b18}.error h1{font-size:20px}.error p{color:#6f6257;font-size:14px;line-height:1.7}.code{padding:10px;border-radius:10px;background:#f8f3ea;text-align:left;font-size:12px;line-height:1.7;word-break:break-all}.actions{display:flex;margin-top:18px;gap:10px}.btn{display:block;flex:1;border:0;border-radius:11px;padding:12px 8px;background:#9f1d20;color:#fff;text-align:center;text-decoration:none;font-weight:650}.btn.secondary{border:1px solid #d8c7ae;background:#fff;color:#7e6233}.footer-note{padding:12px;text-align:center;color:#aa9a86;font-size:11px}
++
++    html,body{background:#f6f7f9;color:#202124}.shell{padding-bottom:110px}.card{box-shadow:none}.hero{background:#fff;color:#202124}.avatar{background:#f9eaea;color:#9f1d20}.meta,.item-meta,.stat span,.empty{color:#616773}.item,.empty,.code{background:#f6f7f9}.back,.logout{min-height:44px;color:#9f1d20}.btn,.btn.secondary{min-height:44px;background:#9f1d20;color:#fff}.compat-app-tabbar{position:fixed;bottom:0;left:0;right:0;display:flex;padding:6px 8px;padding-bottom:calc(6px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #e2e5e9;z-index:20}.compat-app-tabbar a{width:20%;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#616773;text-decoration:none;font-size:12px;border-radius:12px}.compat-app-tabbar svg{width:22px;height:22px;margin-bottom:6px}.compat-app-tabbar a[aria-current]{background:#f9eaea;color:#9f1d20}
+   </style>
+ </head>
+ <body>
+@@ -14,6 +16,7 @@
+     <div class="top"><a class="back" href="/">‹ 返回</a><span class="mode">旧版 iPhone 兼容模式</span></div>
+     <div id="app" class="card"><div class="loading"><div class="spinner"></div><p>正在读取个人中心…</p><small>最长等待 15 秒</small></div></div>
+   </main>
++<nav class="compat-app-tabbar" aria-label="主要功能导航"><a href="/courses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 4h6l2 2 2-2h6v15h-6l-2 2-2-2H4z M12 6v15"/></svg>线上学院</a><a href="/offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 5h16v16H4z M4 10h16 M8 2v6 M16 2v6"/></svg>线下课</a><a href="/events"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3h8v8a4 4 0 0 1-8 0z M8 5H4v3a4 4 0 0 0 4 4 M16 5h4v3a4 4 0 0 1-4 4 M12 15v5 M8 21h8"/></svg>赛事</a><a href="/shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16l1 14H3z M8 8V6a4 4 0 0 1 8 0v2"/></svg>商城</a><a href="/dashboard/profile" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 1 0-8 0 M4 22v-3a8 8 0 0 1 16 0v3"/></svg>个人中心</a></nav>
+   <script>
+   (function () {
+     'use strict';
+--- before/src/app/mobile-app.css
++++ after/src/app/mobile-app.css
+@@ -0,0 +1,43 @@
++/* Shared phone website / installed PWA visual system. Desktop remains responsive. */
++.mobile-app-tabbar{display:none}.mobile-academy{display:none}
++@media(max-width:767px){
++ body{background:#f6f7f9;padding-bottom:calc(88px + env(safe-area-inset-bottom))}
++ h1,h2,h3,h4{font-family:inherit}
++ a:focus-visible,button:focus-visible,input:focus-visible{outline-color:#9f1d20}
++ .mobile-site-header{padding:env(safe-area-inset-top) 12px 0!important;background:#fff;border-bottom:1px solid #e2e5e9}
++ .mobile-site-header-inner{min-height:64px;height:auto!important;border:0!important;border-radius:0!important;background:#fff!important;box-shadow:none!important;backdrop-filter:none!important;padding:6px 0!important}
++ .mobile-site-header-inner button,.mobile-site-header-inner .mobile-user-action{min-width:44px;min-height:44px;box-shadow:none!important;border:0!important;background:#f9eaea!important;color:#9f1d20!important;backdrop-filter:none!important}
++ .mobile-site-header-inner>a{flex:1;min-width:0;margin-right:8px}.mobile-site-header-inner>a span{font-family:inherit;font-size:15px;color:#202124}
++ .mobile-site-header-inner>div{gap:2px}
++ .mobile-app-tabbar{position:fixed;bottom:0;left:0;right:0;z-index:10000;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #e2e5e9}
++ .mobile-app-tabbar>a{display:flex;min-width:0;min-height:64px;gap:6px;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;color:#616773;font-size:12px;line-height:1.3;font-weight:500}
++ .mobile-app-tabbar>a.is-active{color:#9f1d20;background:#f9eaea;font-weight:600}
++ body:has(.course-video-page){padding-bottom:0}
++ .mobile-academy{display:block;padding:calc(env(safe-area-inset-top) + 88px) 16px 24px;background:#f6f7f9;min-height:100vh;color:#202124}
++ .mobile-academy h1{font-size:26px;font-weight:700;line-height:1.3}.mobile-intro{font-size:14px;line-height:1.7;color:#616773;margin-top:8px}
++ .mobile-learning-links{display:flex;gap:10px;margin:22px 0 28px}.mobile-learning-links>a{display:flex;flex:1;min-width:0;min-height:84px;gap:10px;align-items:center;justify-content:center;flex-direction:column;background:#fff;color:#9f1d20;border-radius:12px;font-size:13px}.mobile-learning-links svg{width:22px;height:22px}
++ .mobile-catalog-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.mobile-catalog-heading h2{font-size:20px;font-weight:600}.mobile-catalog-heading>span{font-size:13px;color:#616773}
++ .mobile-catalog-search{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 14px;background:#fff;border:1px solid #d9dde3;border-radius:12px;margin-bottom:18px;color:#616773}.mobile-catalog-search input{width:100%;min-width:0;height:48px;outline:0;background:transparent;color:#202124;font-size:15px}.mobile-catalog-search input::placeholder{color:#616773}
++ .mobile-course-list{display:flex;flex-direction:column;gap:14px}.mobile-course-row{display:flex;gap:14px;align-items:center;background:#fff;padding:14px;border-radius:12px;min-width:0}.mobile-course-cover{position:relative;width:104px;height:100px;flex-shrink:0;border-radius:10px;overflow:hidden;background:#f9eaea}.mobile-course-cover>div,.mobile-course-cover>picture{width:100%;height:100%}.mobile-course-cover img{width:100%;height:100%;object-fit:cover}.mobile-course-copy{flex:1;min-width:0}.mobile-course-category{font-size:12px;color:#9f1d20}.mobile-course-copy h3{font-size:16px;font-weight:600;line-height:1.45;margin-top:5px;overflow-wrap:anywhere}.mobile-course-copy p{color:#616773;font-size:13px;line-height:1.5;margin-top:5px}.mobile-course-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;line-height:1.5;color:#616773;margin-top:8px}
++ .mobile-feedback{padding:24px 16px;text-align:center;background:#fff;border-radius:12px;font-size:15px;line-height:1.7;color:#616773}.mobile-feedback button{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:12px 18px;border-radius:10px;background:#9f1d20;color:#fff;margin-top:16px}
++ .mobile-brand-links{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:22px;color:#9f1d20;font-size:13px}.mobile-brand-links a{display:flex;align-items:center;min-height:44px}
++ body:has([data-mobile-surface]) footer,body:has(.student-profile-page) footer{display:none}
++ [data-mobile-surface="offline"],[data-mobile-surface="events"],[data-mobile-surface="shop"],.student-profile-page,.mobile-personal-events{background:#f6f7f9!important;color:#202124!important}
++ .mobile-offline-surface{padding-top:calc(env(safe-area-inset-top) + 84px)!important}
++ .mobile-offline-surface>nav{gap:8px}.mobile-offline-surface>nav button{min-height:48px;border-radius:12px}
++ .mobile-offline-catalog>section:first-child{background:transparent!important;color:#202124!important;padding:24px 0!important}.mobile-offline-catalog>section:first-child>.absolute{display:none}.mobile-offline-catalog>section:first-child span.inline-block{display:none}.mobile-offline-catalog>section:first-child h1{font-size:26px;color:#202124;margin-bottom:18px}.mobile-offline-catalog>section:first-child [class*="text-white"]{color:#616773!important}.mobile-offline-catalog>section:first-child .text-gold{color:#9f1d20!important}.mobile-offline-catalog section#master{padding-top:16px!important;background:#f6f7f9}
++ .mobile-events-surface>section:first-child{padding-top:calc(env(safe-area-inset-top) + 72px);background:#f6f7f9!important;color:#202124!important}.mobile-events-surface>section:first-child>div{padding-top:16px!important;padding-bottom:20px!important}.mobile-events-surface>section:first-child h1{font-size:26px;margin-top:0!important}.mobile-events-surface>section:first-child span.inline-flex{display:none}.mobile-events-surface>section:first-child .grid.grid-cols-3{background:#fff;border:0;border-radius:12px}.mobile-events-surface>section:first-child [class*="text-white/"]{color:#616773!important}.mobile-events-surface>section:first-child .text-gold{color:#9f1d20!important}.mobile-events-surface #event-list{padding-top:16px!important}.mobile-events-surface #event-list>div>.grid{grid-template-columns:1fr}.mobile-events-surface article{border:0!important;box-shadow:none!important;border-radius:12px!important}.mobile-events-surface article h3{font-size:18px;line-height:1.5}.mobile-events-surface article [class*="aspect-"]{height:190px;aspect-ratio:auto}
++ .mobile-shop-surface>section:first-child{padding:calc(env(safe-area-inset-top) + 88px) 16px 24px!important;background:#f6f7f9!important;color:#202124!important}.mobile-shop-surface>section:first-child>div>div{margin-top:0;gap:16px}.mobile-shop-surface>section:first-child h1{font-size:26px;font-weight:700}.mobile-shop-surface>section:first-child p:first-child.tracking-\[\.3em\]{display:none}.mobile-shop-surface>section:first-child p.mt-6{margin-top:12px;font-size:14px;line-height:1.7;color:#616773}.mobile-shop-surface>section:first-child [class*="text-white/"],.mobile-shop-surface>section:first-child [class*="text-emerald-"]{color:#616773!important}.mobile-shop-surface>section:first-child .border{padding:8px 0;border:0;gap:12px}.mobile-shop-surface>main{padding-top:0}.mobile-shop-surface [class*="bg-emerald-9"],.mobile-shop-surface [class*="bg-emerald-8"]{background:#9f1d20}.mobile-shop-surface [class*="text-emerald-9"],.mobile-shop-surface [class*="text-emerald-8"]{color:#9f1d20}.mobile-shop-surface [class*="bg-emerald-50"]{background:#f9eaea}.mobile-shop-surface button{min-height:44px}.mobile-shop-surface .fixed.bottom-6{bottom:calc(100px + env(safe-area-inset-bottom))}
++ .site-main:has(.student-profile-page){padding-top:calc(env(safe-area-inset-top) + 72px)}.student-profile-page{padding:16px!important}.student-profile-page [class*="from-[#7F171B]"]{background:#fff!important;color:#202124!important;padding:20px 16px!important}.student-profile-page [class*="from-[#7F171B]"] [class*="text-white/"]{color:#616773!important}.student-profile-page [class*="from-[#7F171B]"] button{min-height:44px;background:#9f1d20;color:white}.student-profile-page [class*="from-[#7F171B]"] label{background:#f9eaea;color:#9f1d20;box-shadow:none}.student-profile-page [class*="text-[#8A7A68]"],.student-profile-page [class*="text-[#685746]"]{color:#616773}.student-profile-page [class*="bg-[#FBF8F2]"],.student-profile-page [class*="bg-[#F8F3EA]"]{background:#f6f7f9}.student-profile-page section{box-shadow:none}.student-profile-page a,.student-profile-page button{min-height:44px}.student-profile-page h2{font-size:18px}
++ .mobile-personal-events{padding-top:calc(env(safe-area-inset-top) + 84px)!important}.mobile-personal-events>div>section:first-of-type{background:white;color:#202124;box-shadow:none}.mobile-personal-events>div>section:first-of-type [class*="text-white/"]{color:#616773!important}.mobile-personal-events>div>section:first-of-type [class*="bg-white/"]{background:#f6f7f9}.mobile-personal-events article{background:#fff;border-color:#e2e5e9}.mobile-personal-events [class*="text-[#8A7A68]"]{color:#616773}
++ .pwa-install-card{bottom:calc(94px + env(safe-area-inset-bottom));background:#fff;backdrop-filter:none;border:1px solid #e2e5e9;box-shadow:0 8px 24px rgba(32,33,36,.12);border-radius:12px}.pwa-install-primary{min-height:44px;background:#9f1d20;color:#fff;border-radius:10px}.pwa-install-close{min-height:44px;min-width:44px;right:4px;top:4px}
++}
++@media(max-width:359px){.mobile-site-header-inner>a span{max-width:56px;font-size:13px}.mobile-site-header-inner>a img{width:26px;height:26px}.mobile-site-header-inner>a{gap:4px;margin-right:4px}.mobile-course-cover{width:88px;height:100px}.mobile-course-row{gap:12px;padding:12px}.mobile-learning-links>a{font-size:12px}}
++@media(display-mode:standalone){.pwa-install-card{display:none!important}}
++@media(max-width:767px){.mobile-all-courses{display:flex;align-items:center;justify-content:center;min-height:48px;margin-top:20px;border-radius:12px;background:#9f1d20;color:#fff;font-size:15px}}
++@media(max-width:767px){
++ [data-mobile-surface] h1,[data-mobile-surface] h2,[data-mobile-surface] h3,.student-profile-page h1,.student-profile-page h2{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}
++ .mobile-shop-surface [class*="bg-emerald-100"]{background:#f9eaea}.mobile-shop-surface [class*="text-emerald-7"]{color:#9f1d20}.mobile-shop-surface [class*="border-emerald"]{border-color:#dcb5b6}
++ .mobile-shop-surface article{border:0;border-radius:12px}.mobile-shop-surface article>div{padding:14px}.mobile-shop-surface>main>.mb-8{margin-bottom:20px}
++}
++@media(max-width:767px){.mobile-catalog-search:focus-within{outline:2px solid #9f1d20;outline-offset:2px}}
+--- before/src/components/MobileAcademy.tsx
++++ after/src/components/MobileAcademy.tsx
+@@ -0,0 +1,44 @@
++"use client";
++import { useEffect, useMemo, useState } from 'react';
++import Link from 'next/link';
++import { BookOpen, CalendarDays, Trophy, Search, RefreshCw } from 'lucide-react';
++import { type Course } from '@/config/courses';
++import { getCourseVideoHref } from '@/lib/course-series-ids';
++import PlaceholderImage from './PlaceholderImage';
++type CatalogCourse = Course & { platformSeriesId?: number; platformCourseId?: number; legacyCourseId?: string };
++type Props={limit?:number;courses?:CatalogCourse[];loading?:boolean;error?:string;onRetry?:()=>void};
++export default function MobileAcademy(props:Props){
++  const [rows,setRows]=useState<CatalogCourse[]>([]),[busy,setBusy]=useState(true),[error,setError]=useState(''),[attempt,setAttempt]=useState(0),[query,setQuery]=useState('');
++  const supplied=props.courses!==undefined;
++  useEffect(()=>{
++    if(supplied)return;
++    const controller=new AbortController();
++    fetch('/api/platform-courses',{cache:'no-store',signal:controller.signal}).then(async response=>{
++      if(!response.ok)throw Error('课程加载失败，请重试');
++      const payload=await response.json();if(payload?.success===false)throw Error(payload.message||'课程加载失败，请重试');
++      const data=Array.isArray(payload)?payload:payload.data;if(!Array.isArray(data))throw Error('课程暂时无法加载，请重试');
++      setRows(data);
++    }).catch(e=>{if(!controller.signal.aborted)setError(e.message||'课程加载失败，请重试');}).finally(()=>{if(!controller.signal.aborted)setBusy(false);});
++    return()=>controller.abort();
++  },[supplied,attempt]);
++  const loading=supplied?props.loading:busy,problem=supplied?props.error:error;
++  const courses=props.courses??rows;
++  const visible=useMemo(()=>{const q=query.trim().toLocaleLowerCase();return courses.filter(c=>(c.category==='online'||c.category==='dance-collection')&&(!q||[c.title,c.instructor,c.description,c.type].join(' ').toLocaleLowerCase().includes(q)));},[courses,query]);
++  return <section className="mobile-academy" data-mobile-surface="academy">
++    <h1>伊娃东方舞</h1><p className="mobile-intro">线上学院 · 从基础到进阶，找到适合你的课程</p>
++    <div className="mobile-learning-links">
++      <Link href="/my-courses"><BookOpen aria-hidden="true"/><span>我的课程</span></Link>
++      <Link href="/offline?tab=rights"><CalendarDays aria-hidden="true"/><span>课时与核销</span></Link>
++      <Link href="/dashboard/events"><Trophy aria-hidden="true"/><span>我的比赛</span></Link>
++    </div>
++    <div className="mobile-catalog-heading"><h2>课程列表</h2>{!loading&&!problem&&<span>{visible.length} 门课程</span>}</div>
++    <label className="mobile-catalog-search"><Search size={20} aria-hidden="true"/><span className="sr-only">搜索课程、老师或分类</span><input type="search" placeholder="搜索课程、老师或分类" value={query} onChange={e=>setQuery(e.target.value)}/></label>
++    {loading?<p role="status" className="mobile-feedback">课程加载中…</p>:problem?<div className="mobile-feedback" role="alert"><p>{problem}</p><button onClick={()=>{if(supplied)props.onRetry?.();else{setBusy(true);setError('');setAttempt(v=>v+1);}}}><RefreshCw size={18} aria-hidden="true"/>重新加载</button></div>:visible.length?<div className="mobile-course-list">{(props.limit&&!query.trim()?visible.slice(0,props.limit):visible).map(course=>{
++      const platform=course.platformSeriesId||course.platformCourseId;
++      const href=getCourseVideoHref({courseId:platform?course.id:(course.legacyCourseId||course.id),legacyCourseId:course.legacyCourseId,platformSeriesId:platform});
++      return <Link href={href} key={String(platform||course.id)} className="mobile-course-row"><div className="mobile-course-cover"><PlaceholderImage src={course.image||'/images/placeholder.svg'} alt="" className="object-cover"/></div><div className="mobile-course-copy"><span className="mobile-course-category">{course.category==='dance-collection'?'成品舞':'线上系统课'}</span><h3>{course.title}</h3>{course.instructor&&<p>{course.instructor}</p>}<div className="mobile-course-meta"><span>{course.duration}</span>{course.displayStudents!==undefined&&<span>{course.displayStudents} 名学员</span>}</div></div></Link>;
++    })}</div>:<p className="mobile-feedback">{query.trim()?'没有找到相关课程，请换个关键词':'课程即将更新，稍后再来看看'}</p>}
++    {props.limit&&visible.length>props.limit&&!query.trim()&&<Link href="/courses" className="mobile-all-courses">查看全部课程</Link>}
++    <div className="mobile-brand-links"><Link href="/about">了解伊娃东方舞</Link><Link href="/dance-circle">东方舞圈资讯</Link><Link href="/contact">联系与合作</Link></div>
++  </section>;
++}
+--- before/src/lib/mobile-app-navigation.ts
++++ after/src/lib/mobile-app-navigation.ts
+@@ -0,0 +1,10 @@
++export type MobileTab = 'academy' | 'offline' | 'events' | 'shop' | 'profile';
++export function activeMobileTab(path: string): MobileTab | null {
++  if (path === '/dashboard/events' || path.startsWith('/dashboard/events/')) return 'profile';
++  if (path === '/' || path === '/courses' || path.startsWith('/courses/') || path.startsWith('/dance-collection')) return 'academy';
++  if (path === '/offline' || path.startsWith('/offline/') || path === '/training-calendar') return 'offline';
++  if (path === '/events' || path.startsWith('/events/') || path.startsWith('/events-news')) return 'events';
++  if (path === '/shop' || path.startsWith('/shop/')) return 'shop';
++  if (path === '/dashboard' || path.startsWith('/dashboard/') || ['/profile','/my-courses','/login','/register'].includes(path)) return 'profile';
++  return null;
++}
+--- before/src/types/framework.d.ts
++++ after/src/types/framework.d.ts
+@@ -0,0 +1,3 @@
++// Next App Router exposes React server cache and styled JSX with React 18.
++/// <reference types="react/canary" />
++import 'styled-jsx';
+--- before/scripts/mobile-app-navigation.test.mjs
++++ after/scripts/mobile-app-navigation.test.mjs
+@@ -0,0 +1,12 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { activeMobileTab } from '../src/lib/mobile-app-navigation.ts';
++test('personal results retain the account tab while public events use the event tab',()=>{
++ assert.equal(activeMobileTab('/dashboard/events'),'profile');assert.equal(activeMobileTab('/events/2026'),'events');assert.equal(activeMobileTab('/events-news/archive'),'events');
++});
++test('course deep links, period balances and store deep links retain their primary tab',()=>{
++ assert.equal(activeMobileTab('/courses/71/videos'),'academy');assert.equal(activeMobileTab('/offline/900001'),'offline');assert.equal(activeMobileTab('/shop/orders'),'shop');assert.equal(activeMobileTab('/my-courses'),'profile');
++});
++test('brand content remains accessible without a false selected primary tab',()=>{
++ assert.equal(activeMobileTab('/about'),null);assert.equal(activeMobileTab('/contact'),null);assert.equal(activeMobileTab('/'),'academy');
++});

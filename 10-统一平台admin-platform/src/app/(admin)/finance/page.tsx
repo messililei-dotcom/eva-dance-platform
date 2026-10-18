@@ -1,4 +1,5 @@
 'use client';
+import { NumericDateInput } from '@/components/numeric-date-input';
 import { useEffect, useMemo, useState } from 'react';
 import { App, Button, Card, Col, Descriptions, Empty, Form, Input, InputNumber, Modal, Row, Select, Spin, Tabs, Tag, Typography } from 'antd';
 import { Table } from '@/components/adaptive-table';
@@ -299,13 +300,13 @@ export default function FinancePage() {
           date: dateText(row.date),
           direction: 'income' as const,
           source: typeLabel(source),
-          title: textValue(row.title, '收入流水'),
+          title: textValue(row.title, '收入流水').replace(/^线上课程授权收入[：:]\s*/, ''),
           amount: amount(row.amount),
           incomeType,
           evidence,
           referenceNo: textValue(row.referenceNo),
           subject: textValue(row.subject),
-          subjectMeta: textValue(row.subjectMeta),
+          subjectMeta: textValue(row.subjectMeta).replace(/(?:^|\s*\/\s*)member_id\s+\d+\s*$/i, ''),
           itemMeta: textValue(row.itemMeta),
           payMethod: textValue(row.payMethod),
           status: textValue(row.status),
@@ -421,7 +422,7 @@ export default function FinancePage() {
       evidence: textValue(row.category).includes('线上课程') ? '学员授权' : '财务录入',
       referenceNo: textValue(row.incomeNo ?? row.income_no, parseAuthId(row.remark) ? `授权-${parseAuthId(row.remark)}` : ''),
       subject: textValue(row.memberName ?? row.customer_name ?? row.customerName, ''),
-      subjectMeta: textValue(row.memberId) ? `member_id ${row.memberId}` : '',
+      subjectMeta: '',
       itemMeta: parseAuthId(row.remark) ? `授权ID ${parseAuthId(row.remark)}` : '',
       payMethod: textValue(row.payment_method ?? row.account, ''),
       customer: textValue(row.memberName ?? row.customer_name ?? row.customerName, ''),
@@ -730,7 +731,7 @@ export default function FinancePage() {
             </Col>
             <Col xs={12} md={12}>
               <Form.Item name="expense_date" label="支出日期">
-                <Input type="date" />
+                <NumericDateInput />
               </Form.Item>
             </Col>
             <Col span={24}>

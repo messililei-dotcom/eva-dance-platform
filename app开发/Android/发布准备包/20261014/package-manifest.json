@@ -1,0 +1,8 @@
+{
+  "artifactType": "signed-release-candidate",
+  "releaseReady": false,
+  "productionBusinessWrites": false,
+  "files": 94,
+  "zip": "SWOD-Android-1.0.0-5-preparation.zip",
+  "sha256": "0240fda5f3e5bba50fec518febdbbe3ec701d7a0d47f62de54f292d63d21f370"
+}

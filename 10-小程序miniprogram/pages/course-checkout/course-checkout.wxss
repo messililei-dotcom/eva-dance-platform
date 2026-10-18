@@ -1,1 +1,2 @@
 .page{padding:28rpx}.card{background:white;padding:32rpx;border-radius:24rpx;line-height:1.8;margin-bottom:24rpx}.title{font-size:36rpx;font-weight:600}.price{font-size:42rpx;color:#9f1d20;margin:24rpx 0}.pay{background:#9f1d20;color:white;margin-top:30rpx}.error{color:#9f1d20;padding:24rpx}
+.pay{min-height:88rpx;padding:18rpx 24rpx;display:flex;align-items:center;justify-content:center;line-height:1.4;font-size:30rpx;border-radius:16rpx}

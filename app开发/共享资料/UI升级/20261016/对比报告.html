@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SWOD 三端 UI 升级对比</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f6f8;color:#20242b;font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}main{max-width:1180px;margin:auto;padding:40px 24px}h1{font-size:32px;margin:0 0 12px}p{color:#626a77}.status,.controls,.links{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}.status span{background:white;padding:12px 18px;border-radius:12px}.pending{color:#855800}button,a.link{font:inherit;border:0;background:white;color:#20242b;border-radius:10px;padding:10px 18px;cursor:pointer;min-height:48px;text-decoration:none}button[aria-pressed=true]{background:#9f1d20;color:white}button:focus-visible,a:focus-visible{outline:3px solid #9f1d20;outline-offset:3px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px}figure{margin:0}figcaption{font-size:18px;font-weight:600;margin-bottom:12px}figure img,#preview{width:100%;height:auto;display:block;border-radius:14px;background:#fff}figure a{display:block}#note{font-size:14px}footer{border-top:1px solid #dfe3e8;margin-top:32px;padding-top:24px}.details{background:white;border-radius:14px;padding:20px;margin-top:24px}.details li{margin:6px 0}h2{font-size:22px}a{color:#9f1d20}[hidden]{display:none!important}@media(max-width:620px){main{padding:24px 14px}h1{font-size:26px}.pair{gap:10px}.controls{gap:6px}button{font-size:14px;padding:10px 12px}}@media(prefers-color-scheme:dark){body{background:#141619;color:#f3f4f6}p{color:#b5bac4}.status span,button,a.link,.details{background:#202328;color:#f3f4f6}button[aria-pressed=true]{background:#9f1d20}a{color:#ffaca9}}
+</style>
+<main>
+<h1>SWOD 三端 UI 升级</h1>
+<p>简洁明亮，突出课程与内容。2026 年 10 月 16 日 · 开发验证成果</p>
+<div class="status"><span>iOS：模拟器及设备目标构建通过</span><span>Android：6 项测试通过，签名候选 APK 已生成</span><span class="pending">HarmonyOS：源码已更新，SDK 构建待完成</span></div>
+<div class="controls" id="platforms">
+<button data-platform="ios" aria-pressed="true">iOS</button>
+<button data-platform="android" aria-pressed="false">Android</button>
+<button data-platform="harmony" aria-pressed="false">HarmonyOS 样式示意</button>
+</div>
+<div class="controls" id="pages"></div>
+<p id="note"></p>
+<div class="pair" id="pair">
+<figure><figcaption>优化前</figcaption><a id="oldLink" target="_blank" rel="noopener"><img id="old" alt="优化前的原生应用截图"></a></figure>
+<figure><figcaption>优化后</figcaption><a id="newLink" target="_blank" rel="noopener"><img id="new" alt="优化后的原生应用截图"></a></figure>
+</div>
+<img id="preview" src="comparisons/harmony-academy-preview.png" alt="HarmonyOS 源码样式布局示意，非设备截图" hidden>
+<section class="details"><h2>本次调整</h2><ul>
+<li>减少装饰和首屏操作占位，让课程封面、标题和列表优先展示。</li>
+<li>统一背景、内容表面、品牌操作色、字号层级、留白与触控尺寸。</li>
+<li>保留五个主入口及业务流程，改善搜索、加载、错误和未登录状态。</li>
+<li>iOS 适配动态字体与 iPad 原生导航；Android 支持深色主题、字体缩放和可滚动的宽屏导航栏。</li>
+<li>鸿蒙同步公共组件、选中态、语义颜色和明暗图标；因缺少 DevEco Studio / SDK，尚未完成构建。</li>
+</ul></section>
+<footer><div class="links">
+<a class="link" href="README.md">验证说明</a>
+<a class="link" href="comparisons/ios-all-pages.png" target="_blank">iOS 五页总览</a>
+<a class="link" href="comparisons/android-all-pages.png" target="_blank">Android 五页总览</a>
+<a class="link" href="installers/SWOD-1.0.0-5-UI-20261016-candidate.apk">Android 签名候选 APK</a>
+</div><p>原始截图完整保存在 before / after；比较图只作等比缩放和排版。iOS 使用同一套本地演示数据；Android 读取公开内容。鸿蒙为源码样式示意。所有平台均未上架，此报告不替代真机或业务验收。</p></footer>
+</main>
+<script>
+const pages=[['academy','线上学院'],['offline','线下课'],['events','赛事'],['shop','商城'],['account','个人中心']];
+let platform='ios',page='academy';const $=id=>document.getElementById(id);
+function render(){
+ document.querySelectorAll('[data-platform]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.platform===platform));
+ const isPreview=platform==='harmony';$('pages').hidden=isPreview;$('pair').hidden=isPreview;$('preview').hidden=!isPreview;
+ $('note').textContent=platform==='ios'?'同一套本地演示数据 · iOS Simulator 运行截图 · 点击图片查看原图':platform==='android'?'同一公开接口的真实内容 · Android Emulator 运行截图 · 点击图片查看原图':'源码样式布局示意，非像素级复刻，也非鸿蒙运行截图；尚缺 DevEco Studio / SDK 编译验证。';
+ if(isPreview)return;
+ for(const [id,phase]of [['old','before'],['new','after']]){$(id).src=phase+'/'+platform+'-'+page+'.png';$(id+'Link').href=$(id).src}
+ document.querySelectorAll('[data-page]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.page===page));
+}
+for(const [id,label]of pages){const b=document.createElement('button');b.textContent=label;b.dataset.page=id;b.onclick=()=>{page=id;render()};$('pages').append(b)}
+document.querySelectorAll('[data-platform]').forEach(b=>b.onclick=()=>{platform=b.dataset.platform;render()});render();
+</script>
+</html>

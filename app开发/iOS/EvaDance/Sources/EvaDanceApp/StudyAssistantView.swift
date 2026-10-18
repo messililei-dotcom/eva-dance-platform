@@ -75,7 +75,7 @@ struct UnifiedSearchView: View {
                 Section("线上课程") {
                     LoadState(store: courses) { Task { await courses.load("/public/series", session: session, publicRead: true) } }
                     let rows = matching(courses.data.scopedRows("search-courses"), fields: ["name","teacher","category","subtitle"])
-                    ForEach(rows, id: \.listID) { row in NavigationLink { PublicCourseView(row: row.value) } label: { CourseCard(row: row.value) } }
+                    ForEach(rows, id: \.listID) { row in NavigationLink { PublicCourseView(row: row.value) } label: { CourseCard(online: true, row: row.value) } }
                     if rows.isEmpty && !courses.busy && courses.error == nil { Text("没有匹配课程") }
                 }
                 Section("线下课程") {

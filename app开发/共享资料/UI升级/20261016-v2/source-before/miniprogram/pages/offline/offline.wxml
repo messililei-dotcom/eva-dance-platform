@@ -1,0 +1,74 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
+<view class="offline-page">
+  <view class="offline-hero">
+    <view class="hero-kicker">伊娃东方舞线下课程</view>
+    <view class="hero-title">线下课</view>
+    <view class="hero-desc">购买课程期次的课时，到课后核销扣减，无需预约。</view>
+    <view class="hero-stats">
+      <view><text>{{availableSessions}}</text><span>剩余课时</span></view>
+      <view><text>{{pendingCount}}</text><span>已购期次</span></view>
+      <view><text>{{consumedCount}}</text><span>已核销</span></view>
+    </view>
+  </view>
+
+  <view class="rule-strip">
+    <view><text>①</text><span>选择课程期次</span></view>
+    <view><text>②</text><span>购买期次课时</span></view>
+    <view><text>③</text><span>到课后核销</span></view>
+  </view>
+
+  <scroll-view class="offline-tabs" scroll-x enable-flex>
+    <view class="offline-tab {{activeTab === item.key ? 'active' : ''}}" wx:for="{{tabs}}" wx:key="key" data-key="{{item.key}}" bindtap="switchTab">{{item.label}}</view>
+  </scroll-view>
+
+  <view wx:if="{{activeTab === 'courses'}}">
+    <view class="catalog-head">
+      <view><view class="section-title">线下课程</view><text>共 {{visibleCourses.length}} 门课程</text></view>
+      <view class="course-search"><input value="{{keyword}}" placeholder="搜索课程或老师" bindinput="onSearchInput" /></view>
+    </view>
+    <view wx:if="{{loading}}" class="empty-card">课程加载中…</view>
+    <view wx:elif="{{courseError}}" class="empty-card">{{courseError}}<button bindtap="loadCourses">重试</button></view>
+    <view wx:elif="{{visibleCourses.length}}" class="course-grid">
+      <view class="course-card" wx:for="{{visibleCourses}}" wx:key="id" data-id="{{item.id}}" bindtap="openCourse">
+        <view class="course-cover">
+          <image wx:if="{{item.coverImage}}" src="{{item.coverImage}}" mode="aspectFill" binderror="onImageError" data-path="visibleCourses[{{index}}].coverImage"></image>
+          <view wx:else class="cover-fallback">线下课</view>
+        </view>
+        <view class="course-body">
+          <view class="course-name">{{item.name}}</view>
+          <view class="course-meta">{{item.teacherText}}</view>
+          <view class="course-meta">{{item.dateText}}</view>
+          <view class="course-meta">{{item.studentCount}} 位已报名学员</view>
+          <view class="course-footer"><text>{{item.sessionsText}}</text><b>{{item.priceText}}</b></view>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="empty-card">暂无线下课程</view>
+  </view>
+
+  <view wx:if="{{activeTab === 'consumes'}}" class="record-list">
+    <view wx:if="{{overviewLoading}}" class="empty-card">核销记录加载中…</view>
+    <view wx:elif="{{overviewError}}" class="empty-card">{{overviewError}}<button bindtap="loadOverview">重试</button></view>
+    <view wx:elif="{{consumes.length}}"><view class="record-card" wx:for="{{consumes}}" wx:key="id">
+      <view class="record-title">{{item.title}}</view><view class="record-meta">{{item.consume_date}} · 核销 {{item.count}} 课时</view>
+      <view class="record-meta">核销后剩余 {{item.remaining_after}} 课时</view>
+    </view></view><view wx:else class="empty-card">暂无核销记录</view>
+  </view>
+
+  <view wx:if="{{activeTab === 'rights'}}" class="record-list">
+    <view wx:if="{{overviewLoading}}" class="empty-card">课时余额加载中…</view>
+    <view wx:elif="{{overviewError}}" class="empty-card">{{overviewError}}<button bindtap="loadOverview">重试</button></view>
+    <view wx:elif="{{rights.length}}">
+      <view class="record-card" wx:for="{{rights}}" wx:key="id">
+        <view class="record-title">{{item.title}}</view>
+        <view class="rights-stats"><view><text>{{item.available}}</text><span>剩余课时</span></view><view><text>{{item.used}}</text><span>已核销</span></view></view>
+        <view class="valid-date">有效期至 {{item.validUntil}}</view>
+      </view>
+    </view>
+    <view wx:else class="empty-card">暂无已购课时，购买课程期次后会显示余额。</view>
+  </view>
+</view>
+
+</block>

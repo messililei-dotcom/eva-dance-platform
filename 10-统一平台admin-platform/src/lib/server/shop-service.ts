@@ -194,6 +194,15 @@ export function fulfillOrder(
   tracking: string,
   actor: string,
 ) {
+  if (orderById(db,id).delivery_method === "pickup") {
+    db.transaction(() => {
+      const now=Date.now();
+      const changed=db.prepare("UPDATE shop_online_orders SET status='completed',shipped_at=?,updated_at=? WHERE id=? AND status='paid' AND delivery_method='pickup'").run(now,now,id);
+      if (!changed.changes) throw new ShopError("仅已付款的自提订单可以确认交付",409);
+      audit(db,id,"picked_up",actor,"管理员确认自提交付");
+    })();
+    return;
+  }
   if (
     !carrier.trim() ||
     carrier.length > 50 ||

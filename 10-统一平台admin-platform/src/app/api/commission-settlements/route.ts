@@ -1,5 +1,8 @@
 import { onlineAuthorizationCommissions } from '@/lib/server/authorization-commission';
-import { cleanText, hasAuth, isSuperAdminRequest, jsonError, nowIso, openTrainingDb, toNumber, unauthorized } from '../training-db';
+import { cleanText, hasAuth, authPayloadFromRequest, jsonError, nowIso, openTrainingDb, toNumber, unauthorized } from '../training-db';
+
+import { findLocalUser } from '../_local-auth';
+import { bonusPermissions } from '@/lib/server/bonus-permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -168,8 +171,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   if (!hasAuth(request)) return unauthorized();
-  if (!isSuperAdminRequest(request)) {
-    return Response.json({ success: false, error: '仅超级管理员可修改结清状态' }, { status: 403 });
+  const payload = authPayloadFromRequest(request);
+  const actor = payload ? findLocalUser(payload.username) : null;
+  if (!bonusPermissions(actor).canPay) {
+    return Response.json({ success: false, error: '仅李雷可修改历史结清状态' }, { status: 403 });
   }
 
   const body = await request.json().catch(() => ({}));
@@ -182,6 +187,10 @@ export async function POST(request: Request) {
 
   const db = openTrainingDb();
   try {
+    const hasNewSettlement = db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='BonusMonthly'").get();
+    if (hasNewSettlement && db.prepare('SELECT 1 FROM BonusMonthly WHERE period=? AND person=?').get(period, advisor)) {
+      return Response.json({ error: '该月使用新版审核与发放流程，请在月度结算中操作' }, { status: 409 });
+    }
     const now = nowIso();
     const result = db.transaction(() => {
       db.prepare(`

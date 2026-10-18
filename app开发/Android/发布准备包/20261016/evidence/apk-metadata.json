@@ -1,0 +1,9 @@
+{
+  "application-id": "cn.com.swod.app",
+  "version-name": "1.0.0",
+  "version-code": "5",
+  "min-sdk": "26",
+  "target-sdk": "36",
+  "debuggable": "false",
+  "permissions": "android.permission.INTERNET"
+}

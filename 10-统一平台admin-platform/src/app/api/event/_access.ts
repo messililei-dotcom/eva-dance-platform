@@ -23,10 +23,10 @@ export function scopeEventDb(db: any, ownerId: number) {
   const tables: string[] = db.prepare("SELECT name FROM main.sqlite_master WHERE type='table' AND name LIKE 'event_%'").all().map((r: any) => r.name);
   const columns = new Map<string, Set<string>>(tables.map(table => [table, new Set<string>(db.prepare(`PRAGMA main.table_info(${quoted(table)})`).all().map((r: any) => r.name))]));
   db.exec(`CREATE TEMP TABLE event_owned_competitions(id INTEGER PRIMARY KEY);
-    INSERT INTO event_owned_competitions SELECT id FROM main.event_competitions WHERE owner_user_id=${ownerId};
+    INSERT INTO event_owned_competitions SELECT id FROM main.event_competitions WHERE owner_user_id=${ownerId} OR EXISTS (SELECT 1 FROM main.event_competition_admins ca WHERE ca.competition_id=main.event_competitions.id AND ca.user_id=${ownerId});
     CREATE TEMP TABLE event_owned_members(id INTEGER PRIMARY KEY);
     INSERT OR IGNORE INTO event_owned_members SELECT member_id FROM main.event_players WHERE competition_id IN (SELECT id FROM event_owned_competitions) AND member_id>0;
-    INSERT OR IGNORE INTO event_owned_members SELECT member_id FROM main.event_judges WHERE owner_user_id=${ownerId} AND member_id>0;`);
+    INSERT OR IGNORE INTO event_owned_members SELECT member_id FROM main.event_judges j WHERE member_id>0 AND (owner_user_id=${ownerId} OR EXISTS (SELECT 1 FROM main.event_group_judges gj WHERE gj.judge_id=j.id AND gj.competition_id IN (SELECT id FROM event_owned_competitions)));`);
   const assert = (condition: string) => `SELECT CASE WHEN NOT (${condition}) THEN RAISE(ABORT, '无权限查看') END;`;
   const refs: Record<string, string> = { group_id: 'event_groups', current_group_id: 'event_groups', player_id: 'event_players', current_player_id: 'event_players', performance_id: 'event_performances', current_performance_id: 'event_performances', music_file_id: 'event_music_files', rule_id: 'event_score_rules', score_rule_id: 'event_score_rules', award_id: 'event_awards', score_id: 'event_scores' };
   for (const table of tables) {
@@ -34,10 +34,18 @@ export function scopeEventDb(db: any, ownerId: number) {
     let predicate: string;
     let oldAccess: string;
     let newAccess: string;
-    if (table === 'event_competitions' || table === 'event_judges') {
-      predicate = `owner_user_id=${ownerId}`;
-      oldAccess = `OLD.owner_user_id=${ownerId}`;
-      newAccess = `NEW.owner_user_id=${ownerId}`;
+    if (table === 'event_competition_admins') {
+      predicate = 'competition_id IN (SELECT id FROM temp.event_owned_competitions)';
+      oldAccess = 'OLD.competition_id IN (SELECT id FROM event_owned_competitions) AND NOT EXISTS (SELECT 1 FROM main.event_competitions WHERE id=OLD.competition_id)'; newAccess = '0';
+    } else if (table === 'event_competitions') {
+      predicate = 'id IN (SELECT id FROM temp.event_owned_competitions)';
+      oldAccess = 'OLD.id IN (SELECT id FROM event_owned_competitions)';
+      newAccess = `NEW.id IN (SELECT id FROM event_owned_competitions) OR NEW.owner_user_id=${ownerId}`;
+    } else if (table === 'event_judges') {
+      const linked = (id: string) => `EXISTS (SELECT 1 FROM main.event_group_judges gj WHERE gj.judge_id=${id} AND gj.competition_id IN (SELECT id FROM event_owned_competitions))`;
+      predicate = `owner_user_id=${ownerId} OR ${linked('main.event_judges.id')}`;
+      oldAccess = `(OLD.owner_user_id=${ownerId} OR ${linked('OLD.id')})`;
+      newAccess = `(NEW.owner_user_id=${ownerId} OR ${linked('NEW.id')})`;
     } else if (cols.has('competition_id')) {
       predicate = 'competition_id IN (SELECT id FROM temp.event_owned_competitions)';
       oldAccess = 'OLD.competition_id IN (SELECT id FROM event_owned_competitions)';
@@ -56,7 +64,7 @@ export function scopeEventDb(db: any, ownerId: number) {
         if (!cols.has(column)) continue;
         checks += assert(`COALESCE(NEW.${column},0)=0 OR EXISTS (SELECT 1 FROM main.${parent} WHERE id=NEW.${column} AND competition_id=NEW.competition_id)`);
       }
-      if (cols.has('judge_id')) checks += assert(`COALESCE(NEW.judge_id,0)=0 OR EXISTS (SELECT 1 FROM main.event_judges WHERE id=NEW.judge_id AND owner_user_id=${ownerId})`);
+      if (cols.has('judge_id')) checks += assert(`COALESCE(NEW.judge_id,0)=0 OR EXISTS (SELECT 1 FROM event_judges WHERE id=NEW.judge_id)`);
     }
     if (table === 'event_judges') {
       const unshared = `NOT EXISTS (SELECT 1 FROM main.event_group_judges WHERE judge_id=OLD.id AND competition_id NOT IN (SELECT id FROM event_owned_competitions))`;
@@ -85,6 +93,8 @@ export function withRequestEventDb(request: Request, fn: (db: any) => any) {
   try {
     db.eventActorId = actor.id;
     if (actor.role === 'event_admin') {
+      const requestPath = new URL(request.url).pathname.replace(/^\/(local-api|legacy-student-api)/, '/api');
+      if (request.method === 'POST' && ['/api/event/competitions', '/api/event/data-transfer'].includes(requestPath)) return denied();
       scopeEventDb(db, actor.id);
       const url = new URL(request.url);
       const path = url.pathname.replace(/^\/(local-api|legacy-student-api)/, '/api');

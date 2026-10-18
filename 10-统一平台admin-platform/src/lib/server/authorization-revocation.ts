@@ -1,6 +1,35 @@
 import type { AdminDb } from './admin-db';
 import { ensureStaffInboxSchema } from './staff-inbox';
 
+/** Clear the cancelled authorization ledger while retaining the original values in audit.
+ * The order ledger (when linked) remains owned by the order/refund flow.
+ * Call within the same transaction as revocation and its notification.
+ */
+export function clearRevokedAuthorizationFinancials(db: AdminDb, rows: any[], operatorId: number) {
+  if (!rows.length) return;
+  db.exec(`CREATE TABLE IF NOT EXISTS CourseAuthorizationRecordAudit (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, authorization_id INTEGER NOT NULL,
+    action TEXT NOT NULL, actor_id INTEGER NOT NULL, before_json TEXT NOT NULL,
+    after_json TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`);
+  const update = db.prepare(`UPDATE CourseAuthorization
+    SET actual_amount=0, commission_amount=0, commission_rate=0
+    WHERE id=? AND status='revoked'`);
+  const get = db.prepare('SELECT * FROM CourseAuthorization WHERE id=?');
+  const audit = db.prepare(`INSERT INTO CourseAuthorizationRecordAudit
+    (authorization_id,action,actor_id,before_json,after_json) VALUES(?,?,?,?,?)`);
+  const hasIncome = Boolean(db.prepare("SELECT 1 FROM sqlite_master WHERE name='FinanceIncome'").get());
+  const income = hasIncome ? db.prepare(`UPDATE FinanceIncome SET amount=0
+    WHERE incomeNo=? OR remark LIKE ? OR remark LIKE ?`) : null;
+  for (const row of rows) {
+    const before = get.get<any>(row.id);
+    if (!before || before.status !== 'revoked') continue;
+    update.run(row.id);
+    income?.run(`AUTH-${row.id}`, `%AUTO_ONLINE_AUTH_INCOME|authorization_id=${row.id}`,
+      `%AUTO_ONLINE_AUTH_INCOME|authorization_id=${row.id}\n%`);
+    audit.run(row.id, 'revoke_financial_zero', operatorId, JSON.stringify(before), JSON.stringify(get.get(row.id)));
+  }
+}
+
 /** Only newly revoked rows are notified, within the revocation transaction. */
 export function notifyAuthorizationRevocation(db: AdminDb, rows: any[], operatorId: number) {
   if (!rows.length) return;
@@ -17,4 +46,5 @@ export function notifyAuthorizationRevocation(db: AdminDb, rows: any[], operator
     const insert = db.prepare('INSERT INTO StaffInboxRecipient(message_id,user_id) VALUES (?,?)');
     for (const recipient of recipients) insert.run(message.lastInsertRowid, recipient.id);
   }
+  clearRevokedAuthorizationFinancials(db, rows, operatorId);
 }

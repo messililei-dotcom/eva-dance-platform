@@ -1,4 +1,4 @@
-import { cleanText, readEventBody, hasAuth, jsonError, mapPlayer, nowIso, toNumber, unauthorized, withRequestEventDb } from '../../_db';
+import { cleanText, readEventBody, hasAuth, jsonError, mapPlayer, nowIso, toNumber, unauthorized, withRequestEventDb, recalculateGroupRankings } from '../../_db';
 import { normalizeEventMemberPhone, syncEventPlayerToMember } from '@/lib/server/event-member-sync';
 
 import { ensurePhoneMember } from '@/lib/server/event-entry-import';
@@ -103,6 +103,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         if (performance) db.prepare('UPDATE event_performances SET title=?,updated_at=? WHERE id=?').run(performanceTitle, nowIso(), performance.id);
         else db.prepare("INSERT INTO event_performances (competition_id,group_id,player_id,title,status,updated_at) VALUES (?,?,?,?,'pending',?)").run(current.competition_id, body.groupId ?? current.group_id, current.id, performanceTitle, nowIso());
       }
+      if (current.group_id && body.status != null && body.status !== current.status) recalculateGroupRankings(db, Number(current.group_id));
       return member;
     })();
     if (!updated) return jsonError('选手不存在', 404);

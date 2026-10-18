@@ -1,4 +1,5 @@
 'use client';
+import { NumericDateInput } from '@/components/numeric-date-input';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -1688,7 +1689,7 @@ export default function EventDetailPage() {
             <Col span={8}><Form.Item name="amount" label="金额" rules={[{required:true}]}><InputNumber disabled precision={2} style={{width:'100%'}} /></Form.Item></Col>
             <Col span={8}><Form.Item name="method" label="缴费方式" rules={[{required:true}]}><Select options={Object.entries(paymentMethods).map(([value,label]) => ({value,label}))} /></Form.Item></Col>
           </Row>
-          <Form.Item name="paidAt" label="实际缴费 / 退款时间" rules={[{required:true}]}><Input type="datetime-local" /></Form.Item>
+          <Form.Item name="paidAt" label="实际缴费 / 退款时间" rules={[{required:true}]}><NumericDateInput showTime /></Form.Item>
           <Form.Item name="remark" label="备注 / 收款凭据编号"><Input /></Form.Item>
         </Form>
         <Table size="small" rowKey="id" dataSource={paymentRecords} pagination={false} scroll={{y:220}} columns={[

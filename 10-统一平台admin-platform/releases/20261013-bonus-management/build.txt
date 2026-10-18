@@ -1,0 +1,301 @@
+▲ Next.js 16.2.12 (webpack)
+- Environments: .env.local, .env.production, .env
+- Experiments (use with caution):
+  · cpus: 1
+  · optimizePackageImports
+  · proxyClientMaxBodySize: "5gb"
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 11.0s
+  Running TypeScript ...
+
+  We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+  The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+  	- include was updated to add '.next-preview/bonus-validation/types/**/*.ts'
+  	- include was updated to add '.next-preview/bonus-validation/dev/types/**/*.ts'
+
+  Finished TypeScript in 5.6s ...
+  Collecting page data using 1 worker ...
+  Generating static pages using 1 worker (0/67) ...
+  Generating static pages using 1 worker (16/67) 
+  Generating static pages using 1 worker (33/67) 
+  Generating static pages using 1 worker (50/67) 
+✓ Generating static pages using 1 worker (67/67) in 467ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /access-records
+├ ƒ /api/access-records
+├ ƒ /api/analytics/overview
+├ ƒ /api/app/v1/[...path]
+├ ƒ /api/bonus-management
+├ ƒ /api/certificates
+├ ƒ /api/certificates/[id]/render.svg
+├ ƒ /api/certificates/auto-issue
+├ ƒ /api/certificates/batch
+├ ƒ /api/certificates/stats
+├ ƒ /api/certificates/templates/[seriesId]
+├ ƒ /api/certificates/verify
+├ ƒ /api/commission-settlements
+├ ƒ /api/consume-records
+├ ƒ /api/consume-records/[id]
+├ ƒ /api/course-templates
+├ ƒ /api/course-templates/[id]
+├ ƒ /api/course/admin/dashboard
+├ ƒ /api/course/authorization-commissions
+├ ƒ /api/course/authorization-vouchers
+├ ƒ /api/course/authorization-vouchers/[filename]
+├ ƒ /api/course/authorizations
+├ ƒ /api/course/authorizations/batch
+├ ƒ /api/course/courses
+├ ƒ /api/course/courses/[id]
+├ ƒ /api/course/courses/[id]/materials
+├ ƒ /api/course/courses/[id]/materials/[assocId]
+├ ƒ /api/course/courses/batch-create
+├ ƒ /api/course/courses/batch-delete
+├ ƒ /api/course/courses/batch-status
+├ ƒ /api/course/cover-image
+├ ƒ /api/course/material-folders
+├ ƒ /api/course/material-folders/[id]
+├ ƒ /api/course/material-folders/[id]/move
+├ ƒ /api/course/materials
+├ ƒ /api/course/materials/[id]
+├ ƒ /api/course/materials/[id]/file
+├ ƒ /api/course/materials/[id]/references
+├ ƒ /api/course/materials/[id]/references/[referenceId]
+├ ƒ /api/course/materials/[id]/replace-references
+├ ƒ /api/course/materials/[id]/thumbnail
+├ ƒ /api/course/materials/all
+├ ƒ /api/course/materials/batch-delete
+├ ƒ /api/course/materials/batch-move
+├ ƒ /api/course/materials/storage
+├ ƒ /api/course/materials/upload
+├ ƒ /api/course/materials/upload-local
+├ ƒ /api/course/materials/vod-status
+├ ƒ /api/course/materials/vod-sync
+├ ƒ /api/course/orders
+├ ƒ /api/course/series
+├ ƒ /api/course/series/[id]
+├ ƒ /api/course/series/[id]/authorize
+├ ƒ /api/course/series/[id]/authorize-phone
+├ ƒ /api/course/series/[id]/batch-authorize
+├ ƒ /api/course/series/[id]/batch-deauthorize
+├ ƒ /api/course/series/[id]/courses
+├ ƒ /api/course/series/[id]/courses/reorder
+├ ƒ /api/course/series/[id]/deauthorize
+├ ƒ /api/course/series/[id]/release
+├ ƒ /api/course/series/[id]/students
+├ ƒ /api/course/series/cover
+├ ƒ /api/course/series/cover/[filename]
+├ ƒ /api/courses
+├ ƒ /api/courses/[id]
+├ ƒ /api/courses/[id]/attendance-sheet
+├ ƒ /api/courses/[id]/certificates
+├ ƒ /api/courses/cover
+├ ƒ /api/courses/cover-image
+├ ƒ /api/dashboard/business
+├ ƒ /api/dashboard/overview
+├ ƒ /api/ecommerce/orders
+├ ƒ /api/ecommerce/overview
+├ ƒ /api/ecommerce/products
+├ ƒ /api/ecommerce/products/[id]
+├ ƒ /api/ecommerce/products/image
+├ ƒ /api/ecommerce/sales
+├ ƒ /api/ecommerce/sales/[id]
+├ ƒ /api/ecommerce/stock-in
+├ ƒ /api/ecommerce/stock-logs
+├ ƒ /api/ecommerce/stock-logs/[id]
+├ ƒ /api/event/competitions
+├ ƒ /api/event/competitions/[id]
+├ ƒ /api/event/competitions/cover
+├ ƒ /api/event/data-transfer
+├ ƒ /api/event/entry-summary
+├ ƒ /api/event/group-judges
+├ ƒ /api/event/group-judges/copy
+├ ƒ /api/event/groups
+├ ƒ /api/event/groups/[id]
+├ ƒ /api/event/groups/import
+├ ƒ /api/event/groups/reorder
+├ ƒ /api/event/judges
+├ ƒ /api/event/judges/[id]
+├ ƒ /api/event/judges/import
+├ ƒ /api/event/members
+├ ƒ /api/event/music/[id]
+├ ƒ /api/event/notices
+├ ƒ /api/event/performances/randomize
+├ ƒ /api/event/players
+├ ƒ /api/event/players/[id]
+├ ƒ /api/event/players/[id]/payments
+├ ƒ /api/event/players/batch
+├ ƒ /api/event/players/import
+├ ƒ /api/event/results
+├ ƒ /api/event/score-rules
+├ ƒ /api/event/scores
+├ ƒ /api/event/verify
+├ ƒ /api/exclusive-orders
+├ ƒ /api/finance/commissions
+├ ƒ /api/finance/commissions/[id]
+├ ƒ /api/finance/expenses
+├ ƒ /api/finance/income-details
+├ ƒ /api/finance/summary
+├ ƒ /api/inbox/announcements
+├ ƒ /api/inbox/jobs/run
+├ ƒ /api/inbox/staff
+├ ƒ /api/login
+├ ƒ /api/members
+├ ƒ /api/members/[id]
+├ ƒ /api/members/[id]/profile360
+├ ƒ /api/members/avatar
+├ ƒ /api/members/course-counts
+├ ƒ /api/members/directory
+├ ƒ /api/mini/activity/series/[id]
+├ ƒ /api/mini/admin/miniprogram-config
+├ ƒ /api/mini/admin/status
+├ ƒ /api/mini/authorization/check
+├ ƒ /api/mini/authorization/request
+├ ƒ /api/mini/bookmarks
+├ ƒ /api/mini/bookmarks/[id]
+├ ƒ /api/mini/bookmarks/all
+├ ƒ /api/mini/certificates
+├ ƒ /api/mini/certificates/[id]/name
+├ ƒ /api/mini/certificates/[id]/preview
+├ ƒ /api/mini/checkins
+├ ƒ /api/mini/checkins/my
+├ ƒ /api/mini/checkins/series/[id]
+├ ƒ /api/mini/events
+├ ƒ /api/mini/events/[id]
+├ ƒ /api/mini/events/[id]/groups/[groupId]
+├ ƒ /api/mini/events/[id]/groups/[groupId]/players/[playerId]
+├ ƒ /api/mini/events/[id]/judge
+├ ƒ /api/mini/events/[id]/register
+├ ƒ /api/mini/member/authorized-series
+├ ƒ /api/mini/member/checkin
+├ ƒ /api/mini/member/checkins
+├ ƒ /api/mini/member/consume-records
+├ ƒ /api/mini/member/event-registrations
+├ ƒ /api/mini/member/events
+├ ƒ /api/mini/member/growth
+├ ƒ /api/mini/member/messages
+├ ƒ /api/mini/member/messages/[id]/read
+├ ƒ /api/mini/member/messages/read-all
+├ ƒ /api/mini/member/messages/unread-count
+├ ƒ /api/mini/member/payments
+├ ƒ /api/mini/member/profile
+├ ƒ /api/mini/member/recent-courses
+├ ƒ /api/mini/member/wechat-avatar
+├ ƒ /api/mini/member/wechat-profile
+├ ƒ /api/mini/notes
+├ ƒ /api/mini/notes/[id]
+├ ƒ /api/mini/notes/all
+├ ƒ /api/mini/offline/bookings
+├ ƒ /api/mini/offline/bookings/[id]
+├ ƒ /api/mini/offline/checkin
+├ ƒ /api/mini/offline/overview
+├ ƒ /api/mini/phone-login
+├ ƒ /api/mini/public/calendar
+├ ƒ /api/mini/public/features
+├ ƒ /api/mini/public/home-stats
+├ ƒ /api/mini/public/offline-courses
+├ ƒ /api/mini/public/series
+├ ƒ /api/mini/public/series/[id]
+├ ƒ /api/mini/public/series/[id]/courses
+├ ƒ /api/mini/public/series/[id]/detail
+├ ƒ /api/mini/public/series/[id]/progress
+├ ƒ /api/mini/questions
+├ ƒ /api/mini/questions/[id]
+├ ƒ /api/mini/questions/[id]/answers
+├ ƒ /api/mini/send-code
+├ ƒ /api/mini/series
+├ ƒ /api/mini/series/[id]
+├ ƒ /api/mini/series/[id]/authorize-phone
+├ ƒ /api/mini/shop/[...path]
+├ ƒ /api/mini/silent-login
+├ ƒ /api/mini/student-login
+├ ƒ /api/mini/video/[id]/play
+├ ƒ /api/mini/video/[id]/progress
+├ ƒ /api/mini/video/[id]/stream
+├ ƒ /api/offline/bookings
+├ ƒ /api/offline/bookings/[id]
+├ ƒ /api/offline/migrate
+├ ƒ /api/offline/sessions
+├ ƒ /api/offline/sessions/[id]
+├ ƒ /api/offline/sessions/[id]/checkin-code
+├ ƒ /api/orders/[id]/status
+├ ƒ /api/orders/unified
+├ ƒ /api/payments
+├ ƒ /api/payments/[id]
+├ ƒ /api/payments/voucher
+├ ƒ /api/provinces
+├ ƒ /api/public/enroll
+├ ƒ /api/shop/summary
+├ ƒ /api/student-growth
+├ ƒ /api/student-growth/[id]
+├ ƒ /api/student-growth/[id]/academy-start
+├ ƒ /api/student-growth/[id]/adjust
+├ ƒ /api/student-growth/backfill
+├ ƒ /api/students/progress
+├ ƒ /api/users
+├ ƒ /api/users/[id]
+├ ƒ /api/users/[id]/status
+├ ƒ /api/validate-token
+├ ƒ /api/wechat/identity/sync
+├ ○ /bonus-commission
+├ ○ /certificates
+├ ○ /commission
+├ ○ /content
+├ ○ /courses
+├ ○ /crm
+├ ○ /dashboard
+├ ○ /data
+├ ○ /ecommerce
+├ ○ /events
+├ ƒ /events/[id]
+├ ƒ /events/judges/[id]
+├ ƒ /events/players/[id]
+├ ○ /finance
+├ ○ /forgot-password
+├ ○ /live
+├ ƒ /local-api/ecommerce/overview
+├ ƒ /local-api/ecommerce/products
+├ ƒ /local-api/ecommerce/products/[id]
+├ ƒ /local-api/ecommerce/products/image
+├ ƒ /local-api/ecommerce/sales
+├ ƒ /local-api/ecommerce/sales/[id]
+├ ƒ /local-api/ecommerce/stock-in
+├ ƒ /local-api/ecommerce/stock-logs
+├ ƒ /local-api/ecommerce/stock-logs/[id]
+├ ƒ /local-api/finance/expenses
+├ ƒ /local-api/finance/summary
+├ ƒ /local-api/payments/[id]
+├ ○ /login
+├ ○ /manifest.webmanifest
+├ ○ /marketing
+├ ○ /members
+├ ƒ /members/[id]
+├ ○ /messages
+├ ○ /miniprogram
+├ ○ /offline-scheduling
+├ ○ /online-course
+├ ƒ /online-course/[id]
+├ ○ /online-course/auth
+├ ○ /online-course/materials
+├ ○ /order-center
+├ ○ /orders
+├ ○ /permissions
+├ ○ /robots.txt
+├ ○ /settings
+├ ○ /student-growth
+├ ○ /student-progress
+└ ○ /training
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

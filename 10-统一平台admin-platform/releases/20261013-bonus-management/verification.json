@@ -1,0 +1,88 @@
+{
+  "browser": "Chrome",
+  "desktop": true,
+  "mobile": true,
+  "lessonFormSaved": true,
+  "productTab": true,
+  "confirmAndPay": true,
+  "importDedup": true,
+  "exportSheets": 2,
+  "expenseAmount": 450,
+  "pageErrors": [],
+  "status": "deployed_verified",
+  "testsPassed": 14,
+  "productionBuild": "passed",
+  "productionDataModified": false,
+  "previewDatabase": "isolated",
+  "refundPolicy": "pending",
+  "receiptAttachmentUpload": false,
+  "legacyTestFixtureFailures": 3,
+  "sourceSha256": {
+    "src/app/(admin)/bonus-commission/page.tsx": "19b8f4f08dde2ae6fb2d55f16a90d2f2158cda1bfb6b980020c8736108410d3e",
+    "src/app/(admin)/bonus-commission/settlement.module.css": "3bd8ce0474174c732e8eba6fdb2e5e976097381452236338ed0c85856d324b42",
+    "src/app/api/bonus-management/route.ts": "5690a8d9b4d7fc9dca5983a5dafb69636cf050ba4a469179dfce2ca2fa47f96e",
+    "src/app/api/commission-settlements/route.ts": "274847b79e32d0e31a05198890f7f46f5df2766502de9a61a7a38e2d698fd483",
+    "src/components/course-commission-details.tsx": "2734af8158a9b185f1dbd2591daa9756f318c925f174671325a8f209cd91be38",
+    "src/lib/server/bonus-management.ts": "dbdf189ac052b3ddcd519d0631da9265ebc4c19473b1f3564e851b918f8afb50",
+    "src/lib/bonus-export.ts": "cf2a2d6bd9addd8f6bfbc408efa7fd69793212ecda3fa444a1ab2f8a59c8b3ec",
+    "tests/bonus-management.test.mjs": "79ec23f78f4b4c3b6277c69e8ae40348c7e0fcdedf756f481ae75526eb8093c4"
+  },
+  "deployment": {
+    "status": "deployed_verified",
+    "backup": "/www/backups/dongfangwuquan/bonus-management-20261013-v1",
+    "previousBuild": "pop34j4lAJRzyoQVvzcd7",
+    "build": "VWIuveyEZtjmog25uBw5r",
+    "routesPreserved": 263,
+    "anonymousGetStatus": 401,
+    "anonymousPostStatus": 401,
+    "files": {
+      "src/app/(admin)/bonus-commission/page.tsx": "19b8f4f08dde2ae6fb2d55f16a90d2f2158cda1bfb6b980020c8736108410d3e",
+      "src/app/(admin)/bonus-commission/settlement.module.css": "3bd8ce0474174c732e8eba6fdb2e5e976097381452236338ed0c85856d324b42",
+      "src/app/api/bonus-management/route.ts": "5690a8d9b4d7fc9dca5983a5dafb69636cf050ba4a469179dfce2ca2fa47f96e",
+      "src/app/api/commission-settlements/route.ts": "274847b79e32d0e31a05198890f7f46f5df2766502de9a61a7a38e2d698fd483",
+      "src/components/course-commission-details.tsx": "2734af8158a9b185f1dbd2591daa9756f318c925f174671325a8f209cd91be38",
+      "src/lib/server/bonus-management.ts": "dbdf189ac052b3ddcd519d0631da9265ebc4c19473b1f3564e851b918f8afb50",
+      "src/lib/bonus-export.ts": "cf2a2d6bd9addd8f6bfbc408efa7fd69793212ecda3fa444a1ab2f8a59c8b3ec"
+    },
+    "financialRecordsWritten": false,
+    "databaseRestorePerformed": false,
+    "browser": {
+      "pageStatus": 200,
+      "title": "伊娃东方舞 · 数字化运营平台",
+      "account": "lilei",
+      "origin": "https://admin.swod.com.cn",
+      "tabs": [
+        "月度结算",
+        "课程提成",
+        "商品销售",
+        "课时登记"
+      ],
+      "monthlyApiStatus": [
+        200
+      ],
+      "productFormOpened": true,
+      "lessonFormOpened": true,
+      "courseDetailsLoaded": true,
+      "mobileOverflow": false,
+      "pageErrors": [],
+      "financialActionsSubmitted": false
+    },
+    "authenticated": {
+      "authenticatedApiStatus": 200,
+      "account": "lilei",
+      "people": 3,
+      "detailRows": 35,
+      "schemaTables": {
+        "BonusEntry": 0,
+        "BonusOrderKey": 0,
+        "BonusMonthly": 0,
+        "BonusStandard": 0,
+        "BonusAudit": 0
+      },
+      "financialSourceCountsUnchanged": true,
+      "databaseCheck": "ok",
+      "realRegistrationsOrPaymentsSubmitted": false
+    },
+    "serverTestsPassed": 14
+  }
+}

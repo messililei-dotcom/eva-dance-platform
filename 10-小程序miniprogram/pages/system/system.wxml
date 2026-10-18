@@ -30,6 +30,7 @@
           <text>{{item.lessonText}}</text>
           <text>{{item.learnerText}}</text>
         </view>
+        <view wx:if="{{item.unlocked}}" class="course-unlocked">✓ 已解锁 <text class="course-learn-action">继续学习</text></view><view wx:else class="course-pricing"><text class="course-sale-price">{{item.hasDiscount ? '优惠价 ' : ''}}{{item.priceText}}</text><text wx:if="{{item.hasDiscount}}" class="course-original-price">原价 {{item.originalPriceText}}</text></view>
       </view>
     </view>
   </view>

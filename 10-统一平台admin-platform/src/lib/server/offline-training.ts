@@ -3,6 +3,11 @@ import type { AdminDb } from './admin-db';
 
 type Row = Record<string, any>;
 
+export const OFFLINE_LESSON_RULE = '线下课程按期次购买课时，再按实际到课核销；无需预约。';
+function rejectRetiredScheduling(): void {
+  throw businessError('约课及预约签到功能已取消，请购买课程期次课时后使用课时核销', 410);
+}
+
 function columns(db: AdminDb, table: string) {
   return db.prepare(`PRAGMA table_info('${table.replace(/'/g, "''")}')`).all<{ name: string }>().map(row => row.name);
 }
@@ -297,6 +302,7 @@ export function listOfflineSessions(db: AdminDb, filters: { courseId?: unknown; 
 }
 
 export function createOfflineSession(db: AdminDb, input: Row) {
+  rejectRetiredScheduling();
   ensureOfflineTrainingTables(db);
   const courseId = positiveInt(input.courseId ?? input.course_id);
   const sessionDate = cleanOfflineText(input.sessionDate ?? input.session_date);
@@ -334,6 +340,7 @@ export function createOfflineSession(db: AdminDb, input: Row) {
 }
 
 export function updateOfflineSession(db: AdminDb, sessionId: unknown, input: Row) {
+  rejectRetiredScheduling();
   ensureOfflineTrainingTables(db);
   const id = positiveInt(sessionId);
   const current = db.prepare('SELECT * FROM OfflineSession WHERE id=?').get<Row>(id);
@@ -383,6 +390,7 @@ function activeEntitlement(db: AdminDb, memberId: number, courseId: number) {
 }
 
 export function createOfflineBooking(db: AdminDb, input: Row) {
+  rejectRetiredScheduling();
   ensureOfflineTrainingTables(db);
   backfillOfflineEntitlements(db);
   const memberId = positiveInt(input.memberId ?? input.member_id);
@@ -439,6 +447,7 @@ export function createOfflineBooking(db: AdminDb, input: Row) {
 }
 
 export function cancelOfflineBooking(db: AdminDb, bookingId: unknown, memberId?: unknown, reason = '') {
+  rejectRetiredScheduling();
   ensureOfflineTrainingTables(db);
   const id = positiveInt(bookingId);
   const now = shanghaiNowText();
@@ -468,6 +477,7 @@ export function cancelOfflineBooking(db: AdminDb, bookingId: unknown, memberId?:
 }
 
 export function openOfflineCheckin(db: AdminDb, sessionId: unknown, operator = '') {
+  rejectRetiredScheduling();
   ensureOfflineTrainingTables(db);
   const id = positiveInt(sessionId);
   const session = db.prepare('SELECT * FROM OfflineSession WHERE id=?').get<Row>(id);
@@ -487,6 +497,7 @@ export function openOfflineCheckin(db: AdminDb, sessionId: unknown, operator = '
 }
 
 export function checkinOfflineBooking(db: AdminDb, input: Row) {
+  rejectRetiredScheduling();
   ensureOfflineTrainingTables(db);
   const bookingId = positiveInt(input.bookingId ?? input.booking_id);
   const memberId = positiveInt(input.memberId ?? input.member_id);
@@ -624,42 +635,35 @@ export function memberOfflineOverview(db: AdminDb, memberId: unknown, filters: {
            c.coverImage AS cover_image
     FROM OfflineEntitlement e
     JOIN Course c ON c.id=e.course_id
+    JOIN Payment p ON p.id=e.payment_id AND p.paymentStatus IN ('paid','completed')
     WHERE e.member_id=? AND e.status='active'
     ORDER BY e.valid_until, e.id
   `).all(id);
-  const now = shanghaiNowText();
-  const today = now.slice(0, 10);
   const courseIds = [...new Set((filters.courseIds || []).map(id => positiveInt(id)).filter(Boolean))].slice(0, 200);
-  const sessions = db.prepare(`
-    SELECT s.*, c.name AS course_name, c.subType AS course_period,
-           EXISTS(
-             SELECT 1 FROM OfflineEntitlement e
-             WHERE e.member_id=? AND e.course_id=s.course_id AND e.status='active'
-               AND e.available_sessions>0
-               AND (COALESCE(e.valid_from,'')='' OR substr(e.valid_from,1,10)<=?)
-               AND (COALESCE(e.valid_until,'')='' OR substr(e.valid_until,1,10)>=?)
-           ) AS has_valid_entitlement
-    FROM OfflineSession s
-    JOIN Course c ON c.id=s.course_id
-    WHERE s.status IN ('published','checkin_open') AND s.session_date>=?
-      ${courseIds.length ? `AND s.course_id IN (${courseIds.map(() => '?').join(',')})` : ''}
-    ORDER BY s.session_date, s.start_time
-    LIMIT 200
-  `).all<Row>(id, today, today, today, ...courseIds).map(session => {
-    const reason = `${session.session_date} ${session.start_time}` <= now ? '已开课'
-      : session.booking_open_at && session.booking_open_at > now ? '预约未开始'
-      : session.booking_close_at && session.booking_close_at < now ? '预约已截止'
-      : Number(session.booked_count) >= Number(session.capacity) ? '已满员'
-      : !Number(session.has_valid_entitlement) ? '无有效可用课次' : '';
-    const { has_valid_entitlement, ...publicSession } = session;
-    return { ...publicSession, can_book: reason ? 0 : 1, booking_reason: reason };
-  });
-  const bookings = listOfflineBookings(db, { memberId: id });
-  return { entitlements, sessions, bookings };
+  const consumes = db.prepare(`SELECT cr.id, cr.courseId AS course_id, cr.courseName AS course_name,
+    c.subType AS course_period, cr.count, cr.consumeDate AS consume_date, cr.remainingAfter AS remaining_after
+    FROM ConsumeRecord cr LEFT JOIN Course c ON c.id=cr.courseId
+    WHERE cr.memberId=? AND COALESCE(cr.status,'active')='active'
+      ${courseIds.length ? `AND cr.courseId IN (${courseIds.map(() => '?').join(',')})` : ''}
+    ORDER BY cr.consumeDate DESC,cr.id DESC LIMIT 200`).all(id,...courseIds);
+  return { entitlements: entitlements.filter((e:any) => !courseIds.length || courseIds.includes(Number(e.course_id))),
+    sessions: [], bookings: [], consumes, rule: OFFLINE_LESSON_RULE, bookingEnabled: false };
+
 }
 
 export function offlineErrorResponse(error: unknown) {
   const err = error as Error & { status?: number };
   const message = cleanOfflineText(err?.message, '操作失败');
   return Response.json({ success: false, error: message, message }, { status: err?.status || 500 });
+}
+
+/** Mirror the authoritative paid receipt balance after a direct lesson write-off. */
+export function syncOfflinePaymentBalance(db: AdminDb, paymentId: unknown) {
+  if (!db.prepare("SELECT 1 FROM sqlite_master WHERE name='OfflineEntitlement'").get()) return;
+  const payment=db.prepare('SELECT * FROM Payment WHERE id=?').get<Row>(positiveInt(paymentId));
+  if (!payment) return;
+  const used=Number(db.prepare("SELECT COALESCE(SUM(count),0) n FROM ConsumeRecord WHERE paymentId=? AND COALESCE(status,'active')='active'").get<{n:number}>(payment.id)?.n||0);
+  const available=['paid','completed'].includes(String(payment.paymentStatus||''))?Math.max(0,Number(payment.remainingSessions||0)):0;
+  db.prepare(`UPDATE OfflineEntitlement SET available_sessions=?,used_sessions=?,total_sessions=?,
+    version=version+1,updated_at=? WHERE payment_id=?`).run(available,used,available+used,shanghaiNowText(),payment.id);
 }

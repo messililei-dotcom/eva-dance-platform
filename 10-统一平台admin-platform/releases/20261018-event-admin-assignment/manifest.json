@@ -1,0 +1,13 @@
+{
+  "state": "prepared_not_deployed",
+  "files": {
+    "src/app/(admin)/events/page.tsx": "a78ebc7ec6768ccafe5169890efd70e55afe3d7f65ad4c674b87a408f7c67921",
+    "src/app/api/event/_competition-owner.ts": "3f816c601fee227e70adb77fe31b8b869ba7b09922301a39f3c9f7d15fb3b763",
+    "src/app/api/event/_db.ts": "b9ef08faa326d5a34dfb1e7e9f92e620f5b80181bbd009f4544a01d5492030c1",
+    "src/app/api/event/competitions/route.ts": "966dbe26a06ce1e10a11749b4abcefdb14ba15586883f6ec5279697756aecf67",
+    "src/app/api/event/competitions/[id]/route.ts": "16fc4fc6dee44c207380c957644c77f8d06a0aa8138670de277383e8164133d4",
+    "tests/event-owner.test.mjs": "f72a41aa73537008588943834d4f5dcf19f89822b9dd1085c42b8d00541207f8"
+  },
+  "validation": "7 permission tests passed; source TypeScript check passed in prior turn",
+  "scope": "Event administrator assignment only; no account creation or business data writes"
+}

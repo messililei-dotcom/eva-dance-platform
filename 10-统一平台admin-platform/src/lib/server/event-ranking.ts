@@ -69,6 +69,16 @@ function summarizeJudgeScoreRows(rows: any[]) {
 export function recalculateGroupRankings(db: any, groupId: number) {
   const group = db.prepare('SELECT * FROM event_groups WHERE id = ?').get(groupId);
   if (!group) throw new Error('组别不存在');
+  // Preserve historical/manual totals while removing ineligible players from
+  // live rankings and publication. Reinstatement is handled by the upsert below.
+  db.prepare(`UPDATE event_rankings SET rank_no=0, status=COALESCE(
+    (SELECT CASE WHEN p.group_id!=event_rankings.group_id THEN 'inactive' WHEN p.audit_status='rejected' THEN 'rejected' WHEN p.status IN ('withdrawn','cancelled') THEN p.status ELSE 'inactive' END
+     FROM event_players p WHERE p.id=event_rankings.player_id), 'inactive'),
+    published_total=NULL, published_at='', updated_at=?
+    WHERE group_id=? AND NOT EXISTS (
+      SELECT 1 FROM event_players p WHERE p.id=event_rankings.player_id
+        AND p.group_id=? AND p.audit_status!='rejected'
+        AND p.status NOT IN ('withdrawn','cancelled'))`).run(nowIso(), groupId, groupId);
   const rule = getRuleForGroup(db, groupId, group.score_rule_id);
   const players = db.prepare(`
     SELECT p.*, COUNT(DISTINCT gj.judge_id) AS judge_count
@@ -109,7 +119,7 @@ export function recalculateGroupRankings(db: any, groupId: number) {
         raw_total = excluded.raw_total,
         calculated_total = COALESCE(event_rankings.manual_total, excluded.calculated_total),
         rank_no = excluded.rank_no,
-        status = CASE WHEN event_rankings.status = 'published' THEN 'draft' ELSE event_rankings.status END,
+        status = CASE WHEN event_rankings.status IN ('published','withdrawn','cancelled','rejected','inactive') THEN 'draft' ELSE event_rankings.status END,
         published_total = NULL, published_at = '',
         recalculated_at = excluded.recalculated_at,
         updated_at = excluded.updated_at
@@ -126,7 +136,8 @@ export function rerankGroupRankings(db: any, groupId: number, updatedAt = nowIso
     SELECT r.id
     FROM event_rankings r
     LEFT JOIN event_players p ON p.id = r.player_id
-    WHERE r.group_id = ?
+    WHERE r.group_id = ? AND p.group_id=r.group_id
+      AND p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled')
     ORDER BY r.calculated_total DESC, CAST(NULLIF(p.player_no, '') AS INTEGER) ASC, p.player_no ASC, r.player_id ASC
   `).all(groupId);
   const update = db.prepare('UPDATE event_rankings SET rank_no = ?, updated_at = ? WHERE id = ?');

@@ -1,0 +1,74 @@
+[
+  {
+    "path": "before/home.png",
+    "sha256": "8f5e3ccab188bc938956b5556b58ecbf699d49f8e8c7a23f065faef40f967863"
+  },
+  {
+    "path": "before/academy.png",
+    "sha256": "b3b7f25522753ea5bb2e9085d7bff0f2d114e515572c2e8750d378a248a63ff5"
+  },
+  {
+    "path": "before/offline.png",
+    "sha256": "3b878e59a3e7236c411dbbceba6752fafd937c76ddc5042df6594342aa1a8523"
+  },
+  {
+    "path": "before/events.png",
+    "sha256": "fb186d144c371319b6b3895f99cd5460199ec2ef3718ed80fce561d679104611"
+  },
+  {
+    "path": "before/shop.png",
+    "sha256": "7912454b31c201f00b6da6c1dfdcc0705adb9eeaa170123d856dc5bfd8c42034"
+  },
+  {
+    "path": "before/profile.png",
+    "sha256": "0b7a8dbc52a17a95a20942d3101b275f01216fa93d4c94abd34c5f2c31fa10b6"
+  },
+  {
+    "path": "after/home.png",
+    "sha256": "bde217607598890a6fb22c641f2ebe910c779bf8d10cbc2fb646954f8e5e35e9"
+  },
+  {
+    "path": "after/academy.png",
+    "sha256": "7d5d6fc47bb28fab6730ddaffe407266311fd02934a253410052d1da13c17adc"
+  },
+  {
+    "path": "after/offline.png",
+    "sha256": "327a4b0e54ce0567c93fffcbd9417a02ba0a1bda8d98a2def93981f6e53135ce"
+  },
+  {
+    "path": "after/events.png",
+    "sha256": "6bfe66745d95dff1159b3395ce81e62a2eea10c6041331faf874f70e8548766f"
+  },
+  {
+    "path": "after/shop.png",
+    "sha256": "6b735a10560c1c5fd03a3bb8232297c52d1295e2de860eb0d7f6e3301d167331"
+  },
+  {
+    "path": "after/profile.png",
+    "sha256": "2aadbbd19a84d5e187a23d84a246664833df340bb6eefbe6248710313b230edb"
+  },
+  {
+    "path": "after/desktop.png",
+    "sha256": "4a8abb43a51d82df02d5b35060383b123e4a2c30feb12d0123dabd74392f5b83"
+  },
+  {
+    "path": "after/profile-member.png",
+    "sha256": "447d87b99366c876bd09363130d52be33518a9b90cd78f70e5f9f2374cb15afd"
+  },
+  {
+    "path": "after/my-events.png",
+    "sha256": "1c55c3980f2d377ec880ab0dd1a04afdaaedc6d357cd14d1f51e67ba21d266e1"
+  },
+  {
+    "path": "after/pwa-profile.png",
+    "sha256": "447d87b99366c876bd09363130d52be33518a9b90cd78f70e5f9f2374cb15afd"
+  },
+  {
+    "path": "after/legacy-profile.png",
+    "sha256": "b5ee4be94a708c683539bc1e0a22aa2cfa95410e0236637ea8fb05124192d80c"
+  },
+  {
+    "path": "after/error-state.png",
+    "sha256": "6f2ccc29041f87705cbb83bfa521b161e5cfd45a35f19b75164d47d0f5208494"
+  }
+]

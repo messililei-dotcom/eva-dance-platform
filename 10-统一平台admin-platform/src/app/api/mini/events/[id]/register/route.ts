@@ -1,6 +1,6 @@
 import {ensureEventOnline,ensurePhoneMember} from '@/lib/server/event-online';
 import fs from 'node:fs';
-import { normalizedMusicForm, validateMusicBytes, persistEventMusic, MusicUploadError } from '@/lib/server/event-music-upload';
+import { normalizedMusicForm, validatePlayableMusic, persistEventMusic, MusicUploadError } from '@/lib/server/event-music-upload';
 import { getMemberId } from '../../../_helpers';
 import { cleanText, nowIso, toNumber, withEventDb } from '../../../../event/_db';
 import { createPersonalMessage } from '@/lib/server/inbox';
@@ -54,7 +54,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const title = cleanText(body.performanceTitle);
     if (!title || title.length > 120) throw new MusicUploadError('请填写1至120字的节目名称');
     const music = form.get('musicFile') as File;
-    const bytes = Buffer.from(await music.arrayBuffer()); validateMusicBytes(music.name, bytes);
+    const bytes = Buffer.from(await music.arrayBuffer()); await validatePlayableMusic(music.name, bytes);
     return withEventDb((db) => db.transaction(() => {
 
       ensureEventOnline(db);

@@ -72,6 +72,11 @@
 **/*.tgz
 
 # OS, IDE and local tool state
+**/.gradle/
+**/local.properties
+**/signing.local.properties
+**/*.jks
+**/*.keystore
 **/.DS_Store
 Thumbs.db
 .vscode/

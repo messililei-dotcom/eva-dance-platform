@@ -9,7 +9,7 @@ function load(path, mocks={}) {
  new Function('require','module','exports',code)(name=>{if(name in mocks)return mocks[name];throw Error(name);},module,module.exports);
  return module.exports;
 }
-test('取消授权和通知原子提交，重试不重复，提成扣回但收入保留',()=>{
+test('取消授权和通知原子提交，原授权与取消记录共用归零数据，审计保留原金额',()=>{
  const sqlite=new DatabaseSync(':memory:');
  sqlite.exec(`CREATE TABLE User(id INTEGER,name TEXT,username TEXT,status TEXT,role TEXT);
  INSERT INTO User VALUES(1,'操作人','op','active','admin'),(2,'管理员','admin','active','admin'),(3,'停用','off','disabled','admin');
@@ -17,6 +17,8 @@ test('取消授权和通知原子提交，重试不重复，提成扣回但收�
  INSERT INTO Member VALUES(1,'学员','13800000000','','');
  CREATE TABLE CourseSeries(id INTEGER,name TEXT); INSERT INTO CourseSeries VALUES(1,'课程');
  CREATE TABLE CourseOrder(id INTEGER,status TEXT);
+ CREATE TABLE FinanceIncome(incomeNo TEXT,amount REAL,remark TEXT);
+ INSERT INTO FinanceIncome VALUES('AUTH-1',100,''),('AUTH-10',999,'AUTO_ONLINE_AUTH_INCOME|authorization_id=10');
  CREATE TABLE CourseAuthorization(id INTEGER,series_id INTEGER,member_id INTEGER,phone TEXT,wx_openid TEXT,wx_unionid TEXT,status TEXT,revoked_at TEXT,revoked_by INTEGER,granted_at TEXT,remark TEXT,actual_amount REAL,sales TEXT,commission_rate REAL,commission_amount REAL);
  INSERT INTO CourseAuthorization VALUES(1,1,1,'13800000000','','','active',NULL,NULL,'2026-10-12','','100','顾问',10,10);
  ALTER TABLE CourseAuthorization ADD COLUMN order_id INTEGER;`);
@@ -29,13 +31,27 @@ test('取消授权和通知原子提交，重试不重复，提成扣回但收�
  assert.equal(commission.onlineAuthorizationCommissions(db).length,1);
  assert.equal(auth.deauthorizeMemberIdentity(db,1,1,'',1,1).deauthorized,1);
  assert.equal(commission.onlineAuthorizationCommissions(db).length,0);
- assert.equal(sqlite.prepare(financial.AUTHORIZATION_INCOME_SQL).get().amount,100);
+ assert.equal(sqlite.prepare(financial.AUTHORIZATION_INCOME_SQL).all().length,0);
+ const cleared=sqlite.prepare('SELECT * FROM CourseAuthorization WHERE id=1').get();
+ assert.equal(cleared.actual_amount,0);assert.equal(cleared.commission_amount,0);assert.equal(cleared.commission_rate,0);
+ const saved=sqlite.prepare('SELECT * FROM CourseAuthorizationRecordAudit').get();
+ assert.equal(saved.action,'revoke_financial_zero');assert.equal(saved.actor_id,1);
+ assert.equal(JSON.parse(saved.before_json).actual_amount,100);assert.equal(JSON.parse(saved.before_json).commission_amount,10);
  assert.match(sqlite.prepare('SELECT content FROM StaffInboxMessage').get().content,/操作人在.*取消了学员.*课程.*请退回提成奖金 ¥10.00/);
  assert.equal(sqlite.prepare('SELECT user_id FROM StaffInboxRecipient').get().user_id,2);
+ assert.equal(sqlite.prepare("SELECT amount FROM FinanceIncome WHERE incomeNo='AUTH-1'").get().amount,0);
+ assert.equal(sqlite.prepare("SELECT amount FROM FinanceIncome WHERE incomeNo='AUTH-10'").get().amount,999);
  assert.equal(auth.deauthorizeMemberIdentity(db,1,1,'',1,1).deauthorized,0);
+ assert.equal(sqlite.prepare('SELECT count(*) n FROM CourseAuthorizationRecordAudit').get().n,1);
  assert.equal(sqlite.prepare('SELECT count(*) n FROM StaffInboxMessage').get().n,1);
- sqlite.exec("UPDATE CourseAuthorization SET status='active'; CREATE TRIGGER fail_notice BEFORE INSERT ON StaffInboxMessage BEGIN SELECT RAISE(ABORT,'test failure'); END;");
+ sqlite.exec("UPDATE CourseAuthorization SET status='active',actual_amount=100,commission_amount=10,commission_rate=10; CREATE TRIGGER fail_notice BEFORE INSERT ON StaffInboxMessage BEGIN SELECT RAISE(ABORT,'test failure'); END;");
  assert.throws(()=>auth.deauthorizeMembers(db,1,[1],1),/test failure/);
  assert.equal(sqlite.prepare('SELECT status FROM CourseAuthorization').get().status,'active');
+ assert.equal(sqlite.prepare('SELECT actual_amount FROM CourseAuthorization').get().actual_amount,100);
+ sqlite.exec("DROP TRIGGER fail_notice; CREATE TRIGGER fail_audit BEFORE INSERT ON CourseAuthorizationRecordAudit BEGIN SELECT RAISE(ABORT,'audit failed'); END;");
+ assert.throws(()=>auth.deauthorizeMembers(db,1,[1],1),/audit failed/);
+ assert.equal(sqlite.prepare('SELECT status FROM CourseAuthorization').get().status,'active');
+ assert.equal(sqlite.prepare('SELECT actual_amount FROM CourseAuthorization').get().actual_amount,100);
+ assert.equal(sqlite.prepare('SELECT count(*) n FROM StaffInboxMessage').get().n,1);
  sqlite.close();
 });

@@ -23,7 +23,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     wechatIdentityText: "",
     authorizedCourses: [],
     offlineCourses: [],
-    eventRegistrations: [],
+    eventRegistrations: [], myEventsOpen: false, eventsLoading: false, eventsError: "",
     certificates: [],
     isAdmin: false,
     adminRole: "",
@@ -60,6 +60,11 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
       app.globalData.memberName = null;
     }
     
+    if (this.eventsMemberId !== memberId) {
+      this.eventsMemberId = memberId;
+      this.eventsRequestId = (this.eventsRequestId || 0) + 1;
+      this.setData({ myEventsOpen: false, eventsLoading: false, eventsError: "", eventRegistrations: [] });
+    }
     const storedWechatProfile = this.getStoredWechatProfile(memberId);
     const initialMemberName = app.globalData.memberName || "未登录";
     this.setData(Object.assign({
@@ -81,7 +86,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
         unreadMessageCount: 0,
         authorizedCourses: [],
         offlineCourses: [],
-                eventRegistrations: [],
+                eventRegistrations: [], myEventsOpen: false, eventsLoading: false, eventsError: "",
             certificates: [],
         showWechatBinder: false
       });
@@ -120,6 +125,8 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     const requestedMember = wx.getStorageSync("memberId");
     this.setData({ profileLoading: true, profileError: "" });
     let profileFailure = null;
+    let eventsFailure = null;
+    const eventsVersion = this.eventsRequestId || 0;
     const [profile, authorized, recent, catalog, payments, certificates, eventRegistrations] = await Promise.all([
       api.getMemberProfile().catch(err => { profileFailure = err; return null; }),
       api.getAuthorizedSeries().catch(() => []),
@@ -127,7 +134,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
       api.getSeriesList().catch(() => []),
       api.getPayments().catch(() => []),
       api.getCertificates().catch(() => []),
-      api.getEventRegistrations().catch(() => [])
+      api.getEventRegistrations().catch(err => { eventsFailure = err; return []; })
     ]);
     if (requestId !== this.profileRequestId || requestedMember !== wx.getStorageSync("memberId")) return;
     if (profileFailure) {
@@ -188,21 +195,6 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
       consumedSessions: Number(item.consumedSessions || item.consumed_sessions || 0),
       paymentMethod: cleanText(item.paymentMethod || item.payment_method || "")
     }));
-    const auditStatusMap = { pending: "已报名", approved: "已报名", rejected: "未通过" };
-    const paidStatusMap = { unpaid: "待缴费", pending: "待确认", paid: "已缴费", refunded: "已退款" };
-    const normalizedEventRegistrations = (eventRegistrations || []).map(item => ({
-      ...item,
-      id:item.playerId || item.id,
-      competitionName: cleanText(item.competitionName || item.competition_name || "东方舞赛事"),
-      groupName: cleanText(item.groupName || item.group_name || "未分组"),
-      statusText: auditStatusMap[item.auditStatus || item.audit_status] || item.auditStatus || item.audit_status || "待审核",
-      paidStatusText: paidStatusMap[item.paidStatus || item.paid_status] || item.paidStatus || item.paid_status || "",
-      resultText: item.resultPublished
-        ? `${item.awardName || (item.rankNo ? `第${item.rankNo}名` : "成绩已公示")} · ${item.totalScore == null ? "-" : item.totalScore}分`
-        : "成绩待公示",
-      displayStartDate: String(item.startDate || item.start_date || "").slice(0, 10),
-      competitionId: item.competitionId || item.competition_id
-    }));
     this.profileMember = member;
     if (!this.data.profileDirty) this.setData({ profileDraft: this.profileDraftFrom(member), genderIndex: Math.max(0, this.data.genderOptions.indexOf(member.gender || "未填写")) });
     const wechatName = member.wx_name || member.wx_nickname || this.data.wechatName || "";
@@ -231,7 +223,10 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
       wechatIdentityText: (member.wx_unionid || member.wx_openid) ? "微信身份已同步" : "",
       authorizedCourses,
       offlineCourses,
-      eventRegistrations: normalizedEventRegistrations,
+      ...((this.eventsRequestId || 0) === eventsVersion ? {
+        eventRegistrations: this.normalizeEventRegistrations(eventRegistrations),
+        eventsError: eventsFailure ? (eventsFailure.message || "比赛记录加载失败，请重试") : ""
+      } : {}),
       profileLoading: false,
       profileError: "",
       certificates: (certificates || []).map(cert => ({
@@ -344,17 +339,48 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
   },
 
   openOfflineSchedule() {
-    wx.setStorageSync("offlineTargetTab", "sessions");
+    wx.setStorageSync("offlineTargetTab", "rights");
     wx.switchTab({ url: "/pages/offline/offline" });
   },
 
+  normalizeEventRegistrations(eventRegistrations) {
+    const auditStatusMap = { pending: "待审核", approved: "审核通过", rejected: "未通过" };
+    const paidStatusMap = { unpaid: "待缴费", pending: "待确认", paid: "已缴费", refunded: "已退款" };
+    return (eventRegistrations || []).map(item => ({
+      ...item,
+      id:item.playerId || item.id,
+      competitionName: cleanText(item.competitionName || item.competition_name || "东方舞赛事"),
+      groupName: cleanText(item.groupName || item.group_name || "未分组"),
+      statusText: auditStatusMap[item.auditStatus || item.audit_status] || item.auditStatus || item.audit_status || "待审核",
+      paidStatusText: paidStatusMap[item.paidStatus || item.paid_status] || item.paidStatus || item.paid_status || "",
+      resultText: item.resultPublished === true
+        ? `${item.awardName || (item.rankNo ? `第${item.rankNo}名` : "成绩已公示")} · ${item.totalScore == null ? "-" : item.totalScore}分`
+        : "成绩待公示",
+      displayStartDate: String(item.startDate || item.start_date || "").slice(0, 10),
+      competitionId: item.competitionId || item.competition_id
+    }));
+  },
+
   openEventRegistrations() {
-    const rows = this.data.eventRegistrations || [];
-    if (rows.length === 1) {
-      videoFeature.navigateTo({ url: `/pages/event-detail/event-detail?id=${rows[0].competitionId}` });
-      return;
+    if (!this.data.isLoggedIn) return this.goLogin();
+    const myEventsOpen = !this.data.myEventsOpen;
+    this.setData({ myEventsOpen });
+    if (myEventsOpen) return this.loadMyEvents();
+  },
+
+  async loadMyEvents() {
+    if (!this.data.isLoggedIn || this.data.eventsLoading) return;
+    const memberId = wx.getStorageSync("memberId");
+    const requestId = this.eventsRequestId = (this.eventsRequestId || 0) + 1;
+    this.setData({ eventsLoading: true, eventsError: "" });
+    try {
+      const rows = await api.getEventRegistrations();
+      if (requestId !== this.eventsRequestId || memberId !== wx.getStorageSync("memberId") || !this.data.isLoggedIn) return;
+      this.setData({ eventRegistrations: this.normalizeEventRegistrations(rows), eventsLoading: false });
+    } catch (err) {
+      if (requestId !== this.eventsRequestId || memberId !== wx.getStorageSync("memberId") || !this.data.isLoggedIn) return;
+      this.setData({ eventsLoading: false, eventsError: err.message || "比赛记录加载失败，请重试" });
     }
-    wx.switchTab({ url: "/pages/events/events" });
   },
 
   payEventRegistration(event) {wx.navigateTo({url:'/pages/course-checkout/course-checkout?kind=event&id='+encodeURIComponent(event.currentTarget.dataset.id)});},
@@ -499,7 +525,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
             unreadMessageCount: 0,
         authorizedCourses: [],
             offlineCourses: [],
-                            eventRegistrations: [],
+                            eventRegistrations: [], myEventsOpen: false, eventsLoading: false, eventsError: "",
                     certificates: [],
 
           });

@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "environment": "isolated database copy at port 3044",
+  "productionBusinessWrites": false,
+  "statuses": {
+    "profile": 200,
+    "edit": 200,
+    "invalidBirthday": 400,
+    "devices": 200,
+    "courses": 200,
+    "refresh": 200,
+    "oldToken": 401,
+    "logout": 200,
+    "revoked": 401
+  }
+}

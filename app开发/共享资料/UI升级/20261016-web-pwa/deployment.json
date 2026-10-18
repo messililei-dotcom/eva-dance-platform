@@ -1,0 +1,32 @@
+{
+  "deployed": true,
+  "deployedAt": "2026-10-16T09:16:55.769011+00:00",
+  "origin": "https://www.swod.com.cn",
+  "release": "web-ui-20261016",
+  "buildId": "kNbVGd8EJUfZBObuykQan",
+  "previousBuildId": "M4oeY9aKFT0Kp54s_Pfbr",
+  "sourceFilesVerified": 20,
+  "productionBaselineMatched": true,
+  "productionBuildPassed": true,
+  "serverTargetedTests": 19,
+  "browserVerified": true,
+  "browserLog": "logs/deployed-browser-qa.json",
+  "cdnRefreshTaskId": "33608514399",
+  "backup": "/www/wwwroot/dongfangwuquan/releases/web-ui-20261016/backup",
+  "rollback": "/www/wwwroot/dongfangwuquan/releases/web-ui-20261016/rollback.sh",
+  "businessDataMigrated": false,
+  "productionBusinessWrites": false,
+  "physicalInstalledPwaVerified": false,
+  "scope": "mobile official website and PWA UI only; native and mini-program releases excluded",
+  "cdnPublicHomeUpdatedVerified": true,
+  "productionAdminRestarted": false,
+  "rollbackReady": true,
+  "pwaResourcesVerified": {
+    "serviceWorkerVersion": "swod-pwa-v12-content-ui-20261016",
+    "manifestTheme": "#ffffff",
+    "manifestBackground": "#f6f7f9",
+    "startUrl": "/dashboard/profile?source=pwa"
+  },
+  "installedPwaUpdateVerified": false,
+  "pwaActivationProbe": "inconclusive: fresh-browser registration/activation did not finish within the check window"
+}

@@ -1,6 +1,7 @@
 import { normalizedMusicForm, MusicUploadError } from '@/lib/server/event-music-upload';
 import { appPlatform, appMemberSource, appDeviceName } from '@/lib/server/app-platform';
 import { appShopPayment } from '@/lib/server/app-shop';
+import { mergeAppProfile } from '@/lib/server/app-profile';
 import { carrierLoginEnabled, getCarrierPhone } from '@/lib/server/app-carrier-auth';
 import { withDb, memberToken } from '../../../mini/_helpers';
 import { upsertPhoneMember } from '../../../mini/_auth';
@@ -115,7 +116,7 @@ async function handle(request: Request, context: Context) {
         if(detail.order?.kind === 'online') throw new AppError('App 录播课程购买需使用苹果内购',409);
         if (!existing.ok || !payment[detail.order?.provider as 'wechat' | 'alipay']) throw new AppError('订单不存在或支付方式暂未开放',409);
       }
-      headers.set('user-agent', 'EvaDance iPhone Mobile');
+      headers.set('user-agent', platform === 'ios' ? 'EvaDance iPhone Mobile' : platform === 'android' ? 'EvaDance Android Mobile' : 'EvaDance HarmonyOS Mobile');
       headers.set('x-real-ip', request.headers.get('x-real-ip') || '127.0.0.1');
       headers.set('origin', 'https://www.swod.com.cn');
       const result = await fetch(`https://www.swod.com.cn/api/shop/${shopPath}`, {
@@ -146,12 +147,7 @@ async function handle(request: Request, context: Context) {
       const module = await import('../../../mini/member/profile/route');
       const old = await (await module.GET(new Request(url, {headers}))).json();
       if (!old.success) throw new AppError('个人资料加载失败');
-      const allowed = ['name','gender','birthday','country','province','city','address'];
-      const merged = {...old.data.member};
-      for (const key of allowed) if (body[key] !== undefined) {
-        if (typeof body[key] !== 'string' || body[key].length > 300) throw new AppError('个人资料格式无效');
-        merged[key] = body[key];
-      }
+      const merged = mergeAppProfile(old.data.member, body);
       Object.keys(body).forEach(key => delete body[key]); Object.assign(body, merged);
     }
     const upload = multipart ? await normalizedMusicForm(request) : undefined;

@@ -34,7 +34,9 @@ import {
   UserSwitchOutlined,
 } from '@ant-design/icons';
 import { Table } from '@/components/adaptive-table';
-import { eventApi } from '@/lib/api';
+import { api, eventApi } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
+import { isPlatformSuperAdmin } from '@/lib/admin-feature-access';
 import { sortableColumns } from '@/lib/table-sort';
 
 const statusColor: Record<string, string> = {
@@ -78,6 +80,22 @@ const competitionStageText: Record<string, string> = {
 
 export default function EventsPage() {
   const { message } = App.useApp();
+  const { user } = useAuth();
+  const canAssignAdmin = isPlatformSuperAdmin(user);
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [adminUsersLoading, setAdminUsersLoading] = useState(false);
+  const [adminUsersError, setAdminUsersError] = useState(false);
+  useEffect(() => {
+    if (!canAssignAdmin) return;
+    let active = true;
+    setAdminUsersLoading(true);
+    api.get('/users').then(({ data }) => {
+      if (!data.success || !Array.isArray(data.data)) throw new Error('加载失败');
+      if (active) { setAdminUsers(data.data.filter((item: any) => item.status === 'active' && (item.role === 'event_admin' || isPlatformSuperAdmin(item)))); setAdminUsersError(false); }
+    }).catch(() => { if (active) setAdminUsersError(true); })
+      .finally(() => { if (active) setAdminUsersLoading(false); });
+    return () => { active = false; };
+  }, [canAssignAdmin]);
   const [tab, setTab] = useState('competitions');
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -174,6 +192,7 @@ export default function EventsPage() {
     if (row) {
       competitionForm.setFieldsValue({
         ...row,
+        adminUserIds: row.adminUserIds || (row.ownerUserId ? [row.ownerUserId] : []),
         dateRange: row.startDate ? [dayjs(row.startDate), row.endDate ? dayjs(row.endDate) : dayjs(row.startDate)] : undefined,
 
       });
@@ -189,6 +208,7 @@ export default function EventsPage() {
   const saveCompetition = async () => {
     const values = await competitionForm.validateFields();
     const payload = {
+      ...(canAssignAdmin && values.adminUserIds !== undefined ? { adminUserIds: values.adminUserIds } : {}),
       name: values.name,
       code: values.code,
       coverUrl: values.coverUrl,
@@ -509,7 +529,7 @@ export default function EventsPage() {
           />
           <Button icon={<DatabaseOutlined />} onClick={() => tab === 'verify' ? loadVerify() : load()}>刷新{tab === 'verify' ? '/核验' : ''}</Button>
           <Button icon={<DownloadOutlined />} loading={transferLoading} onClick={exportAll}>导出全部</Button>
-          {tab === 'competitions' && <Button type="primary" icon={<PlusOutlined />} onClick={() => openCompetition()}>新建赛事</Button>}
+          {tab === 'competitions' && canAssignAdmin && <Button type="primary" icon={<PlusOutlined />} onClick={() => openCompetition()}>新建赛事</Button>}
           {tab === 'players' && <Button type="primary" icon={<PlusOutlined />} onClick={() => {
             setEditingPlayer(null);
             playerForm.resetFields();
@@ -608,6 +628,9 @@ export default function EventsPage() {
             <Col xs={24} sm={12}><Form.Item name="location" label="地点"><Input /></Form.Item></Col>
             <Col xs={24} sm={12}><Form.Item name="organizer" label="主办方"><Input /></Form.Item></Col>
           </Row>
+          {canAssignAdmin && <Form.Item name="adminUserIds" label="赛事管理员" extra={adminUsersError ? '管理员用户加载失败，请刷新页面重试' : '支持多选，可搜索姓名或账号。仅超级管理员可以添加或移除赛事管理员。'}>
+            <Select mode="multiple" showSearch allowClear optionFilterProp="label" loading={adminUsersLoading} disabled={adminUsersLoading || adminUsersError} placeholder="搜索并选择赛事管理员，可多选" options={adminUsers.map(item => ({ value: item.id, label: `${item.name || item.username}（${item.username}）` }))} />
+          </Form.Item>}
           <Form.Item name="description" label="赛事说明"><Input.TextArea rows={3} /></Form.Item>
         </Form>
       </Modal>

@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0 (5)",
+  "androidSDKBuild": true,
+  "releaseLint": {
+    "errors": 0,
+    "warnings": 15
+  },
+  "unitTests": [
+    {
+      "suite": "cn.com.swod.app.CommerceTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "suite": "cn.com.swod.app.PolicyTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0
+    }
+  ],
+  "artifacts": {
+    "SWOD-1.0.0-5-release.apk": {
+      "size": 240176,
+      "sha256": "c9ff69a1862760c1c21077328fe17f3ce64ab88c6b80632162e1b2258280d061"
+    },
+    "SWOD-1.0.0-5-release.aab": {
+      "size": 238035,
+      "sha256": "3d288c5c40d0f64f58d997d622336c19c4900e2a2b13779e7701b20902be72f0"
+    }
+  },
+  "APKSignatureVerified": true,
+  "AABJarSignatureVerified": true,
+  "certificateMatchesFiling": true,
+  "emulatorVerified": true,
+  "physicalDeviceVerified": false,
+  "emulatorEvidence": "模拟器验收/验收结果.json"
+}

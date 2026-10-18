@@ -1,0 +1,10 @@
+{
+  "file": "installers/SWOD-1.0.0-5-UI-20261016-candidate.apk",
+  "sha256": "549950579e7d62fa220408183ac76b361e87a844032b49ed7112a12ba356498d",
+  "size": 243368,
+  "signed": true,
+  "status": "development_candidate_not_store_release",
+  "package": "cn.com.swod.app",
+  "versionName": "1.0.0",
+  "versionCode": 5
+}

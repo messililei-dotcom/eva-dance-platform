@@ -89,9 +89,9 @@ const checks = [
     message: "主导航需要提供线下课栏目"
   },
   {
-    ok: apiJs.includes("getOfflineOverview") && apiJs.includes("bookOfflineSession")
-      && apiJs.includes("cancelOfflineBooking") && apiJs.includes("checkinOfflineBooking"),
-    message: "线下课需要接入课次、预约、取消和签到核销接口"
+    ok: apiJs.includes("getOfflineOverview") && apiJs.includes("getConsumeRecords")
+      && !apiJs.includes("bookOfflineSession") && !apiJs.includes("checkinOfflineBooking"),
+    message: "线下课需要接入期次课时与核销记录，移除约课及预约签到接口"
   },
   {
     ok: appJson.includes("pages/detail/detail"),

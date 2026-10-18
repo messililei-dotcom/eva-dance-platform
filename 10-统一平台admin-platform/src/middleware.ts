@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyLocalToken } from './app/api/_local-auth';
+import { adminApiFeature, adminLandingPage, canAccessAdminApi, canAccessAdminPage, isRemovedAdminPage, isRestrictedAdminPage } from './lib/admin-feature-access';
 
 /**
  * 公开API路由列表 — 这些路由不需要Token验证
@@ -165,6 +167,17 @@ export async function middleware(request: NextRequest) {
   };
 
   if (!apiPath.startsWith('/api')) {
+    if (isRemovedAdminPage(pathname)) {
+      return withRobotsHeader(new NextResponse('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>页面已移除 · 伊娃东方舞</title><body style="margin:0;background:#f6f7fb;color:#26304d;font-family:system-ui"><main style="max-width:480px;margin:15vh auto;padding:24px"><h1>页面已移除</h1><p>直播管理已从平台移除。</p><a href="/login" style="color:#c91568">返回管理端</a></main></body></html>', { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } }));
+    }
+    if (isRestrictedAdminPage(pathname)) {
+      const token = getTokenFromRequest(request);
+      const actor = token ? verifyLocalToken(token) : null;
+      if (!actor) return withRobotsHeader(NextResponse.redirect(new URL('/login', request.url)));
+      if (!canAccessAdminPage(actor, pathname)) {
+        return withRobotsHeader(NextResponse.redirect(new URL(adminLandingPage(actor), request.url)));
+      }
+    }
     return withRobotsHeader(NextResponse.next());
   }
 
@@ -174,7 +187,8 @@ export async function middleware(request: NextRequest) {
     const payload = decodeBase64UrlJson(localToken.split('.')[1]);
     if (payload?.role === 'event_admin'
       && !apiPath.startsWith('/api/event/')
-      && !['/api/login', '/api/validate-token'].includes(apiPath)) {
+      && !['/api/login', '/api/validate-token'].includes(apiPath)
+      && !(apiPath === '/api/access-records' && request.method === 'POST')) {
       return withRobotsHeader(NextResponse.json({ success: false, error: '无权限查看', message: '无权限查看' }, { status: 403 }));
     }
   }
@@ -211,9 +225,18 @@ export async function middleware(request: NextRequest) {
     ));
   }
 
+  if (adminApiFeature(apiPath, request.method)) {
+    // Re-read the active user's current role; an old signed token cannot retain revoked access.
+    const actor = verifyLocalToken(token);
+    if (!actor) return withRobotsHeader(NextResponse.json({ success: false, error: '未登录' }, { status: 401 }));
+    if (!canAccessAdminApi(actor, apiPath, request.method)) {
+      return withRobotsHeader(NextResponse.json({ success: false, error: '无权限查看', message: '无权限查看' }, { status: 403 }));
+    }
+  }
   return withRobotsHeader(NextResponse.next());
 }
 
 export const config = {
   matcher: '/:path*',
+  runtime: 'nodejs',
 };

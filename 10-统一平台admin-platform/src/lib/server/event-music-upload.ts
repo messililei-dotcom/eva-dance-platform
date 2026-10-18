@@ -1,6 +1,8 @@
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as os from 'node:os';
+import { spawn } from 'node:child_process';
 
 export const MAX_EVENT_MUSIC = 10 * 1024 * 1024;
 export class MusicUploadError extends Error {
@@ -54,4 +56,58 @@ export function persistEventMusic(name: string, bytes: Buffer) {
   const file = path.join(root, basename);
   fs.writeFileSync(file, bytes, { flag: 'wx', mode: 0o600 });
   return { file, fileURL: '/uploads/event-music/' + basename, name: path.basename(name).replace(/[\x00-\x1f]/g, '').slice(0, 120) };
+}
+
+// Validate actual decoded samples, not just a spoofable file signature. Successful
+// identical uploads share validation, with bounded CPU, queue and cache usage.
+const decodedMusic = new Map<string, number>();
+const decodingMusic = new Map<string, Promise<void>>();
+let activeDecoders = 0;
+const decoderWaiters: Array<() => void> = [];
+async function acquireDecoder() {
+  if (activeDecoders < 2) { activeDecoders++; return; }
+  if (decoderWaiters.length >= 64) throw new MusicUploadError('音乐校验繁忙，请稍后重试', 503);
+  await new Promise<void>(resolve => decoderWaiters.push(resolve));
+}
+function releaseDecoder() {
+  const next = decoderWaiters.shift();
+  if (next) next(); else activeDecoders--;
+}
+export async function validatePlayableMusic(name: string, bytes: Buffer): Promise<void> {
+  const extension = validateMusicBytes(name, bytes);
+  const key = extension + ':' + crypto.createHash('sha256').update(bytes).digest('hex');
+  if ((decodedMusic.get(key) || 0) > Date.now()) return;
+  const existing = decodingMusic.get(key);
+  if (existing) return existing;
+  const task = (async () => {
+    await acquireDecoder();
+    let directory: string | undefined;
+    try {
+      directory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'swod-audio-'));
+      const input = path.join(directory, 'input' + extension);
+      await fs.promises.writeFile(input, bytes, { mode: 0o600 });
+      await new Promise<void>((resolve, reject) => {
+        const child = spawn(process.env.EVENT_FFMPEG_PATH || '/usr/bin/ffmpeg',
+          ['-nostdin', '-v', 'error', '-xerror', '-err_detect', 'explode', '-i', input,
+           '-map', '0:a:0', '-vn', '-ac', '1', '-ar', '8000', '-f', 's16le', 'pipe:1'],
+          { stdio: ['ignore', 'pipe', 'ignore'] });
+        let sampleBytes = 0;
+        child.stdout.on('data', (chunk: Buffer) => { sampleBytes += chunk.length; });
+        const timer = setTimeout(() => child.kill('SIGKILL'), 30000);
+        child.once('error', () => { clearTimeout(timer); reject(new MusicUploadError('音乐校验暂时不可用，请稍后重试', 503)); });
+        child.once('close', code => {
+          clearTimeout(timer);
+          if (code === 0 && sampleBytes > 0) resolve();
+          else reject(new MusicUploadError('音乐无法完整播放，请重新导出有效音频后上传'));
+        });
+      });
+      if (decodedMusic.size >= 32) decodedMusic.delete(decodedMusic.keys().next().value!);
+      decodedMusic.set(key, Date.now() + 10 * 60 * 1000);
+    } finally {
+      try { if (directory) await fs.promises.rm(directory, { recursive: true, force: true }); }
+      finally { releaseDecoder(); }
+    }
+  })();
+  decodingMusic.set(key, task);
+  try { await task; } finally { decodingMusic.delete(key); }
 }

@@ -1,3 +1,4 @@
+import { getCoursePromotion, courseSalePrice } from './course-promotion';
 import {ensureEventOnline,eventPaymentOffer,settleEventPayment} from "./event-online";
 import { randomBytes, createHash } from "node:crypto";
 import type { AdminDb } from "./admin-db";
@@ -21,6 +22,7 @@ export type ShopOrder = {
   recipient: string;
   phone: string;
   address: string;
+  delivery_method?: "express" | "pickup";
   created_at: number;
   expires_at: number;
   payment_attempted: number;
@@ -74,6 +76,7 @@ export function ensureShop(db: AdminDb) {
   const columns = db.prepare('PRAGMA table_info(shop_online_orders)').all<{name:string}>();
   if (!columns.some(column=>column.name==='payment_app_id')) db.exec("ALTER TABLE shop_online_orders ADD COLUMN payment_app_id TEXT NOT NULL DEFAULT ''");
 
+  if (!columns.some(column=>column.name==='delivery_method')) db.exec("ALTER TABLE shop_online_orders ADD COLUMN delivery_method TEXT NOT NULL DEFAULT 'express'");
 }
 export function audit(
   db: AdminDb,
@@ -128,6 +131,7 @@ export function publicOrder(db: AdminDb, order: ShopOrder) {
     recipient: order.recipient,
     phone: order.phone,
     address: order.address,
+    deliveryMethod: order.delivery_method || "express",
     createdAt: order.created_at,
     expiresAt: order.expires_at,
     carrier: order.carrier,
@@ -146,8 +150,10 @@ export function createOrder(db: AdminDb, memberId: number, body: any) {
   const phone = field(body.phone, 25, "手机号");
   if (!/^\+?[\d -]{7,25}$/.test(phone))
     throw new ShopError("请填写正确的手机号");
-  const address = field(body.address, 300, "完整收货地址");
-  if (address.length < 8) throw new ShopError("请填写省、市、区及街道门牌号");
+  const deliveryMethod = body.deliveryMethod ?? "express";
+  if (!["express", "pickup"].includes(deliveryMethod)) throw new ShopError("请选择配送方式");
+  const address = deliveryMethod === "pickup" ? "" : field(body.address, 300, "完整收货地址");
+  if (deliveryMethod === "express" && address.length < 8) throw new ShopError("请填写省、市、区及街道门牌号");
   const key = field(body.requestKey, 80, "下单标识");
   if (!["wechat", "alipay"].includes(body.provider))
     throw new ShopError("请选择支付方式");
@@ -177,6 +183,7 @@ export function createOrder(db: AdminDb, memberId: number, body: any) {
         recipient,
         phone,
         address,
+        ...(deliveryMethod === "pickup" ? {deliveryMethod} : {}),
         items,
         provider: body.provider,
       }),
@@ -275,6 +282,7 @@ export function createOrder(db: AdminDb, memberId: number, body: any) {
       now + 15 * 60000,
       now,
     );
+    db.prepare("UPDATE shop_online_orders SET delivery_method=? WHERE id=?").run(deliveryMethod,id);
     audit(db, id, "created", `member:${memberId}`);
     return orderById(db, id);
   })();
@@ -436,7 +444,7 @@ export function courseOffer(db: AdminDb, kind: string, target: unknown, actor = 
     : db.prepare("SELECT c.* FROM Course c LEFT JOIN CourseTemplate t ON t.id=c.templateId WHERE c.id=? AND c.status IN ('active','planned') AND COALESCE(t.websiteVisible,1)=1 AND COALESCE(c.category,'') NOT LIKE '%演示%' AND c.name NOT LIKE '%测试%'").get<any>(id);
   if (!row) throw new ShopError('课程已隐藏、下架或停止招生',404);
   if (kind === 'offline' && row.endDate && String(row.endDate).slice(0,10) < new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Shanghai'})) throw new ShopError('本期课程已经结束',409);
-  const price = kind === 'online' && Number(row.promo_price)>0 ? row.promo_price : row.price;
+  const price = kind === 'online' ? courseSalePrice(row, getCoursePromotion(db).enabled) : row.price;
   if (kind === 'online' && row.is_free) throw new ShopError('免费课程无需付款，请直接进入学习',409);
   if (!(Number(price)>0)) throw new ShopError('本课程暂未设置在线售价，请联系课程顾问',409);
   return {kind,id,name:row.name,priceFen:moneyFen(price),image:row.cover_image || row.coverImage || row.image || '',description:row.description || row.content || row.subtitle || '',period:[row.subType || row.dateRange,row.startDate && row.endDate ? `${row.startDate} — ${row.endDate}` : row.startDate,row.location].filter(Boolean).join(' · '),sessions:Math.max(0,Math.floor(Number(row.sessions || 0))),expires:row.endDate || '',capacity:Number(row.capacity || 0),remaining:Number(row.remaining || 0)};
@@ -454,7 +462,7 @@ export function createCourseOrder(db: AdminDb, memberId: number, body: any) {
     const offer=courseOffer(db,body.kind,body.targetId,memberId);
     if(body.expectedTotalFen!==offer.priceFen)throw new ShopError('课程价格已更新，请刷新后确认',409);
     if(offer.kind==='online' && db.prepare("SELECT id FROM CourseAuthorization WHERE (member_id=? OR (phone=? AND ?<>'')) AND series_id=? AND status='active' AND (expire_at IS NULL OR expire_at='' OR datetime(expire_at)>datetime('now','localtime'))").get(memberId,member.phone || '',member.phone || '',offer.id))throw new ShopError('你已拥有该课程，请直接学习',409);
-    if(offer.kind==='offline' && db.prepare("SELECT id FROM Payment WHERE memberId=? AND courseId=? AND paymentStatus IN ('paid','completed')").get(memberId,offer.id))throw new ShopError('你已报名本期课程，请查看约课',409);
+    if(offer.kind==='offline' && db.prepare("SELECT id FROM Payment WHERE memberId=? AND courseId=? AND paymentStatus IN ('paid','completed')").get(memberId,offer.id))throw new ShopError('你已购买本期课程，请查看课时余额',409);
     const pending=db.prepare("SELECT o.id FROM shop_online_orders o JOIN shop_course_orders c ON c.order_id=o.id WHERE o.member_id=? AND c.kind=? AND c.target_id=? AND o.status IN ('pending','refund_requested','refunding')").get(memberId,offer.kind,offer.id);
     if(pending && offer.kind==='event')return orderById(db,pending.id,memberId);
     if(pending)throw new ShopError('该课程已有待处理订单，请到我的订单继续付款或取消',409);
@@ -501,7 +509,10 @@ function fulfillCourse(db: AdminDb,order:ShopOrder,c:any){
 export function validateCourseRefund(db:AdminDb,id:string){
  const c=courseOrder(db,id);if(!c || c.kind!=='offline')return;
  const e=db.prepare('SELECT * FROM OfflineEntitlement WHERE payment_id=?').get<any>(c.receipt_id);
- if(e && (e.used_sessions>0 || e.frozen_sessions>0))throw new ShopError('该期次存在已使用或已预约课次，请先处理课次再退款',409);
+ const consumeTable=db.prepare("SELECT 1 FROM sqlite_master WHERE name='ConsumeRecord'").get();
+ const consumeHasStatus=consumeTable && db.prepare('PRAGMA table_info(ConsumeRecord)').all<any>().some(col=>col.name==='status');
+ const used=consumeTable ? Number(db.prepare(`SELECT COALESCE(SUM(count),0) n FROM ConsumeRecord WHERE paymentId=?${consumeHasStatus?" AND COALESCE(status,'active')='active'":""}`).get<any>(c.receipt_id)?.n||0) : 0;
+ if(used>0 || (e && (e.used_sessions>0 || e.frozen_sessions>0)))throw new ShopError('该期次存在已核销课时，请先处理核销记录再退款',409);
  // Freeze rights while the gateway refund is in progress; prevents booking/refund races.
  db.prepare("UPDATE OfflineEntitlement SET status='refunding',available_sessions=0 WHERE payment_id=?").run(c.receipt_id);
  db.prepare("UPDATE Payment SET paymentStatus='refunding' WHERE id=?").run(c.receipt_id);

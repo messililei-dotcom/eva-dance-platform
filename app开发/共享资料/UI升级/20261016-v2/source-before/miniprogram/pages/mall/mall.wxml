@@ -1,0 +1,15 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
+<view class="shop-page">
+ <view class="shop-header"><view><text class="brand">伊娃甄选</text><view class="subtitle">东方舞生活 · 官方商城 · 快递包邮</view></view><button class="outline" bindtap="orders">我的订单</button></view>
+ <input class="search" value="{{keyword}}" placeholder="搜索商品" bindinput="search"/>
+ <scroll-view scroll-x class="categories"><view class="category-list"><button wx:for="{{categories}}" wx:key="*this" class="chip {{category===item?'selected':''}}" data-value="{{item}}" bindtap="category">{{item}}</button></view></scroll-view>
+ <view wx:if="{{loading}}" class="empty">正在加载商品…</view>
+ <view wx:elif="{{error}}" class="empty">{{error}}<button class="outline" bindtap="reload">重新加载</button></view>
+ <view wx:elif="{{productCount === 0}}" class="empty">暂无符合条件的商品</view>
+ <view class="product-grid" wx:if="{{!loading && !error && productCount > 0}}"><view class="product-card" wx:for="{{visibleProducts}}" wx:key="id" bindtap="openProduct" data-id="{{item.id}}"><image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill"/><view wx:else class="image-placeholder">伊娃甄选</view><view class="product-info"><view class="product-name">{{item.name}}</view><view class="muted">{{item.specText}}</view><view class="price">¥{{item.priceText}}<text class="stock">{{item.stock>0?'有货':'售罄'}}</text></view></view></view></view>
+ <view class="bottom-bar"><text>购物袋 {{cartCount}} 件</text><button class="primary" bindtap="checkout">查看购物袋</button></view>
+</view>
+
+</block>

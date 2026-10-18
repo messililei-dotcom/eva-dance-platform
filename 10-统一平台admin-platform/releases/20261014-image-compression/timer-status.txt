@@ -1,0 +1,8 @@
+NextElapseUSecMonotonic=2month 2w 2d 13h 26min 16.244840s
+LastTriggerUSec=Wed 2026-10-14 20:03:28 CST
+ActiveState=active
+NEXT                            LEFT LAST                             PASSED UNIT                        ACTIVATES
+Wed 2026-10-14 20:08:28 CST 3min 53s Wed 2026-10-14 20:03:28 CST 1min 7s ago eva-image-compression.timer eva-image-compression.service
+
+1 timers listed.
+Pass --all to see loaded but inactive timers, too.

@@ -1,6 +1,6 @@
 import { AntdRegistry } from '@ant-design/nextjs-registry';
-import { App as AntdApp, ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
+import { App as AntdApp } from 'antd';
+import { NumericDateProvider } from '@/components/numeric-date-provider';
 import { KeyboardEnterSubmit } from '@/components/keyboard-enter-submit';
 import { PwaRegister } from '@/components/pwa-register';
 import { AuthProvider } from '@/lib/auth-context';
@@ -50,8 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body style={{ margin: 0 }}>
         <AntdRegistry>
-          <ConfigProvider
-            locale={zhCN}
+          <NumericDateProvider
             theme={{
               token: {
                 colorPrimary: '#F72A8A',
@@ -107,7 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {children}
               </AuthProvider>
             </AntdApp>
-          </ConfigProvider>
+          </NumericDateProvider>
         </AntdRegistry>
       </body>
     </html>

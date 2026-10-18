@@ -1,3 +1,4 @@
+import { getCoursePromotion, applyCoursePromotion } from '@/lib/server/course-promotion';
 import { studentDisplayBases } from '@/lib/server/student-display';
 import { getMemberId, jsonError, recordSeriesVisit, toPositiveInt, withDb } from '../../../../_helpers';
 import { noStoreJson } from '@/lib/http-cache';
@@ -7,6 +8,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   try {
     return withDb((db) => {
       const displayBases = studentDisplayBases(db);
+      const promotionEnabled = getCoursePromotion(db).enabled;
       const seriesId = toPositiveInt(routeParams.id);
       const data = db.prepare(
         `SELECT cs.id, cs.name, cs.subtitle, cs.category, cs.teacher, cs.price, cs.promo_price,
@@ -20,7 +22,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       Object.assign(data, { student_display_base: displayBases.get(seriesId) });
       const memberId = getMemberId(new URL(request.url).searchParams, request);
       recordSeriesVisit(db, seriesId, memberId, 'detail', request);
-      return memberId ? Response.json({ success: true, data }) : noStoreJson({ success: true, data });
+      const body = { success: true, data: applyCoursePromotion(data, promotionEnabled) };
+      return noStoreJson(body);
     });
   } catch (err: any) {
     return jsonError(err.message);

@@ -1,0 +1,15 @@
+{
+  "apkSHA256": "",
+  "nativeUI": false,
+  "loginLogout": false,
+  "courseAuthorization": false,
+  "playbackProgress": false,
+  "notesBookmarks": false,
+  "profile": false,
+  "orders": false,
+  "events": false,
+  "privacyDeletion": false,
+  "filingVerified": false,
+  "storeMaterialVerified": false,
+  "evidence": []
+}

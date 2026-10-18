@@ -181,6 +181,6 @@ export function saveJudgeScore(db: AdminDb, options: {
     db.prepare(`UPDATE event_players SET score_status='scored', updated_at=? WHERE id=?`).run(now, playerId);
     recalculateGroupRankings(db, Number(group.id));
     return { id: Number(inserted.lastInsertRowid), total, version };
-  })();
+  }).immediate();
   return result;
 }

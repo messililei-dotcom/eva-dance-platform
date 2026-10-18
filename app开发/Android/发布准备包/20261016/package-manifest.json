@@ -1,0 +1,16 @@
+{
+  "asOf": "2026-10-16",
+  "artifactType": "signed-release-preparation",
+  "packageName": "cn.com.swod.app",
+  "versionName": "1.0.0",
+  "versionCode": 5,
+  "releaseReady": false,
+  "storeReviewSubmitted": false,
+  "publicDownloadDeployed": false,
+  "productionBusinessWrites": false,
+  "sourceSnapshotIncluded": true,
+  "files": 85,
+  "zip": "SWOD-Android-1.0.0-5-preparation.zip",
+  "bytes": 3159618,
+  "sha256": "1ecae3c80b9de93e5d389b0a37fcd2ef08d17181d44ed2ab39d995b077b4040d"
+}

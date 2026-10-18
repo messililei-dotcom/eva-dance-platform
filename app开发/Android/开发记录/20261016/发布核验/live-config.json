@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "data": {
+    "version": 1,
+    "oneTapLogin": false,
+    "offlineDownload": false,
+    "digitalPurchase": false,
+    "physicalCheckout": false,
+    "privacyURL": "https://www.swod.com.cn/privacy",
+    "termsURL": "https://www.swod.com.cn/terms",
+    "accountDeletion": "request",
+    "minimumVersion": "1.0.0"
+  }
+}

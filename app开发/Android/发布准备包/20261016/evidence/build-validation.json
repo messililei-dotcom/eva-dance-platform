@@ -1,0 +1,54 @@
+{
+  "asOf": "2026-10-16",
+  "package": "cn.com.swod.app",
+  "installedLabel": "SWOD",
+  "versionName": "1.0.0",
+  "versionCode": 5,
+  "minSDK": 26,
+  "targetSDK": 36,
+  "buildSuccessful": true,
+  "unitTests": [
+    {
+      "name": "cn.com.swod.app.CompetitionRecordTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "cn.com.swod.app.CommerceTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "cn.com.swod.app.PolicyTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "lint": {
+    "errors": 0,
+    "warnings": 15
+  },
+  "APKCertificateMatchesFiling": true,
+  "AABSignatureVerified": true,
+  "artifacts": {
+    "SWOD-1.0.0-5-release.apk": {
+      "sha256": "90a4a51f5121b0f796f11d131ad6c7fe1af20e8d3937a2ca76f1cc8a5c5a8b4e",
+      "bytes": 244716
+    },
+    "SWOD-1.0.0-5-release.aab": {
+      "sha256": "cec243c96083c735126f23b8fb56b6738e7bb8f0e3e5578215df46d1d7ccdb2d",
+      "bytes": 242483
+    }
+  },
+  "physicalDeviceVerified": false,
+  "reviewSubmitted": false,
+  "publicDownloadDeployed": false,
+  "released": false,
+  "productionBusinessWrites": false
+}

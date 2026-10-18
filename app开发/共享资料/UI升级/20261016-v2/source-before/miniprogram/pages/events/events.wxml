@@ -1,0 +1,39 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
+<view class="events-page">
+  <view class="event-hero">
+    <view class="event-kicker">东方舞赛事平台</view>
+    <view class="event-title">AiwaRaks赛事平台</view>
+    <view class="hero-stats">
+      <view><text>{{eventCount}}</text><span>赛事总数</span></view>
+      <view><text>{{playerCount}}</text><span>累计参与</span></view>
+      <view><text>{{recordCount}}</text><span>记录数据</span></view>
+    </view>
+  </view>
+  <view class="list-head">
+    <view class="list-title">全部赛事</view>
+    <view class="event-search"><input value="{{keyword}}" placeholder="搜索赛事或地点" bindinput="onSearchInput" /><text>⌕</text></view>
+  </view>
+  <view wx:if="{{loading}}" class="empty-card">赛事加载中…</view>
+  <view wx:elif="{{visibleEvents.length}}" class="event-list">
+    <view class="event-card" wx:for="{{visibleEvents}}" wx:key="id">
+      <view class="event-cover" bindtap="openEvent" data-id="{{item.id}}">
+        <image wx:if="{{item.coverUrl}}" src="{{item.coverUrl}}" mode="aspectFill" binderror="onImageError" data-index="{{index}}"></image>
+        <view wx:else class="event-cover-fallback">赛事</view>
+        <view class="event-status {{item.registrationOpen ? 'open' : ''}}">{{item.registrationOpen ? '正在报名' : '圆满结束'}}</view>
+      </view>
+      <view class="event-body" bindtap="openEvent" data-id="{{item.id}}">
+        <view class="event-info">{{item.dateText}}</view>
+        <view class="event-info">{{item.location || '地点待定'}}</view>
+        <view class="event-name">{{item.name}}</view>
+        <view class="event-data"><view><text>{{item.groupCount || 0}}</text><span>组别</span></view><view><text>{{item.approvedPlayerCount || item.playerCount || 0}}</text><span>选手</span></view><view><text>{{item.judgeCount || 0}}</text><span>评委</span></view></view>
+      </view>
+      <button wx:if="{{item.registrationOpen}}" class="event-button register" catchtap="goRegister" data-id="{{item.id}}">点击报名 ›</button>
+      <button wx:else class="event-button" bindtap="openEvent" data-id="{{item.id}}">查看赛事 ›</button>
+    </view>
+  </view>
+  <view wx:else class="empty-card">当前暂无符合条件的赛事</view>
+</view>
+
+</block>

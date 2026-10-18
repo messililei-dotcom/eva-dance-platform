@@ -3,7 +3,7 @@
 <block wx:else>
 <view class="events-page">
   <view class="event-hero">
-    <view class="event-kicker">东方舞赛事平台</view>
+
     <view class="event-title">AiwaRaks赛事平台</view>
     <view class="hero-stats">
       <view><text>{{eventCount}}</text><span>赛事总数</span></view>
@@ -13,15 +13,16 @@
   </view>
   <view class="list-head">
     <view class="list-title">全部赛事</view>
-    <view class="event-search"><input value="{{keyword}}" placeholder="搜索赛事或地点" bindinput="onSearchInput" /><text>⌕</text></view>
+    <view class="event-search"><input value="{{keyword}}" placeholder="搜索赛事或地点" bindinput="onSearchInput" /></view>
   </view>
   <view wx:if="{{loading}}" class="empty-card">赛事加载中…</view>
+  <view wx:elif="{{error}}" class="empty-card"><text>{{error}}</text><button class="event-button" bindtap="loadEvents">重新加载</button></view>
   <view wx:elif="{{visibleEvents.length}}" class="event-list">
     <view class="event-card" wx:for="{{visibleEvents}}" wx:key="id">
       <view class="event-cover" bindtap="openEvent" data-id="{{item.id}}">
         <image wx:if="{{item.coverUrl}}" src="{{item.coverUrl}}" mode="aspectFill" binderror="onImageError" data-index="{{index}}"></image>
         <view wx:else class="event-cover-fallback">赛事</view>
-        <view class="event-status {{item.registrationOpen ? 'open' : ''}}">{{item.registrationOpen ? '正在报名' : '圆满结束'}}</view>
+        <view class="event-status {{item.registrationOpen ? 'open' : ''}}">{{item.statusText}}</view>
       </view>
       <view class="event-body" bindtap="openEvent" data-id="{{item.id}}">
         <view class="event-info">{{item.dateText}}</view>

@@ -1,6 +1,11 @@
+function courseAccountKey() {
+  if (typeof wx === 'undefined' || typeof wx.getStorageSync !== 'function') return 'guest';
+  return wx.getStorageSync('token') ? String(wx.getStorageSync('memberId') || 'signed-in') : 'guest';
+}
 const share = require("../../shared/share");
 const videoFeature = require("../../shared/video-feature");
 const api = require("../../utils/api");
+const { coursePrice } = require("../../shared/course-price");
 const { cleanText } = require("../../shared/review-text");
 const { findCourseVideoSelection } = require("../../shared/course-video-selection");
 
@@ -13,12 +18,12 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     playUrl: "", playbackSource: "", percent: 0, outline: [], visibleOutline: [], activePanel: "catalog",
     autoplayCountdown: null, lessonEnded: false,
     notes: [], noteContent: "", savingNote: false, loading: true,
-    hasStartedPlayback: false, authorizationRequired: false,
-    playbackRate: 1, rateOptions: [0.75, 1, 1.25, 2],
+    hasStartedPlayback: false, authorizationRequired: false, courseAuthorized: false,
+    playbackRate: 1, holdingSpeed: false, rateOptions: [0.75, 1, 1.25, 1.5],
     showPlayerMenu: false, showVideoControls: false, qualityOptions: [], currentQuality: "auto",
     currentQualityLabel: "自动", resumeSeconds: 0, currentSeconds: 0, currentDuration: 0,
     catalogPage: 1, catalogPageCount: 1, catalogTotal: 0, catalogFrom: 0, catalogTo: 0,
-    catalogQuery: "", catalogResultText: "", playbackError: ""
+    catalogQuery: "", catalogResultText: "", selectedOrdinal: 0, playbackError: ""
   },
   async onLoad(options) {
     this.setData({ videoId: options.videoId || null, seriesId: options.seriesId, courseId: options.courseId });
@@ -39,9 +44,15 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     }
   },
   async refreshCourseCatalog() {
+    const account = courseAccountKey();
     const seriesId = this.data.seriesId;
-    const [course, courses] = await Promise.all([api.getSeriesMeta(seriesId), api.getSeriesCourses(seriesId)]);
+    const [course, courses, auth] = await Promise.all([api.getSeriesMeta(seriesId), api.getSeriesCourses(seriesId), api.checkAuthorization ? api.checkAuthorization(seriesId).catch(() => null) : null]);
     if (String(seriesId) !== String(this.data.seriesId) || this.catalogDisposed) return;
+    if (account !== courseAccountKey()) return this.refreshCourseCatalog();
+    if (auth && !auth.authorized && Number(course.is_free) !== 1 && this.data.playUrl) {
+      this.endHoldSpeed(); if (this.videoContext) this.videoContext.stop();
+      this.setData({ playUrl: '', hasStartedPlayback: false, isPlaying: false });
+    }
     const previous = new Map((this.data.outline || []).map(item => [String(item.videoId), item]));
     const outline = [];
     (courses || []).forEach(row => (row.videos || []).forEach(item => {
@@ -56,7 +67,7 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     }));
     const index = outline.findIndex(item => String(item.videoId) === String(this.data.videoId));
     const selected = outline[index];
-    this.setData({ course, outline, hasPrevious: index > 0, hasNext: index >= 0 && index < outline.length - 1 });
+    this.setData({ course: { ...course, ...coursePrice(course, !auth ? null : !!auth.authorized && auth.reason !== "free_series" && Number(course.is_free) !== 1) }, courseAuthorized: !!(auth && auth.authorized) || Number(course.is_free) === 1, authorizationRequired: false, outline, hasPrevious: index > 0, hasNext: index >= 0 && index < outline.length - 1 });
     if (selected) this.setData({ courseId: selected.courseId, 'video.name': selected.name });
     else if (this.data.videoId) {
       this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1;
@@ -67,14 +78,18 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     this.refreshCatalog();
   },
   async loadCourse(seriesId, initialVideoId) {
+    const account = courseAccountKey();
     wx.showLoading({ title: "加载中" });
     try {
-      const [course, courses, progressRows] = await Promise.all([
+      const [course, courses, progressRows, auth] = await Promise.all([
         api.getSeriesMeta(seriesId),
         api.getSeriesCourses(seriesId),
-        api.getSeriesProgress(seriesId).catch(() => [])
+        api.getSeriesProgress(seriesId).catch(() => []),
+        api.checkAuthorization ? api.checkAuthorization(seriesId).catch(() => null) : null
       ]);
+      if (account !== courseAccountKey()) return this.loadCourse(seriesId, initialVideoId);
       this.catalogLoaded = true;
+      this.setData({ course: { ...course, ...coursePrice(course, !auth ? null : !!auth.authorized && auth.reason !== "free_series" && Number(course.is_free) !== 1) }, courseAuthorized: !!(auth && auth.authorized) || Number(course.is_free) === 1 });
       const progressMap = (progressRows || []).reduce((map, row) => { map[String(row.video_id)] = row; return map; }, {});
       const outline = [];
       (courses || []).forEach(courseRow => (courseRow.videos || []).forEach(item => {
@@ -91,14 +106,14 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
         });
       }));
       if (!outline.length) {
-        this.setData({ course, outline: [], loading: false });
+        this.setData({ outline: [], loading: false });
         return wx.showToast({ title: "当前课程暂未配置可播放视频", icon: "none" });
       }
       const requested = findCourseVideoSelection(outline, initialVideoId);
       const resume = outline.filter(item => item.progressPercent > 0).sort((a, b) => String(b.lastPlayAt).localeCompare(String(a.lastPlayAt)))[0];
       const target = requested || resume || outline[0];
       this.setData({
-        course, outline, visibleOutline: outline, videoId: target.videoId, courseId: target.courseId,
+        course: { ...course, ...coursePrice(course, !auth ? null : !!auth.authorized && auth.reason !== "free_series" && Number(course.is_free) !== 1) }, outline, visibleOutline: outline, videoId: target.videoId, courseId: target.courseId,
         video: { id: target.videoId, name: target.name, duration: target.duration },
         percent: target.progressPercent, playUrl: "", loading: false,
         resumeSeconds: target.resumeSeconds, currentSeconds: 0, currentDuration: target.duration,
@@ -112,7 +127,7 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
       wx.showToast({ title: err.message || "加载失败", icon: "none" });
     } finally { wx.hideLoading(); }
   },
-  async loadVideo(videoId) {
+  async loadVideo(videoId) { this.endHoldSpeed();
     this.cancelAutoplay();
     this.setData({ lessonEnded: false });
     const requestId = this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1;
@@ -264,11 +279,11 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     const duration = Math.floor(this.data.currentDuration || this.data.video.duration || 0);
     if (videoId && current && duration) api.saveVideoProgress(videoId, current, duration).catch(() => {});
   },
-  onPause() { this.setData({ isPlaying: false }); this.saveCurrentProgress(); },
-  onHide() { this.cancelAutoplay(); this.clearPlayerControlsTimer(); this.setData({ showVideoControls: false, showPlayerMenu: false }); this.saveCurrentProgress(); },
-  onUnload() { this.catalogDisposed = true; this.cancelAutoplay(); this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1; this.clearPlayerControlsTimer(); this.saveCurrentProgress(); this.setData({ catalogQuery: "", catalogResultText: "" }); },
-  onVideoError(event) { this.cancelAutoplay(); console.error("课程视频播放失败", event.detail || event); wx.showToast({ title: "课程视频暂时无法播放", icon: "none" }); },
-  onEnded() {
+  onPause() { this.endHoldSpeed(); this.setData({ isPlaying: false }); this.saveCurrentProgress(); },
+  onHide() { this.endHoldSpeed(); this.cancelAutoplay(); this.clearPlayerControlsTimer(); this.setData({ showVideoControls: false, showPlayerMenu: false }); this.saveCurrentProgress(); },
+  onUnload() { this.endHoldSpeed(); this.catalogDisposed = true; this.cancelAutoplay(); this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1; this.clearPlayerControlsTimer(); this.saveCurrentProgress(); this.setData({ catalogQuery: "", catalogResultText: "" }); },
+  onVideoError(event) { this.endHoldSpeed(); this.cancelAutoplay(); console.error("课程视频播放失败", event.detail || event); wx.showToast({ title: "课程视频暂时无法播放", icon: "none" }); },
+  onEnded() { this.endHoldSpeed();
     const duration = this.data.currentDuration || this.data.video.duration || 1;
     api.saveVideoProgress(this.data.videoId, duration, duration).catch(() => {});
     this.updateOutlineProgress(this.data.videoId, 100);
@@ -321,7 +336,11 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     this.videoContext.seek(position);
     this.setData({ currentSeconds: position, currentTimeText: this.formatTimestamp(position) });
   },
+  buyCourse() {
+    if (this.data.course.canPurchase && !this.data.courseAuthorized) wx.navigateTo({ url: `/pages/course-checkout/course-checkout?kind=online&id=${encodeURIComponent(this.data.seriesId)}` });
+  },
   requestAuthorization() {
+    if (this.data.course.canPurchase) return this.buyCourse();
     wx.showModal({
       title: "课程权限", content: "请联系客服老师申请课程授权：\n海艳老师 153 6787 0529\n伊琳老师 193 1002 9982",
       confirmText: "联系客服", cancelText: "稍后", showCancel: true,
@@ -364,7 +383,8 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     }
     page = Math.max(1, Math.min(pageCount, page));
     const start = (page - 1) * 50;
-    this.setData({ catalogPage: page, catalogPageCount: pageCount, catalogTotal: rows.length,
+    const selected = (this.data.outline || []).find(row => String(row.videoId) === String(this.data.videoId));
+    this.setData({ selectedOrdinal: selected ? selected.ordinal : 0, catalogPage: page, catalogPageCount: pageCount, catalogTotal: rows.length,
       catalogFrom: rows.length ? start + 1 : 0, catalogTo: Math.min(rows.length, start + 50),
       visibleOutline: rows.slice(start, start + 50),
       catalogResultText: String(this.data.catalogQuery || '').trim() ? `找到 ${rows.length} 节` : '' });
@@ -390,6 +410,14 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
   clearCatalogSearch() {
     this.setData({ catalogQuery: '', catalogPage: 1 });
     this.refreshCatalog(true);
+  },
+  locateCurrentLesson() {
+    if (!this.data.videoId) return;
+    this.setData({ activePanel: 'catalog', catalogQuery: '' });
+    this.refreshCatalog(true);
+    this.setData({}, () => {
+      if (typeof wx.pageScrollTo === 'function') wx.pageScrollTo({ selector: `#lesson-${this.data.videoId}`, duration: 0 });
+    });
   },
   switchPanel(event) { this.setData({ activePanel: event.currentTarget.dataset.panel }); },
   onNoteInput(event) { this.setData({ noteContent: event.detail.value || "" }); },
@@ -419,7 +447,35 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
       this.playerControlsTimer = null;
     }, 3000);
   },
+  onHoldStart(event) {
+    this.endHoldSpeed();
+    if (!event.touches || event.touches.length !== 1 || !this.data.isPlaying || !this.data.playUrl || !this.videoContext) return;
+    const touch = event.touches[0];
+    this.holdOrigin = { x: touch.clientX, y: touch.clientY };
+    const id = this.data.videoId;
+    this.holdSpeedTimer = setTimeout(() => {
+      this.holdSpeedTimer = null;
+      if (!this.holdOrigin || !this.data.isPlaying || this.data.videoId !== id) return;
+      this.holdRestoreRate = this.data.playbackRate;
+      this.videoContext.playbackRate(2);
+      this.setData({ holdingSpeed: true });
+    }, 400);
+  },
+  onHoldMove(event) {
+    const touch = event.touches && event.touches[0], origin = this.holdOrigin;
+    if (!origin) return;
+    if (!touch || event.touches.length !== 1 || Math.max(Math.abs(touch.clientX - origin.x), Math.abs(touch.clientY - origin.y)) > 12) this.endHoldSpeed();
+  },
+  endHoldSpeed() {
+    clearTimeout(this.holdSpeedTimer); this.holdSpeedTimer = null; this.holdOrigin = null;
+    if (this.data.holdingSpeed) {
+      if (this.videoContext) this.videoContext.playbackRate(this.holdRestoreRate || this.data.playbackRate);
+      this.holdSuppressUntil = Date.now() + 350;
+      this.setData({ holdingSpeed: false });
+    }
+  },
   onPlayerTap() {
+    if (this.data.holdingSpeed || Date.now() < (this.holdSuppressUntil || 0)) return;
     if (this.data.showPlayerMenu) return;
     const showVideoControls = !this.data.showVideoControls;
     this.setData({ showVideoControls });
@@ -483,7 +539,7 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     setTimeout(() => { if (current > 0) this.videoContext.seek(current); this.videoContext.playbackRate(this.data.playbackRate); this.videoContext.play(); }, 500);
     this.schedulePlayerControlsHide();
   },
-  setRate(event) {
+  setRate(event) { this.endHoldSpeed();
     const rate = parseFloat(event.currentTarget.dataset.rate);
     if (!this.data.rateOptions.includes(rate) || !this.videoContext) return;
     this.videoContext.playbackRate(rate);

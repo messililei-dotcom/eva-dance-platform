@@ -1,12 +1,16 @@
+function courseAccountKey() {
+  if (typeof wx === 'undefined' || typeof wx.getStorageSync !== 'function') return 'guest';
+  return wx.getStorageSync('token') ? String(wx.getStorageSync('memberId') || 'signed-in') : 'guest';
+}
+const { authorizedCourseIds } = require('../../shared/course-access');
 const share = require("../../shared/share");
 const videoFeature = require("../../shared/video-feature");
 const api = require("../../utils/api");
 const { popularityText } = require("../../shared/popularity");
 const { cleanText } = require("../../shared/review-text");
-const { formatPrice } = require("../../shared/money-format");
+const { coursePrice } = require("../../shared/course-price");
 
-function normalizeCard(item) {
-  const price = Number(item.promo_price || item.price || 0);
+function normalizeCard(item, rights = new Set()) {
   const lessons = Number(item.total_courses || item.course_count || item.lesson_count || 0);
   return {
     ...item,
@@ -16,7 +20,7 @@ function normalizeCard(item) {
     meta: cleanText(item.subtitle || item.teacher || item.category || "伊娃东方舞线上学院"),
     lessonText: `${lessons}节课程`,
     popularityText: popularityText(item),
-    priceText: item.is_free || price <= 0 ? "免费" : formatPrice(price)
+    ...coursePrice(item, rights.has(String(item.id)))
   };
 }
 function uniqueById(list) {
@@ -36,26 +40,32 @@ function filterRows(list, keyword) {
 }
 
 Page(share.withShare("home", videoFeature.withVideoFeature({
-  data: { loading: true, carouselCourses: [], allCourseRows: [], searchableCourseRows: [], courseRows: [], searchFocused: false, searchKeyword: "", searchCountText: "" },
+  data: { loading: true, error: "", carouselCourses: [], allCourseRows: [], searchableCourseRows: [], courseRows: [], searchFocused: false, searchKeyword: "", searchCountText: "" },
   onShow() { return this.loadHomeSections(); },
   async loadHomeSections() {
+    const account = courseAccountKey();
+    this.setData({ loading: true, error: "", allCourseRows: [], searchableCourseRows: [], courseRows: [], carouselCourses: [] });
     try {
-      const list = await api.getSeriesList().catch(() => []);
-      const courses = uniqueById(list).map(normalizeCard);
+      const [list, rights] = await Promise.all([api.getSeriesList(), authorizedCourseIds(api)]);
+      if (account !== courseAccountKey()) return this.loadHomeSections();
+      const courses = uniqueById(list).map(item => normalizeCard(item, rights));
       const allCourseRows = courses.slice(0, 8);
       this.setData({
         carouselCourses: courses.slice(0, 8),
         allCourseRows,
         searchableCourseRows: courses,
-        courseRows: this.data.searchKeyword ? filterRows(courses, this.data.searchKeyword) : allCourseRows,
+        courseRows: normalizeKeyword(this.data.searchKeyword) ? filterRows(courses, this.data.searchKeyword) : allCourseRows,
+        searchCountText: normalizeKeyword(this.data.searchKeyword) ? `找到 ${filterRows(courses, this.data.searchKeyword).length} 门课程` : "",
         loading: false
       });
     } catch (err) {
-      this.setData({ loading: false });
-      wx.showToast({ title: err.message || "加载失败", icon: "none" });
+      this.setData({ loading: false, error: err.message || "课程加载失败，请重试" });
     }
   },
   goSystemCourses() { videoFeature.navigateTo({ url: "/pages/system/system" }); },
+  goMyCourses() { wx.switchTab({ url: "/pages/profile/profile" }); },
+  goOffline() { wx.switchTab({ url: "/pages/offline/offline" }); },
+  goEvents() { wx.switchTab({ url: "/pages/events/events" }); },
   onSearchInput(event) {
     const keyword = event.detail.value || "";
     const rows = normalizeKeyword(keyword) ? filterRows(this.data.searchableCourseRows, keyword) : this.data.allCourseRows;

@@ -1,0 +1,95 @@
+/* Shared phone ergonomics; desktop layouts retain their existing density. */
+.admin-mobile-functions .ant-drawer-content { border-radius: 20px 20px 0 0; }
+.admin-mobile-functions .ant-drawer-body { display: flex; flex-direction: column; overflow: hidden; }
+.admin-mobile-function-search { padding: 8px 16px 12px; border-bottom: 1px solid #eef0f6; }
+.admin-mobile-function-search .ant-input-affix-wrapper { min-height: 44px; border-radius: 12px; background: #f6f7fb; }
+.admin-mobile-function-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 16px calc(16px + env(safe-area-inset-bottom)); }
+.admin-mobile-function-group { margin: 16px 0 22px; }
+.admin-mobile-function-group h3 { margin: 0 0 10px; color: #7a8199; font-size: 13px; font-weight: 500; }
+.admin-mobile-function-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.admin-mobile-function-grid button { display: flex; min-width: 0; min-height: 82px; flex-direction: column; align-items: center; justify-content: center; gap: 9px; border: 1px solid #e9ecf5; border-radius: 14px; background: #fafbfe; color: #26304d; font: inherit; font-size: 13px; cursor: pointer; }
+.admin-mobile-function-grid button .anticon { font-size: 22px; color: #7661cf; }
+.admin-mobile-function-grid button.is-active { border-color: #f4b6d5; background: #fff2f8; color: #c91568; }
+.admin-mobile-recent { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-mobile-recent button { min-height: 44px; padding: 8px 12px; border: 1px solid #e9ecf5; border-radius: 10px; background: #fff; color: #26304d; font: inherit; font-size: 13px; cursor: pointer; }
+.admin-mobile-function-account { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; border-top: 1px solid #eef0f6; }
+.admin-mobile-account-trigger { border: 0; background: transparent; padding: 0; min-height: 44px; font: inherit; color: #26304d; cursor: pointer; }
+.admin-mobile-function-account > div, .admin-mobile-account-trigger { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.admin-mobile-account-trigger > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-table-scroll-hint { display: flex; justify-content: space-between; padding: 7px 2px; color: #7a8199; font-size: 12px; }
+
+@media (max-width: 767px) {
+  .admin-mobile-header { gap: 10px; box-shadow: 0 3px 12px rgba(7,23,45,.08); }
+  .admin-mobile-header .admin-mobile-title { display: flex; flex: 1; }
+  .admin-mobile-header .ant-btn { flex: 0 0 44px; width: 44px; height: 44px; min-height: 44px; padding: 0; }
+  .admin-mobile-title strong { max-width: none; font-size: 16px; }
+  .admin-mobile-title span { font-size: 11px; }
+  .admin-mobile-tabbar { left: 0; right: 0; bottom: 0; min-height: calc(64px + env(safe-area-inset-bottom)); padding: 5px max(8px, env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); border-radius: 0; border: 0; border-top: 1px solid #e9ecf5; box-shadow: 0 -4px 18px rgba(18,26,58,.06); }
+  .admin-mobile-tabbar button { min-height: 54px; }
+  .admin-mobile-tabbar button span:last-child { font-size: 12px; }
+  .admin-main-layout.is-keyboard-open .admin-mobile-tabbar { display: none; }
+  .admin-main-layout.is-keyboard-open .admin-content { padding-bottom: 16px !important; }
+  .admin-content { padding-left: max(12px, env(safe-area-inset-left)) !important; padding-right: max(12px, env(safe-area-inset-right)) !important; }
+  .admin-content .page-header { flex-wrap: wrap; gap: 12px; }
+  .admin-content .toolbar { padding: 12px; }
+  .admin-content .content-area { padding: 0; }
+  .admin-content .ant-card-head { padding: 0 14px; }
+  .admin-content .ant-card-head-wrapper { gap: 8px; padding: 10px 0; }
+  .admin-content .ant-card-extra { margin-inline-start: 0; }
+  .admin-content .ant-btn, .admin-mobile-functions .ant-btn,
+  .ant-modal-root .ant-btn, .ant-drawer-body .ant-btn { min-height: 44px; height: auto; }
+  .admin-content .ant-btn-icon-only, .ant-modal-root .ant-btn-icon-only { min-width: 44px; }
+  .admin-content .ant-input:not(textarea), .admin-content .ant-input-affix-wrapper,
+  .admin-content .ant-picker, .admin-content .ant-input-number,
+  .ant-modal-root .ant-input:not(textarea), .ant-modal-root .ant-input-affix-wrapper,
+  .ant-modal-root .ant-picker, .ant-modal-root .ant-input-number { min-height: 44px !important; height: auto !important; }
+  .admin-content .ant-input-affix-wrapper > input.ant-input,
+  .ant-modal-root .ant-input-affix-wrapper > input.ant-input { min-height: 0 !important; }
+  .admin-content .ant-input-number-input, .ant-modal-root .ant-input-number-input { height: 42px !important; }
+  .admin-content .ant-select-single, .ant-modal-root .ant-select-single { height: 44px !important; }
+  .admin-content .ant-select-single .ant-select-selector,
+  .ant-modal-root .ant-select-single .ant-select-selector { min-height: 44px !important; height: 44px !important; }
+  .admin-content .ant-space, .admin-content .ant-space-item { max-width: 100%; }
+  .admin-content .toolbar .ant-space, .admin-content .page-header .ant-space { flex-wrap: wrap; }
+  .admin-content .ant-table-wrapper { overflow: visible; }
+  .admin-content .ant-table-wrapper .ant-table { width: 100% !important; min-width: 0 !important; }
+  .admin-content .ant-table-content, .admin-content .ant-table-body { overflow-x: auto !important; }
+  .admin-content .ant-table-wrapper .ant-table-tbody > tr > td { font-size: 13px; }
+  .admin-content .ant-table-wrapper .ant-table-cell-fix-left,
+  .admin-content .ant-table-wrapper .ant-table-cell-fix-right,
+  .admin-content .ant-table-wrapper .ant-table-thead > tr > th.ant-table-cell-fix-left,
+  .admin-content .ant-table-wrapper .ant-table-thead > tr > th.ant-table-cell-fix-right { position: static !important; }
+  .admin-content .ant-pagination { flex-wrap: wrap; gap: 8px; }
+  .admin-content .ant-pagination-prev, .admin-content .ant-pagination-next,
+  .admin-content .ant-pagination-item { min-width: 44px; height: 44px; line-height: 42px; }
+  .admin-content .ant-pagination-simple-pager { height: 44px; line-height: 44px; margin: 0; }
+  .admin-content .ant-pagination-simple-pager input { min-width: 44px; }
+  .ant-select-dropdown .ant-select-item { min-height: 44px; display: flex; align-items: center; }
+  .ant-modal-root .ant-modal-close, .admin-mobile-functions .ant-drawer-close { width: 44px; height: 44px; }
+  .ant-modal-root .ant-modal-content { display: flex; flex-direction: column; max-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+  .ant-modal-root .ant-modal-header, .ant-modal-root .ant-modal-footer { flex-shrink: 0; }
+  .ant-modal-root .ant-modal-title { padding-right: 32px; }
+  .ant-modal-root .ant-modal-body { min-height: 0; }
+  .ant-modal-root .ant-modal-footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  .ant-modal-root .ant-modal-footer .ant-btn + .ant-btn { margin-inline-start: 0; }
+}
+
+/* Older page rules use important sizing; keep shared touch targets authoritative. */
+@media (max-width: 767px) {
+  .admin-main-layout .admin-content .ant-btn,
+  .admin-main-layout .admin-content .online-course-replica .ant-btn,
+  .ant-modal-root .ant-modal .ant-modal-content .ant-btn,
+  .admin-mobile-functions .ant-btn { min-height: 44px !important; height: auto !important; }
+  .admin-mobile-function-search .ant-input-affix-wrapper,
+  .admin-main-layout .admin-content .online-course-replica .ant-input-affix-wrapper { min-height: 44px !important; height: auto !important; }
+  .admin-main-layout .admin-content .online-course-replica .ant-select-single,
+  .admin-main-layout .admin-content .online-course-replica .ant-select-selector { min-height: 44px !important; height: 44px !important; }
+  .admin-main-layout .admin-content .ant-pagination .ant-pagination-prev,
+  .admin-main-layout .admin-content .ant-pagination .ant-pagination-next,
+  .admin-main-layout .admin-content .ant-pagination .ant-pagination-item,
+  .admin-main-layout .admin-content .ant-pagination .ant-pagination-simple-pager { min-width: 44px !important; height: 44px !important; line-height: 44px !important; }
+  .admin-main-layout .admin-content .ant-pagination button { min-height: 44px !important; height: 44px !important; }
+  .admin-main-layout .admin-content .ant-radio-button-wrapper,
+  .ant-modal-root .ant-modal .ant-radio-button-wrapper { min-height: 44px !important; height: auto !important; line-height: 42px !important; }
+  .ant-modal-root .ant-form > .ant-row { margin-inline: 0 !important; max-width: 100%; }
+}

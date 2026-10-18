@@ -1,0 +1,122 @@
+{
+  "settings.gradle": {
+    "sha256": "94f8c8a8425584184b251e911d5bc57898814147b62d7cbbb1c964f72a0edb07",
+    "matchesBuiltSource": true
+  },
+  "build.gradle": {
+    "sha256": "96a33edb21d173da2c36f5312f50cdfb9f71d9f5078c081c81f2d029547f6cb9",
+    "matchesBuiltSource": true
+  },
+  "gradle.properties": {
+    "sha256": "af6c8e8ac48c490eb71214aa933232c206934e14e771ffc195a3b03f43313124",
+    "matchesBuiltSource": true
+  },
+  "app/build.gradle": {
+    "sha256": "85da7fe1d3642f7a4e0c9f25655f79820f60fa200a3cc8f37f61ca116df9cf6a",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/AndroidManifest.xml": {
+    "sha256": "98492dbf45f63ee5e3e85a5edce4f4f3070d8ea33cae334bc540ea14d36c569e",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/values/styles.xml": {
+    "sha256": "01e56e38f3e59dc719df5df5f9e2010a7fb01b1b764f771df614808b7be9dfda",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/values/colors.xml": {
+    "sha256": "cd76b3fb39e2c973f06bda974a6cfc3e89e41113255c14d0b8622e443833c2bb",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/drawable/brand_logo.png": {
+    "sha256": "b2cda0bebd372fc089ba9a0a54c44f9b70e1c2a58ff25974e59edbc3cfbdd9ab",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/drawable-nodpi/ic_launcher_foreground.png": {
+    "sha256": "aff6113f7c1500e0505289acf1861a854f52a2dc1b9c096306d100b80a0dba14",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml": {
+    "sha256": "7a33a1ef4f0ab40bbaec897dbfbe652d6cabb4def263c084ca0ce0ded1d3183e",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml": {
+    "sha256": "7a33a1ef4f0ab40bbaec897dbfbe652d6cabb4def263c084ca0ce0ded1d3183e",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/mipmap-hdpi/ic_launcher.png": {
+    "sha256": "51a11faa644ee666b1c647ce8745673336432a0a06dc890216115ee89250a1b7",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/mipmap-mdpi/ic_launcher.png": {
+    "sha256": "ae57728199918680660f661dd99b233df94ef045fd16d41d9564e625f1c51fec",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/mipmap-xhdpi/ic_launcher.png": {
+    "sha256": "1f070a055466a47dec43bcf7c5aa948af920011b3a176bb2a9861956ef788c07",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/mipmap-xxhdpi/ic_launcher.png": {
+    "sha256": "9e488faed2906d1463d8f2b2a5065b067fced17f702f846261e5c1e00fb91c0c",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png": {
+    "sha256": "099a32c09ab00fde06ef8180c0f3ce190eac744d340efa830d40437e15f74226",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/xml/data_extraction_rules.xml": {
+    "sha256": "6776a6a01f449fd8dcd49a6fdd63429ea883dca62304b9bc345808494c7c2f8e",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/res/values-night/styles.xml": {
+    "sha256": "bcbc0f9d69f7b328bf2e1001275408f2c08712b98738422a81d414b5c317c881",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/java/cn/com/swod/app/Policy.java": {
+    "sha256": "e8250888f1788548b0ac9c7e8d54969ce318fbe59d79d2377ff7e63853ee486b",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/java/cn/com/swod/app/TokenVault.java": {
+    "sha256": "1d187602b493a601d5380fdd93d55761fa63f947e7728d9e22b830fb477bd071",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/java/cn/com/swod/app/Api.java": {
+    "sha256": "bc72f92591871a6a306eb24f93fa672dc4ffa07c4f7782d213d664d9ea9f1192",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/java/cn/com/swod/app/MainActivity.java": {
+    "sha256": "7e5ac05cba0d29e9be0136e45d319a17b9452385e84aba763a0b02ad9835cabe",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/java/cn/com/swod/app/PlayerActivity.java": {
+    "sha256": "9f3a2c9ac559ca100c9db75a7ac00816581f2c5dfced0de133cc91e89c3135eb",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/java/cn/com/swod/app/Commerce.java": {
+    "sha256": "b6e97b128841663210bcddd8d6e4a2fc9904cf35ab9fd438b42a93c0ec096e1c",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/java/cn/com/swod/app/Images.java": {
+    "sha256": "82f0de1412f2e0f9f0595ef5572d9dfeed20766dbe376c218b921095fd0a56ac",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/java/cn/com/swod/app/SwodUi.java": {
+    "sha256": "3700532c3a5ca9eab039fef84bd9670b19ed54956cadb78295fc40f4a0b0a585",
+    "matchesBuiltSource": true
+  },
+  "app/src/main/java/cn/com/swod/app/CompetitionRecord.java": {
+    "sha256": "bbce4c40eddf1eb121c67aecf6c920a689b88970a6d5c607d01114c24d54b6cd",
+    "matchesBuiltSource": true
+  },
+  "app/src/test/java/cn/com/swod/app/PolicyTest.java": {
+    "sha256": "9db41429eb32d7dc695f158df52bbbc3905ffd45e260e306522a5574910df9d1",
+    "matchesBuiltSource": true
+  },
+  "app/src/test/java/cn/com/swod/app/CommerceTest.java": {
+    "sha256": "2e02c8375cfd82e99a8915a4716e04d42836352bb6d93c627e1b61abc64f494c",
+    "matchesBuiltSource": true
+  },
+  "app/src/test/java/cn/com/swod/app/CompetitionRecordTest.java": {
+    "sha256": "8e19c6b380118de12992176d94220568c5d5d2d4faab7ef9f11e0b26d84f8c31",
+    "matchesBuiltSource": true
+  }
+}

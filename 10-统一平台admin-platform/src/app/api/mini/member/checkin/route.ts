@@ -1,3 +1,4 @@
+import { syncOfflinePaymentBalance } from '@/lib/server/offline-training';
 import { cleanText, getMemberId, jsonError, linkedMemberIds, shanghaiDateKey, sqlIn, toPositiveInt, withDb } from '../../_helpers';
 import { reconcileOfflineCheckin } from '@/lib/server/student-growth';
 import { createConsumeMessage } from '@/lib/server/inbox';
@@ -21,9 +22,11 @@ export async function POST(request: Request) {
 
       const payment = db.prepare(`SELECT * FROM Payment WHERE id=? AND memberId IN (${linked.clause})`).get<any>(paymentId, ...linked.values);
       if (!payment) return jsonError('学习记录不存在', 404);
+      if (!['paid','completed'].includes(String(payment.paymentStatus))) return jsonError('请完成课程期次付款后再核销',400);
       if ((Number(payment.remainingSessions) || 0) < 1) return jsonError('剩余课时不足，无法签到核销', 400);
 
       const course = payment.courseId ? db.prepare('SELECT * FROM Course WHERE id=?').get<any>(payment.courseId) : null;
+      if (!course) return jsonError('缴费记录未关联有效课程期次，请先核对期次',400);
       const today = shanghaiDateKey();
       const expireDate = String(payment.expireDate || course?.endDate || '').slice(0, 10);
       if (expireDate && expireDate < today) return jsonError('学习已到期，无法自助签到核销', 400);
@@ -41,6 +44,7 @@ export async function POST(request: Request) {
           VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, '学员自助签到', ?)
         `).run(member.id, member.name || '', member.phone || '', payment.id, payment.courseId || 0, courseName, today, newRemaining, remark);
         db.prepare('UPDATE Payment SET remainingSessions=? WHERE id=?').run(newRemaining, payment.id);
+        syncOfflinePaymentBalance(db,payment.id);
         reconcileOfflineCheckin(db, Number(consume.lastInsertRowid));
         createConsumeMessage(db, {
           memberId,

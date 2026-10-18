@@ -1,0 +1,145 @@
+.admin-hero {
+  padding: 34rpx 30rpx;
+  border-radius: 18rpx;
+  color: #ffffff;
+  background: linear-gradient(135deg, #202936, #b65f42);
+}
+
+.admin-kicker {
+  display: inline-flex;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.admin-title {
+  margin-top: 28rpx;
+  font-size: 44rpx;
+  font-weight: 900;
+}
+
+.admin-desc {
+  margin-top: 12rpx;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10rpx;
+  margin-top: 18rpx;
+}
+
+.stat-card {
+  padding: 20rpx 8rpx;
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  color: #ef5b45;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.stat-label {
+  display: block;
+  margin-top: 8rpx;
+  color: #8c8172;
+  font-size: 22rpx;
+}
+
+.section-title {
+  margin: 30rpx 0 14rpx;
+  color: #202124;
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.admin-form,
+.auth-box {
+  padding: 24rpx;
+}
+
+.field {
+  margin-bottom: 20rpx;
+}
+
+.field text {
+  display: block;
+  margin-bottom: 8rpx;
+  color: #8c8172;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.field input,
+.field textarea,
+.auth-box input,
+.picker-row {
+  width: 100%;
+  min-height: 78rpx;
+  padding: 18rpx;
+  border-radius: 12rpx;
+  background: #f7f8fb;
+  color: #202124;
+  font-size: 26rpx;
+}
+
+.field textarea {
+  min-height: 140rpx;
+}
+
+.form-actions,
+.series-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+}
+
+.auth-box {
+  display: grid;
+  gap: 14rpx;
+}
+
+.series-list {
+  display: grid;
+  gap: 14rpx;
+}
+
+.series-card {
+  display: grid;
+  grid-template-columns: 180rpx 1fr;
+  gap: 18rpx;
+  padding: 18rpx;
+}
+
+.series-card image {
+  width: 180rpx;
+  height: 135rpx;
+  aspect-ratio: 4 / 3;
+  border-radius: 12rpx;
+  background: #202936;
+}
+
+.series-title {
+  color: #202124;
+  font-size: 28rpx;
+  line-height: 1.35;
+  font-weight: 900;
+}
+
+.series-meta {
+  margin: 8rpx 0 14rpx;
+  color: #8c8172;
+  font-size: 23rpx;
+}
+
+.series-actions .ghost-btn {
+  min-height: 64rpx;
+  font-size: 24rpx;
+}

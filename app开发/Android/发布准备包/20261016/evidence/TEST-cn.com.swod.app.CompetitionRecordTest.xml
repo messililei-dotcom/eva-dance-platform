@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.com.swod.app.CompetitionRecordTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-16T07:02:42.760Z" hostname="Eva-Mac-mini.local" time="0.001">
+  <properties/>
+  <testcase name="publishedZeroAndMissingScoresStayDistinct" classname="cn.com.swod.app.CompetitionRecordTest" time="0.001"/>
+  <testcase name="auditAndPaymentAreSeparateStatuses" classname="cn.com.swod.app.CompetitionRecordTest" time="0.0"/>
+  <testcase name="unpublishedOrMalformedFlagsNeverRevealScores" classname="cn.com.swod.app.CompetitionRecordTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

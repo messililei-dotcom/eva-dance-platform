@@ -1,0 +1,37 @@
+{
+  "status": "deployed_verified",
+  "tests_passed": 10,
+  "production_build": "passed",
+  "browser_reload_to_rows_ms": 846,
+  "api_pagination": {
+    "total_records": 2388,
+    "old_full_response_bytes": 4796438,
+    "first_20_response_bytes": 42512,
+    "first_page_ms": 84,
+    "second_page_ms": 68
+  },
+  "browser_verified": [
+    "authorization_record_and_actions_separate_columns",
+    "next_page",
+    "search_resets_page",
+    "delete_financial_confirmation"
+  ],
+  "financial_sync": [
+    "commission",
+    "revenue",
+    "finance_income",
+    "business_dashboard",
+    "member_spending"
+  ],
+  "guards": [
+    "lilei_only",
+    "active_account",
+    "settled_commissions",
+    "paid_linked_orders",
+    "stale_snapshot",
+    "atomic_audit"
+  ],
+  "deletion_behavior": "void financial values and exclude shared financial reports; preserve access and audit",
+  "production_data_mutated_during_browser_verification": false,
+  "server_backup": "/www/backups/dongfangwuquan/auth-speed-financial-20261013"
+}

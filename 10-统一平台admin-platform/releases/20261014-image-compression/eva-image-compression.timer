@@ -1,0 +1,11 @@
+[Unit]
+Description=Automatically compress new or changed Eva images
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+AccuracySec=30s
+Unit=eva-image-compression.service
+
+[Install]
+WantedBy=timers.target

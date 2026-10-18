@@ -1,0 +1,6 @@
+{
+  "src/app/api/event/_db.ts": "f555d1a8b0fd099833453894e63c79046107e07abfd340025e4dc8128f907715",
+  "src/app/api/event/competitions/route.ts": "48e7d221e1862abb29098e8945d4f24aac92ff19f12668b04a039e96c6ab5404",
+  "src/app/api/event/competitions/[id]/route.ts": "52d2bf349a083aff0e1eac87a229976962443b9ba9b122acdab0f9fec74d572c",
+  "src/app/(admin)/events/page.tsx": "939b78bce3807ee89ac90fbec39ca9a5609bb60fc7679b1c29783626042ac9d8"
+}

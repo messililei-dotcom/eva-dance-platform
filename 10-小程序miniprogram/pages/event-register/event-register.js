@@ -80,7 +80,7 @@ Page(share.withShare('event-register', {
     if (!this.data.name.trim() || !/^1[3-9]\d{9}$/.test(this.data.phone.trim())) return wx.showToast({ title: '请填写姓名和正确手机号', icon: 'none' });
     if (!this.data.performanceTitle.trim()) return wx.showToast({ title: '请填写节目名称', icon: 'none' });
     if (!this.data.musicFilePath) return wx.showToast({ title: '请选择需要上传的音乐文件', icon: 'none' });
-    if (!this.data.competition.registrationOpen && this.data.competition.registrationStatus !== 'open') return wx.showToast({ title: '赛事报名已关闭', icon: 'none' });
+    if (!require('../../shared/event-state').eventState(this.data.competition).registrationOpen) return wx.showToast({ title: '赛事当前未开放报名，请返回赛事详情确认', icon: 'none' });
     this.setData({ submitting: true });
     try {
       const body = { groupId: group.id, musicFileName: this.data.musicFileName };

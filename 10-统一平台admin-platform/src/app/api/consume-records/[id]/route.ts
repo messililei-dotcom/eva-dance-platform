@@ -1,3 +1,4 @@
+import { syncOfflinePaymentBalance } from '@/lib/server/offline-training';
 import { cleanText, hasAuth, jsonError, openTrainingDb, toNumber, today, unauthorized } from '../../training-db';
 import { recalculateMemberGrowth, reconcileOfflineCheckin, reverseDeletedSource } from '@/lib/server/student-growth';
 import { createConsumeMessage, createPersonalMessage } from '@/lib/server/inbox';
@@ -8,7 +9,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const routeParams = await params;
   if (!hasAuth(request)) return unauthorized();
   const body = await request.json().catch(() => ({}));
-  const nextCount = Math.max(1, toNumber(body.count, 1));
+  const nextCount = Number(body.count ?? 1);
+  if (!Number.isSafeInteger(nextCount) || nextCount < 1) return jsonError('核销课时须为正整数',400);
   const db = openTrainingDb();
   try {
     const result = db.transaction(() => {
@@ -16,6 +18,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (!current) return { changes: 0 };
       const payment = db.prepare('SELECT * FROM Payment WHERE id = ?').get(current.paymentId);
       if (!payment) throw new Error('缴费记录不存在');
+      if (!['paid','completed'].includes(String(payment.paymentStatus))) throw new Error('请完成课程期次付款后再核销');
+      if (!db.prepare('SELECT id FROM Course WHERE id=?').get(payment.courseId)) throw new Error('缴费记录未关联有效课程期次，请先核对期次');
       const restored = toNumber(payment.remainingSessions) + toNumber(current.count);
       if (restored < nextCount) throw new Error('剩余课时不足，无法调整核销次数');
       const remainingAfter = restored - nextCount;
@@ -32,6 +36,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         routeParams.id,
       );
       db.prepare('UPDATE Payment SET remainingSessions = ? WHERE id = ?').run(remainingAfter, payment.id);
+      syncOfflinePaymentBalance(db, payment.id);
       reconcileOfflineCheckin(db, Number(routeParams.id));
       createPersonalMessage(db, Number(current.memberId), {
         type: 'consume',
@@ -67,6 +72,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       db.prepare('UPDATE Payment SET remainingSessions = ? WHERE id = ?').run(remainingAfter, current.paymentId);
       reverseDeletedSource(db, Number(current.memberId), 'consume_record', current.id, '撤销线下核销并冲正经验');
       const deleted = db.prepare('DELETE FROM ConsumeRecord WHERE id = ?').run(routeParams.id);
+      syncOfflinePaymentBalance(db,current.paymentId);
       recalculateMemberGrowth(db, Number(current.memberId), '撤销线下核销');
       createConsumeMessage(db, {
         memberId: Number(current.memberId),

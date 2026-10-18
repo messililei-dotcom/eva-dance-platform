@@ -2,6 +2,8 @@
  * Authorization revocation is an access action, not evidence of a refund.
  * A paid linked order is counted by the order ledger, not a second time here.
  */
+export const DELETED_AUTHORIZATION_FINANCIAL_MARKER = '[AUTH_RECORD_FINANCIAL_DELETED]';
+
 export const AUTHORIZATION_FINANCIAL_SQL = `
  SELECT ca.*, cs.name AS course, COALESCE(m.name, ca.phone) AS memberName,
    COALESCE(m.phone, ca.phone) AS memberPhone,
@@ -9,6 +11,7 @@ export const AUTHORIZATION_FINANCIAL_SQL = `
      AND co.status IN ('paid','completed')) THEN 0 ELSE 1 END AS standalone
  FROM CourseAuthorization ca JOIN CourseSeries cs ON cs.id=ca.series_id
  LEFT JOIN Member m ON m.id=ca.member_id
+ WHERE instr(COALESCE(ca.remark,''), '${DELETED_AUTHORIZATION_FINANCIAL_MARKER}')=0
 `;
 
 export const AUTHORIZATION_INCOME_SQL = `

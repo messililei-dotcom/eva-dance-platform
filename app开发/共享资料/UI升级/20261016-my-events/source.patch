@@ -1,0 +1,215 @@
+--- before/10-小程序miniprogram/pages/profile/profile.js
++++ after/10-小程序miniprogram/pages/profile/profile.js
+@@ -23,7 +23,7 @@
+     wechatIdentityText: "",
+     authorizedCourses: [],
+     offlineCourses: [],
+-    eventRegistrations: [],
++    eventRegistrations: [], myEventsOpen: false, eventsLoading: false, eventsError: "",
+     certificates: [],
+     isAdmin: false,
+     adminRole: "",
+@@ -60,6 +60,11 @@
+       app.globalData.memberName = null;
+     }
+     
++    if (this.eventsMemberId !== memberId) {
++      this.eventsMemberId = memberId;
++      this.eventsRequestId = (this.eventsRequestId || 0) + 1;
++      this.setData({ myEventsOpen: false, eventsLoading: false, eventsError: "", eventRegistrations: [] });
++    }
+     const storedWechatProfile = this.getStoredWechatProfile(memberId);
+     const initialMemberName = app.globalData.memberName || "未登录";
+     this.setData(Object.assign({
+@@ -81,7 +86,7 @@
+         unreadMessageCount: 0,
+         authorizedCourses: [],
+         offlineCourses: [],
+-                eventRegistrations: [],
++                eventRegistrations: [], myEventsOpen: false, eventsLoading: false, eventsError: "",
+             certificates: [],
+         showWechatBinder: false
+       });
+@@ -120,6 +125,8 @@
+     const requestedMember = wx.getStorageSync("memberId");
+     this.setData({ profileLoading: true, profileError: "" });
+     let profileFailure = null;
++    let eventsFailure = null;
++    const eventsVersion = this.eventsRequestId || 0;
+     const [profile, authorized, recent, catalog, payments, certificates, eventRegistrations] = await Promise.all([
+       api.getMemberProfile().catch(err => { profileFailure = err; return null; }),
+       api.getAuthorizedSeries().catch(() => []),
+@@ -127,7 +134,7 @@
+       api.getSeriesList().catch(() => []),
+       api.getPayments().catch(() => []),
+       api.getCertificates().catch(() => []),
+-      api.getEventRegistrations().catch(() => [])
++      api.getEventRegistrations().catch(err => { eventsFailure = err; return []; })
+     ]);
+     if (requestId !== this.profileRequestId || requestedMember !== wx.getStorageSync("memberId")) return;
+     if (profileFailure) {
+@@ -188,21 +195,6 @@
+       consumedSessions: Number(item.consumedSessions || item.consumed_sessions || 0),
+       paymentMethod: cleanText(item.paymentMethod || item.payment_method || "")
+     }));
+-    const auditStatusMap = { pending: "已报名", approved: "已报名", rejected: "未通过" };
+-    const paidStatusMap = { unpaid: "待缴费", pending: "待确认", paid: "已缴费", refunded: "已退款" };
+-    const normalizedEventRegistrations = (eventRegistrations || []).map(item => ({
+-      ...item,
+-      id:item.playerId || item.id,
+-      competitionName: cleanText(item.competitionName || item.competition_name || "东方舞赛事"),
+-      groupName: cleanText(item.groupName || item.group_name || "未分组"),
+-      statusText: auditStatusMap[item.auditStatus || item.audit_status] || item.auditStatus || item.audit_status || "待审核",
+-      paidStatusText: paidStatusMap[item.paidStatus || item.paid_status] || item.paidStatus || item.paid_status || "",
+-      resultText: item.resultPublished
+-        ? `${item.awardName || (item.rankNo ? `第${item.rankNo}名` : "成绩已公示")} · ${item.totalScore == null ? "-" : item.totalScore}分`
+-        : "成绩待公示",
+-      displayStartDate: String(item.startDate || item.start_date || "").slice(0, 10),
+-      competitionId: item.competitionId || item.competition_id
+-    }));
+     this.profileMember = member;
+     if (!this.data.profileDirty) this.setData({ profileDraft: this.profileDraftFrom(member), genderIndex: Math.max(0, this.data.genderOptions.indexOf(member.gender || "未填写")) });
+     const wechatName = member.wx_name || member.wx_nickname || this.data.wechatName || "";
+@@ -231,7 +223,10 @@
+       wechatIdentityText: (member.wx_unionid || member.wx_openid) ? "微信身份已同步" : "",
+       authorizedCourses,
+       offlineCourses,
+-      eventRegistrations: normalizedEventRegistrations,
++      ...((this.eventsRequestId || 0) === eventsVersion ? {
++        eventRegistrations: this.normalizeEventRegistrations(eventRegistrations),
++        eventsError: eventsFailure ? (eventsFailure.message || "比赛记录加载失败，请重试") : ""
++      } : {}),
+       profileLoading: false,
+       profileError: "",
+       certificates: (certificates || []).map(cert => ({
+@@ -348,13 +343,44 @@
+     wx.switchTab({ url: "/pages/offline/offline" });
+   },
+ 
++  normalizeEventRegistrations(eventRegistrations) {
++    const auditStatusMap = { pending: "待审核", approved: "审核通过", rejected: "未通过" };
++    const paidStatusMap = { unpaid: "待缴费", pending: "待确认", paid: "已缴费", refunded: "已退款" };
++    return (eventRegistrations || []).map(item => ({
++      ...item,
++      id:item.playerId || item.id,
++      competitionName: cleanText(item.competitionName || item.competition_name || "东方舞赛事"),
++      groupName: cleanText(item.groupName || item.group_name || "未分组"),
++      statusText: auditStatusMap[item.auditStatus || item.audit_status] || item.auditStatus || item.audit_status || "待审核",
++      paidStatusText: paidStatusMap[item.paidStatus || item.paid_status] || item.paidStatus || item.paid_status || "",
++      resultText: item.resultPublished === true
++        ? `${item.awardName || (item.rankNo ? `第${item.rankNo}名` : "成绩已公示")} · ${item.totalScore == null ? "-" : item.totalScore}分`
++        : "成绩待公示",
++      displayStartDate: String(item.startDate || item.start_date || "").slice(0, 10),
++      competitionId: item.competitionId || item.competition_id
++    }));
++  },
++
+   openEventRegistrations() {
+-    const rows = this.data.eventRegistrations || [];
+-    if (rows.length === 1) {
+-      videoFeature.navigateTo({ url: `/pages/event-detail/event-detail?id=${rows[0].competitionId}` });
+-      return;
+-    }
+-    wx.switchTab({ url: "/pages/events/events" });
++    if (!this.data.isLoggedIn) return this.goLogin();
++    const myEventsOpen = !this.data.myEventsOpen;
++    this.setData({ myEventsOpen });
++    if (myEventsOpen) return this.loadMyEvents();
++  },
++
++  async loadMyEvents() {
++    if (!this.data.isLoggedIn || this.data.eventsLoading) return;
++    const memberId = wx.getStorageSync("memberId");
++    const requestId = this.eventsRequestId = (this.eventsRequestId || 0) + 1;
++    this.setData({ eventsLoading: true, eventsError: "" });
++    try {
++      const rows = await api.getEventRegistrations();
++      if (requestId !== this.eventsRequestId || memberId !== wx.getStorageSync("memberId") || !this.data.isLoggedIn) return;
++      this.setData({ eventRegistrations: this.normalizeEventRegistrations(rows), eventsLoading: false });
++    } catch (err) {
++      if (requestId !== this.eventsRequestId || memberId !== wx.getStorageSync("memberId") || !this.data.isLoggedIn) return;
++      this.setData({ eventsLoading: false, eventsError: err.message || "比赛记录加载失败，请重试" });
++    }
+   },
+ 
+   payEventRegistration(event) {wx.navigateTo({url:'/pages/course-checkout/course-checkout?kind=event&id='+encodeURIComponent(event.currentTarget.dataset.id)});},
+@@ -499,7 +525,7 @@
+             unreadMessageCount: 0,
+         authorizedCourses: [],
+             offlineCourses: [],
+-                            eventRegistrations: [],
++                            eventRegistrations: [], myEventsOpen: false, eventsLoading: false, eventsError: "",
+                     certificates: [],
+ 
+           });
+--- before/10-小程序miniprogram/pages/profile/profile.wxml
++++ after/10-小程序miniprogram/pages/profile/profile.wxml
+@@ -78,12 +78,28 @@
+       <button size="mini" class="sync-btn" bindtap="syncWechatProfile">同步微信资料</button>
+     </view>
+ 
+-    <view class="link-row" bindtap="openEventRegistrations">
+-      <view>
+-        <view class="row-title">我的比赛</view>
+-        <view class="row-desc">{{eventRegistrations.length}} 个报名组别 · 查看报名、缴费和比赛信息</view>
+-      </view>
+-      <text class="row-arrow">›</text>
++    <button class="link-row my-events-toggle" bindtap="openEventRegistrations" aria-expanded="{{myEventsOpen}}" aria-label="我的比赛，报名与结果记录">
++      <view><view class="row-title">我的比赛</view><view class="row-desc">{{eventRegistrations.length}} 个报名组别 · 报名、缴费与比赛结果</view></view>
++      <image class="chevron {{myEventsOpen ? 'expanded' : ''}}" src="/images/profile/chevron.svg" />
++    </button>
++    <view class="my-events-panel" wx:if="{{myEventsOpen}}">
++      <view wx:if="{{eventsLoading}}" class="empty-row">比赛记录加载中…</view>
++      <view wx:elif="{{eventsError}}" class="events-feedback"><text>{{eventsError}}</text><button bindtap="loadMyEvents">重新加载</button></view>
++      <block wx:else>
++        <view wx:if="{{!eventRegistrations.length}}" class="empty-row">暂无比赛报名和结果记录</view>
++        <view class="record-card" wx:for="{{eventRegistrations}}" wx:key="id">
++          <view class="record-title">{{item.competitionName}}</view>
++          <view class="record-meta">{{item.groupName}}{{item.playerNo ? ' · 选手号 ' + item.playerNo : ''}}</view>
++          <view wx:if="{{item.entrantName || item.performanceTitle}}" class="record-meta">{{item.entrantName}}{{item.performanceTitle ? ' · 节目：' + item.performanceTitle : ''}}</view>
++          <view class="record-meta">{{item.statusText}}{{item.paidStatusText ? ' · ' + item.paidStatusText : ''}}{{item.displayStartDate ? ' · ' + item.displayStartDate : ''}}</view>
++          <view class="event-result">{{item.resultText}}</view>
++          <view class="my-events-actions">
++            <button wx:if="{{item.competitionId}}" data-id="{{item.competitionId}}" bindtap="openEventRegistration">赛事详情</button>
++            <button wx:if="{{item.canPay === true}}" class="event-pay" data-id="{{item.playerId}}" bindtap="payEventRegistration">继续缴费</button>
++          </view>
++        </view>
++        <button wx:if="{{eventRegistrations.length}}" class="events-refresh" bindtap="loadMyEvents">刷新比赛记录</button>
++      </block>
+     </view>
+ 
+     <view class="link-row" bindtap="goCommerceOrders">
+@@ -124,16 +140,6 @@
+       <view wx:else class="empty-row">暂无线下课程记录</view>
+     </view>
+ 
+-    <view class="content-section" wx:if="{{eventRegistrations.length}}">
+-      <view class="content-title">比赛报名</view>
+-      <view class="record-card event-record" wx:for="{{eventRegistrations}}" wx:key="id" data-id="{{item.competitionId}}" bindtap="openEventRegistration">
+-        <view class="record-title">{{item.competitionName}}</view>
+-        <view class="record-meta">{{item.groupName}}{{item.playerNo ? ' · 选手号 ' + item.playerNo : ''}}</view>
+-        <view class="record-meta">{{item.statusText}}{{item.paidStatusText ? ' · ' + item.paidStatusText : ''}}{{item.displayStartDate ? ' · ' + item.displayStartDate : ''}}</view>
+-        <view class="record-meta">{{item.resultText}}</view><button wx:if="{{item.canPay}}" data-id="{{item.playerId}}" catchtap="payEventRegistration">继续缴费</button>
+-      </view>
+-    </view>
+-
+     <view class="content-section">
+       <view class="content-title">我的证书</view>
+       <view wx:if="{{certificates.length}}">
+--- before/10-小程序miniprogram/pages/profile/profile.wxss
++++ after/10-小程序miniprogram/pages/profile/profile.wxss
+@@ -414,3 +414,14 @@
+ @media(max-width:359px){button.avatar-edit{width:88rpx;min-width:88rpx;height:88rpx;flex-basis:88rpx}.profile-head button.head-action{padding:8rpx 10rpx}}
+ 
+ .profile-page{padding:32rpx}.profile-head{background:#fff;color:#202124;padding:28rpx 24rpx;flex-wrap:wrap}.avatar{box-shadow:none;background:#f9eaea;color:#9f1d20}.phone,.profile-caption{color:#616773}.profile-head button.head-action{min-height:88rpx;padding:16rpx;color:#fff;background:#9f1d20;font-size:24rpx}.name{font-size:36rpx;white-space:normal}.phone{flex-wrap:wrap;white-space:normal}.head-actions{margin-left:auto}.stats{padding:20rpx 12rpx}.stat-item{flex-direction:column;gap:8rpx;white-space:normal}.stat-item image{display:none}.label{font-size:24rpx}.num{color:#9f1d20}.content-section{padding:28rpx 24rpx}.content-title{font-size:32rpx;font-weight:600}.row-title,.record-title,.course-name{font-weight:600}.row-desc,.record-meta,.course-meta{font-size:25rpx;color:#616773}.link-row{min-height:116rpx}.schedule-link{min-height:88rpx;display:flex;align-items:center;justify-content:center;font-size:25rpx;border-radius:18rpx}.course-fallback{background:#f9eaea;color:#9f1d20}.profile-caption{display:none}.connection-card button{min-height:88rpx;height:auto;line-height:1.4;padding:16rpx 20rpx}.profile-summary button.expand-profile{height:88rpx;min-width:88rpx}.profile-summary button.bind-pill{min-height:88rpx}.profile-summary-main{min-height:108rpx}
++
++/* Personal competition records are part of the My competitions section. */
++button.my-events-toggle{display:flex;width:100%;margin:0;text-align:left;line-height:1.4;border-radius:0;white-space:normal;font-weight:400}
++.my-events-toggle>view{min-width:0;flex:1}.my-events-toggle .chevron{flex-shrink:0}
++.my-events-panel{padding:8rpx 24rpx 28rpx;border-bottom:1rpx solid #e2e5e9;background:#fff}
++.my-events-panel .record-card{padding:24rpx;margin-top:16rpx;border-radius:24rpx}
++.event-result{margin-top:16rpx;font-size:28rpx;font-weight:600;color:#9f1d20;line-height:1.5}
++.my-events-actions{display:flex;flex-wrap:wrap;gap:16rpx;justify-content:flex-end;margin-top:20rpx}
++.my-events-actions button,.events-feedback button,.events-refresh{min-height:88rpx;padding:20rpx 24rpx;display:flex;align-items:center;justify-content:center;border-radius:18rpx;font-size:26rpx;line-height:1.4;color:#9f1d20;background:#fff;border:1rpx solid #dcb5b6}
++.my-events-actions .event-pay{color:#fff;background:#9f1d20;border-color:#9f1d20}
++.events-feedback{padding:24rpx;color:#616773;font-size:27rpx;line-height:1.6}.events-feedback button{margin-top:20rpx}.events-refresh{margin-top:24rpx;width:100%}

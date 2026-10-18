@@ -1,16 +1,12 @@
 const share = require("../../shared/share");
 const api = require("../../utils/api");
+const { eventState } = require("../../shared/event-state");
 
 function dateText(value) {
   return String(value || "").slice(0, 10) || "时间待定";
 }
 
 function normalizeEvent(item) {
-  const now = Date.now();
-  const finished = item.status === "finished" || (item.endDate && Date.parse(item.endDate) < now);
-  const registrationOpen = item.registrationStatus === "open"
-    && (!item.registrationStart || Date.parse(item.registrationStart) <= now)
-    && (!item.registrationEnd || Date.parse(item.registrationEnd) >= now);
   return {
     ...item,
     coverUrl: item.coverUrl || item.cover_url || "",
@@ -18,15 +14,14 @@ function normalizeEvent(item) {
       ? `${dateText(item.startDate)} 至 ${dateText(item.endDate)}`
       : dateText(item.startDate),
     feeText: Number(item.registrationFee || 0) > 0 ? `¥${Number(item.registrationFee).toFixed(2)}` : "免费报名",
-    registrationOpen,
-    finished,
-    statusText: finished ? "已结束" : registrationOpen ? "报名中" : "即将开始"
+    ...eventState(item)
   };
 }
 
 Page(share.withShare("events", {
   data: {
     loading: true,
+    error: "",
     events: [],
     visibleEvents: [],
     keyword: "",
@@ -41,7 +36,7 @@ Page(share.withShare("events", {
     this.loadEvents().finally(() => wx.stopPullDownRefresh());
   },
   async loadEvents() {
-    this.setData({ loading: true });
+    this.setData({ loading: true, error: "" });
     try {
       const events = (await api.getEvents() || []).map(normalizeEvent);
       this.setData({
@@ -53,8 +48,7 @@ Page(share.withShare("events", {
       });
       this.applySearch(this.data.keyword, events);
     } catch (err) {
-      this.setData({ loading: false, events: [], visibleEvents: [] });
-      wx.showToast({ title: err.message || "赛事加载失败", icon: "none" });
+      this.setData({ loading: false, error: err.message || "赛事加载失败，请重试" });
     }
   },
   onSearchInput(event) {

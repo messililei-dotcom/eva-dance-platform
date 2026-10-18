@@ -1,0 +1,30 @@
+{
+  "state": "deployed_ui_verified",
+  "buildId": "NAuuhEQSoTqDfpRLY5T4c",
+  "buildExitCode": 0,
+  "typecheck": "passed",
+  "staticPages": 67,
+  "backupServerPath": "/www/backups/dongfangwuquan/event-admin-20261018",
+  "browserOriginConfig": {
+    "origin": "https://admin.swod.com.cn",
+    "access": "allow"
+  },
+  "browserRuntime": "last access rejected; exact cause not present in inspected logs",
+  "hypothesis": "runtime permission state may not have synchronized; unconfirmed",
+  "productionSwitched": true,
+  "oldBuildId": "DWb1MKwo1sOzrQyRhhkge",
+  "rollbackScript": "/www/backups/dongfangwuquan/event-admin-20261018/rollback.sh",
+  "deployedSourceMatches": true,
+  "uiVerification": {
+    "url": "https://admin.swod.com.cn/events",
+    "eventId": 100061,
+    "field": "赛事管理员",
+    "currentOwner": "李雷（lilei）",
+    "options": [
+      "李雷（lilei）",
+      "feifei_guyi（feifei_guyi）"
+    ],
+    "savedBusinessChanges": false
+  },
+  "validationLimit": "Assignment persistence and authorization tested in isolated memory database; no real event ownership changed during production UI acceptance"
+}

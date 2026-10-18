@@ -28,8 +28,8 @@ test('offline cover proxies and camel-case document URLs survive API normalizati
  vm.runInNewContext(fs.readFileSync(path.join(root,'utils/api.js'),'utf8'),{module,require:()=>({apiBase:'https://admin.swod.com.cn/api/mini'}),getApp:()=>null,getCurrentPages:()=>[],wx:{getStorageSync:()=>'',request:o=>o.success({statusCode:200,data:{success:true,data:payload}})}});
  const data=await module.exports.getOfflineCourses();assert.equal(data[0].cover_image,'https://admin.swod.com.cn/api/courses/cover-image?src=abc');assert.equal(data[1].cover_image,payload[1].cover_image);assert.equal(data[1].pdfUrl,'https://admin.swod.com.cn/api/certificates/1/render.svg');
 });
-test('selected period is sent to the server before rendering its available sessions',async()=>{
- let ids;const p=page('offline',{getOfflineOverview:async value=>{ids=value;return {sessions:[{id:1,course_id:3,can_book:1,capacity:10,booked_count:0}]};}});p.data.sessionCourseIds=['3'];await p.loadOverview();assert.equal(ids.join(','),'3');assert.equal(p.data.sessions.length,1);
+test('selected period is sent to the server before rendering purchased lesson balances',async()=>{
+ let ids;const p=page('offline',{getOfflineOverview:async value=>{ids=value;return {entitlements:[{id:1,course_id:3,available_sessions:4,used_sessions:2}],consumes:[{id:2,count:2}]};}});p.data.sessionCourseIds=['3'];await p.loadOverview();assert.equal(ids.join(','),'3');assert.equal(p.data.sessions.length,0);assert.equal(p.data.availableSessions,4);assert.equal(p.data.consumedCount,2);assert.equal(p.data.tabs.some(t=>["sessions","bookings"].includes(t.key)),false);
 });
 test('anonymous period and group student displays never use student names',async()=>{
  const p=page('offline-detail',{getOfflineCourses:async()=>[{id:900003,source_id:3,name:'A',group_key:'a',total_students:2,group_total_students:2,anonymous_students:[{label:'PRIVATE_NAME'}],teacher:'T'}]}, {setNavigationBarTitle:()=>{}});

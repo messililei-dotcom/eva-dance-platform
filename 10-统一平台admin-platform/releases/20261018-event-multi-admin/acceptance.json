@@ -1,0 +1,23 @@
+{
+  "live": true,
+  "assignedEvent": 100061,
+  "adminUserIds": [
+    1,
+    7
+  ],
+  "restrictedVisibleEvents": [
+    100061
+  ],
+  "deniedEndpoints": {
+    "/api/event/competitions/100060": 403,
+    "/api/users": 403,
+    "/api/finance/income-details": 403,
+    "/api/course/authorizations": 403
+  },
+  "otherEventWrite": 403,
+  "grantChange": 403,
+  "createAdditionalEvent": 403,
+  "importAdditionalEvents": 403,
+  "persistence": "passed",
+  "groupAccess": 200
+}

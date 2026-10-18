@@ -1,11 +1,12 @@
 plugins { id 'com.android.application' }
 def signingFile = rootProject.file('signing.local.properties')
+if (!signingFile.exists()) signingFile = new File(System.getProperty('user.home'), '.config/eva-app/android-signing.properties')
 def signingValues = new Properties()
 if (signingFile.exists()) signingFile.withInputStream { signingValues.load(it) }
 android {
     namespace 'cn.com.swod.app'
     compileSdk 36
-    defaultConfig { applicationId 'cn.com.swod.app'; minSdk 26; targetSdk 36; versionCode 3; versionName '1.0.0' }
+    defaultConfig { applicationId 'cn.com.swod.app'; minSdk 26; targetSdk 36; versionCode 5; versionName '1.0.0' }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
     signingConfigs {
         if (signingFile.exists()) release {
@@ -18,3 +19,11 @@ android {
     }
 }
 dependencies { testImplementation 'junit:junit:4.13.2' }
+tasks.matching { it.name == 'preReleaseBuild' }.configureEach {
+    doFirst {
+        if (!signingFile.exists() || ['storeFile','storePassword','keyAlias','keyPassword'].any { !signingValues[it] }) {
+            throw new GradleException('正式构建缺少完整发布签名配置，已停止生成未签名发布包。')
+        }
+        if (!file(signingValues['storeFile']).isFile()) throw new GradleException('发布签名文件不存在。')
+    }
+}

@@ -1,0 +1,55 @@
+{
+  "time": "2026-10-14T12:01:56.524Z",
+  "dryRun": false,
+  "files": 1573,
+  "compressed": 360,
+  "errors": [],
+  "beforeBytes": 319650828,
+  "afterBytes": 194715818,
+  "savedBytes": 124935010,
+  "savedPercent": 39.08,
+  "compressedFilesHashChecked": 360,
+  "publicSamples": [
+    {
+      "category": "/uploads/event-covers/",
+      "status": 200,
+      "bytes": 253059,
+      "hashMatched": true
+    },
+    {
+      "category": "/uploads/training-courses/",
+      "status": 200,
+      "bytes": 808399,
+      "hashMatched": true
+    },
+    {
+      "category": "/uploads/online-course/series-covers/",
+      "status": 200,
+      "bytes": 204369,
+      "hashMatched": true
+    },
+    {
+      "category": "/images/courses/",
+      "status": 200,
+      "bytes": 198049,
+      "hashMatched": true
+    },
+    {
+      "category": "/images/reports/",
+      "status": 200,
+      "bytes": 124388,
+      "hashMatched": true
+    }
+  ],
+  "health": [
+    {
+      "host": "admin.swod.com.cn",
+      "status": 200
+    },
+    {
+      "host": "www.swod.com.cn",
+      "status": 200
+    }
+  ],
+  "sourceSha256": "c98af9eda7cf211ed78dccf59f7fe1721243726b3a53c173af305582c3e88d84"
+}

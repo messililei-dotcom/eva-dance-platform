@@ -1,0 +1,19 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
+<view class="messages-page">
+  <view class="toolbar"><view class="heading">通知 <text class="badge" wx:if="{{unreadCount}}">{{unreadCount > 99 ? '99+' : unreadCount}}</text></view><button class="text-button" wx:if="{{unreadCount}}" disabled="{{marking}}" bindtap="markAllRead">全部已读</button><button class="text-button" bindtap="refresh" disabled="{{loading}}">刷新</button></view>
+  <view class="filters"><button wx:for="{{filters}}" wx:key="key" class="filter {{filter === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="changeFilter">{{item.label}}</button></view>
+  <view class="error" wx:if="{{error}}">{{error}}<button class="text-button" bindtap="refresh">重试</button></view>
+  <view class="message {{item.status === 'unread' ? 'unread' : ''}}" wx:for="{{items}}" wx:key="recipientId" data-id="{{item.recipientId}}" bindtap="openMessage">
+    <view class="message-heading"><text class="dot" wx:if="{{item.status === 'unread'}}"></text><text class="title">{{item.title}}</text><text class="urgent" wx:if="{{item.priority === 'urgent'}}">重要</text></view>
+    <view class="summary">{{item.content}}</view><view class="meta">{{item.typeLabel}} · {{item.timeText}}</view>
+  </view>
+  <view class="empty" wx:if="{{!items.length && !error}}">{{loading ? '通知加载中…' : '暂无通知'}}</view>
+  <button class="load-more" wx:if="{{hasMore}}" disabled="{{loading}}" bindtap="loadMore">{{loading ? '加载中…' : '加载更多'}}</button>
+  <view class="overlay" wx:if="{{selected}}">
+    <view class="dialog"><view class="dialog-heading"><text class="title">{{selected.title}}</text><button class="close" bindtap="closeDetail">关闭</button></view><view class="meta">{{selected.typeLabel}} · {{selected.timeText}}</view><scroll-view scroll-y class="body-scroll"><text class="body" selectable>{{selected.content}}</text></scroll-view><button class="related" wx:if="{{selected.target}}" bindtap="openRelated">查看相关内容</button></view>
+  </view>
+</view>
+
+</block>

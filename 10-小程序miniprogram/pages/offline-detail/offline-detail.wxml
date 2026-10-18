@@ -18,6 +18,7 @@
         <view><text>已报名学员</text><span>{{course.studentCount}} 人</span></view>
         <view><text>开设期次</text><span>{{course.sessionsText}}</span></view>
         <view><text>最新期次</text><span>{{course.dateText}}</span></view>
+        <view wx:if="{{course.levelText}}"><text>适合级别</text><span>{{course.levelText}}</span></view>
         <view><text>课程费用</text><span class="price">{{course.priceText}}</span></view>
       </view>
       <view class="info-grid" wx:if="{{course.location}}"><view><text>上课地点</text><text>{{course.location}}</text></view></view>
@@ -50,15 +51,16 @@
             <text>{{item.sessionsText}}</text>
             <text>{{item.total_students}} 位学员</text>
           </view>
-<button wx:if="{{item.price > 0 && (item.period_status === 'active' || item.period_status === 'planned')}}" size="mini" data-id="{{item.source_id}}" bindtap="buyCourse">本期报名并支付</button>
-<button size="mini" class="period-schedule" data-course-id="{{item.source_id}}" bindtap="openSchedule">查看本期课表</button>
+<button wx:if="{{item.canPurchase}}" size="mini" data-id="{{item.source_id}}" bindtap="buyCourse">购买本期课时</button>
+<view wx:if="{{!item.canPurchase}}" class="period-desc">{{item.purchaseReason}}</view>
+<button size="mini" class="period-schedule" data-course-id="{{item.source_id}}" bindtap="openSchedule">查看本期课时</button>
         </view>
       </view>
     </view>
 
     <view class="action-bar">
-      <button class="schedule-btn" bindtap="openSchedule">查看课表并约课</button>
-      <button class="contact-btn" open-type="contact" show-message-card="true" send-message-title="{{course.name}}" send-message-path="/pages/offline-detail/offline-detail?id={{course.id}}">预约咨询</button>
+      <button class="schedule-btn" bindtap="openSchedule">查看期次课时</button>
+      <button class="contact-btn" open-type="contact" show-message-card="true" send-message-title="{{course.name}}" send-message-path="/pages/offline-detail/offline-detail?id={{course.id}}">课程咨询</button>
     </view>
   </block>
 </view>

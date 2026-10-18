@@ -1,3 +1,4 @@
+import { saleCommissionFields } from '@/lib/sale-commission';
 import { hasAuth, openCommerceDb, unauthorized } from '../../_db';
 
 export const dynamic = 'force-dynamic';
@@ -19,6 +20,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!sale) return Response.json({ success: false, error: '销售记录不存在' }, { status: 404 });
     if (/^官网(?:订单|退款) EV[a-f0-9]{30}$/.test(sale.remark || '')) return Response.json({ error: '官网订单流水不能手工修改，请在官网商城订单中办理退款' }, { status: 409 });
 
+    const totalAmount = toNumber(body.amount ?? body.total_amount ?? body.total_price, toNumber(sale.total_amount));
+    let commission;
+    try { commission = saleCommissionFields(body, totalAmount, sale); }
+    catch (error) { return Response.json({ success: false, error: (error as Error).message }, { status: 400 }); }
     const product = db.prepare('SELECT * FROM shop_products WHERE id = ?').get(sale.product_id);
     const oldQty = toNumber(sale.quantity);
     const newQty = Math.max(1, toNumber(body.quantity, oldQty));
@@ -28,10 +33,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       db.prepare('UPDATE shop_products SET stock = ?, updated_at = ? WHERE id = ?').run(available - newQty, new Date().toISOString(), product.id);
     }
 
-    const totalAmount = toNumber(body.amount ?? body.total_amount ?? body.total_price, toNumber(sale.total_amount));
     db.prepare(`
       UPDATE shop_sales
-      SET quantity = ?, total_amount = ?, sale_date = ?, remark = ?, sale_type = ?, channel = ?
+      SET quantity = ?, total_amount = ?, sale_date = ?, remark = ?, sale_type = ?, channel = ?, sales_advisor = ?, commission_rate = ?, commission_amount = ?
       WHERE id = ?
     `).run(
       newQty,
@@ -40,6 +44,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       body.note ?? body.remark ?? sale.remark ?? '',
       body.saleType ?? body.sale_type ?? sale.sale_type ?? '线下',
       body.channel ?? sale.channel ?? '线下',
+      commission.salesAdvisor, commission.commissionRate, commission.commissionAmount,
       routeParams.id,
     );
     db.prepare(`

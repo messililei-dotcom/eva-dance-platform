@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-17",
+  "sourceUpdated": [
+    "iOS",
+    "Android",
+    "HarmonyOS"
+  ],
+  "uploaded": false,
+  "released": false,
+  "productionOrders": 0,
+  "realPayments": 0,
+  "iOS": {
+    "simulatorBuild": true,
+    "coreChecks": true,
+    "screenVerification": "public prices and catalog; catalog screenshot uses a direct QA entry only in the temporary build copy"
+  },
+  "Android": {
+    "debugBuild": true,
+    "lintErrors": 0,
+    "unitTests": 12,
+    "emulator": {
+      "realOrders": 0,
+      "realPayments": 0,
+      "package": "cn.com.swod.app.syncqa",
+      "catalog53Lessons": true,
+      "paginationPassed": true,
+      "searchEmptyPassed": true,
+      "offlineIntroScreenPassed": true,
+      "passed": true
+    }
+  },
+  "HarmonyOS": {
+    "sourceSync": true,
+    "ruleTests": 5,
+    "nativeBuild": false,
+    "reason": "DevEco Studio installation not found in default locations"
+  },
+  "digitalPurchase": "App server continues to reject online-course orders; iOS IAP not configured; no server capability change"
+}

@@ -1,0 +1,39 @@
+{
+  "deviceType": "emulator",
+  "package": "cn.com.swod.app",
+  "physicalDeviceVerified": false,
+  "productionBusinessWrites": false,
+  "screens": [
+    {
+      "name": "01-线上学院",
+      "sha256": "0bbf047be3bff50926da7ca1e5145fdb0e22fc4ac71579f6336b1e9d306c1cd9",
+      "selectedTabVerified": true
+    },
+    {
+      "name": "02-线下课",
+      "sha256": "40feb2a637a73390b1c53b7918f8fe52f081cf9043508c2e4984744946fe2b08",
+      "selectedTabVerified": true
+    },
+    {
+      "name": "03-赛事",
+      "sha256": "8fb606d5876a63ac3e891977122dce1d8d4d1b0f6b15ccb67b861ca0d26bb491",
+      "selectedTabVerified": true
+    },
+    {
+      "name": "04-商城",
+      "sha256": "a11045fc048f11c6243c6e57d8af6ea568b086b7d1fe8b45c6463f9883f7539f",
+      "selectedTabVerified": true
+    },
+    {
+      "name": "05-个人中心",
+      "sha256": "292caad2c95e95eaedc4c44017fcfca8ed3066f54513aba9f1fb606e75356851",
+      "selectedTabVerified": true
+    }
+  ],
+  "uncheckedConsentBlocksSMS": true,
+  "crashLogMentionsPackage": false,
+  "apkSHA256": "90a4a51f5121b0f796f11d131ad6c7fe1af20e8d3937a2ca76f1cc8a5c5a8b4e",
+  "androidVersion": "Android 16 / API36",
+  "model": "sdk_gphone64_arm64",
+  "storeScreenshotApproved": false
+}

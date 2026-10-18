@@ -9,7 +9,7 @@ export type AdminStatement = {
 export type AdminDb = {
   prepare: (source: string) => AdminStatement;
   exec: (source: string) => unknown;
-  transaction: <Args extends unknown[], Result>(fn: (...args: Args) => Result) => (...args: Args) => Result;
+  transaction: <Args extends unknown[], Result>(fn: (...args: Args) => Result) => ((...args: Args) => Result) & { immediate: (...args: Args) => Result };
   close: () => void;
 };
 

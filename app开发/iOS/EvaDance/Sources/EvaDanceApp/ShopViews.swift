@@ -22,7 +22,7 @@ struct ShopView: View {
     var filtered: [SiteRow] { products.filter { (category == "全部" || $0.value["category"].text == category) && (search.isEmpty || $0.value["name"].text.localizedCaseInsensitiveContains(search)) } }
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 20) {
                 BrandHeader(title: "伊娃甄选", subtitle: "东方舞生活 · 官方商城", icon: "bag")
                 HStack {
                     NavigationLink("购物袋（\(cart.quantities.values.reduce(0,+))）") { CartView(cart: cart) }
@@ -41,8 +41,8 @@ struct ShopView: View {
                     }.buttonStyle(.plain) }
                 }
                 if !store.busy && store.error == nil && filtered.isEmpty { Text("暂无匹配商品") }
-            }.padding(12)
-        }.evaCompactLayout().navigationTitle("商城").searchable(text: $search, prompt: "搜索商品")
+            }.padding(20).frame(maxWidth: 960).frame(maxWidth: .infinity)
+        }.evaHomeLayout().navigationTitle("商城").evaSearch(text: $search, prompt: "搜索商品")
             .task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/shop/products", session: session, publicRead: true) }
@@ -52,19 +52,18 @@ struct ProductTile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             ZStack {
-                Rectangle().fill(EvaBrand.gold.opacity(0.12))
+                Rectangle().fill(EvaBrand.softAccent)
                 if let url = AppPolicy.secureMediaURL(product["image"].text) {
                     AsyncImage(url: url) { image in image.resizable().scaledToFit() } placeholder: { ProgressView() }
                 } else { Text("伊娃甄选").foregroundStyle(EvaBrand.red).font(.headline) }
-            }.frame(height: 140).clipped()
+            }.frame(height: 160).clipped()
             VStack(alignment: .leading, spacing: 8) {
                 Text(product["name"].text).font(.headline).lineLimit(2)
                 Text(product["spec"].text).font(.caption).foregroundStyle(.secondary)
                 Text(money(product["priceFen"].number)).font(.headline).foregroundStyle(EvaBrand.red)
                 Text(product["stock"].number > 0 ? "有货" : "售罄").font(.caption).foregroundStyle(.secondary)
             }.padding(.horizontal, 12).padding(.bottom, 12)
-        }.background(.background, in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(.secondary.opacity(0.15)))
+        }.background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14))
             .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }
@@ -284,6 +283,9 @@ struct OfflineCheckoutView: View {
     let courseID: String
     @EnvironmentObject var session: Session
     @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var showRights = false
+    @State private var confirmed = false
     @StateObject private var store = SiteStore()
     @State private var provider = "alipay"
     @State private var requestKey = UUID().uuidString
@@ -292,9 +294,10 @@ struct OfflineCheckoutView: View {
     var body: some View {
         Form {
             Text(store.data["offer"]["name"].text)
-            Text(store.data["offer"]["period"].text)
+            Text("期次安排：\(store.data["offer"]["period"].text)")
+            Text("购买课时：\(store.data["offer"]["sessions"].text) 课时")
             Text(String(format:"¥%.2f",store.data["offer"]["priceFen"].number / 100))
-            Text("付款后开通所选期次的课次，可在个人中心预约上课。")
+            Text("付款后开通所选期次的课时，到课后由工作人员核销扣减，无需预约。")
             Picker("支付方式",selection:$provider){
                 if store.data["payment"]["alipay"].bool {Text("支付宝").tag("alipay")}
                 if store.data["payment"]["wechat"].bool {Text("微信支付").tag("wechat")}
@@ -304,6 +307,8 @@ struct OfflineCheckoutView: View {
             } else {NavigationLink("查看订单／继续付款"){ShopOrderDetail(id:orderID)}}
             LoadState(store:store){Task{await load()}}
         }.navigationTitle("确认课程订单").task{await load()}
+        .navigationDestination(isPresented:$showRights){OfflineScheduleView(courseID:courseID)}
+        .onChange(of:scenePhase){phase in if phase == .active && !orderID.isEmpty && !confirmed {Task{if let result=await store.send("/shop/orders/\(orderID)/refresh",session:session),["paid","completed"].contains(result["order"]["status"].text){confirmed=true;showRights=true}}}}
     }
     private func load() async {
         await store.load("/shop/courses/offline/\(courseID)",session:session)

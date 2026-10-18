@@ -410,6 +410,14 @@ CREATE TABLE IF NOT EXISTS event_music_archives (
     const columns = db.prepare(`PRAGMA table_info(${table})`).all();
     if (!columns.some((column: any) => column.name === 'owner_user_id')) db.exec(`ALTER TABLE ${table} ADD COLUMN owner_user_id INTEGER NOT NULL DEFAULT 0`);
   }
+  db.exec(`CREATE TABLE IF NOT EXISTS event_competition_admins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    competition_id INTEGER NOT NULL REFERENCES event_competitions(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL,
+    UNIQUE(competition_id,user_id)
+  ); CREATE INDEX IF NOT EXISTS idx_event_competition_admin_user ON event_competition_admins(user_id,competition_id);
+  INSERT OR IGNORE INTO event_competition_admins (competition_id,user_id)
+    SELECT id,owner_user_id FROM event_competitions WHERE owner_user_id>0;`);
   const competitionColumns = new Set((db.prepare('PRAGMA table_info(event_competitions)').all() as Array<{ name: string }>).map((row) => row.name));
   if (!competitionColumns.has('registration_public')) {
     db.transaction(() => {
@@ -471,6 +479,7 @@ export function competitionSelectSql() {
   return `
     SELECT
       c.*,
+      (SELECT json_group_array(user_id) FROM event_competition_admins ca WHERE ca.competition_id=c.id) AS admin_user_ids,
       (SELECT COUNT(*) FROM event_players p WHERE p.competition_id=c.id AND p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled')) AS active_player_count,
       (SELECT COUNT(*) FROM event_groups g WHERE g.competition_id = c.id) AS group_count,
       (SELECT COUNT(*) FROM event_players p WHERE p.competition_id = c.id) AS player_count,
@@ -487,6 +496,8 @@ export function mapCompetition(row: any) {
     name: row.name,
     code: row.code,
     status: row.status,
+    ownerUserId: row.owner_user_id || undefined,
+    adminUserIds: JSON.parse(row.admin_user_ids || (row.owner_user_id ? JSON.stringify([row.owner_user_id]) : '[]')),
     registrationStatus: row.registration_status,
     registrationPublic: Number(row.registration_public) === 1,
     judgeScoresPublic: Number(row.judge_scores_public) === 1,
@@ -510,7 +521,7 @@ export function mapCompetition(row: any) {
 }
 
 export function mapPublicCompetition(row: any) {
-  const value = mapCompetition(row);
+  const { ownerUserId: _ownerUserId, adminUserIds: _adminUserIds, ...value } = mapCompetition(row);
   return { ...value, playerCount: value.registrationPublic ? Number(row.active_player_count || 0) : null,
     approvedPlayerCount: value.registrationPublic ? value.approvedPlayerCount : null };
 }

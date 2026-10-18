@@ -1,0 +1,107 @@
+[
+  {
+    "path": "10-小程序miniprogram/app.json",
+    "sha256": "1519fb8e72cf8ea66d72ad4c886baebaab5e7e3b41628bbba65d8febde6baa1d",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/app.wxss",
+    "sha256": "ba0ef757d9a6ece9908deb00ae09b784606e34ed022aea3ceeb26faaf4e80513",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/shared/event-state.js",
+    "sha256": "175fe1388d95cf13a1179ffbdbe373a479a920cc96957e4e969afadfefc325af",
+    "baselineExists": false
+  },
+  {
+    "path": "10-小程序miniprogram/shared/shop.wxss",
+    "sha256": "a5d985778d6a42980a6eb3bb8b665c19e20c904c200a5a961c62057113401cf3",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/pages/home/home.wxml",
+    "sha256": "8fd0e73569ae66afcd1483da1c27b6efc8ecb78d523c099b1d4ca330b3b6096a",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/pages/home/home.wxss",
+    "sha256": "859d3a974f62f6ee0d8ed732844b7f1224c78e1e35c3824961a4b5028c461729",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/pages/home/home.js",
+    "sha256": "d84d37edf04ccbda264da9db2cc94cdbe12b843ada7e34be320d4915c11d0512",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/pages/event-detail/event-detail.js",
+    "sha256": "0f3710ccd8fc9f12154787d844694505d10ab533a00a9ef3cbef258a5a45ec5e",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/pages/event-register/event-register.js",
+    "sha256": "fa1474e9be387978b423c79d1057fafd8aac705d48931ac32c9de9baa61809ff",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/pages/profile/profile.wxss",
+    "sha256": "8f46c500c6dde5118ba8f9c53d0a6dc841271a50844e48e7568384080e150bf6",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/pages/profile/profile.wxml",
+    "sha256": "9c096bd871e1bb1f210d237a204a8f4c575797aec86f62cf88c7db5a61b8b8d0",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/pages/events/events.js",
+    "sha256": "84d4505f1a50d851e0390628001fd87c52c2d46271781839a9e12f48f46d0bae",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/pages/events/events.wxss",
+    "sha256": "1ace29293ac73985abfc3434092bfdd47072994177a940ead9b63ce869e9a9b5",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/pages/events/events.wxml",
+    "sha256": "d9980c741e1b1f773c1a99716c4f62c597cd45a1152177a8e2ad49674327f589",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/pages/offline/offline.wxss",
+    "sha256": "88702a33734a965158a21298656e44680165ea2ab323848d489aef5fd57a11d9",
+    "baselineExists": true
+  },
+  {
+    "path": "10-小程序miniprogram/pages/offline/offline.wxml",
+    "sha256": "6158869391e081fd5297dfefd97a16793a7ea39003c344158d7a0e687373d8b1",
+    "baselineExists": true
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift",
+    "sha256": "61f3579ddcb997607ff2e78bb12f2a923203cef5c374a67834920c789d15106c",
+    "baselineExists": true
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/ShopViews.swift",
+    "sha256": "1e787ddfac3b68ab64ba0c34088b50ec6ad367a67849c1328f53b649aca71f9e",
+    "baselineExists": true
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift",
+    "sha256": "a124f9bd44deca3c7e3fafb3f59f05f5fbc5fd7e4e6dee4d80248c4ed263fcfb",
+    "baselineExists": true
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "sha256": "5c8e2af722a9996279396a1424d16603e221edff81f5609a926ff69575548a5f",
+    "baselineExists": true
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+    "sha256": "4be62cc1d3fffdfcb9bae3e8a2a04b072ff3612bd7bc456dd800f74821c9561c",
+    "baselineExists": true
+  }
+]

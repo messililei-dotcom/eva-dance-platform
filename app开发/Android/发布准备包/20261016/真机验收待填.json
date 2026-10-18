@@ -1,0 +1,19 @@
+{
+  "apkSHA256": "90a4a51f5121b0f796f11d131ad6c7fe1af20e8d3937a2ca76f1cc8a5c5a8b4e",
+  "nativeUI": false,
+  "loginLogout": false,
+  "courseAuthorization": false,
+  "playbackProgress": false,
+  "notesBookmarks": false,
+  "profile": false,
+  "orders": false,
+  "events": false,
+  "privacyDeletion": false,
+  "filingVerified": false,
+  "storeMaterialVerified": false,
+  "evidence": [],
+  "deviceType": "physical_device_required",
+  "deviceModel": "",
+  "androidVersion": "",
+  "testedAt": ""
+}

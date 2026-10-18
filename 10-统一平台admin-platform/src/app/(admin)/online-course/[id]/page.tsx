@@ -555,8 +555,8 @@ export default function OnlineCourseEditorPage() {
       if (folderValue !== 'all') params.folder_id = Number(folderValue);
 
       const [firstMaterialPayload, folderPayload] = await Promise.all([
-        onlineCourseApi.getMaterials(params),
-        folders.length && !input.force ? Promise.resolve({ flat: folders }) : onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] })),
+        onlineCourseApi.getCourseMaterialOptions(params),
+        folders.length && !input.force ? Promise.resolve({ flat: folders }) : onlineCourseApi.getCourseMaterialFolderOptions().catch(() => ({ flat: [] })),
       ]);
       const materialRows = materialRowsFromPayload(firstMaterialPayload);
       const materialTotal = materialNumberFromPayload(firstMaterialPayload, ['total', 'total_count', 'count'], materialRows.length);
@@ -569,7 +569,7 @@ export default function OnlineCourseEditorPage() {
           (_, index) => pageStart + index,
         );
         const payloads = await Promise.all(
-          pages.map(page => onlineCourseApi.getMaterials({ ...params, page })),
+          pages.map(page => onlineCourseApi.getCourseMaterialOptions({ ...params, page })),
         );
         payloads.forEach(payload => materialRows.push(...materialRowsFromPayload(payload)));
       }
@@ -1244,14 +1244,14 @@ export default function OnlineCourseEditorPage() {
     const folderName = series?.name?.trim() || `课程-${seriesId}`;
     const currentFolders = folders.length
       ? folders
-      : pickFolderRows(await onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] })));
+      : pickFolderRows(await onlineCourseApi.getCourseMaterialFolderOptions().catch(() => ({ flat: [] })));
     const existing = currentFolders.find(folder => Number(folder.parent_id || 0) === 0 && folder.name === folderName);
     if (existing) return existing;
     try {
       const result = await onlineCourseApi.createMaterialFolder({ name: folderName, parent_id: 0 });
       return result?.data || result;
     } catch {
-      const folderPayload = await onlineCourseApi.getMaterialFolders().catch(() => ({ flat: [] }));
+      const folderPayload = await onlineCourseApi.getCourseMaterialFolderOptions().catch(() => ({ flat: [] }));
       const refreshed = pickFolderRows(folderPayload);
       const fallback = refreshed.find((folder: FolderRow) => Number(folder.parent_id || 0) === 0 && folder.name === folderName);
       if (fallback) return fallback;

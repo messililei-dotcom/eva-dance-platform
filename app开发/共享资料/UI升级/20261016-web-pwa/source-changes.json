@@ -1,0 +1,82 @@
+[
+  {
+    "path": "public/sw.js",
+    "sha256": "81565f2bcd415959391e6f1a5ce3de2df258b90332019712558bcdb10a6d73a1"
+  },
+  {
+    "path": "public/manifest.json",
+    "sha256": "c0ed6f05d76d48cc916b077b15a35b000e7294e675060ed52e8c266dcfda601c"
+  },
+  {
+    "path": "public/manifest-20261006.json",
+    "sha256": "c0ed6f05d76d48cc916b077b15a35b000e7294e675060ed52e8c266dcfda601c"
+  },
+  {
+    "path": "scripts/mobile-navigation.test.mjs",
+    "sha256": "14303fa32fa1ba9c0e6e864b982c0c92aa1a5e46db4e240d0e95e6674607f595"
+  },
+  {
+    "path": "src/app/layout.tsx",
+    "sha256": "aa6df1b080affff2f0fae8f38df7a499743d5c77eaed1d6eb478e1c4130162e4"
+  },
+  {
+    "path": "src/app/page.tsx",
+    "sha256": "3c37a98d9c5600723774ea30ad34cfd78daa31792ffdbe1c149a9684b409657e"
+  },
+  {
+    "path": "src/components/Navbar_v2.tsx",
+    "sha256": "a5a2a30645573d1fb401490342b871a8ed597d5bc5166bc3f2cb4b57418b8abf"
+  },
+  {
+    "path": "src/components/BottomNav.tsx",
+    "sha256": "32b6b4c7f62c449fdeefc00f1791e084e647f57002ef977130d3163bff86ac1a"
+  },
+  {
+    "path": "src/components/OfflineHub.tsx",
+    "sha256": "492122e10b7cc13c8818c288ee618b7325f803ecb7fea1c4ce93eecbfdc3fd52"
+  },
+  {
+    "path": "src/components/OfflineCourseCatalog.tsx",
+    "sha256": "64a0ea690839c91fab501773f95bae9dde3d6c769a341b3964e3fc4065280672"
+  },
+  {
+    "path": "src/app/courses/page.tsx",
+    "sha256": "8a929d56bb6ccb02202cfd9fda8d4ac3130cb435ce375c050419d1cefdd59cf1"
+  },
+  {
+    "path": "src/app/events-news/page.tsx",
+    "sha256": "545899cf78820b6a344ffae60cc04cfa12d4cf5259d5fb3e04afc163bfe6ea4d"
+  },
+  {
+    "path": "src/app/shop/storefront.tsx",
+    "sha256": "ebf4bf77d898d26a250beca1cc5d9453a50b16fe336a75ac8369928f76a32917"
+  },
+  {
+    "path": "src/app/dashboard/events/page.tsx",
+    "sha256": "857a54791069ad32e0d2e2151cab53fe440c61f2d49655703fd1d9d748829ae2"
+  },
+  {
+    "path": "public/compat/profile.html",
+    "sha256": "54d26b36ee195205818cf0e9eaa5c32747d9ea9feb9ccfc808c77656a3f2c228"
+  },
+  {
+    "path": "src/app/mobile-app.css",
+    "sha256": "a53b6e0369eec13d92d89df0b5897958588474315aa6dc886c4d2770654183f1"
+  },
+  {
+    "path": "src/components/MobileAcademy.tsx",
+    "sha256": "7b054e5f29f702e590a7fc77256b39566be2d6bfc570f983f35851a61627d1b2"
+  },
+  {
+    "path": "src/lib/mobile-app-navigation.ts",
+    "sha256": "81604e877d6fb996e29ed7e1971c2b16b03eaf01a0ef168484028667047cb7c5"
+  },
+  {
+    "path": "src/types/framework.d.ts",
+    "sha256": "5e1050f6c9eee8e36e84e12f2c22e5dfe9353a133b8b42c9ccc6ad00c2b6e639"
+  },
+  {
+    "path": "scripts/mobile-app-navigation.test.mjs",
+    "sha256": "257e3e42557ef7142fa1ccf14d428d9d186447956a6630224dfb7bd489bcbda5"
+  }
+]

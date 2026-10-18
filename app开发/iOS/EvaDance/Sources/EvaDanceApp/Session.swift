@@ -6,6 +6,23 @@ import EvaCore
     @Published private(set) var credentials: Login?
     @Published var error: String?
     @Published var showLogin = false
+    @Published private(set) var unlockedSeries: Set<Int> = []
+    @Published private(set) var courseAccessReady = false
+    private var accessRequest = 0
+    private var accessAccount: Int?
+    func refreshCourseAccess() async {
+        accessRequest += 1; let request = accessRequest
+        let account = accountID
+        guard let token, let account else { unlockedSeries = []; accessAccount = nil; courseAccessReady = true; return }
+        if accessAccount != account { unlockedSeries = [] }; courseAccessReady = false; accessAccount = account
+        do {
+            let rows: JSONValue = try await api.request("/member/authorized-series", token: token)
+            guard accountID == account, accessRequest == request else { return }
+            unlockedSeries = Set(rows.list.compactMap { Int($0.firstText("series_id", "id")) })
+            courseAccessReady = true
+        } catch { if accountID == account, accessRequest == request { unlockedSeries = []; courseAccessReady = false } }
+    }
+    func isCourseUnlocked(_ id: String) -> Bool { token != nil && accessAccount == accountID && unlockedSeries.contains(Int(id) ?? 0) }
     var token: String? { credentials?.token }
     var accountID: Int? { credentials?.memberId }
     let transport: APIClient
@@ -40,6 +57,7 @@ import EvaCore
     private func store(_ value: Login) throws {
         let data = try JSONEncoder().encode(value)
         try TokenStore.save(String(decoding: data, as: UTF8.self)); credentials = value
+        unlockedSeries = []; courseAccessReady = false; Task { await refreshCourseAccess() }
     }
     func refresh() async throws -> String {
         if let refreshTask { return try await refreshTask.value.token }
@@ -58,7 +76,7 @@ import EvaCore
         clear()
         if let old { Task { let _: Empty? = try? await transport.request("/auth/logout", token: old, method: "POST", body: Data("{}".utf8)) } }
     }
-    func clear() { generation += 1; refreshTask?.cancel(); refreshTask = nil; TokenStore.delete(); credentials = nil }
+    func clear() { generation += 1; refreshTask?.cancel(); refreshTask = nil; TokenStore.delete(); credentials = nil; unlockedSeries = []; accessAccount = nil; courseAccessReady = true }
     func handle(_ error: Error) {
         if case APIError.sessionExpired = error { clear(); showLogin = true }
         self.error = error.localizedDescription

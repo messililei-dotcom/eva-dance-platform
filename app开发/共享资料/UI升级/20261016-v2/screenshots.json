@@ -1,0 +1,130 @@
+[
+  {
+    "path": "before/mini-home.png",
+    "sha256": "1363e5eb9e826ebc497f321e9980e299c05897ff7a589d9a1d3a8048b7020301"
+  },
+  {
+    "path": "before/mini-offline.png",
+    "sha256": "d5c63b544eaff5e40c01b6afca8fb0ca965d25219601aa124d5785c9e3781178"
+  },
+  {
+    "path": "before/mini-events.png",
+    "sha256": "d1f8c61c83183da401366b1c96a7bd6c0484806b9c14df4e363c0470ed567120"
+  },
+  {
+    "path": "before/mini-mall.png",
+    "sha256": "8d12470c4288397a1d180fbfb10e30957d785769802a95d4e4a6d21dbdbc4dac"
+  },
+  {
+    "path": "before/mini-profile.png",
+    "sha256": "111735b2845851bad9b431975f3f6072cb5eff69d03306d7966e18a188800f0d"
+  },
+  {
+    "path": "before/ios-academy.png",
+    "sha256": "7ec11703d442fbcf2db09ad65a29baf36058e32fc073f8f15853f1bd2a77f22d"
+  },
+  {
+    "path": "before/ios-offline.png",
+    "sha256": "514ee8f246e9433e7a9ce5364c71648964133a1fe19cf3a4cc0341fa39be9426"
+  },
+  {
+    "path": "before/ios-events.png",
+    "sha256": "89e5c7b2f92e8e8a695b30607a792fbe146e7a9b31486090daf83e55a902f49b"
+  },
+  {
+    "path": "before/ios-shop.png",
+    "sha256": "923da29ae3ba1da27644faff5d0d9ed4bb83710416e20ade48b74038503f56c8"
+  },
+  {
+    "path": "before/ios-account.png",
+    "sha256": "660a4a15e476cf34dd5fbd8dd1a1b0130152b23b250e2cae41984bb2fce18fb6"
+  },
+  {
+    "path": "before/android-academy.png",
+    "sha256": "61a4e0f1c823db5c70679eced1f36341ec2b50f35a9181cbfe7c06bacee59621"
+  },
+  {
+    "path": "before/android-offline.png",
+    "sha256": "b60eaac3eb3d924f95a962ece373df98c76af683f10224ae75ab5a74b34c74c0"
+  },
+  {
+    "path": "before/android-events.png",
+    "sha256": "8697aec2b5bce04e835d3de4c52a8715d0b8a8b0a40709dbb0005f027bbb4b35"
+  },
+  {
+    "path": "before/android-shop.png",
+    "sha256": "136c119221e00523b2fb1d59e348771a28415c877769fe11ee3f3e1bce297b11"
+  },
+  {
+    "path": "before/android-account.png",
+    "sha256": "cb7260d1238c23bd665dfb5ef0eca1c55b6b76a31898599e5a332efaeacd30f6"
+  },
+  {
+    "path": "after/mini-home.png",
+    "sha256": "fdf390b007bc43ae8918565de2713d15cbfcb539434e3fb751e405db7fb6e472"
+  },
+  {
+    "path": "after/mini-offline.png",
+    "sha256": "9f4fd8711d46aa3033b1a58b86fcdf793a78c7bfd090d2d3f68f9837fea515db"
+  },
+  {
+    "path": "after/mini-events.png",
+    "sha256": "76c958f2ff79e7f5b5b3c86243a71fa809e84b5f0668a8cd2e4c51cb8554c5bb"
+  },
+  {
+    "path": "after/mini-mall.png",
+    "sha256": "966fee68a3e60a3f73aef9d9c2bf69700d715571b1cd035109e54541a77b878b"
+  },
+  {
+    "path": "after/mini-profile.png",
+    "sha256": "c3f37bdfe128e974fd0944560baa481b062cbe7041fc50e1d01eba679529a99b"
+  },
+  {
+    "path": "after/mini-search-empty.png",
+    "sha256": "a20515e18a7500484526fddfbf52201f7d9e2bc6448b456b83578df9e6b97619"
+  },
+  {
+    "path": "after/mini-error-state.png",
+    "sha256": "11054496bdd532497fcc6d85ba12ae2dc41c54353e6a49bbededa73af52244a8"
+  },
+  {
+    "path": "after/android-academy.png",
+    "sha256": "b5275f890e49053e9ec7ed1c2d51dcf54812b4922bee7381cd8b8be292a92062"
+  },
+  {
+    "path": "after/android-offline.png",
+    "sha256": "4fbafd35759a4a731d6a98efc2c514c3588553099de6334bac59786f2c682ca5"
+  },
+  {
+    "path": "after/ios-academy.png",
+    "sha256": "27d82fc3f981a6cbb292946843e8bbd4894a77af2c4c7deb5f0d771a9f1cc0ad"
+  },
+  {
+    "path": "after/android-events.png",
+    "sha256": "952eafb015e715206bfd0bc053acdd54493bdef0e54c7216ea88483278158599"
+  },
+  {
+    "path": "after/ios-offline.png",
+    "sha256": "28883c5ccc398cd7466175a2a0b2cd423970ac62e0fd56ac78da7c459ac9f7d1"
+  },
+  {
+    "path": "after/android-shop.png",
+    "sha256": "be1292bf5382d3c49b4523c4abbdb6190f33b9654794823c7f100a8f781bb6ad"
+  },
+  {
+    "path": "after/ios-events.png",
+    "sha256": "5037d448ca1974bc3ec231562b3de0ce45cb615545a8aca59a2bda092e12bf85"
+  },
+  {
+    "path": "after/android-account.png",
+    "sha256": "55fe85adc07c0850822a09b46e8df9fb73b392bad4c3d5abcac468c732a34131"
+  },
+  {
+    "path": "after/ios-shop.png",
+    "sha256": "bc9373619ab5f53f33ff47ca4390a5dffba792a9afa850dfa15e7aa3a92eec75"
+  },
+  {
+    "path": "after/ios-account.png",
+    "sha256": "59574b65692aad4cb92d44e48d7cd954b8c42e954ea937e429eac86b4910a855"
+  }
+]

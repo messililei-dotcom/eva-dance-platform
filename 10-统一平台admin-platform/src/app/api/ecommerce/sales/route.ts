@@ -1,3 +1,4 @@
+import { saleCommissionFields } from '@/lib/sale-commission';
 import { hasAuth, openCommerceDb, unauthorized } from '../_db';
 
 export const dynamic = 'force-dynamic';
@@ -46,6 +47,9 @@ export async function POST(request: Request) {
     const now = new Date().toISOString();
     const unitPrice = toNumber(body.unit_price ?? body.unitPrice, product.sale_price);
     const total = toNumber(body.total_amount ?? body.total_price ?? body.totalPrice ?? body.amount, unitPrice * quantity);
+    let commission;
+    try { commission = saleCommissionFields(body, total); }
+    catch (error) { return Response.json({ success: false, error: (error as Error).message }, { status: 400 }); }
     const saleDate = cleanText(body.date ?? body.sale_date, now);
     const remark = cleanText(body.note ?? body.remark);
     const afterStock = beforeStock - quantity;
@@ -56,9 +60,9 @@ export async function POST(request: Request) {
         INSERT INTO shop_sales (
           product_id, product_name, quantity, unit_price, total_amount,
           member_name, sale_date, remark, created_at, sale_type, channel,
-          customer_phone, operator
+          customer_phone, operator, sales_advisor, commission_rate, commission_amount
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         productId,
         product.name,
@@ -73,6 +77,7 @@ export async function POST(request: Request) {
         cleanText(body.channel, '线下'),
         cleanText(body.customer_phone ?? body.customerPhone),
         cleanText(body.operator, 'admin'),
+        commission.salesAdvisor, commission.commissionRate, commission.commissionAmount,
       );
       db.prepare(`
         INSERT INTO shop_stock_logs (

@@ -12,6 +12,25 @@ import EvaCore
     @Published var qualities: [Quality] = []
     @Published var quality = "auto"
     @Published var speed: Float = 1
+    @Published var holdingSpeed = false
+    private var holdTask: Task<Void, Never>?
+    private var holdTracking = false
+    func beginHold() {
+        guard !holdTracking else { return }
+        holdTracking = true
+        guard playing, player.rate > 0 else { return }
+        holdTask = Task { [weak self] in
+            do { try await Task.sleep(nanoseconds: 400_000_000) } catch { return }
+            guard let self, self.playing, self.player.rate > 0, !Task.isCancelled else { return }
+            self.holdingSpeed = true; self.player.rate = 2
+        }
+    }
+    func endHold(resetTracking: Bool = true) {
+        holdTask?.cancel(); holdTask = nil
+        if holdingSpeed, player.rate > 0 { player.rate = speed }
+        holdingSpeed = false
+        if resetTracking { holdTracking = false }
+    }
     @Published var loop = false
     private var active = true
     private var generation = 0
@@ -19,8 +38,9 @@ import EvaCore
     private var revision = 0
     private var playbackAccount: Int?
     func activate() { active = true }
-    func stop() { active = false; generation += 1; player.pause(); playing = false }
+    func stop() { endHold(); active = false; generation += 1; player.pause(); playing = false }
     func load(id: Int, session: Session, selectedQuality: String? = nil) async {
+        endHold()
         generation += 1; let requestGeneration = generation
         loading = true; failure = nil; player.pause(); playing = false
         let resume = selectedQuality == nil ? nil : player.currentTime().seconds
@@ -38,13 +58,16 @@ import EvaCore
             guard active, requestGeneration == generation else { return }
             revision = checkpoint?.revision ?? 0
             player.replaceCurrentItem(with: AVPlayerItem(url: url))
-            let target = resume ?? checkpoint?.progress ?? 0
+            let saved = checkpoint?.progress ?? 0
+            let completed = (checkpoint?.duration ?? 0) > 0 && saved >= (checkpoint?.duration ?? 0)
+            let target = resume ?? (completed ? 0 : saved)
             if target.isFinite && target > 0 { await player.seek(to: CMTime(seconds: target, preferredTimescale: 600)) }
             // Stay paused until the learner explicitly starts playback.
         } catch { failure = error.localizedDescription; session.handle(error) }
         if requestGeneration == generation { loading = false }
     }
     func toggle() {
+        endHold()
         guard !loading, failure == nil else { return }
         if playing { player.pause() } else { player.playImmediately(atRate: speed) }
         playing.toggle()
@@ -57,7 +80,7 @@ import EvaCore
             var payload = progress; payload["revision"] = Double(revision)
             let saved: ProgressRecord = try await session.api.request("/video/\(id)/progress", token: token, method: "POST", body: JSONSerialization.data(withJSONObject: payload))
             revision = saved.revision ?? revision
-        } catch { failure = "学习记录同步失败：\(error.localizedDescription)"; player.pause(); playing = false; session.handle(error) }
+        } catch { failure = "学习记录同步失败：\(error.localizedDescription)"; endHold(); player.pause(); playing = false; session.handle(error) }
     }
     func monitor(id: Int, session: Session) async {
         var ticks = 0
@@ -69,9 +92,10 @@ import EvaCore
             if p.isFinite { position = p }
             if d.isFinite { duration = d }
             if player.currentItem?.status == .failed {
-                failure = "视频暂时无法播放，请重试。"; player.pause(); playing = false
+                failure = "视频暂时无法播放，请重试。"; endHold(); player.pause(); playing = false
             }
             if duration > 0 && position >= duration - 0.3 && playing {
+                endHold()
                 if loop { await save(id: id, session: session); if failure == nil { await player.seek(to: .zero); player.playImmediately(atRate: speed) } }
                 else { playing = false; await save(id: id, session: session) }
             }
@@ -81,7 +105,7 @@ import EvaCore
                 do {
                     let result: Playback = try await session.api.request("/video/\(id)/play", token: session.token)
                     guard result.authorized else { throw APIError.denied }
-                } catch { player.pause(); playing = false; failure = error.localizedDescription; session.handle(error) }
+                } catch { endHold(); player.pause(); playing = false; failure = error.localizedDescription; session.handle(error) }
             }
         }
     }
@@ -90,6 +114,7 @@ struct PlayerView: View {
     @EnvironmentObject var session: Session
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var model = LessonPlayer()
+    @GestureState private var holdTouchActive = false
     @State private var mirror = false
     @State private var showNote = false
     let lessonID: Int
@@ -104,6 +129,20 @@ struct PlayerView: View {
                     .accessibilityLabel("课程视频画面")
                     .aspectRatio(16 / 9, contentMode: .fit)
                     .background(.black)
+                    .overlay {
+                        Rectangle().fill(.clear).contentShape(Rectangle())
+                            .simultaneousGesture(DragGesture(minimumDistance: 0)
+                                .updating($holdTouchActive) { _, active, _ in active = true }
+                                .onChanged { value in
+                                    model.beginHold()
+                                    if max(abs(value.translation.width), abs(value.translation.height)) > 12 { model.endHold(resetTracking: false) }
+                                }
+                                .onEnded { _ in model.endHold() })
+                            .accessibilityHidden(true)
+                    }
+                    .overlay(alignment: .top) {
+                        if model.holdingSpeed { Text("2 倍播放 · 松手恢复").font(.caption).padding(8).foregroundStyle(.white).allowsHitTesting(false) }
+                    }
                 if model.loading { ProgressView("正在获取播放权限") }
                 if let failure = model.failure {
                     Text(failure).foregroundStyle(.red)
@@ -130,8 +169,8 @@ struct PlayerView: View {
                 Toggle("镜面练习", isOn: $mirror)
                 Toggle("循环本节", isOn: $model.loop)
                 Picker("播放速度", selection: $model.speed) {
-                    ForEach([Float(0.5), 0.75, 1, 1.25, 1.5, 2], id: \.self) { rate in Text("\(rate, specifier: "%.2g") 倍").tag(rate) }
-                }.onChange(of: model.speed) { speed in if model.playing { model.player.rate = speed } }
+                    ForEach([Float(0.75), 1, 1.25, 1.5], id: \.self) { rate in Text("\(rate, specifier: "%.3g") 倍").tag(rate) }
+                }.onChange(of: model.speed) { speed in model.endHold(); if model.playing { model.player.rate = speed } }
                 if !model.qualities.isEmpty {
                     Picker("清晰度", selection: $model.quality) {
                         ForEach(model.qualities) { Text($0.label).tag($0.value) }
@@ -152,8 +191,9 @@ struct PlayerView: View {
         }.evaCompactLayout().navigationTitle(title)
         .task { model.activate(); await model.load(id: lessonID, session: session); await model.monitor(id: lessonID, session: session) }
         .onChange(of: scenePhase) { phase in
-            if phase != .active { model.player.pause(); model.playing = false; Task { await model.save(id: lessonID, session: session) } }
+            if phase != .active { model.endHold(); model.player.pause(); model.playing = false; Task { await model.save(id: lessonID, session: session) } }
         }
+        .onChange(of: holdTouchActive) { active in if !active { model.endHold() } }
         .onDisappear { model.stop(); Task { await model.save(id: lessonID, session: session) } }
         .sheet(isPresented: $showNote) { LessonNoteView(lessonID: lessonID, timestamp: model.position).environmentObject(session) }
     }

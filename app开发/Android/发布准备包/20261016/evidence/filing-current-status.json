@@ -1,0 +1,22 @@
+{
+  "asOf": "2026-10-16",
+  "verifiedVia": "阿里云备案管理页及订单详情，只读核验",
+  "sourceURL": "https://beian.aliyun.com/pcContainer/orderdetail?baOrderId=2031841613213",
+  "orderNumber": "2031841613213",
+  "appName": "SWOD",
+  "operator": "伊娃文化艺术发展（湖南）有限公司",
+  "submittedAt": "2026-10-16 14:21 Asia/Shanghai",
+  "stage": "阿里云初审",
+  "stageStatus": "审核中",
+  "platformsListed": [
+    "安卓平台",
+    "鸿蒙平台",
+    "IOS平台"
+  ],
+  "appFilingApproved": false,
+  "appFilingNumber": null,
+  "thisTurnSubmitted": false,
+  "thisTurnModified": false,
+  "androidFeatureDetailsReverifiedInConsole": false,
+  "note": "控制台显示今天20点前审核；不是获批承诺。三端条目可见，未成功展开安卓特征详情；本次证书比对依据本地公开备案材料。旧20261002草稿状态已过时。"
+}

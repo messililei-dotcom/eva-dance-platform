@@ -1,4 +1,6 @@
 'use client';
+import { initialAuthorizationFinancials, authorizationFinancialPatch } from '@/lib/authorization-record-financials';
+import { useAuth } from '@/lib/auth-context';
 import { buildCourseAdvisorOptions, filterCourseAdvisorOption } from '@/lib/course-advisors';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
@@ -545,6 +547,12 @@ function uploadSizeLimitText() {
 }
 
 export default function OnlineCoursePage() {
+  const { user } = useAuth();
+  const canManageAuthRecords = user?.username === 'lilei';
+  const [editingAuthRecord, setEditingAuthRecord] = useState<any>(null);
+  const [recordForm] = Form.useForm();
+  const recordActualAmount = Form.useWatch('actual_amount',recordForm);
+
   const router = useRouter();
   const pathname = usePathname();
   const { message, modal } = App.useApp();
@@ -585,10 +593,19 @@ export default function OnlineCoursePage() {
   const [authSeriesId, setAuthSeriesId] = useState<number | 'all'>('all');
   const [authFilter, setAuthFilter] = useState('all');
   const [authorizedStudents, setAuthorizedStudents] = useState<any[]>([]);
+  const [authRowsLoading, setAuthRowsLoading] = useState(true);
+  const [authPage, setAuthPage] = useState(1);
+  const [authPageSize, setAuthPageSize] = useState(20);
+  const [authTotal, setAuthTotal] = useState(0);
+  const authRequestSeq = useRef(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [authToggleLoadingKey, setAuthToggleLoadingKey] = useState('');
   const [seriesKeyword, setSeriesKeyword] = useState('');
+  const [promotion, setPromotion] = useState<{ enabled: boolean; revision: string; canEdit: boolean } | null>(null);
+  const [promotionSaving, setPromotionSaving] = useState(false);
+  const [promotionError, setPromotionError] = useState('');
+  const promotionLock = useRef(false);
   const [seriesStatus, setSeriesStatus] = useState('all');
   const [lessonKeyword, setLessonKeyword] = useState('');
   const [authKeyword, setAuthKeyword] = useState('');
@@ -750,6 +767,19 @@ export default function OnlineCoursePage() {
       .finally(() => setLoading(false));
   };
 
+  const loadPromotion = async () => {
+    try { const payload = await onlineCourseApi.getPromotion(); setPromotion(payload.data); setPromotionError(''); }
+    catch (error) { setPromotion(null); setPromotionError(apiError(error)); }
+  };
+  useEffect(() => { if (activeTab === 'series') void loadPromotion(); }, [activeTab]);
+  const changePromotion = async (enabled: boolean) => {
+    if (!promotion?.canEdit || promotionLock.current) return;
+    promotionLock.current = true; setPromotionSaving(true); setPromotionError('');
+    try { const payload = await onlineCourseApi.setPromotion(enabled, promotion.revision); setPromotion(payload.data); message.success(enabled ? '促销价已开启，各端使用已设置的促销价' : '促销价已关闭，各端恢复原价'); }
+    catch (error) { await loadPromotion(); setPromotionError(apiError(error)); }
+    finally { promotionLock.current = false; setPromotionSaving(false); }
+  };
+
   const openAuthorizationModal = () => {
     authForm.resetFields();
     setAuthVoucherFiles([]);
@@ -787,6 +817,8 @@ export default function OnlineCoursePage() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setDebouncedAuthKeyword(authKeyword.trim());
+      setAuthPage(1);
+      setSelectedAuthIds([]);
     }, 250);
     return () => window.clearTimeout(timer);
   }, [authKeyword]);
@@ -894,13 +926,56 @@ export default function OnlineCoursePage() {
   }, [pathname]);
 
   const loadAuthRows = useCallback(async () => {
-    if (!series.length) {
-      setAuthorizedStudents([]);
-      return;
+    const requestId = ++authRequestSeq.current;
+    setAuthRowsLoading(true);
+    try {
+      const payload = await onlineCourseApi.getAuthorizations({ tab: authFilter, keyword: debouncedAuthKeyword, series_id: authSeriesId === 'all' ? undefined : authSeriesId, page: authPage, pageSize: authPageSize });
+      if (requestId !== authRequestSeq.current) return;
+      const total = Number(payload.total || 0);
+      const lastPage = Math.max(1, Math.ceil(total / authPageSize));
+      if (authPage > lastPage) { setAuthPage(lastPage); return; }
+      setAuthorizedStudents(pickArray(payload));
+      setAuthTotal(total);
+    } catch (err) {
+      if (requestId === authRequestSeq.current) throw err;
+    } finally {
+      if (requestId === authRequestSeq.current) setAuthRowsLoading(false);
     }
-    const payload = await onlineCourseApi.getAuthorizations({ tab: authFilter, keyword: debouncedAuthKeyword });
-    setAuthorizedStudents(pickArray(payload).filter(row => authSeriesId === 'all' || Number(row.series_id) === Number(authSeriesId)));
-  }, [series, authSeriesId, authFilter, debouncedAuthKeyword]);
+  }, [authSeriesId, authFilter, debouncedAuthKeyword, authPage, authPageSize]);
+
+  const saveAuthRecord = async () => {
+    if (!editingAuthRecord || saving) return;
+    try {
+      const values = await recordForm.validateFields();
+      setSaving(true);
+      await api.patch('/course/authorizations', { ...values, authorization_id: editingAuthRecord.authorization_id, expected: editingAuthRecord.record_snapshot });
+      setEditingAuthRecord(null);
+      await loadAuthRows();
+      message.success('授权记录已更新');
+    } catch (err) { message.error(apiError(err)); }
+    finally { setSaving(false); }
+  };
+  const renderAuthRecordActions = (_: unknown, record: any) => <Space size={4}>
+      <Button type="link" size="small" onClick={() => {
+        recordForm.resetFields();
+        recordForm.setFieldsValue({ ...initialAuthorizationFinancials(record), sales: record.sales || '', remark: record.remark || '' });
+        setEditingAuthRecord(record);
+      }}>编辑</Button>
+      <Button type="link" size="small" danger onClick={() => modal.confirm({
+        title: '删除授权列表记录？',
+        content: `学员：${record.name || record.phone || '—'}；课程：${record.series_name}。将移除该授权的授权和取消授权列表行，并同步扣除营业额 ¥${Number(record.actual_amount || 0).toFixed(2)}、账面提成 ¥${record.authorization_status === 'active' ? Number(record.commission_amount || 0).toFixed(2) : '0.00'}，保留课程访问和审计数据。已发放奖金需要线下办理退回；取消课程权限请使用“取消授权”。`,
+        okText: '删除记录', okButtonProps: { danger: true }, cancelText: '取消',
+        onOk: async () => {
+          try {
+            await api.delete('/course/authorizations', { data: { authorization_id: record.authorization_id, expected: record.record_snapshot } });
+            await loadAuthRows();
+            setSelectedAuthIds([]);
+            message.success('记录已删除，营业额与提成已同步');
+          } catch (err) { message.error(apiError(err)); throw err; }
+        },
+      })}>删除</Button>
+  </Space>;
+
 
   useEffect(() => {
     if (activeTab !== 'series' || !selectedSeriesId) return;
@@ -915,9 +990,9 @@ export default function OnlineCoursePage() {
   }, [activeTab, selectedSeriesId, series]);
 
   useEffect(() => {
-    if (loading || activeTab !== 'auth') return;
+    if (activeTab !== 'auth') return;
     loadAuthRows().catch(err => message.error(apiError(err)));
-  }, [loading, activeTab, loadAuthRows]);
+  }, [activeTab, loadAuthRows]);
 
   const filteredSeries = useMemo(() => {
     const q = seriesKeyword.trim().toLowerCase();
@@ -942,16 +1017,7 @@ export default function OnlineCoursePage() {
       .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0) || Number(a.id) - Number(b.id));
   }, [lessons, lessonKeyword, lessonStatus]);
 
-  const filteredAuthorizedStudents = useMemo(() => {
-    const q = authKeyword.trim().toLowerCase();
-    return authorizedStudents
-      .filter(item => {
-        const matchStatus = authFilter === 'authorized' ? item.authorized : authFilter === 'unauthorized' ? !item.authorized : true;
-        const matchKeyword = !q || authIdentitySearchValues(item).some(value => String(value || '').toLowerCase().includes(q));
-        return matchStatus && matchKeyword;
-      })
-      .sort((a, b) => String(authActionTime(b)).localeCompare(String(authActionTime(a))) || Number(b.authorization_id || 0) - Number(a.authorization_id || 0));
-  }, [authorizedStudents, authFilter, authKeyword]);
+  const filteredAuthorizedStudents = authorizedStudents;
 
   const findAuthMember = useCallback((record: any): Member | null => {
     const memberId = String(record?.member_id || record?.id || '');
@@ -1712,7 +1778,7 @@ export default function OnlineCoursePage() {
     if (!rows.length) { message.warning('请选择当前有效的授权记录'); return; }
     modal.confirm({
       title: `确定取消 ${rows.length} 条课程授权吗？`,
-      content: '取消授权会同时退回提成，所选学员将无法访问对应课程。系统会通知其他管理员取消操作人、时间、学员及课程，请退回已发放的提成奖金。授权和提成原始记录会保留。',
+      content: '取消授权后，原授权和取消授权条目的实收金额、提成金额及比例会归零，并同步扣除授权登记收入和账面提成；所选学员将无法访问对应课程。更正前金额保留在审计记录中。系统会通知其他管理员，请线下办理已发放提成退回。关联已支付订单的退款仍需从订单入口处理。',
       okText: '取消授权', okButtonProps: { danger: true }, cancelText: '返回',
       onOk: async () => {
         setSaving(true);
@@ -1740,7 +1806,7 @@ export default function OnlineCoursePage() {
   const cancelAuthorization = (record: any) => {
     modal.confirm({
       title: '确定撤销此学员授权吗？',
-      content: '取消授权会同时退回提成，所选学员将无法访问对应课程。系统会通知其他管理员取消操作人、时间、学员及课程，请退回已发放的提成奖金。授权和提成原始记录会保留。',
+      content: '取消授权后，原授权和取消授权条目的实收金额、提成金额及比例会归零，并同步扣除授权登记收入和账面提成；所选学员将无法访问对应课程。更正前金额保留在审计记录中。系统会通知其他管理员，请线下办理已发放提成退回。关联已支付订单的退款仍需从订单入口处理。',
       okText: '撤销',
       okButtonProps: { danger: true },
       cancelText: '取消',
@@ -2286,7 +2352,7 @@ export default function OnlineCoursePage() {
     });
   };
 
-  if (loading) return <div style={{ padding: 80, textAlign: 'center' }}><Spin size="large" /></div>;
+  if (loading && activeTab !== 'auth') return <div style={{ padding: 80, textAlign: 'center' }}><Spin size="large" /></div>;
 
   return (
     <div className="online-course-replica">
@@ -2296,7 +2362,13 @@ export default function OnlineCoursePage() {
           <Text>{currentMeta.desc}</Text>
         </div>
 	        <Space wrap>
-	          {activeTab === 'series' && <Button type="primary" icon={<PlusOutlined />} onClick={() => openSeriesModal()}>新建课程</Button>}
+	          {activeTab === 'series' && <Space size="small" wrap>
+              <Text>开启促销价</Text>
+              <Switch aria-label="开启促销价" checked={promotion?.enabled === true} checkedChildren="开启" unCheckedChildren="关闭" loading={promotionSaving} disabled={!promotion || !promotion.canEdit} onChange={changePromotion} />
+              <Text type="secondary">{promotion ? promotion.enabled ? '各端按促销价销售' : '各端仅显示原价' : promotionError ? '设置暂不可用' : '正在读取设置'}</Text>
+              {promotionError && <Text type="danger">{promotionError}<Button type="link" size="small" onClick={loadPromotion}>重试</Button></Text>}
+            </Space>}
+            {activeTab === 'series' && <Button type="primary" icon={<PlusOutlined />} onClick={() => openSeriesModal()}>新建课程</Button>}
 	        </Space>
       </div>
 
@@ -2691,7 +2763,7 @@ export default function OnlineCoursePage() {
                       { title: '课节', width: 80, align: 'right' as const, render: (_, record) => record.course_count ?? record.total_courses ?? 0 },
                       { title: '学员', dataIndex: 'total_students', align: 'right' as const, width: 80, render: value => Number(value || 0) },
                       { title: '价格', dataIndex: 'price', align: 'right' as const, width: 100, render: money },
-                      { title: '促销价', dataIndex: 'promo_price', align: 'right' as const, width: 100, render: money },
+                      { title: '促销价', dataIndex: 'promo_price', align: 'right' as const, width: 130, render: (value: number) => <Space size={4}>{money(value)}{promotion?.enabled === false && <Tag>未启用</Tag>}</Space> },
                       { title: '状态', dataIndex: 'status', width: 100, render: statusTag },
                       {
                         title: '操作',
@@ -2727,6 +2799,7 @@ export default function OnlineCoursePage() {
                         value={authSeriesId}
                         onChange={(value) => {
                           setAuthSeriesId(value === 'all' ? 'all' : Number(value));
+                          setAuthPage(1);
                           setSelectedAuthIds([]);
                         }}
                         placeholder="选择课程"
@@ -2742,7 +2815,7 @@ export default function OnlineCoursePage() {
                         <Select
                           size="small"
                           value={authFilter}
-                          onChange={setAuthFilter}
+                          onChange={value => { setAuthFilter(value); setAuthPage(1); setSelectedAuthIds([]); }}
                           style={{ width: 120 }}
                           options={[
                             { value: 'all', label: '全部记录' },
@@ -2771,9 +2844,10 @@ export default function OnlineCoursePage() {
                     rowKey={(record) => String(record.auth_row_key || `${record.series_id || authSeriesId}:${record.id || record.phone}`)}
                     size="small"
                     dataSource={filteredAuthorizedStudents}
+                    loading={authRowsLoading}
                     tableLayout={isMobile ? 'fixed' : 'auto'}
-                    scroll={isMobile ? { x: 600, y: 'calc(100dvh - 258px)' } : { x: 1370, y: 'calc(100dvh - 178px)' }}
-                    pagination={{ defaultPageSize: 50, showSizeChanger: true, pageSizeOptions: [20, 50, 100], showTotal: total => `共 ${total} 条` }}
+                    scroll={isMobile ? { x: 600, y: 'calc(100dvh - 258px)' } : { x: 1490, y: 'calc(100dvh - 178px)' }}
+                    pagination={{ current: authPage, pageSize: authPageSize, total: authTotal, showSizeChanger: true, pageSizeOptions: [20, 50, 100], showTotal: total => `共 ${total} 条`, onChange: (page, pageSize) => { setAuthPage(pageSize === authPageSize ? page : 1); setAuthPageSize(pageSize); setSelectedAuthIds([]); } }}
                     locale={{ emptyText: <Empty description="暂无授权学员；可用右上角新增授权" /> }}
                     columns={(isMobile ? [
                       { title: '学员', dataIndex: 'name', width: 130, ellipsis: true, render: (value: any, record: any) => renderAuthMemberLink(record, value || '-', { strong: true }) },
@@ -2787,7 +2861,8 @@ export default function OnlineCoursePage() {
                         },
                       },
                       { title: '实收金额', dataIndex: 'actual_amount', width: 120, align: 'right' as const, render: (value: unknown) => value !== null && value !== undefined && Number.isFinite(Number(value)) ? `¥${Number(value).toFixed(2)}` : '—' },
-                      { title: '操作记录', dataIndex: 'action_label', width: 150, render: (value: string) => value || '—' },
+                      { title: '授权记录', dataIndex: 'action_label', width: 150, render: (value: string) => value || '—' },
+                      ...(canManageAuthRecords ? [{ title: '操作', key: 'record_actions', width: 120, render: renderAuthRecordActions }] : []),
                     ] : [
                       { title: '学员', dataIndex: 'name', fixed: 'left', width: 130, render: (value, record) => renderAuthMemberLink(record, value || '-', { strong: true }) },
                       {
@@ -2814,7 +2889,8 @@ export default function OnlineCoursePage() {
                           ) : <Text type="secondary">无凭证</Text>;
                         },
                       },
-                      { title: '操作记录', dataIndex: 'action_label', width: 150, render: (value: string) => value || '—' },
+                      { title: '授权记录', dataIndex: 'action_label', width: 150, render: (value: string) => value || '—' },
+                      ...(canManageAuthRecords ? [{ title: '操作', key: 'record_actions', width: 120, render: renderAuthRecordActions }] : []),
                     ])}
                   />
                 </Card>
@@ -3373,6 +3449,23 @@ export default function OnlineCoursePage() {
             blockedIds.add(Number(editingFolder.id));
             return !blockedIds.has(Number(item.id));
           }).map(item => ({ value: item.id, label: folderLabel(item) }))]} /></Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal title="编辑授权记录" open={!!editingAuthRecord} width={720} onCancel={() => {if(!saving)setEditingAuthRecord(null);}} onOk={saveAuthRecord} confirmLoading={saving} closable={!saving} maskClosable={!saving} destroyOnClose>
+        <Alert type="info" showIcon message="修改实收和提成会同步财务报表；学员、课程和授权状态保持原记录。" description={editingAuthRecord?.actual_amount == null ? '此记录尚未登记实收金额，请按实际收款填写。' : undefined} style={{ marginBottom: 16 }} />
+        <Form form={recordForm} layout="vertical" data-enter-submit="off" onValuesChange={(changed,values)=>recordForm.setFieldsValue(authorizationFinancialPatch(changed,values))}>
+          <Row gutter={12}>
+            <Col xs={24} md={12}><Form.Item label="授权课程" htmlFor="record_series_context"><Input id="record_series_context" readOnly value={editingAuthRecord?.series_name || ''} title={editingAuthRecord?.series_name || ''}/></Form.Item></Col>
+            <Col xs={24} md={12}><Form.Item label="学员" htmlFor="record_member_context"><Input id="record_member_context" readOnly value={[editingAuthRecord?.name || (editingAuthRecord?.member_id ? `学员 #${editingAuthRecord.member_id}` : ''),editingAuthRecord?.phone].filter(Boolean).join(' · ') || '未关联学员'}/></Form.Item></Col>
+            <Col xs={24} md={12}><Form.Item label="实收金额" name="actual_amount" rules={[{ required: true, message: '请输入实收金额' }]}><InputNumber min={0} max={999999999} precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={24} md={12}><Form.Item label="课程顾问" name="sales" rules={[{ required: true, whitespace: true, message: '请选择或输入课程顾问' }]}><AutoComplete allowClear maxLength={100} options={buildCourseAdvisorOptions()} filterOption={filterCourseAdvisorOption} placeholder="选择或输入课程顾问" /></Form.Item></Col>
+            <Col xs={12} md={12}><Form.Item label="提成金额" name="commission_amount" rules={[{ required: true, message: '请输入提成金额' },{validator:(_,value)=>value==null || (Number(value)>=0&&Number(value)<=Number(recordActualAmount||0)) ? Promise.resolve() : Promise.reject(new Error('提成金额不能超过实收金额'))}]}><InputNumber min={0} max={Number(recordActualAmount||0)} precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={12} md={12}><Form.Item label="提成比例" name="commission_rate" rules={[{ required: true, message: '请输入提成比例' }]}><InputNumber min={0} max={100} precision={2} suffix="%" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col span={24}><Typography.Text type="secondary">提成比例与金额可互相换算；调整实收金额时按当前比例重算。保存后同步财务报表和奖金提成统计。</Typography.Text></Col>
+            <Col span={24}><Form.Item label="备注" name="remark" style={{marginTop:16}}><Input.TextArea maxLength={2000} rows={3} /></Form.Item></Col>
+          </Row>
+          <Form.Item name="commission_basis" hidden><Input /></Form.Item>
         </Form>
       </Modal>
 

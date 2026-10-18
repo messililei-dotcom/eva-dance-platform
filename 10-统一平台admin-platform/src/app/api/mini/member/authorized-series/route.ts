@@ -15,7 +15,7 @@ export async function GET(request: Request) {
           seen.add(seriesId);
           return true;
         });
-      return Response.json({ success: true, data: rows });
+      return Response.json({ success: true, data: rows.map(row => ({ ...row, unlocked: true })) }, { headers: { 'Cache-Control': 'private, no-store, max-age=0', Vary: 'Authorization' } });
     });
   } catch (err: any) {
     return jsonError(err.message);

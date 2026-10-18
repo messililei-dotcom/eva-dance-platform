@@ -1,0 +1,23 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
+<view class="register-page">
+  <view class="register-head"><view class="register-kicker">赛事报名</view><view class="register-title">{{competition.name || '伊娃东方舞赛事'}}</view><view class="register-note">{{competition.startDate || '比赛日期待定'}} · {{competition.location || '地点待定'}}</view></view>
+  <view wx:if="{{loading}}" class="form-card card">正在读取报名信息…</view><view wx:elif="{{error}}" class="form-card card"><text>{{error}}</text><button bindtap="loadForm">重新加载</button></view><view wx:else class="form-card card">
+    <view wx:if="{{draftMessage}}" class="draft-note">{{draftMessage}}</view>
+    <input class="group-search" value="{{groupQuery}}" placeholder="搜索组别、舞种或年龄" bindinput="onGroupSearch" />
+    <view class="form-title"><view>填写报名信息</view><text>带 * 为必填项</text></view>
+    <view class="field"><text>参赛组别 *</text><picker range="{{filteredGroups}}" range-key="name" value="{{groupIndex}}" bindchange="onGroupChange"><view class="picker-value {{groupIndex < 0 ? 'placeholder' : ''}}">{{selectedGroupName || '请选择组别'}} ›</view></picker></view>
+    <view class="field"><text>参赛姓名 *</text><input value="{{name}}" placeholder="参赛学员姓名" data-field="name" bindinput="onInput"></input></view>
+    <view class="field"><text>手机号码 *</text><input value="{{phone}}" type="number" maxlength="11" placeholder="参赛学员手机号" data-field="phone" bindinput="onInput"></input></view>
+    <view class="field"><text>机构 / 舞蹈室</text><input value="{{organization}}" placeholder="选填" data-field="organization" bindinput="onInput"></input></view>
+    <view class="field"><text>指导老师</text><input value="{{teacher}}" placeholder="选填" data-field="teacher" bindinput="onInput"></input></view>
+    <view class="field"><text>节目名称 *</text><input value="{{performanceTitle}}" maxlength="120" placeholder="节目名称" data-field="performanceTitle" bindinput="onInput"></input></view>
+    <view wx:if="{{feeText}}" class="fee-note">本组别报名费 {{feeText}} · 单组别一次缴费</view><view class="music-field"><view class="music-label">上传音乐 *</view><button class="music-button" loading="{{musicSaving}}" disabled="{{musicSaving || submitting}}" bindtap="chooseMusic">从微信聊天记录选择</button><view class="music-name">{{musicFileName || '尚未选择音乐文件 · 最大10MB'}}</view><button wx:if="{{musicFilePath}}" class="music-preview" bindtap="previewMusic">{{musicPlaying ? '暂停试听' : '试听音乐'}}</button></view>
+    <view class="field textarea-field"><text>备注</text><textarea value="{{remark}}" maxlength="500" placeholder="可填写参赛项目、作品或其他说明" data-field="remark" bindinput="onInput"></textarea></view>
+  </view>
+  <button class="submit-btn" loading="{{submitting}}" disabled="{{submitting || loading || error || musicSaving}}" bindtap="submit">{{submitting ? '正在提交…' : '提交赛事报名'}}</button>
+  <view class="submit-note">报名及音乐提交后进入订单确认页，确认组别和金额后支付。未付款可稍后在个人中心继续缴费。</view>
+</view>
+
+</block>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小程序模拟器 - 伊娃东方舞网课后台</title>
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="shortcut icon" href="../favicon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">☰</button>
+
+<aside class="sidebar">
+  <div class="sidebar-header"><h2>伊娃网课后台</h2><small>私域陪伴式训练平台</small></div>
+  <nav class="sidebar-nav"></nav>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<main class="main-content">
+  <header class="topbar">
+    <div><h1>小程序模拟器</h1><p>查看小程序首页、接口连通和展示状态。</p></div>
+    <div class="topbar-right">
+      <button class="btn btn-outline" onclick="refreshSimulator()">刷新模拟器</button>
+      <a class="btn btn-primary" href="/mini-preview/" target="_blank">新窗口打开</a>
+    </div>
+  </header>
+
+  <section class="content-area">
+    <div class="mini-config-grid" id="simStats"></div>
+    <div class="simulator-layout">
+      <section class="card simulator-frame-card">
+        <div class="card-header"><span class="card-title">小程序预览</span></div>
+        <iframe id="miniFrame" class="mini-simulator-frame" src="/mini-preview/" title="小程序模拟器"></iframe>
+      </section>
+      <aside class="card">
+        <div class="card-header"><span class="card-title">状态检查</span></div>
+        <div class="data-source-list" id="statusList"></div>
+        <div class="mini-help" id="statusNote">正在检查小程序数据源...</div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<nav class="bottom-nav"></nav>
+
+<script src="app.js"></script>
+<script>
+if (!checkLogin()) throw new Error('not login'); setActiveBottomNav();
+setActiveNav('miniprogram-simulator.html');
+
+function refreshSimulator() {
+  const frame = document.getElementById('miniFrame');
+  frame.src = '/mini-preview/?t=' + Date.now();
+  loadSimulatorStatus();
+}
+
+async function loadSimulatorStatus() {
+  const stats = document.getElementById('simStats');
+  const list = document.getElementById('statusList');
+  const note = document.getElementById('statusNote');
+  stats.innerHTML = '';
+  list.innerHTML = '<span>检查中</span>';
+  note.textContent = '正在读取后台小程序配置和课程数据。';
+
+  const r = await apiFetch('/admin/miniprogram-config');
+  if (!r.success) {
+    list.innerHTML = '<span>接口异常</span>';
+    note.textContent = r.message || '小程序配置接口读取失败';
+    return;
+  }
+
+  const s = r.data.stats;
+  stats.innerHTML = [
+    ['线上学院', s.online_count],
+    ['成品舞池', s.dance_count],
+    ['线下培训池', s.offline_count],
+    ['授权记录', s.authorizations],
+    ['学习记录', s.progress_count],
+    ['订单收入', formatMoney(s.paid_revenue)]
+  ].map(([label, value]) => `<div class="mini-stat"><b>${value}</b><span>${label}</span></div>`).join('');
+
+  list.innerHTML = [
+    '后台登录状态正常',
+    '小程序配置接口正常',
+    `首页可展示训练 ${s.online_count + s.dance_count + s.offline_count} 个`,
+    `授权记录 ${s.authorizations} 条`
+  ].map(item => `<span>${item}</span>`).join('');
+  note.textContent = '模拟器读取 /mini-preview/，数据来自当前网课后台接口。';
+}
+
+loadSimulatorStatus();
+</script>
+</body>
+</html>

@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   if (!competitionId && !groupId) return jsonError('缺少赛事或组别ID');
 
   return withRequestEventDb(request, (db) => {
-    let where = 'WHERE 1=1';
+    let where = "WHERE p.group_id=r.group_id AND p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled')";
     const params: any[] = [];
     if (competitionId) {
       where += ' AND r.competition_id = ?';
@@ -96,6 +96,7 @@ export async function PATCH(request: Request) {
       if (!playerId) return jsonError('缺少选手ID');
       const player = db.prepare('SELECT * FROM event_players WHERE id = ? AND group_id = ?').get(playerId, groupId);
       if (!player) return jsonError('选手不属于当前组别', 404);
+      if (player.audit_status === 'rejected' || ['withdrawn','cancelled'].includes(player.status)) return jsonError('该报名已失效，不能修改最终得分');
 
       const manualTotal = action === 'set_manual_score' ? Number(body.finalScore ?? body.final_score) : null;
       if (action === 'set_manual_score' && (manualTotal === null || !Number.isFinite(manualTotal) || manualTotal < 0)) return jsonError('最终得分必须是不小于 0 的数字');
@@ -141,7 +142,7 @@ export async function PATCH(request: Request) {
       return Response.json({ success: true, data: { ranking: mapRanking(ranking) } });
     }
 
-    const rankings = db.prepare('SELECT * FROM event_rankings WHERE group_id = ? ORDER BY rank_no ASC').all(groupId);
+    const rankings = db.prepare(`SELECT r.* FROM event_rankings r JOIN event_players p ON p.id=r.player_id WHERE r.group_id=? AND p.group_id=r.group_id AND p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled') ORDER BY r.rank_no ASC`).all(groupId);
     if (action === 'publish' && !rankings.length) return jsonError('请先重算成绩再公示');
 
     const publish = db.transaction(() => {
@@ -149,7 +150,7 @@ export async function PATCH(request: Request) {
         db.prepare(`
           UPDATE event_rankings
           SET status = 'published', published_total = calculated_total, published_at = ?, updated_at = ?
-          WHERE group_id = ?
+          WHERE group_id = ? AND player_id IN (SELECT id FROM event_players WHERE group_id=event_rankings.group_id AND audit_status!='rejected' AND status NOT IN ('withdrawn','cancelled'))
         `).run(now, now, groupId);
         db.prepare(`UPDATE event_scores SET score_status='published', published_score=calculated_score, updated_at=? WHERE group_id=? AND score_status IN ('submitted','reviewed','published')`).run(now, groupId);
         db.prepare('UPDATE event_groups SET scoring_status = ?, updated_at = ? WHERE id = ?').run('locked', now, groupId);
@@ -176,7 +177,7 @@ export async function PATCH(request: Request) {
         SELECT r.id, r.rank_no, r.published_total, p.member_id
         FROM event_rankings r
         JOIN event_players p ON p.id = r.player_id
-        WHERE r.group_id = ? AND p.member_id > 0
+        WHERE r.group_id = ? AND p.member_id > 0 AND r.status='published' AND p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled')
       `).all(groupId) as Array<Record<string, any>>;
       publishedRows.forEach(row => {
         createPersonalMessage(db, Number(row.member_id), {

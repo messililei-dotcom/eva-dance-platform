@@ -1,0 +1,60 @@
+{
+  "mini": {
+    "regressionTests": 97,
+    "failures": 0,
+    "consistency": true,
+    "developerToolsRuntime": {
+      "engine": "WeChat DevTools",
+      "productionWrites": false,
+      "checks": [
+        "home loads actual published courses",
+        "search empty and clear",
+        "error rendering and retry read",
+        "my courses shortcut opens real profile",
+        "offline tabs retain catalog rights and consumption without reservation",
+        "event statuses use current registration rules"
+      ],
+      "passed": true
+    },
+    "screenshots": "Actual WeChat DevTools simulator, profile anonymized"
+  },
+  "iOS": {
+    "exactSourceSimulatorBuild": true,
+    "screenshots": "Actual iPhone simulator with isolated local fixtures"
+  },
+  "Android": {
+    "exactSourceBuild": true,
+    "unitTests": [
+      {
+        "name": "cn.com.swod.app.CommerceTest",
+        "tests": "2",
+        "failures": "0",
+        "errors": "0"
+      },
+      {
+        "name": "cn.com.swod.app.PolicyTest",
+        "tests": "4",
+        "failures": "0",
+        "errors": "0"
+      }
+    ],
+    "lint": {
+      "Error": 0,
+      "Warning": 15
+    },
+    "apkSignatureVerified": true,
+    "apkSHA256": "39967b2bd18da51fe0bcb5c311c93befd62bebd00bdc026b5f0b87ab0d8539cd",
+    "screenshots": "Isolated UI harness package, public GET data"
+  },
+  "HarmonyOS": {
+    "sourceUpdated": true,
+    "resourceSVGsParsed": 24,
+    "compiled": false,
+    "reason": "DevEco Studio missing",
+    "deviceScreenshots": false
+  },
+  "productionBusinessWrites": false,
+  "submittedForReview": false,
+  "released": false,
+  "nativeAuthenticatedPeriodFilterAcceptance": false
+}

@@ -1,0 +1,32 @@
+{
+  "color": [
+    {
+      "name": "start_window_background",
+      "value": "#000000"
+    },
+    {
+      "name": "swod_canvas",
+      "value": "#141619"
+    },
+    {
+      "name": "swod_surface",
+      "value": "#202328"
+    },
+    {
+      "name": "swod_ink",
+      "value": "#F3F4F6"
+    },
+    {
+      "name": "swod_muted",
+      "value": "#B5BAC4"
+    },
+    {
+      "name": "swod_primary",
+      "value": "#FFACA9"
+    },
+    {
+      "name": "swod_tonal",
+      "value": "#3C272A"
+    }
+  ]
+}

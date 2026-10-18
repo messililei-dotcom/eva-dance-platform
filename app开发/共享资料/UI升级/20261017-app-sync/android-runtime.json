@@ -1,0 +1,10 @@
+{
+  "realOrders": 0,
+  "realPayments": 0,
+  "package": "cn.com.swod.app.syncqa",
+  "catalog53Lessons": true,
+  "paginationPassed": true,
+  "searchEmptyPassed": true,
+  "offlineIntroScreenPassed": true,
+  "passed": true
+}

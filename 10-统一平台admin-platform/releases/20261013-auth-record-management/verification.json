@@ -1,0 +1,24 @@
+{
+  "status": "deployed_verified",
+  "account": "lilei",
+  "files": [
+    "src/app/(admin)/online-course/page.tsx",
+    "src/app/api/course/authorizations/route.ts"
+  ],
+  "tests_passed": 6,
+  "production_build": "passed",
+  "api_get": {
+    "status": 200,
+    "rows": 2388,
+    "milliseconds": 624
+  },
+  "unauthenticated_patch_status": 401,
+  "browser_verified": [
+    "edit_delete_buttons",
+    "edit_modal",
+    "delete_confirmation"
+  ],
+  "production_records_modified_in_ui_verification": false,
+  "deletion_behavior": "hide complete authorization record in list; preserve course access, financial data and audit",
+  "server_backup": "/www/backups/dongfangwuquan/auth-record-management-20261013-v2"
+}

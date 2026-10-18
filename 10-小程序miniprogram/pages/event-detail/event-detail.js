@@ -45,9 +45,7 @@ Page(share.withShare("event-detail", {
     try {
       const data = await api.getEventDetail(this.data.id);
       const competition = data.competition || {};
-      const registrationOpen = competition.registrationStatus === "open"
-        && (!competition.registrationStart || Date.parse(competition.registrationStart) <= Date.now())
-        && (!competition.registrationEnd || Date.parse(competition.registrationEnd) >= Date.now());
+      const { registrationOpen, statusText } = require('../../shared/event-state').eventState(competition);
       const groups=(data.groups||[]).map((g,i)=>({...g,ordinal:i+1,playerCountText:g.playerCount==null?'报名信息未公开':g.playerCount+'位'}));
       this.setData({
         competition: {
@@ -56,7 +54,7 @@ Page(share.withShare("event-detail", {
           dateText: competition.endDate && competition.endDate !== competition.startDate
             ? `${shortDate(competition.startDate).slice(0, 10)} 至 ${shortDate(competition.endDate).slice(0, 10)}`
             : shortDate(competition.startDate).slice(0, 10),
-          registrationText: registrationOpen ? "报名中" : "报名已关闭",
+          registrationText: statusText,
           registrationOpen,
           feeText: Number(competition.registrationFee || 0) > 0 ? `¥${Number(competition.registrationFee).toFixed(2)}` : "免费"
         },

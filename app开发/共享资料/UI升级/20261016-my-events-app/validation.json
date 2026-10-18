@@ -1,0 +1,51 @@
+{
+  "iOS": {
+    "exactProductSimulatorBuild": true,
+    "contractChecks": 19,
+    "failures": 0,
+    "renderCapture": "iOS-我的比赛.png",
+    "fixtureIdentityInjectedOnlyInTempHarness": true,
+    "productionLoginValidated": false,
+    "runtimePublishedZeroVisible": true,
+    "runtimeUnpublishedScoreHidden": true
+  },
+  "Android": {
+    "exactProductReleaseAndDebugBuild": true,
+    "unitTests": [
+      {
+        "name": "cn.com.swod.app.CompetitionRecordTest",
+        "tests": "3",
+        "failures": "0",
+        "errors": "0"
+      },
+      {
+        "name": "cn.com.swod.app.CommerceTest",
+        "tests": "2",
+        "failures": "0",
+        "errors": "0"
+      },
+      {
+        "name": "cn.com.swod.app.PolicyTest",
+        "tests": "4",
+        "failures": "0",
+        "errors": "0"
+      }
+    ],
+    "lintErrors": 0,
+    "lintWarnings": 15,
+    "signatureVerified": true,
+    "sha256": "e9a816ec7485fc71703aea4f8028553ce0d2515fbac31ddfcb1343eb23998723",
+    "runtimePublishedZeroVisible": true,
+    "runtimeUnpublishedScoreHidden": true,
+    "isolatedPackage": "cn.com.swod.app.uiqa"
+  },
+  "HarmonyOS": {
+    "sourceUpdated": true,
+    "compiled": false,
+    "reason": "DevEco Studio installation not found"
+  },
+  "productionBusinessWrites": false,
+  "reviewSubmitted": false,
+  "released": false,
+  "nativeEventPaymentUnchanged": true
+}

@@ -17,6 +17,7 @@ dbtest('App handler validates sessions, strips self-reported identity and blocks
  if(name.endsWith('event-music-upload'))return load('src/lib/server/event-music-upload.ts');
  if(name.endsWith('app-session'))return api;
  if(name.endsWith('app-platform'))return load('src/lib/server/app-platform.ts',name=>name==='./app-session'?api:require(name));
+ if(name.endsWith('app-profile'))return load('src/lib/server/app-profile.ts',()=>api);
  if(name.endsWith('app-shop'))return {appShopPayment:()=>({alipay:false,wechat:false})};
  if(name.endsWith('app-carrier-auth'))return {carrierLoginEnabled:()=>false};
  if(name.endsWith('mini/_helpers'))return{withDb:f=>f(db),memberToken:({id})=>'internal-'+id};
@@ -68,6 +69,7 @@ dbtest('Android and Harmony login keep shared accounts with their own source and
  if(name.endsWith('event-music-upload'))return load('src/lib/server/event-music-upload.ts');
  if(name.endsWith('app-session'))return api;
  if(name.endsWith('app-platform'))return platform;
+ if(name.endsWith('app-profile'))return load('src/lib/server/app-profile.ts',()=>api);
  if(name.endsWith('app-shop'))return {appShopPayment:()=>({alipay:false,wechat:false})};
  if(name.endsWith('app-carrier-auth'))return {carrierLoginEnabled:()=>false};
  if(name.endsWith('mini/_helpers'))return {withDb:f=>f(db)};

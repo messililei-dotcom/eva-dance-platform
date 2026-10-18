@@ -1,0 +1,263 @@
+--- before/app开发/iOS/EvaDance/Sources/EvaCore/CompetitionRecord.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaCore/CompetitionRecord.swift
+@@ -0,0 +1,18 @@
++import Foundation
++
++public enum CompetitionRecord {
++    public static func result(_ row: JSONValue) -> String {
++        guard row["resultPublished"] == .bool(true) else { return "成绩待公示" }
++        let award = row["awardName"].text
++        let rank = row["rankNo"].number
++        let label = !award.isEmpty ? award : rank > 0 ? "第\(row["rankNo"].text)名" : "成绩已公示"
++        let score = row["totalScore"].text
++        return label + (score.isEmpty ? "" : " · \(score)分")
++    }
++    public static func audit(_ value: String) -> String {
++        ["pending":"待审核", "approved":"审核通过", "rejected":"未通过"][value] ?? (value.isEmpty ? "待审核" : value)
++    }
++    public static func paid(_ value: String) -> String {
++        ["unpaid":"待缴费", "pending":"待确认", "paid":"已缴费", "refunded":"已退款"][value] ?? value
++    }
++}
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift
+@@ -200,7 +200,7 @@
+         List {
+             BrandHeader(title: "AiwaRaks赛事平台", subtitle: "赛事、报名、赛程与成绩", icon: "trophy")
+             NavigationLink("工作人员 · 赛事管理") { StaffEventRootView() }
+-            NavigationLink("我的报名与成绩") { AuthGate { RecordListView(title: "赛事记录", path: "/member/events", collectionKey: "entries", fields: [("赛事","competitionName"),("姓名","name"),("组别","groupName"),("审核","auditStatus"),("成绩","totalScore")]) } }
++            NavigationLink("我的比赛") { AuthGate { MyCompetitionsView() } }
+             LoadState(store: store) { Task { await load() } }
+             ForEach(store.data.rows.filter { search.isEmpty || $0.value["name"].text.localizedCaseInsensitiveContains(search) }) { row in
+                 NavigationLink { EventDetailView(id: row.id) } label: { VStack(alignment: .leading, spacing: 6) {
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift
+@@ -30,7 +30,7 @@
+                 }
+                 Section("我的服务") {
+                     NavigationLink("课时余额与核销记录") { OfflineScheduleView() }
+-                    NavigationLink("报名与成绩") { RecordListView(title:"赛事记录",path:"/member/events",collectionKey:"entries",fields:[("赛事","competitionName"),("组别","groupName"),("审核","auditStatus"),("成绩","totalScore")]) }
++                    NavigationLink("我的比赛") { MyCompetitionsView() }
+                     NavigationLink("商城订单") { ShopOrdersView() }
+                     NavigationLink("收货地址") { ShippingView() }
+                     NavigationLink("课程缴费记录") { RecordListView(title:"课程缴费记录",path:"/member/payments",fields:[("课程","courseName"),("金额","amount"),("剩余课次","remainingSessions"),("日期","date")]) }
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/MyCompetitionsView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/MyCompetitionsView.swift
+@@ -0,0 +1,29 @@
++import SwiftUI
++import EvaCore
++
++struct MyCompetitionsView: View {
++    @EnvironmentObject private var session: Session
++    @StateObject private var store = SiteStore()
++    private var entries: [SiteRow] { store.data["entries"].scopedRows("my-competitions") }
++    var body: some View {
++        List {
++            LoadState(store: store) { Task { await load() } }
++            ForEach(entries, id: \.listID) { entry in
++                VStack(alignment: .leading, spacing: 10) {
++                    Text(entry.value["competitionName"].text).font(.headline)
++                    Text([entry.value["groupName"].text, entry.value["playerNo"].text.isEmpty ? "" : "选手号 " + entry.value["playerNo"].text].filter { !$0.isEmpty }.joined(separator: " · "))
++                    if !entry.value["entrantName"].text.isEmpty { Text("参赛人：" + entry.value["entrantName"].text) }
++                    if !entry.value["performanceTitle"].text.isEmpty { Text("节目：" + entry.value["performanceTitle"].text) }
++                    Text([CompetitionRecord.audit(entry.value["auditStatus"].text), CompetitionRecord.paid(entry.value["paidStatus"].text), String(entry.value["startDate"].text.prefix(10))].filter { !$0.isEmpty }.joined(separator: " · ")).font(.subheadline).foregroundStyle(.secondary)
++                    Text(CompetitionRecord.result(entry.value)).font(.body.weight(.semibold)).foregroundStyle(EvaBrand.red)
++                    if !entry.value["competitionId"].text.isEmpty {
++                        NavigationLink("赛事详情") { EventDetailView(id: entry.value["competitionId"].text) }.frame(minHeight: 44)
++                    }
++                }.padding(.vertical, 8)
++            }
++            if !store.busy && store.error == nil && entries.isEmpty { Text("暂无比赛报名和结果记录").foregroundStyle(.secondary) }
++        }.evaCompactLayout().navigationTitle("我的比赛")
++        .task(id: session.accountID) { await load() }.refreshable { await load() }
++    }
++    private func load() async { await store.load("/member/events", session: session) }
++}
+--- before/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -129,7 +129,7 @@
+     private void schedule(){schedule(0);}
+     private void schedule(int courseId){begin("期次课时与核销");load("/offline/overview"+(courseId>0?"?course_ids="+courseId:""),"GET",null,true,v->{JSONObject o=object(v);info("购买课程期次的课时，到课后核销扣减，无需预约。");JSONArray es=array(o.opt("entitlements"));for(int i=0;i<es.length();i++){JSONObject r=es.getJSONObject(i);info(r.optString("course_name")+" · "+r.optString("course_period")+" · 剩余 "+r.optInt("available_sessions")+" 课时 · 已核销 "+r.optInt("used_sessions")+" 课时");}info("核销记录");JSONArray records=array(o.opt("consumes"));for(int i=0;i<records.length();i++){JSONObject r=records.getJSONObject(i);info(r.optString("course_name")+" · "+r.optString("consume_date")+" · 核销 "+r.optInt("count")+" 课时");}});}
+     private void booking(JSONObject r){open(this::schedule);}
+-    private void events(){begin("东方舞赛事");hero("AiwaRaks赛事平台","赛事、报名、赛程与成绩");action("工作人员 · 赛事管理",()->open(this::staffHome));action("我的报名与成绩",()->open(()->records("赛事记录","/member/events","entries",null)));load("/events","GET",null,false,v->searchable(array(v),new String[]{"name","venue","city"},r->open(()->event(r.optInt("id")))));}
++    private void events(){begin("东方舞赛事");hero("AiwaRaks赛事平台","赛事、报名、赛程与成绩");action("工作人员 · 赛事管理",()->open(this::staffHome));action("我的比赛",()->open(this::myEvents));load("/events","GET",null,false,v->searchable(array(v),new String[]{"name","venue","city"},r->open(()->event(r.optInt("id")))));}
+     private void event(int id){begin("赛事详情");load("/events/"+id,"GET",null,false,v->{JSONObject o=object(v),c=o.optJSONObject("competition");if(c!=null){info(c.optString("name"));info(first(c,"startDate","start_date")+" · "+first(c,"venue"));info(strip(first(c,"description","introduction")));}info("完整组别名称");searchable(array(o.opt("groups")),new String[]{"name"},r->open(()->register(id,r)));info("赛程");displayRows(array(o.opt("sessions")),new String[]{"name","startsAt","venue"},null);info("已发布成绩");displayRows(array(o.opt("rankings")),new String[]{"rankNo","playerName","groupName","publishedTotal"},null);});}
+ 
+     private void register(int id,JSONObject group){
+@@ -148,7 +148,7 @@
+                 byte[] bytes=musicBytes;String filename=musicFilename;
+                 io.execute(()->{Exception failure=null;try{api.registerWithMusic(id,fields,filename,bytes);}catch(Exception e){failure=e;}
+                     final Exception error=failure;runOnUiThread(()->{registrationBusy=false;if(version!=generation||isFinishing())return;
+-                        if(error!=null){info(error.getMessage());return;}musicBytes=null;begin("报名与音乐已提交");info("付款及处理进度请在赛事记录中查看。");action("查看报名记录",()->open(()->records("赛事记录","/member/events","entries",null)));});
++                        if(error!=null){info(error.getMessage());return;}musicBytes=null;begin("报名与音乐已提交");info("付款及处理进度请在赛事记录中查看。");action("查看报名记录",()->open(this::myEvents));});
+                 });
+             });
+         });
+@@ -173,7 +173,7 @@
+     private void order(String id){begin("订单详情");String path="/shop/orders/"+Uri.encode(id);load(path,"GET",null,true,v->{JSONObject r=object(v).optJSONObject("order");if(r==null)throw new Exception("订单不存在");hero("订单 "+r.optString("id"),Commerce.status(r.optString("status"),r.optString("kind")));info("合计 ¥"+Commerce.money(r.optLong("totalFen")));JSONArray items=array(r.opt("items"));for(int i=0;i<items.length();i++){JSONObject item=items.getJSONObject(i);card(content,item.optString("name"),"¥"+Commerce.money(item.optLong("unit_fen"))+" × "+item.optInt("quantity"),null);}info(first(r,"createdAt"));info(first(r,"carrier")+" "+first(r,"trackingNo"));info(first(r,"recipient")+" · "+mask(r.optString("phone"))+" · "+first(r,"address"));JSONObject shipping=r.optJSONObject("shipping");if(shipping!=null)info(first(shipping,"recipient")+" · "+mask(shipping.optString("phone"))+" · "+shipping.optString("address"));action("同步最新订单状态",()->memberWrite(path+"/refresh","POST",body(),()->order(id)));String state=r.optString("status");if(state.equals("pending"))action("取消订单",()->confirm("确认取消此订单？",()->memberWrite(path+"/cancel","POST",body(),()->order(id))));if(state.equals("shipped")&&r.optString("kind").equals("goods"))action("确认收货",()->confirm("请确认已经收到商品",()->memberWrite(path+"/received","POST",body(),()->order(id))));if(Commerce.refundable(state)){EditText reason=field(content,"退款原因",false);action("申请退款",()->{String message=reason.getText().toString().trim();if(message.isEmpty()||message.length()>300){info("请填写300字以内退款原因");return;}confirm("确认提交退款申请？结果以平台审核为准",()->memberWrite(path+"/refund","POST",body("reason",message),()->order(id)));});}});}
+     private void memberWrite(String path,String method,JSONObject body,Runnable next){if(memberWriteBusy)return;memberWriteBusy=true;int version=generation;io.execute(()->{try{api.request(path,method,body,true);runOnUiThread(()->{memberWriteBusy=false;if(version==generation&&!isFinishing()){page=next;next.run();}});}catch(Exception e){runOnUiThread(()->{memberWriteBusy=false;if(version==generation&&!isFinishing())info(e.getMessage());});}});}
+     private void profileEditor(){begin("个人资料");load("/member/profile","GET",null,true,v->{JSONObject r=object(v);info("手机号 "+mask(r.optString("phone"))+" · 资料与官网同步");String[] keys={"name","gender","birthday","country","province","city","address"},labels={"姓名","性别（男/女/其他，选填）","生日（YYYY-MM-DD，选填）","国家/地区","省份/地区","城市","详细地址"};EditText[] inputs=new EditText[keys.length];for(int i=0;i<keys.length;i++){inputs[i]=field(content,labels[i],false);inputs[i].setText(first(r,keys[i]));}action("保存个人资料",()->{JSONObject draft=body();for(int i=0;i<keys.length;i++){String value=inputs[i].getText().toString().trim();if(value.length()>300||(i==0&&(value.isEmpty()||value.length()>60))){info("请填写姓名，单项资料不能超过300字");return;}try{draft.put(keys[i],value);}catch(Exception ignored){}}String birthday=inputs[2].getText().toString().trim();if(!birthday.isEmpty()){try{java.time.LocalDate date=java.time.LocalDate.parse(birthday);if(date.isAfter(java.time.LocalDate.now()))throw new Exception();}catch(Exception e){info("请填写有效生日 YYYY-MM-DD");return;}}memberWrite("/member/profile","PUT",draft,this::account);});});}
+-    private void account(){begin("个人中心");if(!api.loggedIn()){hero("欢迎来到伊娃东方舞","登录后同步课程、比赛、证书与订单");action("手机号登录",()->open(this::login));}else{LinearLayout summary=column();content.addView(summary);load("/member/profile","GET",null,true,v->{JSONObject r=object(v);card(summary,first(r,"name"),mask(r.optString("phone"))+" · "+first(r,"level"),()->open(this::profileEditor));JSONObject stats=r.optJSONObject("stats");if(stats!=null)card(summary,"我的学习","线上课 "+stats.optInt("authorized_count")+" · 已学完 "+stats.optInt("completed_count")+" · 线下剩余 "+stats.optInt("offline_remaining_sessions")+" 课时",null);});section("学习与服务");action("个人资料",()->open(this::profileEditor));action("我的线上课程",()->open(this::myCourses));action("我的线下课时",()->open(this::schedule));action("我的比赛与成绩",()->open(()->records("赛事记录","/member/events","entries",null)));action("我的商城订单",()->open(this::orders));action("学习消息",()->open(()->messages(0)));action("我的证书",()->open(this::certificates));action("学习笔记",()->open(()->learningRecords(false)));action("学习书签",()->open(()->learningRecords(true)));action("成长档案",()->open(()->records("成长档案","/member/growth","",null)));section("账号与安全");action("登录设备",()->open(this::devices));action("注销账号",()->open(this::deletion));action("退出登录",()->confirm("退出当前账号？",()->{generation++;io.execute(()->{try{api.logout();}catch(Exception ignored){}runOnUiThread(()->{history.clear();page=this::account;account();});});}));}section("更多服务");action("东方舞圈与品牌服务",()->open(this::website));action("工作人员 · 赛事管理",()->open(this::staffHome));action("隐私政策",()->link("https://www.swod.com.cn/privacy"));action("服务条款",()->link("https://www.swod.com.cn/terms"));info("SWOD 1.0.0 (5)");}
++    private void account(){begin("个人中心");if(!api.loggedIn()){hero("欢迎来到伊娃东方舞","登录后同步课程、比赛、证书与订单");action("手机号登录",()->open(this::login));}else{LinearLayout summary=column();content.addView(summary);load("/member/profile","GET",null,true,v->{JSONObject r=object(v);card(summary,first(r,"name"),mask(r.optString("phone"))+" · "+first(r,"level"),()->open(this::profileEditor));JSONObject stats=r.optJSONObject("stats");if(stats!=null)card(summary,"我的学习","线上课 "+stats.optInt("authorized_count")+" · 已学完 "+stats.optInt("completed_count")+" · 线下剩余 "+stats.optInt("offline_remaining_sessions")+" 课时",null);});section("学习与服务");action("个人资料",()->open(this::profileEditor));action("我的线上课程",()->open(this::myCourses));action("我的线下课时",()->open(this::schedule));action("我的比赛",()->open(this::myEvents));action("我的商城订单",()->open(this::orders));action("学习消息",()->open(()->messages(0)));action("我的证书",()->open(this::certificates));action("学习笔记",()->open(()->learningRecords(false)));action("学习书签",()->open(()->learningRecords(true)));action("成长档案",()->open(()->records("成长档案","/member/growth","",null)));section("账号与安全");action("登录设备",()->open(this::devices));action("注销账号",()->open(this::deletion));action("退出登录",()->confirm("退出当前账号？",()->{generation++;io.execute(()->{try{api.logout();}catch(Exception ignored){}runOnUiThread(()->{history.clear();page=this::account;account();});});}));}section("更多服务");action("东方舞圈与品牌服务",()->open(this::website));action("工作人员 · 赛事管理",()->open(this::staffHome));action("隐私政策",()->link("https://www.swod.com.cn/privacy"));action("服务条款",()->link("https://www.swod.com.cn/terms"));info("SWOD 1.0.0 (5)");}
+     private void learningRecords(boolean bookmarks){begin(bookmarks?"学习书签":"学习笔记");String path=bookmarks?"/bookmarks":"/notes";load(path+"/all","GET",null,true,v->{JSONArray rows=array(v);for(int i=0;i<rows.length();i++){JSONObject r=rows.getJSONObject(i);card(content,first(r,"course_name","video_name","series_name"),first(r,"content","label")+" · "+r.optInt("timestamp_seconds")+"秒",()->playAt(r.optInt("video_id"),first(r,"course_name","video_name"),r.optInt("timestamp_seconds")));action("删除此"+(bookmarks?"书签":"笔记"),()->confirm("确认删除此记录？",()->memberWrite(path+"/"+r.optInt("id"),"DELETE",body(),()->learningRecords(bookmarks))));}if(rows.length()==0)info("暂无记录");});}
+     private void certificates(){begin("我的证书");load("/certificates","GET",null,true,v->{JSONArray rs=array(v);for(int i=0;i<rs.length();i++){JSONObject r=rs.getJSONObject(i);card(content,r.optString("courseName"),r.optString("certificateNo")+" · "+r.optString("issueDate")+" · "+r.optString("status"),()->{String url=r.optString("verifyUrl");if(Policy.certificateURL(url))link(url);});String raw=r.optString("pdfUrl");String url=raw.startsWith("/")?"https://admin.swod.com.cn"+raw:raw;if("active".equals(r.optString("status"))&&Policy.certificateURL(url))action("查看电子证书",()->link(url));}if(rs.length()==0)info("暂无已颁发证书");});}
+     private void messages(int cursor){begin("学习消息");load("/member/messages?limit=20&cursor="+cursor,"GET",null,true,v->{JSONObject o=object(v);JSONArray rs=array(o.opt("items"));for(int i=0;i<rs.length();i++){JSONObject r=rs.getJSONObject(i);card(content,r.optString("title"),r.optString("content"),()->open(()->{begin(r.optString("title"));info(r.optString("content"));load("/member/messages/"+Uri.encode(r.optString("recipientId"))+"/read","PATCH",body(),true,ignored->{});}));}if(rs.length()==0)info("暂无消息");if(o.optBoolean("hasMore"))action("下一页",()->open(()->messages(o.optInt("nextCursor"))));action("全部标记已读",()->mutate("/member/messages/read-all","POST",body(),()->messages(0)));});}
+@@ -200,6 +200,7 @@
+         action("登录",()->{if(authBusy)return;if(!consent.isChecked()){info("请阅读并同意协议");return;}String number=phone.getText().toString().trim(),sms=code.getText().toString().trim();if(!number.matches("1[3-9][0-9]{9}")||!sms.matches("[0-9]{6}")){info("请填写有效手机号和六位验证码");return;}int version=generation;authBusy=true;io.execute(()->{try{JSONObject response=object(api.request("/auth/login","POST",body("phone",number,"code",sms,"deviceName","伊娃东方舞 Android"),false));runOnUiThread(()->{authBusy=false;if(version!=generation||isFinishing())return;try{api.accept(response);history.clear();page=this::account;account();}catch(Exception e){info(e.getMessage());}});}catch(Exception e){runOnUiThread(()->{authBusy=false;if(version==generation&&!isFinishing())info(e.getMessage());});}});});
+     }
+     private void assistant(){begin("学习助手");info("根据已有课程制定练习安排");action("20 分钟：热身 4 · 技巧 12 · 复习 4",()->open(()->records("最近学习","/member/recent-courses","",r->play(r.optInt("video_id"),first(r,"course_name")))));action("30 分钟：热身 6 · 技巧 18 · 复习 6",()->open(()->records("最近学习","/member/recent-courses","",r->play(r.optInt("video_id"),first(r,"course_name")))));}
++    private void myEvents(){begin("我的比赛");load("/member/events","GET",null,true,v->{JSONArray entries=array(object(v).opt("entries"));if(entries.length()==0){info("暂无比赛报名和结果记录");return;}for(int i=0;i<entries.length();i++){JSONObject r=entries.getJSONObject(i);String detail=first(r,"groupName")+(first(r,"playerNo").isEmpty()?"":" · 选手号 "+first(r,"playerNo"));if(!first(r,"entrantName").isEmpty())detail+="\n参赛人："+first(r,"entrantName");if(!first(r,"performanceTitle").isEmpty())detail+="\n节目："+first(r,"performanceTitle");detail+="\n"+CompetitionRecord.audit(r.optString("auditStatus"))+" · "+CompetitionRecord.paid(r.optString("paidStatus"))+" · "+first(r,"startDate");detail+="\n"+CompetitionRecord.result(r.opt("resultPublished"),first(r,"totalScore"),r.optInt("rankNo"),first(r,"awardName"));card(content,first(r,"competitionName"),detail,null);int id=r.optInt("competitionId");if(id>0)action("赛事详情",()->open(()->event(id)));}});}
+     private void records(String name,String path,String key,RowTap tap){begin(name);load(path,"GET",null,true,v->{Object items=key.isEmpty()?v:object(v).opt(key);JSONArray rs=array(items);if(rs.length()==0&&items instanceof JSONObject)rs=new JSONArray().put(items);displayRows(rs,new String[]{"series_name","course_name","competitionName","name","groupName","auditStatus","totalScore","content","label","status"},tap);if(rs.length()==0)info("暂无记录");});}
+     private void displayRows(JSONArray rs,String[] fields,RowTap tap)throws Exception{for(int i=0;i<rs.length();i++){JSONObject r=rs.getJSONObject(i);String summary="";for(String f:fields){String s=first(r,f);if(!s.isEmpty())summary+=s+" · ";}card(content,first(r,"name","title","courseName","series_name","course_name","playerName"),summary,tap==null?null:()->tap.tap(r));}}
+     private void mutate(String path,String method,JSONObject body,Runnable next){load(path,method,body,true,v->{history.clear();page=next;next.run();});}
+--- before/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CompetitionRecord.java
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CompetitionRecord.java
+@@ -0,0 +1,16 @@
++package cn.com.swod.app;
++
++public final class CompetitionRecord {
++    private CompetitionRecord() {}
++    public static String result(Object published, String score, int rank, String award) {
++        if (!Boolean.TRUE.equals(published)) return "成绩待公示";
++        String label = award != null && !award.isEmpty() ? award : rank > 0 ? "第"+rank+"名" : "成绩已公示";
++        return label + (score == null || score.isEmpty() ? "" : " · "+score+"分");
++    }
++    public static String audit(String value) {
++        switch(value) { case "pending":return "待审核";case "approved":return "审核通过";case "rejected":return "未通过";default:return value.isEmpty()?"待审核":value; }
++    }
++    public static String paid(String value) {
++        switch(value) { case "unpaid":return "待缴费";case "pending":return "待确认";case "paid":return "已缴费";case "refunded":return "已退款";default:return value; }
++    }
++}
+--- before/app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/CompetitionRecordTest.java
++++ after/app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/CompetitionRecordTest.java
+@@ -0,0 +1,17 @@
++package cn.com.swod.app;
++import org.junit.Test;
++import static org.junit.Assert.*;
++public class CompetitionRecordTest {
++    @Test public void unpublishedOrMalformedFlagsNeverRevealScores() {
++        for(Object flag:new Object[]{null,false,"true","false",1})assertEquals("成绩待公示",CompetitionRecord.result(flag,"99",1,"冠军"));
++    }
++    @Test public void publishedZeroAndMissingScoresStayDistinct() {
++        assertEquals("第2名 · 0分",CompetitionRecord.result(true,"0",2,""));
++        assertEquals("冠军 · 95.5分",CompetitionRecord.result(true,"95.5",1,"冠军"));
++        assertEquals("成绩已公示",CompetitionRecord.result(true,"",0,""));
++    }
++    @Test public void auditAndPaymentAreSeparateStatuses() {
++        assertEquals("待审核",CompetitionRecord.audit("pending"));assertEquals("待确认",CompetitionRecord.paid("pending"));
++        assertEquals("已退款",CompetitionRecord.paid("refunded"));
++    }
++}
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -120,6 +120,13 @@
+   private summary(row: Row): string {
+     return [row.subtitle, row.teacher, row.category, this.route.screen === 'home' && row.total_courses !== undefined ? row.total_courses + ' 节课程' : '', this.route.screen === 'offline' ? [row.start_date, row.location, '期次课时'].filter((v: string | undefined) => !!v).join(' · ') : '', row.groupName, row.contestantNumber, row.programNumber, row.sequenceNo ? '出场顺序 ' + row.sequenceNo : '', row.musicName ? '音乐：' + row.musicName : '', row.paidStatus, row.content].filter((text: string | undefined) => text !== undefined && text !== '').join(' · ');
+   }
++  private eventResult(row: Row): string {
++    if (row.resultPublished !== true) return '成绩待公示';
++    const label = row.awardName || (Number(row.rankNo) > 0 ? '第' + row.rankNo + '名' : '成绩已公示');
++    return label + (row.totalScore === undefined || row.totalScore === null ? '' : ' · ' + row.totalScore + '分');
++  }
++  private eventAudit(value: string): string { return value === 'pending' ? '待审核' : value === 'approved' ? '审核通过' : value === 'rejected' ? '未通过' : value || '待审核'; }
++  private eventPaid(value: string): string { return value === 'unpaid' ? '待缴费' : value === 'pending' ? '待确认' : value === 'paid' ? '已缴费' : value === 'refunded' ? '已退款' : value; }
+   private async write(path: string, body: WriteBody, method: http.RequestMethod = http.RequestMethod.POST, staff: boolean = false): Promise<void> {
+     if (this.busy) return; const version = this.generation; this.busy = true; this.error = '';
+     try {
+@@ -325,7 +332,7 @@
+     if (this.route.screen === 'offline') { this.intro('线下课', '选择课程期次 · 购买课时 · 到课核销'); this.action('期次课时与核销', () => this.go('schedule', '期次课时', '/offline/overview', true)) }
+     if (this.route.screen === 'events') {
+       this.intro('东方舞赛事', '完整组别 · 节目报名 · 赛程与成绩')
+-      this.action('我的报名与成绩', () => this.go('myEvents', '赛事记录', '/member/events', true))
++      this.action('我的比赛', () => this.go('myEvents', '我的比赛', '/member/events', true))
+       this.action('工作人员 · 赛事管理', () => this.go(this.staffLoggedIn ? 'staffHome' : 'staffLogin', '赛事管理', this.staffLoggedIn ? '/event/competitions' : '', false, 0, 0, true))
+     }
+     if (this.route.screen === 'shop') { this.intro('伊娃甄选', '东方舞生活 · 官方商城') }
+@@ -341,7 +348,7 @@
+         Text(this.detail.name || '我的学习空间').fontSize(18)
+         this.action('我的课程', () => this.go('records', '我的课程', '/member/authorized-series', true))
+         this.action('课时余额与核销记录', () => this.go('schedule', '期次课时', '/offline/overview', true))
+-        this.action('我的报名与成绩', () => this.go('myEvents', '赛事记录', '/member/events', true))
++        this.action('我的比赛', () => this.go('myEvents', '我的比赛', '/member/events', true))
+         this.action('学习消息', () => this.go('messages', '学习消息', '/member/messages?limit=20&cursor=0', true))
+         this.action('我的证书', () => this.go('certificates', '我的证书', '/certificates', true))
+         this.action('学习笔记', () => this.go('records', '学习笔记', '/notes/all', true))
+@@ -424,7 +431,20 @@
+       Text('共 ' + (this.detail.contestants || []).length + ' 名选手 · ' + (this.detail.players || []).length + ' 个节目').fontSize(14)
+       Text('完整记录先编号，再搜索；选手编号、节目编号与出场顺序分别管理。').fontSize(12)
+     }
+-    if (this.route.screen === 'myEvents') { ForEach(this.detail.entries || [], (row: Row) => { this.card(row) }, (row: Row) => String(row.id)) }
++    if (this.route.screen === 'myEvents') {
++      ForEach(this.detail.entries || [], (row: Row) => {
++        Column({ space: 10 }) {
++          Text(row.competitionName || '赛事').fontSize(18).fontWeight(FontWeight.Bold)
++          Text((row.groupName || '未分组') + (row.playerNo ? ' · 选手号 ' + row.playerNo : '')).fontSize(15)
++          if (row.entrantName) { Text('参赛人：' + row.entrantName).fontSize(14) }
++          if (row.performanceTitle) { Text('节目：' + row.performanceTitle).fontSize(14) }
++          Text(this.eventAudit(row.auditStatus || '') + ' · ' + this.eventPaid(row.paidStatus || '') + ' · ' + (row.startDate || '')).fontSize(14).fontColor(SwodTheme.muted)
++          Text(this.eventResult(row)).fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary)
++          if (Number(row.competitionId) > 0) { this.action('赛事详情', () => this.go('event', row.competitionName || '赛事详情', '/events/' + Number(row.competitionId), false, Number(row.competitionId))) }
++        }.width('100%').alignItems(HorizontalAlign.Start).padding(20).backgroundColor(SwodTheme.surface).borderRadius(16)
++      }, (row: Row) => String(row.playerId || row.id))
++      if (!this.busy && !this.error && (this.detail.entries || []).length === 0) { Text('暂无比赛报名和结果记录').fontSize(15).fontColor(SwodTheme.muted) }
++    }
+     if (this.route.screen === 'message') { Text(this.detail.content || '').fontSize(16) }
+     if (this.route.screen !== 'catalog' && this.rows.length > 0) {
+       TextInput({ placeholder: '搜索名称、老师、组别或音乐', text: this.query }).height(52).fontSize(16).fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).backgroundColor(SwodTheme.surface).borderRadius(12).onChange((v: string) => { this.query = v; })
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets
+@@ -14,6 +14,7 @@
+   organization?: string; contestantNumber?: string; programNumber?: string; sequenceNo?: number; playerNo?: string;
+   registrationFee?: number; paidAmount?: number; paidStatus?: string; totalRegistrationFee?: number;
+   musicName?: string; musicFileId?: number; musicDuration?: number; playerCount?: number; groupCount?: number;
++  playerId?: string; competitionId?: string; entrantName?: string; resultPublished?: boolean; awardName?: string;
+   auditStatus?: string; totalScore?: number; rankNo?: number; playerName?: string; publishedTotal?: number;
+   startsAt?: string; registrationStatus?: string; status?: string; remark?: string; content?: string; label?: string;
+   recipientId?: string; createdAt?: string; nextCursor?: number; hasMore?: boolean;
+--- before/app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj
++++ after/app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj
+@@ -6,6 +6,8 @@
+ };
+ "objectVersion" = 56;
+ "objects" = {
++"CB1100000000000000000001" = { "isa" = "PBXFileReference"; "lastKnownFileType" = "sourcecode.swift"; "path" = "Sources/EvaDanceApp/MyCompetitionsView.swift"; "sourceTree" = "<group>"; };
++"CB1100000000000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "CB1100000000000000000001"; };
+ "81864538E639F1A2E54E91D9" = {
+ "isa" = "PBXFileReference";
+ "lastKnownFileType" = "sourcecode.swift";
+@@ -190,7 +192,7 @@
+ };
+ "4813494D137E1631BBA301D5" = {
+ "isa" = "PBXGroup";
+-"children" = ( "81864538E639F1A2E54E91D9", "56176A749AFDC37A8CA0C094", "6B58734A28CA9AACE961205D", "55E384D46FF217A9EA069A71", "5AFEB74CA9F2E77773EC3CB5", "131F716279A998597B23DF85", "F712CA44479FE5D168DCD3CA", "6D2FDD52C7BF889083ED934F", "72AD4380CE5193F42D6545AE", "BA26EB7A465D3B3B2219C3E5", "8A12A3212CC96AFD5D0516C1", "ED254B5CA0100E0CFAE01C52", "529C3590CBA26C828828E62B", "45C66AB82B8E87038BAE9A09", "8BF729FFE074CAEE622C0292", "FF92D541C4DD1008E9E8550B", "0A672A95F3C32EF5CF1F7853", "0A3E27B8CA818264D75C8D81" );
++"children" = ( "CB1100000000000000000001", "81864538E639F1A2E54E91D9", "56176A749AFDC37A8CA0C094", "6B58734A28CA9AACE961205D", "55E384D46FF217A9EA069A71", "5AFEB74CA9F2E77773EC3CB5", "131F716279A998597B23DF85", "F712CA44479FE5D168DCD3CA", "6D2FDD52C7BF889083ED934F", "72AD4380CE5193F42D6545AE", "BA26EB7A465D3B3B2219C3E5", "8A12A3212CC96AFD5D0516C1", "ED254B5CA0100E0CFAE01C52", "529C3590CBA26C828828E62B", "45C66AB82B8E87038BAE9A09", "8BF729FFE074CAEE622C0292", "FF92D541C4DD1008E9E8550B", "0A672A95F3C32EF5CF1F7853", "0A3E27B8CA818264D75C8D81" );
+ "sourceTree" = "<group>";
+ };
+ "4C62EC40DF63DF0873D128AE" = {
+@@ -209,7 +211,7 @@
+ "878A52FC5FF6A57D50B7B870" = {
+ "isa" = "PBXSourcesBuildPhase";
+ "buildActionMask" = 2147483647;
+-"files" = ( "2FF545814F363265D5AD097E", "790B8D9D6B0E5338AE9E1A5A", "BD00DF6DF6F592B6BE345172", "5BDA1848E55504A3A6D8E45D", "BBA4B39CD9ACACBFE75268A0", "D4717E498B619E6361A5810C", "F96FB527BBD862B252EC6B8D", "D1BA965BFA2970438908AE6F", "87E07FDE34D23593AF8F1068", "35CB5B247FEC3B7004E36625" );
++"files" = ( "CB1100000000000000000002", "2FF545814F363265D5AD097E", "790B8D9D6B0E5338AE9E1A5A", "BD00DF6DF6F592B6BE345172", "5BDA1848E55504A3A6D8E45D", "BBA4B39CD9ACACBFE75268A0", "D4717E498B619E6361A5810C", "F96FB527BBD862B252EC6B8D", "D1BA965BFA2970438908AE6F", "87E07FDE34D23593AF8F1068", "35CB5B247FEC3B7004E36625" );
+ "runOnlyForDeploymentPostprocessing" = 0;
+ };
+ "E2AA269EB967A8853A258BFA" = {
+--- before/app开发/iOS/EvaDance/Tests/EvaCoreTests/EvaCoreTests.swift
++++ after/app开发/iOS/EvaDance/Tests/EvaCoreTests/EvaCoreTests.swift
+@@ -197,7 +197,13 @@
+         try await suite.testStaffLoginCannotPromoteMemberCredentials()
+         suite.testStaffExportsPreserveNumbersAndRejectFormulaInjection()
+         try suite.testMultipartMusicRejectsIdentityAndSanitizesHeaders()
+-        print("18 contract checks; failures=\(failures)")
++        XCTAssertEqual(CompetitionRecord.result(.object(["resultPublished":.bool(false),"totalScore":.number(99),"awardName":.string("冠军")])), "成绩待公示")
++        XCTAssertEqual(CompetitionRecord.result(.object(["resultPublished":.string("true"),"totalScore":.number(99)])), "成绩待公示")
++        XCTAssertEqual(CompetitionRecord.result(.object(["resultPublished":.bool(true),"totalScore":.number(0),"rankNo":.number(2)])), "第2名 · 0分")
++        XCTAssertEqual(CompetitionRecord.result(.object(["resultPublished":.bool(true),"totalScore":.null])), "成绩已公示")
++        XCTAssertEqual(CompetitionRecord.audit("pending"), "待审核")
++        XCTAssertEqual(CompetitionRecord.paid("pending"), "待确认")
++        print("19 contract checks; failures=\(failures)")
+         if failures > 0 { exit(1) }
+     }
+ }

@@ -1,3 +1,4 @@
+import { getCoursePromotion, applyCoursePromotion } from '@/lib/server/course-promotion';
 import { studentDisplayBases } from '@/lib/server/student-display';
 import { jsonError, withDb } from '../../_helpers';
 import { noStoreJson } from '@/lib/http-cache';
@@ -6,6 +7,7 @@ export async function GET() {
   try {
     return withDb((db) => {
       const displayBases = studentDisplayBases(db);
+      const promotionEnabled = getCoursePromotion(db).enabled;
       const data = db.prepare(
         `SELECT cs.id, cs.name, cs.subtitle, cs.category, cs.teacher, cs.price, cs.promo_price, cs.is_free,
                 cs.cover_image, cs.share_image, cs.share_text, cs.description, cs.rich_description,
@@ -17,7 +19,7 @@ export async function GET() {
          WHERE cs.status='published'
          ORDER BY cs.sort_order, cs.created_at DESC`
       ).all();
-      return noStoreJson({ success: true, data: data.map((row: any) => ({ ...row, student_display_base: displayBases.get(Number(row.id)) })) });
+      return noStoreJson({ success: true, data: data.map((row: any) => ({ ...applyCoursePromotion(row, promotionEnabled), student_display_base: displayBases.get(Number(row.id)) })) });
     });
   } catch (err: any) {
     return jsonError(err.message);

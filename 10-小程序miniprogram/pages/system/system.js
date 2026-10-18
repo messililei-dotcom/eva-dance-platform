@@ -1,9 +1,14 @@
+function courseAccountKey() {
+  if (typeof wx === 'undefined' || typeof wx.getStorageSync !== 'function') return 'guest';
+  return wx.getStorageSync('token') ? String(wx.getStorageSync('memberId') || 'signed-in') : 'guest';
+}
+const { authorizedCourseIds } = require('../../shared/course-access');
 const share = require("../../shared/share");
 const videoFeature = require("../../shared/video-feature");
 const api = require("../../utils/api");
 const { popularityText } = require("../../shared/popularity");
 const { cleanText, contentText } = require("../../shared/review-text");
-const { formatPrice } = require("../../shared/money-format");
+const { coursePrice } = require("../../shared/course-price");
 
 const tabs = [
   { key: "all", label: "全部" },
@@ -35,8 +40,7 @@ function inferType(item) {
   return "offline";
 }
 
-function normalizeCourse(item) {
-  const price = Number(item.promo_price || item.price || 0);
+function normalizeCourse(item, rights = new Set()) {
   const type = inferType(item);
   return {
     ...item,
@@ -48,7 +52,7 @@ function normalizeCourse(item) {
     badge: type === "dance" ? "舞蹈作品" : "播放内容",
     lessonText: `${item.total_courses || item.course_count || 0} 项内容`,
     learnerText: popularityText(item),
-    priceText: item.is_free || price <= 0 ? "免费" : formatPrice(price)
+    ...coursePrice(item, rights.has(String(item.id)))
   };
 }
 
@@ -66,10 +70,13 @@ Page(share.withShare("system", videoFeature.withVideoFeature({
   },
 
   async loadCourses() {
+    const account = courseAccountKey();
+    this.setData({ loading: true, allCourses: [], courses: [] });
     wx.showLoading({ title: "加载中" });
     try {
-      const list = await api.getSeriesList().catch(() => []);
-      const allCourses = uniqueById((list || []).filter(item => inferType(item) !== "offline")).map(normalizeCourse);
+      const [list, rights] = await Promise.all([api.getSeriesList(), authorizedCourseIds(api)]);
+      if (account !== courseAccountKey()) return this.loadCourses();
+      const allCourses = uniqueById((list || []).filter(item => inferType(item) !== "offline")).map(item => normalizeCourse(item, rights));
       this.setData({
         allCourses,
         courses: this.filterCourses(allCourses, this.data.activeTab),

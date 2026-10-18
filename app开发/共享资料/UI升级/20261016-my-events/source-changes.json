@@ -1,0 +1,14 @@
+[
+  {
+    "file": "10-小程序miniprogram/pages/profile/profile.js",
+    "sha256": "23d7220af827062c29277499dbf96f422ce3a582ab8ab5c36f19b20873b4f8f0"
+  },
+  {
+    "file": "10-小程序miniprogram/pages/profile/profile.wxml",
+    "sha256": "818b56b2e6f2da50977480050cc9e65e7ec63a293c7ca4d1b3696fd2677ad9cd"
+  },
+  {
+    "file": "10-小程序miniprogram/pages/profile/profile.wxss",
+    "sha256": "9d35267c8c5488c3ab1316d3d76a607054d955399d282e6c40f6dfd3f24d5b5a"
+  }
+]

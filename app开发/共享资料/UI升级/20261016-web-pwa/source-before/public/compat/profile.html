@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no">
+  <title>个人中心 - 伊娃东方舞</title>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#f8f3ea;color:#2c1810;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}button,a{font:inherit}.shell{max-width:760px;margin:0 auto;padding:10px 12px 40px}.top{display:flex;align-items:center;justify-content:space-between;height:48px}.back,.logout{border:0;background:rgba(255,255,255,.82);color:#87672f;border-radius:22px;padding:9px 14px;text-decoration:none}.mode{font-size:11px;color:#9b8b78}.card{overflow:hidden;border-radius:16px;background:#fff;box-shadow:0 4px 18px rgba(91,59,26,.07)}.hero{display:flex;align-items:center;justify-content:space-between;padding:18px;background:linear-gradient(135deg,#8b1a1a,#b99652);color:#fff}.identity{display:flex;align-items:center;min-width:0}.avatar{display:flex;align-items:center;justify-content:center;width:58px;height:58px;margin-right:12px;border-radius:50%;background:rgba(255,255,255,.2);font-size:25px;font-weight:700}.name{margin:0 0 5px;font-size:22px}.meta{margin:0;color:rgba(255,255,255,.8);font-size:13px}.stats{display:flex;padding:10px 4px;border-bottom:1px solid #f1e7d8}.stat{width:33.333%;text-align:center}.stat strong{display:block;font-size:18px}.stat span{font-size:11px;color:#8a7a68}.notice{margin:0;padding:10px 14px;background:#fff8e8;color:#8a641f;font-size:13px;line-height:1.6;border-bottom:1px solid #f1e7d8}.section{padding:14px;border-bottom:1px solid #f1e7d8}.section:last-child{border-bottom:0}.section h2{margin:0 0 10px;font-size:17px}.empty{padding:12px;border-radius:11px;background:#f8f3ea;color:#8a7a68;font-size:13px}.item{display:block;margin-top:8px;padding:11px;border-radius:11px;background:#fbf8f2;color:#2c1810;text-decoration:none}.item:first-of-type{margin-top:0}.item-title{font-size:14px;font-weight:650;line-height:1.5}.item-meta{margin-top:4px;color:#8a7a68;font-size:12px;line-height:1.5}.loading,.error{padding:90px 24px;text-align:center}.spinner{width:28px;height:28px;margin:0 auto 14px;border:3px solid #e5d6bc;border-top-color:#b99652;border-radius:50%;-webkit-animation:spin .8s linear infinite;animation:spin .8s linear infinite}@-webkit-keyframes spin{to{-webkit-transform:rotate(360deg)}}@keyframes spin{to{transform:rotate(360deg)}}.error-icon{font-size:36px;color:#a64b18}.error h1{font-size:20px}.error p{color:#6f6257;font-size:14px;line-height:1.7}.code{padding:10px;border-radius:10px;background:#f8f3ea;text-align:left;font-size:12px;line-height:1.7;word-break:break-all}.actions{display:flex;margin-top:18px;gap:10px}.btn{display:block;flex:1;border:0;border-radius:11px;padding:12px 8px;background:#9f1d20;color:#fff;text-align:center;text-decoration:none;font-weight:650}.btn.secondary{border:1px solid #d8c7ae;background:#fff;color:#7e6233}.footer-note{padding:12px;text-align:center;color:#aa9a86;font-size:11px}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="top"><a class="back" href="/">‹ 返回</a><span class="mode">旧版 iPhone 兼容模式</span></div>
+    <div id="app" class="card"><div class="loading"><div class="spinner"></div><p>正在读取个人中心…</p><small>最长等待 15 秒</small></div></div>
+  </main>
+  <script>
+  (function () {
+    'use strict';
+    var app = document.getElementById('app');
+    var state = { member:null, courses:[], payments:[], certificates:[], events:[], pending:0, logs:[], failures:[], cached:false, authFailed:false };
+    var token = '';
+    var memberId = '';
+
+    function text(value) { return value === null || typeof value === 'undefined' ? '' : String(value); }
+    function escapeHtml(value) { return text(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function pick(object, keys, fallback) { var i, value; object = object && typeof object === 'object' ? object : {}; for (i=0;i<keys.length;i+=1) { value=object[keys[i]]; if (value !== null && typeof value !== 'undefined' && value !== '') return value; } return fallback || ''; }
+    function unwrap(payload) { if (payload && typeof payload === 'object' && typeof payload.data !== 'undefined') return payload.data; return payload; }
+    function rows(payload) { var data=unwrap(payload), keys=['items','entries','list','rows','courses','payments','certificates','data'], i; if (Array.isArray(data)) return data; if (data && typeof data === 'object') { for(i=0;i<keys.length;i+=1) if(Array.isArray(data[keys[i]])) return data[keys[i]]; } return []; }
+    function requestId() { return 'legacy-profile-' + new Date().getTime() + '-' + Math.random().toString(36).slice(2,8); }
+    function safeUrl(value) { value=text(value); return /^(https?:\/\/|\/)/i.test(value) ? value : ''; }
+
+    function readSession() {
+      try {
+        token = localStorage.getItem('student_token') || '';
+        var raw = localStorage.getItem('student_member') || '';
+        var cached = raw ? JSON.parse(raw) : null;
+        if (cached && typeof cached === 'object') {
+          memberId = text(pick(cached,['id','memberId','member_id','studentId','student_id']));
+          state.member = cached;
+          state.courses = Array.isArray(cached.authorizedCourses) ? cached.authorizedCourses : [];
+          state.payments = Array.isArray(cached.payments) ? cached.payments : [];
+          state.cached = !!memberId;
+        }
+        if (!memberId) memberId = localStorage.getItem('studentId') || '';
+        return !!(token && memberId);
+      } catch (error) {
+        // Recover from the server cookie even when local storage is unavailable.
+        return false;
+      }
+    }
+
+    var sendingCode=false, loggingIn=false, retryAt=0, cooldownTimer=null;
+    function authRequest(path, body, done) {
+      var xhr=new XMLHttpRequest(), completed=false;
+      function finish(error,payload,status) { if(completed)return; completed=true; done(error,payload,status); }
+      try {
+        xhr.open('POST',path,true); xhr.timeout=15000;
+        xhr.setRequestHeader('Content-Type','application/json');
+        if(token) xhr.setRequestHeader('Authorization','Bearer '+token);
+        xhr.onreadystatechange=function(){
+          if(xhr.readyState!==4)return;
+          var payload=null;
+          try { payload=JSON.parse(xhr.responseText); } catch(ignore) {}
+          if(xhr.status<200||xhr.status>=300||!payload||payload.success===false) {
+            finish(payload&&(payload.message||payload.error)||'连接失败，请重试',payload,xhr.status); return;
+          }
+          finish('',payload,xhr.status);
+        };
+        xhr.onerror=function(){finish('网络连接失败，请重试',null,0);};
+        xhr.ontimeout=function(){finish('连接超时，请重试',null,0);};
+        xhr.send(JSON.stringify(body));
+      } catch(error) { finish('连接失败，请重试',null,0); }
+    }
+    function forgetSession() {
+      token=''; memberId=''; state.member=null; state.cached=false;
+      state.courses=[]; state.payments=[]; state.certificates=[]; state.events=[];
+      try { var keys=['student_token','student_member','student_auth_expires_at','studentToken','studentId','studentName','studentAuthExpiresAt']; for(var i=0;i<keys.length;i+=1)localStorage.removeItem(keys[i]); } catch(ignore){}
+    }
+    function acceptSession(payload) {
+      var data=unwrap(payload)||{}, member=data.member;
+      if(!data.token||!member||!member.id)return false;
+      token=text(data.token); memberId=text(member.id); state.member=member; state.cached=false; state.authFailed=false; state.failures=[];
+      try {
+        localStorage.setItem('student_token',token);
+        localStorage.setItem('student_member',JSON.stringify(member));
+        if(data.expiresAt)localStorage.setItem('student_auth_expires_at',text(data.expiresAt));
+        else localStorage.removeItem('student_auth_expires_at');
+      } catch(ignore) { /* The HttpOnly session cookie still authenticates this device. */ }
+      return true;
+    }
+    function loginMessage(message) { var el=document.getElementById('login-message'); if(el)el.textContent=message; }
+    function updateCooldown() {
+      var button=document.getElementById('send-code'), seconds=Math.max(0,Math.ceil((retryAt-new Date().getTime())/1000));
+      if(button){button.disabled=sendingCode||seconds>0;button.textContent=sendingCode?'发送中…':seconds>0?seconds+' 秒后重试':'获取验证码';}
+      if(!seconds&&cooldownTimer){window.clearInterval(cooldownTimer);cooldownTimer=null;}
+    }
+    function showLoginRequired() {
+      app.innerHTML='<div class="section"><h1 style="font-size:22px">学员登录</h1><p>请使用报名时的手机号和短信验证码登录。</p><form id="login-form"><label for="login-phone">手机号</label><input id="login-phone" type="tel" inputmode="tel" autocomplete="tel-national" maxlength="11" required style="display:block;width:100%;padding:12px;margin:8px 0 16px;font-size:16px;border:1px solid #d8c7ae;border-radius:8px"><label for="login-code">验证码</label><div class="actions" style="margin-top:8px"><input id="login-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required style="min-width:0;width:50%;padding:12px;font-size:16px;border:1px solid #d8c7ae;border-radius:8px"><button class="btn secondary" id="send-code" type="button">获取验证码</button></div><p id="login-message" role="status" aria-live="polite" style="color:#9f1d20;line-height:1.6"></p><button class="btn" id="submit-login" type="submit" style="width:100%">登录</button></form></div>';
+      document.getElementById('send-code').onclick=function(){
+        var phone=document.getElementById('login-phone').value.replace(/\D/g,'');
+        if(!/^1[3-9]\d{9}$/.test(phone)){loginMessage('请输入正确的11位手机号');return;}
+        if(sendingCode||retryAt>new Date().getTime())return;
+        sendingCode=true;updateCooldown();loginMessage('正在发送验证码…');
+        authRequest('/api/mini/send-code',{phone:phone,countryCode:'+86'},function(error,payload,status){
+          sendingCode=false;
+          var data=unwrap(payload)||{}, seconds=Number(data.retryAfter||data.retry_after||payload&&payload.retryAfter||60);
+          if(!error||status===429){retryAt=new Date().getTime()+(error?Math.max(1,seconds):60)*1000;cooldownTimer=window.setInterval(updateCooldown,250);}
+          updateCooldown();loginMessage(error||'验证码已发送，5分钟内有效，请查看短信。');
+        });
+      };
+      document.getElementById('login-form').onsubmit=function(event){
+        event.preventDefault();if(loggingIn)return;
+        var phone=document.getElementById('login-phone').value.replace(/\D/g,''), code=document.getElementById('login-code').value.replace(/\D/g,'');
+        if(!/^1[3-9]\d{9}$/.test(phone)||!/^\d{6}$/.test(code)){loginMessage('请输入正确的手机号和6位验证码');return;}
+        loggingIn=true;var button=document.getElementById('submit-login');button.disabled=true;button.textContent='登录中…';loginMessage('');
+        authRequest('/api/mini/student-login',{phone:phone,code:code,countryCode:'+86'},function(error,payload){
+          loggingIn=false;button.disabled=false;button.textContent='登录';
+          if(error){loginMessage(error);return;}
+          if(!acceptSession(payload)){loginMessage('登录信息不完整，请重试');return;}
+          if(cooldownTimer){window.clearInterval(cooldownTimer);cooldownTimer=null;}
+          loadProfile();
+        });
+      };
+      updateCooldown();
+    }
+
+    function memberName() { var m=state.member||{}; return text(pick(m,['wxName','wx_name','wxNickname','wx_nickname','nickname','name'],'学员')); }
+    function memberPhone() { return text(pick(state.member||{},['phone','mobile','phoneNumber','phone_number'],'')); }
+    function courseName(course) { return text(pick(course,['title','name','series_name','seriesName','course_name','courseName'],'未命名课程')); }
+    function courseId(course) { return text(pick(course,['id','series_id','seriesId','course_id','courseId'],'')); }
+    function offlinePayment(payment) { return /\u7ebf\u4e0b|\u96c6\u8bad|\u5e08\u8d44|\u95e8\u5f92|\u57f9\u8bad|\u79c1\u6559|\u5de5\u4f5c\u574a/.test(text(pick(payment,['courseType','course_type'],'')+' '+pick(payment,['courseName','course_name'],''))); }
+
+    function renderItems(items, kind) {
+      if (!items.length) return '<div class="empty">\u6682\u65e0\u8bb0\u5f55</div>';
+      var html='', i, item, id, title, meta, href;
+      for(i=0;i<items.length;i+=1) {
+        item=items[i]||{}; href=''; meta='';
+        if(kind==='course') {
+          id=courseId(item); title=courseName(item); href=id ? '/courses/'+encodeURIComponent(id)+'/videos?source=platform' : '#';
+          meta=text(pick(item,['lesson_count','lessons','course_count','total_courses'],0))+' \u8282 \u00b7 \u5df2\u5b66 '+text(pick(item,['progress','progress_percent'],0))+'%';
+        } else if(kind==='payment') {
+          title=text(pick(item,['courseName','course_name','name'],'\u7ebf\u4e0b\u8bfe\u7a0b'));
+          meta='\u5269\u4f59 '+text(pick(item,['remainingSessions','remaining_sessions'],0))+' \u8bfe\u65f6 \u00b7 '+text(pick(item,['date','payment_date'],'\u65e5\u671f\u5f85定'));
+        } else if(kind==='event') {
+          title=text(pick(item,['groupName','group_name'],'比赛组别'));
+          meta=text(pick(item,['competitionName','competition_name'],'赛事'));
+          if(pick(item,['resultPublished','result_published'],false)) meta+=' · '+text(pick(item,['awardName','award_name'],'第 '+pick(item,['rankNo','rank_no'],'-')+' 名'))+' · 总分 '+text(pick(item,['totalScore','total_score'],'-'));
+          else meta+=' · 成绩待公示';
+        } else {
+          title=text(pick(item,['courseName','course_name','name'],'\u7ed3\u4e1a\u8bc1\u4e66'));
+          meta='\u7f16\u53f7 '+text(pick(item,['certificateNo','certificate_no','cert_no'],'-'))+' \u00b7 '+text(pick(item,['issueDate','issue_date'],'-')).slice(0,10);
+          href=safeUrl(pick(item,['pdfUrl','pdf_url'],''));
+        }
+        html += (href ? '<a class="item" href="'+escapeHtml(href)+'">' : '<div class="item">')+'<div class="item-title">'+escapeHtml(title)+'</div><div class="item-meta">'+escapeHtml(meta)+'</div>'+(href?'</a>':'</div>');
+      }
+      return html;
+    }
+
+    function render() {
+      if(state.authFailed) return;
+      if (!state.member && state.pending > 0) return;
+      if (!state.member && state.pending === 0) {
+        var last=state.failures[state.failures.length-1]||{};
+        showError(state.authFailed?'PROFILE_AUTH_401':'PROFILE_NETWORK_001',state.authFailed?'\u767b\u5f55\u72b6\u6001\u5df2\u5931\u6548':'\u4e2a\u4eba\u4e2d\u5fc3\u8fde\u63a5\u5931\u8d25',state.authFailed?'\u8bf7\u91cd\u65b0\u767b\u5f55后再进入个人中心。':'\u7f51\u7edc\u4e0d\u7a33\u5b9a\u6216\u670d\u52a1\u6682\u65f6\u65e0\u54cd\u5e94，请重新连接。',last.cause||'');
+        return;
+      }
+      var offline=[], i;
+      for(i=0;i<state.payments.length;i+=1) if(offlinePayment(state.payments[i])) offline.push(state.payments[i]);
+      var warning = state.failures.length ? '<p class="notice">\u5df2\u8fdb\u5165个人中心，部分最新数据暂未连接，当前展示已保存资料。</p>' : '';
+      app.innerHTML='<section class="hero"><div class="identity"><div class="avatar">'+escapeHtml(memberName().slice(0,1)||'\u5b66')+'</div><div><h1 class="name">'+escapeHtml(memberName())+'</h1><p class="meta">'+escapeHtml(memberPhone()||'\u672a绑定手机号')+' \u00b7 \u4e2a人中心</p></div></div><button class="logout" onclick="legacyLogout()">\u9000出</button></section>'+warning+'<div class="stats"><div class="stat" style="width:25%"><strong>'+state.courses.length+'</strong><span>\u7ebf上课</span></div><div class="stat" style="width:25%"><strong>'+offline.length+'</strong><span>\u7ebf下课</span></div><div class="stat" style="width:25%"><strong>'+state.events.length+'</strong><span>比赛</span></div><div class="stat" style="width:25%"><strong>'+state.certificates.length+'</strong><span>\u8bc1书</span></div></div><section class="section"><h2>我的比赛</h2>'+renderItems(state.events,'event')+'</section><section class="section"><h2>\u6211的线上课程</h2>'+renderItems(state.courses,'course')+'</section><section class="section"><h2>\u6211的线下课程</h2>'+renderItems(offline,'payment')+'</section><section class="section"><h2>\u6211的证书</h2>'+renderItems(state.certificates,'certificate')+'</section><div class="footer-note">\u5df2启用旧版 iPhone \u517c容模式</div>';
+    }
+
+    function showError(code,title,message,cause) {
+      var rid=requestId();
+      app.innerHTML='<div class="error"><div class="error-icon">!</div><h1>'+escapeHtml(title)+'</h1><p>'+escapeHtml(message)+'</p><div class="code">\u9519\u8bef\u7f16\u7801：'+escapeHtml(code)+'<br>\u8bf7\u6c42ID：'+escapeHtml(rid)+'</div><div class="actions"><button class="btn" onclick="location.reload()">\u91cd\u65b0\u8fde\u63a5</button><button class="btn secondary" onclick="legacyCopy()">\u590d\u5236排查信息</button></div>'+(code.indexOf('AUTH')>=0?'<a class="btn secondary" style="margin-top:10px" href="/?login=1">\u91cd\u65b0\u767b\u5f55</a>':'')+'</div>';
+      window.legacyFailure={code:code,title:title,message:message,cause:cause||'',requestId:rid};
+    }
+
+    function api(path, done) {
+      var xhr=new XMLHttpRequest(), rid=requestId(), started=new Date().getTime(), completed=false;
+      state.pending += 1;
+      function finish(error,payload,status) {
+        if(completed) return; completed=true; state.pending-=1;
+        var log={method:'GET',url:path,status:status||0,durationMs:new Date().getTime()-started,clientRequestId:rid};
+        state.logs.push(log);
+        if(error) { state.failures.push({cause:error,log:log}); if(status===401) { state.authFailed=true; forgetSession(); showLoginRequired(); } }
+        if(state.authFailed)return;
+        done(error,payload,status); render();
+      }
+      try {
+        xhr.open('GET',path,true); xhr.timeout=15000; xhr.setRequestHeader('Accept','application/json'); xhr.setRequestHeader('X-Client-Request-Id',rid); if(token) xhr.setRequestHeader('Authorization','Bearer '+token);
+        xhr.onreadystatechange=function(){ if(xhr.readyState!==4) return; var payload=null; try{payload=xhr.responseText?JSON.parse(xhr.responseText):null;}catch(e){finish('JSON parse failed',null,xhr.status);return;} if(xhr.status<200||xhr.status>=300||(payload&&payload.success===false)){finish('HTTP '+xhr.status,payload,xhr.status);return;} finish('',payload,xhr.status); };
+        xhr.onerror=function(){finish('Network error',null,xhr.status);}; xhr.ontimeout=function(){finish('Timeout after 15000ms',null,0);}; xhr.send();
+      } catch(error) { finish(text(error&&error.message)||'XHR failed',null,0); }
+    }
+
+    function updateStoredMember() { try { if(state.member) localStorage.setItem('student_member',JSON.stringify(state.member)); } catch(ignore){} }
+    function loadProfile() {
+      if(state.cached) render();
+      var query='?member_id='+encodeURIComponent(memberId);
+      api('/api/mini/member/profile'+query,function(error,payload){ if(error)return; var data=unwrap(payload)||{}, fresh=data.member||data.user||data; if(fresh&&typeof fresh==='object'&&!Array.isArray(fresh)){ var merged={}, key; if(state.member) for(key in state.member) if(Object.prototype.hasOwnProperty.call(state.member,key)) merged[key]=state.member[key]; for(key in fresh) if(Object.prototype.hasOwnProperty.call(fresh,key)) merged[key]=fresh[key]; state.member=merged; updateStoredMember(); } });
+      api('/api/mini/member/authorized-series'+query,function(error,payload){ if(!error){ var list=rows(payload); if(list.length) state.courses=list; } });
+      api('/api/mini/member/payments'+query,function(error,payload){ if(!error){ var list=rows(payload); if(list.length||!state.cached) state.payments=list; } });
+      api('/api/mini/certificates'+query,function(error,payload){ if(!error) state.certificates=rows(payload); });
+      api('/api/mini/member/events'+query,function(error,payload){ if(!error) state.events=rows(payload); });
+    }
+
+    function start() {
+      readSession();
+      authRequest('/api/mini/session/refresh',{},function(error,payload,status){
+        if(!error&&acceptSession(payload)){loadProfile();return;}
+        if(status===401||status===403){forgetSession();showLoginRequired();return;}
+        showError('PROFILE_NETWORK_001','暂时无法连接','请检查网络后重新连接。',error||'登录信息不完整');
+      });
+    }
+    window.legacyLogout=function(){
+      authRequest('/api/mini/session/logout',{},function(error){
+        if(error){showError('PROFILE_NETWORK_001','退出未完成','请重新连接后退出。',error);return;}
+        forgetSession();showLoginRequired();
+      });
+    };
+    window.legacyCopy=function(){ var failure=window.legacyFailure||{}; var value='\u4e2a\u4eba\u4e2d\u5fc3兼容版排查信息\n错误编码: '+(failure.code||'PROFILE_LEGACY_UNKNOWN')+'\n请求ID: '+(failure.requestId||'unknown')+'\n原因: '+(failure.cause||failure.message||'unknown')+'\n用户环境: '+navigator.userAgent+'\n接口日志: '+JSON.stringify(state.logs); var area=document.createElement('textarea'); area.value=value; area.style.position='fixed'; area.style.opacity='0'; document.body.appendChild(area); area.select(); try{document.execCommand('copy');alert('\u6392\u67e5信息已复制');}catch(error){alert('\u590d制失败，请截图错误编码');} document.body.removeChild(area); };
+    start();
+  }());
+  </script>
+</body>
+</html>

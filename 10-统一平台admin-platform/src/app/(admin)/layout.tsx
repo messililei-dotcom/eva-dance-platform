@@ -1,20 +1,22 @@
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
-import { App, Layout, Menu, Avatar, Dropdown, Space, Drawer, Grid, Result } from 'antd';
+import { App, Layout, Menu, Avatar, Dropdown, Space, Drawer, Grid, Result, Input, Button, Empty } from 'antd';
 import {
   HomeOutlined, UserOutlined, ShoppingCartOutlined,
   ShopOutlined, DollarOutlined, SettingOutlined, SafetyOutlined,
   LogoutOutlined, TeamOutlined, LaptopOutlined, CrownOutlined,
-  GiftOutlined, CalendarOutlined, BarChartOutlined,
-  PictureOutlined, AppstoreOutlined, FileTextOutlined, GlobalOutlined,
+  GiftOutlined, CalendarOutlined,
+  AppstoreOutlined, GlobalOutlined,
   FolderOutlined, TrophyOutlined, UserSwitchOutlined, NotificationOutlined,
-  MoreOutlined,
+  MoreOutlined, SearchOutlined, ArrowLeftOutlined, CloseOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { platformLinks } from '@/lib/platform-links';
 import { PwaInstallButton } from '@/components/pwa-install-button';
 import { reportAdminAudit } from '@/lib/api';
+import { adminLandingPage, canAccessAdminPage } from '@/lib/admin-feature-access';
+import '@/styles/admin-mobile.css';
 
 const { Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
@@ -39,7 +41,6 @@ const menuItems: any[] = [
     label: '教学',
     children: [
       { key: '/training', icon: <TeamOutlined />, label: '线下课程' },
-      { key: '/offline-scheduling', icon: <CalendarOutlined />, label: '排课与约课' },
       { key: '/online-course', icon: <LaptopOutlined />, label: '线上课程' },
       { key: '/online-course/materials', icon: <FolderOutlined />, label: '素材中心' },
       { key: '/online-course/auth', icon: <UserSwitchOutlined />, label: '学员授权' },
@@ -57,26 +58,6 @@ const menuItems: any[] = [
       { key: '/finance', icon: <DollarOutlined />, label: '财务中心' },
       { key: '/marketing', icon: <GiftOutlined />, label: '营销工具' },
       { key: '/messages', icon: <NotificationOutlined />, label: '站内消息' },
-      { key: '/live', icon: <PictureOutlined />, label: '直播管理' },
-    ],
-  },
-  {
-    key: 'grp-extras',
-    type: 'group',
-    label: '扩展',
-    children: [
-      { key: '/content', icon: <FileTextOutlined />, label: '内容管理' },
-      { key: '/miniprogram', icon: <AppstoreOutlined />, label: '小程序' },
-      { key: '/data', icon: <BarChartOutlined />, label: '数据分析' },
-      { key: '/crm', icon: <TeamOutlined />, label: 'CRM' },
-    ],
-  },
-  {
-    key: 'grp-more',
-    type: 'group',
-    label: '更多',
-    children: [
-      { key: '/order-center', icon: <ShoppingCartOutlined />, label: '收银台' },
     ],
   },
   { type: 'divider' as const },
@@ -103,6 +84,7 @@ function flattenItems(items: any[]) {
   }
 }
 flattenItems(menuItems);
+pathLabelMap['/miniprogram'] = '小程序配置';
 
 // 所有可搜索的路由
 const searchableItems = menuItems.flatMap((it: any) =>
@@ -120,21 +102,95 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const { user, logout, loading } = useAuth();
   const eventOnly = user?.role === 'event_admin';
-  const canView = !eventOnly || pathname === '/events' || pathname?.startsWith('/events/');
+  const canView = canAccessAdminPage(user, pathname || '/');
+  const landingPage = adminLandingPage(user);
+  const visibleMenuItems = menuItems.flatMap(item => {
+    if (!item.children) return [];
+    const children = item.children.filter((child: { key: string }) => canAccessAdminPage(user, child.key));
+    return children.length ? [{ ...item, children }] : [];
+  });
   const { message } = App.useApp();
   const screens = useBreakpoint();
   const isMobile = !screens.md;
 
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuSearch, setMenuSearch] = useState('');
+  const [recentPaths, setRecentPaths] = useState<string[]>([]);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const visibleRecentPaths = recentPaths.filter(path => canAccessAdminPage(user, path));
+  const recentStorageKey = user?.id || user?.username
+    ? `admin-mobile-recent:${user?.id || user?.username}` : null;
+  const primaryItems = eventOnly
+    ? [{ key: '/events', label: '赛事', icon: <CalendarOutlined /> }] : mobilePrimaryItems;
+
+  useEffect(() => {
+    if (!recentStorageKey) { setRecentPaths([]); return; }
+    try {
+      const saved: unknown = JSON.parse(localStorage.getItem(recentStorageKey) || '[]');
+      setRecentPaths(Array.isArray(saved) ? saved.filter((key): key is string =>
+        typeof key === 'string' && searchableItems.some(item => item.key === key)).slice(0, 4) : []);
+    } catch { setRecentPaths([]); }
+  }, [recentStorageKey]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const viewport = window.visualViewport;
+    const update = () => {
+      const field = document.activeElement;
+      const editing = field instanceof HTMLElement &&
+        (field.matches('input, textarea, select') || field.isContentEditable);
+      setKeyboardOpen(Boolean(editing && viewport && window.innerHeight - viewport.height > 150));
+    };
+    update();
+    viewport?.addEventListener('resize', update);
+    document.addEventListener('focusin', update);
+    document.addEventListener('focusout', update);
+    return () => {
+      viewport?.removeEventListener('resize', update);
+      document.removeEventListener('focusin', update);
+      document.removeEventListener('focusout', update);
+    };
+  }, [isMobile]);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setMenuSearch('');
+  }, [pathname]);
+
+  const navigate = (key: string) => {
+    if (!canAccessAdminPage(user, key)) return;
+    if (recentStorageKey) {
+      setRecentPaths(previous => {
+        const next = [key, ...previous.filter(path => path !== key)].slice(0, 4);
+        try { localStorage.setItem(recentStorageKey, JSON.stringify(next)); } catch { /* Storage may be unavailable. */ }
+        return next;
+      });
+    }
+    router.push(key);
+    setMobileMenuOpen(false);
+    setMenuSearch('');
+  };
+
+  const mobileGroups = visibleMenuItems.filter(item => item.children).map(group => ({
+    ...group,
+    children: group.children.filter((item: any) =>
+      (!menuSearch.trim() ||
+        `${item.label} ${group.label} ${item.key === '/bonus-commission' ? '工资 报销 课时 商品提成' : ''}`.includes(menuSearch.trim())))
+  })).filter(group => group.children.length);
+
+
+  useEffect(() => {
+    if (!loading && !user) router.replace('/login');
+  }, [loading, user, router]);
 
   // 找到当前激活的菜单项
   const active = useMemo(() => {
-    const allKeys = searchableItems.map(s => s.key);
+    const allKeys = [...searchableItems.map(s => s.key), '/miniprogram'];
     return allKeys
       .filter((k: string) => pathname === k || pathname?.startsWith(`${k}/`))
-      .sort((a: string, b: string) => b.length - a.length)[0] || '/dashboard';
-  }, [pathname]);
+      .sort((a: string, b: string) => b.length - a.length)[0] || landingPage;
+  }, [pathname, landingPage]);
 
   // 更新页面标题
   useEffect(() => {
@@ -145,9 +201,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   }, [active]);
 
   useEffect(() => {
-    if (!user || !pathname) return;
+    if (!user || !pathname || !canView) return;
     reportAdminAudit({ kind: 'access', path: pathname, method: 'GET', status: 200, label: pathLabelMap[active] || '后台页面' });
-  }, [active, pathname, user]);
+  }, [active, pathname, user, canView]);
 
   // 用户信息
   const rawUserName = user?.name || user?.username || '管理员';
@@ -177,7 +233,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       key: 'miniapp',
       icon: <AppstoreOutlined />,
       label: '小程序配置',
-      onClick: () => router.push('/miniprogram'),
+      onClick: () => navigate('/miniprogram'),
+      disabled: !canAccessAdminPage(user, '/miniprogram'),
     },
     { type: 'divider' as const },
     {
@@ -201,11 +258,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       theme="dark"
       selectedKeys={[active]}
       defaultOpenKeys={isMobile ? ['grp-core', 'grp-education'] : ['grp-core']}
-      items={eventOnly ? menuItems.map(item => ({ ...item, children: item.children?.map((child: any) => ({ ...child, label: child.key === '/events' ? child.label : `${child.label} · 无权限查看` })) })) : menuItems}
+      items={visibleMenuItems}
       onClick={({ key }) => {
         if (key.startsWith('/')) {
-          router.push(key);
-          setMobileMenuOpen(false);
+          navigate(key);
         }
       }}
       style={{
@@ -347,53 +403,90 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       )}
 
       <Drawer
-        placement="left"
-        open={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
-        width="min(88vw, 340px)"
-        styles={{
-          body: { padding: 0, background: '#07172D' },
-          header: { display: 'none' },
-        }}
+        title="全部功能"
+        placement="bottom"
+        open={isMobile && mobileMenuOpen}
+        onClose={() => { setMobileMenuOpen(false); setMenuSearch(''); }}
+        height="min(86dvh, 760px)"
+        className="admin-mobile-functions"
+        closeIcon={<CloseOutlined aria-label="关闭全部功能" />}
+        styles={{ body: { padding: 0 }, header: { padding: '12px 16px' } }}
       >
-        <div className="sider-brand" style={{ minHeight: '100vh', paddingTop: 8, display: 'flex', flexDirection: 'column' }}>
-          <div className="admin-mobile-drawer-brand">
-            <img src="/pwa-icon-192-20261005.png" alt="" />
-            <div><strong>伊娃东方舞</strong><span>数字化运营平台</span></div>
+        <div className="admin-mobile-function-search">
+          <Input prefix={<SearchOutlined />} placeholder="搜索功能，如订单、授权、工资"
+            aria-label="搜索管理功能" allowClear value={menuSearch}
+            onChange={event => setMenuSearch(event.target.value)} />
+        </div>
+        <div className="admin-mobile-function-body">
+          {!menuSearch.trim() && visibleRecentPaths.length > 0 && (
+            <section aria-label="最近使用" className="admin-mobile-function-group">
+              <h3>最近使用</h3>
+              <div className="admin-mobile-recent">
+                {visibleRecentPaths.map(key => (
+                  <button type="button" key={key} onClick={() => navigate(key)}>{pathLabelMap[key]}</button>
+                ))}
+              </div>
+            </section>
+          )}
+          {mobileGroups.map(group => (
+            <section key={group.key} aria-label={group.label} className="admin-mobile-function-group">
+              <h3>{group.label}</h3>
+              <div className="admin-mobile-function-grid">
+                {group.children.map((item: any) => (
+                  <button key={item.key} type="button" onClick={() => navigate(item.key)}
+                    className={active === item.key ? 'is-active' : ''} aria-current={active === item.key ? 'page' : undefined}>
+                    {item.icon}<span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))}
+          {!mobileGroups.length && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有找到功能，请换个关键词" />}
+          <div className="admin-mobile-function-account">
+            <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
+              <button type="button" className="admin-mobile-account-trigger" aria-label="账户菜单">
+                <Avatar size={32}>{userInitials}</Avatar><span>{userName}</span><MoreOutlined />
+              </button>
+            </Dropdown>
+            <Button icon={<LogoutOutlined />} onClick={handleLogout}>退出登录</Button>
           </div>
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {menu}
-          </div>
-          <div style={{ flexShrink: 0, padding: '10px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <PwaInstallButton />
-            {userProfile(false)}
-          </div>
+          <PwaInstallButton />
         </div>
       </Drawer>
 
       {/* ===== 右侧内容区 ===== */}
-      <Layout className="admin-main-layout">
+      <Layout className={`admin-main-layout${keyboardOpen ? ' is-keyboard-open' : ''}`}>
+        {isMobile && (
+          <header className="admin-mobile-header">
+            <Button type="text" icon={pathname !== active ? <ArrowLeftOutlined /> : <HomeOutlined />}
+              aria-label={pathname !== active ? '返回列表' : pathLabelMap[landingPage]}
+              onClick={() => navigate(pathname !== active ? active : landingPage)} />
+            <div className="admin-mobile-title"><strong>{pathLabelMap[active] || '管理工作台'}</strong><span>伊娃东方舞 · {userName}</span></div>
+            <Button type="text" icon={<AppstoreOutlined />} aria-label="打开全部功能"
+              aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen(true)} />
+          </header>
+        )}
         <Content style={{
           padding: isMobile
-            ? 'max(10px, env(safe-area-inset-top)) 10px calc(82px + env(safe-area-inset-bottom))'
+            ? '12px 12px calc(88px + env(safe-area-inset-bottom))'
             : 24,
           background: '#f0f2f5',
           minHeight: '100vh',
         }} className="admin-content">
-          {loading ? null : canView ? children : <Result status="403" title="无权限查看" subTitle="此账号仅可使用赛事管理，管理自己新建的赛事。" />}
+          {loading ? null : canView ? children : <Result status="403" title="无权限查看" subTitle={eventOnly ? "此账号仅可使用赛事管理，管理自己新建的赛事。" : "当前账号没有此功能的访问权限。"} />}
         </Content>
 
         {isMobile && (
-          <nav className="admin-mobile-tabbar" aria-label="常用功能">
-            {(eventOnly ? [{ key: '/events', label: '赛事', icon: <CalendarOutlined /> }] : mobilePrimaryItems).map(item => {
+          <nav className="admin-mobile-tabbar" aria-label="常用功能" style={{ gridTemplateColumns: `repeat(${primaryItems.length + 1}, minmax(0, 1fr))` }}>
+            {primaryItems.map(item => {
               const selected = active === item.key;
               return (
-                <button key={item.key} type="button" className={selected ? 'is-active' : ''} onClick={() => router.push(item.key)} aria-current={selected ? 'page' : undefined}>
+                <button key={item.key} type="button" className={selected ? 'is-active' : ''} onClick={() => navigate(item.key)} aria-current={selected ? 'page' : undefined}>
                   {item.icon}<span>{item.label}</span>
                 </button>
               );
             })}
-            <button type="button" className={mobilePrimaryItems.some(item => item.key === active) ? '' : 'is-active'} onClick={() => setMobileMenuOpen(true)}>
+            <button type="button" className={!primaryItems.some(item => item.key === active) || mobileMenuOpen ? 'is-active' : ''} aria-label="打开全部功能" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen(true)}>
               <MoreOutlined /><span>全部</span>
             </button>
           </nav>

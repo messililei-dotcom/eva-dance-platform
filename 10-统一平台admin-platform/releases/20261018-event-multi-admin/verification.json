@@ -1,0 +1,16 @@
+{
+  "state": "deployed_and_verified",
+  "buildId": "4mwqysL3IN_wwGR0XA9Tz",
+  "eventId": 100061,
+  "admins": [
+    "lilei",
+    "sun_saishi"
+  ],
+  "interface": "searchable multi-select; add and remove individual admins; super-admin only",
+  "productionApiChecks": "see acceptance.json",
+  "ui": "reloaded event edit form shows both names",
+  "backup": "/www/backups/dongfangwuquan/event-multi-20261018",
+  "rollbackScript": "/www/backups/dongfangwuquan/event-multi-20261018/rollback.sh",
+  "passwordChanged": false,
+  "groupsCreated": false
+}

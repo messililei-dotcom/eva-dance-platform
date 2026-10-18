@@ -30,6 +30,7 @@ type Order = {
   recipient: string;
   phone: string;
   address: string;
+  deliveryMethod?: "express" | "pickup";
   provider: string;
   status: string;
   totalFen: number;
@@ -82,7 +83,7 @@ export default function ShopOnlineOrders() {
     if (!target) return;
     setBusy(true);
     try {
-      const values = mode === "ship" ? await form.validateFields() : {};
+      const values = mode === "ship" && target.deliveryMethod !== "pickup" ? await form.validateFields() : {};
       await api.post("/ecommerce/orders", {
         id: target.id,
         action: mode,
@@ -164,7 +165,7 @@ export default function ShopOnlineOrders() {
             render: (_, o: Order) => (
               <>
                 {o.recipient} {o.phone}
-                <div>{o.address}</div>
+                <div>{o.deliveryMethod === "pickup" ? "自提" : o.address}</div>
                 {o.trackingNo && (
                   <div>
                     {o.carrier} {o.trackingNo}
@@ -181,7 +182,7 @@ export default function ShopOnlineOrders() {
               <>
                 ¥{(o.totalFen / 100).toFixed(2)}
                 <div>
-                  {o.provider === "wechat" ? "微信支付" : "支付宝"} · 包邮
+                  {o.provider === "wechat" ? "微信支付" : "支付宝"} · {o.deliveryMethod === "pickup" ? "自提" : "包邮"}
                 </div>
               </>
             ),
@@ -201,7 +202,7 @@ export default function ShopOnlineOrders() {
                         : "default"
                   }
                 >
-                  {o.kind && o.kind!=='goods' && o.status==='completed' ? '课程已开通' : names[o.status] || o.status}
+                  {o.kind && o.kind!=='goods' && o.status==='completed' ? '课程已开通' : o.deliveryMethod === "pickup" && o.status === "paid" ? "待自提" : names[o.status] || o.status}
                 </Tag>
                 {o.refundReason && <div>{o.refundReason}</div>}
               </>
@@ -223,7 +224,7 @@ export default function ShopOnlineOrders() {
                       form.resetFields();
                     }}
                   >
-                    发货
+                    {o.deliveryMethod === "pickup" ? "确认自提交付" : "发货"}
                   </Button>
                 )}
                 {[
@@ -270,7 +271,7 @@ export default function ShopOnlineOrders() {
       />
       <Modal
         open={!!target}
-        title={mode === "ship" ? "订单发货" : "确认原路退款"}
+        title={mode === "ship" ? (target?.deliveryMethod === "pickup" ? "确认自提交付" : "订单发货") : "确认原路退款"}
         onCancel={() => {
           if (!busy) setTarget(null);
         }}
@@ -285,7 +286,7 @@ export default function ShopOnlineOrders() {
         }}
         destroyOnHidden
       >
-        {mode === "ship" ? (
+        {mode === "ship" && target?.deliveryMethod === "pickup" ? <p>请确认已将商品交给 {target.recipient}（{target.phone}）。确认后订单标记为已收货，并记录交付操作。</p> : mode === "ship" ? (
           <Form form={form} layout="vertical">
             <Form.Item
               name="carrier"

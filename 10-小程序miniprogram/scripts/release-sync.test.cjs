@@ -1,8 +1,9 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const view=require('../shared/event-view');
+const eventState=require('../shared/event-state');
 function page(route,api={},wx={},timers={}) {
  let p;const jobs=new Map();let seq=0;
- vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../pages',route,route+'.js'),'utf8'),{Page:x=>p=x,require:n=>n.includes('shared/share')?{withShare:(_,x)=>x}:n.includes('video-feature')?{withVideoFeature:x=>x}:n.includes('event-view')?view:n.includes('course-video-selection')?{}:api,wx:{showToast(){},...wx},console,setTimeout:(fn,ms)=>{const id=++seq;jobs.set(id,{fn:()=>{jobs.delete(id);fn()},ms});return id},clearTimeout:id=>jobs.delete(id),...timers});
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../pages',route,route+'.js'),'utf8'),{Page:x=>p=x,require:n=>n.includes('shared/share')?{withShare:(_,x)=>x}:n.includes('video-feature')?{withVideoFeature:x=>x}:n.includes('event-view')?view:n.includes('event-state')?eventState:n.includes('course-video-selection')?{}:api,wx:{showToast(){},...wx},console,setTimeout:(fn,ms)=>{const id=++seq;jobs.set(id,{fn:()=>{jobs.delete(id);fn()},ms});return id},clearTimeout:id=>jobs.delete(id),...timers});
  p.data=JSON.parse(JSON.stringify(p.data));p.setData=d=>Object.assign(p.data,d);return{p,jobs};
 }
 test('playing starts clean, a tap reveals controls, interaction extends timeout, hidden pages clear timers',()=>{

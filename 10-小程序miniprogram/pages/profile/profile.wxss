@@ -1,7 +1,7 @@
 .profile-page {
   min-height: 100vh;
   padding: 0 22rpx 38rpx;
-  background: #f8f3ea;
+  background: #f6f7f9;
 }
 
 .profile-shell {
@@ -85,7 +85,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   padding: 12rpx 8rpx;
-  border-bottom: 1rpx solid #f1e7d8;
+  border-bottom: 1rpx solid #e2e5e9;
   background: #ffffff;
 }
 
@@ -95,7 +95,7 @@
 
 .num {
   display: block;
-  color: #2c1810;
+  color: #202124;
   font-size: 31rpx;
   font-weight: 900;
 }
@@ -103,7 +103,7 @@
 .label {
   display: block;
   margin-top: 4rpx;
-  color: #8a7a68;
+  color: #616773;
   font-size: 21rpx;
 }
 
@@ -115,14 +115,14 @@
   gap: 22rpx;
   min-height: 98rpx;
   padding: 16rpx 24rpx;
-  border-bottom: 1rpx solid #f1e7d8;
+  border-bottom: 1rpx solid #e2e5e9;
   background: #ffffff;
 }
 
 .row-title,
 .content-title,
 .record-title {
-  color: #2c1810;
+  color: #202124;
   font-weight: 900;
 }
 
@@ -132,14 +132,14 @@
 
 .row-desc {
   margin-top: 6rpx;
-  color: #8a7a68;
+  color: #616773;
   font-size: 21rpx;
   line-height: 1.35;
 }
 
 .row-arrow {
   flex: 0 0 auto;
-  color: #8a6a32;
+  color: #616773;
   font-size: 25rpx;
   font-weight: 800;
 }
@@ -156,19 +156,19 @@
 
 .wechat-card {
   padding: 22rpx 24rpx;
-  border-bottom: 1rpx solid #f1e7d8;
+  border-bottom: 1rpx solid #e2e5e9;
   background: #ffffff;
 }
 
 .wechat-title {
-  color: #2c1810;
+  color: #202124;
   font-size: 29rpx;
   font-weight: 900;
 }
 
 .wechat-desc {
   margin-top: 5rpx;
-  color: #8a7a68;
+  color: #616773;
   font-size: 21rpx;
 }
 
@@ -189,9 +189,9 @@
 .wechat-input {
   height: 76rpx;
   padding: 0 20rpx;
-  border: 1rpx solid #e8ddcb;
+  border: 1rpx solid #d9dde3;
   border-radius: 16rpx;
-  color: #2c1810;
+  color: #202124;
   background: #ffffff;
   font-size: 25rpx;
 }
@@ -210,7 +210,7 @@
 
 .content-section {
   padding: 18rpx 18rpx 20rpx;
-  border-top: 1rpx solid #f1e7d8;
+  border-top: 1rpx solid #e2e5e9;
   background: #ffffff;
 }
 
@@ -246,7 +246,7 @@
   margin-top: 10rpx;
   padding: 12rpx;
   border-radius: 18rpx;
-  background: #fbf8f2;
+  background: #f6f7f9;
 }
 
 .course-cover {
@@ -275,7 +275,7 @@
 .course-name {
   display: -webkit-box;
   overflow: hidden;
-  color: #2c1810;
+  color: #202124;
   font-size: 27rpx;
   font-weight: 900;
   line-height: 1.35;
@@ -286,7 +286,7 @@
 .course-meta,
 .record-meta {
   margin-top: 8rpx;
-  color: #8a7a68;
+  color: #616773;
   font-size: 21rpx;
   line-height: 1.45;
 }
@@ -295,7 +295,7 @@
   margin-top: 10rpx;
   padding: 14rpx 16rpx;
   border-radius: 18rpx;
-  background: #fbf8f2;
+  background: #f6f7f9;
 }
 
 .record-title {
@@ -312,7 +312,7 @@
   position: absolute;
   top: 50%;
   right: 18rpx;
-  color: #8a6a32;
+  color: #616773;
   content: "›";
   font-size: 26rpx;
   transform: translateY(-50%);
@@ -326,7 +326,7 @@
   margin-top: 10rpx;
   padding: 14rpx 16rpx;
   border-radius: 18rpx;
-  background: #fbf8f2;
+  background: #f6f7f9;
 }
 
 .certificate-action {
@@ -339,8 +339,8 @@
 .empty-row {
   padding: 24rpx 18rpx;
   border-radius: 18rpx;
-  color: #8a7a68;
-  background: #f8f3ea;
+  color: #616773;
+  background: #f6f7f9;
   font-size: 23rpx;
 }
 
@@ -351,7 +351,7 @@
   min-height: 88rpx;
   padding: 0 24rpx;
   color: #ffffff;
-  background: #2c1810;
+  background: #202124;
   font-size: 25rpx;
   font-weight: 800;
 }
@@ -382,8 +382,8 @@
 .stat-item{display:flex;align-items:center;justify-content:center;gap:8rpx;min-width:0;padding:4rpx 0;white-space:nowrap}
 .stat-item image{width:28rpx;height:28rpx;flex-shrink:0}
 .num{display:inline;font-size:30rpx;font-weight:800;line-height:36rpx}
-.label{display:inline;margin:0;font-size:21rpx;color:#8a7a68}
-.profile-summary{display:flex;align-items:center;min-height:96rpx;border-bottom:1rpx solid #f1e7d8;background:white;padding:0 12rpx}
+.label{display:inline;margin:0;font-size:21rpx;color:#616773}
+.profile-summary{display:flex;align-items:center;min-height:96rpx;border-bottom:1rpx solid #e2e5e9;background:white;padding:0 12rpx}
 .profile-summary-main{display:flex;align-items:center;flex:1;min-width:0;gap:14rpx;text-align:left;padding:14rpx 12rpx}
 .profile-summary-main>view{min-width:0}
 .profile-summary .row-title{font-size:30rpx;font-weight:700}
@@ -393,15 +393,15 @@
 .bind-pill{background:#1aad19;color:#fff}
 .expand-profile{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:52rpx;height:72rpx}
 .chevron{width:30rpx;height:30rpx;transition:transform .18s}.chevron.expanded{transform:rotate(180deg)}
-.profile-form{padding:20rpx 24rpx;border-bottom:1rpx solid #f1e7d8}
+.profile-form{padding:20rpx 24rpx;border-bottom:1rpx solid #e2e5e9}
 .form-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18rpx;font-size:30rpx;font-weight:700}
 .form-heading button,.profile-form-footer button{border-radius:40rpx;background:#9f1d20;color:white;font-size:24rpx;line-height:1.4;padding:12rpx 24rpx;white-space:nowrap}
 .form-heading button[disabled]{opacity:.5}
 .profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16rpx 12rpx}
-.profile-field{min-width:0;font-size:24rpx;font-weight:600;color:#2c1810}.profile-field.wide{grid-column:span 2}
-.profile-field input,.picker-value{box-sizing:border-box;width:100%;min-width:0;height:76rpx;line-height:40rpx;padding:18rpx;margin-top:8rpx;border:1rpx solid #e8ddcb;border-radius:16rpx;font-size:24rpx;font-weight:400}
-.profile-field input[disabled]{background:#f8f3ea;color:#8a7a68}
-.profile-form-footer{display:flex;align-items:center;gap:16rpx;margin-top:18rpx;padding:16rpx;background:#f8f3ea;border-radius:16rpx;font-size:21rpx;color:#8a7a68}.profile-form-footer text{flex:1;min-width:0}.profile-form-footer button{font-size:21rpx;padding:10rpx 18rpx}
+.profile-field{min-width:0;font-size:24rpx;font-weight:600;color:#202124}.profile-field.wide{grid-column:span 2}
+.profile-field input,.picker-value{box-sizing:border-box;width:100%;min-width:0;height:76rpx;line-height:40rpx;padding:18rpx;margin-top:8rpx;border:1rpx solid #d9dde3;border-radius:16rpx;font-size:24rpx;font-weight:400}
+.profile-field input[disabled]{background:#f6f7f9;color:#616773}
+.profile-form-footer{display:flex;align-items:center;gap:16rpx;margin-top:18rpx;padding:16rpx;background:#f6f7f9;border-radius:16rpx;font-size:21rpx;color:#616773}.profile-form-footer text{flex:1;min-width:0}.profile-form-footer button{font-size:21rpx;padding:10rpx 18rpx}
 .profile-save-message{color:#9f1d20;font-size:24rpx;padding-top:16rpx}
 @media(max-width:359px){.profile-head{gap:12rpx;padding:20rpx}.avatar{width:88rpx;height:88rpx}.head-action{padding:12rpx 10rpx;font-size:19rpx}.name{font-size:34rpx}.phone,.profile-caption{font-size:20rpx}.stat-item{gap:5rpx}.label{font-size:20rpx}.bound-pill,.bind-pill{font-size:20rpx;padding:10rpx 12rpx}}
 button.avatar-edit{width:100rpx;min-width:100rpx;height:100rpx;padding:0;flex:0 0 100rpx}
@@ -412,3 +412,16 @@ button.avatar-edit{width:100rpx;min-width:100rpx;height:100rpx;padding:0;flex:0 
 .profile-form button{width:auto;margin:0;line-height:1.4}
 button.avatar-picker{width:104rpx;padding:0;line-height:104rpx}button.sync-btn{display:block;width:100%;line-height:72rpx}
 @media(max-width:359px){button.avatar-edit{width:88rpx;min-width:88rpx;height:88rpx;flex-basis:88rpx}.profile-head button.head-action{padding:8rpx 10rpx}}
+
+.profile-page{padding:32rpx}.profile-head{background:#fff;color:#202124;padding:28rpx 24rpx;flex-wrap:wrap}.avatar{box-shadow:none;background:#f9eaea;color:#9f1d20}.phone,.profile-caption{color:#616773}.profile-head button.head-action{min-height:88rpx;padding:16rpx;color:#fff;background:#9f1d20;font-size:24rpx}.name{font-size:36rpx;white-space:normal}.phone{flex-wrap:wrap;white-space:normal}.head-actions{margin-left:auto}.stats{padding:20rpx 12rpx}.stat-item{flex-direction:column;gap:8rpx;white-space:normal}.stat-item image{display:none}.label{font-size:24rpx}.num{color:#9f1d20}.content-section{padding:28rpx 24rpx}.content-title{font-size:32rpx;font-weight:600}.row-title,.record-title,.course-name{font-weight:600}.row-desc,.record-meta,.course-meta{font-size:25rpx;color:#616773}.link-row{min-height:116rpx}.schedule-link{min-height:88rpx;display:flex;align-items:center;justify-content:center;font-size:25rpx;border-radius:18rpx}.course-fallback{background:#f9eaea;color:#9f1d20}.profile-caption{display:none}.connection-card button{min-height:88rpx;height:auto;line-height:1.4;padding:16rpx 20rpx}.profile-summary button.expand-profile{height:88rpx;min-width:88rpx}.profile-summary button.bind-pill{min-height:88rpx}.profile-summary-main{min-height:108rpx}
+
+/* Personal competition records are part of the My competitions section. */
+button.my-events-toggle{display:flex;width:100%;margin:0;text-align:left;line-height:1.4;border-radius:0;white-space:normal;font-weight:400}
+.my-events-toggle>view{min-width:0;flex:1}.my-events-toggle .chevron{flex-shrink:0}
+.my-events-panel{padding:8rpx 24rpx 28rpx;border-bottom:1rpx solid #e2e5e9;background:#fff}
+.my-events-panel .record-card{padding:24rpx;margin-top:16rpx;border-radius:24rpx}
+.event-result{margin-top:16rpx;font-size:28rpx;font-weight:600;color:#9f1d20;line-height:1.5}
+.my-events-actions{display:flex;flex-wrap:wrap;gap:16rpx;justify-content:flex-end;margin-top:20rpx}
+.my-events-actions button,.events-feedback button,.events-refresh{min-height:88rpx;padding:20rpx 24rpx;display:flex;align-items:center;justify-content:center;border-radius:18rpx;font-size:26rpx;line-height:1.4;color:#9f1d20;background:#fff;border:1rpx solid #dcb5b6}
+.my-events-actions .event-pay{color:#fff;background:#9f1d20;border-color:#9f1d20}
+.events-feedback{padding:24rpx;color:#616773;font-size:27rpx;line-height:1.6}.events-feedback button{margin-top:20rpx}.events-refresh{margin-top:24rpx;width:100%}

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小程序配置 - 伊娃东方舞网课后台</title>
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="shortcut icon" href="../favicon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">☰</button>
+
+  <aside class="sidebar">
+    <div class="sidebar-header"><h2>伊娃网课后台</h2><small>私域陪伴式训练平台</small></div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="index.html"><span class="icon">◎</span>运营总览</a>
+      <a class="nav-item active" href="miniprogram.html"><span class="icon">◈</span>小程序</a>
+      <a class="nav-item" href="materials.html"><span class="icon">▣</span>素材中心</a>
+      <a class="nav-item" href="series.html"><span class="icon">▤</span>课程管理</a>
+      <a class="nav-item" href="authorization.html"><span class="icon">✓</span>学员授权</a>
+      <a class="nav-item" href="distribution.html"><span class="icon">¥</span>分销管理</a>
+    </nav>
+  </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div><h1>小程序配置</h1><p>配置小程序页面内容。</p></div>
+      <div class="topbar-right"><button class="btn btn-outline" onclick="syncToProduction()">同步到生产</button></div>
+    </header>
+
+    <section class="content-area">
+
+<div class="mini-page">
+      <div class="mini-config-grid" id="miniStats"></div>
+
+      <div class="mini-page-layout">
+        <section class="card">
+          <div class="card-header">
+            <span class="card-title">首页栏目与海报卡</span>
+            <div class="btn-group">
+              <button class="btn btn-outline btn-sm" onclick="setSection('online')">线上学院</button>
+              <button class="btn btn-outline btn-sm" onclick="setSection('dance')">成品舞</button>
+              <button class="btn btn-outline btn-sm" onclick="setSection('offline')">线下培训</button>
+            </div>
+          </div>
+          <div class="mini-section-note" id="sectionNote"></div>
+          <div class="mini-poster-grid" id="posterGrid"></div>
+        </section>
+
+        <aside class="card mini-editor">
+          <div class="card-header"><span class="card-title">小程序展示字段</span></div>
+          <div id="editorEmpty" class="empty-state">选择一张海报卡，编辑小程序展示名称、分类、主图、价格和上下架状态。</div>
+          <div id="editorForm" style="display:none">
+            <input type="hidden" id="sId">
+            <div class="mini-cover-preview" id="coverPreview">主图预览</div>
+            <div class="form-group"><label>小程序标题</label><input id="sName"></div>
+            <div class="form-group"><label>副标题 / 卡片说明</label><input id="sSubtitle"></div>
+            <input id="sCover" type="hidden">
+            <div class="form-group"><label>详情页介绍</label><textarea id="sDesc" rows="4"></textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="form-group"><label>原价</label><input id="sPrice" type="number"></div>
+              <div class="form-group"><label>小程序价</label><input id="sPromo" type="number"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="form-group"><label>栏目分类</label><select id="sCategory"></select></div>
+              <div class="form-group"><label>排序</label><input id="sSort" type="number"></div>
+            </div>
+            <div class="form-group"><label>状态</label><select id="sStatus"><option value="published">已上架</option><option value="draft">草稿</option><option value="offline">已下架</option></select></div>
+            <div class="btn-group">
+              <button class="btn btn-primary" onclick="saveSeriesFromMini()">保存并同步小程序</button>
+              <button class="btn btn-outline" onclick="openSeriesPage()">去课节管理</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="mini-page-layout">
+        <section class="card">
+          <div class="card-header"><span class="card-title">课程中心数据</span><a href="series.html">去完整课程管理</a></div>
+          <div class="mini-table-wrap"><table><thead><tr><th>展示标题</th><th>栏目</th><th>价格</th><th>状态</th><th>课节</th><th>学员</th></tr></thead><tbody id="systemTable"></tbody></table></div>
+        </section>
+        
+        <aside class="card">
+          <div class="card-header"><span class="card-title">个人中心数据来源</span><a href="authorization.html">去学员授权</a></div>
+          <div class="data-source-list" id="profileFields"></div>
+          <p class="mini-help">个人中心实时读取学员管理系统中的 Member、授权、订单、学习进度和佣金记录，后台修改后小程序刷新即可同步。</p>
+        </aside>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">小程序管理员手机号</span></div>
+        <div class="toolbar">
+          <input class="search-input" id="adminPhone" placeholder="管理员登录手机号">
+          <input class="search-input" id="adminName" placeholder="管理员姓名">
+          <select class="search-input compact" id="adminRole"><option value="super_admin">超级管理员</option><option value="admin">管理员</option><option value="operator">运营</option></select>
+          <button class="btn btn-primary" onclick="saveAdminUser()">保存管理员</button>
+        </div>
+        <div class="mini-table-wrap"><table><thead><tr><th>手机号</th><th>姓名</th><th>角色</th><th>状态</th><th>小程序权限</th><th>操作</th></tr></thead><tbody id="adminTable"></tbody></table></div>
+      </div>
+
+</div>
+
+<div class="modal-overlay" id="seriesModal">
+  <div class="modal">
+    <div class="modal-header"><h3>新增小程序训练</h3><button class="modal-close" onclick="closeModal('seriesModal')">&times;</button></div>
+    <div class="form-group"><label>训练名称</label><input id="newName" placeholder="例：成品舞｜新作品"></div>
+    <div class="form-group"><label>栏目分类</label><select id="newCategory"></select></div>
+    <input id="newCover" type="hidden">
+    <div class="form-group"><label>介绍</label><textarea id="newDesc" rows="3"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label>原价</label><input id="newPrice" type="number" value="399"></div>
+      <div class="form-group"><label>小程序价</label><input id="newPromo" type="number" value="199"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('seriesModal')">取消</button><button class="btn btn-primary" onclick="createSeriesFromMini()">创建并上架</button></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+if (!checkLogin()) throw new Error('not login'); setActiveBottomNav();
+setActiveNav('miniprogram.html');
+
+const categories = ['线上学院', '经典成品舞', '情感主题', '国风', '道具舞', '民俗舞', '现代融合', '古典', '线下培训', '门徒班', '师资', '入门', '进阶', '高阶'];
+let config = null;
+let activeSection = 'online';
+let selectedSeries = null;
+
+function categoryOptions(value = '') {
+  return categories.map(c => `<option value="${c}" ${c === value ? 'selected' : ''}>${c}</option>`).join('');
+}
+
+function isDance(item) {
+  return /成品舞|经典|情感|国风|道具|民俗|现代融合|古典/.test(`${item.name || ''}${item.category || ''}${item.subtitle || ''}`);
+}
+
+function isOffline(item) {
+  return /线下|培训|门徒|传承|师资|集训|密训|周末/.test(`${item.name || ''}${item.category || ''}${item.subtitle || ''}`);
+}
+
+function sectionItems() {
+  if (!config) return [];
+  if (activeSection === 'online') return config.home.online;
+  if (activeSection === 'dance') return config.home.dances;
+  return config.home.offline;
+}
+
+function sectionTitle() {
+  const map = {
+    online: '小程序首页 01 线上学院训练：按 SWOD 系统分组展示，点击进入训练详情。',
+    dance: '小程序首页 03 成品舞随机精选：由成品舞相关分类自动进入随机池。',
+    offline: '小程序首页 04 线下培训随机精选：线下/门徒/师资/集训类课程进入随机池。'
+  };
+  return map[activeSection];
+}
+
+async function loadConfig() {
+  const r = await apiFetch('/admin/miniprogram-config');
+  if (!r.success) return showToast(r.message || '加载失败', 'error');
+  config = r.data;
+  renderStats();
+  renderSection();
+  renderSystemTable();
+  renderProfileFields();
+  loadAdminUsers();
+}
+
+function renderStats() {
+  const s = config.stats;
+  const cards = [
+    ['线上学院', s.online_count],
+    ['成品舞池', s.dance_count],
+    ['线下培训池', s.offline_count],
+    ['授权记录', s.authorizations],
+    ['学习记录', s.progress_count],
+    ['订单收入', formatMoney(s.paid_revenue)]
+  ];
+  miniStats.innerHTML = cards.map(([label, value]) => `<div class="mini-stat"><b>${value}</b><span>${label}</span></div>`).join('');
+}
+
+function renderSection() {
+  sectionNote.textContent = sectionTitle();
+  const items = sectionItems();
+  posterGrid.innerHTML = items.length ? items.map(item => `
+    <article class="mini-poster ${selectedSeries && selectedSeries.id === item.id ? 'active' : ''}" onclick="selectPoster(${item.id})">
+      ${item.cover_image ? `<img src="${item.cover_image}" alt="">` : `<div class="poster-empty">${item.category || '课程'}</div>`}
+      <div class="poster-badge">${item.category || '未分类'}</div>
+      <div class="poster-copy"><h3>${item.name}</h3><p>${item.promo_price || item.price ? formatMoney(item.promo_price || item.price) : '咨询'}</p></div>
+    </article>`).join('') : '<div class="empty-state">当前栏目暂无可展示训练。</div>';
+}
+
+function renderSystemTable() {
+  const items = config.system.all || [];
+  systemTable.innerHTML = items.length ? items.map(item => `<tr>
+    <td data-label="展示标题"><strong>${item.name}</strong><br><small>${item.subtitle || '--'}</small></td>
+    <td data-label="栏目">${item.category || '--'}</td>
+    <td data-label="价格">${item.is_free ? '免费' : formatMoney(item.promo_price || item.price)}</td>
+    <td data-label="状态">${statusBadge(item.status)}</td>
+    <td data-label="课节">${item.course_count || 0}</td>
+    <td data-label="学员">${item.total_students || 0}</td>
+  </tr>`).join('') : '<tr><td colspan="6" class="empty-state">暂无上架课程</td></tr>';
+}
+
+function renderProfileFields() {
+  profileFields.innerHTML = config.profile_fields.map(item => `<span>${item}</span>`).join('');
+}
+
+function setSection(section) {
+  activeSection = section;
+  selectedSeries = null;
+  editorForm.style.display = 'none';
+  editorEmpty.style.display = 'block';
+  renderSection();
+}
+
+function selectPoster(id) {
+  const all = [...config.home.online, ...config.home.dances, ...config.home.offline, ...config.system.all];
+  selectedSeries = all.find(item => item.id === id);
+  if (!selectedSeries) return;
+  editorEmpty.style.display = 'none';
+  editorForm.style.display = 'block';
+  sCategory.innerHTML = categoryOptions(selectedSeries.category);
+  sId.value = selectedSeries.id;
+  sName.value = selectedSeries.name || '';
+  sSubtitle.value = selectedSeries.subtitle || '';
+  sCover.value = selectedSeries.cover_image || '';
+  sDesc.value = selectedSeries.description || '';
+  sPrice.value = selectedSeries.price || 0;
+  sPromo.value = selectedSeries.promo_price || 0;
+  sSort.value = selectedSeries.sort_order || 0;
+  sStatus.value = selectedSeries.status || 'draft';
+  renderCoverPreview();
+  renderSection();
+}
+
+function renderCoverPreview() {
+  coverPreview.innerHTML = sCover.value ? `<img src="${sCover.value}" alt="">` : '主图预览';
+}
+
+async function saveSeriesFromMini() {
+  if (!sId.value) return;
+  const body = {
+    name: sName.value.trim(),
+    subtitle: sSubtitle.value.trim(),
+    cover_image: sCover.value.trim(),
+    description: sDesc.value.trim(),
+    price: Number(sPrice.value) || 0,
+    promo_price: Number(sPromo.value) || 0,
+    category: sCategory.value,
+    sort_order: Number(sSort.value) || 0,
+    status: sStatus.value
+  };
+  if (!body.name) return showToast('请输入小程序标题', 'error');
+  const r = await apiFetch('/series/' + sId.value, { method: 'PUT', body: JSON.stringify(body) });
+  if (!r.success) return showToast(r.message || '保存失败', 'error');
+  showToast('已同步到小程序数据');
+  await loadConfig();
+}
+
+async function loadAdminUsers() {
+  const r = await apiFetch('/admin-users');
+  if (!r.success) return showToast(r.message || '管理员加载失败', 'error');
+  adminTable.innerHTML = (r.data || []).length ? r.data.map(item => `<tr>
+    <td data-label="手机号">${item.phone}</td>
+    <td data-label="姓名">${item.name || '--'}</td>
+    <td data-label="角色">${roleLabel(item.role)}</td>
+    <td data-label="状态">${item.status === 'active' ? '<span class="badge badge-success">启用</span>' : '<span class="badge badge-danger">停用</span>'}</td>
+    <td data-label="小程序权限">管理 / 编辑 / 授权</td>
+    <td><button class="btn btn-sm btn-outline" onclick="toggleAdmin(${item.id}, '${item.status === 'active' ? 'disabled' : 'active'}')">${item.status === 'active' ? '停用' : '启用'}</button></td>
+  </tr>`).join('') : '<tr><td colspan="6" class="empty-state">暂无管理员手机号</td></tr>';
+}
+
+function roleLabel(role) {
+  return { super_admin: '超级管理员', admin: '管理员', operator: '运营' }[role] || role;
+}
+
+async function saveAdminUser() {
+  const body = {
+    phone: adminPhone.value.trim(),
+    name: adminName.value.trim(),
+    role: adminRole.value,
+    status: 'active'
+  };
+  const r = await apiFetch('/admin-users', { method: 'POST', body: JSON.stringify(body) });
+  if (!r.success) return showToast(r.message || '保存失败', 'error');
+  adminPhone.value = '';
+  adminName.value = '';
+  showToast('管理员已保存，使用该手机号登录小程序即可看到管理入口');
+  loadAdminUsers();
+}
+
+async function toggleAdmin(id, status) {
+  const r = await apiFetch('/admin-users/' + id + '/status', { method: 'POST', body: JSON.stringify({ status }) });
+  if (!r.success) return showToast(r.message || '操作失败', 'error');
+  showToast(status === 'active' ? '管理员已启用' : '管理员已停用');
+  loadAdminUsers();
+}
+
+function openSeriesPage() {
+  if (!selectedSeries) return;
+  location.href = 'series.html';
+}
+
+function showCreateSeries() {
+  newCategory.innerHTML = categoryOptions(activeSection === 'online' ? '线上学院' : activeSection === 'dance' ? '经典成品舞' : '线下培训');
+  newName.value = '';
+  newCover.value = '';
+  newDesc.value = '';
+  newPrice.value = 399;
+  newPromo.value = 199;
+  seriesModal.classList.add('show');
+}
+
+async function createSeriesFromMini() {
+  const body = {
+    name: newName.value.trim(),
+    category: newCategory.value,
+    cover_image: newCover.value.trim(),
+    description: newDesc.value.trim(),
+    price: Number(newPrice.value) || 0,
+    promo_price: Number(newPromo.value) || 0,
+    status: 'published',
+    teacher: '伊娃老师'
+  };
+  if (!body.name) return showToast('请输入训练名称', 'error');
+  const r = await apiFetch('/series', { method: 'POST', body: JSON.stringify(body) });
+  if (!r.success) return showToast(r.message || '创建失败', 'error');
+  closeModal('seriesModal');
+  showToast('已创建并进入小程序数据池');
+  await loadConfig();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+loadConfig();
+</script>
+    </div>
+  </div>
+
+  <!-- 底部导航（移动端） -->
+  <nav class="bottom-nav">
+    <a class="bottom-nav-item" href="index.html">
+      <span class="bnav-icon">◎</span>
+      <span class="bnav-label">运营总览</span>
+    </a>
+    <a class="bottom-nav-item" href="miniprogram.html">
+      <span class="bnav-icon">◈</span>
+      <span class="bnav-label">小程序</span>
+    </a>
+    <a class="bottom-nav-item" href="materials.html">
+      <span class="bnav-icon">▣</span>
+      <span class="bnav-label">素材中心</span>
+    </a>
+    <a class="bottom-nav-item" href="series.html">
+      <span class="bnav-icon">▤</span>
+      <span class="bnav-label">课程管理</span>
+    </a>
+    <a class="bottom-nav-item" href="authorization.html">
+      <span class="bnav-icon">✓</span>
+      <span class="bnav-label">学员授权</span>
+    </a>
+    <a class="bottom-nav-item" href="distribution.html">
+      <span class="bnav-icon">¥</span>
+      <span class="bnav-label">分销管理</span>
+    </a>
+  </nav>
+
+</body>
+</html>

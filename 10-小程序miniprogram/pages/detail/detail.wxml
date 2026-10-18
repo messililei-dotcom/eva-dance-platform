@@ -18,6 +18,7 @@
         <text>持续更新</text>
         <text>{{series.popularityText}}</text>
       </view>
+      <view wx:if="{{series.accessPending}}">学习权益暂无法确认<button bindtap="retryDetail">重新查询</button></view><view wx:elif="{{series.unlocked}}" class="course-unlocked">✓ 已解锁</view><view wx:else class="course-pricing"><text class="course-sale-price">{{series.hasDiscount ? '优惠价 ' : ''}}{{series.priceText}}</text><text wx:if="{{series.hasDiscount}}" class="course-original-price">原价 {{series.originalPriceText}}</text></view>
       <view wx:if="{{videoPlaybackEnabled && authorized}}" class="auth ok">已确认用户可播放完整内容</view>
     </view>
   </view>
@@ -28,7 +29,6 @@
 
   </view>
 
-  <button wx:if="{{!authorized && !series.is_free && series.price > 0}}" bindtap="buyCourse">报名并支付</button>
   <view class="lesson-list">
     <view class="panel-title">课程目录</view>
     <view wx:if="{{courses.length}}">
@@ -43,9 +43,9 @@
     <view wx:else class="empty card">内容正在整理中。</view>
   </view>
 
-  <view wx:if="{{videoPlaybackEnabled}}" class="bottom-bar">
-    <view class="bottom-price">内容播放</view>
-    <button class="primary-btn" bindtap="primaryAction">播放内容</button>
+  <view wx:if="{{!series.accessPending && (videoPlaybackEnabled || (!authorized && series.canPurchase))}}" class="bottom-bar">
+    <view class="bottom-price">{{series.unlocked ? '✓ 已解锁' : series.priceText}}</view>
+    <button class="primary-btn" bindtap="primaryAction">{{series.unlocked ? '继续学习' : !authorized && series.canPurchase ? '立即购买' : '立即学习'}}</button>
   </view>
 </view>
 

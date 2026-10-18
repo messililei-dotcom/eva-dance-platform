@@ -19,9 +19,14 @@ public final class Api {
     private final TokenVault vault;
     private JSONObject session;
     private long generation;
-    private Api(Context context) { vault = new TokenVault(context); try { String saved = vault.read(); if (saved != null) session = new JSONObject(saved); } catch (Exception e) { vault.clear(); } }
+    private Api(Context context) { vault = new TokenVault(context); try { String saved = vault.read(); if (saved != null) { JSONObject parsed = new JSONObject(saved); if (!Policy.sessionTokens(parsed.optString("token"), parsed.optString("refreshToken"))) throw new Exception(); session = parsed; } } catch (Exception e) { vault.clear(); } }
+    public synchronized long accountGeneration(){return generation;}
     public synchronized boolean loggedIn() { return session != null; }
-    public synchronized void accept(JSONObject credentials) throws Exception { vault.save(credentials.toString()); session = credentials; generation++; }
+    public synchronized void accept(JSONObject credentials) throws Exception { if (!Policy.sessionTokens(credentials.optString("token"), credentials.optString("refreshToken"))) throw new Failure(502, "登录响应无效，请重试"); JSONObject copy = new JSONObject(credentials.toString()); vault.save(copy.toString()); session = copy; generation++; }
+    private synchronized Object currentResult(Object result, long version, boolean auth) throws Failure {
+        if (auth && (version != generation || session == null)) throw new Failure(401, "账号已切换，请重新打开此页面");
+        return result;
+    }
     public synchronized void clear() { generation++; session = null; vault.clear(); }
     public void logout() throws Exception { String old; synchronized(this) { old = session == null ? null : session.optString("token"); clear(); } if (old != null) exchange("/auth/logout", "POST", new JSONObject(), old, false); }
     public Object request(String path, String method, JSONObject body, boolean auth) throws Exception {
@@ -29,7 +34,7 @@ public final class Api {
         String token; long version;
         synchronized(this) { token = auth && session != null ? session.optString("token") : null; version = generation; }
         if (auth && token == null) throw new Failure(401, "请先登录");
-        try { return exchange(path, method, body, token, !auth && Policy.publicRead(path, method)); }
+        try { return currentResult(exchange(path, method, body, token, !auth && Policy.publicRead(path, method)), version, auth); }
         catch (Failure failure) {
             if (failure.status != 401 || token == null) throw failure;
             String renewed;
@@ -39,12 +44,13 @@ public final class Api {
                 if (token.equals(session.optString("token"))) {
                     try {
                         JSONObject next = (JSONObject) exchange("/auth/refresh", "POST", new JSONObject().put("refreshToken", session.getString("refreshToken")), null, false);
+                        if (!Policy.sessionTokens(next.optString("token"), next.optString("refreshToken"))) throw new Failure(502, "登录刷新响应无效，请重新登录");
                         vault.save(next.toString()); session = next;
                     } catch (Failure e) { if (e.status == 401) clear(); throw e; }
                 }
                 renewed = session.getString("token");
             }
-            return exchange(path, method, body, renewed, false);
+            return currentResult(exchange(path, method, body, renewed, false), version, true);
         }
     }
     private Object exchange(String path, String method, JSONObject body, String token, boolean publicRead) throws Exception {
@@ -76,9 +82,9 @@ public final class Api {
             if (status >= 300 && status < 400) throw new Failure(status, "服务地址发生变化，请稍后重试");
             InputStream stream = status >= 400 ? c.getErrorStream() : c.getInputStream();
             String text = "{}";
-            if (stream != null) try (stream) { ByteArrayOutputStream bytes = new ByteArrayOutputStream(); byte[] chunk = new byte[8192]; int n; while ((n = stream.read(chunk)) != -1) { bytes.write(chunk, 0, n); if (bytes.size() > 2_000_000) throw new Failure(502, "响应内容过大"); } text = bytes.toString("UTF-8"); }
+            if (stream != null) try (stream) { ByteArrayOutputStream responseBytes = new ByteArrayOutputStream(); byte[] chunk = new byte[8192]; int n; while ((n = stream.read(chunk)) != -1) { responseBytes.write(chunk, 0, n); if (responseBytes.size() > 2_000_000) throw new Failure(502, "响应内容过大"); } text = responseBytes.toString("UTF-8"); }
             JSONObject envelope;
-            try { envelope = new JSONObject(text); } catch (Exception e) { throw new Failure(status, "服务暂不可用，请重试"); }
+            try { envelope = new JSONObject(text); } catch (Exception e) { throw new Failure(status, status == 404 ? "App 服务尚未启用，请稍后重试" : "服务暂不可用，请重试"); }
             if (status < 200 || status >= 300 || (!raw && !envelope.optBoolean("success"))) throw new Failure(status, envelope.optString("message", envelope.optString("error", "请求失败，请重试")));
             return envelope;
         } finally { c.disconnect(); }
@@ -96,12 +102,12 @@ public final class Api {
         data.write(music); data.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
         String token; long version; synchronized(this) { if(session == null) throw new Failure(401, "请先登录"); token = session.getString("token"); version = generation; }
         String path = "/events/" + event + "/register";
-        try { return transportBytes(Policy.API, path, "POST", data.toByteArray(), "multipart/form-data; boundary="+boundary, token, false).opt("data"); }
+        try { return currentResult(transportBytes(Policy.API, path, "POST", data.toByteArray(), "multipart/form-data; boundary="+boundary, token, false).opt("data"), version, true); }
         catch(Failure error) {
             if(error.status != 401) throw error;
             request("/member/profile", "GET", null, true);
             synchronized(this) { if(session == null || version != generation) throw new Failure(401, "账号已切换，请重新打开报名页面"); token = session.getString("token"); }
-            return transportBytes(Policy.API, path, "POST", data.toByteArray(), "multipart/form-data; boundary="+boundary, token, false).opt("data");
+            return currentResult(transportBytes(Policy.API, path, "POST", data.toByteArray(), "multipart/form-data; boundary="+boundary, token, false).opt("data"), version, true);
         }
     }
 

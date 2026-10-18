@@ -1,4 +1,5 @@
 'use client';
+import { NumericDateInput } from '@/components/numeric-date-input';
 import { useEffect, useMemo, useState } from 'react';
 import {
   App,
@@ -39,6 +40,7 @@ import {
 } from '@ant-design/icons';
 import ShopOnlineOrders from '@/components/shop-online-orders';
 import { ecommerceApi } from '@/lib/api';
+import { calculateSaleCommission } from '@/lib/sale-commission';
 import { formatCompactMoney, formatPaymentAmount } from '@/lib/money-format';
 import { compareTableValues, sortableColumns } from '@/lib/table-sort';
 
@@ -131,6 +133,9 @@ function normalizeLog(raw: any, productMap: Map<string, ProductRow>) {
     type: changeType || '-',
     quantity: numberValue(raw.quantity),
     channel: textValue(raw.channel ?? raw.supplier, '-'),
+    salesAdvisor: textValue(raw.sales_advisor, ''),
+    commissionRate: numberValue(raw.commission_rate),
+    commissionAmount: numberValue(raw.commission_amount),
     operator: textValue(raw.operator, '-'),
     note: textValue(raw.note ?? raw.remark, ''),
     costPrice: numberValue(raw.cost_price ?? raw.unitCost ?? raw.unit_cost),
@@ -154,6 +159,9 @@ function normalizeSale(raw: any, productMap: Map<string, ProductRow>) {
     amount: numberValue(raw.amount ?? raw.total_amount ?? raw.total_price ?? raw.totalPrice),
     customerName: textValue(raw.customer_name ?? raw.customerName ?? raw.member_name, ''),
     customerPhone: textValue(raw.customer_phone ?? raw.customerPhone, ''),
+    salesAdvisor: textValue(raw.sales_advisor, ''),
+    commissionRate: numberValue(raw.commission_rate),
+    commissionAmount: numberValue(raw.commission_amount),
     operator: textValue(raw.operator, '-'),
     note: textValue(raw.note ?? raw.remark, ''),
     raw,
@@ -251,6 +259,11 @@ export default function EcommercePage() {
   const [logForm] = Form.useForm();
   const [saleRecordForm] = Form.useForm();
 
+  const saleAmount = Form.useWatch('amount', saleForm);
+  const saleCommissionRate = Form.useWatch('commissionRate', saleForm);
+  const recordAmount = Form.useWatch('amount', saleRecordForm);
+  const recordCommissionRate = Form.useWatch('commissionRate', saleRecordForm);
+
   const [visibilityBusy, setVisibilityBusy] = useState(false);
   const load = () => {
     setLoading(true);
@@ -293,9 +306,10 @@ export default function EcommercePage() {
     saleRecordForm.resetFields();
   };
 
-  const openProductModal = (product?: ProductRow) => {
+  const openProductModal = (product?: ProductRow, group?: ProductGroup) => {
     setModalMode(product ? 'editProduct' : 'product');
     setActiveProduct(product || null);
+    setActiveGroup(group || null);
     setImagePreview(product?.image || '');
     productForm.setFieldsValue({
       name: product?.name,
@@ -348,6 +362,8 @@ export default function EcommercePage() {
       quantity: 1,
       amount: product?.salePrice || 0,
       unitPrice: product?.salePrice || 0,
+      salesAdvisor: '',
+      commissionRate: 0,
       customerName: '',
       customerPhone: '',
       remark: '',
@@ -370,6 +386,8 @@ export default function EcommercePage() {
       quantity: record.quantity,
       amount: record.amount,
       note: record.note,
+      salesAdvisor: record.salesAdvisor,
+      commissionRate: record.commissionRate,
     });
   };
 
@@ -423,7 +441,7 @@ export default function EcommercePage() {
   const submitSale = async () => {
     const values = await saleForm.validateFields();
     const productId = values.variantId || values.productId || activeProduct?.id;
-    const total = Number(values.amount || values.unitPrice * values.quantity || 0);
+    const total = Number(values.amount ?? ((values.unitPrice || 0) * (values.quantity || 0)));
     await ecommerceApi.createSale({
       product_id: productId,
       productId,
@@ -432,6 +450,8 @@ export default function EcommercePage() {
       total_price: total,
       total_amount: total,
       amount: total,
+      salesAdvisor: values.salesAdvisor,
+      commissionRate: values.commissionRate,
       customer_name: values.customerName,
       customer_phone: values.customerPhone,
       saleType: values.saleType,
@@ -473,7 +493,24 @@ export default function EcommercePage() {
       if (failed.length) message.error(`${failed.length} 个规格更新失败，请刷新后重试`);
       else message.success(hidden ? '已隐藏，官网和小程序商城不再展示' : '已恢复显示，仍按商品在售状态展示');
       load();
+      return failed.length === 0;
     } finally { setVisibilityBusy(false); }
+  };
+
+  const confirmVisibilityChange = () => {
+    if (!activeProduct || visibilityBusy || imageUploading) return;
+    const items = activeGroup?.variants || [activeProduct];
+    const hide = !items.every(item => item.hidden);
+    modal.confirm({
+      title: hide ? '隐藏商品' : '显示商品',
+      content: `${activeGroup && items.length > 1 ? `此操作作用于当前卡片包含的 ${items.length} 个规格。` : ''}${hide ? '隐藏后官网和小程序商城不再展示此商品。' : '恢复显示后，仍按商品在售状态展示。'}此操作不会保存尚未提交的商品编辑。`,
+      okText: hide ? '确认隐藏' : '确认显示',
+      cancelText: '取消',
+      onOk: async () => {
+        if (!await toggleVisibility(items, hide)) throw new Error('商品展示状态更新失败，请刷新后重试');
+        closeModal();
+      },
+    });
   };
 
   const deleteProduct = (product: ProductRow) => {
@@ -490,6 +527,7 @@ export default function EcommercePage() {
         try {
           await ecommerceApi.deleteProduct(product.id);
           message.success('商品已删除，历史销售和库存流水已保留');
+          closeModal();
           load();
         } catch (error) {
           message.error(errorText(error));
@@ -513,6 +551,7 @@ export default function EcommercePage() {
         try {
           await Promise.all(group.variants.map(product => ecommerceApi.deleteProduct(product.id)));
           message.success('商品已删除，历史销售和库存流水已保留');
+          closeModal();
           load();
         } catch (error) {
           message.error(errorText(error));
@@ -673,14 +712,12 @@ export default function EcommercePage() {
     {
       title: '操作',
       fixed: 'right',
-      width: 310,
+      width: 180,
       render: (_, record) => (
         <Space size={6}>
-          <Tooltip title="编辑"><Button icon={<EditOutlined />} onClick={() => openProductModal(record)} /></Tooltip>
-          <Button loading={visibilityBusy} icon={record.hidden ? <EyeOutlined /> : <EyeInvisibleOutlined />} onClick={() => void toggleVisibility([record], !record.hidden)}>{record.hidden ? '显示' : '隐藏'}</Button>
+          <Tooltip title="编辑"><Button aria-label="编辑商品" icon={<EditOutlined />} onClick={() => openProductModal(record)} /></Tooltip>
           <Button onClick={() => openStockModal(record)}>入库</Button>
           <Button onClick={() => openSaleModal(record)} disabled={record.stock <= 0}>销售</Button>
-          <Tooltip title="删除"><Button danger icon={<DeleteOutlined />} onClick={() => deleteProduct(record)} /></Tooltip>
         </Space>
       ),
     },
@@ -770,13 +807,9 @@ export default function EcommercePage() {
                             </Row>
                           </div>
                           <Space className="ecommerce-card-actions" size={3} wrap onClick={event => event.stopPropagation()}>
-                            <Button size="small" onClick={() => openProductModal(group.variants[0])}>编辑</Button>
-                            <Button size="small" loading={visibilityBusy} onClick={() => void toggleVisibility(group.variants, !group.variants.every(item => item.hidden))}>{group.variants.every(item => item.hidden) ? '显示' : '隐藏'}</Button>
+                            <Button size="small" onClick={() => openProductModal(group.variants[0], group)}>编辑</Button>
                             <Button size="small" onClick={() => openStockModal(group)}>入库</Button>
                             <Button size="small" type="primary" onClick={() => openSaleModal(group)} disabled={group.stock <= 0}>销售</Button>
-                            <Tooltip title="删除">
-                              <Button size="small" danger icon={<DeleteOutlined />} aria-label="删除" onClick={() => deleteProductGroup(group)} />
-                            </Tooltip>
                           </Space>
                         </Space>
                       </Space>
@@ -864,6 +897,9 @@ export default function EcommercePage() {
                       { title: '渠道', dataIndex: 'channel', width: 120, sorter: (a: any, b: any) => compareTableValues(a.channel, b.channel) },
                       { title: '数量', dataIndex: 'quantity', align: 'right' as const, width: 90, sorter: (a: any, b: any) => a.quantity - b.quantity },
                       { title: '实收金额', dataIndex: 'amount', align: 'right' as const, width: 120, sorter: (a: any, b: any) => a.amount - b.amount, render: (value: number) => <Text strong style={{ color: '#F72A8A' }}>{money(value)}</Text> },
+                      { title: '销售顾问', dataIndex: 'salesAdvisor', width: 120, render: value => value || '未填写' },
+                      { title: '提成比例', dataIndex: 'commissionRate', width: 110, render: value => `${value}%` },
+                      { title: '提成金额', dataIndex: 'commissionAmount', width: 120, align: 'right' as const, render: money },
                       { title: '备注', dataIndex: 'note', ellipsis: true, sorter: (a: any, b: any) => compareTableValues(a.note, b.note) },
                       { title: '操作', fixed: 'right' as const, width: 120, render: (_: any, record: any) => <Space><Tooltip title="编辑"><Button icon={<EditOutlined />} onClick={() => openSaleRecordModal(record)} /></Tooltip><Tooltip title="删除"><Button danger icon={<DeleteOutlined />} onClick={() => deleteSale(record)} /></Tooltip></Space> },
                     ])}
@@ -875,7 +911,28 @@ export default function EcommercePage() {
         ]}
       />
 
-      <Modal title={modalMode === 'editProduct' ? '编辑商品' : '新增商品'} open={modalMode === 'product' || modalMode === 'editProduct'} onCancel={closeModal} onOk={submitProduct} okText="保存" cancelText="取消" width={760} okButtonProps={{ disabled: imageUploading }}>
+      <Modal title={modalMode === 'editProduct' ? '编辑商品' : '新增商品'} open={modalMode === 'product' || modalMode === 'editProduct'} onCancel={closeModal} onOk={submitProduct} okText="保存" cancelText="取消" width={760} okButtonProps={{ disabled: imageUploading || visibilityBusy }}
+        footer={(_, { OkBtn, CancelBtn }) => (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, width: '100%' }}>
+            <Space wrap>
+              {modalMode === 'editProduct' && activeProduct && <>
+                <Button loading={visibilityBusy} disabled={imageUploading}
+                  icon={(activeGroup?.variants || [activeProduct]).every(item => item.hidden) ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                  onClick={confirmVisibilityChange}>
+                  {(activeGroup?.variants || [activeProduct]).every(item => item.hidden) ? '显示商品' : '隐藏商品'}
+                </Button>
+                <Button danger icon={<DeleteOutlined />} disabled={imageUploading || visibilityBusy}
+                  onClick={() => activeGroup ? deleteProductGroup(activeGroup) : deleteProduct(activeProduct)}>删除商品</Button>
+              </>}
+            </Space>
+            <Space style={{ marginLeft: 'auto' }}><CancelBtn /><OkBtn /></Space>
+          </div>
+        )}>
+        {modalMode === 'editProduct' && activeGroup && activeGroup.variants.length > 1 && (
+          <Typography.Paragraph type="secondary">
+            当前编辑 {activeProduct?.color} / {activeProduct?.size} 规格；隐藏和删除作用于当前卡片包含的 {activeGroup.variants.length} 个规格。
+          </Typography.Paragraph>
+        )}
         <Form form={productForm} layout="vertical">
           <Row gutter={12}>
             <Col xs={24} sm={8}>
@@ -924,7 +981,7 @@ export default function EcommercePage() {
       <Modal title={modalMode === 'groupStockIn' ? '按颜色尺码入库' : '进货入库'} open={modalMode === 'stockIn' || modalMode === 'groupStockIn'} onCancel={closeModal} onOk={submitStock} okText="保存" cancelText="取消" width={720}>
         <Form form={stockForm} layout="vertical">
           <Row gutter={12}>
-            <Col xs={12} sm={12}><Form.Item name="date" label="日期"><Input type="date" /></Form.Item></Col>
+            <Col xs={12} sm={12}><Form.Item name="date" label="日期"><NumericDateInput /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="supplier" label="来源/供应商"><Input /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="color" label="颜色"><Input list="ecommerce-colors" /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="size" label="尺码"><Input list="ecommerce-sizes" /></Form.Item></Col>
@@ -947,7 +1004,7 @@ export default function EcommercePage() {
                 </Form.Item>
               </Col>
             )}
-            <Col xs={12} sm={12}><Form.Item name="date" label="日期"><Input type="date" /></Form.Item></Col>
+            <Col xs={12} sm={12}><Form.Item name="date" label="日期"><NumericDateInput /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="saleType" label="销售类型"><Select options={['线下', '线上'].map(item => ({ value: item, label: item }))} /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="channel" label="渠道"><Select options={['线下', '抖店', '微信小店', '淘宝', '呼啦/线下社群', '微信转账'].map(item => ({ value: item, label: item }))} /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="quantity" label="销售数量" rules={[{ required: true, message: '请填写销售数量' }]}><InputNumber min={1} precision={0} style={{ width: '100%' }} /></Form.Item></Col>
@@ -955,6 +1012,9 @@ export default function EcommercePage() {
             <Col xs={12} sm={12}><Form.Item name="amount" label="实收金额"><InputNumber min={0} precision={2} style={{ width: '100%' }} /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="customerName" label="客户姓名"><Input /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="customerPhone" label="客户手机号"><Input /></Form.Item></Col>
+            <Col xs={24} sm={12}><Form.Item name="salesAdvisor" label="销售顾问" dependencies={['commissionRate']} rules={[{ validator: (_, value) => Number(saleForm.getFieldValue('commissionRate') || 0) > 0 && !String(value || '').trim() ? Promise.reject(new Error('有提成时请填写销售顾问')) : Promise.resolve() }]}><Input placeholder="填写销售顾问姓名" maxLength={100} /></Form.Item></Col>
+            <Col xs={12} sm={6}><Form.Item name="commissionRate" label="提成比例" rules={[{ required: true, message: '请填写提成比例' }]}><InputNumber min={0} max={100} precision={2} addonAfter="%" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={12} sm={6}><Form.Item label="提成金额" extra="实收金额 × 提成比例"><InputNumber aria-label="提成金额" value={calculateSaleCommission(saleAmount, saleCommissionRate)} readOnly controls={false} precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
             <Col span={24}><Form.Item name="remark" label="备注"><Input /></Form.Item></Col>
           </Row>
         </Form>
@@ -963,7 +1023,7 @@ export default function EcommercePage() {
       <Modal title="编辑库存流水" open={modalMode === 'log'} onCancel={closeModal} onOk={submitLog} okText="保存" cancelText="取消" width={560}>
         <Form form={logForm} layout="vertical">
           <Row gutter={12}>
-            <Col xs={12} sm={12}><Form.Item name="date" label="日期"><Input type="date" /></Form.Item></Col>
+            <Col xs={12} sm={12}><Form.Item name="date" label="日期"><NumericDateInput /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="quantity" label="数量"><InputNumber min={1} precision={0} style={{ width: '100%' }} /></Form.Item></Col>
             <Col span={24}><Form.Item name="channel" label="来源/渠道"><Input /></Form.Item></Col>
             <Col span={24}><Form.Item name="note" label="备注"><Input /></Form.Item></Col>
@@ -974,11 +1034,14 @@ export default function EcommercePage() {
       <Modal title="编辑销售记录" open={modalMode === 'saleRecord'} onCancel={closeModal} onOk={submitSaleRecord} okText="保存" cancelText="取消" width={620}>
         <Form form={saleRecordForm} layout="vertical">
           <Row gutter={12}>
-            <Col xs={12} sm={12}><Form.Item name="date" label="日期"><Input type="date" /></Form.Item></Col>
+            <Col xs={12} sm={12}><Form.Item name="date" label="日期"><NumericDateInput /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="saleType" label="销售类型"><Select options={['线下', '线上'].map(item => ({ value: item, label: item }))} /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="channel" label="渠道"><Select options={['线下', '抖店', '微信小店', '淘宝', '呼啦/线下社群', '微信转账'].map(item => ({ value: item, label: item }))} /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="quantity" label="销售数量"><InputNumber min={1} precision={0} style={{ width: '100%' }} /></Form.Item></Col>
             <Col xs={12} sm={12}><Form.Item name="amount" label="实收金额"><InputNumber min={0} precision={2} style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={24} sm={12}><Form.Item name="salesAdvisor" label="销售顾问" dependencies={['commissionRate']} rules={[{ validator: (_, value) => Number(saleRecordForm.getFieldValue('commissionRate') || 0) > 0 && !String(value || '').trim() ? Promise.reject(new Error('有提成时请填写销售顾问')) : Promise.resolve() }]}><Input placeholder="填写销售顾问姓名" maxLength={100} /></Form.Item></Col>
+            <Col xs={12} sm={6}><Form.Item name="commissionRate" label="提成比例" rules={[{ required: true, message: '请填写提成比例' }]}><InputNumber min={0} max={100} precision={2} addonAfter="%" style={{ width: '100%' }} /></Form.Item></Col>
+            <Col xs={12} sm={6}><Form.Item label="提成金额" extra="实收金额 × 提成比例"><InputNumber aria-label="提成金额" value={calculateSaleCommission(recordAmount, recordCommissionRate)} readOnly controls={false} precision={2} prefix="¥" style={{ width: '100%' }} /></Form.Item></Col>
             <Col span={24}><Form.Item name="note" label="备注"><Input /></Form.Item></Col>
           </Row>
         </Form>
