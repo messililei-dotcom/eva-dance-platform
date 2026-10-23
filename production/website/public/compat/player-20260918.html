@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="format-detection" content="telephone=no"><meta name="referrer" content="same-origin"><title>课程学习 - 伊娃东方舞</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#f8f3ea;color:#2c1810;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}.shell{max-width:850px;margin:auto;padding:12px}a{color:#8b1a1a}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.top a{text-decoration:none;padding:8px;background:white;border-radius:8px}.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px}h1{font-size:20px;line-height:1.5;margin:0 0 12px}h2{font-size:18px}video{display:block;width:100%;height:auto;min-height:210px;max-height:70vh;background:#000;border-radius:8px}button,select,input{font:inherit;font-size:16px}button{border:1px solid #d8c7ae;border-radius:8px;padding:11px;background:white;color:#7e6233;cursor:pointer}button:disabled{opacity:.5}.controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.controls select{max-width:100%;padding:8px}.status{font-size:14px;line-height:1.6;color:#76582e;overflow-wrap:anywhere}.lesson{display:block;width:100%;text-align:left;margin:8px 0;line-height:1.5;color:#2c1810}.lesson.active{background:#fff1df;border-color:#a32929;color:#8b1a1a}.small{font-size:12px;color:#8a7a68}#search{width:100%;padding:12px;border:1px solid #d8c7ae;border-radius:8px}#login{display:none;padding:12px;text-align:center;background:#8b1a1a;color:white;border-radius:8px;text-decoration:none}</style></head>
+<body><main class="shell"><div class="top"><a href="/dashboard/profile">‹ 个人中心</a><span class="small">课程学习</span></div><section class="card"><h1 id="title">正在读取课程…</h1><video id="video" controls playsinline webkit-playsinline preload="metadata"></video><p id="status" class="status" role="status" aria-live="polite">正在恢复登录状态…</p><a id="login" href="/dashboard/profile">登录后继续学习</a><div class="controls"><button id="previous" disabled>上一节</button><button id="next" disabled>下一节</button><button id="retry">重新连接</button><button id="share-lesson">分享本课节</button><select id="speed" aria-label="播放速度"><option value="1">正常速度</option><option value="0.75">0.75 倍</option><option value="1.25">1.25 倍</option><option value="1.5">1.5 倍</option></select></div></section><section class="card"><h2>课程目录</h2><input id="search" type="search" placeholder="搜索本课程章节" aria-label="搜索章节"><div id="catalog"></div></section></main>
+<script>
+(function(){
+'use strict';
+var video=document.getElementById('video'), status=document.getElementById('status'), title=document.getElementById('title');
+var token='', memberId='', lessons=[], active=-1, generation=0, playable=false, lastSave=0, resume=0, resumed=false, fallback='', usedFallback=false;
+var params=new URLSearchParams(location.search), seriesId=params.get('series_id')||'', wanted=params.get('video')||'';
+var holdTimer=0,holdActive=false,holdX=0,holdY=0,holdRate=1,holdSuppress=0;
+var holdHint=document.createElement('p');holdHint.className='status';holdHint.style.display='none';holdHint.textContent='2 倍播放 · 松手恢复';video.parentNode.insertBefore(holdHint,video.nextSibling);
+function endHold(){clearTimeout(holdTimer);holdTimer=0;if(holdActive){video.playbackRate=holdRate;holdSuppress=Date.now()+350;}holdActive=false;holdHint.style.display='none';}
+function beginHold(x,y){endHold();if(video.paused||video.ended||y>video.getBoundingClientRect().bottom-40)return;holdX=x;holdY=y;holdTimer=setTimeout(function(){if(video.paused||video.ended)return;holdRate=video.playbackRate;video.playbackRate=2;holdActive=true;holdHint.style.display='block';},400);}
+function moveHold(x,y){if(Math.max(Math.abs(x-holdX),Math.abs(y-holdY))>12)endHold();}
+if(window.PointerEvent){video.addEventListener('pointerdown',function(e){if(!e.isPrimary||e.button!==0){endHold();return;}beginHold(e.clientX,e.clientY);});video.addEventListener('pointermove',function(e){moveHold(e.clientX,e.clientY);});window.addEventListener('pointerup',endHold);window.addEventListener('pointercancel',endHold);video.addEventListener('pointerleave',endHold);}
+else {video.addEventListener('touchstart',function(e){if(e.touches.length!==1){endHold();return;}beginHold(e.touches[0].clientX,e.touches[0].clientY);});video.addEventListener('touchmove',function(e){if(e.touches.length!==1){endHold();return;}moveHold(e.touches[0].clientX,e.touches[0].clientY);});window.addEventListener('touchend',endHold);window.addEventListener('touchcancel',endHold);video.addEventListener('mousedown',function(e){if(e.button===0)beginHold(e.clientX,e.clientY);});video.addEventListener('mousemove',function(e){moveHold(e.clientX,e.clientY);});window.addEventListener('mouseup',endHold);video.addEventListener('mouseleave',endHold);}
+video.addEventListener('click',function(e){if(holdActive||Date.now()<holdSuppress){e.preventDefault();e.stopImmediatePropagation();}},true);
+video.addEventListener('contextmenu',function(e){e.preventDefault();});window.addEventListener('blur',endHold);window.addEventListener('pagehide',endHold);
+video.addEventListener('pause',endHold);video.addEventListener('ended',endHold);video.addEventListener('error',endHold);
+document.addEventListener('visibilitychange',function(){if(document.hidden)endHold();});
+function message(s){status.textContent=s;}
+function unwrap(p){return p&&typeof p.data!=='undefined'?p.data:p;}
+function request(method,path,body,done){
+ var xhr=new XMLHttpRequest(),finished=false;
+ function finish(error,payload,statusCode){if(finished)return;finished=true;done(error,payload,statusCode);}
+ try{
+  xhr.open(method,path,true);xhr.timeout=15000;xhr.setRequestHeader('Accept','application/json');
+  if(token)xhr.setRequestHeader('Authorization','Bearer '+token);
+  if(body)xhr.setRequestHeader('Content-Type','application/json');
+  xhr.onreadystatechange=function(){if(xhr.readyState!==4)return;var p=null;try{p=JSON.parse(xhr.responseText);}catch(ignore){}
+   if(xhr.status<200||xhr.status>=300||!p||p.success===false){finish(p&&(p.message||p.error)||'连接失败，请重试',p,xhr.status);return;}finish('',unwrap(p),xhr.status);};
+  xhr.onerror=function(){finish('网络连接失败，请重新连接',null,0);};xhr.ontimeout=function(){finish('连接超时，请重新连接',null,0);};xhr.send(body?JSON.stringify(body):null);
+ }catch(e){finish('连接失败，请重新连接',null,0);}
+}
+function needsLogin(){playable=false;video.pause();video.removeAttribute('src');video.load();document.getElementById('login').style.display='block';message('登录已过期，请登录后重新打开课程。');}
+function safeMedia(value){return typeof value==='string'&&(/^(https:\/\/|\/[^\/])/.test(value))?value:'';}
+function saveProgress(){
+ if(!playable||active<0||!isFinite(video.duration)||video.duration<=0||video.currentTime<=0)return;
+ var id=lessons[active].id;lastSave=Date.now();
+ request('POST','/api/mini/video/'+encodeURIComponent(id)+'/progress',{member_id:memberId,progress:Math.floor(video.currentTime),duration:Math.floor(video.duration)},function(){});
+}
+function resumePlayback(){if(resumed||!resume||video.readyState<1)return;resumed=true;if(video.currentTime<1&&resume<video.duration-5){try{video.currentTime=resume;}catch(ignore){}}}
+function renderCatalog(){
+ var box=document.getElementById('catalog'),query=document.getElementById('search').value.toLowerCase();box.textContent='';
+ lessons.forEach(function(item,index){if(query&&(item.name+' '+item.chapter).toLowerCase().indexOf(query)<0)return;
+  var button=document.createElement('button');button.className='lesson'+(active===index?' active':'');button.textContent=(index+1)+'. '+item.name;button.setAttribute('aria-current',active===index?'true':'false');button.onclick=function(){selectLesson(index);};box.appendChild(button);});
+ document.getElementById('previous').disabled=active<=0;document.getElementById('next').disabled=active<0||active>=lessons.length-1;
+}
+function selectLesson(index){
+ if(index<0||index>=lessons.length)return;saveProgress();playable=false;video.pause();video.removeAttribute('src');video.load();
+ active=index;wanted=lessons[index].id;var run=++generation,item=lessons[index];resume=0;resumed=false;fallback='';usedFallback=false;
+ title.textContent=item.name;message('正在获取播放地址…');renderCatalog();
+ try{history.replaceState(null,'','?series_id='+encodeURIComponent(seriesId)+'&video='+encodeURIComponent(item.id));}catch(ignore){}
+ request('GET','/api/mini/video/'+encodeURIComponent(item.id)+'/progress',null,function(error,p){if(run!==generation||error)return;resume=Math.max(0,Number(p&&p.progress||0));resumePlayback();});
+ request('GET','/api/mini/video/'+encodeURIComponent(item.id)+'/play',null,function(error,p,statusCode){
+  if(run!==generation)return;if(statusCode===401){needsLogin();return;}if(error){message(error);return;}
+  var options=p.qualities||p.quality_options||[], hls='',mp4='',url=safeMedia(p.video_url||p.play_url);
+  options.forEach(function(q){var u=safeMedia(q.url);if(!hls&&(q.format==='m3u8'||/\.m3u8(?:\?|$)/i.test(u)))hls=u;if(!mp4&&(q.format==='mp4'||/\.mp4(?:\?|$)/i.test(u)))mp4=u;});
+  var nativeHls=!!video.canPlayType('application/vnd.apple.mpegurl');url=nativeHls?(hls||mp4||url):(mp4||url);
+  if(!url){message('视频暂不可用，请联系老师检查素材。');return;}
+  fallback=mp4&&mp4!==url?mp4:'';playable=true;lastSave=Date.now();video.src=url;video.load();message('视频已就绪，请点击视频中的播放按钮。');
+ });
+}
+video.addEventListener('loadedmetadata',function(){endHold();video.defaultPlaybackRate=video.playbackRate=Number(document.getElementById('speed').value)||1;resumePlayback();});
+video.addEventListener('playing',function(){message('正在播放');});
+video.addEventListener('waiting',function(){if(playable)message('正在缓冲，请稍候…');});
+video.addEventListener('error',function(){
+ if(!playable)return;
+ if(fallback&&!usedFallback){usedFallback=true;video.src=fallback;video.load();message('已切换兼容格式，请点击播放。');return;}
+ message('视频未能加载，请点击“重新连接”后再次播放。');
+});
+video.addEventListener('timeupdate',function(){if(Date.now()-lastSave>=15000)saveProgress();});
+video.addEventListener('pause',saveProgress);video.addEventListener('ended',function(){saveProgress();message('本节播放结束，可点击“下一节”继续学习。');});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')saveProgress();});
+document.getElementById('previous').onclick=function(){selectLesson(active-1);};document.getElementById('next').onclick=function(){selectLesson(active+1);};
+document.getElementById('speed').onchange=function(){endHold();video.defaultPlaybackRate=video.playbackRate=Number(this.value)||1;};document.getElementById('search').oninput=renderCatalog;
+document.getElementById('retry').onclick=function(){start();};
+function start(){
+ if(!/^\d+$/.test(seriesId)||Number(seriesId)<=0){message('课程地址无效，请返回个人中心选择课程。');return;}
+ saveProgress();playable=false;video.pause();var run=++generation;document.getElementById('login').style.display='none';message('正在恢复登录状态…');
+ try{token=localStorage.getItem('student_token')||'';}catch(ignore){}
+ request('POST','/api/mini/session/refresh',{},function(error,p,statusCode){
+  if(run!==generation)return;if(statusCode===401){needsLogin();return;}
+  if(error||!p.token||!p.member||!p.member.id){message(error||'无法读取登录状态，请重新连接。');return;}
+  token=p.token;memberId=String(p.member.id);try{localStorage.setItem('student_token',token);localStorage.setItem('student_member',JSON.stringify(p.member));}catch(ignore){}
+  message('正在读取课程目录…');
+  request('GET','/api/learn/series/'+encodeURIComponent(seriesId)+'/catalog-live',null,function(error,chapters){
+   if(run!==generation)return;if(error){message(error);return;}lessons=[];
+   (Array.isArray(chapters)?chapters:[]).forEach(function(chapter){(chapter.videos||[]).forEach(function(item){lessons.push({id:String(item.id),name:item.name||chapter.name||'课程视频',chapter:chapter.name||''});});});
+   if(!lessons.length){title.textContent='课程学习';message('该课程暂无可播放视频，请联系老师。');renderCatalog();return;}
+   var selected=0;lessons.forEach(function(item,index){if(item.id===wanted)selected=index;});selectLesson(selected);
+  });
+ });
+}
+start();
+}());
+</script><script>
+(function(){
+ var initialUrl=location.href.split('#')[0], image='https://www.swod.com.cn/icons/icon-512-20261005.png';
+ function data(){
+  var q=new URLSearchParams(location.search), series=q.get('series_id')||'', video=q.get('video')||'';
+  var link='https://www.swod.com.cn/courses/'+encodeURIComponent(series)+'/videos?source=platform';
+  if(/^\d+$/.test(video))link+='&video='+encodeURIComponent(video);
+  return {title:document.getElementById('title').textContent+' · 伊娃东方舞',desc:'伊娃东方舞线上课程，打开查看本课节。',link:link,imgUrl:image};
+ }
+ function update(){if(!window.wx)return;var d=data();wx.updateAppMessageShareData(d);wx.updateTimelineShareData({title:d.title,link:d.link,imgUrl:d.imgUrl});}
+ function configure(){
+  var xhr=new XMLHttpRequest();xhr.open('GET','/api/wechat/js-sign?url='+encodeURIComponent(initialUrl));
+  xhr.onload=function(){if(xhr.status!==200)return;try{var c=JSON.parse(xhr.responseText);c.debug=false;c.jsApiList=['updateAppMessageShareData','updateTimelineShareData'];wx.ready(function(){update();new MutationObserver(update).observe(document.getElementById('title'),{childList:true,subtree:true,characterData:true});});wx.config(c);}catch(e){}};xhr.send();
+ }
+ if(/micromessenger/i.test(navigator.userAgent)){var script=document.createElement('script');script.src='https://res.wx.qq.com/open/js/jweixin-1.6.0.js';script.onload=configure;document.head.appendChild(script);}
+ document.getElementById('share-lesson').onclick=function(){
+  var link=data().link;
+  function fallback(){window.prompt('复制链接发送到微信；微信内也可点击右上角“…”转发',link);}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(link).then(function(){window.alert('课节链接已复制，可粘贴到微信发送。微信内也可点击右上角“…”转发。');},fallback);else fallback();
+ };
+})();
+</script></body></html>

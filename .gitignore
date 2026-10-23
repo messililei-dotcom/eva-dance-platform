@@ -126,3 +126,7 @@ ops/
 .local-db-backups/
 数据库备份/
 backups/
+
+# Patch-editor residue; archives live outside runtime source
+**/*.orig
+**/*.rej

@@ -1,0 +1,56 @@
+{
+  "id": "/",
+  "name": "伊娃东方舞网课",
+  "short_name": "伊娃东方舞",
+  "description": "伊娃东方舞在线学习系统",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "/courses?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#140304",
+  "categories": ["education", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icons/pwa/icon-192-20261005.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa/icon-512-20261005.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa/icon-maskable-512-20261005.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "线上课程",
+      "short_name": "线上课程",
+      "url": "/courses?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/pwa/icon-192-20261005.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "学习进度",
+      "short_name": "学习进度",
+      "url": "/dashboard/progress?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/pwa/icon-192-20261005.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "安装教程",
+      "short_name": "安装教程",
+      "url": "/install",
+      "icons": [{ "src": "/icons/pwa/icon-192-20261005.png", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -1,0 +1,572 @@
+{
+  "version": 1,
+  "covers": {
+    "_7+1_国际技巧班-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-0e16235ee75b3b69.webp",
+      "avif": "/images/courses/platform/course-cover-0e16235ee75b3b69.avif",
+      "width": 828,
+      "height": 828,
+      "sourceBytes": 173906,
+      "webpBytes": 63382,
+      "avifBytes": 45556
+    },
+    "《全舞种道具课程》-1783046221405.jpg": {
+      "webp": "/images/courses/platform/course-cover-93836d1c806eef93.webp",
+      "avif": "/images/courses/platform/course-cover-93836d1c806eef93.avif",
+      "width": 1440,
+      "height": 1080,
+      "sourceBytes": 242628,
+      "webpBytes": 72588,
+      "avifBytes": 55788
+    },
+    "《舞蹈视频剪辑课》-1782093935401.jpg": {
+      "webp": "/images/courses/platform/course-cover-363095b1e007f363.webp",
+      "avif": "/images/courses/platform/course-cover-363095b1e007f363.avif",
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 141792,
+      "webpBytes": 72214,
+      "avifBytes": 55568
+    },
+    "14种头部技巧 + 全类甩发技巧-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-46818f9f0193df40.webp",
+      "avif": "/images/courses/platform/course-cover-46818f9f0193df40.avif",
+      "width": 1063,
+      "height": 1063,
+      "sourceBytes": 349443,
+      "webpBytes": 124260,
+      "avifBytes": 84355
+    },
+    "本地测试线上封面-1782814930852.png": {
+      "webp": "/images/courses/platform/course-cover-4b5c5c92cec3b23e.webp",
+      "avif": "/images/courses/platform/course-cover-4b5c5c92cec3b23e.avif",
+      "width": 1,
+      "height": 1,
+      "sourceBytes": 68,
+      "webpBytes": 44,
+      "avifBytes": 449
+    },
+    "编舞师·第1阶-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-d9624e952844257e.webp",
+      "avif": "/images/courses/platform/course-cover-d9624e952844257e.avif",
+      "width": 1600,
+      "height": 1600,
+      "sourceBytes": 752993,
+      "webpBytes": 136964,
+      "avifBytes": 98514
+    },
+    "编舞师·第2阶-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-320d2c789aa25c02.webp",
+      "avif": "/images/courses/platform/course-cover-320d2c789aa25c02.avif",
+      "width": 1063,
+      "height": 1063,
+      "sourceBytes": 304705,
+      "webpBytes": 114000,
+      "avifBytes": 86012
+    },
+    "成品舞｜18支全风格舞蹈-1780642917688.png": {
+      "webp": "/images/courses/platform/course-cover-e7c9472d50460983.webp",
+      "avif": "/images/courses/platform/course-cover-e7c9472d50460983.avif",
+      "width": 1024,
+      "height": 1024,
+      "sourceBytes": 2408487,
+      "webpBytes": 69754,
+      "avifBytes": 42629
+    },
+    "成品舞｜阿语版·我只在乎你-1780806375767.png": {
+      "webp": "/images/courses/platform/course-cover-7cf0a437317df11b.webp",
+      "avif": "/images/courses/platform/course-cover-7cf0a437317df11b.avif",
+      "width": 840,
+      "height": 467,
+      "sourceBytes": 787970,
+      "webpBytes": 32626,
+      "avifBytes": 25862
+    },
+    "成品舞｜百分百晚安-1780806282949.jpg": {
+      "webp": "/images/courses/platform/course-cover-cd03dd3d336a6a4a.webp",
+      "avif": "/images/courses/platform/course-cover-cd03dd3d336a6a4a.avif",
+      "width": 1200,
+      "height": 1200,
+      "sourceBytes": 343815,
+      "webpBytes": 105216,
+      "avifBytes": 71334
+    },
+    "成品舞｜不如见一面-1780806100799.png": {
+      "webp": "/images/courses/platform/course-cover-9f05ad89d6b8aac7.webp",
+      "avif": "/images/courses/platform/course-cover-9f05ad89d6b8aac7.avif",
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 1896737,
+      "webpBytes": 80394,
+      "avifBytes": 50060
+    },
+    "成品舞｜大花轿-1780806181796.jpg": {
+      "webp": "/images/courses/platform/course-cover-f7c9b539129cd145.webp",
+      "avif": "/images/courses/platform/course-cover-f7c9b539129cd145.avif",
+      "width": 675,
+      "height": 1200,
+      "sourceBytes": 272955,
+      "webpBytes": 89486,
+      "avifBytes": 64702
+    },
+    "成品舞｜嘟嘟Ay Khedma Ya Basha-1783484771057.jpg": {
+      "webp": "/images/courses/platform/course-cover-e17362d5302be5cb.webp",
+      "avif": "/images/courses/platform/course-cover-e17362d5302be5cb.avif",
+      "width": 1448,
+      "height": 1086,
+      "sourceBytes": 695578,
+      "webpBytes": 104146,
+      "avifBytes": 76719
+    },
+    "成品舞｜故事就是这样开始了-1783484776692.jpg": {
+      "webp": "/images/courses/platform/course-cover-45f7b227f69b0dfa.webp",
+      "avif": "/images/courses/platform/course-cover-45f7b227f69b0dfa.avif",
+      "width": 1448,
+      "height": 1086,
+      "sourceBytes": 781326,
+      "webpBytes": 144618,
+      "avifBytes": 105534
+    },
+    "成品舞｜归去来兮-1780806198495.png": {
+      "webp": "/images/courses/platform/course-cover-c27700402ccc8978.webp",
+      "avif": "/images/courses/platform/course-cover-c27700402ccc8978.avif",
+      "width": 840,
+      "height": 471,
+      "sourceBytes": 377875,
+      "webpBytes": 15284,
+      "avifBytes": 11405
+    },
+    "成品舞｜画皮-1780806273547.png": {
+      "webp": "/images/courses/platform/course-cover-0365dee1e3703d99.webp",
+      "avif": "/images/courses/platform/course-cover-0365dee1e3703d99.avif",
+      "width": 1200,
+      "height": 605,
+      "sourceBytes": 1228690,
+      "webpBytes": 59512,
+      "avifBytes": 44057
+    },
+    "成品舞｜可惜没有如果（伊娃原创现代融合风）-1780807570372.png": {
+      "webp": "/images/courses/platform/course-cover-7cf2dd1a3aa9cef8.webp",
+      "avif": "/images/courses/platform/course-cover-7cf2dd1a3aa9cef8.avif",
+      "width": 840,
+      "height": 357,
+      "sourceBytes": 710640,
+      "webpBytes": 40570,
+      "avifBytes": 33860
+    },
+    "成品舞｜可惜没有如果（原创作品·新现代融舞·情感主题系列）-1780806114123.png": {
+      "webp": "/images/courses/platform/course-cover-b190e5e537ab78a8.webp",
+      "avif": "/images/courses/platform/course-cover-b190e5e537ab78a8.avif",
+      "width": 840,
+      "height": 473,
+      "sourceBytes": 768126,
+      "webpBytes": 35314,
+      "avifBytes": 25659
+    },
+    "成品舞｜笼-1780806296579.png": {
+      "webp": "/images/courses/platform/course-cover-17e01a7fb381080e.webp",
+      "avif": "/images/courses/platform/course-cover-17e01a7fb381080e.avif",
+      "width": 840,
+      "height": 467,
+      "sourceBytes": 659826,
+      "webpBytes": 28422,
+      "avifBytes": 20052
+    },
+    "成品舞｜梦底-1780806233621.png": {
+      "webp": "/images/courses/platform/course-cover-0822b054b2caa512.webp",
+      "avif": "/images/courses/platform/course-cover-0822b054b2caa512.avif",
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 2024079,
+      "webpBytes": 97784,
+      "avifBytes": 67107
+    },
+    "成品舞｜哪吒-1780806133174.jpg": {
+      "webp": "/images/courses/platform/course-cover-f3c3d1a6867928f9.webp",
+      "avif": "/images/courses/platform/course-cover-f3c3d1a6867928f9.avif",
+      "width": 1200,
+      "height": 1200,
+      "sourceBytes": 470346,
+      "webpBytes": 172302,
+      "avifBytes": 131014
+    },
+    "成品舞｜你的选择-1783484787796.jpg": {
+      "webp": "/images/courses/platform/course-cover-c46e97bba65c1ed9.webp",
+      "avif": "/images/courses/platform/course-cover-c46e97bba65c1ed9.avif",
+      "width": 1448,
+      "height": 1086,
+      "sourceBytes": 570910,
+      "webpBytes": 78294,
+      "avifBytes": 53145
+    },
+    "成品舞｜女人花-1780807560981.png": {
+      "webp": "/images/courses/platform/course-cover-272ca6d48950aeb9.webp",
+      "avif": "/images/courses/platform/course-cover-272ca6d48950aeb9.avif",
+      "width": 840,
+      "height": 467,
+      "sourceBytes": 445579,
+      "webpBytes": 24304,
+      "avifBytes": 18872
+    },
+    "成品舞｜青花-1780806384943.jpg": {
+      "webp": "/images/courses/platform/course-cover-1ce6d6dea65f52d2.webp",
+      "avif": "/images/courses/platform/course-cover-1ce6d6dea65f52d2.avif",
+      "width": 1200,
+      "height": 675,
+      "sourceBytes": 191938,
+      "webpBytes": 57924,
+      "avifBytes": 42040
+    },
+    "成品舞｜人世间-1780806107688.png": {
+      "webp": "/images/courses/platform/course-cover-bcd10e5a792e60b5.webp",
+      "avif": "/images/courses/platform/course-cover-bcd10e5a792e60b5.avif",
+      "width": 840,
+      "height": 477,
+      "sourceBytes": 396722,
+      "webpBytes": 14622,
+      "avifBytes": 10834
+    },
+    "成品舞｜如愿-1780807579827.png": {
+      "webp": "/images/courses/platform/course-cover-7fe1071243f21719.webp",
+      "avif": "/images/courses/platform/course-cover-7fe1071243f21719.avif",
+      "width": 840,
+      "height": 357,
+      "sourceBytes": 708248,
+      "webpBytes": 38958,
+      "avifBytes": 32579
+    },
+    "成品舞｜三生三世-1780807601411.png": {
+      "webp": "/images/courses/platform/course-cover-daddeb25fcfd47d3.webp",
+      "avif": "/images/courses/platform/course-cover-daddeb25fcfd47d3.avif",
+      "width": 1200,
+      "height": 1200,
+      "sourceBytes": 2284287,
+      "webpBytes": 115942,
+      "avifBytes": 77981
+    },
+    "成品舞｜珊瑚颂-1780806246323.png": {
+      "webp": "/images/courses/platform/course-cover-16ae03c9635dda1f.webp",
+      "avif": "/images/courses/platform/course-cover-16ae03c9635dda1f.avif",
+      "width": 1200,
+      "height": 672,
+      "sourceBytes": 954873,
+      "webpBytes": 51516,
+      "avifBytes": 37467
+    },
+    "成品舞｜说散就散-1780806305043.png": {
+      "webp": "/images/courses/platform/course-cover-d2c12dfcd1363d42.webp",
+      "avif": "/images/courses/platform/course-cover-d2c12dfcd1363d42.avif",
+      "width": 838,
+      "height": 480,
+      "sourceBytes": 314324,
+      "webpBytes": 12452,
+      "avifBytes": 9147
+    },
+    "成品舞｜塑料般的腰-1780806173845.jpg": {
+      "webp": "/images/courses/platform/course-cover-35871e59e868e6a6.webp",
+      "avif": "/images/courses/platform/course-cover-35871e59e868e6a6.avif",
+      "width": 1200,
+      "height": 1200,
+      "sourceBytes": 312780,
+      "webpBytes": 89010,
+      "avifBytes": 65200
+    },
+    "成品舞｜桃花诺-1780807545591.png": {
+      "webp": "/images/courses/platform/course-cover-58543576a10ba47a.webp",
+      "avif": "/images/courses/platform/course-cover-58543576a10ba47a.avif",
+      "width": 1200,
+      "height": 1200,
+      "sourceBytes": 2266975,
+      "webpBytes": 111002,
+      "avifBytes": 77198
+    },
+    "成品舞｜天下无双-1780806190242.png": {
+      "webp": "/images/courses/platform/course-cover-f302c2f6b0d5ce59.webp",
+      "avif": "/images/courses/platform/course-cover-f302c2f6b0d5ce59.avif",
+      "width": 840,
+      "height": 473,
+      "sourceBytes": 1018800,
+      "webpBytes": 44518,
+      "avifBytes": 34823
+    },
+    "成品舞｜听说你-1780806122913.png": {
+      "webp": "/images/courses/platform/course-cover-fb7d09c4c03870bd.webp",
+      "avif": "/images/courses/platform/course-cover-fb7d09c4c03870bd.avif",
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 1887270,
+      "webpBytes": 84500,
+      "avifBytes": 53389
+    },
+    "成品舞｜晚秋-1780806222685.png": {
+      "webp": "/images/courses/platform/course-cover-1f1fde1266afa4ef.webp",
+      "avif": "/images/courses/platform/course-cover-1f1fde1266afa4ef.avif",
+      "width": 832,
+      "height": 473,
+      "sourceBytes": 934419,
+      "webpBytes": 44280,
+      "avifBytes": 36757
+    },
+    "成品舞｜万疆-1780807592831.png": {
+      "webp": "/images/courses/platform/course-cover-111804ae8b9c60d6.webp",
+      "avif": "/images/courses/platform/course-cover-111804ae8b9c60d6.avif",
+      "width": 1200,
+      "height": 1200,
+      "sourceBytes": 2271740,
+      "webpBytes": 107164,
+      "avifBytes": 71955
+    },
+    "成品舞｜我爱你，美丽的姑娘-1783484762389.jpg": {
+      "webp": "/images/courses/platform/course-cover-1cf3cd08f9a9b6cb.webp",
+      "avif": "/images/courses/platform/course-cover-1cf3cd08f9a9b6cb.avif",
+      "width": 1448,
+      "height": 1086,
+      "sourceBytes": 647791,
+      "webpBytes": 100226,
+      "avifBytes": 73539
+    },
+    "成品舞｜我的中国心-1780806210147.jpg": {
+      "webp": "/images/courses/platform/course-cover-48c66d5aab412993.webp",
+      "avif": "/images/courses/platform/course-cover-48c66d5aab412993.avif",
+      "width": 1200,
+      "height": 675,
+      "sourceBytes": 213002,
+      "webpBytes": 75314,
+      "avifBytes": 57789
+    },
+    "成品舞｜遥远的思念 Baed Annak-1780806316739.jpg": {
+      "webp": "/images/courses/platform/course-cover-112a26ffc17a1e84.webp",
+      "avif": "/images/courses/platform/course-cover-112a26ffc17a1e84.avif",
+      "width": 1200,
+      "height": 666,
+      "sourceBytes": 158860,
+      "webpBytes": 49394,
+      "avifBytes": 34993
+    },
+    "成品舞｜一千零一夜-1780806093279.jpg": {
+      "webp": "/images/courses/platform/course-cover-4d0a3b1a9514e0f7.webp",
+      "avif": "/images/courses/platform/course-cover-4d0a3b1a9514e0f7.avif",
+      "width": 675,
+      "height": 1200,
+      "sourceBytes": 193555,
+      "webpBytes": 70744,
+      "avifBytes": 54744
+    },
+    "成品舞｜饮湖上-1780807586488.png": {
+      "webp": "/images/courses/platform/course-cover-294e8e8d93f1c269.webp",
+      "avif": "/images/courses/platform/course-cover-294e8e8d93f1c269.avif",
+      "width": 1200,
+      "height": 1200,
+      "sourceBytes": 2290191,
+      "webpBytes": 105062,
+      "avifBytes": 71031
+    },
+    "成品舞｜在窗下 Taht EI Shibbak-1780806165239.png": {
+      "webp": "/images/courses/platform/course-cover-672a9e2f7d68bb64.webp",
+      "avif": "/images/courses/platform/course-cover-672a9e2f7d68bb64.avif",
+      "width": 840,
+      "height": 466,
+      "sourceBytes": 1027545,
+      "webpBytes": 64724,
+      "avifBytes": 51303
+    },
+    "成品舞｜珍惜你 Batwanes Beek-1780806257078.png": {
+      "webp": "/images/courses/platform/course-cover-568c503d5c77a943.webp",
+      "avif": "/images/courses/platform/course-cover-568c503d5c77a943.avif",
+      "width": 1200,
+      "height": 600,
+      "sourceBytes": 1259485,
+      "webpBytes": 68214,
+      "avifBytes": 49928
+    },
+    "成品舞｜Aziza纱巾舞-1780807527901.png": {
+      "webp": "/images/courses/platform/course-cover-29d8ac1ee6faeb22.webp",
+      "avif": "/images/courses/platform/course-cover-29d8ac1ee6faeb22.avif",
+      "width": 839,
+      "height": 460,
+      "sourceBytes": 787661,
+      "webpBytes": 34642,
+      "avifBytes": 25103
+    },
+    "成品舞｜DrumSolo鼓舞-1783484750157.jpg": {
+      "webp": "/images/courses/platform/course-cover-11521e4e1c43c4e5.webp",
+      "avif": "/images/courses/platform/course-cover-11521e4e1c43c4e5.avif",
+      "width": 1448,
+      "height": 1086,
+      "sourceBytes": 729408,
+      "webpBytes": 129422,
+      "avifBytes": 99153
+    },
+    "成品舞｜Khaleegy波斯湾甩发舞-1780806083484.jpg": {
+      "webp": "/images/courses/platform/course-cover-761183fcb6950285.webp",
+      "avif": "/images/courses/platform/course-cover-761183fcb6950285.avif",
+      "width": 1200,
+      "height": 675,
+      "sourceBytes": 76488,
+      "webpBytes": 41842,
+      "avifBytes": 31702
+    },
+    "成品舞｜LiberTango-1780642936039.jpg": {
+      "webp": "/images/courses/platform/course-cover-d9395c52c0d453a8.webp",
+      "avif": "/images/courses/platform/course-cover-d9395c52c0d453a8.avif",
+      "width": 1200,
+      "height": 800,
+      "sourceBytes": 128588,
+      "webpBytes": 23800,
+      "avifBytes": 12818
+    },
+    "成品舞｜Mejance纱巾开场舞-1783484793483.jpg": {
+      "webp": "/images/courses/platform/course-cover-faf91a1b4499a95a.webp",
+      "avif": "/images/courses/platform/course-cover-faf91a1b4499a95a.avif",
+      "width": 1448,
+      "height": 1086,
+      "sourceBytes": 669584,
+      "webpBytes": 96910,
+      "avifBytes": 71185
+    },
+    "成品舞｜Yala ya Habibi-1783484782413.jpg": {
+      "webp": "/images/courses/platform/course-cover-3802455853dbba51.webp",
+      "avif": "/images/courses/platform/course-cover-3802455853dbba51.avif",
+      "width": 1448,
+      "height": 1086,
+      "sourceBytes": 606765,
+      "webpBytes": 97508,
+      "avifBytes": 68538
+    },
+    "东方舞技巧大全·选配128节-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-bca6291dee60af1b.webp",
+      "avif": "/images/courses/platform/course-cover-bca6291dee60af1b.avif",
+      "width": 1063,
+      "height": 1063,
+      "sourceBytes": 558354,
+      "webpBytes": 78056,
+      "avifBytes": 61772
+    },
+    "东方舞零基础入门课程·全阶段-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-d1023765b3e392cf.webp",
+      "avif": "/images/courses/platform/course-cover-d1023765b3e392cf.avif",
+      "width": 1594,
+      "height": 1600,
+      "sourceBytes": 637301,
+      "webpBytes": 129620,
+      "avifBytes": 88744
+    },
+    "疯狂西米-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-3da1fe0dd3f64601.webp",
+      "avif": "/images/courses/platform/course-cover-3da1fe0dd3f64601.avif",
+      "width": 1063,
+      "height": 1063,
+      "sourceBytes": 284004,
+      "webpBytes": 87612,
+      "avifBytes": 58879
+    },
+    "黄金陀螺·旋转训练-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-9238b2bffcd54103.webp",
+      "avif": "/images/courses/platform/course-cover-9238b2bffcd54103.avif",
+      "width": 1417,
+      "height": 1417,
+      "sourceBytes": 463287,
+      "webpBytes": 108534,
+      "avifBytes": 78454
+    },
+    "课程主图-1782947292348.jpg": {
+      "webp": "/images/courses/platform/course-cover-93836d1c806eef93.webp",
+      "avif": "/images/courses/platform/course-cover-93836d1c806eef93.avif",
+      "width": 1440,
+      "height": 1080,
+      "sourceBytes": 242628,
+      "webpBytes": 72588,
+      "avifBytes": 55788
+    },
+    "课程主图-1782961053241.jpg": {
+      "webp": "/images/courses/platform/course-cover-93836d1c806eef93.webp",
+      "avif": "/images/courses/platform/course-cover-93836d1c806eef93.avif",
+      "width": 1440,
+      "height": 1080,
+      "sourceBytes": 242628,
+      "webpBytes": 72588,
+      "avifBytes": 55788
+    },
+    "零基础·亲传教练系统课-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-44613da54ec645d9.webp",
+      "avif": "/images/courses/platform/course-cover-44613da54ec645d9.avif",
+      "width": 1280,
+      "height": 1280,
+      "sourceBytes": 236209,
+      "webpBytes": 130736,
+      "avifBytes": 105629
+    },
+    "全力出肌·舞蹈核心风暴-1780279303758.png": {
+      "webp": "/images/courses/platform/course-cover-66aa6e8085a792ee.webp",
+      "avif": "/images/courses/platform/course-cover-66aa6e8085a792ee.avif",
+      "width": 376,
+      "height": 436,
+      "sourceBytes": 2751,
+      "webpBytes": 1980,
+      "avifBytes": 1229
+    },
+    "全力出肌·舞蹈核心风暴-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-0ac2bee73524f2bb.webp",
+      "avif": "/images/courses/platform/course-cover-0ac2bee73524f2bb.avif",
+      "width": 1600,
+      "height": 1600,
+      "sourceBytes": 459158,
+      "webpBytes": 79970,
+      "avifBytes": 53353
+    },
+    "手臂全维度精雕系统课-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-90b5edbd0e3784ac.webp",
+      "avif": "/images/courses/platform/course-cover-90b5edbd0e3784ac.avif",
+      "width": 1600,
+      "height": 1600,
+      "sourceBytes": 556343,
+      "webpBytes": 98160,
+      "avifBytes": 63111
+    },
+    "舞蹈运动呼吸学-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-0a5c0258dc324a30.webp",
+      "avif": "/images/courses/platform/course-cover-0a5c0258dc324a30.avif",
+      "width": 1063,
+      "height": 1063,
+      "sourceBytes": 383395,
+      "webpBytes": 140626,
+      "avifBytes": 104264
+    },
+    "舞者英语·国际课堂入门-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-54a256155e2adb78.webp",
+      "avif": "/images/courses/platform/course-cover-54a256155e2adb78.avif",
+      "width": 1600,
+      "height": 1600,
+      "sourceBytes": 471530,
+      "webpBytes": 77688,
+      "avifBytes": 49306
+    },
+    "云·弟子班-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-bbab844ac8e594e9.webp",
+      "avif": "/images/courses/platform/course-cover-bbab844ac8e594e9.avif",
+      "width": 1063,
+      "height": 1063,
+      "sourceBytes": 463536,
+      "webpBytes": 89272,
+      "avifBytes": 64274
+    },
+    "S曲线·胸腰舞感-official.jpg": {
+      "webp": "/images/courses/platform/course-cover-0b212f371d63593e.webp",
+      "avif": "/images/courses/platform/course-cover-0b212f371d63593e.avif",
+      "width": 1600,
+      "height": 1600,
+      "sourceBytes": 532998,
+      "webpBytes": 97116,
+      "avifBytes": 63639
+    },
+    "SWOD国际埃及舞蹈师资教育培训证书-1780279272924.jpg": {
+      "webp": "/images/courses/platform/course-cover-c58a0f0495a6da97.webp",
+      "avif": "/images/courses/platform/course-cover-c58a0f0495a6da97.avif",
+      "width": 1074,
+      "height": 1455,
+      "sourceBytes": 153385,
+      "webpBytes": 47688,
+      "avifBytes": 36932
+    }
+  }
+}

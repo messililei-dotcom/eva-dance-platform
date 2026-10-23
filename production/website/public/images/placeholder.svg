@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#E8D5B7"/>
+  <rect x="300" y="200" width="200" height="200" rx="100" fill="#C8A96E" opacity="0.3"/>
+  <path d="M380 280 L420 280 L420 340 L380 340 Z" fill="#C8A96E" opacity="0.5"/>
+  <text x="400" y="450" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#8B1A1A">图片筹备中</text>
+  <text x="400" y="475" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#7A7A7A">Placeholder Image</text>
+</svg>

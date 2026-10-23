@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#C8A96E" opacity="0.3"/>
+  <path d="M0 300 Q200 200 400 300 T800 300 L800 600 L0 600 Z" fill="#E8D5B7" opacity="0.5"/>
+  <circle cx="400" cy="200" r="80" fill="#C8A96E" opacity="0.2"/>
+  <text x="400" y="500" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#8B1A1A">视觉素材筹备中</text>
+  <text x="400" y="530" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#7A7A7A">Video/Image Placeholder</text>
+</svg>
