@@ -433,7 +433,7 @@ export function getSeriesAccessStatus(db: AdminDb, seriesId: number, memberId: n
     return { authorized: true, trial_available: false, reason: 'authorized', auth_type: authorization.type || 'admin_grant' };
   }
 
-  return { authorized: false, trial_available: false, reason: 'unauthorized', message: '当前未开通学习权限，请在课程详情页购买或联系课程客服' };
+  return { authorized: false, trial_available: false, reason: 'unauthorized', message: '请先申请授权观看完整学习' };
 }
 
 export function getVideoAccessStatus(db: AdminDb, videoId: number, memberId: number, phone = '') {

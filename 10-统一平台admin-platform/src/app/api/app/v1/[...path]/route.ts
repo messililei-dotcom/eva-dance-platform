@@ -7,7 +7,6 @@ import { carrierLoginEnabled, getCarrierPhone } from '@/lib/server/app-carrier-a
 import { withDb, memberToken } from '../../../mini/_helpers';
 import { upsertPhoneMember } from '../../../mini/_auth';
 import { AppError, reserveCarrierAttempt, ensureAppSchema, createAppSession, authenticateApp, rotateAppSession, revokeAppSession, verifyAppSMS, verifyAppPassword, requestAccountDeletion, accountDeletionReceipt, saveAppCheckpoint } from '@/lib/server/app-session';
-import { authorizeVideoCache, videoCacheCapability } from '@/lib/server/app-video-cache';
 import { findAppRoute } from '@/lib/server/app-route-map';
 
 export const dynamic = 'force-dynamic';
@@ -41,7 +40,7 @@ async function handle(request: Request, context: Context) {
     const multipart = method === "POST" && /^events\/[1-9]\d*\/register$/.test(path) && request.headers.get("content-type")?.startsWith("multipart/form-data;");
     const body = multipart ? {} : await readBody(request);
     if (path === 'config' && method === 'GET') return json({
-      version: 1, push: pushCapability(platform), oneTapLogin: carrierLoginEnabled(), offlineDownload: videoCacheCapability(platform).enabled, videoCache: videoCacheCapability(platform), digitalPurchase: false, physicalCheckout: Object.values(appShopPayment()).some(Boolean),
+      version: 1, push: pushCapability(platform), oneTapLogin: carrierLoginEnabled(), offlineDownload: false, digitalPurchase: false, physicalCheckout: Object.values(appShopPayment()).some(Boolean),
       privacyURL: 'https://www.swod.com.cn/privacy', termsURL: 'https://www.swod.com.cn/terms',
       accountDeletion: 'request-with-receipt', accountDeletionWorkingDays: 7, minimumVersion: '1.0.0',
     });
@@ -96,9 +95,6 @@ async function handle(request: Request, context: Context) {
     const session = publicRead && !bearer(request) ? null : withDb(db => {
       ensureAppSchema(db); return authenticateApp(db, bearer(request));
     });
-    if (/^video\/[1-9]\d*\/cache-authorization$/.test(path) && method === 'POST' && session) {
-      return withDb(async db => json(await authorizeVideoCache(db, bearer(request), platform, Number(parts[1]), body)));
-    }
     if (path === 'push/permits' && method === 'POST' && session) return withDb(db => json(reservePushPermit(db, bearer(request), platform, String(body.installationId || ''))));
     if (path === 'push/devices' && method === 'PUT' && session) return withDb(db => json(bindPushDevice(db, bearer(request), platform, body)));
     if (path === 'push/devices' && method === 'DELETE' && session) return withDb(db => json(unbindPushDevice(db, bearer(request), String(body.installationId || ''))));

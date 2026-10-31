@@ -441,7 +441,7 @@ export function getSeriesAccessStatus(db: AdminDb, seriesId: number, memberId: n
     trial_available: trialCount > 0 || freeTrialCourses > 0,
     trial_count: trialCount,
     reason: isFree ? 'free' : auth ? 'authorized' : 'locked',
-    message: isFree || auth ? '' : '当前未开通学习权限，请在课程详情页购买或联系课程客服',
+    message: isFree || auth ? '' : '请先申请授权观看完整学习',
   };
 }
 
@@ -488,7 +488,7 @@ export function getVideoAccessStatus(db: AdminDb, videoId: number, memberId: num
         : (isCourseTrial || isVideoFree || isWithinTrialCount)
           ? 'trial'
           : 'locked',
-    message: authorized ? '' : '当前未开通学习权限，请在课程详情页购买或联系课程客服',
+    message: authorized ? '' : '请先申请授权观看完整学习',
   };
 }
 

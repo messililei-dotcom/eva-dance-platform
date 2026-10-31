@@ -1,3 +1,4 @@
+import swodTeacherLevel12 from './dance-circle-imported/swod-techniques-teacher-level-1-2.json';
 import courseSchedule20262027 from './dance-circle-imported/course-schedule-2026-2027.json';
 import evaPortrait2026 from './dance-circle-imported/eva-portrait-2026.json';
 import swodTechniqueBootcampGraduation from './dance-circle-imported/2026-swod-technique-bootcamp-graduation.json';
@@ -28,6 +29,7 @@ export type DanceCircleArticle = {
 };
 
 export const danceCircleArticles: DanceCircleArticle[] = [
+  swodTeacherLevel12 as DanceCircleArticle,
   courseSchedule20262027 as DanceCircleArticle,
   evaPortrait2026 as DanceCircleArticle,
   professionalCourseGuide2026 as DanceCircleArticle,

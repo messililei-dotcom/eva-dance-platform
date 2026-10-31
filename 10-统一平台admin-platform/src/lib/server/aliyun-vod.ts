@@ -611,24 +611,3 @@ export async function getVodPlayUrl(videoId: string, formatPolicy: 'default' | '
     || options[0];
   return preferred?.url || '';
 }
-
-/** Only for the authenticated App cache gateway. Never return server AccessKeys or a source URL. */
-/** A rollout flag cannot prove cloud encryption. Mixed or clear streams fail closed. */
-export function validateVodOfflineStreams(response: any) {
-  const streams = response?.PlayInfoList?.PlayInfo;
-  if (response?.VideoBase?.Status !== 'Normal' || !Array.isArray(streams) || !streams.length ||
-      streams.some((row: any) => String(row?.Encrypt) !== '1' || !['m3u8','mp4'].includes(row?.Format))) {
-    throw new Error('本课节尚无完整的加密离线码流，请在线观看');
-  }
-}
-export async function getVodDownloadPlayAuth(videoId: string, ttl = 300) {
-  if (!/^[a-fA-F0-9]{32}$/.test(videoId)) throw new Error('VOD ID 无效');
-  const info = await callVodRpc<any>('GetPlayInfo', {VideoId: videoId, Formats: 'm3u8,mp4', ResultType: 'Multiple', AuthTimeout: 100});
-  validateVodOfflineStreams(info);
-  const seconds = Math.min(300, Math.max(100, Math.floor(ttl)));
-  const response = await callVodRpc<any>('GetVideoPlayAuth', { VideoId: videoId, AuthInfoTimeout: seconds });
-  if (response?.VideoMeta?.Status !== 'Normal' || response?.VideoMeta?.VideoId !== videoId || typeof response.PlayAuth !== 'string' || !response.PlayAuth) {
-    throw new Error('VOD 媒资暂不可缓存');
-  }
-  return { play_auth: response.PlayAuth, expires_in: seconds, region: vodRegion() };
-}

@@ -39,7 +39,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       if (!video) return jsonError('视频不存在', 404);
 
       const auth = video.series_is_free || getActiveAuthorization(db, Number(video.series_id || 0), tokenPayload.memberId);
-      if (!auth) return jsonError('当前未开通学习权限，请在课程详情页购买或联系课程客服', 403);
+      if (!auth) return jsonError('请先申请授权观看完整学习', 403);
 
       if (video.vod_video_id && video.type !== 'audio') {
         try {
