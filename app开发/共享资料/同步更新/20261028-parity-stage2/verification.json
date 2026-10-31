@@ -1,0 +1,45 @@
+{
+  "scope": "Continuation of compact UI, playback and carrier login",
+  "builds": {
+    "Android": "debug build + unit tests + lint passed",
+    "iOS": "simulator and unsigned iphoneos build passed",
+    "HarmonyOS": "debug build passed"
+  },
+  "tests": {
+    "serverSessions": {
+      "pass": 18,
+      "fail": 0
+    },
+    "harmony": {
+      "pass": 21,
+      "fail": 0
+    },
+    "android": {
+      "pass": 17,
+      "fail": 0
+    }
+  },
+  "changes": [
+    "Android playback controls scroll below 16:9 video; searchable virtualized directory; fullscreen and modern back gesture support",
+    "iOS/Harmony searchable directory with 50-item batches",
+    "Android/Harmony periodic server playback authorization; iOS/Android playback account guards",
+    "iOS carrier timeout and attempt-scoped callbacks"
+  ],
+  "carrier": {
+    "threeNativeSDKsIntegrated": true,
+    "serverCodePresent": true,
+    "serverCredentialsPresent": true,
+    "serverEnabled": false,
+    "realSIMTested": false
+  },
+  "runtimeThisStage": false,
+  "remaining": [
+    "Compare all pages against independently verified production mini-program",
+    "Finish autoplay, iOS fullscreen, casting/PiP parity and real-device media acceptance",
+    "Real SIM carrier login tests and server enablement",
+    "WeChat mobile configuration supplied by user"
+  ],
+  "serverDeployed": false,
+  "storeUploaded": false,
+  "storePublished": false
+}

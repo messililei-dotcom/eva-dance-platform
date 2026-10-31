@@ -1,0 +1,72 @@
+{
+  "checkedAt": "2026-10-28T22:47:23.971391+08:00",
+  "scope": "three native app navigation chrome, compact spacing, search positioning and safe areas",
+  "sourceSHA256": {
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EvaDanceApp.swift": "10f20962c4d63c44c195f32b2aedee61f8764e7b90d213d6f5bfafc58bd6a441",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift": "5f6ff3432bd7f4a1f2d301df2bacc11187a24c80a6bb26454aa8faaf84b650e3",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift": "0c31032e1f5ffbea0750d47103f8c55bfcd9870cd4bb706d2b650124c740cb3d",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/ShopViews.swift": "50db99e43c07f2c134c1ac89e25f63d99c9aed68ea055d96a728eeff961f2705",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift": "1afb6cf59cbb16e61fda9cc364a2c0c4a9c50687e8a19e45dac40dd747029886",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/StudyAssistantView.swift": "3978a14f27334b225a0746fe22a8eb161d959c5a2f6ec0be990f5f0d32d5328d",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/StaffEventViews.swift": "413ab45b680803c8579eabb3de4db21b57484978a41c0d5c152fbf1c170cdda8",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/MyCompetitionsView.swift": "2cefae276a36a2d74e85ba41bb757c8a83f886f71f91830379fa550e857df7be",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift": "d9359ca712b81db158e17f45d4e5bb2cdb3c6146b6249404b62579bc43564a14",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/DeletionReceiptView.swift": "70cdf6e94d96cfdbc9bf1b19e7fe7a1e6da9e50313aa4103380800888de970dd",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/LoginView.swift": "939bf9e0c5dea2fbd4b0a8f7f696344762cac1ed5049cac2ef5fb43536c43f0c",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventsView.swift": "9a9bfc8551cbf6f9452aebbe8d7803cdb258836eb49f9833b886ba538b982f91",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/BrandViews.swift": "1a30e0d3db56ba3894ce75d008558fc0569c96041669ab6a9b2c8259d6cdfd97",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "2dbb296226718e974a1f73af519ef95e735ab09755795ddfdb95b7c91f13845b",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "d22f7d4e22c9d5649e083853e6d22d627fb05e81a347d04aa08c459cb242d11c"
+  },
+  "iOS": {
+    "version": "1.0.0(8)",
+    "build": "simulator and unsigned iphoneos Release passed",
+    "runtime": [
+      "five main destinations inspected without duplicate navigation title",
+      "native detail back action retained",
+      "course search filters 58 to 2 for 旋转 and clears back to 58",
+      "keyboard search dismisses",
+      "landscape camera/cutout clearance checked",
+      "large text search and service buttons remain separate"
+    ],
+    "safeArea": "system safe area retained; no controls inserted into Dynamic Island status slots"
+  },
+  "Android": {
+    "version": "1.0.0(9)",
+    "build": "debug/release APK/AAB, lintRelease and existing signing verification passed",
+    "tests": {
+      "tests": 21,
+      "failures": 0,
+      "errors": 0
+    },
+    "runtime": "updated release installed and main activity launched; per-page UI unverified because native emulator window unavailable"
+  },
+  "HarmonyOS": {
+    "version": "1.0.0(8)",
+    "build": "signed HAP/APP passed; original profile and certificate verified",
+    "runtime": "unverified; emulator unavailable"
+  },
+  "newTestsAdded": false,
+  "filingChanged": false,
+  "serverDeployment": false,
+  "storeUpload": false,
+  "submittedOrPublished": false,
+  "artifacts": [
+    {
+      "path": "HarmonyOS/installers/SWOD-1.0.0-8-release.hap",
+      "sha256": "41e9824200b1d22e1c04b86c4f1b9eb07853553e414de6494162b32a9eebade4"
+    },
+    {
+      "path": "HarmonyOS/installers/SWOD-1.0.0-8-release.app",
+      "sha256": "1ce67a30be197bb813d249e61bcdc633fe55b83e8d5317beea737d5eb23e72a0"
+    },
+    {
+      "path": "Android/installers/SWOD-1.0.0-9-compact-release.apk",
+      "sha256": "b158ed8141cef1761cf0ce43ada8527fdd8e01a1e31ca0269e8c87581e7c9bec"
+    },
+    {
+      "path": "Android/installers/SWOD-1.0.0-9-compact-release.aab",
+      "sha256": "26ec88209471f2e118c8b03936f7f69ec6b949500cf1bbe56d780aeb411c09de"
+    }
+  ]
+}

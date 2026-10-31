@@ -1,0 +1,34 @@
+{
+  "checkedAt": "2026-10-28T17:19:31.374476+08:00",
+  "scope": "local iOS login update only",
+  "version": "1.0.0",
+  "build": "8",
+  "simulatorBundleID": "cn.com.swod.app.parityqa",
+  "simulatorBuild": "passed",
+  "deviceReleaseCompile": "passed unsigned, not installable or real-device verification",
+  "coreChecks": "21 existing contract checks plus login input, consent, cooldown and carrier event boundary groups; failures=0",
+  "uiChecks": {
+    "defaultConsentUnchecked": true,
+    "sendCodeRequiresConsentAndValidPhone": true,
+    "fixtureSMSCooldown": true,
+    "fixtureSMSLoginToMyCourses": true,
+    "fixtureWrongPasswordInlineAndCleared": true,
+    "fixturePasswordLoginToMyCourses": true,
+    "cancelledViewRequestNoLongerAlerts": true,
+    "simulatorCarrierUnavailableAndSMSFallback": true,
+    "largeFontVerticalLayout": true,
+    "lightAndDark": true
+  },
+  "productionConfig": {
+    "oneTapLogin": false,
+    "digitalPurchase": false,
+    "accountDeletionWorkingDays": 7
+  },
+  "realSMSRequested": false,
+  "realSIMVerified": false,
+  "wechatNativeLogin": "pending existing mobile integration and callbacks",
+  "filingChanged": false,
+  "appStoreUpload": false,
+  "submitted": false,
+  "publishedThisUpdate": false
+}

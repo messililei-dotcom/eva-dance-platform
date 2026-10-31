@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-28",
+  "localConfigDocumentFilesChecked": 11599,
+  "localCodeFilesChecked": 11852,
+  "compressedCodexConversationsChecked": 856,
+  "uncompressedCodexConversationFilesChecked": 29,
+  "found": {
+    "applicationType": "website",
+    "applicationName": "SWOD伊娃东方舞官网",
+    "sourceThreadId": "019fab8a-dcb0-7cd2-8bdd-99be2133ebb1",
+    "sourceDate": "2026-07-29",
+    "sourceLine": 9,
+    "appId": "wxabcbd7a6d669e5cc",
+    "appSecretPresent": true,
+    "privateRecoveryFile": "/Users/lilei/.config/eva-app/wechat-website-recovered-20260729.json",
+    "privateFileMode": "0600",
+    "validityVerified": false,
+    "historicalEnvironmentKeys": [
+      "WECHAT_QR_APP_ID",
+      "WECHAT_QR_APP_SECRET"
+    ],
+    "historicalServerConfig": "/www/wwwroot/dongfangwuquan/website/.env"
+  },
+  "mobileAppConfigurationConfirmed": false,
+  "browserStatus": {
+    "openPlatform": "site safety blocked",
+    "developerCommunity": "site safety blocked"
+  },
+  "secretIncludedInReport": false,
+  "nativeAppConfigurationChanged": false
+}

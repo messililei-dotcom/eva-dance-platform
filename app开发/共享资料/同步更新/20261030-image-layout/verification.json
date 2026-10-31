@@ -1,0 +1,90 @@
+{
+  "updatedAt": "2026-10-30T17:11:34+08:00",
+  "status": "implemented-local-builds-complete",
+  "policy": "Fixed image frames, proportional cover scaling and centered clipping. No stretching or repeated tiling. Latest user instruction supersedes the initial contain plan.",
+  "frames": {
+    "courseThumbnail": "112 wide, existing text-driven height 84-160",
+    "courseDetail": "4:3",
+    "productMain": "1:1",
+    "productSmall": "90 square on iOS; 112 square on Harmony shop list",
+    "event": "existing fixed 1.25 ratio"
+  },
+  "borders": "No extra stroke or inner padding. Loaded images fill the frame; placeholder surfaces remain for unavailable images.",
+  "ios": {
+    "deviceBuild": 11,
+    "releaseCompiled": true,
+    "archive": "iOS/SWOD-images-build11-unsigned.xcarchive",
+    "signed": false,
+    "ipaExported": false,
+    "originalImagePreviewTestPassed": 1,
+    "preview": "evidence/fixed-frame-original-images-before-after.png",
+    "visualCheck": "Actual shared component rendered with two unchanged public original images. Cover scaling and no tinted bars visually confirmed. Not full-screen or physical-device acceptance."
+  },
+  "android": {
+    "build": 15,
+    "testsPassed": 32,
+    "lintPassed": true,
+    "releaseApkAabReady": true,
+    "originalSignatureVerified": true,
+    "certificateSHA256": "58ecee1c1cd0adc08f797ab9bb75dcb45e6a3b747c535939020d8ae8f0d548fe",
+    "runtimeVisualAccepted": false
+  },
+  "harmony": {
+    "build": 12,
+    "testsPassed": 44,
+    "releaseHapAppReady": true,
+    "originalSignatureVerified": true,
+    "runtimeVisualAccepted": false,
+    "buildRecord": "HarmonyOS-build12/verification.json"
+  },
+  "sourceAssetsModified": false,
+  "sampleHashes": {
+    "course-original.jpg": "c2bf4b9007bdd4ad65552a0988940414ad2eceeb8b97eefd1349cf65c5adaf50",
+    "._course-original.jpg": "d2e613b8fd3421be5f3116df43e1266e4e5ecb23536437d537b8824d1c518966",
+    "product-original.jpg": "b1661fbda827f494fc50d5fc73f5030a31ffc82ab0bff7bfad2791358c990681",
+    "._product-original.jpg": "d2e613b8fd3421be5f3116df43e1266e4e5ecb23536437d537b8824d1c518966"
+  },
+  "entitlementPricingAndDirectEntryChanged": false,
+  "filingChanged": false,
+  "signingIdentityChanged": false,
+  "productionFeatureFlagsChanged": false,
+  "physicalDeviceTests": "skipped-at-user-request",
+  "uploaded": false,
+  "submitted": false,
+  "published": false,
+  "existingReviewsWithdrawn": false,
+  "oldCandidateFilesHashVerifiedUnchanged": true,
+  "artifacts": [
+    {
+      "path": "Android-build15/installers/SWOD-1.0.1-15-release.aab",
+      "size": 15421897,
+      "sha256": "8820b4bab7eadc869e5a7781595e3189884eaf5aa5b39ce2239622ba26ba1103"
+    },
+    {
+      "path": "Android-build15/installers/SWOD-1.0.1-15-release.apk",
+      "size": 28923557,
+      "sha256": "29b8ba8dd4513b4344c629d8770873142214c3416ec9d3843b703fb5802500e8"
+    },
+    {
+      "path": "HarmonyOS-build12/installers/SWOD-1.0.1-12-release.app",
+      "size": 7596700,
+      "sha256": "3d0dd41104845862c64190b0d895a77e555f03a9361f3dd831489743d67c9777"
+    },
+    {
+      "path": "HarmonyOS-build12/installers/SWOD-1.0.1-12-release.hap",
+      "size": 16110943,
+      "sha256": "dc0363e5cbea0f60a868d24ebfb5f8cbf57a461d68049d14f0dd94df0e8a69fb"
+    }
+  ],
+  "sourceHashes": {
+    "iOS/EvaDance/Sources/EvaDanceApp/ArtworkImage.swift": "f62ea6935ceec2cfc7e6d34e23335fce95f0a9c3ef26b0f2ca01474fcddc6efb",
+    "iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift": "12709521b9784b0579e95d013da9b1eb9cdb06235e754b16803940ad608656db",
+    "iOS/EvaDance/Sources/EvaDanceApp/ShopViews.swift": "d638a6c38b37b9126476bc604c94dda158a35d329f07a43676d5bcd74e3efc70",
+    "iOS/EvaDance/Sources/EvaDanceApp/EventsView.swift": "b6b4f45e41e700bd54d8867ecdcb309204fd1eca262bb696c7691503418207c2",
+    "iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj": "7b6027fcc7f4276e37c85e58479759479d24f8c6924e014246d271ec0a933f4f",
+    "Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "429381b080734c4e2d297938ca3ebe5a1426ae041af03bae062977a1ae23188e",
+    "Android/EvaDance/app/build.gradle": "bd10a4ebc69bb221822d6d9ba753982970aeeb0abaa4f409526d2cf41b9dff54",
+    "HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "8c05f06cd9d032bb78ea5bbe25b5d94e5fa0cd36085df6c67cd7c1f4cee119df",
+    "HarmonyOS/EvaDance/AppScope/app.json5": "b7e618fdcdf0ec49074d7d7136bd171bda8cec7ecb32a0c19198f482977a11f7"
+  }
+}

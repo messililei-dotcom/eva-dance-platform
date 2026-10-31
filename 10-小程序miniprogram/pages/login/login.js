@@ -30,6 +30,7 @@ Page(share.withShare("login", {
     phoneLogging: false
   },
   countdownTimer: null,
+  onLoad(options = {}) { this.returnProfile = options.returnTab === 'profile'; this.loginCompleted = false; },
 
   onPhoneInput(e) {
     this.setData({ phone: e.detail.value.replace(/\D/g, '').slice(0, 11) });
@@ -86,6 +87,11 @@ Page(share.withShare("login", {
   },
 
   onUnload() {
+    if (this.returnProfile && !this.loginCompleted && !(wx.getStorageSync('token') && wx.getStorageSync('memberId'))) {
+      const app = getApp(); app.globalData.profileLoginCancelled = true;
+      const last = ['home','offline','events','mall'].includes(app.globalData.lastPublicTab) ? app.globalData.lastPublicTab : 'home';
+      wx.switchTab({ url: '/pages/' + last + '/' + last });
+    }
     if (this.countdownTimer) {
       clearInterval(this.countdownTimer);
       this.countdownTimer = null;
@@ -113,7 +119,10 @@ Page(share.withShare("login", {
     app.globalData.memberId = member.id;
     app.globalData.memberName = member.wx_nickname || member.name || "";
 
+    this.loginCompleted = true;
+    getApp().globalData.profileLoginCancelled = false;
     wx.showToast({ title: "登录成功", icon: "success" });
+    if (this.returnProfile) return wx.switchTab({ url: "/pages/profile/profile" });
     const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
     if (pages.length > 1) wx.navigateBack({ delta: 1 });
     else wx.switchTab({ url: "/pages/home/home" });

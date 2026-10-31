@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-10-24T20:08:57.212408+08:00",
+  "observations": {
+    "xiaomi": "开发者身份审核中",
+    "vivo": "基础资料人工审核中；尚未进入验证打款金额",
+    "tencent_yingyongbao": "账号资料审核中；通过后实名认证才可创建应用",
+    "oppo": "开发者资料正在审核中；审核通过前不能上传更新应用"
+  },
+  "officialPagesRefreshed": true,
+  "certificationStatusChanged": false,
+  "oppoSessionRecovered": true,
+  "newUserActionRequired": false,
+  "appUploaded": false,
+  "appSubmitted": false,
+  "publiclyReleased": false,
+  "copyrightBlockerUnchanged": true,
+  "ecommerceCorrectionPaused": true,
+  "notification": "DONT_NOTIFY"
+}

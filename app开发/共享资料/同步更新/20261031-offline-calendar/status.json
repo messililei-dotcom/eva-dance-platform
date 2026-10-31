@@ -1,0 +1,85 @@
+{
+  "asOf": "2026-10-31T01:07:48.435613+08:00",
+  "feature": "线下课程月历与左右滑动切月",
+  "website": {
+    "sourceSynced": true,
+    "buildPassed": true,
+    "deployed": true,
+    "public": true,
+    "browserVisualAccepted": false,
+    "url": "https://www.swod.com.cn/offline",
+    "build": "2um_o-PpzKia2UqCnSO6u",
+    "rollback": "/www/wwwroot/dongfangwuquan/deploy-backups/offline-calendar-20261031-004054/rollback.py",
+    "publicVerification": {
+      "url": "https://www.swod.com.cn/offline",
+      "publicHtmlReferencesNewBundle": true,
+      "chunk": "/_next/static/chunks/app/offline/page-749a7600da872cae.js",
+      "chunkSHA256": "a37c2f4190405a91372ad52c2d74b2a10a03f730572dede768a74eb2bfb5cc7e",
+      "monthCalendarCode": true,
+      "swipeHandlers": true,
+      "publicCoursePeriods": 140,
+      "browserVisualAcceptance": false
+    }
+  },
+  "miniProgram": {
+    "sourceSynced": true,
+    "regressionTestsPassed": 122,
+    "newCalendarTestsPassed": 4,
+    "developerToolsLoggedIn": false,
+    "uploaded": false,
+    "reviewSubmitted": false,
+    "released": false,
+    "blocker": "用户明确要求暂不上传；保留已同步源码与测试结果",
+    "uploadPausedByUser": true
+  },
+  "ios": {
+    "version": "1.0.2",
+    "build": 12,
+    "sourceSynced": true,
+    "simulatorBuildPassed": true,
+    "archivePassed": true,
+    "exportPassed": true,
+    "originalFilingSignatureVerified": true,
+    "uploaded": false,
+    "reviewSubmitted": false,
+    "released": false,
+    "blocker": "解锁后再次上传仍返回 Failed to Use Accounts；Xcode Apple Accounts 当前无账号，已打开用户登录窗口"
+  },
+  "android": {
+    "version": "1.0.2",
+    "build": 19,
+    "sourceSynced": true,
+    "unitTestsPassed": 32,
+    "lintPassed": true,
+    "signedApkAndAab": true,
+    "originalSignatureVerified": true,
+    "uploaded": false,
+    "reviewSubmitted": false,
+    "released": false,
+    "blocker": "浏览器控制仍关闭，无法操作商店后台；Android模拟器进程不是可附着的原生应用，尚未完成界面手势验收",
+    "emulatorInstallPassed": true
+  },
+  "harmony": {
+    "version": "1.0.2",
+    "build": 16,
+    "sourceSynced": true,
+    "buildPassed": true,
+    "regressionTestsPassed": 44,
+    "signedAppAndHap": true,
+    "signatureVerified": true,
+    "uploaded": false,
+    "reviewSubmitted": false,
+    "released": false,
+    "blocker": "浏览器控制仍关闭，无法操作AppGallery；打开模拟器应用时控制服务超时"
+  },
+  "runtimeAcceptance": {
+    "simulatorUi": false,
+    "physicalDevice": false,
+    "reason": "Mac已解锁，原生应用控制可用；iOS Simulator GUI缺失、Android原生应用附着失败、鸿蒙模拟器控制服务超时，尚未完成界面验收"
+  },
+  "filingChanged": false,
+  "existingReviewsWithdrawn": false,
+  "businessDatabaseMutations": false,
+  "macUnlockedVerified": true,
+  "browserControlEnabled": false
+}

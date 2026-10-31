@@ -1,0 +1,17 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): false
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=Eva Dongfangwu Android Release, O=Eva Culture and Art Development, ST=Hunan, C=CN
+Signer #1 certificate SHA-256 digest: 58ecee1c1cd0adc08f797ab9bb75dcb45e6a3b747c535939020d8ae8f0d548fe
+Signer #1 certificate SHA-1 digest: d92d7f9701205e22b84d7ccb90ca7f8bad643cec
+Signer #1 certificate MD5 digest: 460ddea3a2119d0c4f11c43c24889b11
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 2048
+Signer #1 public key SHA-256 digest: 35383a594fb05c2749b0f4e0a59051d0738d5a54e9dd3a2a4f1090213be36c3b
+Signer #1 public key SHA-1 digest: 7e31537e4c56242863db7414ef5136e949d55565
+Signer #1 public key MD5 digest: 0d6bc3b2ac5118de64eae8a223aec0b5

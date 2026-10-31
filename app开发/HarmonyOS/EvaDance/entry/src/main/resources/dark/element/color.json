@@ -27,6 +27,10 @@
     {
       "name": "swod_tonal",
       "value": "#3C272A"
+    },
+    {
+      "name": "swod_on_primary",
+      "value": "#000000"
     }
   ]
 }

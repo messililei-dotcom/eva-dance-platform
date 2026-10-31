@@ -1,0 +1,14 @@
+{
+  "sourcePages": 30,
+  "sourceSubmissionPages": 30,
+  "manualPages": 4,
+  "originalCodeLines": 971,
+  "sourceVisualRows": 1462,
+  "manualRows": 121,
+  "docxA4ForRegistration": true,
+  "draftFieldsStillUnconfirmed": [
+    "completionDate",
+    "publicationStatus",
+    "rightsScope"
+  ]
+}

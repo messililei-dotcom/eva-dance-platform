@@ -1,0 +1,22 @@
+{
+  "status": "BLOCKED_MISSING_TOOLCHAIN",
+  "requiredSdk": "HarmonyOS 6.0.2 (API 22)",
+  "studio": null,
+  "clt": null,
+  "tools": {
+    "node": "/Users/lilei/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "java": "/usr/bin/java",
+    "ohpm": null,
+    "hvigor": null
+  },
+  "sdkDirectories": [],
+  "missing": [
+    "DevEco Studio or official Command Line Tools",
+    "ohpm",
+    "Hvigor",
+    "HarmonyOS SDK directory"
+  ],
+  "sdkCompatibilityVerified": false,
+  "compiled": false,
+  "note": "仅探测文件路径；Java/SDK版本、依赖安装、ArkTS编译、签名及真机运行须另行验证。"
+}

@@ -13,6 +13,7 @@
     "abilities": [
       {
         "name": "EntryAbility",
+        "orientation": "auto_rotation_restricted",
         "srcEntry": "./ets/entryability/EntryAbility.ets",
         "description": "$string:EntryAbility_desc",
         "icon": "$media:brand_logo",
@@ -32,6 +33,11 @@
         ]
       }
     ],
-    "requestPermissions": [{ "name": "ohos.permission.INTERNET" }]
+    "requestPermissions": [
+      { "name": "ohos.permission.INTERNET" },
+      { "name": "ohos.permission.PRIVACY_WINDOW" },
+      { "name": "ohos.permission.GET_NETWORK_INFO" },
+      { "name": "ohos.permission.SET_NETWORK_INFO" }
+    ]
   }
 }

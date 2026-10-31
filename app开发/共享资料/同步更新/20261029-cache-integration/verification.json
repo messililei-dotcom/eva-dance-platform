@@ -1,0 +1,63 @@
+{
+  "updatedAt": "2026-10-29T07:01:17.880710+00:00",
+  "trial": {
+    "submitted": true,
+    "priceCNY": 0,
+    "licenseBound": true,
+    "status": "activated",
+    "instance": "ice_sdk_public_cn-my550u4m901",
+    "expiresAt": "2026-11-30T00:00:00+08:00"
+  },
+  "builds": {
+    "iosDeviceUnsigned": true,
+    "iosSimulator": true,
+    "androidSignedApkAndAab": true,
+    "harmonySignedHapAndApp": true
+  },
+  "tests": {
+    "iosContractChecks": 21,
+    "iosAdditionalRenewalAndClockAssertions": true,
+    "androidUnit": 29,
+    "androidRuntimeKeystoreRoundTrip": true,
+    "androidRuntimeTamperRejected": true,
+    "androidRuntimeLicenseValid": true,
+    "harmonyUnit": 41,
+    "backendTargeted": 36,
+    "privateClientAssetBoundaryTests": 4,
+    "androidEncryptedDownload": true,
+    "androidOfflineFrameWithNoNetwork": true,
+    "androidWrongBindingRejected": true,
+    "androidSystemDecoderRejected": true
+  },
+  "cloud": {
+    "region": "cn-shenzhen",
+    "downloadEnabled": false,
+    "threeAuthorizedCourseSamplesEncrypted": false,
+    "productionCacheEnabled": false,
+    "serverChangesDeployed": false,
+    "downloadEnabledForIsolatedTestThenRestoredOff": true,
+    "isolatedTestStreamEncrypted": true,
+    "existingCoursesModified": false
+  },
+  "pending": [
+    "iOS/Android/Harmony physical device end-to-end cache and entitlement acceptance",
+    "24h renewal/revoke/logout/reboot long-run device acceptance",
+    "SDK privacy and overseas environment acceptance before rollout",
+    "actual course encrypted-rendition migration design; existing courses untouched"
+  ],
+  "realDeviceAccepted": false,
+  "uploadedToStore": false,
+  "submittedForReview": false,
+  "published": false,
+  "filingChanged": false,
+  "snapshotCoverage": "21 recorded snapshots, some captured after initial edits; partial diff is not a complete pre-task rollback",
+  "runtimeBoundary": "Android emulator ran the production SDK media driver plus isolated fixture assertions. No production member cache API was enabled or deployed; full logged-in cache UI/renewal chain is not accepted on devices.",
+  "cleanup": {
+    "emulatorNetworkRestored": true,
+    "emulatorTestCacheRemoved": true,
+    "instrumentationApkRemoved": true,
+    "cleanReleaseApkRestored": true,
+    "cloudGlobalDownloadRestoredOff": true,
+    "cloudSyntheticMediaRetainedUnassociated": true
+  }
+}

@@ -346,3 +346,5 @@ button.locate-lesson{width:176rpx;min-width:88px;flex:0 0 176rpx;margin:0}
 .outline-status,.current-lesson-label,.catalog-caption,.pagination-range{font-size:12px}
 
 .hold-speed-hint{position:absolute;top:70rpx;left:0;right:0;z-index:30;text-align:center;color:#fff;font-size:26rpx;pointer-events:none;}
+
+.content{padding:16rpx 24rpx 36rpx}.video-card,.player-tabs,.outline,.notes-panel,.intro-panel{border:0;border-radius:0;box-shadow:none}.video-card{padding:16rpx 0}.player-tabs{margin-top:12rpx}.outline{padding:16rpx 0}.video-transport slider{min-height:88rpx}.catalog-search{border-radius:12rpx}.outline-item{border-radius:0;min-height:88rpx}

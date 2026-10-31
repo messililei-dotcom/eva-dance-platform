@@ -53,7 +53,7 @@
       <view class="video-transport {{showVideoControls ? 'visible' : ''}}">
         <button catchtap="togglePlayback" aria-label="{{isPlaying ? '暂停' : '播放'}}">{{isPlaying ? 'Ⅱ' : '▶'}}</button>
         <text>{{currentTimeText}} / {{durationText}}</text>
-        <slider min="0" max="{{currentDuration > 0 ? currentDuration : 1}}" value="{{currentSeconds}}" block-size="12" activeColor="#ffffff" backgroundColor="#777777" bindchange="seekPlayback" disabled="{{!currentDuration}}" />
+        <slider min="0" max="{{currentDuration > 0 ? currentDuration : 1}}" value="{{currentSeconds}}" block-size="12" activeColor="#ffffff" backgroundColor="#777777" bindchanging="onSeekStart" bindtouchstart="onSeekStart" bindtouchcancel="onSeekCancel" bindtouchend="onSeekCancel" bindchange="seekPlayback" disabled="{{!currentDuration}}" />
         <button catchtap="toggleMute" aria-label="{{isMuted ? '恢复声音' : '静音'}}">{{isMuted ? '静音' : '声音'}}</button>
       </view>
       <view class="player-menu-backdrop" wx:if="{{showPlayerMenu}}" bindtap="closePlayerMenu"></view>

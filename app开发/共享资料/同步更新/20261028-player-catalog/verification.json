@@ -1,0 +1,55 @@
+{
+  "verifiedAt": "2026-10-29T09:00:21.645835+08:00",
+  "scope": "Player catalog layout in iOS, Android and HarmonyOS",
+  "ios": {
+    "simulatorBuild": true,
+    "deviceReleaseCompile": true,
+    "deviceBuildSigned": false,
+    "fixtureUI": true,
+    "coreChecks": 21,
+    "realVideoPlaybackAccepted": false
+  },
+  "android": {
+    "releaseBuild": true,
+    "unitTests": 21,
+    "lint": true,
+    "apkSigned": true,
+    "certificateMD5": "460ddea3a2119d0c4f11c43c24889b11",
+    "emulatorInstalled": true,
+    "playerRuntimeAccepted": false
+  },
+  "harmony": {
+    "releaseBuild": true,
+    "unitTests": 31,
+    "signatureVerified": true,
+    "deviceConnected": false,
+    "playerRuntimeAccepted": false
+  },
+  "realDeviceAccepted": false,
+  "uploaded": false,
+  "submitted": false,
+  "published": false,
+  "filingChanged": false,
+  "artifacts": [
+    {
+      "file": "Android/installers/app-release.apk",
+      "bytes": 4495459,
+      "sha256": "206d18300c0c119bbe2e8fb353a1e1c34f939234648107d4cc6d4a76811d2aea"
+    },
+    {
+      "file": "Android/installers/app-release.aab",
+      "bytes": 3519278,
+      "sha256": "90d80983fbbd8c2f4978ce189039350210be4d12b466167270b2edf1caa7b86d"
+    },
+    {
+      "file": "HarmonyOS/installers/SWOD-1.0.0-8-release.hap",
+      "bytes": 1237592,
+      "sha256": "e99178d265328c9388d78ad6939b1ee9cbe3ae89e2c0bf6ae684e66363df485e"
+    },
+    {
+      "file": "HarmonyOS/installers/SWOD-1.0.0-8-release.app",
+      "bytes": 651792,
+      "sha256": "b867087d71db776bdd0cb0c8f454d6456e706d7b67cec72b4773e8ecc9e9a4fa"
+    }
+  ]
+}

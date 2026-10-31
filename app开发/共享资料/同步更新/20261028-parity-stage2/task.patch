@@ -1,0 +1,295 @@
+--- before/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java
+@@ -17,10 +17,13 @@
+ import java.util.concurrent.Executors;
+ 
+ /** Authorization precedes playback; a conflicting checkpoint never overwrites another device. */
+-public final class PlayerActivity extends Activity {
++public final class PlayerActivity extends androidx.activity.ComponentActivity {
+     private final ExecutorService io=Executors.newSingleThreadExecutor();
+     private final Handler timer=new Handler(Looper.getMainLooper());
+     private VideoView video;
++    private LinearLayout playerRoot;
++    private boolean fullscreen;
++    private int inlineVideoHeight;
+     private int[] playlistIds;
+     private String[] playlistNames;
+     private int playlistIndex = -1;
+@@ -56,37 +59,42 @@
+     }
+     private Api api;
+     private int lesson,revision;
++    private long playbackAccount, lastAuthorization;
++    private boolean authorizationPending;
+     private boolean ready,resumed,resumePlayback=true;
+     private volatile boolean destroyed;
+     private long seek;
+-    private final Runnable checkpoint=new Runnable(){public void run(){saveProgress();if(!destroyed&&resumed)timer.postDelayed(this,15000);}};
++    private final Runnable checkpoint=new Runnable(){public void run(){saveProgress();verifyAccess();if(!destroyed&&resumed)timer.postDelayed(this,15000);}};
+     @Override public void onCreate(Bundle saved){
+-        super.onCreate(saved);api=Api.get(this);lesson=getIntent().getIntExtra("lesson",0);
+-        LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);
++        super.onCreate(saved);getOnBackPressedDispatcher().addCallback(this,new androidx.activity.OnBackPressedCallback(true){@Override public void handleOnBackPressed(){if(fullscreen)setFullscreen(false);else finish();}});api=Api.get(this);playbackAccount=api.accountGeneration();lesson=getIntent().getIntExtra("lesson",0);
++        LinearLayout root=new LinearLayout(this);playerRoot=root;inlineVideoHeight=Math.round(getResources().getDisplayMetrics().widthPixels*9f/16f);root.setOrientation(LinearLayout.VERTICAL);
+         root.setOnApplyWindowInsetsListener((v,insets)->{if(android.os.Build.VERSION.SDK_INT>=30){android.graphics.Insets p=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.ime());root.setPadding(p.left,p.top,p.right,p.bottom);}else root.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});
+         TextView title=new TextView(this);title.setText(getIntent().getStringExtra("title"));title.setTextSize(18);root.addView(title);
+-        video=new VideoView(this);root.addView(video,new LinearLayout.LayoutParams(-1,0,1));MediaController controls=new MediaController(this);controls.setAnchorView(video);video.setMediaController(controls);
+-        status=new TextView(this);status.setText("正在验证课程权限…");root.addView(status);
++        video=new VideoView(this);root.addView(video,new LinearLayout.LayoutParams(-1,inlineVideoHeight));MediaController controls=new MediaController(this);controls.setAnchorView(video);video.setMediaController(controls);
++        ScrollView scroll=new ScrollView(this);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
++        LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);int gap=Math.round(12*getResources().getDisplayMetrics().density);content.setPadding(gap,0,gap,gap);scroll.addView(content);
++        status=new TextView(this);status.setText("正在验证课程权限…");content.addView(status);
+         playlistIds=getIntent().getIntArrayExtra("playlistIds");playlistNames=getIntent().getStringArrayExtra("playlistNames");
+         if(playlistIds!=null&&playlistNames!=null&&playlistIds.length==playlistNames.length){
+             for(int i=0;i<playlistIds.length;i++)if(playlistIds[i]==lesson)playlistIndex=i;
+             if(playlistIndex>=0){
+                 LinearLayout navigation=new LinearLayout(this);
+                 Button previous=new Button(this);previous.setText("上一节");previous.setEnabled(playlistIndex>0);previous.setOnClickListener(v->selectLesson(playlistIndex-1));
+-                Button catalog=new Button(this);catalog.setText("目录 · "+playlistIds.length+" 节");catalog.setOnClickListener(v->{endHoldSpeed();new AlertDialog.Builder(this).setTitle("课节目录").setSingleChoiceItems(playlistNames,playlistIndex,(dialog,at)->{dialog.dismiss();selectLesson(at);}).setNegativeButton("关闭",null).show();});
++                Button catalog=new Button(this);catalog.setText("目录 · "+playlistIds.length+" 节");catalog.setOnClickListener(v->{showDirectory();});
+                 Button next=new Button(this);next.setText("下一节");next.setEnabled(playlistIndex+1<playlistIds.length);next.setOnClickListener(v->selectLesson(playlistIndex+1));
+-                for(Button item:new Button[]{previous,catalog,next}){item.setAllCaps(false);item.setMinimumHeight(Math.round(48*getResources().getDisplayMetrics().density));navigation.addView(item,new LinearLayout.LayoutParams(0,-2,1));}root.addView(navigation);
++                for(Button item:new Button[]{previous,catalog,next}){item.setAllCaps(false);item.setMinimumHeight(Math.round(48*getResources().getDisplayMetrics().density));navigation.addView(item,new LinearLayout.LayoutParams(0,-2,1));}content.addView(navigation);
+             }
+         }
+-        if(CoursePolicy.isAudio(getIntent().getStringExtra("title"))){TextView audio=new TextView(this);audio.setText("SWOD · 音频课程，播放时没有视频画面");audio.setTextSize(18);root.addView(audio,1);}
++        if(CoursePolicy.isAudio(getIntent().getStringExtra("title"))){TextView audio=new TextView(this);audio.setText("SWOD · 音频课程，播放时没有视频画面");audio.setTextSize(18);content.addView(audio,0);}
+         LinearLayout actions=new LinearLayout(this);CheckBox mirror=new CheckBox(this);mirror.setText("镜像");mirror.setOnCheckedChangeListener((b,on)->video.setScaleX(on?-1:1));actions.addView(mirror);
+         CheckBox loop=new CheckBox(this);loop.setText("循环播放");actions.addView(loop);
+-        Spinner speed=new Spinner(this);speed.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"0.75×","1.0×","1.25×","1.5×"}));speed.setSelection(1);actions.addView(speed);root.addView(actions);
+-        Spinner quality=new Spinner(this);quality.setContentDescription("视频清晰度");root.addView(quality);
+-        EditText note=new EditText(this);note.setHint("记录练习笔记");root.addView(note);Button add=new Button(this);add.setText("保存本节笔记");root.addView(add);
++        Spinner speed=new Spinner(this);speed.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"0.75×","1.0×","1.25×","1.5×"}));speed.setSelection(1);actions.addView(speed);content.addView(actions);
++        Spinner quality=new Spinner(this);quality.setContentDescription("视频清晰度");content.addView(quality);
++        EditText note=new EditText(this);note.setHint("记录练习笔记");content.addView(note);Button add=new Button(this);add.setText("保存本节笔记");content.addView(add);
+         add.setOnClickListener(v->{String text=note.getText().toString().trim();if(text.isEmpty()||text.length()>5000||!ready)return;int at=video.getCurrentPosition()/1000;add.setEnabled(false);io.execute(()->{try{api.request("/notes","POST",new JSONObject().put("video_id",lesson).put("timestamp_seconds",at).put("content",text),true);runOnUiThread(()->{if(!destroyed){note.setText("");status.setText("笔记已保存");}});}catch(Exception e){message(e.getMessage());}finally{runOnUiThread(()->{if(!destroyed)add.setEnabled(true);});}});});
+-        Button bookmark=new Button(this);bookmark.setText("在当前位置添加书签");root.addView(bookmark);
++        Button bookmark=new Button(this);bookmark.setText("在当前位置添加书签");content.addView(bookmark);
+         bookmark.setOnClickListener(v->{if(!ready)return;int at=video.getCurrentPosition()/1000;bookmark.setEnabled(false);io.execute(()->{try{api.request("/bookmarks","POST",new JSONObject().put("video_id",lesson).put("timestamp_seconds",at).put("label","练习位置 "+at+" 秒"),true);message("书签已保存，可在个人中心打开");}catch(Exception e){message(e.getMessage());}finally{runOnUiThread(()->{if(!destroyed)bookmark.setEnabled(true);});}});});
++        Button expand=new Button(this);expand.setText("全屏播放");expand.setOnClickListener(v->setFullscreen(true));content.addView(expand,0);
+         setContentView(root);
+         installHoldSpeed();
+         if(lesson<=0){status.setText("课节无效，请返回课程目录");return;}
+@@ -107,8 +115,8 @@
+                 if(source.equals(url))qualityNames.set(0,option.optString("label","自动"));
+                 if(Policy.secureURL(source)&&!qualityURLs.contains(source)){qualityNames.add(option.optString("label","清晰度 "+(i+1)));qualityURLs.add(source);}
+             }
+-            runOnUiThread(()->{if(!destroyed){
+-                currentURL=url;video.setVideoURI(Uri.parse(url));
++            runOnUiThread(()->{if(!destroyed&&api.accountGeneration()==playbackAccount){
++                lastAuthorization=android.os.SystemClock.elapsedRealtime();currentURL=url;video.setVideoURI(Uri.parse(url));
+                 quality.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,qualityNames));
+                 quality.setEnabled(ready&&qualityURLs.size()>1);
+                 quality.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
+@@ -121,19 +129,53 @@
+             }});
+         }catch(Exception e){message(e.getMessage());}});
+     }
++    private void setFullscreen(boolean enabled){
++        fullscreen=enabled;endHoldSpeed();
++        for(int i=0;i<playerRoot.getChildCount();i++){android.view.View child=playerRoot.getChildAt(i);if(child!=video)child.setVisibility(enabled?android.view.View.GONE:android.view.View.VISIBLE);}
++        video.setLayoutParams(new LinearLayout.LayoutParams(-1,enabled?-1:inlineVideoHeight));
++        if(android.os.Build.VERSION.SDK_INT>=30&&getWindow().getInsetsController()!=null){
++            if(enabled){getWindow().getInsetsController().setSystemBarsBehavior(android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);getWindow().getInsetsController().hide(WindowInsets.Type.systemBars());}
++            else getWindow().getInsetsController().show(WindowInsets.Type.systemBars());
++        }
++    }
++    private void showDirectory(){
++        endHoldSpeed();
++        LinearLayout panel=new LinearLayout(this);panel.setOrientation(LinearLayout.VERTICAL);
++        EditText search=new EditText(this);search.setSingleLine(true);search.setHint("搜索课节");panel.addView(search);
++        ListView list=new ListView(this);panel.addView(list,new LinearLayout.LayoutParams(-1,Math.round(320*getResources().getDisplayMetrics().density)));
++        java.util.ArrayList<Integer> indices=new java.util.ArrayList<>();
++        java.util.ArrayList<String> labels=new java.util.ArrayList<>();
++        ArrayAdapter<String> adapter=new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,labels);list.setAdapter(adapter);
++        java.util.function.Consumer<String> filter=query->{indices.clear();labels.clear();for(int i=0;i<playlistNames.length;i++){String name=playlistNames[i]==null?"":playlistNames[i];if(name.toLowerCase(java.util.Locale.ROOT).contains(query.toLowerCase(java.util.Locale.ROOT))){indices.add(i);labels.add((i==playlistIndex?"正在播放 · ":"")+name);}}adapter.notifyDataSetChanged();};
++        filter.accept("");
++        search.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int start,int count,int after){}public void onTextChanged(CharSequence s,int start,int before,int count){filter.accept(s.toString());}public void afterTextChanged(android.text.Editable value){}});
++        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("课节目录").setView(panel).setNegativeButton("关闭",null).create();
++        list.setOnItemClickListener((parent,view,at,id)->{int index=indices.get(at);dialog.dismiss();selectLesson(index);});dialog.show();
++    }
+     private void selectLesson(int index){
+         if(playlistIds==null||playlistNames==null||index<0||index>=playlistIds.length||index==playlistIndex||playlistIds[index]<=0)return;
+         endHoldSpeed();
+         startActivity(new Intent(this,PlayerActivity.class).putExtra("lesson",playlistIds[index]).putExtra("title",playlistNames[index]).putExtra("playlistIds",playlistIds).putExtra("playlistNames",playlistNames));
+         finish();
+     }
+-    private void saveProgress(){if(!ready||destroyed)return;double position=video.getCurrentPosition()/1000.0,duration=video.getDuration()/1000.0;if(duration<=0||position<0)return;
+-        io.execute(()->{try{JSONObject result=(JSONObject)api.request("/video/"+lesson+"/progress","POST",new JSONObject().put("progress",Math.min(position,duration)).put("duration",duration).put("revision",revision),true);revision=result.optInt("revision",revision);}
++    private void saveProgress(){if(!ready||destroyed||api.accountGeneration()!=playbackAccount)return;double position=video.getCurrentPosition()/1000.0,duration=video.getDuration()/1000.0;if(duration<=0||position<0)return;
++        io.execute(()->{try{if(api.accountGeneration()!=playbackAccount)return;JSONObject result=(JSONObject)api.request("/video/"+lesson+"/progress","POST",new JSONObject().put("progress",Math.min(position,duration)).put("duration",duration).put("revision",revision),true);revision=result.optInt("revision",revision);}
+             catch(Api.Failure e){if(e.status==409){try{JSONObject c=(JSONObject)api.request("/video/"+lesson+"/progress","GET",null,true);revision=c.optInt("revision");message("另一设备已更新进度，本次没有覆盖。后续学习将继续同步。");}catch(Exception failure){message(failure.getMessage());}}else message(e.getMessage());}
+             catch(Exception e){message("学习进度未同步，请检查网络");}});
+     }
++    private void verifyAccess(){
++        if(destroyed||!ready||authorizationPending)return;
++        if(api.accountGeneration()!=playbackAccount){video.pause();ready=false;status.setText("账号已切换，请重新打开课程");return;}
++        if(android.os.SystemClock.elapsedRealtime()-lastAuthorization<60000)return;
++        authorizationPending=true;
++        io.execute(()->{try{
++            JSONObject result=(JSONObject)api.request("/video/"+lesson+"/play","GET",null,true);
++            if(!result.optBoolean("authorized")||api.accountGeneration()!=playbackAccount)throw new Exception("学习权限已变化，请返回课程重新加载");
++            runOnUiThread(()->{if(!destroyed){authorizationPending=false;lastAuthorization=android.os.SystemClock.elapsedRealtime();}});
++        }catch(Exception e){runOnUiThread(()->{if(!destroyed){authorizationPending=false;endHoldSpeed();video.pause();ready=false;status.setText("权限验证失败，请返回后重试："+e.getMessage());}});}});
++    }
+     private void message(String text){runOnUiThread(()->{if(!destroyed)status.setText(text);});}
+     @Override protected void onPause(){endHoldSpeed();if(ready)resumePlayback=video.isPlaying();resumed=false;saveProgress();video.pause();timer.removeCallbacks(checkpoint);super.onPause();}
+-    @Override protected void onResume(){super.onResume();resumed=true;if(ready){if(resumePlayback)video.start();timer.removeCallbacks(checkpoint);timer.postDelayed(checkpoint,15000);}}
++    @Override protected void onResume(){super.onResume();resumed=true;verifyAccess();if(ready){if(resumePlayback)video.start();timer.removeCallbacks(checkpoint);timer.postDelayed(checkpoint,15000);}}
+     @Override protected void onDestroy(){endHoldSpeed();media=null;timer.removeCallbacksAndMessages(null);destroyed=true;video.stopPlayback();io.shutdown();super.onDestroy();}
+ }
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
+@@ -48,14 +48,14 @@
+             guard let token = session.token else { throw APIError.sessionExpired }
+             playbackAccount = session.accountID
+             let playback: Playback = try await session.api.request("/video/\(id)/play", token: token)
+-            guard active, requestGeneration == generation else { return }
++            guard active, requestGeneration == generation, playbackAccount == session.accountID else { return }
+             guard playback.authorized else { throw APIError.denied }
+             qualities = playback.quality_options ?? []
+             quality = selectedQuality ?? qualities.first(where: { $0.url == playback.play_url })?.value ?? qualities.first?.value ?? "auto"
+             let raw = qualities.first(where: { $0.value == quality })?.url ?? playback.play_url
+             guard let url = AppPolicy.secureMediaURL(raw) else { throw APIError.service("视频地址不可用，请联系课程管理员。") }
+             let checkpoint = try await session.api.optionalProgress(lessonID: id, token: token)
+-            guard active, requestGeneration == generation else { return }
++            guard active, requestGeneration == generation, playbackAccount == session.accountID else { return }
+             revision = checkpoint?.revision ?? 0
+             player.replaceCurrentItem(with: AVPlayerItem(url: url))
+             let saved = checkpoint?.progress ?? 0
+@@ -87,6 +87,7 @@
+         while !Task.isCancelled && active {
+             do { try await Task.sleep(nanoseconds: 1_000_000_000) } catch { return }
+             guard active else { return }
++            guard playbackAccount == session.accountID, session.token != nil else { stop(); failure = "账号已切换，请重新打开课程"; return }
+             let p = player.currentTime().seconds
+             let d = player.currentItem?.duration.seconds ?? 0
+             if p.isFinite { position = p }
+@@ -117,6 +118,9 @@
+     @GestureState private var holdTouchActive = false
+     @State private var mirror = false
+     @State private var showNote = false
++    @State private var directoryQuery = ""
++    @State private var directoryLimit = 50
++    private var filteredLessons: [Lesson] { playlist.filter { directoryQuery.isEmpty || $0.name.localizedCaseInsensitiveContains(directoryQuery) } }
+     let lessonID: Int
+     let title: String
+     var playlist: [Lesson] = []
+@@ -188,10 +192,13 @@
+                         if index + 1 < playlist.count { nextLink(playlist[index + 1], text: "下一节") }
+                     }
+                     DisclosureGroup("课节目录 · 共 \(playlist.count) 节") {
+-                        ForEach(playlist) { lesson in
++                        TextField("搜索课节", text: $directoryQuery).textFieldStyle(.roundedBorder).onChange(of: directoryQuery) { _ in directoryLimit = 50 }
++                        ForEach(Array(filteredLessons.prefix(directoryLimit))) { lesson in
+                             if lesson.id == lessonID { Label(lesson.name + " · 当前课节", systemImage: "play.circle.fill").foregroundStyle(EvaBrand.red).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }
+                             else { nextLink(lesson, text: lesson.name).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }
+                         }
++                        if filteredLessons.isEmpty { Text("没有匹配的课节").foregroundStyle(.secondary) }
++                        if filteredLessons.count > directoryLimit { Button("显示更多课节") { directoryLimit += 50 }.frame(minHeight: 44) }
+                     }
+                 }
+             }.padding()
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/CarrierLogin.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/CarrierLogin.swift
+@@ -9,6 +9,8 @@
+ @MainActor final class CarrierLogin {
+     static let shared = CarrierLogin()
+     private var pending: CheckedContinuation<String, Error>?
++    private var timeoutTask: Task<Void, Never>?
++    private var attempt = UUID()
+     func token() async throws -> String {
+         #if targetEnvironment(simulator)
+         throw APIError.service("本机号码登录需要插有 SIM 卡的 iPhone，请在模拟器中使用短信登录。")
+@@ -28,9 +30,15 @@
+         while let presented = controller.presentedViewController { controller = presented }
+         return try await withCheckedThrowingContinuation { continuation in
+             pending = continuation
++            let request = UUID(); attempt = request
++            timeoutTask = Task {
++                do { try await Task.sleep(nanoseconds: 20_000_000_000) } catch { return }
++                guard self.attempt == request else { return }
++                self.finish(.failure(APIError.service("号码认证超时，请重试或使用短信登录。")))
++            }
+             TXCommonHandler.sharedInstance().setAuthSDKInfo(secret) { result in
+                 Task { @MainActor in
+-                    guard self.pending != nil else { return }
++                    guard self.pending != nil, self.attempt == request else { return }
+                     guard result["resultCode"] as? String == "600000" else {
+                         self.finish(.failure(APIError.service("号码认证初始化失败，请使用短信登录。"))); return
+                     }
+@@ -42,6 +50,7 @@
+                     model.privacyTwo = ["服务条款", "https://www.swod.com.cn/terms"]
+                     TXCommonHandler.sharedInstance().getLoginToken(withTimeout: 8, controller: controller, model: model) { result in
+                         Task { @MainActor in
++                            guard self.pending != nil, self.attempt == request else { return }
+                             let code = result["resultCode"] as? String ?? ""
+                             if code == "600000", let token = result["token"] as? String, !token.isEmpty {
+                                 self.finish(.success(token))
+@@ -64,6 +73,8 @@
+     private func finish(_ result: Result<String, Error>) {
+         guard let continuation = pending else { return }
+         pending = nil
++        timeoutTask?.cancel(); timeoutTask = nil
++        attempt = UUID()
+         #if canImport(ATAuthSDK)
+         TXCommonHandler.sharedInstance().cancelLoginVC(animated: true, complete: nil)
+         #endif
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -28,6 +28,10 @@
+   @State private progressRows: Row[] = [];
+   @State private videoPlaylist: Row[] = [];
+   @State private videoCatalogOpen: boolean = false;
++  @State private videoQuery: string = '';
++  @State private videoLimit: number = 50;
++  private lastAuthorization: number = 0;
++  private authorizationPending: boolean = false;
+   @State private videoQualities: MediaQuality[] = [];
+   @State private videoQuality: number = 0;
+   private qualityResume: number = -1;
+@@ -262,9 +266,22 @@
+     else if (!fromVideo) this.videoPlaylist = [];
+     // Capture the old lesson checkpoint before changing the selected lesson.
+     this.saveProgress(); this.duration = 0; this.playbackPosition = 0; this.revision = 0;
++    this.videoQuery = ''; this.videoLimit = 50; this.lastAuthorization = Date.now();
+     this.currentLessonID = String(row.id || row.video_id); this.videoCatalogOpen = false; this.videoQualities = []; this.qualityChanging = false; this.qualityResume = -1;
+     this.selected = row; this.go('video', this.title(row), '/video/' + Number(row.id || row.video_id) + '/play', true);
+     if (fromVideo) this.history.pop();
++  }
++  private async verifyVideoAccess(): Promise<void> {
++    if (this.authorizationPending || this.route.screen !== 'video' || Date.now() - this.lastAuthorization < 60000) return;
++    const version = this.generation; this.authorizationPending = true;
++    try {
++      const result = await platform.request<Row>('/video/' + this.currentLessonID + '/play', http.RequestMethod.GET, undefined, true);
++      if (version !== this.generation) return;
++      if (!result.authorized) throw new Error('学习权限已变化，请返回课程重新加载');
++      this.lastAuthorization = Date.now();
++    } catch (failure) {
++      if (version === this.generation) { this.endHoldSpeed(); this.controller.pause(); this.videoPlaying = false; this.playURL = ''; this.error = '权限验证失败，请返回后重试'; }
++    } finally { this.authorizationPending = false; }
+   }
+   private carrierLogin: CarrierLogin = new CarrierLogin();
+   private async loginCarrier(): Promise<void> {
+@@ -664,7 +681,7 @@
+       }
+       Video({ src: this.playURL, controller: this.controller, currentProgressRate: this.holdingSpeed ? 2 : this.selectedPlaybackRate }).width('100%').height(this.selected.mediaKind === 'audio' ? 72 : 230).objectFit(ImageFit.Contain).controls(true).loop(this.loop).scale({ x: this.mirror ? -1 : 1 })
+         .onPrepared((event?: VideoDuration) => { this.duration = event?.duration || 0; const position = this.qualityResume >= 0 ? this.qualityResume : this.playbackPosition; this.controller.setCurrentTime(Math.max(0, Math.min(position, this.duration))); this.playbackPosition = position; this.qualityResume = -1; this.qualityChanging = false; })
+-        .onUpdate((event?: VideoTime) => { if (this.qualityChanging) return; this.playbackPosition = event?.time || 0; if (Date.now() - this.lastCheckpoint > 15000) { this.lastCheckpoint = Date.now(); this.saveProgress(); } })
++        .onUpdate((event?: VideoTime) => { if (this.qualityChanging) return; this.playbackPosition = event?.time || 0; if (Date.now() - this.lastCheckpoint > 15000) { this.lastCheckpoint = Date.now(); this.saveProgress(); this.verifyVideoAccess(); } })
+         .onStart(() => { this.videoPlaying = true; })
+         .onPause(() => { this.endHoldSpeed(); this.videoPlaying = false; })
+         .onFinish(() => { this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); })
+@@ -685,9 +702,11 @@
+         }.width('100%')
+         if (this.videoCatalogOpen) {
+           Text('课节目录 · 共 ' + this.videoPlaylist.length + ' 节').fontSize(18).fontWeight(FontWeight.Bold)
+-          ForEach(this.videoPlaylist, (row: Row) => {
++          TextInput({ placeholder: '搜索课节', text: this.videoQuery }).onChange((value: string) => { this.videoQuery = value; this.videoLimit = 50; })
++          ForEach(this.videoPlaylist.filter((row: Row) => (row.name || '').toLowerCase().includes(this.videoQuery.toLowerCase())).slice(0, this.videoLimit), (row: Row) => {
+             this.action((String(row.id) === this.currentLessonID ? '当前课节 · ' : '') + (row.name || ''), () => { if (String(row.id) !== this.currentLessonID) this.startVideo(row); })
+           }, (row: Row) => String(row.id))
++          if (this.videoPlaylist.filter((row: Row) => (row.name || '').toLowerCase().includes(this.videoQuery.toLowerCase())).length > this.videoLimit) { this.action('显示更多课节', () => { this.videoLimit += 50; }) }
+         }
+       }
+       Row({ space: 8 }) {

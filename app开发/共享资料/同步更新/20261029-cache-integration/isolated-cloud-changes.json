@@ -1,0 +1,14 @@
+{
+  "updatedAt": "2026-10-29T07:01:17.880710+00:00",
+  "userApprovedSecureDownload": true,
+  "scope": "one synthetic ten-second test; production App cache off",
+  "globalDownloadHistory": [
+    "off",
+    "secure download enabled for test",
+    "off restored and verified in console"
+  ],
+  "testVideoID": "b0f27b56d36471f1b7610361c0c60102",
+  "nonDefaultTemplateGroupID": "f5c17b658fde096ceed6dbbbb1825562",
+  "existingCoursesModified": false,
+  "syntheticVideoRetainedForDeviceRetest": true
+}

@@ -1,0 +1,11 @@
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -1150,7 +1150,7 @@
+             .onHttpErrorReceive((event: OnHttpErrorReceiveEvent) => { if (event.request.isMainFrame()) { this.webLoading = false; this.webError = '网页暂时不可用，请稍后重试'; } })
+         }.layoutWeight(1).width('100%')
+       } else {
+-        Scroll(this.catalogScroller) { Column({ space: 8 }) { this.content() }.alignItems(this.route.screen === 'login' ? HorizontalAlign.Center : HorizontalAlign.Start).padding({ left: 16, right: 16, top: 4, bottom: 16 }).width('100%').constraintSize({ maxWidth: 760 }) }.layoutWeight(1).width('100%')
++        Scroll(this.catalogScroller) { Column({ space: 8 }) { this.content() }.alignItems(this.route.screen === 'login' ? HorizontalAlign.Center : HorizontalAlign.Start).padding({ left: 16, right: 16, top: 4, bottom: 16 }).width('100%').constraintSize({ maxWidth: 760 }) }.align(Alignment.Top).layoutWeight(1).width('100%')
+       }
+       Row({ space: 4 }) {
+         this.navItem('线上学院', 'home', this.activeTab === 'home' ? $r('app.media.nav_learn_on') : $r('app.media.nav_learn'), '线上学院', '/public/series')

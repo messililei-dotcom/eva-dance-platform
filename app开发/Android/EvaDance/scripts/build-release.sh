@@ -15,6 +15,7 @@ fi
 # Build on a native filesystem: macOS resource forks on exFAT break Android resource parsing.
 work_dir=$(mktemp -d "${TMPDIR:-/tmp}/eva-android-build.XXXXXX")
 rsync -a --exclude='._*' --exclude=.gradle --exclude=build --exclude=local.properties --exclude=signing.local.properties "$project_dir/" "$work_dir/"
+"${EVA_PYTHON_BIN:-python3}" "$project_dir/../../共享资料/scripts/prepare_vod_config.py" android "$work_dir"
 cd "$work_dir"
 if [ -n "${EVA_GRADLE_BIN:-}" ]; then
     "$EVA_GRADLE_BIN" --console=plain :app:testDebugUnitTest :app:lintRelease :app:assembleDebug :app:assembleRelease :app:bundleRelease

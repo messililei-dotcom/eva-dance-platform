@@ -1,0 +1,78 @@
+{
+  "checkedAt": "2026-10-28T22:34:26.047989+08:00",
+  "scope": "events list layout across iOS Android HarmonyOS; existing palette retained",
+  "sourceSHA256": {
+    "iOS/FullSiteViews.swift": "0ae91047f3db9963912a9e892c5e83c0a10a4771b076f89467ea5d89f983ff29",
+    "iOS/EventsView.swift": "271467ce10155c9829d551491dfbb62caa9b078126399c657a45f54d6240d272",
+    "iOS/EventPresentation.swift": "4f3469a7e2e5fe73e0bc1e856ee3d36a6dd9d174d1dd9ead4eaabb3af505fa4d",
+    "iOS/EvaCoreTests.swift": "e312bf2018e474fd5d31369fad01c190eddabdd2d42267d071b93a034c2af599",
+    "Android/MainActivity.java": "c26a51711511993615df6e880ee0ee221f652a5d56a2c640ec2d99e03f63058d",
+    "Android/EventPresentation.java": "0ab6e7506ad5409981fbe3c39637cc1494f24706e0d5966bcb40cd9e58a7a1e2",
+    "Android/EventPresentationTest.java": "b8f5fc44125b234547f41c1fd272b912575b167e86e7938d7476f7a3499cab25",
+    "HarmonyOS/Index.ets": "f83ac0c31f6d6fbef370001249f825a7d71c31a8541b32c96df8d3368eead41b",
+    "HarmonyOS/Models.ets": "544e45660e68ea313fc75803485417527c9e71fdf04cddea64586c078e28fe1d",
+    "HarmonyOS/EventPresentation.ets": "463ff324ccfd46fedff31602fb8ca0d20a4e37417ed362c6a6de797535015cdf",
+    "HarmonyOS/event-presentation.test.cjs": "6b6b1aedd94b6af5033fee965bce4be025e5e5a5352b30f34c3fe826c83dd5c3",
+    "HarmonyOS/SwodTheme.ets": "517f695d43115e75d27270b2343ee59f1bff8f3e675e9c6e5e0a87dc478ae6a2",
+    "HarmonyOS/base-color.json": "026f7ca009206633ec407c6467d5c7efe7c5efeffb7ebfa13ed15225b00a229e",
+    "HarmonyOS/dark-color.json": "8700229c19ee0800518114f176f89a1ce884850d729a267e4eaa94ca7e98edcf"
+  },
+  "publicEventCount": 39,
+  "countsPolicy": "null/missing remain unknown; zero stays zero; no partial total presented as complete",
+  "eventDates": "date-only end inclusive through Asia/Shanghai 23:59:59.999; database local timestamps use Asia/Shanghai",
+  "iOS": {
+    "version": "1.0.0(8)",
+    "build": "simulator and unsigned device Release passed",
+    "tests": "21 existing contract checks and login/course/product checks plus new event privacy, zero totals, date and registration boundary assertions passed",
+    "runtime": [
+      "double-column posters",
+      "name/place search",
+      "empty search result",
+      "correct detail destination",
+      "dark mode",
+      "accessibility single-column"
+    ],
+    "previewBundle": "cn.com.swod.app.parityqa"
+  },
+  "Android": {
+    "version": "1.0.0(9)",
+    "build": "debug, signed release APK/AAB and lintRelease passed",
+    "tests": {
+      "tests": 21,
+      "failures": 0,
+      "errors": 0
+    },
+    "runtime": "release installed on emulator; event page UI not verified because native UI window binding unavailable"
+  },
+  "HarmonyOS": {
+    "version": "1.0.0(8)",
+    "build": "signed HAP/APP and original certificate/profile verification passed",
+    "tests": {
+      "tests": 31,
+      "failures": 0
+    },
+    "runtime": "not verified; emulator unavailable in this session"
+  },
+  "serverDeployment": false,
+  "filingChanged": false,
+  "storeUpload": false,
+  "submittedOrPublished": false,
+  "artifacts": [
+    {
+      "path": "HarmonyOS/installers/SWOD-1.0.0-8-release.hap",
+      "sha256": "05a16e5b4c561169577999b84c306d3b83055c24551c2c6e6927621c35a00e24"
+    },
+    {
+      "path": "HarmonyOS/installers/SWOD-1.0.0-8-release.app",
+      "sha256": "1d285a36581747524fbe2dc38f680da77dd0e5dd7b0a49b387127dae84e467f1"
+    },
+    {
+      "path": "Android/installers/SWOD-1.0.0-9-event-layout-release.apk",
+      "sha256": "c5e22a122471f1f6e40c65a8648895d922ab0b74fa968adcecb8899c52e9d23f"
+    },
+    {
+      "path": "Android/installers/SWOD-1.0.0-9-event-layout-release.aab",
+      "sha256": "595e4cf83657d53e731fe1a839a401609de72632e264ba31c1f9d9dd9c016ed0"
+    }
+  ]
+}

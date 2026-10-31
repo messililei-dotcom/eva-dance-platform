@@ -1,0 +1,52 @@
+{
+  "asOf": "2026-10-26",
+  "sourceRoot": "/Volumes/Eva U disk/伊娃东方舞-开发工程",
+  "head": "b8139d6",
+  "sourceDirtyBeforeTask": true,
+  "artifacts": [
+    {
+      "platform": "Android",
+      "path": "/Users/lilei/Documents/Codex/2026-10-26/task-2/sync-20261026/android-release/installers/SWOD-1.0.0-8-release.aab",
+      "versionName": "1.0.0",
+      "versionCode": 8,
+      "bytes": 272248,
+      "sha256": "ceb807782f1f696b7afbdcba85ec56d92962c169a20ccb3b4e8dc205129f94cf"
+    },
+    {
+      "platform": "Android",
+      "path": "/Users/lilei/Documents/Codex/2026-10-26/task-2/sync-20261026/android-release/installers/SWOD-1.0.0-8-release.apk",
+      "versionName": "1.0.0",
+      "versionCode": 8,
+      "bytes": 273737,
+      "sha256": "e03b4a63dcb6c68b718624310bea4026231c5326cb112671b38cce3aac1d8cb8"
+    },
+    {
+      "platform": "HarmonyOS",
+      "path": "/Users/lilei/Documents/Codex/2026-10-26/task-2/sync-20261026/harmony-release/installers/SWOD-1.0.0-8-release.app",
+      "versionName": "1.0.0",
+      "versionCode": 8,
+      "bytes": 303208,
+      "sha256": "a1181e466d784d1a5791a498de554b5c1c7d08a91bda2c69cb9a0aaf53f9b1c7"
+    },
+    {
+      "platform": "HarmonyOS",
+      "path": "/Users/lilei/Documents/Codex/2026-10-26/task-2/sync-20261026/harmony-release/installers/SWOD-1.0.0-8-release.hap",
+      "versionName": "1.0.0",
+      "versionCode": 8,
+      "bytes": 456668,
+      "sha256": "f502f3b97f349789d7c10df05f8b6995aae69cd2be34e6c0efe3841e11154586"
+    }
+  ],
+  "iOS": {
+    "versionName": "1.0.0",
+    "build": 7,
+    "simulatorBuild": true,
+    "unsignedReleaseDeviceBuild": true,
+    "newIPAExported": false,
+    "existingReviewBuild": 6,
+    "submitted": false
+  },
+  "androidCertificateSHA256": "58ecee1c1cd0adc08f797ab9bb75dcb45e6a3b747c535939020d8ae8f0d548fe",
+  "uploaded": false,
+  "productionDeployed": false
+}

@@ -6,6 +6,17 @@ import EvaCore
     @Published private(set) var credentials: Login?
     @Published var error: String?
     @Published var showLogin = false
+    @Published private(set) var deletionReceipts = DeletionReceiptStore.read()
+    func prepareDeletionReceipt() throws -> LocalDeletionReceipt {
+        guard let memberID = accountID else { throw APIError.sessionExpired }
+        if let existing = deletionReceipts.first(where: { $0.memberID == memberID }) { return existing }
+        guard deletionReceipts.count < 50 else { throw APIError.service("本机注销回执较多，请联系平台处理。") }
+        let receipt = try DeletionReceiptStore.make(memberID: memberID)
+        let updated = deletionReceipts + [receipt]
+        try DeletionReceiptStore.save(updated)
+        deletionReceipts = updated
+        return receipt
+    }
     @Published private(set) var unlockedSeries: Set<Int> = []
     @Published private(set) var courseAccessReady = false
     private var accessRequest = 0
@@ -29,6 +40,8 @@ import EvaCore
     let publicTransport: APIClient
     let isFixture: Bool
     lazy var api = SessionClient(session: self)
+    lazy var notifications: AppNotifications = { let value = AppNotifications(); value.attach(self); return value }()
+    lazy var videoCache = CourseCacheStore(session: self)
     private var refreshTask: Task<Login, Error>?
     private var generation = 0
     init() {
@@ -45,16 +58,31 @@ import EvaCore
         if let value = TokenStore.read(), let data = value.data(using: .utf8) { credentials = try? JSONDecoder().decode(Login.self, from: data) }
     }
     func login(phone: String, code: String) async throws {
+        let version = generation
         let body = try JSONSerialization.data(withJSONObject: ["phone": phone, "code": code, "deviceName": "伊娃东方舞 iPhone / iPad"])
         let result: Login = try await transport.request("/auth/login", method: "POST", body: body)
+        try Task.checkCancellation()
+        guard version == generation else { throw CancellationError() }
+        try store(result); showLogin = false
+    }
+    func loginWithPassword(phone: String, password: String) async throws {
+        let version = generation
+        let body = try JSONSerialization.data(withJSONObject: ["phone": phone, "password": password, "deviceName": "伊娃东方舞 iPhone / iPad"])
+        let result: Login = try await transport.request("/auth/password-login", method: "POST", body: body)
+        try Task.checkCancellation()
+        guard version == generation else { throw CancellationError() }
         try store(result); showLogin = false
     }
     func loginWithCarrier(token: String) async throws {
+        let version = generation
         let body = try JSONSerialization.data(withJSONObject: ["accessToken": token, "deviceName": "伊娃东方舞 iPhone / iPad"])
         let result: Login = try await transport.request("/auth/one-tap", method: "POST", body: body)
+        try Task.checkCancellation()
+        guard version == generation else { throw CancellationError() }
         try store(result); showLogin = false
     }
     private func store(_ value: Login) throws {
+        if credentials?.memberId != value.memberId || credentials?.sessionId != value.sessionId { notifications.revoke(sessionID: credentials?.sessionId); notifications.reset(); videoCache.purge() }
         let data = try JSONEncoder().encode(value)
         try TokenStore.save(String(decoding: data, as: UTF8.self)); credentials = value
         unlockedSeries = []; courseAccessReady = false; Task { await refreshCourseAccess() }
@@ -76,8 +104,10 @@ import EvaCore
         clear()
         if let old { Task { let _: Empty? = try? await transport.request("/auth/logout", token: old, method: "POST", body: Data("{}".utf8)) } }
     }
-    func clear() { generation += 1; refreshTask?.cancel(); refreshTask = nil; TokenStore.delete(); credentials = nil; unlockedSeries = []; accessAccount = nil; courseAccessReady = true }
+    func clear() { generation += 1; notifications.revoke(sessionID: credentials?.sessionId); notifications.reset(); videoCache.purge(); refreshTask?.cancel(); refreshTask = nil; TokenStore.delete(); credentials = nil; unlockedSeries = []; accessAccount = nil; courseAccessReady = true }
     func handle(_ error: Error) {
+        // Closing a login sheet or replacing the account cancels obsolete view requests.
+        guard !(error is CancellationError), (error as? URLError)?.code != .cancelled else { return }
         if case APIError.sessionExpired = error { clear(); showLogin = true }
         self.error = error.localizedDescription
     }

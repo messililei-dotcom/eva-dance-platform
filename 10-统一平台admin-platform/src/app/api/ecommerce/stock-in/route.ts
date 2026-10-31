@@ -32,6 +32,7 @@ export async function POST(request: Request) {
     let product = body.product_id || body.productId
       ? db.prepare('SELECT * FROM shop_products WHERE id = ? AND status != ?').get(body.product_id || body.productId, 'deleted')
       : null;
+    const template = product;
     const color = cleanText(body.color, product?.color || '默认');
     const size = cleanText(body.size, product?.size || '均码');
 
@@ -66,6 +67,9 @@ export async function POST(request: Request) {
         now,
         now,
       );
+      if (template) {
+        db.prepare('UPDATE shop_products SET group_name=?,storefront_category=?,detail_text=?,detail_images=? WHERE id=?').run(template.group_name || '', template.storefront_category || '', template.detail_text || '', template.detail_images || '', id);
+      }
       product = db.prepare('SELECT * FROM shop_products WHERE id = ?').get(id);
     }
 

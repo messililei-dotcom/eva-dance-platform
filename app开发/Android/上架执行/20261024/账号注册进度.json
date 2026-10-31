@@ -1,0 +1,339 @@
+{
+  "asOf": "2026-10-25",
+  "company": "伊娃文化艺术发展（湖南）有限公司",
+  "huawei": {
+    "status": "enterprise_verified",
+    "evidence": "华为公司账号已认证.jpg",
+    "androidAppId": "119475083",
+    "appVersionState": "1.0.0 准备提交",
+    "latestSessionCheck": {
+      "checkedAt": "2026-10-27T16:19:23.875562+08:00",
+      "state": "华为账号登录页，需扫码或本人登录",
+      "reviewStateVerified": false
+    },
+    "latest20261028Check": {
+      "state": "需本人扫码或登录",
+      "reviewStateVerified": false
+    }
+  },
+  "xiaomi": {
+    "status": "enterprise_realname_completed_developer_identity_review_pending",
+    "evidence": "小米已提交开发者身份审核.jpg",
+    "authoritativeResult": "法大大实名认证已通过；小米最终提交后显示开发者身份审核中",
+    "note": "早期步骤不同步已解决，最终平台审核已提交，勿重复认证",
+    "latestReadback": "开发者身份审核中",
+    "thirdPartyRealnameVerified": true,
+    "userCompletedCorporateAmountVerification": true,
+    "finalPlatformReviewSubmitted": true,
+    "submittedResult": "开发者身份审核中",
+    "thirdPartyEvidence": "小米法大大实名认证通过.jpg",
+    "pending": [
+      "等待小米开发者身份人工审核结果"
+    ],
+    "certificationCompleted": false,
+    "lastOfficialRefreshAt": "2026-10-25T07:12:44.036499+08:00",
+    "latestEvidenceDirectory": "../20261025/定时核验0712",
+    "latestAppReadback": {
+      "appId": "2882303761520603185",
+      "packageName": "cn.com.swod.app",
+      "versionName": "1.0.0",
+      "versionCode": 9,
+      "apkPresentInDraft": true,
+      "state": "等待提交审核／草稿／未发布",
+      "reviewSubmitted": false,
+      "publicListingVerified": false,
+      "missingVisibleFields": [
+        "应用分类",
+        "图标",
+        "关键词",
+        "审核测试账号",
+        "至少4张应用截图",
+        "软件著作权证书或APP电子版权认证证书",
+        "资质材料评估",
+        "生成合成服务问卷",
+        "联系人手机验证码"
+      ],
+      "filingReadback": "湘ICP备2026005683号-5A"
+    },
+    "latestAppCheckAt": "2026-10-27T16:19:23.875562+08:00",
+    "latest20261028Check": {
+      "appId": "2882303761520603185",
+      "packageName": "cn.com.swod.app",
+      "versionCode": 9,
+      "versionName": "1.0.0",
+      "state": "等待提交审核／草稿／未发布",
+      "draftSaved": true,
+      "savedAtReadback": "2026-10-28 14:44",
+      "supplemented": [
+        "学习教育/教育分类",
+        "东方舞、舞蹈学习关键词",
+        "512x512正式图标",
+        "审核操作说明",
+        "既有受控审核会员凭据，仅官方字段使用，未抄入材料"
+      ],
+      "reviewSubmitted": false,
+      "publicListingVerified": false,
+      "remaining": [
+        "版权证书",
+        "最新版截图",
+        "特殊行业资质评估",
+        "生成合成服务问卷核实",
+        "联系人手机验证",
+        "真机验收"
+      ]
+    }
+  },
+  "oppo": {
+    "status": "corporate_amount_verified_developer_information_under_review",
+    "url": "https://open.oppomobile.com/new/admin/corporatePayment",
+    "pending": [
+      "等待OPPO开发者资料人工审核结果"
+    ],
+    "sensitiveIdentityNotCopiedToArchive": true,
+    "currentUserConsentForIdentitySubmission": true,
+    "developerAndPrivacyConsentChecked": true,
+    "sensitiveInfoConsentChecked": true,
+    "contractSignerSelection": "否，发生合同签署时再添加",
+    "captchaStatus": "早期滑块阻塞已解除，申请人验证和对公金额校验已完成",
+    "submitted": true,
+    "smsSentVerified": true,
+    "smsCodeEntered": true,
+    "applicantRealnameFormSubmitted": true,
+    "evidence": "OPPO对公校验通过资料审核中.jpg",
+    "faceVerificationCompleted": true,
+    "businessLicenseOriginalUploaded": true,
+    "bankBranchReadback": "长沙银行股份有限公司暮云支行",
+    "bankRoutingVerifiedByOfficialForm": true,
+    "bankAccountSubmittedWithCurrentUserConsent": true,
+    "accountTextMatchesUserOriginal": true,
+    "corporateVerificationRequestSubmitted": true,
+    "submittedResult": "开发者资料正在审核中；审核大约需要1-3个工作日；审核通过前不能上传更新应用",
+    "verificationPayor": "杭州天谷信息科技有限公司",
+    "latestExpectedArrivalDate": "2026-10-27",
+    "amountEntryLimit": 3,
+    "amountEntryAttemptsUsed": 1,
+    "certificationCompleted": false,
+    "amountVerificationCompleted": true,
+    "lastCheckObservation": "开发者资料正在审核中；审核通过前不能更新应用",
+    "lastCheckAt": "2026-10-25T07:12:44.036499+08:00",
+    "latestReadback": "开发者资料正在审核中；审核通过前不能更新应用",
+    "lastOfficialRefreshAt": "2026-10-25T07:12:44.036499+08:00",
+    "latestEvidenceDirectory": "../20261025/定时核验0712",
+    "liveReviewReverified": true,
+    "latestSessionCheck": {
+      "checkedAt": "2026-10-27T16:19:23.875562+08:00",
+      "state": "需登录，登录组件SDK加载失败；重新打开后仍停留登录页",
+      "reviewStateVerified": false
+    },
+    "latest20261028Check": {
+      "state": "登录组件恢复；需本人登录",
+      "reviewStateVerified": false
+    }
+  },
+  "vivo": {
+    "status": "enterprise_verification_submitted_waiting_review",
+    "url": "https://id.vivo.com.cn/?callback=https://dev.vivo.com.cn#/auth/bank/review",
+    "evidence": "vivo复核仍在人工审核.jpg",
+    "authoritativeResult": "审核中；提交成功",
+    "bankBranchExactMatchSelected": true,
+    "privacyPolicyAcceptedWithCurrentUserConfirmation": true,
+    "personalIdentityProvidedByUserNotArchived": true,
+    "verificationCodesNotArchived": true,
+    "nextStep": "审核通过后30分钟至3个工作日内，平台向公司账户打入小于1元款项，后续需用户核对金额",
+    "certificationCompleted": false,
+    "latestReadback": "基础资料人工审核中；尚未进入验证打款金额",
+    "pending": [
+      "等待企业资料人工审核，审核通过后再核对平台实际要求的打款金额"
+    ],
+    "lastOfficialRefreshAt": "2026-10-25T07:12:44.036499+08:00",
+    "latestEvidenceDirectory": "../20261025/定时核验0712",
+    "latestSessionCheck": {
+      "checkedAt": "2026-10-27T16:19:23.875562+08:00",
+      "state": "会话过期，需重新登录",
+      "reviewStateVerified": false
+    },
+    "latest20261028Check": {
+      "state": "需重新登录",
+      "reviewStateVerified": false
+    }
+  },
+  "tencent_yingyongbao": {
+    "status": "registered_account_information_under_review",
+    "url": "https://app.open.qq.com/p/developer/reg",
+    "prepared": [
+      "企业类型普通企业",
+      "公司名称",
+      "统一社会信用代码",
+      "联系人",
+      "手机号",
+      "邮箱",
+      "湖南长沙及详细企业地址"
+    ],
+    "smsRequestedOnce": true,
+    "emailCodeRequestedOnce": true,
+    "evidence": "应用宝复核账号资料审核中.jpg",
+    "pending": [
+      "等待账号资料审核结果",
+      "审核通过后按平台要求完成实名认证"
+    ],
+    "agreementAccepted": true,
+    "submitted": true,
+    "companyBankAccountFieldsPrepared": true,
+    "bankSelectionStatus": "已按用户指定选择长沙银行股份有限公司暮云支行并完成注册提交",
+    "smsCodeEntered": true,
+    "emailCodeEntered": true,
+    "codesValidatedByServer": false,
+    "businessLicenseOriginalLocated": true,
+    "businessLicenseFile": "公司资质原件/营业执照_原始照片.jpg",
+    "businessLicenseUploaded": true,
+    "bankBranchSelected": "长沙银行股份有限公司暮云支行",
+    "bankBranchChangeAuthorization": "用户本轮明确指定：没有汇金支行，改暮云支行",
+    "bankDirectoryBlockResolved": true,
+    "submitAttempted": true,
+    "submittedResult": "平台明确显示：注册成功，您的账号信息正在审核中",
+    "bankBranchEvidence": "应用宝已选择暮云支行.jpg",
+    "verificationRecovery": "早期注册阻塞已解除，用户补勾协议并提交成功；当前账号资料审核中",
+    "liveTabId": "895627590",
+    "sourceLicenseEvidence": "公司资质原件/来源核对.json",
+    "supportRequestSent": false,
+    "submissionActor": "用户手动补勾协议并提交",
+    "certificationCompleted": false,
+    "correction": "此前确认框停留的原因不能归结为验证组件；用户指出漏勾协议，已手动补勾并成功提交",
+    "latestReadback": "账号资料审核中；通过后实名认证才可创建应用",
+    "lastOfficialRefreshAt": "2026-10-25T07:12:44.036499+08:00",
+    "latestEvidenceDirectory": "../20261025/定时核验0712",
+    "latestSessionCheck": {
+      "checkedAt": "2026-10-27T16:19:23.875562+08:00",
+      "state": "需QQ登录",
+      "reviewStateVerified": false
+    },
+    "latest20261028Check": {
+      "state": "需QQ登录",
+      "reviewStateVerified": false
+    }
+  },
+  "noDuplicateAccountsCreated": true,
+  "noFinancialTransactionExecuted": true,
+  "noCodesPasswordsOrFullPersonalIdsArchived": true,
+  "companyOriginalAssetPreserved": true,
+  "monitoring": {
+    "automationId": "automation-6",
+    "name": "安卓市场认证与上架跟进",
+    "status": "ACTIVE",
+    "intervalHours": 1,
+    "notifyOnlyMeaningfulChangeOrUserAction": true,
+    "threadId": "01a13a2a-4293-73e0-b552-be75ad34400f"
+  },
+  "releaseCandidate": {
+    "versionName": "1.0.0",
+    "versionCode": 9,
+    "preparationDirectory": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/Android/发布准备包/20261027",
+    "apkSHA256": "29bbb5fb161003a4dcaff2cf37f4210dada9f57ca98e835f90d58bb0e5b3b840",
+    "uploaded": false,
+    "submittedForReview": false,
+    "publiclyReleased": false,
+    "existingHuaweiDraftVersionCode": 6,
+    "requiresReplacingOldArtifactInDraft": true,
+    "readiness": "NOT_READY_device_and_channel_materials",
+    "reviewerLoginVerified": false,
+    "reviewerAccountReusesExistingDedicatedMember": true,
+    "passwordMaterialStoredInPackage": false,
+    "softwareCopyrightDocumentFound": false,
+    "physicalDeviceVerified": false,
+    "softwareCopyrightStatus": "official_form_saved_waiting_truthful_eligibility_clarification",
+    "softwareCopyrightUserConfirmedAt": "2026-10-24T13:05:02.273035+08:00",
+    "reviewerLoginPriorEvidenceVersion": 7,
+    "uploadThreadNotificationOutcome": "unknown_no_response_do_not_repeat_without_check"
+  },
+  "copyrightPreparation": {
+    "asOf": "2026-10-24",
+    "directory": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/Android/版权与软著/20261024",
+    "companyDevelopmentConfirmedByUser": true,
+    "completionDateDraft": "2026-10-24",
+    "completionDateFinallyConfirmed": true,
+    "publicationStatusConfirmed": true,
+    "traditionalOnlyRequirementConfirmed": false,
+    "xiaomiOppoVivoTencentAcceptElectronicAlternative": true,
+    "huaweiAndroidSpecificFormStillNeedsVerification": true,
+    "officialCenterLoggedIn": true,
+    "applicationSubmitted": false,
+    "copyrightCertificateIssued": false,
+    "electronicCopyrightServiceQuotedCNY": 600,
+    "electronicCopyrightOrderPlaced": false,
+    "newProviderDataTransmissionAuthorized": false,
+    "sourcePdfPages": 30,
+    "manualPdfPages": 4,
+    "userAlreadyAskedFor": [],
+    "officialTemplatesFilledUnsigned": [
+      "应用宝应用发布承诺函",
+      "OPPO通用承诺函"
+    ],
+    "publicationStatus": "未发表",
+    "officialFormStage": "待提交材料／待上传签章页",
+    "existingDifferentSoftwareApplication": {
+      "name": "伊娃东方舞电商管理系统",
+      "flowNumber": "2026R11L2413059",
+      "status": "待补正",
+      "modified": false,
+      "workStatus": "paused_by_user",
+      "pauseReason": "用户明确指示暂时忽略伊娃东方舞电商管理系统",
+      "correctionSubmitted": false
+    },
+    "ownershipFinallyConfirmed": true,
+    "officialFlowNumber": "2026R11L3720301",
+    "sourceAndManualUploaded": true,
+    "officialCenterDataTransmissionAuthorized": true,
+    "aiDeclarationBlocker": "官方签章页要求未使用AI开发编写代码、撰写文档或生成申请材料；本次材料有AI参与，不能如实作出声明",
+    "nextAction": "核实可如实披露AI辅助的办理路径；不得签署未使用AI声明，不重复申请。"
+  },
+  "latestMarketplaceCheck": {
+    "checkedAt": "2026-10-28T14:45:08.556780+08:00",
+    "xiaomi": {
+      "appId": "2882303761520603185",
+      "packageName": "cn.com.swod.app",
+      "versionCode": 9,
+      "versionName": "1.0.0",
+      "state": "等待提交审核／草稿／未发布",
+      "draftSaved": true,
+      "savedAtReadback": "2026-10-28 14:44",
+      "supplemented": [
+        "学习教育/教育分类",
+        "东方舞、舞蹈学习关键词",
+        "512x512正式图标",
+        "审核操作说明",
+        "既有受控审核会员凭据，仅官方字段使用，未抄入材料"
+      ],
+      "reviewSubmitted": false,
+      "publicListingVerified": false,
+      "remaining": [
+        "版权证书",
+        "最新版截图",
+        "特殊行业资质评估",
+        "生成合成服务问卷核实",
+        "联系人手机验证",
+        "真机验收"
+      ]
+    },
+    "oppo": {
+      "state": "登录组件恢复；需本人登录",
+      "reviewStateVerified": false
+    },
+    "vivo": {
+      "state": "需重新登录",
+      "reviewStateVerified": false
+    },
+    "tencent_yingyongbao": {
+      "state": "需QQ登录",
+      "reviewStateVerified": false
+    },
+    "huawei": {
+      "state": "需本人扫码或登录",
+      "reviewStateVerified": false
+    },
+    "newOtpSent": false,
+    "submittedAnyApp": false,
+    "screenshotDecision": "现有7版学院截图课程名称与9版保留原名称的调整可能不一致，原件保留，未上传为9版最终素材。",
+    "emulator": "启动既有EvaRelease36看到隐私页，未接受条款、未做业务验收，已关闭本轮启动实例。",
+    "newPlatformNotice": "小米2026-10-27公告提示10月31日前导航条沉浸适配；当前源码已有WindowInsets处理，但尚无真机证明，不标验收完成。"
+  }
+}

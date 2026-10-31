@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.com.swod.app.CoursePolicyTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:02:35.359Z" hostname="Eva-Mac-mini.local" time="0.009">
+  <properties/>
+  <testcase name="progressAndOfficialPaymentOrigins" classname="cn.com.swod.app.CoursePolicyTest" time="0.001"/>
+  <testcase name="periodStateAndChinaDateBoundaries" classname="cn.com.swod.app.CoursePolicyTest" time="0.007"/>
+  <testcase name="pricesMatchServerPromoAndFreeRules" classname="cn.com.swod.app.CoursePolicyTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

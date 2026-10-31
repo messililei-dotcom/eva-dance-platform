@@ -1,0 +1,38 @@
+{
+  "automationId": "swod",
+  "triggeredAt": "2026-10-30T06:37:03.377Z",
+  "checkedAt": "2026-10-30T14:49:35+08:00",
+  "newReviewOrPublicResultVerified": false,
+  "apple": {
+    "managerAccess": "browser-control-unavailable",
+    "currentReviewStatusVerified": false,
+    "publicCN": "web-tool-unavailable",
+    "publicUS": "web-tool-unavailable",
+    "currentPublicStatusVerified": false
+  },
+  "huawei": {
+    "managerAccess": "existing Huawei-account login page; authenticated manager unavailable",
+    "currentReviewStatusVerified": false,
+    "currentPublicStatusVerified": false,
+    "newLoginReminderSent": false
+  },
+  "tencent": {
+    "managerAccess": "precise version-info URL redirected to public /p/home; page visibly offers registration/login",
+    "currentManagerAuthenticated": false,
+    "reviewSubmitted": false,
+    "evidence": "evidence/heartbeat-1437/tencent-manager-redirected-public-home.png",
+    "loginReminderDeferred": "No useful submission step until existing copyright and signed-material blockers are resolved; do not repeat login reminders."
+  },
+  "vivo": "Previously reported official support design explanation preserved; reselect category and publication time before final submission. No repeated case.",
+  "oppo": "Existing current privacy-statement confirmation remains unanswered; no acceptance, message or support attachment sent. Working package editor preserved without refresh.",
+  "existingReviewsWithdrawn": false,
+  "newSubmissionPerformed": false,
+  "filingChanged": false,
+  "originalSignaturesChanged": false,
+  "productionFeatureFlagsChanged": false,
+  "automationPromptUpdated": true,
+  "schedulePreserved": "every 4 hours",
+  "notificationDecision": "DONT_NOTIFY",
+  "notificationReason": "No newly verified review/public result or newly actionable material change; existing access/material/consent blockers remain.",
+  "temporaryTencentVerifierClosed": true
+}

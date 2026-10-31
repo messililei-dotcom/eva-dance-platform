@@ -6,7 +6,7 @@
     },
     {
       "name": "swod_canvas",
-      "value": "#F5F6F8"
+      "value": "#F6F7F9"
     },
     {
       "name": "swod_surface",
@@ -14,11 +14,11 @@
     },
     {
       "name": "swod_ink",
-      "value": "#20242B"
+      "value": "#202124"
     },
     {
       "name": "swod_muted",
-      "value": "#626A77"
+      "value": "#616773"
     },
     {
       "name": "swod_primary",
@@ -26,7 +26,11 @@
     },
     {
       "name": "swod_tonal",
-      "value": "#F9EDEC"
+      "value": "#F9EAEA"
+    },
+    {
+      "name": "swod_on_primary",
+      "value": "#FFFFFF"
     }
   ]
 }

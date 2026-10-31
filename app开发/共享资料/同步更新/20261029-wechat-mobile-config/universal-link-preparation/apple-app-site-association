@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "RT4J8ZD4JU.cn.com.swod.app",
+        "paths": [
+          "/app/wechat/",
+          "/app/wechat/*"
+        ]
+      }
+    ]
+  }
+}

@@ -20,15 +20,6 @@ function safelyDecode(value: string) {
   }
 }
 
-function normalizeName(value: string) {
-  return safelyDecode(value)
-    .replace(/\.[^.]+$/, '')
-    .replace(/-\d{8,}$/, '')
-    .replace(/^成品舞[｜|]/, '')
-    .replace(/[_\s"'“”‘’（）()·\-+]+/g, '')
-    .toLowerCase();
-}
-
 function filenameFromCoverUrl(value: string) {
   const clean = value.split(/[?#]/, 1)[0];
   return safelyDecode(clean.split('/').pop() || '');
@@ -39,15 +30,8 @@ export function findStaticSeriesCover(value?: string): CoverAsset | null {
   if (!image.includes('/api/course/series/cover/')) return null;
   const filename = filenameFromCoverUrl(image);
   if (!filename) return null;
-  if (covers[filename]) return covers[filename];
-
-  const wanted = normalizeName(filename);
-  if (!wanted) return null;
-  const matched = Object.entries(covers).find(([candidate]) => {
-    const normalized = normalizeName(candidate);
-    return normalized === wanted || normalized.startsWith(wanted) || wanted.startsWith(normalized);
-  });
-  return matched?.[1] || null;
+  // A changed filename is a new asset version; never reuse a same-title historical cover.
+  return covers[filename] || null;
 }
 
 export function resolveStaticSeriesCover(value?: string) {

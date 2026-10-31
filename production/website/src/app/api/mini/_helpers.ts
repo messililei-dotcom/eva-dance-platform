@@ -194,16 +194,32 @@ function sessionToken(member: { id: unknown; phone?: unknown }, sessionId = '') 
   return `${payload}.${sig}`;
 }
 
+
+export function memberAccountAvailable(db: AdminDb, id: number) {
+  const seen = new Set<number>();
+  const table = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='AppDeletionRequest'").get();
+  while (id && !seen.has(id)) {
+    seen.add(id);
+    const member = db.prepare('SELECT * FROM Member WHERE id=?').get<Record<string, any>>(id);
+    if (!member) return false;
+    if (table && db.prepare("SELECT id FROM AppDeletionRequest WHERE member_id=? AND status='pending'").get(id)) return false;
+    const target = Number(member.merged_to_member_id || String(member.remark || '').match(/member_id\s*=\s*(\d+)/i)?.[1] || 0);
+    if (!target) return !member.status || ['active','正常','enabled'].includes(member.status);
+    id = target;
+  }
+  return false;
+}
+
 function verifyMemberToken(token: string, request?: Request) {
   const payload = parseMemberToken(token);
   if (!payload) return 0;
-  // Legacy signed tokens remain valid during the three-day migration window.
-  if (!payload.sid) return payload.id;
-
-  const deviceSecret = readCookie(request, MEMBER_DEVICE_COOKIE);
-  if (!deviceSecret) return 0;
   const db = openAdminDb();
   try {
+    if (!memberAccountAvailable(db, payload.id)) return 0;
+    // Legacy tokens must pass the same account-deletion check as device cookies.
+    if (!payload.sid) return payload.id;
+    const deviceSecret = readCookie(request, MEMBER_DEVICE_COOKIE);
+    if (!deviceSecret) return 0;
     const session = db.prepare(
       `SELECT member_id, device_hash
        FROM MemberDeviceSession
@@ -269,7 +285,7 @@ export function getRecoverableDeviceSessionMemberId(db: AdminDb, request: Reques
   ].filter(Boolean) as string[];
   for (const token of candidates) {
     const payload = parseUnverifiedDeviceToken(token);
-    if (!payload) continue;
+    if (!payload || !memberAccountAvailable(db, payload.id)) continue;
     const session = db.prepare(
       `SELECT member_id, device_hash
        FROM MemberDeviceSession
@@ -425,7 +441,7 @@ export function getSeriesAccessStatus(db: AdminDb, seriesId: number, memberId: n
     trial_available: trialCount > 0 || freeTrialCourses > 0,
     trial_count: trialCount,
     reason: isFree ? 'free' : auth ? 'authorized' : 'locked',
-    message: isFree || auth ? '' : '请先申请授权观看完整学习',
+    message: isFree || auth ? '' : '当前未开通学习权限，请在课程详情页购买或联系课程客服',
   };
 }
 
@@ -472,7 +488,7 @@ export function getVideoAccessStatus(db: AdminDb, videoId: number, memberId: num
         : (isCourseTrial || isVideoFree || isWithinTrialCount)
           ? 'trial'
           : 'locked',
-    message: authorized ? '' : '请先申请授权观看完整学习',
+    message: authorized ? '' : '当前未开通学习权限，请在课程详情页购买或联系课程客服',
   };
 }
 
@@ -674,7 +690,7 @@ export function createMemberDeviceSession(
   loginMethod: 'phone' | 'wechat' | 'qr' | 'mini_handoff' | 'legacy' = 'phone',
 ): MemberDeviceSession {
   const memberId = toPositiveInt(member.id, 0);
-  if (!memberId) throw new Error('学员账号无效');
+  if (!memberId || !memberAccountAvailable(db, memberId)) throw new Error('账号不可用或注销处理中');
   const now = Date.now();
   const id = crypto.randomUUID();
   const deviceSecret = readCookie(request, MEMBER_DEVICE_COOKIE) || crypto.randomBytes(32).toString('base64url');

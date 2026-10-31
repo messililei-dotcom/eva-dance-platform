@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { Grid3X3, Calendar, MapPin, ChevronRight, ChevronLeft, ChevronRight as NextIcon } from 'lucide-react';
+import { Grid3X3, Calendar, MapPin, ChevronRight, ChevronRight as NextIcon } from 'lucide-react';
 import ScrollAnimation from '@/components/ScrollAnimation';
+import OfflineMonthCalendar from '@/components/OfflineMonthCalendar';
 import CourseCard from '@/components/CourseCard';
 import { type Course } from '@/config/courses';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { getPublicCourseName, PublicCourseRecord } from '@/lib/course-match';
+import { PublicCourseRecord } from '@/lib/course-match';
 
 type PlatformOfflineCourse = Course & {
   platformCourseId?: number;
@@ -109,10 +110,10 @@ function mergeOfflineCourseSessions(courses: PlatformOfflineCourse[]): PlatformO
 
 export default function OfflineCoursesPage() {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [calendarCourses, setCalendarCourses] = useState<PublicCourseRecord[]>([]);
   const [offlineCourses, setOfflineCourses] = useState<PlatformOfflineCourse[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
+  const [calendarError, setCalendarError] = useState(false);
   const [platformReady, setPlatformReady] = useState(false);
 
   useEffect(() => {
@@ -122,11 +123,12 @@ export default function OfflineCoursesPage() {
       .then(res => res.json())
       .then(data => {
         if (!mounted) return;
+        if (data?.success === false) throw new Error(data.error || '课程排期加载失败');
         const rows: PlatformOfflineCourse[] = Array.isArray(data) ? data : data.data || [];
         setOfflineCourses(rows);
         setPlatformReady(Boolean(data?.success && rows.length));
         setCalendarCourses(rows.map((course) => ({
-          id: course.legacyCourseId || course.id,
+          id: course.platformCourseId || course.id,
           name: course.title,
           officialCourseName: course.title,
           type: course.type,
@@ -143,6 +145,7 @@ export default function OfflineCoursesPage() {
       .catch(error => {
         console.error('加载数字化平台线下课程失败:', error);
         if (mounted) {
+          setCalendarError(true);
           setOfflineCourses([]);
           setCalendarCourses([]);
         }
@@ -162,37 +165,6 @@ export default function OfflineCoursesPage() {
     total: groupedOfflineCourses.length,
     cities: cityNames.length ? cityNames : ['长沙', '北京', '上海', '广州', '深圳', '成都'],
     upcoming: groupedOfflineCourses.filter((course) => course.startDate && course.startDate >= new Date().toISOString().slice(0, 10)).length,
-  };
-
-  // 月份名称
-  const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-
-  // 课程日历视图 - 筛选课程
-  const calendarFilteredCourses = useMemo(() => {
-    return calendarCourses.filter(course => {
-      if (selectedMonth !== 0) {
-        if (!course.startDate) return false;
-        const courseStartMonth = parseInt(course.startDate.split('-')[1], 10);
-        const courseEndMonth = parseInt((course.endDate || course.startDate).split('-')[1], 10);
-        const courseStartYear = parseInt(course.startDate.split('-')[0], 10);
-        const courseEndYear = parseInt((course.endDate || course.startDate).split('-')[0], 10);
-        
-        const hasIntersection = 
-          (courseStartYear <= 2026 && courseStartMonth <= selectedMonth) &&
-          (courseEndYear >= 2026 && courseEndMonth >= selectedMonth);
-          
-        if (!hasIntersection) return false;
-      }
-      return true;
-    });
-  }, [calendarCourses, selectedMonth]);
-
-  // 课程颜色
-  const getCourseColor = (course: PublicCourseRecord) => {
-    if (course.type === '集训' || course.type === 'bootcamp') return 'bg-red-500';
-    if (course.type === '传承弟子' || course.type === 'masterclass') return 'bg-green-500';
-    if (course.type === '认证班' || course.type === 'certification') return 'bg-blue-500';
-    return 'bg-[#C8A96E]';
   };
 
   return (
@@ -312,102 +284,10 @@ export default function OfflineCoursesPage() {
 
           {/* 课程日历视图 */}
           {viewMode === 'calendar' && (
-            <>
-              {/* 月份选择 */}
-              <ScrollAnimation>
-                <div className="mb-6 flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => setSelectedMonth(Math.max(1, selectedMonth - 1))}
-                    className="p-2 bg-white rounded-lg border border-gray-200 hover:border-crimson/30 transition-colors"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <div className="px-6 py-2 bg-crimson text-white rounded-lg font-medium">
-                    2026年 {monthNames[selectedMonth - 1]}
-                  </div>
-                  <button
-                    onClick={() => setSelectedMonth(Math.min(12, selectedMonth + 1))}
-                    className="p-2 bg-white rounded-lg border border-gray-200 hover:border-crimson/30 transition-colors"
-                  >
-                    <NextIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              </ScrollAnimation>
-
-              {/* 课程时间线 */}
-              <ScrollAnimation delay={100}>
-                <div className="space-y-4">
-                  {calendarFilteredCourses.length > 0 ? (
-                    calendarFilteredCourses.map((course, i) => (
-                      <div key={course.id} className="flex gap-4 p-4 bg-white rounded-xl border border-gray-100 hover:border-crimson/30 transition-all">
-                        {/* 时间 */}
-                        <div className="flex-shrink-0 w-32">
-                          <div className="text-sm font-medium text-crimson">
-                            {course.startDate?.split('-').slice(1).join('/')} - {(course.endDate || course.startDate)?.split('-').slice(1).join('/')}
-                          </div>
-                          <div className="text-xs text-text-muted mt-1">
-                            {(() => {
-                              const start = new Date(course.startDate || '');
-                              const end = new Date(course.endDate || course.startDate || '');
-                              const days = Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
-                              return Number.isFinite(days) && days > 0 ? `${days}天` : '时间待定';
-                            })()}
-                          </div>
-                        </div>
-                        
-                        {/* 课程信息 */}
-                        <div className="flex-1">
-                          <div className="flex items-start gap-3">
-                            <div className={`w-3 h-3 rounded-full ${getCourseColor(course)} mt-1.5`}></div>
-                            <div>
-                              <Link
-                                href={`/offline/${course.id}`}
-                                className="block font-medium text-text mb-1 hover:text-crimson transition-colors"
-                              >
-                                {getPublicCourseName(course)}
-                              </Link>
-                              <div className="flex flex-wrap gap-2 text-xs">
-                                <span className="px-2 py-0.5 bg-crimson/10 text-crimson rounded-full">{course.type}</span>
-                                {course.scheduleLabel && (
-                                  <span className="px-2 py-0.5 bg-gray-100 text-text-secondary rounded-full">{course.scheduleLabel}</span>
-                                )}
-                                {course.teacher && (
-                                  <span className="px-2 py-0.5 bg-gold/10 text-gold-dark rounded-full">{course.teacher}</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* 价格 */}
-                        <div className="flex-shrink-0 text-right">
-                          <div className="text-lg font-bold text-crimson">¥{Number(course.price || 0).toLocaleString()}</div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-16">
-                      <Calendar className="w-12 h-12 text-crimson/30 mx-auto mb-4" />
-                      <p className="text-text-muted">本月暂无课程安排</p>
-                      <p className="text-text-secondary text-sm">请切换其他月份查看</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollAnimation>
-
-              {/* 查看全部课程期次 */}
-              <ScrollAnimation delay={200}>
-                <div className="mt-6 text-center">
-                  <Link
-                    href="/offline?tab=courses"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-crimson text-white rounded-full hover:bg-crimson-dark transition-all"
-                  >
-                    查看全部课程期次
-                    <NextIcon className="w-4 h-4" />
-                  </Link>
-                </div>
-              </ScrollAnimation>
-            </>
+            calendarError ? <div role="alert" className="rounded-xl border border-[#e8ddcb] bg-white p-6 text-center">
+              <p>课程排期加载失败，请重试。</p>
+              <button type="button" onClick={() => window.location.reload()} className="mt-3 rounded-lg bg-crimson px-5 py-3 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crimson">重新加载</button>
+            </div> : <OfflineMonthCalendar courses={calendarCourses} loading={coursesLoading} />
           )}
         </div>
       </section>

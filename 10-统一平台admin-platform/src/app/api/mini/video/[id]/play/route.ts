@@ -42,7 +42,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       if (!video) return jsonError('视频不存在', 404);
       const member = db.prepare('SELECT phone FROM Member WHERE id=?').get<{ phone?: string }>(memberId);
       const access = getVideoAccessStatus(db, videoId, memberId, member?.phone || '');
-      if (!access.authorized) return jsonError(access.message || '请先申请授权观看完整学习', 403);
+      if (!access.authorized) return jsonError(access.message || '当前未开通学习权限，请在课程详情页购买或联系课程客服', 403);
       recordSeriesVisit(db, Number(video.series_id || 0), memberId, 'video', request);
       const rawUrl = video.file_url || video.file_path || '';
       const isRemoteUrl = /^https?:\/\//.test(rawUrl);

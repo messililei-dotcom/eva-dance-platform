@@ -1,0 +1,35 @@
+{
+  "automationId": "swod",
+  "triggeredAt": "2026-10-30T10:37:06.289Z",
+  "checkedAt": "2026-10-30T18:44:10+08:00",
+  "currentReviewStatusVerified": false,
+  "currentPublicStatusVerified": false,
+  "browserAccess": "browser.user is unavailable on existing IAB tab and documented owned-tab read; stopped further reads; no alternate service/browser bypass",
+  "inventoryOnly": {
+    "apple": "existing App Store Connect apps tab; no review body read",
+    "huawei": "existing Huawei account login page",
+    "tencent": "existing public homepage metadata; manager not verified",
+    "oppoVivo": "original working editors preserved; no new read or mutation"
+  },
+  "publicStoreRead": {
+    "CN": "web tool could not access",
+    "US": "web tool could not access"
+  },
+  "localCandidate": {
+    "android": 17,
+    "apkSHA256": "4767069ac760ca97198511ebdbb949dfa5126fd713d8dfa2fb11369d66ace305",
+    "apkHashVerified": true,
+    "harmony": 14,
+    "iosNew11SignedIPAReady": false
+  },
+  "historicalVendorScreenshotsBuild": 12,
+  "latestAndroidScreenshotsMatch": false,
+  "supportHistoryReconciledFrom": "support-submission-status.json",
+  "newReviewOrPublicResultVerified": false,
+  "existingReviewsWithdrawn": false,
+  "newSubmissionPerformed": false,
+  "filingChanged": false,
+  "originalSignaturesChanged": false,
+  "notificationDecision": "DONT_NOTIFY",
+  "reason": "Same inaccessible official state and existing material blockers; no newly verified actionable change."
+}

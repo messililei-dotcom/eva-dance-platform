@@ -4,3 +4,5 @@
 .selected-period { border-color: #8b1a1a; background: #fff8f5; }
 
 .anonymous-students{display:flex;flex-wrap:wrap;gap:12rpx;margin:16rpx 0}.anonymous-students text{padding:10rpx 16rpx;border-radius:20rpx;background:#f7f3eb;color:#8c8172;font-size:22rpx}
+
+.detail-page{padding:20rpx 28rpx calc(150rpx + env(safe-area-inset-bottom));background:#fff;box-sizing:border-box}.course-cover{border-radius:8rpx;background:transparent}.course-info{padding:20rpx 0;border:0;border-radius:0}.period-list{gap:0}.period-card{padding:20rpx 0;border:0;border-bottom:1rpx solid #eceff3;border-radius:0}.selected-period{background:#fff8f5}.info-grid view{border-radius:8rpx}.period-schedule{min-height:88rpx}.course-cover image{border:0;padding:0}

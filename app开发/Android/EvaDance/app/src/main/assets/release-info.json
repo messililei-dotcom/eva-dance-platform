@@ -1,0 +1,16 @@
+{
+  "applicationId": "cn.com.swod.app",
+  "appName": "SWOD",
+  "brand": "伊娃东方舞",
+  "operator": "伊娃文化艺术发展（湖南）有限公司",
+  "filingNumber": "湘ICP备2026005683号-5A",
+  "filingStatus": "completed_user_confirmed",
+  "filingConfirmedAt": "2026-10-23",
+  "filingEvidence": "用户在本次对话确认备案完成并提供最终编号",
+  "privacyVersion": "2026-10-30-children-v1",
+  "privacyURL": "https://www.swod.com.cn/app/privacy.html",
+  "termsURL": "https://www.swod.com.cn/app/terms.html",
+  "processorsURL": "https://www.swod.com.cn/app/processors.html",
+  "supportURL": "https://www.swod.com.cn/contact",
+  "childrenPrivacyURL": "https://www.swod.com.cn/app/children-privacy.html"
+}

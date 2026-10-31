@@ -1,0 +1,37 @@
+{
+  "checkedAt": "2026-10-30T09:55:52+08:00",
+  "apkVersionCode": 12,
+  "apkSHA256": "1ea2ac9bab6017279ee93a7fb7e5b2260179eabe8d2fe7b87532820838f9ec73",
+  "officialSource": "https://sdk.caict.ac.cn/official/#/public/sdklist/risk/all",
+  "riskListPages": 5,
+  "riskListProducts": 147,
+  "listComplete": true,
+  "matchingListedProductAndVersion": [],
+  "dependencyInventory": "../20261029/evidence/android-runtime-dependencies.txt",
+  "localAARs": [
+    "AliyunPlayer-7.18.0-full.aar",
+    "auth_number_product-2.14.24-log-online-standard-cuum-release.aar",
+    "logger-2.2.2-release.aar",
+    "main-2.2.3-release.aar"
+  ],
+  "reviewedDependencies": {
+    "aliyunPush": "3.10.1",
+    "huaweiPush": "6.13.0.300",
+    "huaweiStatsAndHatool": "6.13.0.301",
+    "xiaomiPush": "6.0.1",
+    "oppoPush": "3.7.1",
+    "vivoPush": "4.1.0.0"
+  },
+  "disambiguation": [
+    "Public list Xiaomi statistics1.9.11 is not Xiaomi push6.0.1.",
+    "Public list Huawei analytics Android6.12.0 is not an exact match for resolved HMS stats/hatool6.13.0.301; other listed Huawei kits are not included in the resolved dependencies.",
+    "HeyTap account authorization2.2.4 is a different product from OPPO push3.7.1.",
+    "Vivo self-upgrade6100 and own ad SDK4620 are different products from vivo push4.1.0.0.",
+    "The other listed players and number-authentication products are different vendors from the installed Aliyun SDKs."
+  ],
+  "scope": "As-of-date published-list and resolved-dependency cross-check only; does not replace runtime privacy testing or marketplace inspection.",
+  "listSnapshotFiles": "evidence/sdk-risk/all-page-*.txt",
+  "tencentCheckboxChecked": true,
+  "tencentVersionDataSaved": true,
+  "updatedAt": "2026-10-30T10:30:08+08:00"
+}

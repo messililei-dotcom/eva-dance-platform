@@ -1,0 +1,18 @@
+{
+  "tests": 29,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "lintErrors": 0,
+  "lintWarnings": 24,
+  "dexUnchangedFromBuild11": true,
+  "changedZipEntries": [
+    "AndroidManifest.xml",
+    "assets/app-privacy.txt",
+    "assets/release-info.json"
+  ],
+  "policyVersion": "2026-10-30-children-v1",
+  "filingNumber": "湘ICP备2026005683号-5A",
+  "policyAssetMatchesSource": true,
+  "buildWorkDirectory": "/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.Wcf6ud"
+}

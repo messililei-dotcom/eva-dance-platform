@@ -1,0 +1,70 @@
+{
+  "verifiedAt": "2026-10-29T10:31:37.866432+08:00",
+  "configurationSynchronized": true,
+  "mobileLoginPermission": "user_confirmed_enabled",
+  "privateConfigMode": "0600",
+  "wechatSecretAbsentFromClientArtifacts": true,
+  "serverConfigurationTests": {
+    "pass": 3,
+    "typecheck": true
+  },
+  "ios": {
+    "simulatorBuild": true,
+    "bundleId": "cn.com.swod.app.parityqa",
+    "formalSignedPackage": false,
+    "deviceAcceptance": false,
+    "coreContractChecks": 21
+  },
+  "android": {
+    "unitTestsAndLintAndBuild": true,
+    "signatureMD5": "460ddea3a2119d0c4f11c43c24889b11",
+    "deviceAcceptance": false,
+    "unitTestResults": {
+      "tests": 26,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "harmony": {
+    "signedHapAndAppBuild": true,
+    "deviceAcceptance": false,
+    "unitTests": 37
+  },
+  "domain": {
+    "wellKnownAASA": 404,
+    "rootAASA": 404,
+    "universalLink": 308,
+    "redirectTarget": 404
+  },
+  "loginEnabled": false,
+  "sdkIntegrated": false,
+  "oauthImplemented": false,
+  "productionDeployed": false,
+  "filingChanged": false,
+  "storeUploaded": false,
+  "submitted": false,
+  "published": false,
+  "artifacts": [
+    {
+      "path": "app开发/Android/EvaDance/app/build/outputs/apk/release/app-release.apk",
+      "bytes": 25779221,
+      "sha256": "47120d86a62a46ad9637bb8aae4b55f56df4a075a564dfa7b88c97c2a562377a"
+    },
+    {
+      "path": "app开发/Android/EvaDance/app/build/outputs/bundle/release/app-release.aab",
+      "bytes": 13057690,
+      "sha256": "d581800b5e73c6207aef3f3416d8e865acf1dde719be2a0e599b752be96e6b82"
+    },
+    {
+      "path": "app开发/共享资料/同步更新/20261029-wechat-mobile-config/HarmonyOS/installers/SWOD-1.0.0-8-release.hap",
+      "bytes": 12381230,
+      "sha256": "1a69ff69b7e08aab4d19725968c348ef8e9450fa7a66882bec1b3633236ef11f"
+    },
+    {
+      "path": "app开发/共享资料/同步更新/20261029-wechat-mobile-config/HarmonyOS/installers/SWOD-1.0.0-8-release.app",
+      "bytes": 5639337,
+      "sha256": "6d2d1317fee1b5a47af03f45d713f328a2b9dbf8613ca6ec0e4ca7347a2e6ac8"
+    }
+  ]
+}

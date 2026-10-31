@@ -5,6 +5,7 @@ import java.util.Locale;
 
 /** Shared service owns authorization; public reads never carry account credentials. */
 public final class Policy {
+    public static final boolean SUPPORTS_OFFLINE_DOWNLOAD = false;
     public static final String API = "https://admin.swod.com.cn/api/app/v1";
     public static final String PUBLIC_API = "https://admin.swod.com.cn/api/mini";
     public static boolean publicRead(String path, String method) {

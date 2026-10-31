@@ -1,0 +1,7 @@
+{
+  "source": "existing Android adaptive icon resources rendered by Android Canvas into a 216x216 square; no branding changed",
+  "renderer": "IconExport.java",
+  "productionSourceModified": false,
+  "iconFile": "icon-216.png",
+  "sha256": "ada676ee2021cd6ad810f57e737d075c7bda4edee64b22e4da9f2b6222fa8099"
+}

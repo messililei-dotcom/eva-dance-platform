@@ -25,15 +25,6 @@ function contentType(filename: string) {
   return 'application/octet-stream';
 }
 
-function normalizeName(value: string) {
-  return value
-    .replace(/\.[^.]+$/, '')
-    .replace(/-\d{8,}$/, '')
-    .replace(/^成品舞[｜|]/, '')
-    .replace(/[_\s"'“”‘’（）()·\-+]+/g, '')
-    .toLowerCase();
-}
-
 function isImage(filename: string) {
   return /\.(jpe?g|png|webp|gif|bmp|svg)$/i.test(filename);
 }
@@ -46,20 +37,6 @@ function directCoverPath(filename: string) {
     && fs.statSync(/* turbopackIgnore: true */ absolutePath).isFile()
     ? absolutePath
     : null;
-}
-
-function findFallbackCover(filename: string) {
-  const wanted = normalizeName(filename);
-  if (!wanted || !fs.existsSync(/* turbopackIgnore: true */ SERIES_COVERS_ROOT)) return null;
-  const files = fs.readdirSync(/* turbopackIgnore: true */ SERIES_COVERS_ROOT).filter((file) => {
-    const absolute = path.join(/* turbopackIgnore: true */ SERIES_COVERS_ROOT, file);
-    return isImage(file) && fs.statSync(/* turbopackIgnore: true */ absolute).isFile();
-  });
-  const matched = files.find((file) => {
-    const candidate = normalizeName(file);
-    return candidate === wanted || candidate.startsWith(wanted) || wanted.startsWith(candidate);
-  });
-  return matched ? path.join(/* turbopackIgnore: true */ SERIES_COVERS_ROOT, matched) : null;
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ filename: string }> }) {
@@ -78,7 +55,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ fil
     });
   }
 
-  const filePath = directCoverPath(filename) || findFallbackCover(filename);
+  const filePath = directCoverPath(filename);
   if (!filePath) return new Response('Not found', { status: 404 });
 
   const stat = fs.statSync(/* turbopackIgnore: true */ filePath);

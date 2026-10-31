@@ -1,0 +1,83 @@
+{
+  "updatedAt": "2026-10-30T17:21:26+08:00",
+  "status": "implemented-compiled-ios-guest-ui-verified",
+  "behavior": {
+    "guestAccountTab": "Present existing login immediately, without guest-profile intermediate page",
+    "cancel": "Keep original public tab/page; next account tap opens login again",
+    "authenticated": "Enter profile normally",
+    "successfulLogin": "Enter account tab after credentials accepted",
+    "duplicates": "Existing login is not stacked again"
+  },
+  "privacy": "iOS account-content identity reset preserved inside MainTabs, cart clears on account change; no member credentials entered in tests. Android/Harmony retain server-authenticated login, consent and account generation checks.",
+  "ios": {
+    "deviceBuild": 11,
+    "deviceTargetReleaseCompiled": true,
+    "signed": false,
+    "ipaExported": false,
+    "archive": "iOS/SWOD-account-build11-unsigned.xcarchive",
+    "simulator": "iPhone14Pro / iOS27",
+    "uiTestsPassed": 3,
+    "guestLoginCancelRepeatedOpenVerified": true,
+    "returnAndFourPublicRootsLayoutVerified": true,
+    "realLoginSubmitted": false,
+    "successLoginRuntimeVerified": false,
+    "screenshot": "evidence/ios-guest-account-direct-login.png"
+  },
+  "android": {
+    "build": 16,
+    "unitTestsPassed": 32,
+    "lintPassed": true,
+    "releaseApkAabReady": true,
+    "originalSignatureVerified": true,
+    "installedOnLocalEmulator": true,
+    "runtimeInteractionAccepted": false,
+    "runtimeBlock": "First-run privacy consent screen; no consent clicked, so account interaction was not exercised. Emulator started for this check and closed afterward."
+  },
+  "harmony": {
+    "build": 13,
+    "unitTestsPassed": 44,
+    "releaseHapAppReady": true,
+    "originalSignatureVerified": true,
+    "runtimeInteractionAccepted": false,
+    "buildRecord": "HarmonyOS-build13-final/verification.json"
+  },
+  "physicalDeviceTests": "skipped-at-user-request",
+  "filingChanged": false,
+  "signingIdentityChanged": false,
+  "productionFeatureFlagsChanged": false,
+  "existingReviewsWithdrawn": false,
+  "uploaded": false,
+  "submitted": false,
+  "published": false,
+  "oldCandidateFilesHashVerifiedUnchanged": true,
+  "artifacts": [
+    {
+      "path": "Android-build16/installers/SWOD-1.0.1-16-release.aab",
+      "size": 15422146,
+      "sha256": "075e38a60521cd0566a61db0fc137926e77507090daaa649b51862c48937cf60"
+    },
+    {
+      "path": "Android-build16/installers/SWOD-1.0.1-16-release.apk",
+      "size": 28923557,
+      "sha256": "ae05ed5fc175e0b63bcba072068922360fff9d02dcb776345721bf303403980e"
+    },
+    {
+      "path": "HarmonyOS-build13-final/installers/SWOD-1.0.1-13-release.app",
+      "size": 7596876,
+      "sha256": "4247a157e33b24671dd089b5baef6c240f921c411c038bcf86b8a0002e287861"
+    },
+    {
+      "path": "HarmonyOS-build13-final/installers/SWOD-1.0.1-13-release.hap",
+      "size": 16110724,
+      "sha256": "1902ac17c891bedf46a930cd7650d6e546e19907fb319c106055d7e9b3eadb2a"
+    }
+  ],
+  "sourceHashes": {
+    "iOS/EvaDance/Sources/EvaDanceApp/EvaDanceApp.swift": "0bcc3052542f3e75b7a9d8c3809c443ea2b25227d743bc83c07a7477d5d64ab9",
+    "iOS/EvaDance/Tests/EvaLayoutUITests/RootLayoutTests.swift": "8c509fc267422bc41a96d387aa2093ddb252fa84a94f7f95e136986147382452",
+    "Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "8a5150204449e871a8fa093a7383ac7491a977828b64f88c0129cc75a9e677d8",
+    "Android/EvaDance/app/build.gradle": "8589aaa38069bfa4d0924973c962c1e82314a6a9a5b8e955ff8fd35df2ab9a9d",
+    "HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "83fba13575976b15165d29abbbe254507197e1bd05cae95ddd7517bb75baee84",
+    "HarmonyOS/EvaDance/AppScope/app.json5": "e9a46f5bb5c5723114eaa71e29bb1cd0380b017849a7673c4c623ec5cbcd934b"
+  }
+}

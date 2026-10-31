@@ -99,13 +99,16 @@ export async function GET(request: Request, context: Context) {
       const products = shopDb((db) =>
         db
           .prepare(
-            `SELECT id,name,category,spec,size,color,sale_price,stock,updated_at,CASE WHEN image<>'' THEN 1 ELSE 0 END has_image FROM shop_products WHERE status='在售' AND is_hidden=0 ORDER BY updated_at DESC,id`,
+            `SELECT id,name,category,spec,size,color,group_name,storefront_category,detail_text,detail_images,sale_price,stock,updated_at,CASE WHEN image<>'' THEN 1 ELSE 0 END has_image FROM shop_products WHERE status='在售' AND is_hidden=0 ORDER BY updated_at DESC,id`,
           )
           .all()
           .map((p) => ({
             id: p.id,
             name: p.name,
-            category: p.category,
+            category: p.storefront_category || p.category,
+            groupName: p.group_name,
+            detailText: p.detail_text,
+            detailImages: p.detail_images ? p.detail_images.split("\n").filter(Boolean) : [],
             spec: p.spec,
             size: p.size,
             color: p.color,

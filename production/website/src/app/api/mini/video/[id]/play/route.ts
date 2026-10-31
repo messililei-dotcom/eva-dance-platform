@@ -75,7 +75,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
          WHERE series_id=? AND status='active' AND (member_id=? OR (phone<>'' AND phone=?))
            AND (expire_at IS NULL OR expire_at > datetime('now','localtime')) LIMIT 1`
       ).get(video.series_id, memberId, member?.phone || '');
-      if (!auth) return jsonError('请先申请授权观看完整课程', 403);
+      if (!auth) return jsonError('当前未开通学习权限，请在课程详情页购买或联系课程客服', 403);
       const rawUrl = video.file_url || video.file_path || '';
       let videoUrl = '';
       let playbackSource = 'local';

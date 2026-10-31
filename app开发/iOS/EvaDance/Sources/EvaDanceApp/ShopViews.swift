@@ -17,12 +17,13 @@ struct ShopView: View {
     @EnvironmentObject var cart: ShoppingCart
     @State private var search = ""
     @State private var category = "全部"
+    @Environment(\.dynamicTypeSize) private var typeSize
     var products: [SiteRow] { store.data["products"].rows }
     var categories: [String] { ["全部"] + Set(products.map { $0.value["category"].text }.filter { !$0.isEmpty }).sorted() }
     var filtered: [SiteRow] { products.filter { (category == "全部" || $0.value["category"].text == category) && (search.isEmpty || $0.value["name"].text.localizedCaseInsensitiveContains(search)) } }
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 12) {
                 BrandHeader(title: "伊娃甄选", subtitle: "东方舞生活 · 官方商城", icon: "bag")
                 HStack {
                     NavigationLink("购物袋（\(cart.quantities.values.reduce(0,+))）") { CartView(cart: cart) }
@@ -35,50 +36,47 @@ struct ShopView: View {
                     } }
                 }
                 LoadState(store: store) { Task { await load() } }
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 14)], spacing: 16) {
+                LazyVGrid(columns: typeSize.isAccessibilitySize ? [GridItem(.flexible())] : [GridItem(.adaptive(minimum: 150), spacing: 12, alignment: .top)], spacing: 12) {
                     ForEach(filtered) { row in NavigationLink { ProductView(product: row.value, cart: cart) } label: {
                         ProductTile(product: row.value)
-                    }.buttonStyle(.plain) }
+                    }.buttonStyle(EvaPressStyle()) }
                 }
                 if !store.busy && store.error == nil && filtered.isEmpty { Text("暂无匹配商品") }
-            }.padding(20).frame(maxWidth: 960).frame(maxWidth: .infinity)
-        }.evaHomeLayout().navigationTitle("商城").evaSearch(text: $search, prompt: "搜索商品")
+            }.padding(.horizontal, 16).padding(.vertical, 6).frame(maxWidth: 960).frame(maxWidth: .infinity)
+        }.evaHomeLayout().evaPageChrome(root: true).evaSearch(text: $search, prompt: "搜索商品")
             .task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/shop/products", session: session, publicRead: true) }
 }
 struct ProductTile: View {
     let product: JSONValue
+    @Environment(\.dynamicTypeSize) private var typeSize
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ZStack {
-                Rectangle().fill(EvaBrand.softAccent)
-                if let url = AppPolicy.secureMediaURL(product["image"].text) {
-                    AsyncImage(url: url) { image in image.resizable().scaledToFit() } placeholder: { ProgressView() }
-                } else { Text("伊娃甄选").foregroundStyle(EvaBrand.red).font(.headline) }
-            }.frame(height: 160).clipped()
+            ArtworkImage(url: AppPolicy.secureMediaURL(product["image"].text), symbol: "bag", label: product["name"].text + "商品主图", ratio: 1)
+                .frame(maxWidth: .infinity)
             VStack(alignment: .leading, spacing: 8) {
-                Text(product["name"].text).font(.headline).lineLimit(2)
+                Text(product["name"].text).font(.headline).lineLimit(typeSize.isAccessibilitySize ? nil : 2)
                 Text(product["spec"].text).font(.caption).foregroundStyle(.secondary)
-                Text(money(product["priceFen"].number)).font(.headline).foregroundStyle(EvaBrand.red)
-                Text(product["stock"].number > 0 ? "有货" : "售罄").font(.caption).foregroundStyle(.secondary)
-            }.padding(.horizontal, 12).padding(.bottom, 12)
-        }.background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14))
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+                Text(ProductPresentation.price(product)).font(.headline).foregroundStyle(EvaBrand.red)
+                Text(ProductPresentation.stock(product)).font(.caption).foregroundStyle(.secondary)
+            }.padding(.bottom, 8)
+        }
     }
 }
 struct ProductCard: View {
     let product: JSONValue
+    var showImage = true
     var body: some View {
         HStack(spacing: 12) {
-            if let url = AppPolicy.secureMediaURL(product["image"].text) {
-                AsyncImage(url: url) { image in image.resizable().scaledToFit() } placeholder: { Color.gray.opacity(0.1) }.frame(width: 90,height: 90).accessibilityHidden(true)
+            if showImage, let url = AppPolicy.secureMediaURL(product["image"].text) {
+                ArtworkImage(url: url, symbol: "bag", ratio: 1).frame(width: 90, height: 90).accessibilityHidden(true)
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text(product["name"].text).font(.headline)
                 Text([product["spec"].text,product["size"].text,product["color"].text].filter { !$0.isEmpty }.joined(separator: " · ")).font(.subheadline)
-                Text(money(product["priceFen"].number)).foregroundStyle(.red)
-                Text(product["stock"].number > 0 ? "库存 \(product["stock"].text)" : "暂时缺货").font(.caption).foregroundStyle(.secondary)
+                Text(ProductPresentation.price(product)).foregroundStyle(.red)
+                Text(ProductPresentation.stock(product)).font(.caption).foregroundStyle(.secondary)
             }
         }.padding(.vertical,6)
     }
@@ -89,11 +87,13 @@ struct ProductView: View {
     @State private var added = false
     var body: some View {
         List {
-            ProductCard(product: product)
+            ArtworkImage(url: AppPolicy.secureMediaURL(product["image"].text), symbol: "bag", label: product["name"].text + "商品主图", ratio: 1)
+                .frame(maxWidth: .infinity).listRowInsets(EdgeInsets())
+            ProductCard(product: product, showImage: false)
             Text("实物商品，价格与库存以平台最终核验为准。")
             Button(added ? "已加入，可继续添加" : "加入购物清单") { cart.add(product); added = true }.disabled(product["stock"].number < 1)
             NavigationLink("查看购物清单") { CartView(cart: cart) }
-        }.evaCompactLayout().navigationTitle(product["name"].text)
+        }.evaCompactLayout().evaPageChrome()
     }
 }
 struct CartView: View {
@@ -128,7 +128,7 @@ struct CartView: View {
                         .disabled(total == nil || cart.quantities.isEmpty)
                 } else { Text("当前版本暂未开放结算").foregroundStyle(.secondary) }
             }
-        }.evaCompactLayout().navigationTitle("购物清单").task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/shop/products",session:session,publicRead:true) }
 }
@@ -148,7 +148,7 @@ struct ShippingView: View {
             } }.disabled(!valid || store.busy)
             if saved { Text("地址已保存").foregroundStyle(.green) }
             LoadState(store:store) { Task { await load() } }
-        }.evaCompactLayout().navigationTitle("收货地址").task { await load() }
+        }.evaCompactLayout().evaPageChrome().task { await load() }
     }
     private func load() async {
         await store.load("/shop/shipping",session:session)
@@ -169,7 +169,7 @@ struct ShopOrdersView: View {
                 } }
             }
             if !store.busy && store.error == nil && store.data["orders"].list.isEmpty { Text("暂无商城订单") }
-        }.evaCompactLayout().navigationTitle("商城订单").task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/shop/orders",session:session) }
 }
@@ -206,7 +206,7 @@ struct ShopOrderDetail: View {
                 TextField("退款原因",text:$reason,axis:.vertical)
                 Button("申请退款") { action="refund" }.disabled(reason.trimmingCharacters(in:.whitespaces).isEmpty)
             }
-        }.evaCompactLayout().navigationTitle("订单详情").task { await load() }
+        }.evaCompactLayout().evaPageChrome().task { await load() }
         .onChange(of: scenePhase) { phase in
             if phase == .active { Task { if await store.send("/shop/orders/\(id)/refresh",session:session) != nil { await load() } } }
         }
@@ -248,7 +248,7 @@ struct ShopCheckoutView: View {
                     .disabled(submitting || store.busy || cart.quantities.isEmpty || !store.data["payment"][provider].bool || recipient.isEmpty || phone.isEmpty || address.count < 8)
             }
             LoadState(store:store) { Task { await load() } }
-        }.navigationTitle("确认订单").task { await load() }
+        }.evaPageChrome().task { await load() }
     }
     private func load() async {
         await store.load("/shop/products",session:session,publicRead:true)
@@ -306,7 +306,7 @@ struct OfflineCheckoutView: View {
                 Button("报名并付款"){Task{await submit()}}.disabled(submitting || store.busy || !store.data["payment"][provider].bool)
             } else {NavigationLink("查看订单／继续付款"){ShopOrderDetail(id:orderID)}}
             LoadState(store:store){Task{await load()}}
-        }.navigationTitle("确认课程订单").task{await load()}
+        }.evaPageChrome().task{await load()}
         .navigationDestination(isPresented:$showRights){OfflineScheduleView(courseID:courseID)}
         .onChange(of:scenePhase){phase in if phase == .active && !orderID.isEmpty && !confirmed {Task{if let result=await store.send("/shop/orders/\(orderID)/refresh",session:session),["paid","completed"].contains(result["order"]["status"].text){confirmed=true;showRights=true}}}}
     }

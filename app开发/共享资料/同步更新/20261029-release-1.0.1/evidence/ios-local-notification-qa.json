@@ -1,0 +1,13 @@
+{
+  "fixtureOnly": true,
+  "bundleId": "cn.com.swod.app.parityqa",
+  "systemPermission": "authorized",
+  "notificationVisible": true,
+  "tapOpenedOwnedFixtureMessage": true,
+  "recipientId": "9",
+  "unreadCountAfterRead": 0,
+  "listUnreadMarkerClearedAfterClosingSheet": true,
+  "cloudDeliveryAccepted": false,
+  "coldStartAccepted": false,
+  "physicalDeviceTest": "skipped-at-user-request"
+}

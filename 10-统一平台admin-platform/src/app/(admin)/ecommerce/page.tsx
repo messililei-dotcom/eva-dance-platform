@@ -205,6 +205,10 @@ function payloadFromProductForm(values: any) {
   return {
     name: values.name,
     category: values.category,
+    group_name: values.group_name || "",
+    storefront_category: values.storefront_category || "",
+    detail_text: values.detail_text || "",
+    detail_images: values.detail_images || "",
     spec: values.spec,
     color: values.color || '默认',
     size: values.size || '均码',
@@ -253,6 +257,7 @@ export default function EcommercePage() {
   const [activeRecord, setActiveRecord] = useState<any>(null);
   const [imagePreview, setImagePreview] = useState('');
   const [imageUploading, setImageUploading] = useState(false);
+  const [detailUploading, setDetailUploading] = useState(false);
   const [productForm] = Form.useForm();
   const [stockForm] = Form.useForm();
   const [saleForm] = Form.useForm();
@@ -313,6 +318,10 @@ export default function EcommercePage() {
     setImagePreview(product?.image || '');
     productForm.setFieldsValue({
       name: product?.name,
+      group_name: product?.raw?.group_name || "",
+      storefront_category: product?.raw?.storefront_category || "",
+      detail_text: product?.raw?.detail_text || "",
+      detail_images: product?.raw?.detail_images || "",
       category: product?.category || '上衣',
       spec: product?.spec || '基础款',
       color: product?.color || '默认',
@@ -393,7 +402,7 @@ export default function EcommercePage() {
 
   const submitProduct = async () => {
     const values = await productForm.validateFields();
-    if (imageUploading) {
+    if (imageUploading || detailUploading) {
       message.warning('商品主图正在上传，请稍后保存');
       return;
     }
@@ -911,7 +920,7 @@ export default function EcommercePage() {
         ]}
       />
 
-      <Modal title={modalMode === 'editProduct' ? '编辑商品' : '新增商品'} open={modalMode === 'product' || modalMode === 'editProduct'} onCancel={closeModal} onOk={submitProduct} okText="保存" cancelText="取消" width={760} okButtonProps={{ disabled: imageUploading || visibilityBusy }}
+      <Modal title={modalMode === 'editProduct' ? '编辑商品' : '新增商品'} open={modalMode === 'product' || modalMode === 'editProduct'} onCancel={closeModal} onOk={submitProduct} okText="保存" cancelText="取消" width={760} okButtonProps={{ disabled: imageUploading || detailUploading || visibilityBusy }}
         footer={(_, { OkBtn, CancelBtn }) => (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, width: '100%' }}>
             <Space wrap>
@@ -972,6 +981,27 @@ export default function EcommercePage() {
                 <Col xs={8} sm={8}><Form.Item name="warningStock" label="低库存预警"><InputNumber min={0} precision={0} style={{ width: '100%' }} /></Form.Item></Col>
                 {modalMode === 'product' && <Col xs={8} sm={8}><Form.Item name="stock" label="初始库存"><InputNumber min={0} precision={0} style={{ width: '100%' }} /></Form.Item></Col>}
               </Row>
+            </Col>
+            <Col span={24}><Typography.Paragraph type="secondary">商城展示：同一商品的各颜色、尺码填写相同的「商城商品名称」和「商城分类」，前台即合并为一个商品。每条记录仍独立管理售价、库存与订单。</Typography.Paragraph></Col>
+            <Col xs={24} sm={12}><Form.Item name="group_name" label="商城商品名称（多规格合并）"><Input maxLength={120} placeholder="例如 A1练习长裤；留空则单独展示" /></Form.Item></Col>
+            <Col xs={24} sm={12}><Form.Item name="storefront_category" label="商城分类（自定义）"><Input maxLength={60} placeholder="例如 练习舞服、舞台服装、配饰" /></Form.Item></Col>
+            <Col xs={12}><Form.Item name="color" label="本规格颜色"><Input maxLength={60} placeholder="例如 黑色" /></Form.Item></Col>
+            <Col xs={12}><Form.Item name="size" label="本规格尺码"><Input maxLength={60} placeholder="例如 S、M、L、均码" /></Form.Item></Col>
+            <Col span={24}><Form.Item name="detail_text" label="商品详情（公开展示）"><Input.TextArea rows={5} maxLength={12000} showCount placeholder="填写已核实的面料、版型、尺码说明、洗护建议等" /></Form.Item></Col>
+            <Col span={24}><Form.Item name="detail_images" label="详情图片（每行一个图片地址，最多12张）"><Input.TextArea rows={3} placeholder="粘贴已上传图片路径或 HTTPS 图片地址" /></Form.Item>
+              <Upload disabled={detailUploading} accept="image/jpeg,image/png,image/webp" showUploadList={false} customRequest={async ({file,onSuccess,onError}) => {
+                try {
+                  setDetailUploading(true);
+                  const data = new FormData(); data.append('file', file as File); data.append('productName', productForm.getFieldValue('name') || 'product-detail');
+                  const result = await uploadProductImageRequest(data);
+                  const image = result?.data?.image || result?.data?.url || result?.url || result?.image;
+                  if (!image) throw new Error('未取得图片地址');
+                  const current = String(productForm.getFieldValue('detail_images') || '').trim();
+                  if (current.split('\n').filter(Boolean).length >= 12) throw new Error('详情图片最多12张');
+                  productForm.setFieldValue('detail_images', [current, image].filter(Boolean).join('\n'));
+                  onSuccess?.(result); message.success('详情图片已添加，保存商品后生效');
+                } catch (error: any) { onError?.(error); message.error(errorText(error)); } finally { setDetailUploading(false); }
+              }}><Button icon={<UploadOutlined />}>上传详情图片</Button></Upload>
             </Col>
             <Col span={24}><Form.Item name="description" label="备注"><Input.TextArea rows={3} /></Form.Item></Col>
           </Row>

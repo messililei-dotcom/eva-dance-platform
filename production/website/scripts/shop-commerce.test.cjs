@@ -10,7 +10,7 @@ const Database = createRequire(path.join(admin, "package.json"))(
   "better-sqlite3",
 );
 const dir = fs.mkdtempSync(path.resolve(".shop-tests-"));
-for (const name of ["shop-core", "shop-payments", "shop-service", "shop-shipping", "exclusive-orders", "exclusive-refunds"]) {
+for (const name of ["shop-core", "shop-payments", "shop-service", "shop-shipping", "exclusive-orders", "exclusive-refunds", "course-promotion", "event-online"]) {
   const source = fs.readFileSync(`src/lib/server/${name}.ts`, "utf8");
   fs.writeFileSync(
     path.join(dir, `${name}.js`),
@@ -35,6 +35,7 @@ test.after(() => fs.rmSync(dir, { recursive: true, force: true }));
 function db() {
   const d = new Database(":memory:");
   d.exec(`
+ CREATE TABLE event_players(id INTEGER PRIMARY KEY);
  CREATE TABLE Member(id INTEGER PRIMARY KEY,name TEXT,phone TEXT DEFAULT '',province TEXT DEFAULT '',city TEXT DEFAULT '',address TEXT DEFAULT ''); INSERT INTO Member(id,name) VALUES(1,'测试客户'); INSERT INTO Member(id,name) VALUES(2,'另一客户');
  CREATE TABLE shop_products(id TEXT PRIMARY KEY,name TEXT,spec TEXT,size TEXT,color TEXT,sale_price REAL,stock INTEGER,status TEXT,updated_at TEXT);
  INSERT INTO shop_products VALUES('p1','练习上衣','基础','M','黑',19.99,3,'在售','');
@@ -550,7 +551,8 @@ test("生产库存日志约束：微信与支付宝下单取消均可回库且�
 });
 
 function courseDb(){
- const d=db();d.exec(`CREATE TABLE CourseSeries(id INTEGER PRIMARY KEY,name TEXT,price REAL,promo_price REAL,is_free INTEGER,status TEXT);INSERT INTO CourseSeries VALUES(1,'系统课',100,80,0,'published'),(2,'隐藏课',100,0,0,'draft');
+ const d=db();d.exec(`CREATE TABLE CourseSalesConfig(key TEXT PRIMARY KEY,value TEXT,revision TEXT,updated_at TEXT);INSERT INTO CourseSalesConfig VALUES('promotionEnabled','true','test','');
+ CREATE TABLE CourseSeries(id INTEGER PRIMARY KEY,name TEXT,price REAL,promo_price REAL,is_free INTEGER,status TEXT);INSERT INTO CourseSeries VALUES(1,'系统课',100,80,0,'published'),(2,'隐藏课',100,0,0,'draft');
  CREATE TABLE CourseTemplate(id INTEGER PRIMARY KEY,websiteVisible INTEGER);INSERT INTO CourseTemplate VALUES(1,1);
  CREATE TABLE Course(id INTEGER PRIMARY KEY,name TEXT,price REAL,templateId INTEGER,status TEXT,category TEXT,sessions INTEGER,endDate TEXT,capacity INTEGER,remaining INTEGER);INSERT INTO Course VALUES(8,'公开期次',200,1,'planned','offline',10,'2099-12-01',1,1);
  CREATE TABLE CourseOrder(id INTEGER PRIMARY KEY,order_no TEXT,member_id INTEGER,series_id INTEGER,amount REAL,status TEXT,pay_method TEXT,paid_at TEXT,remark TEXT,updated_at TEXT);
@@ -589,8 +591,8 @@ test('线下期次锁名额、取消归还、付款开通约课课次、使用�
  const paid=core.createCourseOrder(d,1,courseInput('offline',8,20000,'new'));core.settlePaid(d,paid.id,'wechat','offline-paid',20000);core.settlePaid(d,paid.id,'wechat','offline-paid',20000);
  assert.equal(d.prepare('SELECT COUNT(*) n FROM Payment').get().n,1);
  assert.equal(d.prepare('SELECT available_sessions FROM OfflineEntitlement').get().available_sessions,10);
- d.exec('UPDATE OfflineEntitlement SET frozen_sessions=1');assert.throws(()=>core.validateCourseRefund(d,paid.id),/已预约/);
- d.exec('UPDATE OfflineEntitlement SET frozen_sessions=0');core.validateCourseRefund(d,paid.id);
+ d.exec('UPDATE OfflineEntitlement SET frozen_sessions=1,available_sessions=9');assert.throws(()=>core.validateCourseRefund(d,paid.id),error=>error.status===409);
+ d.exec('UPDATE OfflineEntitlement SET frozen_sessions=0,available_sessions=10');core.validateCourseRefund(d,paid.id);
  assert.equal(d.prepare('SELECT status FROM OfflineEntitlement').get().status,'refunding');
  d.prepare("UPDATE shop_online_orders SET status='refunding' WHERE id=?").run(paid.id);core.settleRefund(d,paid.id);
  assert.equal(d.prepare('SELECT paymentStatus FROM Payment').get().paymentStatus,'refunded');assert.equal(d.prepare('SELECT remaining FROM Course').get().remaining,1);

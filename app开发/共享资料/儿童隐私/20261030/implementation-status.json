@@ -1,0 +1,108 @@
+{
+  "updatedAt": "2026-10-30T11:31:27+08:00",
+  "policyVersion": "2026-10-30-children-v1",
+  "userConfirmed": {
+    "under14LearningAndGuardianEventDataAllowed": true,
+    "responsiblePerson": "李雷",
+    "guardianVerification": "manual-customer-service-before-account-or-registration",
+    "copyrightCertificateObtained": false,
+    "appICPCompleted": true
+  },
+  "publicPolicies": {
+    "website": "https://www.swod.com.cn/privacy#children-privacy",
+    "children": "https://www.swod.com.cn/app/children-privacy.html",
+    "android": "https://www.swod.com.cn/app/privacy.html",
+    "deployed": true,
+    "verifiedByBrowser": true,
+    "screenshots": [
+      "evidence/privacy-children-live.png",
+      "evidence/children-rules-live.png"
+    ]
+  },
+  "deployment": {
+    "serverRelease": "/www/wwwroot/dongfangwuquan/releases/swod-children-privacy-20261030",
+    "productionCopyStaged": true,
+    "scopedSourceFiles": [
+      "src/app/privacy/page.tsx",
+      "src/components/ChildrenPrivacyNotice.tsx",
+      "src/content/children-privacy.json",
+      "public/app/privacy.html",
+      "public/app/children-privacy.html"
+    ],
+    "buildPassed": true,
+    "typeScriptPassed": true,
+    "styleDeliverablePassed": true,
+    "backupAndRollbackPrepared": true,
+    "existingUnrelatedWarning": "admin-db.ts createRequire parsing warning; build succeeded",
+    "sourceSHA256": {
+      "src/app/privacy/page.tsx": "6fb4a1617dc1429b9403eb0105e0b99ac21c35c8982c4452b29c0f6ff904fc7a",
+      "src/components/ChildrenPrivacyNotice.tsx": "dc96a838f3662be9569e8dcb88dab457ad998d6e1f6ecca6a84b47395ea0d675",
+      "src/content/children-privacy.json": "8fd5d1e54feb273d3eff31119be396e5bd0ff1ff2f77999a121134aca18dd3b6",
+      "public/app/privacy.html": "a2d02effa18e70b5599a67a421755359c8391f1f727bd795c9c865e5da5c95b6",
+      "public/app/children-privacy.html": "66123293504c39ec7c932b32b8a33bbdc553716636f367960ecfe4e076af4a04"
+    }
+  },
+  "manualWorkflow": {
+    "blankGuardianForm": "监护人授权表_空白.html",
+    "caseTemplate": "客服核验记录模板.json",
+    "instructions": "人工核验执行说明.txt",
+    "actualChildCasesProcessed": 0,
+    "historicalConsentAuditCompleted": false,
+    "automaticGuardianOrAgeVerificationImplemented": false,
+    "realDataMustRemainOutsideRepository": true,
+    "storageMustBeRestrictedAndEncryptedBeforeCollectingProof": true
+  },
+  "clientSync": {
+    "ios": "existing /privacy link serves new rules; submitted build10 unchanged",
+    "harmony": "existing /privacy link serves new rules; submitted build9 unchanged",
+    "android": "New privacy assets packaged and verified in signed Android1.0.1(12); submitted Huawei11 unchanged",
+    "candidateArtifactsUnchanged": false,
+    "nextAndroidPackageRequiredForBundledPolicy": false,
+    "androidNewCandidateBuild": 12,
+    "androidCandidatePrivacyVersion": "2026-10-30-children-v1",
+    "existingSubmittedArtifactsUnchanged": true,
+    "androidHuaweiSubmittedBuild": 11,
+    "androidHuaweiSubmittedPrivacyVersion": "2026-10-29-push-v1",
+    "androidHuaweiSubmittedSHA256": "8c6a5e144cb5c14370ccd474a01e72305b8a5c7c3a9f9e8d4b5c83ff0befc9e4",
+    "android12CandidateSHA256": "1ea2ac9bab6017279ee93a7fb7e5b2260179eabe8d2fe7b87532820838f9ec73",
+    "androidCurrentChannelBuilds": {
+      "tencent": 12,
+      "oppo": null,
+      "vivo": 12,
+      "xiaomi": 12,
+      "huaweiAndroid": 11,
+      "honor": 11
+    },
+    "oppoPackageAttachmentPersistenceVerified": false,
+    "oppoLastParsedBuild": 12,
+    "oppoWorkingEditorBuild": 12
+  },
+  "verification": {
+    "sourceGenerationConsistency": "passed",
+    "htmlLanguageHeadingLinksAndNoCollectionScripts": "passed",
+    "consentTemplateNotPreapproved": "passed",
+    "blankFormVisualRender": "not performed; local file URL protocol is blocked by browser policy; no workaround used",
+    "nativeBuilds": "Android12: 29 unit tests pass, lint 0 errors and same24 warnings, 5 preflight boundary tests pass; emulator installation verified; native UI not accepted",
+    "physicalDeviceTests": "skipped-at-user-request"
+  },
+  "portalSubmission": {
+    "newReviewSubmitted": false,
+    "tencentChildrenCheckboxChanged": true,
+    "tencentPolicyMustBeRecheckedAndSaved": true,
+    "copyrightCertificateStillMissing": true,
+    "otherMissingMaterials": "Issued copyright certificate, signed release promises/stamped ICP evidence and applicable qualifications/contact verification remain; build12 four original screenshots uploaded to four channels, saved/reopened on Xiaomi,vivo,OPPO; Tencent base save blocked; Honor console unavailable.",
+    "ageQuestionnaires": "Recheck actual questionnaire facts; previous 18+ fields are not proof that children data is absent. Do not equate content rating with guardian consent.",
+    "tencentBaseInfoSaved": false,
+    "tencentVersionDataSaved": true
+  },
+  "constraints": {
+    "filingChanged": false,
+    "originalSignaturesReplaced": false,
+    "existingReviewsWithdrawnOrResubmitted": false,
+    "productionPushEnabled": false,
+    "productionCacheEnabled": false,
+    "carrierOneTapEnabled": false,
+    "wechatMobileLoginEnabled": false
+  },
+  "reference": "https://www.cac.gov.cn/2019-08/23/c_1124913903.htm"
+}

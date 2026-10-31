@@ -1,0 +1,9 @@
+{
+  "checkedAt": "2026-10-30T10:38:58+08:00",
+  "automationId": "swod",
+  "decision": "DONT_NOTIFY",
+  "officialReviewResultVerified": false,
+  "publicAvailabilityVerified": false,
+  "reason": "No verified review result; same access/material blockers and existing user-action request remain pending.",
+  "existingReviewsPreserved": true
+}

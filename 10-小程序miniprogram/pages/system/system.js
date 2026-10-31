@@ -1,3 +1,4 @@
+const { filterCatalog } = require('../../shared/catalog-view');
 function courseAccountKey() {
   if (typeof wx === 'undefined' || typeof wx.getStorageSync !== 'function') return 'guest';
   return wx.getStorageSync('token') ? String(wx.getStorageSync('memberId') || 'signed-in') : 'guest';
@@ -60,21 +61,26 @@ Page(share.withShare("system", videoFeature.withVideoFeature({
   data: {
     tabs,
     activeTab: "all",
-    loading: true,
+    loading: true, error: "", searchKeyword: "", unlockedOnly: false,
     allCourses: [],
     courses: []
   },
 
   onShow() {
+    if (this.pendingUnlocked) { this.setData({ unlockedOnly: !!wx.getStorageSync("token") }); this.pendingUnlocked = false; }
     return this.loadCourses();
   },
 
+  onPullDownRefresh() { return this.loadCourses().finally(() => wx.stopPullDownRefresh()); },
+  onUnload() { this.courseRequestId = (this.courseRequestId || 0) + 1; },
   async loadCourses() {
     const account = courseAccountKey();
-    this.setData({ loading: true, allCourses: [], courses: [] });
+    const requestId = this.courseRequestId = (this.courseRequestId || 0) + 1;
+    this.setData({ loading: true, error: "", allCourses: [], courses: [] });
     wx.showLoading({ title: "加载中" });
     try {
       const [list, rights] = await Promise.all([api.getSeriesList(), authorizedCourseIds(api)]);
+      if (requestId !== this.courseRequestId) return;
       if (account !== courseAccountKey()) return this.loadCourses();
       const allCourses = uniqueById((list || []).filter(item => inferType(item) !== "offline")).map(item => normalizeCourse(item, rights));
       this.setData({
@@ -83,18 +89,27 @@ Page(share.withShare("system", videoFeature.withVideoFeature({
         loading: false
       });
     } catch (err) {
+      if (requestId !== this.courseRequestId || account !== courseAccountKey()) return;
+      this.setData({ error: err.message || "加载失败，请重试" });
       wx.showToast({ title: err.message || "加载失败", icon: "none" });
       this.setData({ loading: false });
     } finally {
-      wx.hideLoading();
+      if (requestId === this.courseRequestId) wx.hideLoading();
     }
   },
 
   filterCourses(list, key) {
-    if (key === "all") return list;
-    return list.filter(item => item.type === key);
+    return filterCatalog(key === "all" ? list : list.filter(item => item.type === key), { keyword: this.data.searchKeyword, unlockedOnly: this.data.unlockedOnly });
   },
 
+  applyCourseFilters() { this.setData({ courses: this.filterCourses(this.data.allCourses, this.data.activeTab) }); },
+  onSearchInput(event) { this.setData({ searchKeyword: event.detail.value || '' }); this.applyCourseFilters(); },
+  onClearSearch() { this.setData({ searchKeyword: '' }); this.applyCourseFilters(); },
+  onSearchConfirm() { if (wx.hideKeyboard) wx.hideKeyboard(); },
+  toggleUnlocked() {
+    if (!wx.getStorageSync('token')) { this.pendingUnlocked = true; return wx.navigateTo({ url: '/pages/login/login' }); }
+    this.setData({ unlockedOnly: !this.data.unlockedOnly }); this.applyCourseFilters();
+  },
   switchTab(event) {
     const activeTab = event.currentTarget.dataset.key;
     this.setData({

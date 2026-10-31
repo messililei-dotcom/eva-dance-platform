@@ -1,0 +1,195 @@
+[
+  {
+    "path": ".gitignore",
+    "beforeSHA256": "a85f3607f4b755b2985e22f65f19b0d165d6d409caab4fe0797615edc1ae9b67",
+    "afterSHA256": "7f6e377d6e4045f6ff3523740e8c3daedc450a7a80e87a71f7718312d1ee10d0"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/BrandViews.swift",
+    "beforeSHA256": "4668cd46fcbddf497bf69f86f93eeeb4699ddaca52280fd1cd2eb5297147c547",
+    "afterSHA256": "103fc5c56d9923a49d3628ea7159dd6409e3c0b9d7329553fa1ed3c7ff13026d"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift",
+    "beforeSHA256": "51f9218ade05ec66ca5b76394e272afcc767cf3812e105b751a1b84246d78042",
+    "afterSHA256": "ead6413022d835ffa6c72eb7dcba0fbba83880290106cdec640a64f275b8af7b"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift",
+    "beforeSHA256": "79c76efc82cff4c278cbc120518d0acd0a06cd6a275ea8c21805486a092afc8f",
+    "afterSHA256": "e8ea2caee1775feed26d2a5461152ce06a77323c2e336096049e4f371e84f540"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift",
+    "beforeSHA256": "010c96869c124c3c1f619ca41be52d9f1582290b78deed269f0f02cfb3e18163",
+    "afterSHA256": "f9398910bdffd2a63c69c1099a6d2661781819a3ef6062118dda7824f9defb0d"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift",
+    "beforeSHA256": "b0631f54cc1699e68f50271e787d83d318c3f9d495a21d45bf0b3fab8f10536a",
+    "afterSHA256": "c4e24945b59d2451cd41669eb3346ab4af8e84fa549c8d3afca5a0afabbb2b3a"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/EvaDanceApp.swift",
+    "beforeSHA256": "3568ff4d0d27a1928092c665866831f085cc38ed80567b2ae0cbe1a2c73a0da4",
+    "afterSHA256": "a5bbbe95aa7a1adfc7492c609c387ce8a81be4baf0d5c946663dc9678ef11826"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/Models.swift",
+    "beforeSHA256": "d26c568a20bfa1f9151e2e983ddb58b69f23e0ceb5b9a8be4368150e7f80972e",
+    "afterSHA256": "c5c560088057da59a0bb6ec5d36293a28654f914b2eaec644f4ff14ab9aa1e73"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/scripts/generate_project.py",
+    "beforeSHA256": "85759f6cc0f345d4624e17b5d0d202a7263d290fc9a4322253c95edf82532ad6",
+    "afterSHA256": "38431b17268a72921b2a1ff6e154fbeab948f11fc813352e3fb62c8d7c7348aa"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj",
+    "beforeSHA256": "b3a25587d6419e9b8ec4825b381f6a1ce0165282660c5b2318a2bd882582fc9b",
+    "afterSHA256": "090be47a6a1cc79daf0f3b144ae8be77d91414073b7be9a51967473e0b58bea4"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Resources/PrivacyInfo.xcprivacy",
+    "beforeSHA256": "373c320e926d807ead18e6f48669c26b14a0518066631754965910dce7838d48",
+    "afterSHA256": "35e73b2193a8f3f97f1b8b15ef4cad23c44ac0b662aa1c152aa0b93f66d70d55"
+  },
+  {
+    "path": "app开发/Android/EvaDance/gradle.properties",
+    "beforeSHA256": "af6c8e8ac48c490eb71214aa933232c206934e14e771ffc195a3b03f43313124",
+    "afterSHA256": "2d9ba4a6aa5ecd1985eb499777b9dd5b93b157352330a6bd788fa87c8f608ebc"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/build.gradle",
+    "beforeSHA256": "60aba46d55af44965cdc8c8b7eaad7cbd2626257823adeba04ef92c9bdeaffff",
+    "afterSHA256": "a17127f04ec8be43bfe5757ca4d7cf462e3e67d74e2f59f88cc3d4b445416873"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/AndroidManifest.xml",
+    "beforeSHA256": "b750544f0af0d69cbfa5235b5fb1e10556ab0e5d79cf5557972bf4bd31a0ca65",
+    "afterSHA256": "fe5dc06297d3a14b4225fa5914011a92791ee0eee3157f41ec6bc518da581465"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "beforeSHA256": "f35c8ac4552f2b1f8a6711bfa442a16fd1300754bf1e22f55067ebd10048b763",
+    "afterSHA256": "805661f7ff74e043e5c74b3cafd0ac1c7b24aac235e6e95bf98a40fe3760909c"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "beforeSHA256": "2392368407ecf124737b1a21f1bdb9eba9e25f2989e0fd0c9f61fe3700ba3aaa",
+    "afterSHA256": "f2d22c81493a5ebc7652895ef9c79835b77545c034f9eb71bfd560d02a2ec182"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "beforeSHA256": "f6c114029d09263612b687d15f865f6d2a2ef13d1012a068f6b2e881f8bbe1c5",
+    "afterSHA256": "495bc6c58914debd16433c99d0f1670ec32416b1782d531720abf79229925372"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "beforeSHA256": "3700532c3a5ca9eab039fef84bd9670b19ed54956cadb78295fc40f4a0b0a585",
+    "afterSHA256": "6623eba84aa4bfe62879a63a6e314096f00e5bd8b541543190118b18672e08f4"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/assets/app-privacy.txt",
+    "beforeSHA256": "11cfa2b0a3608ac8bce088fbd7a23d378e9ab1eec7bda598cd0edf63f4696f69",
+    "afterSHA256": "8f4ad72ec4ed8bffd97855a7de7e1488c48c753b6619acb2ff83787441aaa253"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/assets/app-processors.txt",
+    "beforeSHA256": "dd9aaf96b9ebc74caf19eb6846b64f3fb31bf1341cb3577ebad894a971d8c043",
+    "afterSHA256": "48fc83e1bf2a9d2f68707a6d941f9a78397767300a7a67e81f46b946fe02b94e"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/assets/release-info.json",
+    "beforeSHA256": "690f6b5b44bcc5484b459ce6c9db8993e87746b701adac6d24a343841121439b",
+    "afterSHA256": "c59efbd18c8d766f95f1ccc041c23c7570ceee703b48d1ad203a8a279102bfe0"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/oh-package.json5",
+    "beforeSHA256": "c3ab4a8122311d19a890ceb7d6717fd06e1e2f6ab496aa1fc61e98a95a50a7cc",
+    "afterSHA256": "e60dc3ac600849f51256f274d0db05406185655713a55244c75a510c5bfcd72d"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/module.json5",
+    "beforeSHA256": "ba1ef03c6e90592ea3a6c2dfd41e3bf0568894fe76f9a5aeb103041ecee27a2b",
+    "afterSHA256": "d63085d55b3faad4ce26e3ffad4c5716e43606c86bf20e40c14b8752f5e254fc"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+    "beforeSHA256": "94ab036997379791efbb225bd17c262149a859752b581ef0d5ada01d79539291",
+    "afterSHA256": "efcc3a6c54a252e9f6dd4685a65fedebfd42d821306b2afddd6bc234be118e52"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets",
+    "beforeSHA256": "7436b0fb7d4aa9f2123d156924cf3a984437574110e54c3693829ca9cc33b07e",
+    "afterSHA256": "40c751bc7820c0e3508fae81fcaba1a071ada8f3ca6d1e3fa9403f2e5b8fec9f"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/PlatformApi.ets",
+    "beforeSHA256": "d4c674ce87b833314826adebaea7bce5594458cc82fc58dd5df9eed1e5527325",
+    "afterSHA256": "003a38fb9c678c76f38f55c305607af31085c8099b198a7cc0f2e5a64db2bf15"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/element/color.json",
+    "beforeSHA256": "9344b135bcb004704df513e20e1bf4207ca68c98a442853e2565a196b47f9872",
+    "afterSHA256": "13187ddc55981786e068c0bc0b1d38a57599929c5579f9dd8a29d09921c32459"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/scripts/build_release.py",
+    "beforeSHA256": "e710a5202c37cca1e5fdde73d559725920e2028bdb0090baa797adfb4401a416",
+    "afterSHA256": "4d340bb7b4423e9b5c3ab7aebb522f1e6819871e5a73e34b7f50f5140a58f051"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/scripts/platform-api.test.cjs",
+    "beforeSHA256": "4148d019103045b79f9611d1c300ebb163e2f01803f9bcdb61cb45092e015c9c",
+    "afterSHA256": "26f46c5ce81800048494387d8fccc7861b1028ffa0d1f2e345dd199b1aea2de3"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CarrierLogin.java",
+    "beforeSHA256": null,
+    "afterSHA256": "5e18f8036dadf8f7cc4805ef71bbb9b93a6c273bd7c4f38c5c540c4c8c659557",
+    "bytes": 3736
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/res/values/carrier_auth.xml",
+    "beforeSHA256": null,
+    "afterSHA256": "d88ea5b79adbc0c2714efde52e26777ad7db82bc5b67f895e4494c2a316e6130",
+    "bytes": 165
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CarrierLogin.ets",
+    "beforeSHA256": null,
+    "afterSHA256": "a0ea85a7ebc97ea758f5012cfa94502e35ea797025afc8cb747df595ca27b060",
+    "bytes": 3938
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/scripts/prepare_login_config.py",
+    "beforeSHA256": null,
+    "afterSHA256": "f32b71b4af09d6c98c72ccf93370ce912325ef1cfc4fb23dfea2fe154ba2e3fc",
+    "bytes": 865
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/libs/main-2.2.3-release.aar",
+    "beforeSHA256": null,
+    "afterSHA256": "5d1d246d9e6b0cd8a7483e84e9a4c2a9452f5fd55860b13c8a9b0b5bd0a0e975",
+    "bytes": 48268
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/libs/logger-2.2.2-release.aar",
+    "beforeSHA256": null,
+    "afterSHA256": "2daefda838cdfc300f6ab6862f4a4ceffee898cda128378df9199443f3c1e7a9",
+    "bytes": 38422
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/libs/auth_number_product-2.14.24-log-online-standard-cuum-release.aar",
+    "beforeSHA256": null,
+    "afterSHA256": "a8c0a578b6d5a2f8bdcd80527147ca4c65af18f5ae13a38e43916618994dc68c",
+    "bytes": 1164065
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/libs/auth_number_product-v2.0.25-log-online-standard-release.har",
+    "beforeSHA256": null,
+    "afterSHA256": "ef169bdb61ceb329c66823a151d5fa333163221790beee17c78edca124fe1a67",
+    "bytes": 411417
+  }
+]

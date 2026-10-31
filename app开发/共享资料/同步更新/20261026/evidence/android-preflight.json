@@ -1,0 +1,67 @@
+{
+  "status": "NOT_READY",
+  "packageName": "cn.com.swod.app",
+  "versionCode": 8,
+  "versionName": "1.0.0",
+  "productionWrites": false,
+  "checks": {
+    "manifest": {
+      "passed": true
+    },
+    "resourceXML": {
+      "passed": true
+    },
+    "sdk": {
+      "passed": true,
+      "licenseAccepted": true
+    },
+    "privateSigningConfig": {
+      "passed": true
+    },
+    "signedAPK": {
+      "passed": true,
+      "path": "/Users/lilei/Documents/Codex/2026-10-26/task-2/sync-20261026/staged/Android/EvaDance/app/build/outputs/apk/release/app-release.apk",
+      "apkExists": true,
+      "sha256": "e03b4a63dcb6c68b718624310bea4026231c5326cb112671b38cce3aac1d8cb8",
+      "certificateMatchesFiling": true
+    },
+    "artifactIdentity": {
+      "passed": true,
+      "packageName": "cn.com.swod.app",
+      "versionCode": 8,
+      "versionName": "1.0.0"
+    },
+    "filingDisplay": {
+      "passed": true,
+      "number": "湘ICP备2026005683号-5A",
+      "basis": "用户在本次对话确认备案完成并提供最终编号",
+      "officialConsoleReverified": false
+    },
+    "publicCourses": {
+      "passed": true,
+      "httpStatus": 200
+    },
+    "appConfig": {
+      "passed": true,
+      "httpStatus": 200
+    },
+    "appProducts": {
+      "passed": true,
+      "httpStatus": 200
+    },
+    "invalidSessionDenied": {
+      "passed": true,
+      "httpStatus": 401
+    },
+    "deviceAcceptance": {
+      "passed": false
+    },
+    "storeMaterialAcceptance": {
+      "passed": false
+    }
+  },
+  "blockers": [
+    "deviceAcceptance",
+    "storeMaterialAcceptance"
+  ]
+}

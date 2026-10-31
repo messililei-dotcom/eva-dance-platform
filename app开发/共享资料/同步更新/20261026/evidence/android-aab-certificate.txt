@@ -1,0 +1,14 @@
+Signer #1:
+
+Certificate #1:
+Owner: CN=Eva Dongfangwu Android Release, O=Eva Culture and Art Development, ST=Hunan, C=CN
+Issuer: CN=Eva Dongfangwu Android Release, O=Eva Culture and Art Development, ST=Hunan, C=CN
+Serial number: 8139b0842ead05a0
+Valid from: Fri Oct 02 09:57:05 CST 2026 until: Sun Sep 24 09:57:05 CST 2056
+Certificate fingerprints:
+	 SHA1: D9:2D:7F:97:01:20:5E:22:B8:4D:7C:CB:90:CA:7F:8B:AD:64:3C:EC
+	 SHA256: 58:EC:EE:1C:1C:D0:AD:C0:8F:79:7A:B9:BB:75:DC:B4:5E:6A:3B:74:7C:53:59:39:02:0D:8A:E8:F0:D5:48:FE
+Signature algorithm name: SHA256withRSA
+Subject Public Key Algorithm: 2048-bit RSA key
+Version: 1
+

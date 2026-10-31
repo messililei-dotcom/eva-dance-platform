@@ -1,0 +1,15 @@
+{
+  "10-小程序miniprogram/app.json": "1519fb8e72cf8ea66d72ad4c886baebaab5e7e3b41628bbba65d8febde6baa1d",
+  "10-小程序miniprogram/pages/home/home.wxml": "113fbaa06ad4f7f9adfbe12d7dcdca8fbe7663f9824f79af9a944f81c9501152",
+  "10-小程序miniprogram/pages/profile/profile.wxml": "f58f67d2a6bc62b4c86e333a44ffe0591e1df3abdea76c9428d6c35df74f3843",
+  "10-小程序miniprogram/pages/player/player.wxml": "c095e4bba503e9d8c3b74046ea01383ebb051326560dc88cb1b81b8fd291074b",
+  "10-小程序miniprogram/pages/player/player.js": "37515f8342cc97413b18fe1b23b534c16333ab5e95d833040271664cd4c2008d",
+  "app开发/iOS/EvaDance/Sources/EvaDanceApp/BrandViews.swift": "4668cd46fcbddf497bf69f86f93eeeb4699ddaca52280fd1cd2eb5297147c547",
+  "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift": "51f9218ade05ec66ca5b76394e272afcc767cf3812e105b751a1b84246d78042",
+  "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift": "79c76efc82cff4c278cbc120518d0acd0a06cd6a275ea8c21805486a092afc8f",
+  "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift": "010c96869c124c3c1f619ca41be52d9f1582290b78deed269f0f02cfb3e18163",
+  "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift": "b0631f54cc1699e68f50271e787d83d318c3f9d495a21d45bf0b3fab8f10536a",
+  "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "f35c8ac4552f2b1f8a6711bfa442a16fd1300754bf1e22f55067ebd10048b763",
+  "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java": "2392368407ecf124737b1a21f1bdb9eba9e25f2989e0fd0c9f61fe3700ba3aaa",
+  "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "94ab036997379791efbb225bd17c262149a859752b581ef0d5ada01d79539291"
+}

@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-28",
+  "authority": "东方舞圈；已观察开发者工具当前工程与预览，线上版本尚未独立核验",
+  "platforms": [
+    "iOS",
+    "Android",
+    "HarmonyOS"
+  ],
+  "includes": [
+    "五栏导航与页面布局",
+    "课程列表、详情和目录",
+    "个人中心、课程权益、线下课、赛事和商城",
+    "视频播放、续播、进度、倍速、镜面、笔记、清晰度、全屏及运营版实际存在的其他视频功能"
+  ],
+  "local_source_findings": [
+    {
+      "area": "布局与封面",
+      "finding": "三端已修改紧凑布局、统一首页快捷入口与4:3列表图片容器；完整显示源图，不修改源文件。iOS/Android详情主图完整显示。"
+    },
+    {
+      "area": "视频",
+      "finding": "已传递课节列表并增加播放器内目录及上一节/下一节，Android/Harmony增加服务端返回的清晰度选择；投屏、画中画、全屏、自动连播等仍待继续核对。"
+    },
+    {
+      "area": "登录",
+      "finding": "三端本机号码SDK已接入，线上开关关闭且未真机验号；微信移动应用配置未找到，微信一键登录尚未实现。"
+    }
+  ],
+  "status": "partial_implemented_external_gates",
+  "product_source_changed": true,
+  "uploaded": false,
+  "submitted": false,
+  "published": false,
+  "verification": "verification.json",
+  "changes": "changes.json"
+}

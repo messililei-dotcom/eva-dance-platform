@@ -1,0 +1,10 @@
+{
+  "app": {
+    "bundleName": "cn.com.swod.evadance",
+    "vendor": "SWOD",
+    "versionCode": 11,
+    "versionName": "1.0.1",
+    "icon": "$media:brand_logo",
+    "label": "$string:app_name"
+  }
+}

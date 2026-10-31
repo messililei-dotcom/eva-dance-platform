@@ -28,10 +28,22 @@
       <view><view class="section-title">线下课程</view><text>共 {{visibleCourses.length}} 门课程</text></view>
       <view class="course-search"><input value="{{keyword}}" placeholder="搜索课程或老师" bindinput="onSearchInput" /></view>
     </view>
+    <view class="calendar-view-switch"><button class="{{courseView==='list'?'selected':''}}" data-view="list" bindtap="switchCourseView">课程列表</button><button class="{{courseView==='calendar'?'selected':''}}" data-view="calendar" bindtap="switchCourseView">课程日历</button></view>
     <view wx:if="{{loading}}" class="empty-card">课程加载中…</view>
     <view wx:elif="{{courseError}}" class="empty-card">{{courseError}}<button bindtap="loadCourses">重试</button></view>
+    <view wx:elif="{{courseView === 'calendar'}}" class="month-calendar">
+      <view class="month-toolbar"><view><view class="month-title">{{calendarTitle}}</view><text>{{calendarCount}} 个课程期次 · 左右滑动切月</text></view><view class="month-actions"><button aria-label="上个月" data-offset="-1" bindtap="moveCalendar">‹</button><button bindtap="currentCalendar">本月</button><button aria-label="下个月" data-offset="1" bindtap="moveCalendar">›</button></view></view>
+      <view bindtouchstart="calendarTouchStart" bindtouchmove="calendarTouchMove" bindtouchend="calendarTouchEnd" bindtouchcancel="calendarTouchCancel">
+        <view class="month-weekdays"><text wx:for="{{weekdays}}" wx:key="*this">周{{item}}</text></view>
+        <view class="month-week" wx:for="{{calendarWeeks}}" wx:for-item="week" wx:key="key" style="height:{{week.height}}px">
+          <view class="month-dates"><view wx:for="{{week.days}}" wx:for-item="day" wx:key="key" class="month-date {{day.outside?'outside':''}}"><text class="{{day.today?'today':''}}">{{day.day}}</text></view></view>
+          <view wx:for="{{week.segments}}" wx:for-item="segment" wx:key="key" class="month-course {{segment.tone}}" style="left:{{segment.left}}%;width:calc({{segment.width}}% - 4px);top:{{segment.top}}px" data-id="{{segment.id}}" bindtap="openCalendarCourse" aria-role="button" aria-label="{{segment.label}}">{{segment.name}}</view>
+        </view>
+      </view>
+      <view wx:if="{{!calendarCount}}" class="month-empty">本月暂无课程安排，请切换月份查看。</view>
+    </view>
     <view wx:elif="{{visibleCourses.length}}" class="course-grid">
-      <view class="course-card" wx:for="{{visibleCourses}}" wx:key="id" data-id="{{item.id}}" bindtap="openCourse">
+      <view class="course-card" hover-class="row-pressed" hover-stay-time="80" wx:for="{{visibleCourses}}" wx:key="id" data-id="{{item.id}}" bindtap="openCourse">
         <view class="course-cover">
           <image wx:if="{{item.coverImage}}" src="{{item.coverImage}}" mode="aspectFill" binderror="onImageError" data-path="visibleCourses[{{index}}].coverImage"></image>
           <view wx:else class="cover-fallback">线下课</view>

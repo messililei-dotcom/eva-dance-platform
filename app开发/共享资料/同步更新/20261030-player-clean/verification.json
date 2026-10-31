@@ -1,0 +1,116 @@
+{
+  "updatedAt": "2026-10-30T16:45:27+08:00",
+  "status": "implemented-local-builds-and-scoped-tests-complete",
+  "request": "视频播放时画面干净，功能按钮隐藏",
+  "behavior": {
+    "playing": "约3秒无操作隐藏画面内播放按钮和进度条",
+    "tap": "轻点画面恢复控制；iOS播放中再次轻点可立即隐藏",
+    "paused": "显示控制，便于继续播放",
+    "interactions": "iOS拖动进度条和设置期间不自动隐藏；三端保留原有长按倍速手势",
+    "screenReader": "读屏模式保留可操作控制，不自动隐藏",
+    "watermark": "防盗水印保留，不随控制层隐藏"
+  },
+  "ios": {
+    "sourceBuild": 11,
+    "simulatorReleaseTestsPassed": 8,
+    "audioRegressionTests": 3,
+    "controlStateTests": 4,
+    "hostedSurfaceTest": 1,
+    "surfaceEvidence": "真实共享控件的本地空视频画布，非已授权课程；验证显示/隐藏/恢复三态",
+    "surfaceFramePt": [
+      393,
+      852
+    ],
+    "nativeDuplicateControlsDisabled": true,
+    "deviceTargetArchive": "iOS/SWOD-clean-build11-unsigned.xcarchive",
+    "archiveCompiled": true,
+    "archiveSigned": false,
+    "ipaExported": false,
+    "realProtectedCourseE2E": false,
+    "physicalDeviceAccepted": false
+  },
+  "android": {
+    "version": "1.0.1(13)",
+    "unitRegressionTestsPassed": 29,
+    "lintDebugPassed": true,
+    "releaseAPKAndAABBuilt": true,
+    "APKSignatureVerified": true,
+    "AABSignatureVerified": true,
+    "originalCertificateSHA256": "58ecee1c1cd0adc08f797ab9bb75dcb45e6a3b747c535939020d8ae8f0d548fe",
+    "nativeControls": "VideoView/MediaController，播放3秒自动隐藏，暂停或读屏时固定显示",
+    "newControlRuntimeE2E": false
+  },
+  "harmony": {
+    "version": "1.0.1(10)",
+    "unitRegressionTestsPassed": 41,
+    "releaseBuilt": true,
+    "HAPAndAPPSignaturesVerified": true,
+    "nativeControls": "Video.controls受状态管理；轻触恢复，播放3秒隐藏，离开页面清除定时器",
+    "newControlRuntimeE2E": false,
+    "buildRecord": "HarmonyOS-build10/verification.json"
+  },
+  "offlinePlayback": "已检查：独立安全缓存播放器控制在视频画面外；本次不启用生产缓存，也不以本地编译代替加密课程联调",
+  "physicalDeviceTests": "skipped-at-user-request",
+  "reviewerAccountUsed": false,
+  "filingChanged": false,
+  "signingIdentityChanged": false,
+  "existingReviewsWithdrawn": false,
+  "existingSubmittedArtifactsModified": false,
+  "uploaded": false,
+  "submitted": false,
+  "published": false,
+  "productionFeatureFlagsChanged": false,
+  "existingStoreReviewsPreserved": {
+    "iOS": 10,
+    "HuaweiAndroid": 11,
+    "HarmonyOS": 9
+  },
+  "originalCandidateFilesHashVerifiedUnchanged": true,
+  "newLocalArtifacts": [
+    {
+      "path": "Android-build13/installers/SWOD-1.0.1-13-release.aab",
+      "size": 15419669,
+      "sha256": "84923fd34185a7c4c3e3d06a49010b29b075c7606dd0079f2cfad3c7f98144cb"
+    },
+    {
+      "path": "Android-build13/installers/SWOD-1.0.1-13-release.apk",
+      "size": 28923557,
+      "sha256": "05e21596bf790cdca86a26b84ac94d1a3f06fb02821ef69a0491f4336357de9d"
+    },
+    {
+      "path": "HarmonyOS-build10/installers/SWOD-1.0.1-10-release.app",
+      "size": 7595033,
+      "sha256": "4f9f10a730940faa95b9f1ad8abbed4968e6ccf27142d882414825fa2617ae40"
+    },
+    {
+      "path": "HarmonyOS-build10/installers/SWOD-1.0.1-10-release.hap",
+      "size": 16105288,
+      "sha256": "083af2f9b54604772bce94cb1b9bceb44e9b33cd52a80e425bd98f578986df33"
+    }
+  ],
+  "sourceHashes": {
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlaybackControls.swift": "9614af329cdd3a5f381dfdf1bf79e84b402ee1c12e18b59888f6974b8e3b7ff1",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/LessonVideoSurface.swift": "54fc8b1939993d9235c32177de0f2476548bca0887f8c6a8a910afdcc547988e",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseVideoCanvas.swift": "e2b6adf624a691ecfe64f1b5644c0874b75a41c5db0766ca9bfd18d1c6f4cc1a",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift": "5dd4d7597e2f36121cc30a121e31e0ecfe1ad3bf6d5ca2a58d6bd400e9e131c8",
+    "app开发/iOS/EvaDance/Tests/EvaPlaybackTests/PlaybackControlsTests.swift": "aaabf0581f3dfd481a2fee5d978bd4c107a2f74aa8dc443f6b350b6a4a2779d8",
+    "app开发/iOS/EvaDance/Tests/EvaPlaybackTests/PlaybackSurfaceTests.swift": "81e268f1a2bcb33bcaceacae66f9b4d1d77479717d854a6ed5650dc31bf70910",
+    "app开发/iOS/EvaDance/scripts/create_layout_test_project.py": "3ee9cbbd5fafb75709557182bc74f43bcab2adcf66f91b911b9291fbbe3e2a58",
+    "app开发/iOS/EvaDance/scripts/generate_project.py": "070724153fb7fde5ee97e644dc76b29894dec4eed4f160d99a211a8a9ebae247",
+    "app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj": "d1e09452df4d3da47fb77645efaac187015affa5a4adc93ceb8996ad1964758f",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java": "32ee2371e55a3ffb2872404574e4ebdbea8e964044bb7de1a56b139c74fa9d02",
+    "app开发/Android/EvaDance/app/build.gradle": "8769d36e5ce4e6edbc3da222024cc2964329556d8709893146b7b9b135fec2e1",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "460cb6e78a69980f3eb5a17f59fdc0399ad80b254fb4b8c49f77fa7c4e851fa7",
+    "app开发/HarmonyOS/EvaDance/AppScope/app.json5": "b0bb523cb74b007903d68019bbfc2d85d46bceac2c226669f5934efca78a301c"
+  },
+  "limitations": [
+    "安卓和鸿蒙本次通过编译/既有回归套件，未完成受保护课程播放控制的运行验收",
+    "iOS新11包尚未签名导出，当前商店10不含本次修改",
+    "本次未访问审核详情，不能据此更新审核或公开上架结论"
+  ],
+  "references": [
+    "https://developer.android.com/reference/android/widget/MediaController",
+    "https://developer.apple.com/documentation/swiftui/environmentvalues/accessibilityvoiceoverenabled",
+    "https://developer.huawei.com/consumer/cn/doc/harmonyos-references-V3/ts-media-components-video-0000001333641101-V3"
+  ]
+}

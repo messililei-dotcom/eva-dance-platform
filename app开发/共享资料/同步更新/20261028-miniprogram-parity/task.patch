@@ -1,0 +1,1454 @@
+--- a/.gitignore
++++ b/.gitignore
+@@ -130,3 +130,4 @@
+ # Patch-editor residue; archives live outside runtime source
+ **/*.orig
+ **/*.rej
++**/number-auth.local.json
+--- a/app开发/iOS/EvaDance/Sources/EvaDanceApp/BrandViews.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaDanceApp/BrandViews.swift
+@@ -15,7 +15,9 @@
+     static let gold = Color(red: 0.725, green: 0.588, blue: 0.322)
+     static let gradient = LinearGradient(colors: [red, gold], startPoint: .topLeading, endPoint: .bottomTrailing)
+     #if os(iOS)
+-    static let canvas = Color(uiColor: .systemGroupedBackground)
++    static let canvas = Color(uiColor: UIColor { traits in
++        traits.userInterfaceStyle == .dark ? .systemGroupedBackground : UIColor(red: 246 / 255, green: 247 / 255, blue: 249 / 255, alpha: 1)
++    })
+     static let surface = Color(uiColor: .secondarySystemGroupedBackground)
+     static let onAccent = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .black : .white })
+     #else
+@@ -26,7 +28,7 @@
+     static let softAccent = red.opacity(0.07)
+ }
+ struct BrandHeader: View {
+-    @ScaledMetric(relativeTo: .title2) private var badgeSize = 44
++    @ScaledMetric(relativeTo: .title2) private var badgeSize = 36
+     let title: String
+     let subtitle: String
+     var icon = "sparkles"
+@@ -39,7 +41,7 @@
+                 Text(subtitle).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+             }
+             Spacer(minLength: 0)
+-        }.padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
++        }.padding(.vertical, 6).frame(maxWidth: .infinity, alignment: .leading)
+     }
+ }
+ struct CourseHero: View {
+@@ -96,16 +98,16 @@
+     var body: some View {
+         let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 12)) : AnyLayout(HStackLayout(spacing: 10))
+         layout {
+-            NavigationLink { AuthGate { CoursesView() } } label: { shortcut("继续学习", "play.fill", primary: true) }
+-            NavigationLink { AuthGate { StudyAssistantView() } } label: { shortcut("学习助手", "sparkles") }
+-            NavigationLink { UnifiedSearchView() } label: { shortcut("全站搜索", "magnifyingglass") }
++            NavigationLink { AuthGate { CoursesView() } } label: { shortcut("我的课程", "book") }
++            NavigationLink { AuthGate { OfflineScheduleView() } } label: { shortcut("课时与核销", "calendar") }
++            NavigationLink { AuthGate { MyCompetitionsView() } } label: { shortcut("报名与成绩", "trophy") }
+         }.buttonStyle(.plain)
+     }
+     private func shortcut(_ title: String, _ icon: String, primary: Bool = false) -> some View {
+         let layout = typeSize.isAccessibilitySize ? AnyLayout(HStackLayout(spacing: 16)) : AnyLayout(VStackLayout(spacing: 9))
+         return layout { Image(systemName: icon).font(.title3); Text(title).font(.subheadline.weight(.medium)) }
+             .foregroundStyle(primary ? EvaBrand.onAccent : EvaBrand.red)
+-            .frame(maxWidth: .infinity, minHeight: 80).padding(.vertical, 4)
++            .frame(maxWidth: .infinity, minHeight: 64)
+             .background(primary ? EvaBrand.red : EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14))
+             .contentShape(RoundedRectangle(cornerRadius: 14))
+             .accessibilityElement(children: .combine)
+@@ -116,7 +118,7 @@
+ struct EvaHomeLayout: ViewModifier {
+     func body(content: Content) -> some View {
+         #if os(iOS)
+-        content.navigationBarTitleDisplayMode(.large).background(EvaBrand.canvas)
++        content.navigationBarTitleDisplayMode(.inline).background(EvaBrand.canvas)
+             .toolbar {
+                 #if DEBUG
+                 if ProcessInfo.processInfo.environment["EVA_API_BASE"] != nil {
+--- a/app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift
+@@ -42,18 +42,19 @@
+ struct CourseCard: View {
+     var online = false
+     let row: JSONValue
++    var showCover = true
+     var body: some View {
+         HStack(alignment: .center, spacing: 14) {
+-            ZStack {
++            if showCover { ZStack {
+                 EvaBrand.softAccent
+                 if let url = AppPolicy.secureMediaURL(row["cover_image"].text) {
+-                    AsyncImage(url: url) { image in image.resizable().scaledToFill() } placeholder: { Image(systemName: "play.rectangle").font(.title2).foregroundStyle(EvaBrand.red) }
++                    AsyncImage(url: url) { image in image.resizable().scaledToFit() } placeholder: { Image(systemName: "play.rectangle").font(.title2).foregroundStyle(EvaBrand.red) }
+                 } else { Image(systemName: "play.rectangle").font(.title2).foregroundStyle(EvaBrand.red) }
+-            }.frame(width: 96, height: 88).clipped().clipShape(RoundedRectangle(cornerRadius: 12)).accessibilityHidden(true)
++            }.frame(width: 96, height: 72).clipped().clipShape(RoundedRectangle(cornerRadius: 10)).accessibilityHidden(true) }
+             VStack(alignment: .leading, spacing: 7) {
+-                Text(row.firstText("name", "title")).font(.headline).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
++                Text(row.firstText("name", "title")).font(.headline).foregroundStyle(.primary).lineLimit(showCover ? 2 : nil).fixedSize(horizontal: false, vertical: true)
+                 if !row.firstText("subtitle", "teacher", "category").isEmpty {
+-                    Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++                    Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary).lineLimit(showCover ? 1 : nil).fixedSize(horizontal: false, vertical: true)
+                 }
+                 if !row["total_courses"].text.isEmpty {
+                     Text([row["teacher"].text, "\(row["total_courses"].text) 节课"].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
+@@ -62,7 +63,7 @@
+                 if row["price"] != .null { CoursePriceLine(online: online, row: row) }
+             }
+             Spacer(minLength: 0)
+-        }.padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
++        }.padding(.vertical, 6).frame(maxWidth: .infinity, alignment: .leading)
+     }
+ }
+ struct DiscoverView: View {
+@@ -72,28 +73,34 @@
+     var rows: [SiteRow] { store.data.rows.filter { row in search.isEmpty || ["name", "subtitle", "teacher", "category"].contains { row.value[$0].text.localizedCaseInsensitiveContains(search) } } }
+     var body: some View {
+         ScrollView {
+-            LazyVStack(alignment: .leading, spacing: 20) {
+-                if search.isEmpty {
+-                    BrandHeader(title: "伊娃东方舞", subtitle: "线上学院 · 舞蹈作品 · 每天进步一点", icon: "play.rectangle")
+-                    LearningShortcuts()
+-                }
++            LazyVStack(alignment: .leading, spacing: 14) {
++                VStack(alignment: .leading, spacing: 6) {
++                        Text("伊娃东方舞").font(.title2.bold())
++                        Text("线上学院 · 从基础到进阶，找到适合你的课程").font(.subheadline).foregroundStyle(.secondary)
++                    }.padding(.vertical, 8)
++                LearningShortcuts()
+                 HStack {
+-                    Text(search.isEmpty ? "探索课程" : "搜索结果").font(.title3.bold())
++                    Text(search.isEmpty ? "课程列表" : "搜索结果").font(.title3.bold())
+                     Spacer()
+                     if !store.busy && store.error == nil { Text("\(rows.count) 门课程").font(.subheadline).foregroundStyle(.secondary) }
+                 }
++                HStack(spacing: 10) {
++                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
++                    TextField("搜索课程、老师或分类", text: $search).accessibilityLabel("搜索课程、老师或分类")
++                    if !search.isEmpty { Button { search = "" } label: { Image(systemName: "xmark.circle.fill") }.frame(minWidth: 44, minHeight: 44).accessibilityLabel("清空搜索") }
++                }.padding(.horizontal, 12).frame(minHeight: 48).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 12))
+                 LoadState(store: store) { Task { await load() } }
+                 ForEach(rows) { row in NavigationLink {
+                     if session.isCourseUnlocked(row.value["id"].text), let id = Int(row.value["id"].text) { CatalogByIDView(id: id, title: row.value["name"].text) }
+                     else { PublicCourseView(row: row.value) }
+                 } label: {
+                     HStack(spacing: 4) { CourseCard(online: true, row: row.value); Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.secondary) }
+-                        .padding(.horizontal, 14).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 16))
++                        .padding(.horizontal, 12).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 12))
+                 }.buttonStyle(.plain) }
+                 if !store.busy && store.error == nil && rows.isEmpty { Label("暂无匹配课程，请换个关键词", systemImage: "magnifyingglass").foregroundStyle(.secondary).padding(.vertical, 24) }
+                 NavigationLink { InformationView() } label: { Label("了解伊娃东方舞", systemImage: "info.circle").font(.subheadline).frame(minHeight: 44) }.padding(.top, 4)
+-            }.padding(20).frame(maxWidth: 760).frame(maxWidth: .infinity)
+-        }.evaHomeLayout().navigationTitle("线上学院").evaSearch(text: $search, prompt: "搜索课程、老师或分类")
++            }.padding(16).frame(maxWidth: 760).frame(maxWidth: .infinity)
++        }.evaHomeLayout().evaCompactLayout().navigationTitle("线上学院")
+         .task(id: session.accountID) { await load() }.refreshable { await load() }
+     }
+     private func load() async { await session.refreshCourseAccess(); await store.load("/public/series", session: session, publicRead: true) }
+@@ -103,7 +110,11 @@
+     let row: JSONValue
+     var body: some View {
+         List {
+-            CourseCard(online: true, row: row)
++            if let url = AppPolicy.secureMediaURL(row["cover_image"].text) {
++                AsyncImage(url: url) { image in image.resizable().scaledToFit() } placeholder: { ProgressView("封面加载中") }
++                    .frame(maxWidth: .infinity).clipShape(RoundedRectangle(cornerRadius: 12)).accessibilityLabel(row["name"].text + "课程封面")
++            }
++            CourseCard(online: true, row: row, showCover: false)
+             if !row["description"].text.isEmpty { Text(plain(row["description"].text)).textSelection(.enabled) }
+             Text("教师：\(row["teacher"].text)")
+             Text("课节：\(row["total_courses"].text)")
+--- a/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift
+@@ -4,6 +4,7 @@
+ struct AccountView: View {
+     @EnvironmentObject var session: Session
+     @StateObject private var store = SiteStore()
++    @StateObject private var courses = SiteStore()
+     @State private var logout = false
+     var body: some View {
+         List {
+@@ -19,19 +20,38 @@
+                     LoadState(store: store) { Task { await load() } }
+                     NavigationLink("编辑个人资料") { ProfileEditor() }
+                 }
+-                Section("我的学习") {
++                Section("我的比赛与订单") {
++                    NavigationLink("我的比赛 · 报名与成绩") { MyCompetitionsView() }
++                    NavigationLink("我的订单") { ShopOrdersView() }
++                }
++                Section("我的课程") {
++                    LoadState(store: courses) { Task { await load() } }
++                    ForEach(courses.data.rows) { item in
++                        if let id = Int(item.value["series_id"].text), id > 0 {
++                            NavigationLink { CatalogByIDView(id: id, title: item.value["series_name"].text) } label: {
++                                VStack(alignment: .leading, spacing: 6) {
++                                    Text(item.value["series_name"].text).font(.headline)
++                                    Text("✓ 已解锁").font(.caption).foregroundStyle(.green)
++                                    Text("继续学习").font(.subheadline).foregroundStyle(.green)
++                                }.padding(.vertical, 6)
++                            }
++                        }
++                    }
++                    if !courses.busy && courses.error == nil && courses.data.list.isEmpty { Text("暂无已解锁课程").foregroundStyle(.secondary) }
++                    NavigationLink("查看全部课程与学习记录") { CoursesView() }
++                }
++                Section("线下课与证书") {
++                    NavigationLink("我的线下课 · 课时与核销") { OfflineScheduleView() }
++                    NavigationLink("我的证书") { CertificatesView() }
++                }
++                Section("更多学习服务") {
+                     NavigationLink("今日练习 · 智能学习助手") { StudyAssistantView() }
+-                    NavigationLink("我的课程") { CoursesView() }
+                     NavigationLink("学习消息") { MessagesView() }
+                     NavigationLink("成长与每日打卡") { GrowthView() }
+                     NavigationLink("学习笔记") { StudyItemsView(kind: "notes") }
+                     NavigationLink("视频收藏") { StudyItemsView(kind: "bookmarks") }
+-                    NavigationLink("我的证书") { CertificatesView() }
+                 }
+                 Section("我的服务") {
+-                    NavigationLink("课时余额与核销记录") { OfflineScheduleView() }
+-                    NavigationLink("我的比赛") { MyCompetitionsView() }
+-                    NavigationLink("商城订单") { ShopOrdersView() }
+                     NavigationLink("收货地址") { ShippingView() }
+                     NavigationLink("课程缴费记录") { RecordListView(title:"课程缴费记录",path:"/member/payments",fields:[("课程","courseName"),("金额","amount"),("剩余课次","remainingSessions"),("日期","date")]) }
+                     NavigationLink("课次消耗记录") { RecordListView(title:"课次消耗记录",path:"/member/consume-records",fields:[("课程","courseName"),("课次","count"),("时间","consumeDate")]) }
+@@ -63,7 +83,12 @@
+         }.evaCompactLayout().evaHomeLayout().navigationTitle("个人中心").task(id:session.accountID) { await load() }.refreshable { await load() }
+         .confirmationDialog("确认退出当前账号？",isPresented:$logout) { Button("退出登录",role:.destructive) { session.logout() } }
+     }
+-    private func load() async { if session.token != nil { await store.load("/member/profile",session:session) } }
++    private func load() async {
++        guard session.token != nil else { courses.data = .null; return }
++        courses.data = .null
++        await store.load("/member/profile",session:session)
++        await courses.load("/member/authorized-series",session:session)
++    }
+ }
+ struct ProfileEditor: View {
+     @EnvironmentObject var session: Session
+--- a/app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
+@@ -51,7 +51,7 @@
+             guard active, requestGeneration == generation else { return }
+             guard playback.authorized else { throw APIError.denied }
+             qualities = playback.quality_options ?? []
+-            quality = selectedQuality ?? qualities.first?.value ?? "auto"
++            quality = selectedQuality ?? qualities.first(where: { $0.url == playback.play_url })?.value ?? qualities.first?.value ?? "auto"
+             let raw = qualities.first(where: { $0.value == quality })?.url ?? playback.play_url
+             guard let url = AppPolicy.secureMediaURL(raw) else { throw APIError.service("视频地址不可用，请联系课程管理员。") }
+             let checkpoint = try await session.api.optionalProgress(lessonID: id, token: token)
+@@ -187,6 +187,12 @@
+                         Spacer()
+                         if index + 1 < playlist.count { nextLink(playlist[index + 1], text: "下一节") }
+                     }
++                    DisclosureGroup("课节目录 · 共 \(playlist.count) 节") {
++                        ForEach(playlist) { lesson in
++                            if lesson.id == lessonID { Label(lesson.name + " · 当前课节", systemImage: "play.circle.fill").foregroundStyle(EvaBrand.red).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }
++                            else { nextLink(lesson, text: lesson.name).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }
++                        }
++                    }
+                 }
+             }.padding()
+         }.evaCompactLayout().navigationTitle(title)
+--- a/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift
+@@ -67,7 +67,12 @@
+                     if pages > 1 { pagination(proxy) }
+                 }
+             }.navigationDestination(isPresented: $showPlayer) {
+-                if let selectedID, let lessonID = Int(selectedID), let lesson = lessons.first(where: { $0["id"].text == selectedID }) { AuthGate { PlayerView(lessonID: lessonID, title: lesson["name"].text) } }
++                if let selectedID, let lessonID = Int(selectedID), let lesson = lessons.first(where: { $0["id"].text == selectedID }) {
++                    AuthGate { PlayerView(lessonID: lessonID, title: lesson["name"].text, playlist: lessons.compactMap { row in
++                        guard let id = Int(row["id"].text), id > 0 else { return nil }
++                        return Lesson(id: id, name: row["name"].text, duration: row["duration"].number)
++                    }) }
++                }
+             }
+         }.evaCompactLayout().navigationTitle(title).task { await load() }.refreshable { await load() }
+     }
+--- a/app开发/iOS/EvaDance/Sources/EvaDanceApp/EvaDanceApp.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaDanceApp/EvaDanceApp.swift
+@@ -25,6 +25,7 @@
+ }
+ struct LoginView: View {
+     @EnvironmentObject var session: Session
++    @Environment(\.dismiss) private var dismiss
+     @State private var phone = ""
+     @State private var code = ""
+     @State private var password = ""
+@@ -38,8 +39,16 @@
+                 Section {
+                     Image("BrandLogo").resizable().scaledToFit().frame(width: 88, height: 88)
+                         .accessibilityLabel("伊娃东方舞 SWOD 标志")
+-                    Text("伊娃东方舞").font(.largeTitle.bold())
+-                    Text("让每一次练习都有收获").foregroundStyle(.secondary)
++                    Text("东方舞圈").font(.largeTitle.bold())
++                    Text("登录后同步课程、学习进度与个人资料").foregroundStyle(.secondary)
++                }
++                Section {
++                    Toggle("我已阅读并同意服务条款和隐私政策", isOn: $agreed)
++                    HStack {
++                        Link("隐私政策", destination: URL(string: "https://www.swod.com.cn/privacy")!)
++                        Spacer()
++                        Link("服务条款", destination: URL(string: "https://www.swod.com.cn/terms")!)
++                    }
+                 }
+                 #if os(iOS) && canImport(ATAuthSDK)
+                 Section {
+@@ -76,9 +85,6 @@
+                         }.disabled(busy || !validPhone || !agreed || remaining > 0)
+                     }
+                     }
+-                    Toggle("我已阅读并同意服务条款和隐私政策", isOn: $agreed)
+-                    Link("隐私政策", destination: URL(string: "https://www.swod.com.cn/privacy")!)
+-                    Link("服务条款", destination: URL(string: "https://www.swod.com.cn/terms")!)
+                     Button(busy ? "处理中…" : "登录并开始学习") {
+                         perform {
+                             if passwordLogin {
+@@ -88,7 +94,8 @@
+                         }
+                     }.disabled(busy || !agreed || !validPhone || (passwordLogin ? password.isEmpty : code.isEmpty))
+                 }
+-            }.evaCompactLayout().navigationTitle("欢迎回来")
++            }.disabled(busy).evaCompactLayout().navigationTitle("欢迎回来")
++                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() }.disabled(busy) } }
+                 .onDisappear { password = "" }
+                 .onChange(of: passwordLogin) { _ in password = "" }
+         }
+--- a/app开发/iOS/EvaDance/Sources/EvaCore/Models.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaCore/Models.swift
+@@ -23,6 +23,9 @@
+     public let id: Int
+     public let name: String
+     public let duration: Double?
++    public init(id: Int, name: String, duration: Double? = nil) {
++        self.id = id; self.name = name; self.duration = duration
++    }
+ }
+ public struct CourseUnit: Decodable, Identifiable {
+     public let id: Int
+--- a/app开发/iOS/EvaDance/scripts/generate_project.py
++++ b/app开发/iOS/EvaDance/scripts/generate_project.py
+@@ -19,16 +19,18 @@
+ product = put('product', 'PBXFileReference', explicitFileType='wrapper.application', path='EvaDance.app', sourceTree='BUILT_PRODUCTS_DIR')
+ products = put('products', 'PBXGroup', name='Products', children=[product], sourceTree='<group>')
+ vendor_refs=[]; vendor_builds=[]; optional_refs=[]; optional_resources=[]
+-# The first release uses SMS/password. Keep vendor originals, but do not link an
+-# unused authentication SDK or copy its private configuration into the package.
+-if os.environ.get('EVA_INCLUDE_NUMBER_AUTH') == '1':
++# The client SDK scheme stays outside source and is bundled only in configured builds.
++local_config=Path.home()/'.config/eva-app/ios-number-auth.json'
++include_number_auth = os.environ.get('EVA_INCLUDE_NUMBER_AUTH', '1') == '1' and local_config.is_file()
++if include_number_auth:
+     for name in ['ATAuthSDK','YTXOperators','YTXMonitor']:
+         r=put(name,'PBXFileReference',lastKnownFileType='wrapper.xcframework',path=f'Vendor/NumberAuth/{name}.xcframework',sourceTree='<group>')
+         vendor_refs.append(r); vendor_builds.append(put(name+'-link','PBXBuildFile',fileRef=r))
+-    local_config=Path.home()/'.config/eva-app/ios-number-auth.json'
+-    private_resource=root/'Resources/NumberAuth.local.plist'
+-    private_resource.write_bytes(plistlib.dumps(json.loads(local_config.read_text()) if local_config.exists() else {}))
+-    private_ref=put('numberauth-config','PBXFileReference',lastKnownFileType='text.plist.xml',path='Resources/NumberAuth.local.plist',sourceTree='<group>')
++    private_resource=Path.home()/'Library/Caches/SWOD/ios-number-auth/NumberAuth.local.plist'
++    private_resource.parent.mkdir(parents=True,exist_ok=True)
++    private_resource.write_bytes(plistlib.dumps(json.loads(local_config.read_text())))
++    private_resource.chmod(0o600)
++    private_ref=put('numberauth-config','PBXFileReference',lastKnownFileType='text.plist.xml',path=str(private_resource),sourceTree='<absolute>')
+     sdk_bundle_ref=put('authsdk-bundle','PBXFileReference',lastKnownFileType='wrapper.plug-in',path='Vendor/NumberAuth/ATAuthSDK.bundle',sourceTree='<group>')
+     optional_refs=[private_ref,sdk_bundle_ref]
+     optional_resources=[put('numberauth-config-build','PBXBuildFile',fileRef=private_ref),put('authsdk-bundle-build','PBXBuildFile',fileRef=sdk_bundle_ref)]
+@@ -91,7 +93,7 @@
+         row['NSPrivacyCollectedDataTypePurposes'].append('NSPrivacyCollectedDataTypePurposeAnalytics')
+     if kind in ['NSPrivacyCollectedDataTypeUserID','NSPrivacyCollectedDataTypePurchaseHistory','NSPrivacyCollectedDataTypeProductInteraction']:
+         row['NSPrivacyCollectedDataTypePurposes'].append('NSPrivacyCollectedDataTypePurposeProductPersonalization')
+-for name in (['ATAuthSDK', 'YTXOperators', 'YTXMonitor'] if os.environ.get('EVA_INCLUDE_NUMBER_AUTH') == '1' else []):
++for name in (['ATAuthSDK', 'YTXOperators', 'YTXMonitor'] if include_number_auth else []):
+     manifest = root/f'Vendor/NumberAuth/{name}.xcframework/ios-arm64/{name}.framework/PrivacyInfo.xcprivacy'
+     sdk = plistlib.loads(manifest.read_bytes())
+     privacy['NSPrivacyTracking'] |= sdk.get('NSPrivacyTracking', False)
+--- a/app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj
++++ b/app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj
+@@ -178,9 +178,59 @@
+ "children" = ( "A8792157CB4F27FB949C035F" );
+ "sourceTree" = "<group>";
+ };
++"8A12A3212CC96AFD5D0516C1" = {
++"isa" = "PBXFileReference";
++"lastKnownFileType" = "wrapper.xcframework";
++"path" = "Vendor/NumberAuth/ATAuthSDK.xcframework";
++"sourceTree" = "<group>";
++};
++"A90D2C4579C4F06D52C317D3" = {
++"isa" = "PBXBuildFile";
++"fileRef" = "8A12A3212CC96AFD5D0516C1";
++};
++"ED254B5CA0100E0CFAE01C52" = {
++"isa" = "PBXFileReference";
++"lastKnownFileType" = "wrapper.xcframework";
++"path" = "Vendor/NumberAuth/YTXOperators.xcframework";
++"sourceTree" = "<group>";
++};
++"5C9FF164535FC957B8A8B7DD" = {
++"isa" = "PBXBuildFile";
++"fileRef" = "ED254B5CA0100E0CFAE01C52";
++};
++"529C3590CBA26C828828E62B" = {
++"isa" = "PBXFileReference";
++"lastKnownFileType" = "wrapper.xcframework";
++"path" = "Vendor/NumberAuth/YTXMonitor.xcframework";
++"sourceTree" = "<group>";
++};
++"ED12C661D1F3946C70AA024D" = {
++"isa" = "PBXBuildFile";
++"fileRef" = "529C3590CBA26C828828E62B";
++};
++"FF92D541C4DD1008E9E8550B" = {
++"isa" = "PBXFileReference";
++"lastKnownFileType" = "text.plist.xml";
++"path" = "/Users/lilei/Library/Caches/SWOD/ios-number-auth/NumberAuth.local.plist";
++"sourceTree" = "<absolute>";
++};
++"0A672A95F3C32EF5CF1F7853" = {
++"isa" = "PBXFileReference";
++"lastKnownFileType" = "wrapper.plug-in";
++"path" = "Vendor/NumberAuth/ATAuthSDK.bundle";
++"sourceTree" = "<group>";
++};
++"05D40F91CD3DDD3FD5EA375F" = {
++"isa" = "PBXBuildFile";
++"fileRef" = "FF92D541C4DD1008E9E8550B";
++};
++"D5F2E71AECBC2FBDD3CD579E" = {
++"isa" = "PBXBuildFile";
++"fileRef" = "0A672A95F3C32EF5CF1F7853";
++};
+ "4813494D137E1631BBA301D5" = {
+ "isa" = "PBXGroup";
+-"children" = ( "81864538E639F1A2E54E91D9", "56176A749AFDC37A8CA0C094", "6B58734A28CA9AACE961205D", "5970BA8B84CE918068935CA7", "3D9A44E396B18F90CDA5B02B", "55E384D46FF217A9EA069A71", "5AFEB74CA9F2E77773EC3CB5", "0A9F132394D2D869486E91B0", "E100F589B9621154CF7A1A8D", "131F716279A998597B23DF85", "F712CA44479FE5D168DCD3CA", "6D2FDD52C7BF889083ED934F", "72AD4380CE5193F42D6545AE", "BA26EB7A465D3B3B2219C3E5", "45C66AB82B8E87038BAE9A09", "8BF729FFE074CAEE622C0292", "0A3E27B8CA818264D75C8D81" );
++"children" = ( "81864538E639F1A2E54E91D9", "56176A749AFDC37A8CA0C094", "6B58734A28CA9AACE961205D", "5970BA8B84CE918068935CA7", "3D9A44E396B18F90CDA5B02B", "55E384D46FF217A9EA069A71", "5AFEB74CA9F2E77773EC3CB5", "0A9F132394D2D869486E91B0", "E100F589B9621154CF7A1A8D", "131F716279A998597B23DF85", "F712CA44479FE5D168DCD3CA", "6D2FDD52C7BF889083ED934F", "72AD4380CE5193F42D6545AE", "BA26EB7A465D3B3B2219C3E5", "8A12A3212CC96AFD5D0516C1", "ED254B5CA0100E0CFAE01C52", "529C3590CBA26C828828E62B", "45C66AB82B8E87038BAE9A09", "8BF729FFE074CAEE622C0292", "FF92D541C4DD1008E9E8550B", "0A672A95F3C32EF5CF1F7853", "0A3E27B8CA818264D75C8D81" );
+ "sourceTree" = "<group>";
+ };
+ "4C62EC40DF63DF0873D128AE" = {
+@@ -205,13 +255,13 @@
+ "E2AA269EB967A8853A258BFA" = {
+ "isa" = "PBXFrameworksBuildPhase";
+ "buildActionMask" = 2147483647;
+-"files" = ( "C3027728A224204EC9C061EA" );
++"files" = ( "C3027728A224204EC9C061EA", "A90D2C4579C4F06D52C317D3", "5C9FF164535FC957B8A8B7DD", "ED12C661D1F3946C70AA024D" );
+ "runOnlyForDeploymentPostprocessing" = 0;
+ };
+ "41D311A605520FC7B8B9A980" = {
+ "isa" = "PBXResourcesBuildPhase";
+ "buildActionMask" = 2147483647;
+-"files" = ( "CE592D926B548708CFD0C61E", "5522B3B3B2EACC1C8F9BEAAC" );
++"files" = ( "CE592D926B548708CFD0C61E", "5522B3B3B2EACC1C8F9BEAAC", "05D40F91CD3DDD3FD5EA375F", "D5F2E71AECBC2FBDD3CD579E" );
+ "runOnlyForDeploymentPostprocessing" = 0;
+ };
+ "952548237D7F645F11D1E7B6" = {
+--- a/app开发/iOS/EvaDance/Resources/PrivacyInfo.xcprivacy
++++ b/app开发/iOS/EvaDance/Resources/PrivacyInfo.xcprivacy
+@@ -121,6 +121,7 @@
+ 			<false/>
+ 			<key>NSPrivacyCollectedDataTypePurposes</key>
+ 			<array>
++				<string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+ 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+ 			</array>
+ 		</dict>
+@@ -139,6 +140,23 @@
+ 		</dict>
+ 	</array>
+ 	<key>NSPrivacyAccessedAPITypes</key>
+-	<array/>
++	<array>
++		<dict>
++			<key>NSPrivacyAccessedAPIType</key>
++			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
++			<key>NSPrivacyAccessedAPITypeReasons</key>
++			<array>
++				<string>35F9.1</string>
++			</array>
++		</dict>
++		<dict>
++			<key>NSPrivacyAccessedAPIType</key>
++			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
++			<key>NSPrivacyAccessedAPITypeReasons</key>
++			<array>
++				<string>CA92.1</string>
++			</array>
++		</dict>
++	</array>
+ </dict>
+ </plist>
+--- a/app开发/Android/EvaDance/gradle.properties
++++ b/app开发/Android/EvaDance/gradle.properties
+@@ -1,2 +1,3 @@
+ org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8
+ android.nonTransitiveRClass=true
++android.useAndroidX=true
+--- a/app开发/Android/EvaDance/app/build.gradle
++++ b/app开发/Android/EvaDance/app/build.gradle
+@@ -18,7 +18,28 @@
+         release { minifyEnabled false; if (signingFile.exists()) signingConfig signingConfigs.release }
+     }
+ }
+-dependencies { testImplementation 'junit:junit:4.13.2' }
++dependencies {
++    implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.22')
++    implementation fileTree(dir: 'libs', include: ['*.aar'])
++    implementation 'androidx.appcompat:appcompat:1.7.1'
++    testImplementation 'junit:junit:4.13.2'
++}
++// Client SDK scheme configuration is generated from the existing private file.
++// Server AccessKeys and WeChat AppSecrets never belong in this asset.
++def carrierAssets = layout.buildDirectory.dir('generated/carrierAssets')
++android.sourceSets.main.assets.srcDir(carrierAssets)
++def carrierConfig = new File(System.getProperty('user.home'), '.config/eva-app/android-number-auth.json')
++tasks.register('generateCarrierConfig') {
++    if (carrierConfig.exists()) inputs.file(carrierConfig)
++    outputs.dir(carrierAssets)
++    doLast {
++        def target = new File(carrierAssets.get().asFile, 'number-auth.json')
++        target.parentFile.mkdirs()
++        def config = carrierConfig.exists() ? new groovy.json.JsonSlurper().parse(carrierConfig) : [:]
++        target.text = groovy.json.JsonOutput.toJson([packageName: config.packageName ?: '', sdkSecret: config.sdkSecret ?: ''])
++    }
++}
++tasks.named('preBuild').configure { dependsOn('generateCarrierConfig') }
+ tasks.matching { it.name == 'preReleaseBuild' }.configureEach {
+     doFirst {
+         if (!signingFile.exists() || ['storeFile','storePassword','keyAlias','keyPassword'].any { !signingValues[it] }) {
+--- a/app开发/Android/EvaDance/app/src/main/AndroidManifest.xml
++++ b/app开发/Android/EvaDance/app/src/main/AndroidManifest.xml
+@@ -1,6 +1,8 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+     <uses-permission android:name="android.permission.INTERNET"/>
+     <application android:label="SWOD" android:theme="@style/AppTheme" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:dataExtractionRules="@xml/data_extraction_rules" android:fullBackupContent="false" android:enableOnBackInvokedCallback="true" android:allowBackup="false" android:usesCleartextTraffic="false" android:supportsRtl="true">
++        <activity android:name="com.mobile.auth.gatewayauth.LoginAuthActivity" android:exported="false" android:theme="@style/CarrierAuthTheme" android:configChanges="orientation|keyboardHidden|screenSize" />
++        <activity android:name="com.mobile.auth.gatewayauth.activity.AuthWebVeiwActivity" android:exported="false" android:theme="@style/CarrierAuthTheme" android:configChanges="orientation|keyboardHidden|screenSize" />
+         <activity android:name=".PlayerActivity" android:exported="false"/>
+         <activity android:name=".MainActivity" android:exported="true">
+             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+--- a/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ b/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -60,11 +60,11 @@
+         title = text("线上学院",20);title.setTypeface(null,android.graphics.Typeface.BOLD); title.setGravity(Gravity.CENTER_VERTICAL); bar.addView(title,new LinearLayout.LayoutParams(0,dp(48),1));
+         Button refresh = button("", () -> { if (page != null) page.run(); });refresh.setPadding(dp(12),dp(12),dp(12),dp(12));refresh.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"refresh",red),null,null,null);refresh.setContentDescription("刷新当前页面");bar.addView(refresh,new LinearLayout.LayoutParams(dp(48),dp(48))); root.addView(bar);
+         pageScroll = new ScrollView(this);pageScroll.setFillViewport(true); content = column();int inset=Math.max(16,(getResources().getConfiguration().screenWidthDp-760)/2);content.setPadding(dp(inset),dp(12),dp(inset),dp(24));pageScroll.addView(content);
+-        LinearLayout tabs = row(); String[] names={"线上学院","线下课","赛事","商城","我的"};
++        LinearLayout tabs = row(); String[] names={"线上学院","线下课","赛事","商城","个人中心"};
+         boolean expanded=getResources().getConfiguration().screenWidthDp>=600;if(expanded){tabs.setOrientation(LinearLayout.VERTICAL);tabs.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL);}
+         String[] icons={"learn","calendar","trophy","bag","person"};
+         Runnable[] pages={this::courses,this::offline,this::events,this::shop,this::account};
+-        for(int i=0;i<names.length;i++) { final Runnable p=pages[i]; final int index=i; Button b=button(names[i],()->{history.clear();selectTab(index);page=p;p.run();}); b.setTextSize(12);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);b.setCompoundDrawablePadding(dp(6));b.setGravity(Gravity.CENTER);b.setPadding(dp(2),dp(expanded?6:10),dp(2),dp(expanded?6:8));tabButtons[i]=b; tabs.addView(b,expanded?new LinearLayout.LayoutParams(-1,dp(64)):new LinearLayout.LayoutParams(0,dp(76),1)); }
++        for(int i=0;i<names.length;i++) { final Runnable p=pages[i]; final int index=i; Button b=button(names[i],()->{history.clear();selectTab(index);page=p;p.run();}); b.setTextSize(12);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);b.setCompoundDrawablePadding(dp(6));b.setGravity(Gravity.CENTER);b.setPadding(dp(2),dp(expanded?6:10),dp(2),dp(expanded?6:8));tabButtons[i]=b; tabs.addView(b,expanded?new LinearLayout.LayoutParams(-1,dp(64)):new LinearLayout.LayoutParams(0,dp(68),1)); }
+         tabs.setPadding(dp(6),dp(4),dp(6),dp(4));tabs.setBackgroundColor(SwodUi.surface(this));
+         if(expanded){LinearLayout body=row();body.setGravity(Gravity.TOP);ScrollView rail=new ScrollView(this);rail.setVerticalScrollBarEnabled(false);rail.addView(tabs,new ScrollView.LayoutParams(-1,-2));body.addView(rail,new LinearLayout.LayoutParams(dp(104),-1));body.addView(pageScroll,new LinearLayout.LayoutParams(0,-1,1));root.addView(body,new LinearLayout.LayoutParams(-1,0,1));}
+         else{root.addView(pageScroll,new LinearLayout.LayoutParams(-1,0,1));root.addView(tabs);}
+@@ -76,8 +76,8 @@
+     private void back() { if(!history.isEmpty()) {page=history.pop();page.run();} }
+     private void open(Runnable next) { if(page!=null) history.push(page); page=next; next.run(); }
+     private void selectTab(int selected){String[] icons={"learn","calendar","trophy","bag","person"};for(int i=0;i<tabButtons.length;i++){Button b=tabButtons[i];if(b!=null){boolean active=i==selected;b.setSelected(active);b.setTextColor(active?red:SwodUi.muted(this));b.setTypeface(null,active?android.graphics.Typeface.BOLD:android.graphics.Typeface.NORMAL);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],active?red:SwodUi.muted(this)),null,null);b.setBackground(SwodUi.touch(this,active?SwodUi.tonal(this):SwodUi.surface(this),14));}}}
+-    private void hero(String name,String description){LinearLayout box=column();box.setPadding(dp(4),dp(10),dp(4),dp(18));TextView heading=text(name,26);heading.setTypeface(null,android.graphics.Typeface.BOLD);box.addView(heading);TextView summary=text(description,14);summary.setTextColor(SwodUi.muted(this));box.addView(summary);content.addView(box);}
+-    private void section(String name){TextView label=text(name,20);label.setTypeface(null,android.graphics.Typeface.BOLD);label.setPadding(dp(4),dp(24),dp(4),dp(12));content.addView(label);}
++    private void hero(String name,String description){LinearLayout box=column();box.setPadding(dp(4),dp(6),dp(4),dp(12));TextView heading=text(name,22);heading.setTypeface(null,android.graphics.Typeface.BOLD);box.addView(heading);TextView summary=text(description,14);summary.setTextColor(SwodUi.muted(this));box.addView(summary);content.addView(box);}
++    private void section(String name){TextView label=text(name,18);label.setTypeface(null,android.graphics.Typeface.BOLD);label.setPadding(dp(4),dp(16),dp(4),dp(8));content.addView(label);}
+     private void begin(String name) { courseAccessVisible=false; generation++; content.removeAllViews(); title.setText(name);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
+     private int dp(int x) {return Math.round(x*getResources().getDisplayMetrics().density);}
+     private LinearLayout column(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.VERTICAL);return v;}
+@@ -104,7 +104,7 @@
+     private static String first(JSONObject v,String... keys){for(String k:keys){String s=v.optString(k,"");if(!s.isEmpty()&&!s.equals("null"))return s;}return "";}
+     private static JSONObject body(Object... values){JSONObject v=new JSONObject();try{for(int i=0;i<values.length;i+=2)v.put((String)values[i],values[i+1]);}catch(Exception ignored){}return v;}
+     private void confirm(String message,Runnable send){new AlertDialog.Builder(this).setMessage(message).setNegativeButton("取消",null).setPositiveButton("确认",(d,w)->send.run()).show();}
+-    private void card(LinearLayout box,String name,String summary,Runnable tap){LinearLayout item=column();item.setPadding(dp(14),dp(12),dp(14),dp(12));item.setBackground(SwodUi.touch(this,SwodUi.surface(this),16));TextView heading=text(name,17);heading.setTypeface(null,android.graphics.Typeface.BOLD);item.addView(heading);if(!summary.trim().isEmpty()){TextView detail=text(summary,14);detail.setTextColor(SwodUi.muted(this));item.addView(detail);}LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(12);box.addView(item,p);if(tap!=null){item.setContentDescription(name+"，"+summary+"，查看详情");item.setMinimumHeight(dp(80));item.setFocusable(true);item.setOnClickListener(v->tap.run());}}
++    private void card(LinearLayout box,String name,String summary,Runnable tap){LinearLayout item=column();item.setPadding(dp(12),dp(10),dp(12),dp(10));item.setBackground(SwodUi.touch(this,SwodUi.surface(this),16));TextView heading=text(name,17);heading.setTypeface(null,android.graphics.Typeface.BOLD);item.addView(heading);if(!summary.trim().isEmpty()){TextView detail=text(summary,14);detail.setTextColor(SwodUi.muted(this));item.addView(detail);}LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(12);box.addView(item,p);if(tap!=null){item.setContentDescription(name+"，"+summary+"，查看详情");item.setMinimumHeight(dp(64));item.setFocusable(true);item.setOnClickListener(v->tap.run());}}
+     private boolean courseAccessVisible,needsCourseRefresh;
+     @Override protected void onPause(){needsCourseRefresh=true;super.onPause();}
+     private String pendingCourseOrder="";
+@@ -132,10 +132,10 @@
+     private void unlockedBadge(LinearLayout box,int size){TextView badge=text("✓ 已解锁",size);badge.setTextColor(SwodUi.dark(this)?android.graphics.Color.rgb(74,222,128):android.graphics.Color.rgb(21,128,61));box.addView(badge);}
+     private void retryCourseAccess(){action("重新查询学习权益",()->{if(page!=null)page.run();});}
+     private String coursePrice(JSONObject row){if("online".equals(row.optString("course_access_scope"))&&row.optBoolean("learning_unlocked"))return "继续学习";if("online".equals(row.optString("course_access_scope"))&&!row.optBoolean("course_access_known",true))return "学习权益暂无法确认，请重试";String result=CoursePolicy.price(row.optDouble("price",0),row.optDouble("promo_price",0),!row.has("period_status")&&(row.optBoolean("is_free")||row.optInt("is_free")==1));if(CoursePolicy.discount(row.optDouble("price",0),row.optDouble("promo_price",0),row.optBoolean("is_free")||row.optInt("is_free")==1))result+=" · 原价 ¥"+String.format(Locale.ROOT,"%.2f",row.optDouble("price"));return result;}
+-    private String publicSummary(JSONObject r){String detail=first(r,"subtitle","teacher","groupName","category","venue","location");if(r.has("total_courses"))detail+=" · "+r.optInt("total_courses")+" 节课程";if(r.has("price"))detail+="\n"+coursePrice(r);if(r.has("start_date")&&!r.has("registrationStatus"))detail+=" · "+first(r,"start_date")+" · 期次课时";return detail;}
++    private String publicSummary(JSONObject r){String detail="online".equals(r.optString("course_access_scope"))?first(r,"teacher","category"):first(r,"subtitle","teacher","groupName","category","venue","location");if(r.has("total_courses"))detail+=" · "+r.optInt("total_courses")+" 节课程";if(r.has("price"))detail+="\n"+coursePrice(r);if(r.has("start_date")&&!r.has("registrationStatus"))detail+=" · "+first(r,"start_date")+" · 期次课时";return detail;}
+     private interface RowTap{void tap(JSONObject row);}
+     private void searchable(JSONArray rows,String[] fields,RowTap tap){
+-        EditText search=field(content,"搜索名称、老师或组别",false); LinearLayout results=column();content.addView(results);
++        EditText search=field(content,java.util.Arrays.asList(fields).contains("category")?"搜索课程、老师或分类":"搜索名称、老师或组别",false); LinearLayout results=column();content.addView(results);
+         Runnable render=()->{results.removeAllViews();String query=search.getText().toString().trim().toLowerCase(Locale.ROOT);int count=0;
+             for(int i=0;i<rows.length();i++){JSONObject r=rows.optJSONObject(i);if(r==null)continue;String all="";for(String f:fields)all+=r.optString(f)+" ";boolean match=true;for(String part:query.split("\\s+"))if(!all.toLowerCase(Locale.ROOT).contains(part))match=false;
+                 if(match){count++;int before=results.getChildCount();card(results,first(r,"name","series_name","course_name","competitionName"),publicSummary(r),()->tap.tap(r));if("online".equals(r.optString("course_access_scope"))&&r.optBoolean("learning_unlocked"))unlockedBadge((LinearLayout)results.getChildAt(before),14);String cover=first(r,"cover_image","image");if(!cover.isEmpty())cover((LinearLayout)results.getChildAt(before),cover,false);}}
+@@ -146,12 +146,12 @@
+         String url=source.startsWith("/")?(goods?"https://www.swod.com.cn":"https://admin.swod.com.cn")+source:source;
+         if(!Policy.secureURL(url))return;
+         ImageView image=new ImageView(this);image.setScaleType(ImageView.ScaleType.CENTER);image.setImageDrawable(SwodUi.icon(this,goods?"bag":"learn",red));image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);image.setBackground(SwodUi.shape(this,SwodUi.tonal(this),12));image.setClipToOutline(true);
+-        if(!goods&&box!=content){LinearLayout details=column();while(box.getChildCount()>0){View child=box.getChildAt(0);box.removeViewAt(0);details.addView(child);}box.setOrientation(LinearLayout.HORIZONTAL);box.setGravity(Gravity.CENTER_VERTICAL);LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(dp(104),dp(92));picture.rightMargin=dp(12);box.addView(image,picture);box.addView(details,new LinearLayout.LayoutParams(0,-2,1));}
+-        else{LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(-1,dp(goods?220:180));picture.bottomMargin=dp(12);box.addView(image,0,picture);}
+-        int version=generation;imageIO.execute(()->{if(version!=generation)return;try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(!isFinishing()&&version==generation&&bitmap!=null){image.setScaleType(ImageView.ScaleType.CENTER_CROP);image.setImageBitmap(bitmap);}});}catch(Exception ignored){/* Keep a stable, non-deceptive cover placeholder. */}});
+-    }
+-    private void learningShortcuts(){LinearLayout shortcuts=row();String[] labels={"继续学习","我的课程","学习助手"};String[] icons={"play","learn","person"};Runnable[] targets={()->open(()->records("最近学习","/member/recent-courses","",r->play(r.optInt("video_id"),first(r,"course_name","name")))),()->open(this::myCourses),()->open(this::assistant)};for(int i=0;i<labels.length;i++){Button b=button(labels[i],targets[i]);b.setTextSize(14);b.setGravity(Gravity.CENTER);b.setPadding(dp(4),dp(12),dp(4),dp(12));b.setMinimumHeight(dp(88));b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);b.setCompoundDrawablePadding(dp(8));b.setBackground(SwodUi.touch(this,i==0?SwodUi.tonal(this):SwodUi.surface(this),14));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1);if(i<2)p.rightMargin=dp(10);shortcuts.addView(b,p);}content.addView(shortcuts);}
+-    private void courses(){begin("线上学院");hero("伊娃东方舞","线上学院 · 舞蹈作品 · 每天进步一点");learningShortcuts();section("探索课程");load("/public/series","GET",null,false,v->{JSONArray rows=array(v);if(rows.length()>0&&!rows.getJSONObject(0).optBoolean("course_access_known",true))retryCourseAccess();searchable(rows,new String[]{"name","teacher","category"},r->open(()->{if(r.optBoolean("learning_unlocked"))catalog(r.optInt("id"),r.optString("name"));else course(r);}));action("东方舞圈 · 官网资讯",()->open(this::website));});}
++        if(!goods&&box!=content){LinearLayout details=column();while(box.getChildCount()>0){View child=box.getChildAt(0);box.removeViewAt(0);details.addView(child);}box.setOrientation(LinearLayout.HORIZONTAL);box.setGravity(Gravity.CENTER_VERTICAL);LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(dp(96),dp(72));picture.rightMargin=dp(12);box.addView(image,picture);box.addView(details,new LinearLayout.LayoutParams(0,-2,1));}
++        else{LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(-1,dp(goods?220:Math.min(240,(getResources().getConfiguration().screenWidthDp-32)*3/4)));picture.bottomMargin=dp(12);box.addView(image,0,picture);}
++        int version=generation;imageIO.execute(()->{if(version!=generation)return;try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(!isFinishing()&&version==generation&&bitmap!=null){image.setScaleType(ImageView.ScaleType.FIT_CENTER);image.setImageBitmap(bitmap);}});}catch(Exception ignored){/* Keep a stable, non-deceptive cover placeholder. */}});
++    }
++    private void learningShortcuts(){LinearLayout shortcuts=row();String[] labels={"我的课程","课时与核销","报名与成绩"};String[] icons={"learn","calendar","trophy"};Runnable[] targets={()->open(this::myCourses),()->open(this::schedule),()->open(this::myEvents)};for(int i=0;i<labels.length;i++){Button b=button(labels[i],targets[i]);b.setTextSize(14);b.setGravity(Gravity.CENTER);b.setPadding(dp(4),dp(12),dp(4),dp(12));b.setMinimumHeight(dp(64));b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);b.setCompoundDrawablePadding(dp(8));b.setBackground(SwodUi.touch(this,SwodUi.surface(this),14));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1);if(i<2)p.rightMargin=dp(10);shortcuts.addView(b,p);}content.addView(shortcuts);}
++    private void courses(){begin("线上学院");hero("伊娃东方舞","线上学院 · 从基础到进阶，找到适合你的课程");learningShortcuts();section("课程列表");load("/public/series","GET",null,false,v->{JSONArray rows=array(v);if(rows.length()>0&&!rows.getJSONObject(0).optBoolean("course_access_known",true))retryCourseAccess();searchable(rows,new String[]{"name","teacher","category"},r->open(()->{if(r.optBoolean("learning_unlocked"))catalog(r.optInt("id"),r.optString("name"));else course(r);}));action("东方舞圈 · 官网资讯",()->open(this::website));});}
+     private void myCourses(){begin("我的课程");load("/member/authorized-series","GET",null,true,v->{if(!(v instanceof JSONArray))throw new Exception();JSONArray rows=(JSONArray)v;for(int i=0;i<rows.length();i++){JSONObject r=rows.getJSONObject(i);int id=CourseAccessPolicy.canonicalId(r.opt("series_id"));int before=content.getChildCount();Runnable learn=()->open(()->catalog(id,first(r,"series_name","name")));card(content,first(r,"series_name","name"),"",learn);LinearLayout box=(LinearLayout)content.getChildAt(before);unlockedBadge(box,14);box.addView(button("继续学习",learn));}if(rows.length()==0)info("暂无已解锁课程");});}
+     private void course(JSONObject r){begin(first(r,"name"));load("/public/series/"+r.optInt("id")+"/detail","GET",null,false,v->{JSONObject detail=object(v);hero(first(detail,"name"),first(detail,"subtitle","teacher"));cover(content,first(detail,"cover_image"),false);info(strip(first(detail,"rich_description","description")));info("共 "+detail.optInt("total_courses")+" 节课程");if(detail.optBoolean("learning_unlocked"))unlockedBadge(content,16);else if(!detail.optBoolean("course_access_known",true))retryCourseAccess();else{info(coursePrice(detail));int seriesId=detail.optInt("id");if(seriesId>0)action("立即购买 · 前往官方支付",()->link("https://www.swod.com.cn/checkout/online/"+seriesId));}action(detail.optBoolean("learning_unlocked")?"继续学习":"查看课程目录",()->open(()->catalog(detail.optInt("id"),detail.optString("name"))));action("客服与售后",()->open(this::support));});}
+     private void support(){begin("客服与售后");hero("课程与订单客服","购买、学习权限及售后问题可直接联系课程顾问");info("海艳老师：153 6787 0529");info("伊琳老师：193 1002 9982");action("拨打海艳老师电话",()->dial("15367870529"));action("拨打伊琳老师电话",()->dial("19310029982"));action("查看微信客服二维码",()->link("https://www.swod.com.cn/contact"));}
+@@ -167,16 +167,22 @@
+                 int pages=Math.max(1,(filtered.size()+49)/50);pageNumber[0]=Math.max(1,Math.min(pages,pageNumber[0]));TextView heading=text("课节目录 · 共 "+lessons.size()+" 节",18);heading.setTypeface(null,android.graphics.Typeface.BOLD);results.addView(heading);
+                 if(catalogSelection.containsKey(id))results.addView(button("定位当前",()->{search.setText("");int selected=catalogSelection.get(id);for(int i=0;i<lessons.size();i++)if(lessons.get(i).optInt("id")==selected)pageNumber[0]=i/50+1;render[0].run();pageScroll.smoothScrollTo(0,0);}));
+                 if(pages>1){LinearLayout nav=row();Button prev=button("上一页",()->{pageNumber[0]--;render[0].run();pageScroll.smoothScrollTo(0,0);});prev.setEnabled(pageNumber[0]>1);nav.addView(prev,new LinearLayout.LayoutParams(0,-2,1));nav.addView(text("第 "+pageNumber[0]+" / "+pages+" 页",14));Button next=button("下一页",()->{pageNumber[0]++;render[0].run();pageScroll.smoothScrollTo(0,0);});next.setEnabled(pageNumber[0]<pages);nav.addView(next,new LinearLayout.LayoutParams(0,-2,1));results.addView(nav);}
+-                for(int i=(pageNumber[0]-1)*50;i<Math.min(filtered.size(),pageNumber[0]*50);i++){JSONObject lesson=filtered.get(i);int videoId=lesson.optInt("id");JSONObject record=progress.get(videoId);int percent=record==null?0:CoursePolicy.percent(record.optDouble("progress",0),record.optDouble("duration",lesson.optDouble("duration",0)),record.optInt("completed")==1);boolean current=catalogSelection.getOrDefault(id,0)==videoId;int duration=(int)lesson.optDouble("duration",0);String state=record==null&&!synced[0]?"进度待同步":percent>=100?"已学完":percent>0?"已学 "+percent+"%":"未开始";int before=results.getChildCount();card(results,lesson.optInt("ordinal")+"  "+lesson.optString("name"),(duration>0?String.format(Locale.ROOT,"%d:%02d",duration/60,duration%60):"时长待更新")+" · "+state+(current?" · 当前课节":""),()->{catalogSelection.put(id,videoId);render[0].run();play(videoId,lesson.optString("name"));});if(current)results.getChildAt(before).setBackground(SwodUi.shape(this,SwodUi.tonal(this),16));}
++                for(int i=(pageNumber[0]-1)*50;i<Math.min(filtered.size(),pageNumber[0]*50);i++){JSONObject lesson=filtered.get(i);int videoId=lesson.optInt("id");JSONObject record=progress.get(videoId);int percent=record==null?0:CoursePolicy.percent(record.optDouble("progress",0),record.optDouble("duration",lesson.optDouble("duration",0)),record.optInt("completed")==1);boolean current=catalogSelection.getOrDefault(id,0)==videoId;int duration=(int)lesson.optDouble("duration",0);String state=record==null&&!synced[0]?"进度待同步":percent>=100?"已学完":percent>0?"已学 "+percent+"%":"未开始";int before=results.getChildCount();card(results,lesson.optInt("ordinal")+"  "+lesson.optString("name"),(duration>0?String.format(Locale.ROOT,"%d:%02d",duration/60,duration%60):"时长待更新")+" · "+state+(current?" · 当前课节":""),()->{catalogSelection.put(id,videoId);render[0].run();playPlaylist(videoId,lesson.optString("name"),lessons);});if(current)results.getChildAt(before).setBackground(SwodUi.shape(this,SwodUi.tonal(this),16));}
+                 if(filtered.isEmpty())results.addView(text(keyword.isEmpty()?"暂无课节":"未找到匹配课节",14));
+             };
+             search.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence x,int a,int c,int f){}public void onTextChanged(CharSequence x,int a,int b,int c){pageNumber[0]=1;render[0].run();}public void afterTextChanged(Editable x){}});render[0].run();
+             if(api.loggedIn()){int version=generation;io.execute(()->{try{JSONArray records=array(api.request("/public/series/"+id+"/progress","GET",null,true));runOnUiThread(()->{if(version!=generation||isFinishing())return;for(int i=0;i<records.length();i++){JSONObject record=records.optJSONObject(i);if(record!=null)progress.put(record.optInt("video_id"),record);}synced[0]=true;render[0].run();});}catch(Exception ignored){}});}
+         });
+     }
++    private void playPlaylist(int id,String name,java.util.List<JSONObject> lessons){
++        if(!api.loggedIn()){open(this::login);return;}
++        int[] ids=new int[lessons.size()];String[] names=new String[lessons.size()];
++        for(int i=0;i<lessons.size();i++){ids[i]=lessons.get(i).optInt("id");names[i]=lessons.get(i).optString("name");}
++        startActivity(new Intent(this,PlayerActivity.class).putExtra("lesson",id).putExtra("title",name).putExtra("playlistIds",ids).putExtra("playlistNames",names));
++    }
+     private void play(int id,String name){playAt(id,name,-1);}
+     private void playAt(int id,String name,int seconds){if(id<=0){info("课节信息无效，请刷新后重试");return;}if(!api.loggedIn()){open(this::login);return;}Intent intent=new Intent(this,PlayerActivity.class).putExtra("lesson",id).putExtra("title",name);if(seconds>=0)intent.putExtra("positionSeconds",seconds);startActivity(intent);}
+-    private void offline(){begin("线下课程");hero("线下课","选择课程期次 · 购买课时 · 到课核销");action("期次课时与核销",()->open(this::schedule));load("/public/offline-courses","GET",null,false,v->{JSONArray all=array(v),groups=new JSONArray();java.util.Set<String> seen=new java.util.HashSet<>();for(int i=0;i<all.length();i++){JSONObject period=all.getJSONObject(i);if(seen.add(first(period,"group_key","name")))groups.put(period);}searchable(groups,new String[]{"name","teacher","location"},r->open(()->offlineDetail(r,all)));});}
++    private void offline(){begin("线下课程");hero("线下课","购买课程期次的课时，到课后核销扣减，无需预约。");action("期次课时与核销",()->open(this::schedule));load("/public/offline-courses","GET",null,false,v->{JSONArray all=array(v),groups=new JSONArray();java.util.Set<String> seen=new java.util.HashSet<>();for(int i=0;i<all.length();i++){JSONObject period=all.getJSONObject(i);if(seen.add(first(period,"group_key","name")))groups.put(period);}searchable(groups,new String[]{"name","teacher","location"},r->open(()->offlineDetail(r,all)));});}
+     private void offlineDetail(JSONObject course,JSONArray all){begin(first(course,"name"));CourseContent copy=new CourseContent(this);hero(first(course,"name"),first(course,"teacher"));cover(content,first(course,"cover_image"),false);section("课程介绍");info(copy.description(course));JSONObject intro=copy.intro(course);JSONArray outline=array(intro.opt("outline"));if(outline.length()==0)outline=array(course.opt("outline"));if(outline.length()>0)section("课程大纲");for(int i=0;i<outline.length();i++)info((i+1)+". "+outline.optString(i));section("课程期次");for(int i=0;i<all.length();i++){JSONObject period=all.optJSONObject(i);if(period==null||!first(period,"group_key","name").equals(first(course,"group_key","name")))continue;card(content,first(period,"subtitle","start_date"),first(period,"start_date")+" — "+first(period,"end_date")+"\n"+first(period,"location")+" · "+period.optInt("total_courses")+" 课时 · "+coursePrice(period)+"\n已报名 "+period.optInt("total_students")+" 人（匿名）",null);if(CourseContent.canBuy(period))action("购买本期课时",()->open(()->courseCheckout(period.optInt("source_id"))));else info("本期暂不可购买，请查看期次安排或咨询课程顾问");action("查看本期课时",()->open(()->schedule(period.optInt("source_id"))));}}
+     private void courseCheckout(int courseId){begin("确认课程订单");load("/shop/courses/offline/"+courseId,"GET",null,true,v->{JSONObject quote=object(v),offer=object(quote.opt("offer")),payment=object(quote.opt("payment"));hero(offer.optString("name"),offer.optString("period"));info("购买课时："+offer.optInt("sessions")+" 课时 · ¥"+Commerce.money(offer.optLong("priceFen")));info("付款后自动开通本期课时，到课后核销扣减，无需预约。");String key=java.util.UUID.randomUUID().toString();for(String provider:new String[]{"alipay","wechat"})if(payment.optBoolean(provider)){String channel=provider;action(provider.equals("alipay")?"支付宝支付":"微信支付",()->{if(memberWriteBusy)return;memberWriteBusy=true;int version=generation;io.execute(()->{try{JSONObject created=object(api.request("/shop/orders","POST",body("kind","offline","targetId",courseId,"provider",channel,"expectedTotalFen",offer.optLong("priceFen"),"requestKey",key+channel),true));String orderId=object(created.opt("order")).optString("id");JSONObject pay=object(api.request("/shop/orders/"+Uri.encode(orderId)+"/pay","POST",body(),true));runOnUiThread(()->{memberWriteBusy=false;if(version!=generation||isFinishing())return;if("redirect".equals(pay.optString("kind"))&&CoursePolicy.paymentURL(pay.optString("url"))){pendingCourseOrder=orderId;pendingCourseId=courseId;link(pay.optString("url"));}else info("当前支付通道暂不可用");action("同步付款结果并查看课时",()->load("/shop/orders/"+Uri.encode(orderId)+"/refresh","POST",body(),true,result->{String state=object(object(result).opt("order")).optString("status");if(state.equals("paid")||state.equals("completed"))open(()->schedule(courseId));else info("支付结果待确认，可在我的订单继续付款");}));action("查看订单",()->open(()->order(orderId)));});}catch(Exception error){runOnUiThread(()->{memberWriteBusy=false;if(version==generation)info(error.getMessage());});}});});}if(!payment.optBoolean("alipay")&&!payment.optBoolean("wechat"))info("App 支付暂未开放");action("我的订单／继续处理",()->open(this::orders));});}
+     private void schedule(){schedule(0);}
+@@ -226,7 +232,7 @@
+     private void order(String id){begin("订单详情");String path="/shop/orders/"+Uri.encode(id);load(path,"GET",null,true,v->{JSONObject r=object(v).optJSONObject("order");if(r==null)throw new Exception("订单不存在");hero("订单 "+r.optString("id"),Commerce.status(r.optString("status"),r.optString("kind")));info("合计 ¥"+Commerce.money(r.optLong("totalFen")));JSONArray items=array(r.opt("items"));for(int i=0;i<items.length();i++){JSONObject item=items.getJSONObject(i);card(content,item.optString("name"),"¥"+Commerce.money(item.optLong("unit_fen"))+" × "+item.optInt("quantity"),null);}info(first(r,"createdAt"));info(first(r,"carrier")+" "+first(r,"trackingNo"));info(first(r,"recipient")+" · "+mask(r.optString("phone"))+" · "+first(r,"address"));JSONObject shipping=r.optJSONObject("shipping");if(shipping!=null)info(first(shipping,"recipient")+" · "+mask(shipping.optString("phone"))+" · "+shipping.optString("address"));action("同步最新订单状态",()->memberWrite(path+"/refresh","POST",body(),()->order(id)));String state=r.optString("status");if(state.equals("pending"))action("取消订单",()->confirm("确认取消此订单？",()->memberWrite(path+"/cancel","POST",body(),()->order(id))));if(state.equals("shipped")&&r.optString("kind").equals("goods"))action("确认收货",()->confirm("请确认已经收到商品",()->memberWrite(path+"/received","POST",body(),()->order(id))));if(Commerce.refundable(state)){EditText reason=field(content,"退款原因",false);action("申请退款",()->{String message=reason.getText().toString().trim();if(message.isEmpty()||message.length()>300){info("请填写300字以内退款原因");return;}confirm("确认提交退款申请？结果以平台审核为准",()->memberWrite(path+"/refund","POST",body("reason",message),()->order(id)));});}});}
+     private void memberWrite(String path,String method,JSONObject body,Runnable next){if(memberWriteBusy)return;memberWriteBusy=true;int version=generation;io.execute(()->{try{api.request(path,method,body,true);runOnUiThread(()->{memberWriteBusy=false;if(version==generation&&!isFinishing()){page=next;next.run();}});}catch(Exception e){runOnUiThread(()->{memberWriteBusy=false;if(version==generation&&!isFinishing())info(e.getMessage());});}});}
+     private void profileEditor(){begin("个人资料");load("/member/profile","GET",null,true,v->{JSONObject r=object(v);info("手机号 "+mask(r.optString("phone"))+" · 资料与官网同步");String[] keys={"name","gender","birthday","country","province","city","address"},labels={"姓名","性别（男/女/其他，选填）","生日（YYYY-MM-DD，选填）","国家/地区","省份/地区","城市","详细地址"};EditText[] inputs=new EditText[keys.length];for(int i=0;i<keys.length;i++){inputs[i]=field(content,labels[i],false);inputs[i].setText(first(r,keys[i]));}action("保存个人资料",()->{JSONObject draft=body();for(int i=0;i<keys.length;i++){String value=inputs[i].getText().toString().trim();if(value.length()>300||(i==0&&(value.isEmpty()||value.length()>60))){info("请填写姓名，单项资料不能超过300字");return;}try{draft.put(keys[i],value);}catch(Exception ignored){}}String birthday=inputs[2].getText().toString().trim();if(!birthday.isEmpty()){try{java.time.LocalDate date=java.time.LocalDate.parse(birthday);if(date.isAfter(java.time.LocalDate.now()))throw new Exception();}catch(Exception e){info("请填写有效生日 YYYY-MM-DD");return;}}memberWrite("/member/profile","PUT",draft,this::account);});});}
+-    private void account(){begin("个人中心");if(!api.loggedIn()){hero("欢迎来到伊娃东方舞","登录后同步课程、比赛、证书与订单");action("手机号登录",()->open(this::login));}else{LinearLayout summary=column();content.addView(summary);load("/member/profile","GET",null,true,v->{JSONObject r=object(v);card(summary,first(r,"name"),mask(r.optString("phone"))+" · "+first(r,"level"),()->open(this::profileEditor));JSONObject stats=r.optJSONObject("stats");if(stats!=null)card(summary,"我的学习","线上课 "+stats.optInt("authorized_count")+" · 已学完 "+stats.optInt("completed_count")+" · 线下剩余 "+stats.optInt("offline_remaining_sessions")+" 课时",null);});section("学习与服务");action("个人资料",()->open(this::profileEditor));action("我的课程",()->open(this::myCourses));action("我的线下课时",()->open(this::schedule));action("我的比赛",()->open(this::myEvents));action("我的商城订单",()->open(this::orders));action("学习消息",()->open(()->messages(0)));action("我的证书",()->open(this::certificates));action("学习笔记",()->open(()->learningRecords(false)));action("学习书签",()->open(()->learningRecords(true)));action("成长档案",()->open(()->records("成长档案","/member/growth","",null)));section("账号与安全");action("登录设备",()->open(this::devices));action("注销账号",()->open(this::deletion));action("退出登录",()->confirm("退出当前账号？",()->{generation++;io.execute(()->{try{api.logout();}catch(Exception ignored){}runOnUiThread(()->{history.clear();page=this::account;account();});});}));}section("更多服务");action("客服与售后",()->open(this::support));action("东方舞圈与品牌服务",()->open(this::website));action("工作人员 · 赛事管理",()->open(this::staffHome));action("关于 SWOD",()->open(this::about));action("隐私政策",()->open(()->legalDocument("隐私政策","app-privacy.txt")));action("服务条款",()->open(()->legalDocument("服务条款","app-terms.txt")));info("SWOD "+ReleaseInfo.version(this));}
++    private void account(){begin("个人中心");if(!api.loggedIn()){hero("欢迎来到伊娃东方舞","登录后同步课程、比赛、证书与订单");action("手机号登录",()->open(this::login));}else{LinearLayout summary=column();content.addView(summary);load("/member/profile","GET",null,true,v->{JSONObject r=object(v);card(summary,first(r,"name"),mask(r.optString("phone"))+" · "+first(r,"level"),()->open(this::profileEditor));JSONObject stats=r.optJSONObject("stats");if(stats!=null)card(summary,"我的学习","线上课 "+stats.optInt("authorized_count")+" · 已学完 "+stats.optInt("completed_count")+" · 线下剩余 "+stats.optInt("offline_remaining_sessions")+" 课时",null);});section("个人资料");action("个人资料",()->open(this::profileEditor));action("我的比赛",()->open(this::myEvents));action("我的订单",()->open(this::orders));section("我的课程");LinearLayout courseRows=column();content.addView(courseRows);load("/member/authorized-series","GET",null,true,v->{if(!(v instanceof JSONArray))throw new Exception();JSONArray owned=(JSONArray)v;for(int n=0;n<owned.length();n++){JSONObject r=owned.getJSONObject(n);int id=CourseAccessPolicy.canonicalId(r.opt("series_id"));if(id<=0)continue;int at=courseRows.getChildCount();card(courseRows,first(r,"series_name","name"),"继续学习",()->open(()->catalog(id,first(r,"series_name","name"))));unlockedBadge((LinearLayout)courseRows.getChildAt(at),14);}if(owned.length()==0)courseRows.addView(text("暂无已解锁课程",14));});action("查看全部课程与学习记录",()->open(this::myCourses));section("线下课与证书");action("我的线下课 · 课时与核销",()->open(this::schedule));action("我的证书",()->open(this::certificates));section("更多学习服务");action("学习消息",()->open(()->messages(0)));action("学习笔记",()->open(()->learningRecords(false)));action("学习书签",()->open(()->learningRecords(true)));action("成长档案",()->open(()->records("成长档案","/member/growth","",null)));section("账号与安全");action("登录设备",()->open(this::devices));action("注销账号",()->open(this::deletion));action("退出登录",()->confirm("退出当前账号？",()->{generation++;io.execute(()->{try{api.logout();}catch(Exception ignored){}runOnUiThread(()->{history.clear();page=this::account;account();});});}));}section("更多服务");action("客服与售后",()->open(this::support));action("东方舞圈与品牌服务",()->open(this::website));action("工作人员 · 赛事管理",()->open(this::staffHome));action("关于 SWOD",()->open(this::about));action("隐私政策",()->open(()->legalDocument("隐私政策","app-privacy.txt")));action("服务条款",()->open(()->legalDocument("服务条款","app-terms.txt")));info("SWOD "+ReleaseInfo.version(this));}
+     private void learningRecords(boolean bookmarks){begin(bookmarks?"学习书签":"学习笔记");String path=bookmarks?"/bookmarks":"/notes";load(path+"/all","GET",null,true,v->{JSONArray rows=array(v);for(int i=0;i<rows.length();i++){JSONObject r=rows.getJSONObject(i);card(content,first(r,"course_name","video_name","series_name"),first(r,"content","label")+" · "+r.optInt("timestamp_seconds")+"秒",()->playAt(r.optInt("video_id"),first(r,"course_name","video_name"),r.optInt("timestamp_seconds")));action("删除此"+(bookmarks?"书签":"笔记"),()->confirm("确认删除此记录？",()->memberWrite(path+"/"+r.optInt("id"),"DELETE",body(),()->learningRecords(bookmarks))));}if(rows.length()==0)info("暂无记录");});}
+     private void legalDocument(String name,String asset){begin(name);try{TextView body=text(ReleaseInfo.read(this,asset),16);body.setTextIsSelectable(true);content.addView(body);}catch(Exception error){info("文件读取失败，请返回重试");}}
+     private void about(){begin("关于 SWOD");JSONObject info=ReleaseInfo.data(this);hero("SWOD",ReleaseInfo.version(this));info(info.optString("operator"));action(info.optString("filingNumber"),()->link("https://beian.miit.gov.cn/"));action("隐私政策",()->open(()->legalDocument("隐私政策","app-privacy.txt")));action("服务条款",()->open(()->legalDocument("服务条款","app-terms.txt")));action("服务商与数据清单",()->open(()->legalDocument("服务商与数据清单","app-processors.txt")));action("官方客服",()->link(info.optString("supportURL")));action("撤回隐私授权",()->confirm("撤回将清除本地登录并停止使用 App。服务器账号不会因此自动注销，注销请使用个人中心的独立入口。",()->{generation++;io.execute(()->{try{api.logout();}catch(Exception ignored){}runOnUiThread(()->{if(!PrivacyConsent.revoke(this)){Toast.makeText(this,"保存失败，请重试撤回",Toast.LENGTH_LONG).show();return;}history.clear();recreate();});});}));}
+@@ -248,9 +254,27 @@
+         long elapsed=android.os.SystemClock.elapsedRealtime();if(smsSentAt>0&&elapsed-smsSentAt<60000){info("验证码已发送，请稍后再试");return;}
+         int version=generation;smsBusy=true;io.execute(()->{try{api.request("/send-code","POST",body("phone",phone),false);runOnUiThread(()->{smsBusy=false;smsSentAt=android.os.SystemClock.elapsedRealtime();if(version==generation)info("验证码已发送");});}catch(Exception e){runOnUiThread(()->{smsBusy=false;if(version==generation)info(e.getMessage());});}});
+     }
++    private final CarrierLogin carrierLogin = new CarrierLogin();
++    private void loginWithCarrier(CheckBox consent){
++        if(authBusy)return;
++        if(!consent.isChecked()){consent.setError("请阅读并同意协议");consent.requestFocus();return;}
++        int version=generation;long account=api.accountGeneration();authBusy=true;
++        io.execute(()->{try{
++            JSONObject config=object(api.request("/config","GET",null,false));
++            if(!config.optBoolean("oneTapLogin"))throw new Exception("本机号码登录暂未开放，请使用短信登录");
++            runOnUiThread(()->{if(version!=generation||isFinishing()){authBusy=false;return;}carrierLogin.start(this,(token,error)->{
++                if(version!=generation||isFinishing()){authBusy=false;return;}
++                if(token==null){authBusy=false;if(error!=null)info(error);return;}
++                io.execute(()->{try{
++                    JSONObject response=object(api.request("/auth/one-tap","POST",body("accessToken",token,"deviceName","SWOD Android"),false));
++                    runOnUiThread(()->{authBusy=false;if(version!=generation||account!=api.accountGeneration()||isFinishing())return;try{api.accept(response);history.clear();page=this::account;account();}catch(Exception failure){info("登录结果保存失败，请重新登录");}});
++                }catch(Exception failure){runOnUiThread(()->{authBusy=false;if(version==generation&&!isFinishing())info(failure.getMessage());});}});
++            });});
++        }catch(Exception error){runOnUiThread(()->{authBusy=false;if(version==generation&&!isFinishing())info(error.getMessage());});}});
++    }
+     private void login(){login(false);}
+     private void login(boolean passwordMode){
+-        begin(passwordMode?"密码登录":"手机号登录");
++        begin("欢迎回来");hero("东方舞圈", "登录后同步课程、学习进度与个人资料");section("手机号登录");
+         EditText phone=field(content,"手机号",true),secret=field(content,passwordMode?"密码":"短信验证码",!passwordMode);
+         phone.setContentDescription("手机号");secret.setContentDescription(passwordMode?"密码":"短信验证码");
+         secret.setSaveEnabled(false);
+@@ -260,6 +284,7 @@
+             info("使用已设置密码的会员账号；未设置密码可使用短信登录。");
+         }
+         CheckBox consent=new CheckBox(this);consent.setText("我已阅读并同意隐私政策和服务条款");content.addView(consent);
++        action("本机号码一键登录",()->loginWithCarrier(consent));
+         action("阅读隐私政策",()->open(()->legalDocument("隐私政策","app-privacy.txt")));action("阅读服务条款",()->open(()->legalDocument("服务条款","app-terms.txt")));
+         if(!passwordMode)action("获取验证码",()->{if(!consent.isChecked()){info("请阅读并同意协议");return;}sendSMS(phone.getText().toString().trim());});
+         action("登录",()->{
+@@ -274,7 +299,7 @@
+                 runOnUiThread(()->{authBusy=false;if(version!=generation||isFinishing())return;try{api.accept(response);history.clear();page=this::account;account();}catch(Exception e){info(e.getMessage());}});
+             }catch(Exception e){runOnUiThread(()->{authBusy=false;if(version==generation&&!isFinishing())info(e.getMessage());});}});
+         });
+-        action(passwordMode?"切换为短信登录":"切换为密码登录",()->{if(!authBusy){secret.setText("");open(()->login(!passwordMode));}});
++        action(passwordMode?"切换为短信登录":"切换为密码登录",()->{if(!authBusy){secret.setText("");page=()->login(!passwordMode);page.run();}});
+     }
+     private void assistant(){begin("学习助手");info("根据已有课程制定练习安排");action("20 分钟：热身 4 · 技巧 12 · 复习 4",()->open(()->records("最近学习","/member/recent-courses","",r->play(r.optInt("video_id"),first(r,"course_name")))));action("30 分钟：热身 6 · 技巧 18 · 复习 6",()->open(()->records("最近学习","/member/recent-courses","",r->play(r.optInt("video_id"),first(r,"course_name")))));}
+     private void myEvents(){begin("我的比赛");load("/member/events","GET",null,true,v->{JSONArray entries=array(object(v).opt("entries"));if(entries.length()==0){info("暂无比赛报名和结果记录");return;}for(int i=0;i<entries.length();i++){JSONObject r=entries.getJSONObject(i);String detail=first(r,"groupName")+(first(r,"playerNo").isEmpty()?"":" · 选手号 "+first(r,"playerNo"));if(!first(r,"entrantName").isEmpty())detail+="\n参赛人："+first(r,"entrantName");if(!first(r,"performanceTitle").isEmpty())detail+="\n节目："+first(r,"performanceTitle");detail+="\n"+CompetitionRecord.audit(r.optString("auditStatus"))+" · "+CompetitionRecord.paid(r.optString("paidStatus"))+" · "+first(r,"startDate");detail+="\n"+CompetitionRecord.result(r.opt("resultPublished"),first(r,"totalScore"),r.optInt("rankNo"),first(r,"awardName"));card(content,first(r,"competitionName"),detail,null);int id=r.optInt("competitionId");if(id>0)action("赛事详情",()->open(()->event(id)));}});}
+@@ -284,7 +309,7 @@
+     private void link(String url){if(Policy.secureURL(url))try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)));}catch(Exception e){info("暂时无法打开链接");}}
+     private static String strip(String html){return android.text.Html.fromHtml(html,android.text.Html.FROM_HTML_MODE_LEGACY).toString();}
+     private static String mask(String phone){return phone.length()==11?phone.substring(0,3)+"****"+phone.substring(7):"";}
+-    @Override protected void onDestroy(){generation++;io.shutdownNow();imageIO.shutdownNow();super.onDestroy();}
++    @Override protected void onDestroy(){generation++;carrierLogin.cancel();io.shutdownNow();imageIO.shutdownNow();super.onDestroy();}
+     private void staffLoad(String path,String method,JSONObject body,Result result){
+         if(staffToken==null){staffHome();return;}boolean writing=!method.equals("GET");if(writing&&staffBusy)return;
+         int version=generation;String credential=staffToken;if(writing)staffBusy=true;ProgressBar busy=new ProgressBar(this);content.addView(busy);
+--- a/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java
++++ b/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java
+@@ -1,6 +1,8 @@
+ package cn.com.swod.app;
+ 
+ import android.app.Activity;
++import android.app.AlertDialog;
++import android.content.Intent;
+ import android.os.Bundle;
+ import android.os.Handler;
+ import android.os.Looper;
+@@ -10,6 +12,7 @@
+ import android.view.WindowInsets;
+ import android.widget.*;
+ import org.json.JSONObject;
++import org.json.JSONArray;
+ import java.util.concurrent.ExecutorService;
+ import java.util.concurrent.Executors;
+ 
+@@ -18,7 +21,11 @@
+     private final ExecutorService io=Executors.newSingleThreadExecutor();
+     private final Handler timer=new Handler(Looper.getMainLooper());
+     private VideoView video;
++    private int[] playlistIds;
++    private String[] playlistNames;
++    private int playlistIndex = -1;
+     private TextView status;
++    private String currentURL = "";
+     private MediaPlayer media;
+     private float selectedRate=1,holdX,holdY;
+     private boolean holdingSpeed,holdPending;
+@@ -60,10 +67,22 @@
+         TextView title=new TextView(this);title.setText(getIntent().getStringExtra("title"));title.setTextSize(18);root.addView(title);
+         video=new VideoView(this);root.addView(video,new LinearLayout.LayoutParams(-1,0,1));MediaController controls=new MediaController(this);controls.setAnchorView(video);video.setMediaController(controls);
+         status=new TextView(this);status.setText("正在验证课程权限…");root.addView(status);
++        playlistIds=getIntent().getIntArrayExtra("playlistIds");playlistNames=getIntent().getStringArrayExtra("playlistNames");
++        if(playlistIds!=null&&playlistNames!=null&&playlistIds.length==playlistNames.length){
++            for(int i=0;i<playlistIds.length;i++)if(playlistIds[i]==lesson)playlistIndex=i;
++            if(playlistIndex>=0){
++                LinearLayout navigation=new LinearLayout(this);
++                Button previous=new Button(this);previous.setText("上一节");previous.setEnabled(playlistIndex>0);previous.setOnClickListener(v->selectLesson(playlistIndex-1));
++                Button catalog=new Button(this);catalog.setText("目录 · "+playlistIds.length+" 节");catalog.setOnClickListener(v->{endHoldSpeed();new AlertDialog.Builder(this).setTitle("课节目录").setSingleChoiceItems(playlistNames,playlistIndex,(dialog,at)->{dialog.dismiss();selectLesson(at);}).setNegativeButton("关闭",null).show();});
++                Button next=new Button(this);next.setText("下一节");next.setEnabled(playlistIndex+1<playlistIds.length);next.setOnClickListener(v->selectLesson(playlistIndex+1));
++                for(Button item:new Button[]{previous,catalog,next}){item.setAllCaps(false);item.setMinimumHeight(Math.round(48*getResources().getDisplayMetrics().density));navigation.addView(item,new LinearLayout.LayoutParams(0,-2,1));}root.addView(navigation);
++            }
++        }
+         if(CoursePolicy.isAudio(getIntent().getStringExtra("title"))){TextView audio=new TextView(this);audio.setText("SWOD · 音频课程，播放时没有视频画面");audio.setTextSize(18);root.addView(audio,1);}
+         LinearLayout actions=new LinearLayout(this);CheckBox mirror=new CheckBox(this);mirror.setText("镜像");mirror.setOnCheckedChangeListener((b,on)->video.setScaleX(on?-1:1));actions.addView(mirror);
+         CheckBox loop=new CheckBox(this);loop.setText("循环播放");actions.addView(loop);
+         Spinner speed=new Spinner(this);speed.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"0.75×","1.0×","1.25×","1.5×"}));speed.setSelection(1);actions.addView(speed);root.addView(actions);
++        Spinner quality=new Spinner(this);quality.setContentDescription("视频清晰度");root.addView(quality);
+         EditText note=new EditText(this);note.setHint("记录练习笔记");root.addView(note);Button add=new Button(this);add.setText("保存本节笔记");root.addView(add);
+         add.setOnClickListener(v->{String text=note.getText().toString().trim();if(text.isEmpty()||text.length()>5000||!ready)return;int at=video.getCurrentPosition()/1000;add.setEnabled(false);io.execute(()->{try{api.request("/notes","POST",new JSONObject().put("video_id",lesson).put("timestamp_seconds",at).put("content",text),true);runOnUiThread(()->{if(!destroyed){note.setText("");status.setText("笔记已保存");}});}catch(Exception e){message(e.getMessage());}finally{runOnUiThread(()->{if(!destroyed)add.setEnabled(true);});}});});
+         Button bookmark=new Button(this);bookmark.setText("在当前位置添加书签");root.addView(bookmark);
+@@ -73,15 +92,40 @@
+         if(lesson<=0){status.setText("课节无效，请返回课程目录");return;}
+         video.setOnCompletionListener(p->{endHoldSpeed();saveProgress();});
+         video.setOnErrorListener((p,what,extra)->{endHoldSpeed();ready=false;status.setText("视频播放失败，请返回后重试");return true;});
+-        video.setOnPreparedListener(p->{if(destroyed)return;endHoldSpeed();media=p;ready=true;p.setLooping(loop.isChecked());video.seekTo((int)Math.min(seek,Math.max(0,video.getDuration()-1000)));if(resumed&&resumePlayback)video.start();status.setText("已验证学习权限");loop.setOnCheckedChangeListener((b,on)->p.setLooping(on));speed.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onNothingSelected(android.widget.AdapterView<?> v){}public void onItemSelected(android.widget.AdapterView<?> v,android.view.View x,int at,long id){endHoldSpeed();selectedRate=new float[]{.75f,1f,1.25f,1.5f}[at];applyPlaybackRate(selectedRate);}});if(resumed)timer.postDelayed(checkpoint,15000);});
++        video.setOnPreparedListener(p->{if(destroyed)return;endHoldSpeed();media=p;ready=true;quality.setEnabled(quality.getCount()>1);p.setLooping(loop.isChecked());video.seekTo((int)Math.min(seek,Math.max(0,video.getDuration()-1000)));if(resumed&&resumePlayback)video.start();status.setText("已验证学习权限");loop.setOnCheckedChangeListener((b,on)->p.setLooping(on));speed.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onNothingSelected(android.widget.AdapterView<?> v){}public void onItemSelected(android.widget.AdapterView<?> v,android.view.View x,int at,long id){endHoldSpeed();selectedRate=new float[]{.75f,1f,1.25f,1.5f}[at];applyPlaybackRate(selectedRate);}});if(resumed)timer.postDelayed(checkpoint,15000);});
+         io.execute(()->{try{
+             Object checkpoint=api.request("/video/"+lesson+"/progress","GET",null,true);
+             if(checkpoint instanceof JSONObject){JSONObject c=(JSONObject)checkpoint;revision=c.optInt("revision");seek=c.optDouble("duration",0)>0&&c.optDouble("progress",0)>=c.optDouble("duration",0)?0:Math.round(c.optDouble("progress")*1000);}
+             int explicitPosition=getIntent().getIntExtra("positionSeconds",-1);if(explicitPosition>=0)seek=explicitPosition*1000L;
+             JSONObject play=(JSONObject)api.request("/video/"+lesson+"/play","GET",null,true);
+             String url=play.optString("play_url");if(!play.optBoolean("authorized")||!Policy.secureURL(url))throw new Exception("当前没有此课节的有效学习权限");
+-            runOnUiThread(()->{if(!destroyed)video.setVideoURI(Uri.parse(url));});
++            JSONArray options=play.optJSONArray("quality_options");
++            java.util.ArrayList<String> qualityNames=new java.util.ArrayList<>(),qualityURLs=new java.util.ArrayList<>();
++            qualityNames.add("自动");qualityURLs.add(url);
++            if(options!=null)for(int i=0;i<options.length();i++){
++                JSONObject option=options.optJSONObject(i);if(option==null)continue;String source=option.optString("url");
++                if(source.equals(url))qualityNames.set(0,option.optString("label","自动"));
++                if(Policy.secureURL(source)&&!qualityURLs.contains(source)){qualityNames.add(option.optString("label","清晰度 "+(i+1)));qualityURLs.add(source);}
++            }
++            runOnUiThread(()->{if(!destroyed){
++                currentURL=url;video.setVideoURI(Uri.parse(url));
++                quality.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,qualityNames));
++                quality.setEnabled(ready&&qualityURLs.size()>1);
++                quality.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
++                    public void onNothingSelected(android.widget.AdapterView<?> view){}
++                    public void onItemSelected(android.widget.AdapterView<?> view,android.view.View child,int at,long id){
++                        String source=qualityURLs.get(at);if(source.equals(currentURL))return;
++                        endHoldSpeed();seek=video.getCurrentPosition();resumePlayback=video.isPlaying();video.pause();quality.setEnabled(false);ready=false;media=null;currentURL=source;video.setVideoURI(Uri.parse(source));
++                    }
++                });
++            }});
+         }catch(Exception e){message(e.getMessage());}});
++    }
++    private void selectLesson(int index){
++        if(playlistIds==null||playlistNames==null||index<0||index>=playlistIds.length||index==playlistIndex||playlistIds[index]<=0)return;
++        endHoldSpeed();
++        startActivity(new Intent(this,PlayerActivity.class).putExtra("lesson",playlistIds[index]).putExtra("title",playlistNames[index]).putExtra("playlistIds",playlistIds).putExtra("playlistNames",playlistNames));
++        finish();
+     }
+     private void saveProgress(){if(!ready||destroyed)return;double position=video.getCurrentPosition()/1000.0,duration=video.getDuration()/1000.0;if(duration<=0||position<0)return;
+         io.execute(()->{try{JSONObject result=(JSONObject)api.request("/video/"+lesson+"/progress","POST",new JSONObject().put("progress",Math.min(position,duration)).put("duration",duration).put("revision",revision),true);revision=result.optInt("revision",revision);}
+--- a/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PrivacyConsent.java
++++ b/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PrivacyConsent.java
+@@ -22,7 +22,7 @@
+         });
+         TextView heading = new TextView(activity); heading.setText("欢迎使用 SWOD"); heading.setTextSize(24); heading.setTextColor(SwodUi.ink(activity)); root.addView(heading);
+         TextView body = new TextView(activity);
+-        body.setText("请先阅读隐私政策和服务条款。\n\n同意前不加载业务接口或远程图片。登录时由您主动填写手机号与验证码；App 不读取短信、SIM 或通讯录。学习和个人信息按服务端验证的账号隔离。\n\n您可查看本机内置文件，或选择暂不使用并退出。之后可在“关于 SWOD”撤回授权，账号注销另行申请。");
++        body.setText("请先阅读隐私政策和服务条款。\n\n同意前不加载业务接口或远程图片。登录可填写手机号与验证码，或主动选择运营商授权的本机号码登录；App 不读取短信或通讯录。学习和个人信息按服务端验证的账号隔离。\n\n您可查看本机内置文件，或选择暂不使用并退出。之后可在“关于 SWOD”撤回授权，账号注销另行申请。");
+         body.setTextSize(16); body.setTextColor(SwodUi.ink(activity)); root.addView(body);
+         add(root, "阅读隐私政策", () -> document(activity, "app-privacy.txt", () -> welcome(activity, start)));
+         add(root, "阅读服务条款", () -> document(activity, "app-terms.txt", () -> welcome(activity, start)));
+--- a/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodUi.java
++++ b/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodUi.java
+@@ -17,12 +17,12 @@
+ final class SwodUi {
+     private SwodUi() {}
+     static boolean dark(Context c) { return (c.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES; }
+-    static int canvas(Context c) { return Color.parseColor(dark(c) ? "#141619" : "#F5F6F8"); }
++    static int canvas(Context c) { return Color.parseColor(dark(c) ? "#141619" : "#F6F7F9"); }
+     static int surface(Context c) { return Color.parseColor(dark(c) ? "#202328" : "#FFFFFF"); }
+-    static int ink(Context c) { return Color.parseColor(dark(c) ? "#F3F4F6" : "#20242B"); }
+-    static int muted(Context c) { return Color.parseColor(dark(c) ? "#B5BAC4" : "#626A77"); }
++    static int ink(Context c) { return Color.parseColor(dark(c) ? "#F3F4F6" : "#202124"); }
++    static int muted(Context c) { return Color.parseColor(dark(c) ? "#B5BAC4" : "#616773"); }
+     static int primary(Context c) { return Color.parseColor(dark(c) ? "#FFACA9" : "#9F1D20"); }
+-    static int tonal(Context c) { return Color.parseColor(dark(c) ? "#3C272A" : "#F9EDEC"); }
++    static int tonal(Context c) { return Color.parseColor(dark(c) ? "#3C272A" : "#F9EAEA"); }
+     static int line(Context c) { return Color.parseColor(dark(c) ? "#373D46" : "#E2E5EA"); }
+     static GradientDrawable shape(Context c, int color, int radius) {
+         GradientDrawable d = new GradientDrawable(); d.setColor(color);
+--- a/app开发/Android/EvaDance/app/src/main/assets/app-privacy.txt
++++ b/app开发/Android/EvaDance/app/src/main/assets/app-privacy.txt
+@@ -1,5 +1,5 @@
+ SWOD 安卓 App 隐私政策
+-更新与生效日期：2026年10月24日
++更新与生效日期：2026年10月28日
+ 
+ 运营主体：伊娃文化艺术发展（湖南）有限公司
+ App 名称：SWOD（伊娃东方舞）
+@@ -10,7 +10,7 @@
+ 
+ 二、各功能处理的信息
+ 1. 公开浏览：同意后请求课程、赛事和商品目录及封面，服务端会接收到 IP 地址、请求路径和时间等正常网络访问信息，用于提供内容与安全保障。不需要登录也能浏览公开内容。
+-2. 登录和设备管理：您主动填写手机号，以及短信验证码或已设置的会员密码。验证码和密码由服务端验证；密码经 HTTPS 传输，服务端使用加盐摘要核验，不保存明文密码，App 不持久保存您输入的密码。App 不读取短信、不读取 SIM 或通讯录。登录后使用访问凭证和刷新凭证，服务端保存会员关联、会话、设备显示名称、登录及最近使用时间，用于登录、续期和撤销设备。设备名称为 App 提交的显示名称，不是 IMEI、OAID 或广告标识符。
++2. 登录和设备管理：您主动填写手机号，以及短信验证码或已设置的会员密码。验证码和密码由服务端验证；密码经 HTTPS 传输，服务端使用加盐摘要核验，不保存明文密码，App 不持久保存您输入的密码。App 不读取短信或通讯录。本机号码登录由您主动选择并在运营商授权页同意后进行；号码认证 SDK 及运营商处理手机号、网络地址、网络与 SIM 状态及设备信息，认证令牌经服务端核验后关联会员。登录后使用访问凭证和刷新凭证，服务端保存会员关联、会话、设备显示名称、登录及最近使用时间，用于登录、续期和撤销设备。设备名称为 App 提交的显示名称，不是 IMEI、OAID 或广告标识符。
+ 3. 学习：经验证的会员身份用于查询有效授权、课程目录、进度、笔记、书签和证书。保存您主动提交的学习位置、笔记或书签内容及必要的业务关联。未支付订单、前端缓存或自行提交的用户 ID 不代表已购买。
+ 4. 个人资料：姓名以及您选填的性别、生日、国家、地区、城市、地址用于会员服务；修改不改变账号手机号或工作人员备注。请勿在可选字段提交与服务无关的信息。
+ 5. 线下与商城：查询您的课时期次、核销及已有订单。您主动维护收件人、手机和完整地址，用于收货服务；您发起订单操作时处理相应订单、物流或售后信息。当前 App 未开放的付款、下载或快捷登录功能不会按已开放能力收集数据。经实际开放的支付入口会明确跳转至相应支付服务，不在 App 读取支付账号密码。
+@@ -18,7 +18,7 @@
+ 7. 工作人员：独立的工作人员登录入口验证管理账号和密码，凭证与会员登录分离，服务端按工作人员身份和赛事所有权限制访问。普通会员不因前端入口取得管理权限。
+ 
+ 三、权限、本地存储和后台行为
+-当前发行包仅声明 INTERNET 网络权限，不声明短信读取、电话、定位、相机、麦克风、通讯录或全盘文件权限。选音乐调用 Android 系统文件选择器。会员凭证通过 Android Keystore AES/GCM 加密后存入应用私有区，密钥不随凭证导出；封面使用受限内存缓存。隐私同意版本保存在本机私有配置。关闭备份并排除账号信息的设备迁移。App 没有集成广告、统计、推送、微信登录或号码认证 SDK。视频使用 Android 系统播放能力，切到后台暂停播放，不启动独立后台定位、录音或通讯录任务。
++当前候选构建声明 INTERNET、ACCESS_WIFI_STATE、ACCESS_NETWORK_STATE 和 CHANGE_NETWORK_STATE 网络权限，不声明短信读取、电话、定位、相机、麦克风、通讯录或全盘文件权限。选音乐调用 Android 系统文件选择器。会员凭证通过 Android Keystore AES/GCM 加密后存入应用私有区，密钥不随凭证导出；封面使用受限内存缓存。隐私同意版本保存在本机私有配置。关闭备份并排除账号信息的设备迁移。App 集成阿里云号码认证 SDK，仅在您主动同意并选择本机号码登录后初始化；没有集成广告、统计、推送或微信登录 SDK。视频使用 Android 系统播放能力，切到后台暂停播放，不启动独立后台定位、录音或通讯录任务。
+ 
+ 四、第三方服务与链接
+ 短信验证码和视频点播使用阿里云相关服务。短信服务处理用于发送验证码的手机号及验证码消息；视频服务接收播放请求所需的网络信息和签名资源请求。实际封面、音视频和证书域名可随后台内容配置提供。相关服务不等于在安卓 App 中集成其客户端 SDK。已有交易的状态查询、履约与售后可能涉及对应订单中的支付或物流服务方；以实际业务记录和用户发起的操作为范围。详见内置“服务商与数据清单”。点击外部官网、隐私查询或支付页面将进入系统浏览器或相应平台，其自行处理的信息适用其政策。
+--- a/app开发/Android/EvaDance/app/src/main/assets/app-processors.txt
++++ b/app开发/Android/EvaDance/app/src/main/assets/app-processors.txt
+@@ -1,7 +1,7 @@
+ SWOD 安卓 App 服务商与数据清单
+-核对日期：2026年10月23日
++核对日期：2026年10月28日
+ 
+-客户端第三方 SDK：无生产第三方 SDK。JUnit 为开发测试依赖，不进入发行包。Android 系统的媒体播放、Keystore、文件选择器属于系统能力。未集成广告、推送、统计、微信移动登录及号码认证客户端 SDK。
++客户端第三方 SDK：集成阿里云号码认证 Android SDK 2.14.24（阿里巴巴云计算（北京）有限公司），用于用户主动选择的本机号码一键登录。仅在用户同意协议并点击本机号码登录后初始化，授权页保留运营商协议和未预选的同意框。SDK 及运营商处理完成网关认证所需的手机号、网络地址、网络与 SIM 状态及设备信息；认证令牌交由业务服务端验证，不信任客户端上报的手机号。取消或不可用时可使用短信登录。官方说明：https://help.aliyun.com/zh/pnvs/ 。AndroidX AppCompat 为界面兼容组件，JUnit 仅用于开发测试。未集成广告、推送、统计或微信移动登录 SDK。
+ 
+ 阿里云短信服务：由服务端调用验证码发送服务；处理用户主动提交的手机号、验证码消息及必要发送记录，用于登录或注销验证。官方政策：https://help.aliyun.com/zh/document_detail/2705225.html 。不赋予 App 读取短信或 SIM 的权限。
+ 
+--- a/app开发/Android/EvaDance/app/src/main/assets/release-info.json
++++ b/app开发/Android/EvaDance/app/src/main/assets/release-info.json
+@@ -7,7 +7,7 @@
+   "filingStatus": "completed_user_confirmed",
+   "filingConfirmedAt": "2026-10-23",
+   "filingEvidence": "用户在本次对话确认备案完成并提供最终编号",
+-  "privacyVersion": "2026-10-24-v2",
++  "privacyVersion": "2026-10-28-carrier-v1",
+   "privacyURL": "https://www.swod.com.cn/app/privacy.html",
+   "termsURL": "https://www.swod.com.cn/app/terms.html",
+   "processorsURL": "https://www.swod.com.cn/app/processors.html",
+--- a/app开发/HarmonyOS/EvaDance/entry/oh-package.json5
++++ b/app开发/HarmonyOS/EvaDance/entry/oh-package.json5
+@@ -5,6 +5,8 @@
+   "main": "",
+   "author": "",
+   "license": "",
+-  "dependencies": {}
++  "dependencies": {
++    "numberauth_standard": "file:libs/auth_number_product-v2.0.25-log-online-standard-release.har"
++  }
+ }
+ 
+--- a/app开发/HarmonyOS/EvaDance/entry/src/main/module.json5
++++ b/app开发/HarmonyOS/EvaDance/entry/src/main/module.json5
+@@ -33,6 +33,10 @@
+         ]
+       }
+     ],
+-    "requestPermissions": [{ "name": "ohos.permission.INTERNET" }]
++    "requestPermissions": [
++      { "name": "ohos.permission.INTERNET" },
++      { "name": "ohos.permission.GET_NETWORK_INFO" },
++      { "name": "ohos.permission.SET_NETWORK_INFO" }
++    ]
+   }
+-}+}
+--- a/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ b/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -3,9 +3,10 @@
+ import { util } from '@kit.ArkTS';
+ import { webview } from '@kit.ArkWeb';
+ import { picker, fileIo } from '@kit.CoreFileKit';
+-import { Row, WriteBody, PaymentFlags } from '../services/Models';
++import { Row, WriteBody, PaymentFlags, MediaQuality } from '../services/Models';
+ import { platform, PlatformFailure, secureMedia, coverImageURL, externalURLAllowed, ApiMethod } from '../services/PlatformApi';
+ import { coursePrice, originalPrice, offlineCopy, offlineDescription, canPurchasePeriod, groupedCourses, catalogLessons } from '../services/CoursePresentation';
++import { CarrierLogin } from '../services/CarrierLogin';
+ import { SwodTheme } from '../services/SwodTheme';
+ import { goodsInput, paymentURL, orderStatus } from '../services/ShopCheckout';
+ import { productPrice, productStock } from '../services/ProductPresentation';
+@@ -25,6 +26,12 @@
+   @State private catalogPage: number = 1;
+   @State private currentLessonID: string = '';
+   @State private progressRows: Row[] = [];
++  @State private videoPlaylist: Row[] = [];
++  @State private videoCatalogOpen: boolean = false;
++  @State private videoQualities: MediaQuality[] = [];
++  @State private videoQuality: number = 0;
++  private qualityResume: number = -1;
++  private qualityChanging: boolean = false;
+   @State private offlineRows: Row[] = [];
+   @State private courseOrderID: string = '';
+   @State private shopPayment: PaymentFlags = {};
+@@ -103,7 +110,7 @@
+ 
+   aboutToAppear(): void { this.load(); }
+   onPageShow(): void { if (!this.busy && (this.route.screen === 'home' || this.route.path.startsWith('/member/authorized-series'))) this.load(); }
+-  aboutToDisappear(): void { this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.generation++; }
++  aboutToDisappear(): void { this.carrierLogin.cancel(); this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.generation++; }
+   onBackPress(): boolean { if (this.history.length === 0) return false; this.back(); return true; }
+   private go(screen: string, title: string, path: string = '', auth: boolean = false, eventID: number = 0, groupID: number = 0, staff: boolean = false): void {
+     this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.playURL = '';
+@@ -159,6 +166,9 @@
+         const value = await platform.request<Row>(route.path, http.RequestMethod.GET, undefined, true);
+         if (version !== this.generation) return;
+         if (!value.authorized || !secureMedia(value.play_url || '')) throw new PlatformFailure('当前没有此课节的有效学习权限', 403);
++        this.videoQualities = [{ value: 'auto', label: '自动', url: value.play_url || '' }];
++        for (const quality of value.quality_options || []) { if (quality.url === this.videoQualities[0].url) this.videoQualities[0] = quality; if (secureMedia(quality.url) && !this.videoQualities.some((item: MediaQuality) => item.url === quality.url)) this.videoQualities.push(quality); }
++        this.videoQuality = 0; this.qualityResume = -1; this.qualityChanging = false;
+         this.playURL = value.play_url || ''; this.detail = value;
+       } else {
+         const value = route.staff ? await platform.staffRequest<Row>(route.path) : await platform.request<Row>(route.path, http.RequestMethod.GET, undefined, route.auth);
+@@ -204,6 +214,7 @@
+   }
+   private title(row: Row): string { return row.name || row.courseName || row.course_name || row.series_name || row.title || row.playerName || row.label || '记录'; }
+   private summary(row: Row): string {
++    if (this.route.screen === 'home') return [row.teacher, row.category, row.total_courses !== undefined ? row.total_courses + ' 节课程' : ''].filter((text: string | undefined) => !!text).join(' · ');
+     return [row.subtitle, row.teacher, row.category, this.route.screen === 'home' && row.total_courses !== undefined ? row.total_courses + ' 节课程' : '', this.route.screen === 'offline' ? [row.start_date, row.location, '期次课时'].filter((v: string | undefined) => !!v).join(' · ') : '', row.groupName, row.contestantNumber, row.programNumber, row.sequenceNo ? '出场顺序 ' + row.sequenceNo : '', row.musicName ? '音乐：' + row.musicName : '', row.paidStatus, row.content].filter((text: string | undefined) => text !== undefined && text !== '').join(' · ');
+   }
+   private eventResult(row: Row): string {
+@@ -246,8 +257,32 @@
+   }
+   private startVideo(row: Row): void {
+     if (!platform.credentials) { this.go('login', '手机号登录'); return; }
+-    this.currentLessonID = String(row.id || row.video_id);
++    const fromVideo = this.route.screen === 'video';
++    if (this.route.screen === 'catalog') this.videoPlaylist = catalogLessons(this.rows, this.progressRows);
++    else if (!fromVideo) this.videoPlaylist = [];
++    // Capture the old lesson checkpoint before changing the selected lesson.
++    this.saveProgress(); this.duration = 0; this.playbackPosition = 0; this.revision = 0;
++    this.currentLessonID = String(row.id || row.video_id); this.videoCatalogOpen = false; this.videoQualities = []; this.qualityChanging = false; this.qualityResume = -1;
+     this.selected = row; this.go('video', this.title(row), '/video/' + Number(row.id || row.video_id) + '/play', true);
++    if (fromVideo) this.history.pop();
++  }
++  private carrierLogin: CarrierLogin = new CarrierLogin();
++  private async loginCarrier(): Promise<void> {
++    if (this.busy) return;
++    if (!this.consent) { this.error = '请阅读并同意隐私政策和服务条款'; return; }
++    const version = this.generation; this.busy = true; this.error = '';
++    try {
++      const config = await platform.request<Row>('/config');
++      if (version !== this.generation) return;
++      if (!config.oneTapLogin) throw new Error('本机号码登录暂未开放，请使用短信登录');
++      const token = await this.carrierLogin.token(this.getUIContext().getHostContext() as common.UIAbilityContext);
++      if (version !== this.generation) return;
++      await platform.loginWithCarrier(token);
++      if (version !== this.generation) return;
++      this.loggedIn = true; this.tab('account', '个人中心', '/member/profile', true);
++    } catch (failure) {
++      if (version === this.generation && failure instanceof Error && failure.message !== '已取消本机号码登录') this.error = failure.message;
++    } finally { if (version === this.generation) this.busy = false; }
+   }
+   private async login(): Promise<void> {
+     if (this.busy || !this.consent || !/^1[3-9][0-9]{9}$/.test(this.phone)) { this.error = '请填写有效手机号并阅读同意协议'; return; }
+@@ -424,15 +459,15 @@
+   @Builder
+   private intro(title: string, subtitle: string) {
+     Column({ space: 8 }) {
+-      Text(title).fontSize(26).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
++      Text(title).fontSize(22).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+       Text(subtitle).fontSize(14).fontColor(SwodTheme.muted).width('100%')
+-    }.alignItems(HorizontalAlign.Start).width('100%').padding({ top: 12, bottom: 16 })
++    }.alignItems(HorizontalAlign.Start).width('100%').padding({ top: 6, bottom: 10 })
+   }
+   @Builder
+   private shortcut(label: string, icon: Resource, submit: () => void, primary: boolean = false) {
+     Button({ type: ButtonType.Normal }) {
+       Column({ space: 8 }) { Image(icon).width(24).height(24); Text(label).fontSize(14).fontWeight(FontWeight.Medium).fontColor(SwodTheme.primary) }.padding(12)
+-    }.layoutWeight(1).constraintSize({ minHeight: 88 }).borderRadius(14).backgroundColor(primary ? SwodTheme.tonal : SwodTheme.surface).onClick(submit).accessibilityText(label)
++    }.layoutWeight(1).constraintSize({ minHeight: 64 }).borderRadius(14).backgroundColor(primary ? SwodTheme.tonal : SwodTheme.surface).onClick(submit).accessibilityText(label)
+   }
+   @Builder
+   private navItem(label: string, screen: string, icon: Resource, title: string, path: string, auth: boolean = false) {
+@@ -447,8 +482,8 @@
+   private card(row: Row) {
+     Row({ space: 14 }) {
+       if (this.route.screen === 'home' || this.route.screen === 'offline') {
+-        if (coverImageURL(row.cover_image || '')) { Image(coverImageURL(row.cover_image || '')).width(96).height(88).objectFit(ImageFit.Cover).borderRadius(12).accessibilityLevel('no') }
+-        else { Image($r('app.media.nav_learn_on')).width(96).height(88).objectFit(ImageFit.ScaleDown).backgroundColor(SwodTheme.tonal).borderRadius(12).accessibilityLevel('no') }
++        if (coverImageURL(row.cover_image || '')) { Image(coverImageURL(row.cover_image || '')).width(96).height(72).objectFit(ImageFit.Contain).borderRadius(12).accessibilityLevel('no') }
++        else { Image($r('app.media.nav_learn_on')).width(96).height(72).objectFit(ImageFit.ScaleDown).backgroundColor(SwodTheme.tonal).borderRadius(12).accessibilityLevel('no') }
+       }
+       Column({ space: 8 }) {
+         Text(this.title(row)).fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+@@ -459,10 +494,11 @@
+         }
+         if ((this.route.screen === 'home' || this.route.path.startsWith('/member/authorized-series')) && this.isCourseUnlocked(row)) { Text('✓ 已解锁').fontSize(16).fontColor('#15803d'); Text('继续学习').fontSize(14).fontColor('#15803d') } else if (this.route.screen === 'home' && !this.courseAccessReady) { Text('学习权益暂无法确认').fontSize(12).fontColor(SwodTheme.muted) } else if (row.price !== undefined) { Text(coursePrice(row)).fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary); if (originalPrice(row)) { Text(originalPrice(row)).fontSize(12).fontColor(SwodTheme.muted).decoration({ type: TextDecorationType.LineThrough }) } }
+       }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+-    }.padding(16).backgroundColor(SwodTheme.surface).borderRadius(16).width('100%').constraintSize({ minHeight: 80 }).margin({ bottom: 8 }).onClick(() => this.tap(row)).accessibilityText(this.title(row) + '，' + this.summary(row) + '，查看详情')
++    }.padding(12).backgroundColor(SwodTheme.surface).borderRadius(12).width('100%').constraintSize({ minHeight: 64 }).margin({ bottom: 8 }).onClick(() => this.tap(row)).accessibilityText(this.title(row) + '，' + this.summary(row) + '，查看详情')
+   }
+   @Builder
+   private loginForm() {
++    this.intro('东方舞圈', '登录后同步课程、学习进度与个人资料')
+     TextInput({ placeholder: '手机号', text: this.phone }).type(InputType.PhoneNumber).onChange((v: string) => { this.phone = v; })
+     if (this.memberLoginMode === 'sms') {
+       TextInput({ placeholder: '短信验证码', text: this.code }).type(InputType.Number).onChange((v: string) => { this.code = v; })
+@@ -470,6 +506,7 @@
+       TextInput({ placeholder: '密码', text: this.memberPassword }).type(InputType.Password).onChange((v: string) => { this.memberPassword = v; })
+     }
+     Row() { Checkbox().select(this.consent).onChange((v: boolean) => { this.consent = v; }); Text('我已阅读并同意隐私政策和服务条款').fontSize(12).layoutWeight(1) }
++    this.action('本机号码一键登录', () => { this.loginCarrier(); })
+     this.action('阅读隐私政策', () => this.openURL('https://www.swod.com.cn/privacy'))
+     this.action('阅读服务条款', () => this.openURL('https://www.swod.com.cn/terms'))
+     if (this.memberLoginMode === 'sms') { this.action('获取验证码', () => { this.sendCode(); }) }
+@@ -479,7 +516,6 @@
+     } else {
+       this.action('使用短信验证码登录', () => { this.memberLoginMode = 'sms'; this.memberPassword = ''; this.error = ''; })
+     }
+-    Text('本机号码与微信快捷登录正在接入验证。').fontSize(12)
+   }
+   @Builder
+   private staffForm() {
+@@ -491,6 +527,7 @@
+   @Builder
+   private staffEditor() {
+     TextInput({ placeholder: '姓名', text: this.name }).onChange((v: string) => { this.name = v; })
++    this.intro('东方舞圈', '登录后同步课程、学习进度与个人资料')
+     TextInput({ placeholder: '手机号', text: this.phone }).type(InputType.PhoneNumber).onChange((v: string) => { this.phone = v; })
+     TextInput({ placeholder: '机构', text: this.organization }).onChange((v: string) => { this.organization = v; })
+     TextInput({ placeholder: '指导老师', text: this.teacher }).onChange((v: string) => { this.teacher = v; })
+@@ -513,18 +550,18 @@
+   @Builder
+   private content() {
+     if (this.route.screen === 'home') {
+-      this.intro('伊娃东方舞', '线上学院 · 舞蹈作品 · 每天进步一点')
++      this.intro('伊娃东方舞', '线上学院 · 从基础到进阶，找到适合你的课程')
+       Row({ space: 10 }) {
+-        this.shortcut('继续学习', $r('app.media.nav_learn_on'), () => this.go('records', '最近学习', '/member/recent-courses', true), true)
+         this.shortcut('我的课程', $r('app.media.nav_learn_on'), () => this.go('records', '我的课程', '/member/authorized-series', true))
+-        this.shortcut('学习助手', $r('app.media.nav_person_on'), () => this.go('assistant', '学习助手'))
++        this.shortcut('课时与核销', $r('app.media.nav_calendar_on'), () => this.go('schedule', '期次课时', '/offline/overview', true))
++        this.shortcut('报名与成绩', $r('app.media.nav_trophy_on'), () => this.go('myEvents', '我的比赛', '/member/events', true))
+       }.width('100%').margin({ bottom: 12 })
+-      Text('探索课程').fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%').margin({ top: 8, bottom: 8 })
++      Text('课程列表').fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%').margin({ top: 8, bottom: 8 })
+     }
+     if (this.route.screen === 'assistant') { Text('30分钟：热身6 · 技巧18 · 复习6').fontSize(18); this.action('继续上次课程', () => this.go('records', '最近学习', '/member/recent-courses', true)) }
+-    if (this.route.screen === 'offline') { this.intro('线下课', '选择课程期次 · 购买课时 · 到课核销'); this.action('期次课时与核销', () => this.go('schedule', '期次课时', '/offline/overview', true)) }
++    if (this.route.screen === 'offline') { this.intro('线下课', '购买课程期次的课时，到课后核销扣减，无需预约。'); this.action('期次课时与核销', () => this.go('schedule', '期次课时', '/offline/overview', true)) }
+     if (this.route.screen === 'events') {
+-      this.intro('东方舞赛事', '完整组别 · 节目报名 · 赛程与成绩')
++      this.intro('AiwaRaks赛事平台', '赛事、报名、赛程与成绩')
+       this.action('我的比赛', () => this.go('myEvents', '我的比赛', '/member/events', true))
+       this.action('工作人员 · 赛事管理', () => this.go(this.staffLoggedIn ? 'staffHome' : 'staffLogin', '赛事管理', this.staffLoggedIn ? '/event/competitions' : '', false, 0, 0, true))
+     }
+@@ -542,6 +579,7 @@
+         this.action('我的课程', () => this.go('records', '我的课程', '/member/authorized-series', true))
+         this.action('课时余额与核销记录', () => this.go('schedule', '期次课时', '/offline/overview', true))
+         this.action('我的比赛', () => this.go('myEvents', '我的比赛', '/member/events', true))
++        this.action('我的订单', () => this.go('shopOrders', '我的订单', '/shop/orders', true))
+         this.action('学习消息', () => this.go('messages', '学习消息', '/member/messages?limit=20&cursor=0', true))
+         this.action('我的证书', () => this.go('certificates', '我的证书', '/certificates', true))
+         this.action('学习笔记', () => this.go('records', '学习笔记', '/notes/all', true))
+@@ -581,7 +619,8 @@
+       else {
+         Text(this.selected.name || '').fontSize(18)
+         TextInput({ placeholder: '姓名', text: this.name }).onChange((v: string) => { this.name = v; })
+-        TextInput({ placeholder: '手机号', text: this.phone }).type(InputType.PhoneNumber).onChange((v: string) => { this.phone = v; })
++        this.intro('东方舞圈', '登录后同步课程、学习进度与个人资料')
++    TextInput({ placeholder: '手机号', text: this.phone }).type(InputType.PhoneNumber).onChange((v: string) => { this.phone = v; })
+         TextInput({ placeholder: '机构（选填）', text: this.organization }).onChange((v: string) => { this.organization = v; })
+         TextInput({ placeholder: '节目名称', text: this.performanceTitle }).onChange((v: string) => { this.performanceTitle = v; })
+         this.action(this.musicName ? '更换音乐：' + this.musicName : '选择参赛音乐（10MB以内）', () => { this.chooseMusic(); })
+@@ -624,14 +663,33 @@
+         }.width('100%').padding(24).backgroundColor(SwodTheme.tonal).borderRadius(16)
+       }
+       Video({ src: this.playURL, controller: this.controller, currentProgressRate: this.holdingSpeed ? 2 : this.selectedPlaybackRate }).width('100%').height(this.selected.mediaKind === 'audio' ? 72 : 230).objectFit(ImageFit.Contain).controls(true).loop(this.loop).scale({ x: this.mirror ? -1 : 1 })
+-        .onPrepared((event?: VideoDuration) => { this.duration = event?.duration || 0; this.controller.setCurrentTime(this.playbackPosition); })
+-        .onUpdate((event?: VideoTime) => { this.playbackPosition = event?.time || 0; if (Date.now() - this.lastCheckpoint > 15000) { this.lastCheckpoint = Date.now(); this.saveProgress(); } })
++        .onPrepared((event?: VideoDuration) => { this.duration = event?.duration || 0; const position = this.qualityResume >= 0 ? this.qualityResume : this.playbackPosition; this.controller.setCurrentTime(Math.max(0, Math.min(position, this.duration))); this.playbackPosition = position; this.qualityResume = -1; this.qualityChanging = false; })
++        .onUpdate((event?: VideoTime) => { if (this.qualityChanging) return; this.playbackPosition = event?.time || 0; if (Date.now() - this.lastCheckpoint > 15000) { this.lastCheckpoint = Date.now(); this.saveProgress(); } })
+         .onStart(() => { this.videoPlaying = true; })
+         .onPause(() => { this.endHoldSpeed(); this.videoPlaying = false; })
+         .onFinish(() => { this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); })
+         .onTouch((event: TouchEvent) => { this.onVideoTouch(event); })
+-        .onError(() => { this.endHoldSpeed(); this.videoPlaying = false; this.error = '媒体暂时无法播放，请返回后重试'; })
++        .onError(() => { this.qualityChanging = false; this.endHoldSpeed(); this.videoPlaying = false; this.error = '媒体暂时无法播放，请返回后重试'; })
++      if (this.videoQualities.length > 1) {
++        Select(this.videoQualities.map((quality: MediaQuality): SelectOption => ({ value: quality.label }))).selected(this.videoQuality).value(this.videoQualities[this.videoQuality]?.label || '自动').onSelect((index: number) => {
++          if (index < 0 || index >= this.videoQualities.length || index === this.videoQuality) return;
++          this.endHoldSpeed(); this.videoPlaying = false; this.controller.pause(); this.qualityResume = this.playbackPosition; this.qualityChanging = true; this.videoQuality = index; this.playURL = this.videoQualities[index].url;
++        }).enabled(this.duration > 0 && !this.qualityChanging).accessibilityText('视频清晰度')
++      }
+       if (this.holdingSpeed) { Text('2 倍播放 · 松手恢复').fontSize(14) }
++      if (this.videoPlaylist.length > 0) {
++        Row({ space: 8 }) {
++          Button('上一节').constraintSize({ minHeight: 48 }).layoutWeight(1).enabled(this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID) > 0).onClick(() => { const at = this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID); if (at > 0) this.startVideo(this.videoPlaylist[at - 1]); })
++          Button('目录').constraintSize({ minHeight: 48 }).layoutWeight(1).onClick(() => { this.videoCatalogOpen = !this.videoCatalogOpen; })
++          Button('下一节').constraintSize({ minHeight: 48 }).layoutWeight(1).enabled(this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID) >= 0 && this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID) + 1 < this.videoPlaylist.length).onClick(() => { const at = this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID); if (at >= 0 && at + 1 < this.videoPlaylist.length) this.startVideo(this.videoPlaylist[at + 1]); })
++        }.width('100%')
++        if (this.videoCatalogOpen) {
++          Text('课节目录 · 共 ' + this.videoPlaylist.length + ' 节').fontSize(18).fontWeight(FontWeight.Bold)
++          ForEach(this.videoPlaylist, (row: Row) => {
++            this.action((String(row.id) === this.currentLessonID ? '当前课节 · ' : '') + (row.name || ''), () => { if (String(row.id) !== this.currentLessonID) this.startVideo(row); })
++          }, (row: Row) => String(row.id))
++        }
++      }
+       Row({ space: 8 }) {
+         ForEach([0.75, 1, 1.25, 1.5], (rate: number) => {
+           Button(rate + ' 倍').onClick(() => { this.endHoldSpeed(); this.selectedPlaybackRate = rate; }).backgroundColor(this.selectedPlaybackRate === rate ? SwodTheme.tonal : SwodTheme.surface).fontColor(SwodTheme.ink)
+@@ -642,6 +700,7 @@
+       this.action('保存笔记', () => { this.write('/notes', { video_id: Number(this.selected.id || this.selected.video_id), timestamp_seconds: this.playbackPosition, content: this.remark }); })
+     }
+     if (this.route.screen === 'offlineDetail') {
++      if (coverImageURL(this.detail.cover_image || '')) { Image(coverImageURL(this.detail.cover_image || '')).width('100%').aspectRatio(4 / 3).objectFit(ImageFit.Contain).borderRadius(12).accessibilityText((this.detail.name || '') + '课程封面') }
+       Text('课程介绍').fontSize(18).fontWeight(FontWeight.Bold)
+       Text(offlineDescription(this.detail)).fontSize(16).lineHeight(26)
+       ForEach(offlineCopy(this.detail)?.outline || this.detail.outline || [], (text: string, index: number) => { Text((index + 1) + '. ' + text).fontSize(14).lineHeight(24) }, (text: string) => text)
+@@ -770,7 +829,7 @@
+     }
+     if (this.route.screen === 'message') { Text(this.detail.content || '').fontSize(16) }
+     if (this.route.screen !== 'catalog' && this.route.screen !== 'shopOrders' && this.rows.length > 0) {
+-      TextInput({ placeholder: '搜索名称、老师、组别或音乐', text: this.query }).height(52).fontSize(16).fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).backgroundColor(SwodTheme.surface).borderRadius(12).onChange((v: string) => { this.query = v; })
++      TextInput({ placeholder: this.route.screen === 'home' ? '搜索课程、老师或分类' : '搜索名称、老师、组别或音乐', text: this.query }).height(52).fontSize(16).fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).backgroundColor(SwodTheme.surface).borderRadius(12).onChange((v: string) => { this.query = v; })
+       ForEach(this.filtered(), (row: Row) => { this.card(row) }, (row: Row) => String(row.id || row.video_id || row.series_id))
+       if (!this.busy && !this.error && this.query.trim() && this.filtered().length === 0) {
+         Text('未找到匹配结果，请更换关键词').fontSize(14).fontColor(SwodTheme.muted)
+@@ -815,14 +874,14 @@
+             .onHttpErrorReceive((event: OnHttpErrorReceiveEvent) => { if (event.request.isMainFrame()) { this.webLoading = false; this.webError = '网页暂时不可用，请稍后重试'; } })
+         }.layoutWeight(1).width('100%')
+       } else {
+-        Scroll(this.catalogScroller) { Column({ space: 12 }) { this.content() }.alignItems(HorizontalAlign.Start).padding({ left: 20, right: 20, top: 12, bottom: 24 }).width('100%').constraintSize({ maxWidth: 760 }) }.layoutWeight(1).width('100%')
++        Scroll(this.catalogScroller) { Column({ space: 10 }) { this.content() }.alignItems(HorizontalAlign.Start).padding({ left: 16, right: 16, top: 10, bottom: 20 }).width('100%').constraintSize({ maxWidth: 760 }) }.layoutWeight(1).width('100%')
+       }
+       Row({ space: 4 }) {
+         this.navItem('线上学院', 'home', this.activeTab === 'home' ? $r('app.media.nav_learn_on') : $r('app.media.nav_learn'), '线上学院', '/public/series')
+         this.navItem('线下课', 'offline', this.activeTab === 'offline' ? $r('app.media.nav_calendar_on') : $r('app.media.nav_calendar'), '线下课程', '/public/offline-courses')
+         this.navItem('赛事', 'events', this.activeTab === 'events' ? $r('app.media.nav_trophy_on') : $r('app.media.nav_trophy'), '东方舞赛事', '/events')
+         this.navItem('商城', 'shop', this.activeTab === 'shop' ? $r('app.media.nav_bag_on') : $r('app.media.nav_bag'), '商城', '/shop/products')
+-        this.navItem('我的', 'account', this.activeTab === 'account' ? $r('app.media.nav_person_on') : $r('app.media.nav_person'), '个人中心', platform.credentials ? '/member/profile' : '', true)
++        this.navItem('个人中心', 'account', this.activeTab === 'account' ? $r('app.media.nav_person_on') : $r('app.media.nav_person'), '个人中心', platform.credentials ? '/member/profile' : '', true)
+       }.padding(6).width('100%').backgroundColor(SwodTheme.surface)
+     }.backgroundColor(SwodTheme.canvas).width('100%').height('100%')
+   }
+--- a/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets
++++ b/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets
+@@ -4,7 +4,10 @@
+ export interface Envelope<T> { success: boolean; data?: T; error?: string; message?: string; }
+ export interface CourseOffer { id?: number; name?: string; period?: string; priceFen?: number; sessions?: number; }
+ export interface PaymentFlags { alipay?: boolean; wechat?: boolean; }
++export interface MediaQuality { value: string; label: string; url: string; }
+ export interface Row {
++  quality_options?: MediaQuality[];
++  oneTapLogin?: boolean;
+   mediaKind?: string;
+   shipping?: Row; quantity?: number; productId?: string; alipay?: boolean; wechat?: boolean;
+   recipient?: string; address?: string; deliveryMethod?: string; totalFen?: number; trackingNo?: string; carrier?: string; spec?: string; size?: string; color?: string; image?: string; detailText?: string;
+@@ -33,6 +36,7 @@
+ }
+ export interface ShopItem { id: string; quantity: number; }
+ export interface WriteBody {
++  accessToken?: string;
+   items?: ShopItem[]; recipient?: string; address?: string; deliveryMethod?: string;
+   targetId?: number; provider?: string; expectedTotalFen?: number;
+   phone?: string; code?: string; deviceName?: string; refreshToken?: string; username?: string; password?: string;
+--- a/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/PlatformApi.ets
++++ b/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/PlatformApi.ets
+@@ -52,6 +52,13 @@
+     this.generation++; this.credentials = value;
+   }
+   clear(): void { this.generation++; this.credentials = undefined; }
++  async loginWithCarrier(accessToken: string): Promise<void> {
++    const generation = this.generation;
++    const value = await this.request<Credentials>('/auth/one-tap', http.RequestMethod.POST, { accessToken: accessToken, deviceName: 'SWOD HarmonyOS' });
++    if (generation !== this.generation) throw new PlatformFailure('账号已切换，请重新登录', 401);
++    if (!value.token || !value.refreshToken || !value.memberId) throw new PlatformFailure('登录响应无效，请重试', 502);
++    this.generation++; this.credentials = value;
++  }
+   async logout(): Promise<void> {
+     const token = this.credentials?.token; this.clear();
+     if (token) await this.exchange<Object>(API, '/auth/logout', http.RequestMethod.POST, {}, token);
+--- a/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/element/color.json
++++ b/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/element/color.json
+@@ -6,7 +6,7 @@
+     },
+     {
+       "name": "swod_canvas",
+-      "value": "#F5F6F8"
++      "value": "#F6F7F9"
+     },
+     {
+       "name": "swod_surface",
+@@ -14,11 +14,11 @@
+     },
+     {
+       "name": "swod_ink",
+-      "value": "#20242B"
++      "value": "#202124"
+     },
+     {
+       "name": "swod_muted",
+-      "value": "#626A77"
++      "value": "#616773"
+     },
+     {
+       "name": "swod_primary",
+@@ -26,7 +26,7 @@
+     },
+     {
+       "name": "swod_tonal",
+-      "value": "#F9EDEC"
++      "value": "#F9EAEA"
+     }
+   ]
+ }
+--- a/app开发/HarmonyOS/EvaDance/scripts/build_release.py
++++ b/app开发/HarmonyOS/EvaDance/scripts/build_release.py
+@@ -8,6 +8,7 @@
+ from pathlib import Path
+ import shutil
+ import subprocess
++import sys
+ import zipfile
+ from zoneinfo import ZoneInfo
+ 
+@@ -42,6 +43,7 @@
+     evidence.mkdir(exist_ok=True)
+     shutil.copytree(project, work, dirs_exist_ok=True,
+                     ignore=shutil.ignore_patterns('._*', '.DS_Store', 'build', '.hvigor', 'oh_modules', 'node_modules'))
++    subprocess.run([sys.executable, str(project / 'scripts/prepare_login_config.py'), str(work)], check=True)
+     env = os.environ.copy()
+     env.update(JAVA_HOME=str(java_home), DEVECO_CLI_CLT_PATH=str(clt),
+                DEVECO_SDK_HOME=str(clt / 'sdk'), DEVECO_NODE_HOME=str(clt / 'tool/node'))
+--- a/app开发/HarmonyOS/EvaDance/scripts/platform-api.test.cjs
++++ b/app开发/HarmonyOS/EvaDance/scripts/platform-api.test.cjs
+@@ -78,6 +78,32 @@
+   assert.equal(f.api.credentials.token, 'review-token');
+ });
+ 
++test('carrier login sends only the operator token and accepts server-owned identity', async () => {
++  const f = fixture();
++  f.replies.push({ status: 200, data: { success: true, data: { token: 'carrier-access', refreshToken: 'carrier-refresh', memberId: 2 } } });
++  await f.api.loginWithCarrier('operator-issued-token');
++  assert.equal(f.calls[0].url, 'https://admin.swod.com.cn/api/app/v1/auth/one-tap');
++  assert.deepEqual(JSON.parse(f.calls[0].options.extraData), { accessToken: 'operator-issued-token', deviceName: 'SWOD HarmonyOS' });
++  assert.equal(f.api.credentials.memberId, 2);
++});
++
++test('a late carrier login response cannot restore a cleared account', async () => {
++  const f = fixture(); let release;
++  const wait = new Promise(resolve => { release = resolve; });
++  f.replies.push({ wait, status: 200, data: { success: true, data: { token: 'late-access', refreshToken: 'late-refresh', memberId: 2 } } });
++  const pending = f.api.loginWithCarrier('operator-issued-token');
++  f.api.clear(); release();
++  await assert.rejects(pending, /账号已切换/);
++  assert.equal(f.api.credentials, undefined);
++});
++
++test('an incomplete carrier response never creates a logged-in account', async () => {
++  const f = fixture(); f.api.clear();
++  f.replies.push({ status: 200, data: { success: true, data: { token: 'missing-refresh', memberId: 2 } } });
++  await assert.rejects(f.api.loginWithCarrier('operator-issued-token'), /登录响应无效/);
++  assert.equal(f.api.credentials, undefined);
++});
++
+ test('course covers resolve server-relative URLs without accepting unsafe schemes or hosts', () => {
+   const { coverImageURL } = fixture();
+   const relative = '/api/course/series/cover/%E5%85%A8%E5%8A%9B-1792289355493.jpg';
+--- /dev/null
++++ b/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CarrierLogin.java
+@@ -0,0 +1,68 @@
++package cn.com.swod.app;
++
++import android.app.Activity;
++import android.os.Handler;
++import android.os.Looper;
++import com.mobile.auth.gatewayauth.AuthUIConfig;
++import com.mobile.auth.gatewayauth.PhoneNumberAuthHelper;
++import com.mobile.auth.gatewayauth.TokenResultListener;
++import org.json.JSONObject;
++
++/** Initializes the operator SDK only after the learner explicitly requests login. */
++final class CarrierLogin {
++    interface Result { void complete(String token, String error); }
++    private final Handler handler = new Handler(Looper.getMainLooper());
++    private PhoneNumberAuthHelper helper;
++    private Result pending;
++    private final Runnable timeout = () -> finish(null, "本机号码登录超时，请使用短信登录");
++
++    void start(Activity activity, Result result) {
++        if (pending != null) return;
++        pending = result;
++        try {
++            JSONObject config;
++            try (java.io.InputStream input = activity.getAssets().open("number-auth.json")) {
++                java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
++                byte[] buffer = new byte[2048]; int count;
++                while ((count = input.read(buffer)) != -1) bytes.write(buffer, 0, count);
++                config = new JSONObject(bytes.toString("UTF-8"));
++            }
++            if (!activity.getPackageName().equals(config.optString("packageName")) || config.optString("sdkSecret").isEmpty()) {
++                finish(null, "本机号码登录配置未就绪，请使用短信登录"); return;
++            }
++            helper = PhoneNumberAuthHelper.getInstance(activity, new TokenResultListener() {
++                public void onTokenSuccess(String value) { handler.post(() -> receive(value, true)); }
++                public void onTokenFailed(String value) { handler.post(() -> receive(value, false)); }
++            });
++            helper.getReporter().setLoggerEnable(false);
++            helper.setAuthSDKInfo(config.getString("sdkSecret"));
++            helper.setAuthUIConfig(new AuthUIConfig.Builder()
++                    .setNavText("本机号码登录").setLogBtnText("本机号码一键登录")
++                    .setPrivacyState(false)
++                    .setAppPrivacyOne("隐私政策", "https://www.swod.com.cn/privacy")
++                    .setAppPrivacyTwo("服务条款", "https://www.swod.com.cn/terms").create());
++            handler.postDelayed(timeout, 20_000);
++            helper.getLoginToken(activity, 8_000);
++        } catch (Exception | LinkageError error) {
++            finish(null, "暂时无法使用本机号码登录，请使用短信登录");
++        }
++    }
++    private void receive(String value, boolean success) {
++        if (pending == null) return;
++        try {
++            JSONObject response = new JSONObject(value);
++            String code = response.optString("code");
++            if (success && code.equals("600000") && !response.optString("token").isEmpty()) finish(response.getString("token"), null);
++            else if (code.equals("700000") || code.equals("700001")) finish(null, null);
++            else if (!success) finish(null, "本机号码登录暂不可用，请使用短信登录");
++            // Authorization-page presentation and checkbox events do not sign anyone in.
++        } catch (Exception error) { finish(null, "号码认证响应异常，请使用短信登录"); }
++    }
++    void cancel() { finish(null, null); }
++    private void finish(String token, String error) {
++        handler.removeCallbacks(timeout);
++        Result result = pending; pending = null;
++        if (helper != null) { helper.setAuthListener(null); helper.quitLoginPage(); helper = null; }
++        if (result != null) result.complete(token, error);
++    }
++}
+--- /dev/null
++++ b/app开发/Android/EvaDance/app/src/main/res/values/carrier_auth.xml
+@@ -0,0 +1,5 @@
++<resources>
++    <style name="CarrierAuthTheme" parent="Theme.AppCompat.Light.NoActionBar">
++        <item name="colorAccent">#9F1D20</item>
++    </style>
++</resources>
+--- /dev/null
++++ b/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CarrierLogin.ets
+@@ -0,0 +1,67 @@
++import { common, bundleManager } from '@kit.AbilityKit';
++import { util } from '@kit.ArkTS';
++import PhoneNumberAuthHelper, { AuthUiConfig, TokenResultListener } from 'numberauth_standard';
++
++interface CarrierConfig { bundleName: string; appIdentifier: string; certificateSHA256: string; sdkSecret: string; }
++interface CarrierToken { _code?: string; _token?: string; }
++
++class CarrierListener implements TokenResultListener {
++  private owner: CarrierLogin;
++  constructor(owner: CarrierLogin) { this.owner = owner; }
++  onSuccess(message: string): void { this.owner.receive(message, true); }
++  onFailure(message: string): void { this.owner.receive(message, false); }
++}
++
++/** Only an operator-issued token is sent to the server. No client phone is trusted. */
++export class CarrierLogin {
++  private helper?: PhoneNumberAuthHelper;
++  private resolve?: (token: string) => void;
++  private reject?: (error: Error) => void;
++  private timer: number = -1;
++  async token(context: common.UIAbilityContext): Promise<string> {
++    if (this.resolve) throw new Error('正在获取本机号码，请稍候');
++    let config: CarrierConfig;
++    try {
++      const bytes = await context.resourceManager.getRawFileContent('number-auth.local.json');
++      config = JSON.parse(util.TextDecoder.create('utf-8').decodeToString(bytes)) as CarrierConfig;
++      const info = await bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_SIGNATURE_INFO);
++      const fingerprint = info.signatureInfo.fingerprint.replace(/:/g, '').toLowerCase();
++      if (!config.sdkSecret || config.bundleName !== info.name || config.appIdentifier !== info.signatureInfo.appIdentifier ||
++        config.certificateSHA256.replace(/:/g, '').toLowerCase() !== fingerprint) throw new Error('configuration');
++    } catch { throw new Error('本机号码登录配置未就绪，请使用短信登录'); }
++    return new Promise<string>((resolve, reject) => {
++      this.resolve = resolve; this.reject = reject;
++      this.timer = setTimeout(() => this.finish('', '本机号码登录超时，请使用短信登录'), 20000);
++      this.launch(context, config).catch(() => this.finish('', '本机号码登录暂不可用，请使用短信登录'));
++    });
++  }
++  private async launch(context: common.UIAbilityContext, config: CarrierConfig): Promise<void> {
++    this.helper = PhoneNumberAuthHelper.getInstance(context, new CarrierListener(this));
++    await this.helper.setAuthSDKInfo(config.sdkSecret);
++    if (!this.resolve || !this.helper) return;
++    const ui = new AuthUiConfig();
++    ui.privacyCbIsOn = false;
++    ui.privacySpanOneText = '隐私政策'; ui.privacySpanOneUrl = 'https://www.swod.com.cn/privacy';
++    ui.privacySpanTwoText = '服务条款'; ui.privacySpanTwoUrl = 'https://www.swod.com.cn/terms';
++    this.helper.setAuthConfig(ui);
++    await this.helper.getLoginToken(8000);
++  }
++  receive(message: string, success: boolean): void {
++    if (!this.resolve) return;
++    try {
++      const result = JSON.parse(message) as CarrierToken;
++      if (success && result._code === '600000' && result._token) this.finish(result._token, '');
++      else if (result._code === '700000' || result._code === '700001') this.finish('', '已取消本机号码登录');
++      else if (!success) this.finish('', '本机号码登录暂不可用，请使用短信登录');
++    } catch { this.finish('', '号码认证响应异常，请使用短信登录'); }
++  }
++  cancel(): void { this.finish('', '已取消本机号码登录'); }
++  private finish(token: string, message: string): void {
++    if (this.timer >= 0) clearTimeout(this.timer);
++    this.timer = -1;
++    const resolve = this.resolve; const reject = this.reject;
++    this.resolve = undefined; this.reject = undefined;
++    if (this.helper) { this.helper.clearAuthListener(); this.helper.quitLoginPage().catch(() => {}); this.helper = undefined; }
++    if (token) resolve?.(token); else reject?.(new Error(message));
++  }
++}
+--- /dev/null
++++ b/app开发/HarmonyOS/EvaDance/scripts/prepare_login_config.py
+@@ -0,0 +1,18 @@
++#!/usr/bin/env python3
++"""Copy the existing client scheme to an isolated build; never print its value."""
++import json
++from pathlib import Path
++import sys
++
++source = Path(__file__).resolve().parents[1]
++project = Path(sys.argv[1]).resolve()
++if project == source or source in project.parents:
++    raise SystemExit('号码认证配置只能写入独立编译副本。')
++private = Path.home() / '.config/eva-app/harmony-number-auth.json'
++config = json.loads(private.read_text()) if private.is_file() else {}
++allowed = ['bundleName', 'appIdentifier', 'certificateSHA256', 'sdkSecret']
++target = project / 'entry/src/main/resources/rawfile/number-auth.local.json'
++target.parent.mkdir(parents=True, exist_ok=True)
++target.write_text(json.dumps({key: config.get(key, '') for key in allowed}))
++target.chmod(0o600)
++print('Client scheme configuration prepared; values withheld.')

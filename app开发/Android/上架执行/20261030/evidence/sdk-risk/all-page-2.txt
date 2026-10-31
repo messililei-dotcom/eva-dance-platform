@@ -1,0 +1,477 @@
+- link "全国SDK管理服务平台":
+  - /url: "#/home"
+  - generic: 全国SDK管理服务平台
+- link "首页":
+  - /url: "#/home"
+  - generic: 首页
+- link "新闻通知":
+  - /url: "#/public/news/1"
+  - generic: 新闻通知
+- link "政策标准":
+  - /url: "#/public/policy/1"
+  - generic: 政策标准
+- link "开发者控制台":
+  - /url: "#/developer"
+  - generic: 开发者控制台
+- button "登 录":
+  - generic: 登 录
+- button "注 册":
+  - generic: 注 册
+- generic: 风险 SDK 信息
+- generic: RISK SDK INFORMATION
+- generic: "SDK搜索:"
+- textbox "请输入名称/开发者/类型的关键词"
+- button "search":
+  - img "search":
+- checkbox "全部" [checked]
+- generic: 全部
+- checkbox "只看存在违规行为SDK"
+- generic: 只看存在违规行为SDK
+- checkbox "只看建议版本更新SDK"
+- generic: 只看建议版本更新SDK
+- checkbox "只看产品不再运营SDK"
+- generic: 只看产品不再运营SDK
+- alert:
+  - img "info-circle":
+  - generic: 存在违规行为SDK：在工信部“侵害用户权益行为的APP（SDK）通报”名单中的SDK，建议APP开发者及时更新更换。
+  - generic: 建议版本更新SDK：在工信部抽检过程中发现违规行为，并已在期限内完成整改更新的SDK，建议APP开发者及时更新至SDK最新版本。
+  - generic: 产品不再运营SDK：停止对外提供服务、后续不再运营维护的SDK，建议APP开发者不再使用。
+- img "left":
+- tablist:
+  - tab "全部" [selected]
+  - tab "特定工具类"
+  - tab "游戏联运类"
+  - tab "广告类"
+  - tab "安全风控类"
+  - tab "地图类"
+  - tab "第三方登录类"
+  - tab "支付类"
+  - tab "认证类"
+  - tab "社交类"
+  - tab "客服类"
+  - tab "框架类"
+  - tab "实时音视频类"
+  - tab "统计类"
+  - tab "推送类"
+  - tab "性能监控类"
+  - tab "人工智能类"
+  - tab "平台服务类"
+- tabpanel "全部"
+- img "right":
+- generic: 综合评分：
+- generic: 暂无
+- generic: 雷电SDK
+- generic: 版本
+- generic: 2.5.34
+- generic: 类型
+- generic: 游戏联运类
+- generic: 上海畅指网络科技有限公司
+- generic: 为雷电联运游戏APP提供账号注册登录、支付对接、统计分析、网页浏览、消息推送等基础服务及附加功能支持
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: HeroUSDK
+- generic: 版本
+- generic: 5.0.0.16
+- generic: 类型
+- generic: 特定工具类
+- generic: 天津英雄互娱网络科技有限公司
+- generic: HeroUSDK(简称“USDK”，又称“聚合SDK”)，是英雄游戏用户支撑中心为游戏工作室在渠道发行功能的基础上，整合全球渠道，拓展游戏开发、运营相关工具，形成的一套标准化游戏开发工具集。
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 233乐园内购SDK
+- generic: 版本
+- generic: V3.2.21
+- generic: 类型
+- generic: 游戏联运类
+- generic: 北京龙威互动科技有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 驷象SDK
+- generic: 版本
+- generic: 4.1.4
+- generic: 类型
+- generic: 广告类
+- generic: 杭州驷象信息科技有限公司
+- generic: 聚合广告sdk，提升您的广告收益
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 网易七鱼鸿蒙访客端 SDK
+- generic: 版本
+- generic: V1.1.7
+- generic: 类型
+- generic: 客服类
+- generic: 杭州网易智企科技有限公司
+- generic: 网易七鱼鸿蒙访客端 SDK 插件
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 极准瑞量广告-iOS
+- generic: 版本
+- generic: 1.10.7
+- generic: 类型
+- generic: 广告类
+- generic: 杭州极准网络科技有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: AdMulX 广告SDK
+- generic: 版本
+- generic: 1.0.6.90
+- generic: 类型
+- generic: 广告类
+- generic: 杭州慧聚云途科技有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: Android 直播UI SDK（竖屏模板）
+- generic: 版本
+- generic: 4.35.0
+- generic: 类型
+- generic: 实时音视频类
+- generic: 武汉百家云科技有限公司
+- generic: 提供了一个针对教育场景下的竖屏师生互动模板，主要包括师生一对一音视频互动，多人音视频互动，课件展示、文字聊天等功能
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 智齿科技 SDK 访客端
+- generic: 版本
+- generic: 4.2.14.2
+- generic: 类型
+- generic: 客服类
+- generic: 北京智齿博创科技有限公司
+- generic: 智齿科技 SDK 访客端包含：人工客服、机器人客服、AI机器人客服
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 欢太账号授权SDK
+- generic: 版本
+- generic: 2.2.4
+- generic: 类型
+- generic: 第三方登录类
+- generic: 广东欢太科技有限公司
+- generic: 提供欢太账号一键授权登录及信息授权能力
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 聚合Android SDK
+- generic: 版本
+- generic: 1.8.8.4
+- generic: 类型
+- generic: 游戏联运类
+- generic: 广州米壳信息科技有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: Mosken Android SDK
+- generic: 版本
+- generic: 4.0.8
+- generic: 类型
+- generic: 广告类
+- generic: 北京数优之行科技股份有限公司
+- generic: 为开发者提供一站式商业化变现服务
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 威拜特sdk
+- generic: 版本
+- generic: 1.3.4
+- generic: 类型
+- generic: 广告类
+- generic: 威拜特（北京）科技有限公司
+- generic: 适用于app广告展示的sdk
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 鲤跃SDK
+- generic: 版本
+- generic: 1.1.0
+- generic: 类型
+- generic: 广告类
+- generic: 随身云（南京）信息技术有限公司
+- generic: 提供广告的拉取和展示功能，接入的开发者可获得广告收益
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: sharetrace
+- generic: 版本
+- generic: 2.4.2
+- generic: 类型
+- generic: 统计类
+- generic: 射手科技（珠海）有限公司
+- generic: Sharatrace提供专业稳定的传参安装、渠道统计解决方案
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: AdLink SDK
+- generic: 版本
+- generic: 1.1.5
+- generic: 类型
+- generic: 广告类
+- generic: 北京数怡星联科技有限公司
+- generic: 轻量级开发工具，支持主流广告形式（开屏、原生信息流、横幅、插屏、激励视频等多种广告形式）
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: TurboEngine- Android SDK
+- generic: 版本
+- generic: 3.4.1
+- generic: 类型
+- generic: 广告类
+- generic: 云金天下（杭州）网络科技有限公司
+- generic: TurboEngine-Android-SDK整合了多个广告平台，简化了开发流程，提供了广告位管理、数据统计分析和自动优化等功能，帮助开发者实现最佳的广告效果和最大化的广告收益
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: Adarea广告SDK安卓版
+- generic: 版本
+- generic: V1.0.0
+- generic: 类型
+- generic: 广告类
+- generic: 杭州钰风科技有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 热力引擎 iOS SDK
+- generic: 版本
+- generic: 1.3.0.3
+- generic: 类型
+- generic: 统计类
+- generic: 汇量云（北京）科技有限公司
+- generic: 用于广告效果归因和用户行为分析
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 浩睿广告SDK
+- generic: 版本
+- generic: 1.5.4.0
+- generic: 类型
+- generic: 广告类
+- generic: 天津浩睿信息科技有限公司
+- generic: 浩睿广告 SDK ，开发者的一站式广告接入变现工具
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 目睹直播播放器SDK
+- generic: 版本
+- generic: 1.1.175317505
+- generic: 类型
+- generic: 实时音视频类
+- generic: 杭州雅顾科技有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 坚果游戏SDK
+- generic: 版本
+- generic: 5.7.2
+- generic: 类型
+- generic: 游戏联运类
+- generic: 坚果互娱（天津）网络科技有限公司
+- generic: 打开坚果，享受游戏精彩时光！
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 目睹直播评论SDK-鸿蒙
+- generic: 版本
+- generic: 1.1.1
+- generic: 类型
+- generic: 实时音视频类
+- generic: 杭州雅顾科技有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 目睹直播播放器SDK-鸿蒙
+- generic: 版本
+- generic: 2.0.0
+- generic: 类型
+- generic: 实时音视频类
+- generic: 杭州雅顾科技有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 目睹直播播放器SDK-IOS
+- generic: 版本
+- generic: 1.0.173501505
+- generic: 类型
+- generic: 实时音视频类
+- generic: 杭州雅顾科技有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 多酷网游SDK
+- generic: 版本
+- generic: 4.6.0
+- generic: 类型
+- generic: 游戏联运类
+- generic: 天津多酷紫桐科技有限公司
+- generic: 为游戏厂商提供注册、登陆、账号实名认证、防沉迷、支付等功能
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 九四玩SDK
+- generic: 版本
+- generic: 1.0.9
+- generic: 类型
+- generic: 游戏联运类
+- generic: 北京开源纵横网络科技有限公司
+- generic: 九四玩SDK是北京开源纵横网络科技有限公司旗下的面向游戏厂商进行游戏联运合作的开放SDK，九四玩SDK集成了登录、支付功能，为游戏用户提供游戏登录、支付服务。
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 目睹直播评论SDK-安卓
+- generic: 版本
+- generic: 1.1.173708505
+- generic: 类型
+- generic: 实时音视频类
+- generic: 杭州雅顾科技有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 众鸣联盟
+- generic: 版本
+- generic: 1.0.1
+- generic: 类型
+- generic: 广告类
+- generic: 北京众鸣世纪科技有限公司
+- generic: 众鸣联盟SDK
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 维智 Android 定位SDK
+- generic: 版本
+- generic: 5.4.0
+- generic: 类型
+- generic: 地图类
+- generic: 武汉维网智芯信息科技有限公司
+- generic: 维智Android定位SDK是为Android移动端应用提供的一套简单易用的定位服务接口， 专注于为广大开发者提供最好的综合定位服务
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- list:
+  - listitem "上一页":
+    - button "left":
+      - img "left":
+  - listitem "1":
+    - generic: "1"
+  - listitem "2":
+    - generic: "2"
+  - listitem "3":
+    - generic: "3"
+  - listitem "4":
+    - generic: "4"
+  - listitem "5":
+    - generic: "5"
+  - listitem "下一页":
+    - button "right" [active]:
+      - img "right":
+- paragraph: 版权所有©：中国信息通信研究院
+- paragraph: 中国信息通信研究院技术与标准研究所
+- paragraph: 联系方式：010-62300568
+- generic: 反馈通道

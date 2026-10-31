@@ -1,11 +1,13 @@
 import Foundation
 
 public enum APIError: LocalizedError {
-    case sessionExpired, denied, invalidResponse, service(String)
+    case sessionExpired, denied, invalidResponse, cacheInvalid, progressConflict, service(String)
     public var errorDescription: String? {
         switch self {
         case .sessionExpired: return "登录已过期，请重新登录。"
         case .denied: return "当前账号没有此内容的有效权限。"
+        case .cacheInvalid: return "缓存内容或学习状态已变化，请联网重新验证。"
+        case .progressConflict: return "其他设备已更新学习进度，将自动采用较新的记录。"
         case .invalidResponse: return "服务返回异常，请稍后重试。"
         case .service(let text): return text
         }
@@ -52,6 +54,8 @@ public final class APIClient {
         guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
         if http.statusCode == 401 { throw APIError.sessionExpired }
         if http.statusCode == 403 { throw APIError.denied }
+        if path.hasSuffix("/cache-authorization"), [404,409,410].contains(http.statusCode) { throw APIError.cacheInvalid }
+        if path.hasSuffix("/progress"), http.statusCode == 409 { throw APIError.progressConflict }
         if http.statusCode == 429 { throw APIError.service("请求较多，请稍后重试。") }
         guard (200..<300).contains(http.statusCode) else {
             let failure = try? JSONDecoder().decode(APIEnvelope<Empty>.self, from: data)

@@ -1,0 +1,110 @@
+{
+  "updatedAt": "2026-10-30T17:00:04+08:00",
+  "status": "three-platform-source-and-local-builds-complete",
+  "request": "线上课程点击后直接进入视频播放页，跳过独立目录页",
+  "behavior": {
+    "unlockedCourses": "首页/搜索、个人中心/我的课程、已解锁详情的继续学习入口直达播放器",
+    "selection": "使用当前会话服务端series进度last_play_at，选择当前课程内最近课节；没有记录则第一节，空课程提示重试",
+    "player": "携带完整课节列表、课程ID/标题和进度；保留播放器内目录、上一节/下一节、音频处理及自动隐藏控制层",
+    "back": "iOS用同一导航目的地替换加载状态；安卓不压入加载页；鸿蒙移除中间study路由，返回原卡片页",
+    "unownedCourses": "既有课程介绍、价格、购买/公开目录保留",
+    "noAutomaticPlaybackChange": true
+  },
+  "security": {
+    "playbackAuthorization": "原播放接口仍独立验证当前用户及学习权益；没有把卡片已解锁标记当作播放凭证",
+    "accountSwitch": "iOS绑定sessionId并取消旧任务；安卓绑定accountGeneration/页面generation/请求序号/前台状态；鸿蒙绑定generation/sessionId",
+    "privateHistory": "只使用带当前凭据的/private progress，失败显示错误及重试，不吞错后误当新用户",
+    "crossCourseHistoryExcluded": true,
+    "originalSigningIdentityChanged": false,
+    "filingChanged": false,
+    "reviewerAccountUsed": false,
+    "productionFeatureFlagsChanged": false
+  },
+  "ios": {
+    "releaseTestsPassed": 11,
+    "newSelectionTests": 3,
+    "debugActualEntryFixturePassed": 1,
+    "fixtureNavigationProof": "实际CourseStudyEntryView无需目录点击即实例化PlayerView并请求最近课节/video/101/play；带两节目录截图",
+    "fixtureOnly": "本地loopback、测试凭据、DEBUG专用钥匙串命名空间；403不签发媒体地址，不是受保护课程播放验收；测试结束删除仅该fixture凭据",
+    "fixtureHostSigning": "临时模拟器QA使用本地adhoc签名以允许测试钥匙串，未申请或更换生产证书",
+    "archive": "iOS/SWOD-direct-build11-unsigned.xcarchive",
+    "deviceTargetBuild": 11,
+    "deviceTargetCompilePassed": true,
+    "archiveSigned": false,
+    "ipaExported": false
+  },
+  "android": {
+    "build": 14,
+    "releaseBuilt": true,
+    "unitTestsPassed": 32,
+    "newSelectionTests": 3,
+    "lintDebugPassed": true,
+    "apkAndAabSignatureVerified": true,
+    "originalCertificateSHA256": "58ecee1c1cd0adc08f797ab9bb75dcb45e6a3b747c535939020d8ae8f0d548fe",
+    "nativeNavigationRuntimeAccepted": false
+  },
+  "harmony": {
+    "build": 11,
+    "releaseBuilt": true,
+    "unitTestsPassed": 44,
+    "newSelectionTests": 3,
+    "hapAndAppSignaturesVerified": true,
+    "nativeNavigationRuntimeAccepted": false,
+    "buildRecord": "HarmonyOS-build11/verification.json"
+  },
+  "physicalDeviceTests": "skipped-at-user-request",
+  "realProtectedCoursePlaybackAccepted": false,
+  "uploaded": false,
+  "submitted": false,
+  "published": false,
+  "existingReviewsWithdrawn": false,
+  "existingSubmittedArtifactsModified": false,
+  "oldLocalCandidateFilesHashVerifiedUnchanged": true,
+  "newLocalArtifacts": [
+    {
+      "path": "Android-build14/installers/SWOD-1.0.1-14-release.aab",
+      "size": 15422030,
+      "sha256": "cc423847524a8a5edc45424dd2d57d5a604a47d33c6b0ec354a6e33dfc4381e6"
+    },
+    {
+      "path": "Android-build14/installers/SWOD-1.0.1-14-release.apk",
+      "size": 28923557,
+      "sha256": "5d560e58f9f8dbb31eb61f1a1b01b99052b35a9616fdc08f18b1c33e5eaf8bef"
+    },
+    {
+      "path": "HarmonyOS-build11/installers/SWOD-1.0.1-11-release.app",
+      "size": 7596476,
+      "sha256": "68d48a9c515ecffa89a7e635bb113c2ee5e8613008219b0f294ba817f38217c9"
+    },
+    {
+      "path": "HarmonyOS-build11/installers/SWOD-1.0.1-11-release.hap",
+      "size": 16111664,
+      "sha256": "9500c5566318d3e76e0ef216d4cd115b4c0da275e1eb8b3a2c0f7eee6f98f234"
+    }
+  ],
+  "sourceHashes": {
+    "docs/课程权益展示规则.md": "004ceb32f94343df89538ce8293bf176cc54e67c3ff2fe230b892ed10404dd24",
+    "app开发/iOS/EvaDance/Sources/EvaCore/CoursePresentation.swift": "5bd52a76c06a9695f0adbdf4c9469630ff939ab3f9313997e75097f39e5f53b8",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseStudyEntryView.swift": "e52b10c083d80e2ae30c7697522f90bd040e9b2018e0d893536106a86c3bc21e",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EvaDanceApp.swift": "12ae839f999b36526ff087b4ec1e78570b40fe13cf0384f7f64acaeaf4797686",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift": "b4849311271426b47ec17208e489233498f578211118f80c0faf3772da8a28cc",
+    "app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj": "3755d1a348b571f9e08056398a24fa7b35ac780d3343eb72023906e444aaa629",
+    "app开发/iOS/EvaDance/scripts/create_layout_test_project.py": "223d321200535686c03f205d0e96f96733df226d51391b4e1df4c690a8d170e8",
+    "app开发/iOS/EvaDance/Tests/EvaPlaybackTests/CourseEntryTests.swift": "bcb46fadda71736239902e193fb4a12f50440b8c4b710923408f6f972dc51590",
+    "app开发/iOS/EvaDance/Tests/EvaPlaybackTests/CourseEntrySurfaceTests.swift": "3464abf7296bd3e9443847915e4aee502e33d627ba7c6471cbd51143be9557ae",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "e6ce74cf1e3f7434a699f74a06f44649b1f3d1bf39dec4159ed52023ddc96c5e",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CoursePolicy.java": "48edccfcfd06d304d760e5c4c522f031393a1a42bc4547c8183c54709c9fd359",
+    "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/CourseEntryTest.java": "5258ba513e7725fbe5224b143c57e2008b4f03fe5b145f662bf95e3747cbc8e7",
+    "app开发/Android/EvaDance/app/build.gradle": "a55dab72f7b8262e82185a56c777e84d01e3598e7bacfd85a691e206660bb9ad",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "af59892c5dd2c619dbc41cf6b309bd8bc575572a3f9507899c20b7469c5992b4",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CoursePresentation.ets": "eaf9efcb01cbc3dbda4d21e986bffb17e23a402f96be94673713728c706436ca",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets": "56202ccbf445251f0e16a29b769d72a393f2cc6521a558d7417ceed7b7b65c81",
+    "app开发/HarmonyOS/EvaDance/AppScope/app.json5": "9895f4a79fefa775f45780020273c116aa8f284892713aaaa301ec2086cfa1e1",
+    "app开发/HarmonyOS/EvaDance/scripts/course-media.test.cjs": "12c5ba93cf6fc6df52fbe9a6d320f70b3d3ff1f869e0e7ad8b8fe27d93a56578"
+  },
+  "limits": [
+    "安卓及鸿蒙本次完成编译和选择逻辑回归，实际导航交互尚未真机验收",
+    "新iOS11仅设备目标编译，尚未签名导出IPA；商店10不包含新功能",
+    "本次没有读取商店审核后台，不更新此前审核状态结论"
+  ]
+}

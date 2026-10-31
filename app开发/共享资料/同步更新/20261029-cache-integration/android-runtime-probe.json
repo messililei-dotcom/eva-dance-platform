@@ -1,0 +1,13 @@
+{
+  "platform": "android",
+  "device": "emulator-5554 arm64 simulator",
+  "keystoreRoundTrip": true,
+  "tamperRejected": true,
+  "licenseValid": true,
+  "resultCode": [
+    "-1"
+  ],
+  "runtimeFailure": [],
+  "downloadVerified": false,
+  "offlineDecryptionVerified": false
+}

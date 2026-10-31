@@ -1,0 +1,1896 @@
+--- recorded-snapshot/app开发/iOS/EvaDance/scripts/generate_project.py
++++ current/app开发/iOS/EvaDance/scripts/generate_project.py
+@@ -1,6 +1,7 @@
+ """Generate a dependency-free Xcode project. No signing identities or private data."""
+ from pathlib import Path
+ import hashlib, json, plistlib, os
++import runpy
+ root = Path(__file__).resolve().parents[1]
+ objects = {}
+ def oid(name): return hashlib.sha256(name.encode()).hexdigest()[:24].upper()
+@@ -19,6 +20,9 @@
+ product = put('product', 'PBXFileReference', explicitFileType='wrapper.application', path='EvaDance.app', sourceTree='BUILT_PRODUCTS_DIR')
+ products = put('products', 'PBXGroup', name='Products', children=[product], sourceTree='<group>')
+ vendor_refs=[]; vendor_builds=[]; optional_refs=[]; optional_resources=[]
++vod_loader = root.parents[1]/'共享资料/scripts/prepare_vod_config.py'
++vod_assets = runpy.run_path(str(vod_loader))['load_assets']('ios') if vod_loader.is_file() else None
++vod_info = Path.home()/'Library/Caches/SWOD/vod-ios/Info.local.plist'
+ # The client SDK scheme stays outside source and is bundled only in configured builds.
+ local_config=Path.home()/'.config/eva-app/ios-number-auth.json'
+ include_number_auth = os.environ.get('EVA_INCLUDE_NUMBER_AUTH', '1') == '1' and local_config.is_file()
+@@ -34,6 +38,10 @@
+     sdk_bundle_ref=put('authsdk-bundle','PBXFileReference',lastKnownFileType='wrapper.plug-in',path='Vendor/NumberAuth/ATAuthSDK.bundle',sourceTree='<group>')
+     optional_refs=[private_ref,sdk_bundle_ref]
+     optional_resources=[put('numberauth-config-build','PBXBuildFile',fileRef=private_ref),put('authsdk-bundle-build','PBXBuildFile',fileRef=sdk_bundle_ref)]
++if vod_assets:
++    for label, path in [('vod-license-cert', vod_assets['certificate']), ('vod-download-key', vod_assets['downloadKey'])]:
++        ref=put(label,'PBXFileReference',lastKnownFileType='file',path=path,sourceTree='<absolute>')
++        optional_refs.append(ref); optional_resources.append(put(label+'-build','PBXBuildFile',fileRef=ref))
+ group = put('root', 'PBXGroup', children=refs+vendor_refs+[privacy, assets]+optional_refs+[products], sourceTree='<group>')
+ package = put('local-package', 'XCLocalSwiftPackageReference', relativePath='.')
+ dependency = put('core-product', 'XCSwiftPackageProductDependency', package=package, productName='EvaCore')
+@@ -66,7 +74,7 @@
+         'PRODUCT_BUNDLE_IDENTIFIER':'cn.com.swod.app', 'PRODUCT_NAME':'$(TARGET_NAME)',
+         'MARKETING_VERSION':'1.0.0','CURRENT_PROJECT_VERSION':'8', 'IPHONEOS_DEPLOYMENT_TARGET':'16.0',
+         'TARGETED_DEVICE_FAMILY':'1,2', 'SDKROOT':'iphoneos','SUPPORTED_PLATFORMS':'iphoneos iphonesimulator',
+-        'SWIFT_VERSION':'5.0','CODE_SIGN_STYLE':'Automatic','INFOPLIST_FILE':'Resources/Info.plist',
++        'SWIFT_VERSION':'5.0','CODE_SIGN_STYLE':'Automatic','INFOPLIST_FILE':str(vod_info) if vod_assets else 'Resources/Info.plist',
+         'GENERATE_INFOPLIST_FILE':'NO', 'SWIFT_OPTIMIZATION_LEVEL':'-Onone' if mode=='Debug' else '-O',
+         'ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon',
+         'SWIFT_ACTIVE_COMPILATION_CONDITIONS':'DEBUG' if mode=='Debug' else '',
+@@ -113,6 +121,9 @@
+ info['SWODWeChatUniversalLink'] = wechat['universalLink']
+ info['SWODWeChatLoginEnabled'] = False
+ (root/'Resources/Info.plist').write_bytes(plistlib.dumps(info,sort_keys=False))
++if vod_assets:
++    private_info=info.copy();private_info['AlivcLicenseFile']='AliVideoCert.crt';private_info['AlivcLicenseKey']=vod_assets['licenseKey']
++    vod_info.parent.mkdir(parents=True,exist_ok=True);vod_info.write_bytes(plistlib.dumps(private_info,sort_keys=False));vod_info.chmod(0o600)
+ # Static SDK frameworks do not copy their privacy manifests into the app.
+ # Merge the shipped device manifests; do not silently omit required API reasons.
+ privacy={'NSPrivacyTracking':False,'NSPrivacyTrackingDomains':[],'NSPrivacyCollectedDataTypes':[{'NSPrivacyCollectedDataType':kind, 'NSPrivacyCollectedDataTypeLinked':True, 'NSPrivacyCollectedDataTypeTracking':False, 'NSPrivacyCollectedDataTypePurposes':['NSPrivacyCollectedDataTypePurposeAppFunctionality']} for kind in ['NSPrivacyCollectedDataTypePhoneNumber','NSPrivacyCollectedDataTypeUserID','NSPrivacyCollectedDataTypeProductInteraction','NSPrivacyCollectedDataTypeName','NSPrivacyCollectedDataTypePhysicalAddress','NSPrivacyCollectedDataTypeOtherUserContent','NSPrivacyCollectedDataTypePurchaseHistory','NSPrivacyCollectedDataTypeAudioData','NSPrivacyCollectedDataTypeOtherDataTypes','NSPrivacyCollectedDataTypeFitness']], 'NSPrivacyAccessedAPITypes':[]}
+@@ -143,5 +154,11 @@
+             privacy['NSPrivacyAccessedAPITypes'].append(declaration.copy())
+         else:
+             existing['NSPrivacyAccessedAPITypeReasons'] = sorted(set(existing['NSPrivacyAccessedAPITypeReasons'] + declaration.get('NSPrivacyAccessedAPITypeReasons', [])))
++# Local elapsed-time lease validation and pre-download capacity checks. These
++# device signals remain local; neither is an analytics or fingerprinting input.
++for kind, reason in [('NSPrivacyAccessedAPICategorySystemBootTime','35F9.1'), ('NSPrivacyAccessedAPICategoryDiskSpace','E174.1')]:
++    row = next((row for row in privacy['NSPrivacyAccessedAPITypes'] if row['NSPrivacyAccessedAPIType'] == kind), None)
++    if row is None: privacy['NSPrivacyAccessedAPITypes'].append({'NSPrivacyAccessedAPIType':kind,'NSPrivacyAccessedAPITypeReasons':[reason]})
++    elif reason not in row['NSPrivacyAccessedAPITypeReasons']: row['NSPrivacyAccessedAPITypeReasons'].append(reason)
+ (root/'Resources/PrivacyInfo.xcprivacy').write_bytes(plistlib.dumps(privacy,sort_keys=False))
+ print('Generated EvaDance.xcodeproj (unsigned; privacy matches included components; store answers still require review)')
+--- recorded-snapshot/app开发/iOS/EvaDance/Sources/EvaDanceApp/Session.swift
++++ current/app开发/iOS/EvaDance/Sources/EvaDanceApp/Session.swift
+@@ -40,6 +40,7 @@
+     let publicTransport: APIClient
+     let isFixture: Bool
+     lazy var api = SessionClient(session: self)
++    lazy var videoCache = CourseCacheStore(session: self)
+     private var refreshTask: Task<Login, Error>?
+     private var generation = 0
+     init() {
+@@ -80,6 +81,7 @@
+         try store(result); showLogin = false
+     }
+     private func store(_ value: Login) throws {
++        if credentials?.memberId != value.memberId || credentials?.sessionId != value.sessionId { videoCache.purge() }
+         let data = try JSONEncoder().encode(value)
+         try TokenStore.save(String(decoding: data, as: UTF8.self)); credentials = value
+         unlockedSeries = []; courseAccessReady = false; Task { await refreshCourseAccess() }
+@@ -101,7 +103,7 @@
+         clear()
+         if let old { Task { let _: Empty? = try? await transport.request("/auth/logout", token: old, method: "POST", body: Data("{}".utf8)) } }
+     }
+-    func clear() { generation += 1; refreshTask?.cancel(); refreshTask = nil; TokenStore.delete(); credentials = nil; unlockedSeries = []; accessAccount = nil; courseAccessReady = true }
++    func clear() { generation += 1; videoCache.purge(); refreshTask?.cancel(); refreshTask = nil; TokenStore.delete(); credentials = nil; unlockedSeries = []; accessAccount = nil; courseAccessReady = true }
+     func handle(_ error: Error) {
+         // Closing a login sheet or replacing the account cancels obsolete view requests.
+         guard !(error is CancellationError), (error as? URLError)?.code != .cancelled else { return }
+--- recorded-snapshot/app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
++++ current/app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
+@@ -234,7 +234,7 @@
+                 Form {
+                     Section {
+                         Text("缓存联网时自动续期，可连续离线观看最长 24 小时。学习权益到期或撤销后停止使用。").font(.footnote).foregroundStyle(.secondary)
+-                        Text("课程安全缓存尚未开放，请先在线观看").font(.subheadline)
++                        CourseCacheActions(cache: session.videoCache, lessonID: lessonID, title: title, course: courseTitle)
+                     } header: { Text("课程缓存") }
+                     Toggle("镜面练习", isOn: $mirror)
+                     Toggle("循环本节", isOn: $model.loop)
+--- recorded-snapshot/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift
++++ current/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift
+@@ -25,6 +25,7 @@
+                     NavigationLink("我的订单") { ShopOrdersView() }
+                 }
+                 Section("我的课程") {
++                    NavigationLink("课程缓存 · 离线观看") { CourseCacheView(cache: session.videoCache) }
+                     LoadState(store: courses) { Task { await load() } }
+                     ForEach(courses.data.rows) { item in
+                         if let id = Int(item.value["series_id"].text), id > 0 {
+--- recorded-snapshot/app开发/iOS/EvaDance/Sources/EvaDanceApp/AliyunSecureCacheDriver.swift
++++ current/app开发/iOS/EvaDance/Sources/EvaDanceApp/AliyunSecureCacheDriver.swift
+@@ -31,7 +31,8 @@
+         AliPrivateService.initKey(Bundle.main.path(forResource: "encryptedApp", ofType: "dat"))
+         let worker = AliMediaDownloader()!; downloader = worker; worker.delegate = self; worker.setSaveDirectory(directory.path)
+         let source = AVPVidAuthSource(); source.vid = vodID; source.playAuth = playAuth
+-        guardTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in guard let self else { return }; if !self.allowed() { self.fail("缓存授权待联网更新") } }
++        guardTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in guard let self else { return }; if !self.allowed() { self.fail("缓存授权待联网更新") }
++            else if CourseCacheVault.bytes(URL(fileURLWithPath: self.directoryPath)) > self.maximumBytes { self.fail("缓存超出容量限制，请删除不需要的缓存") } }
+         worker.prepare(withPlayAuth: source)
+     }
+     func onPrepared(_ downloader: AliMediaDownloader!, mediaInfo info: AVPMediaInfo!) {
+@@ -50,7 +51,7 @@
+             guard let self, self.downloader === downloader else { return }; guard self.allowed(), let path = downloader.downloadedFilePath else { self.fail("缓存授权已变化"); return }
+             let file = URL(fileURLWithPath: path).resolvingSymlinksInPath()
+             let root = self.directoryPath
+-            guard file.path.hasPrefix(root), let size = try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > 0, size <= self.maximumBytes else { self.fail("缓存文件无效或超出容量限制"); return }
++            guard file.path.hasPrefix(root), let size = try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > 0, CourseCacheVault.bytes(URL(fileURLWithPath: root)) <= self.maximumBytes else { self.fail("缓存文件无效或超出容量限制"); return }
+             do { try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: file.path) } catch { self.fail("无法安全保存缓存"); return }
+             let callback = self.finished; self.stop(); callback(.success(file))
+         }
+--- recorded-snapshot/app开发/iOS/EvaDance/Sources/EvaCore/APIClient.swift
++++ current/app开发/iOS/EvaDance/Sources/EvaCore/APIClient.swift
+@@ -1,12 +1,13 @@
+ import Foundation
+ 
+ public enum APIError: LocalizedError {
+-    case sessionExpired, denied, invalidResponse, cacheInvalid, service(String)
++    case sessionExpired, denied, invalidResponse, cacheInvalid, progressConflict, service(String)
+     public var errorDescription: String? {
+         switch self {
+         case .sessionExpired: return "登录已过期，请重新登录。"
+         case .denied: return "当前账号没有此内容的有效权限。"
+         case .cacheInvalid: return "缓存内容或学习状态已变化，请联网重新验证。"
++        case .progressConflict: return "其他设备已更新学习进度，将自动采用较新的记录。"
+         case .invalidResponse: return "服务返回异常，请稍后重试。"
+         case .service(let text): return text
+         }
+@@ -54,6 +55,7 @@
+         if http.statusCode == 401 { throw APIError.sessionExpired }
+         if http.statusCode == 403 { throw APIError.denied }
+         if path.hasSuffix("/cache-authorization"), [404,409,410].contains(http.statusCode) { throw APIError.cacheInvalid }
++        if path.hasSuffix("/progress"), http.statusCode == 409 { throw APIError.progressConflict }
+         if http.statusCode == 429 { throw APIError.service("请求较多，请稍后重试。") }
+         guard (200..<300).contains(http.statusCode) else {
+             let failure = try? JSONDecoder().decode(APIEnvelope<Empty>.self, from: data)
+--- recorded-snapshot/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/Api.java
++++ current/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/Api.java
+@@ -23,12 +23,14 @@
+     public synchronized long accountGeneration(){return generation;}
+     public synchronized String learningCode(){String id=session==null?"":session.optString("sessionId");return "SWOD · 学习码 "+(id.length()>=8?id.substring(id.length()-8).toUpperCase(java.util.Locale.ROOT):"未登录");}
+     public synchronized boolean loggedIn() { return session != null; }
+-    public synchronized void accept(JSONObject credentials) throws Exception { if (!Policy.sessionTokens(credentials.optString("token"), credentials.optString("refreshToken"))) throw new Failure(502, "登录响应无效，请重试"); JSONObject copy = new JSONObject(credentials.toString()); vault.save(copy.toString()); session = copy; generation++; }
++    public synchronized long memberID(){return session==null?0:session.optLong("memberId");}
++    public synchronized String sessionID(){return session==null?"":session.optString("sessionId");}
++    public synchronized void accept(JSONObject credentials) throws Exception { if (!Policy.sessionTokens(credentials.optString("token"), credentials.optString("refreshToken"))) throw new Failure(502, "登录响应无效，请重试"); JSONObject copy = new JSONObject(credentials.toString()); vault.save(copy.toString()); session = copy; generation++; CourseCacheManager.clearExisting(); }
+     private synchronized Object currentResult(Object result, long version, boolean auth) throws Failure {
+         if (auth && (version != generation || session == null)) throw new Failure(401, "账号已切换，请重新打开此页面");
+         return result;
+     }
+-    public synchronized void clear() { generation++; session = null; vault.clear(); }
++    public synchronized void clear() { generation++; session = null; vault.clear(); CourseCacheManager.clearExisting(); }
+     public void logout() throws Exception { String old; synchronized(this) { old = session == null ? null : session.optString("token"); clear(); } if (old != null) exchange("/auth/logout", "POST", new JSONObject(), old, false); }
+     public Object request(String path, String method, JSONObject body, boolean auth) throws Exception {
+         if (!Policy.safePath(path)) throw new Failure(400, "接口地址无效");
+--- recorded-snapshot/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ current/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -288,7 +288,7 @@
+     private void order(String id){begin("订单详情");String path="/shop/orders/"+Uri.encode(id);load(path,"GET",null,true,v->{JSONObject r=object(v).optJSONObject("order");if(r==null)throw new Exception("订单不存在");hero("订单 "+r.optString("id"),Commerce.status(r.optString("status"),r.optString("kind")));info("合计 ¥"+Commerce.money(r.optLong("totalFen")));JSONArray items=array(r.opt("items"));for(int i=0;i<items.length();i++){JSONObject item=items.getJSONObject(i);card(content,item.optString("name"),"¥"+Commerce.money(item.optLong("unit_fen"))+" × "+item.optInt("quantity"),null);}info(first(r,"createdAt"));info(first(r,"carrier")+" "+first(r,"trackingNo"));info(first(r,"recipient")+" · "+mask(r.optString("phone"))+" · "+first(r,"address"));JSONObject shipping=r.optJSONObject("shipping");if(shipping!=null)info(first(shipping,"recipient")+" · "+mask(shipping.optString("phone"))+" · "+shipping.optString("address"));action("同步最新订单状态",()->memberWrite(path+"/refresh","POST",body(),()->order(id)));String state=r.optString("status");if(state.equals("pending"))action("取消订单",()->confirm("确认取消此订单？",()->memberWrite(path+"/cancel","POST",body(),()->order(id))));if(state.equals("shipped")&&r.optString("kind").equals("goods"))action("确认收货",()->confirm("请确认已经收到商品",()->memberWrite(path+"/received","POST",body(),()->order(id))));if(Commerce.refundable(state)){EditText reason=field(content,"退款原因",false);action("申请退款",()->{String message=reason.getText().toString().trim();if(message.isEmpty()||message.length()>300){info("请填写300字以内退款原因");return;}confirm("确认提交退款申请？结果以平台审核为准",()->memberWrite(path+"/refund","POST",body("reason",message),()->order(id)));});}});}
+     private void memberWrite(String path,String method,JSONObject body,Runnable next){if(memberWriteBusy)return;memberWriteBusy=true;int version=generation;io.execute(()->{try{api.request(path,method,body,true);runOnUiThread(()->{memberWriteBusy=false;if(version==generation&&!isFinishing()){page=next;next.run();}});}catch(Exception e){runOnUiThread(()->{memberWriteBusy=false;if(version==generation&&!isFinishing())info(e.getMessage());});}});}
+     private void profileEditor(){begin("个人资料");load("/member/profile","GET",null,true,v->{JSONObject r=object(v);info("手机号 "+mask(r.optString("phone"))+" · 资料与官网同步");String[] keys={"name","gender","birthday","country","province","city","address"},labels={"姓名","性别（男/女/其他，选填）","生日（YYYY-MM-DD，选填）","国家/地区","省份/地区","城市","详细地址"};EditText[] inputs=new EditText[keys.length];for(int i=0;i<keys.length;i++){inputs[i]=field(content,labels[i],false);inputs[i].setText(first(r,keys[i]));}action("保存个人资料",()->{JSONObject draft=body();for(int i=0;i<keys.length;i++){String value=inputs[i].getText().toString().trim();if(value.length()>300||(i==0&&(value.isEmpty()||value.length()>60))){info("请填写姓名，单项资料不能超过300字");return;}try{draft.put(keys[i],value);}catch(Exception ignored){}}String birthday=inputs[2].getText().toString().trim();if(!birthday.isEmpty()){try{java.time.LocalDate date=java.time.LocalDate.parse(birthday);if(date.isAfter(java.time.LocalDate.now()))throw new Exception();}catch(Exception e){info("请填写有效生日 YYYY-MM-DD");return;}}memberWrite("/member/profile","PUT",draft,this::account);});});}
+-    private void account(){begin("个人中心");if(!api.loggedIn()){hero("欢迎来到伊娃东方舞","登录后同步课程、比赛、证书与订单");action("手机号登录",()->open(this::login));}else{LinearLayout summary=column();content.addView(summary);load("/member/profile","GET",null,true,v->{JSONObject r=object(v);card(summary,first(r,"name"),mask(r.optString("phone"))+" · "+first(r,"level"),()->open(this::profileEditor));JSONObject stats=r.optJSONObject("stats");if(stats!=null)card(summary,"我的学习","线上课 "+stats.optInt("authorized_count")+" · 已学完 "+stats.optInt("completed_count")+" · 线下剩余 "+stats.optInt("offline_remaining_sessions")+" 课时",null);});section("个人资料");action("个人资料",()->open(this::profileEditor));action("我的比赛",()->open(this::myEvents));action("我的订单",()->open(this::orders));section("我的课程");LinearLayout courseRows=column();content.addView(courseRows);load("/member/authorized-series","GET",null,true,v->{if(!(v instanceof JSONArray))throw new Exception();JSONArray owned=(JSONArray)v;for(int n=0;n<owned.length();n++){JSONObject r=owned.getJSONObject(n);int id=CourseAccessPolicy.canonicalId(r.opt("series_id"));if(id<=0)continue;int at=courseRows.getChildCount();card(courseRows,first(r,"series_name","name"),"继续学习",()->open(()->catalog(id,first(r,"series_name","name"))));unlockedBadge((LinearLayout)courseRows.getChildAt(at),14);}if(owned.length()==0)courseRows.addView(text("暂无已解锁课程",14));});action("查看全部课程与学习记录",()->open(this::myCourses));section("线下课与证书");action("我的线下课 · 课时与核销",()->open(this::schedule));action("我的证书",()->open(this::certificates));section("更多学习服务");action("学习消息",()->open(()->messages(0)));action("学习笔记",()->open(()->learningRecords(false)));action("学习书签",()->open(()->learningRecords(true)));action("成长档案",()->open(()->records("成长档案","/member/growth","",null)));section("账号与安全");action("登录设备",()->open(this::devices));action("注销账号",()->open(this::deletion));action("退出登录",()->confirm("退出当前账号？",()->{generation++;io.execute(()->{try{api.logout();}catch(Exception ignored){}runOnUiThread(()->{history.clear();page=this::account;account();});});}));}section("更多服务");action("客服与售后",()->open(this::support));action("东方舞圈与品牌服务",()->open(this::website));action("工作人员 · 赛事管理",()->open(this::staffHome));action("关于 SWOD",()->open(this::about));action("隐私政策",()->open(()->legalDocument("隐私政策","app-privacy.txt")));action("服务条款",()->open(()->legalDocument("服务条款","app-terms.txt")));info("SWOD "+ReleaseInfo.version(this));}
++    private void account(){begin("个人中心");if(!api.loggedIn()){hero("欢迎来到伊娃东方舞","登录后同步课程、比赛、证书与订单");action("手机号登录",()->open(this::login));}else{LinearLayout summary=column();content.addView(summary);load("/member/profile","GET",null,true,v->{JSONObject r=object(v);card(summary,first(r,"name"),mask(r.optString("phone"))+" · "+first(r,"level"),()->open(this::profileEditor));JSONObject stats=r.optJSONObject("stats");if(stats!=null)card(summary,"我的学习","线上课 "+stats.optInt("authorized_count")+" · 已学完 "+stats.optInt("completed_count")+" · 线下剩余 "+stats.optInt("offline_remaining_sessions")+" 课时",null);});section("个人资料");action("个人资料",()->open(this::profileEditor));action("我的比赛",()->open(this::myEvents));action("我的订单",()->open(this::orders));section("我的课程");action("课程缓存 · 离线观看",()->startActivity(new Intent(this,CourseCacheActivity.class)));LinearLayout courseRows=column();content.addView(courseRows);load("/member/authorized-series","GET",null,true,v->{if(!(v instanceof JSONArray))throw new Exception();JSONArray owned=(JSONArray)v;for(int n=0;n<owned.length();n++){JSONObject r=owned.getJSONObject(n);int id=CourseAccessPolicy.canonicalId(r.opt("series_id"));if(id<=0)continue;int at=courseRows.getChildCount();card(courseRows,first(r,"series_name","name"),"继续学习",()->open(()->catalog(id,first(r,"series_name","name"))));unlockedBadge((LinearLayout)courseRows.getChildAt(at),14);}if(owned.length()==0)courseRows.addView(text("暂无已解锁课程",14));});action("查看全部课程与学习记录",()->open(this::myCourses));section("线下课与证书");action("我的线下课 · 课时与核销",()->open(this::schedule));action("我的证书",()->open(this::certificates));section("更多学习服务");action("学习消息",()->open(()->messages(0)));action("学习笔记",()->open(()->learningRecords(false)));action("学习书签",()->open(()->learningRecords(true)));action("成长档案",()->open(()->records("成长档案","/member/growth","",null)));section("账号与安全");action("登录设备",()->open(this::devices));action("注销账号",()->open(this::deletion));action("退出登录",()->confirm("退出当前账号？",()->{generation++;io.execute(()->{try{api.logout();}catch(Exception ignored){}runOnUiThread(()->{history.clear();page=this::account;account();});});}));}section("更多服务");action("客服与售后",()->open(this::support));action("东方舞圈与品牌服务",()->open(this::website));action("工作人员 · 赛事管理",()->open(this::staffHome));action("关于 SWOD",()->open(this::about));action("隐私政策",()->open(()->legalDocument("隐私政策","app-privacy.txt")));action("服务条款",()->open(()->legalDocument("服务条款","app-terms.txt")));info("SWOD "+ReleaseInfo.version(this));}
+     private void learningRecords(boolean bookmarks){begin(bookmarks?"学习书签":"学习笔记");String path=bookmarks?"/bookmarks":"/notes";load(path+"/all","GET",null,true,v->{JSONArray rows=array(v);for(int i=0;i<rows.length();i++){JSONObject r=rows.getJSONObject(i);card(content,first(r,"course_name","video_name","series_name"),first(r,"content","label")+" · "+r.optInt("timestamp_seconds")+"秒",()->playAt(r.optInt("video_id"),first(r,"course_name","video_name"),r.optInt("timestamp_seconds")));action("删除此"+(bookmarks?"书签":"笔记"),()->confirm("确认删除此记录？",()->memberWrite(path+"/"+r.optInt("id"),"DELETE",body(),()->learningRecords(bookmarks))));}if(rows.length()==0)info("暂无记录");});}
+     private void legalDocument(String name,String asset){begin(name);try{TextView body=text(ReleaseInfo.read(this,asset),16);body.setTextIsSelectable(true);content.addView(body);}catch(Exception error){info("文件读取失败，请返回重试");}}
+     private void about(){begin("关于 SWOD");JSONObject info=ReleaseInfo.data(this);hero("SWOD",ReleaseInfo.version(this));info(info.optString("operator"));action(info.optString("filingNumber"),()->link("https://beian.miit.gov.cn/"));action("隐私政策",()->open(()->legalDocument("隐私政策","app-privacy.txt")));action("服务条款",()->open(()->legalDocument("服务条款","app-terms.txt")));action("服务商与数据清单",()->open(()->legalDocument("服务商与数据清单","app-processors.txt")));action("官方客服",()->link(info.optString("supportURL")));action("撤回隐私授权",()->confirm("撤回将清除本地登录并停止使用 App。服务器账号不会因此自动注销，注销请使用个人中心的独立入口。",()->{generation++;io.execute(()->{try{api.logout();}catch(Exception ignored){}runOnUiThread(()->{if(!PrivacyConsent.revoke(this)){Toast.makeText(this,"保存失败，请重试撤回",Toast.LENGTH_LONG).show();return;}history.clear();recreate();});});}));}
+--- recorded-snapshot/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java
++++ current/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java
+@@ -101,7 +101,8 @@
+         Spinner speed=new Spinner(this);speed.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"0.75×","1.0×","1.25×","1.5×"}));speed.setSelection(1);actions.addView(speed);settings.addView(actions);content.addView(settings);
+         Spinner quality=new Spinner(this);quality.setContentDescription("视频清晰度");settings.addView(quality);
+         settings.addView(label("课程缓存联网时自动续期，可连续离线观看最长 24 小时；学习权益到期或撤销后停止使用。",14,true));
+-        settings.addView(label("课程安全缓存尚未开放，请先在线观看",14,true));
++        Button downloadCache=new Button(this);downloadCache.setText("缓存当前课节");downloadCache.setOnClickListener(v->{CourseCacheManager cache=CourseCacheManager.get(this);cache.download(lesson,getIntent().getStringExtra("title"),getIntent().getStringExtra("seriesTitle"));android.widget.Toast.makeText(this,cache.message,android.widget.Toast.LENGTH_LONG).show();});settings.addView(downloadCache);
++        Button manageCache=new Button(this);manageCache.setText("管理课程缓存");manageCache.setOnClickListener(v->startActivity(new Intent(this,CourseCacheActivity.class)));settings.addView(manageCache);
+         LinearLayout tabBar=new LinearLayout(this);tabBar.setBackground(SwodUi.shape(this,SwodUi.surface(this),12));content.addView(tabBar);
+         String[] labels={"目录("+(playlistIds==null?0:playlistIds.length)+"节)","笔记","简介"};
+         for(int i=0;i<labels.length;i++){final int at=i;Button button=new Button(this);button.setText(labels[i]);button.setTextSize(15);button.setAllCaps(false);button.setMinHeight(dp(48));button.setOnClickListener(v->selectTab(at));tabs.add(button);tabBar.addView(button,new LinearLayout.LayoutParams(0,-2,1));}
+--- recorded-snapshot/app开发/HarmonyOS/EvaDance/scripts/platform-api.test.cjs
++++ current/app开发/HarmonyOS/EvaDance/scripts/platform-api.test.cjs
+@@ -5,6 +5,9 @@
+ const ts = require(path.resolve(__dirname, '../../../../10-统一平台admin-platform/node_modules/typescript'));
+ 
+ function fixture() {
++  const vault = { value: undefined, wait: undefined, async read(){return this.value;}, async save(value){if(value && this.wait)await this.wait;this.value=value;} };
++  class FakeVault { async read(){return vault.read();} async save(value){return vault.save(value);} }
++
+   const calls = [], redirects = [], sessions = [];
+   const replies = [];
+   const response = async (transport, request) => {
+@@ -48,13 +51,31 @@
+     if (name === '@kit.NetworkKit') return { http };
+     if (name === '@kit.RemoteCommunicationKit') return { rcp };
+     if (name === '@kit.ArkTS') return { util: {} };
++    if (name.endsWith('HuksVault')) return {HuksVault: FakeVault};
+     throw new Error('Unexpected dependency: ' + name);
+   }, module, module.exports);
+   const api = new module.exports.PlatformApi();
++  api.vault = new FakeVault();
+   api.credentials = { token: 'fixture-a', refreshToken: 'fixture-refresh', memberId: 1, sessionId: 'fixture-session', expiresAt: 0 };
+-  return { api, calls, replies, sessions, redirects, coverImageURL: module.exports.coverImageURL,
++  return { api, vault, calls, replies, sessions, redirects, coverImageURL: module.exports.coverImageURL,
+     externalURLAllowed: module.exports.externalURLAllowed };
+ }
++
++test('cancel during protected credential write restores the previous session on disk', async()=>{
++  const f=fixture();const original=f.api.credentials;let release;let active=true;
++  f.vault.wait=new Promise(resolve=>{release=resolve;});
++  f.replies.push({status:200,data:{success:true,data:{token:'new-access',refreshToken:'new-refresh',memberId:9,sessionId:'new-session'}}});
++  const pending=f.api.loginWithPassword('13800000000','fixture-password',()=>active);
++  await new Promise(resolve=>setImmediate(resolve));active=false;release();
++  await assert.rejects(pending,/已取消/);assert.equal(f.api.credentials,original);assert.equal(JSON.parse(f.vault.value).memberId,original.memberId);
++});
++test('logout during protected credential write cannot restore an account on restart', async()=>{
++  const f=fixture();let release;f.vault.wait=new Promise(resolve=>{release=resolve;});
++  f.replies.push({status:200,data:{success:true,data:{token:'new-access',refreshToken:'new-refresh',memberId:9,sessionId:'new-session'}}});
++  const pending=f.api.loginWithPassword('13800000000','fixture-password');
++  await new Promise(resolve=>setImmediate(resolve));f.api.clear();release();
++  await assert.rejects(pending,/已取消|已切换/);assert.equal(f.api.credentials,undefined);assert.equal(f.vault.value,'');
++});
+ 
+ test('external link policy permits the filing query and retains the existing trusted destinations', () => {
+   const { externalURLAllowed } = fixture();
+@@ -68,7 +89,7 @@
+ 
+ test('member password login uses the review-capable app endpoint and replaces the session', async () => {
+   const f = fixture();
+-  f.replies.push({ status: 200, data: { success: true, data: { token: 'review-token', refreshToken: 'review-refresh', memberId: 5364 } } });
++  f.replies.push({ status: 200, data: { success: true, data: { token: 'review-token', refreshToken: 'review-refresh', memberId: 5364, sessionId: 'fixture-session' } } });
+   await f.api.loginWithPassword('19999990001', 'fixture-secret');
+   assert.equal(f.calls.length, 1);
+   assert.equal(f.calls[0].url, 'https://admin.swod.com.cn/api/app/v1/auth/password-login');
+@@ -80,7 +101,7 @@
+ 
+ test('carrier login sends only the operator token and accepts server-owned identity', async () => {
+   const f = fixture();
+-  f.replies.push({ status: 200, data: { success: true, data: { token: 'carrier-access', refreshToken: 'carrier-refresh', memberId: 2 } } });
++  f.replies.push({ status: 200, data: { success: true, data: { token: 'carrier-access', refreshToken: 'carrier-refresh', memberId: 2, sessionId: 'fixture-session' } } });
+   await f.api.loginWithCarrier('operator-issued-token');
+   assert.equal(f.calls[0].url, 'https://admin.swod.com.cn/api/app/v1/auth/one-tap');
+   assert.deepEqual(JSON.parse(f.calls[0].options.extraData), { accessToken: 'operator-issued-token', deviceName: 'SWOD HarmonyOS' });
+@@ -90,7 +111,7 @@
+ test('a late carrier login response cannot restore a cleared account', async () => {
+   const f = fixture(); let release;
+   const wait = new Promise(resolve => { release = resolve; });
+-  f.replies.push({ wait, status: 200, data: { success: true, data: { token: 'late-access', refreshToken: 'late-refresh', memberId: 2 } } });
++  f.replies.push({ wait, status: 200, data: { success: true, data: { token: 'late-access', refreshToken: 'late-refresh', memberId: 2, sessionId: 'fixture-session' } } });
+   const pending = f.api.loginWithCarrier('operator-issued-token');
+   f.api.clear(); release();
+   await assert.rejects(pending, /账号已切换/);
+@@ -99,7 +120,7 @@
+ 
+ test('an incomplete carrier response never creates a logged-in account', async () => {
+   const f = fixture(); f.api.clear();
+-  f.replies.push({ status: 200, data: { success: true, data: { token: 'missing-refresh', memberId: 2 } } });
++  f.replies.push({ status: 200, data: { success: true, data: { token: 'missing-refresh', memberId: 2, sessionId: 'fixture-session' } } });
+   await assert.rejects(f.api.loginWithCarrier('operator-issued-token'), /登录响应无效/);
+   assert.equal(f.api.credentials, undefined);
+ });
+@@ -181,7 +202,7 @@
+       const original = f.api.credentials;
+       const wait = new Promise(resolve => { release = resolve; });
+       f.replies.push({ status: 200, wait, data: { success: true, data: {
+-        token: 'late-token', refreshToken: 'late-refresh', memberId: 99
++        token: 'late-token', refreshToken: 'late-refresh', memberId: 99, sessionId: 'fixture-session'
+       } } });
+       const active = () => current;
+       const pending = method === 'sms' ? f.api.login('13800000000', '123456', active) :
+--- recorded-snapshot/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/PlatformApi.ets
++++ current/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/PlatformApi.ets
+@@ -3,6 +3,8 @@
+ 
+ import { util } from '@kit.ArkTS';
+ import { Credentials, StaffCredentials, Envelope, WriteBody } from './Models';
++import { common } from '@kit.AbilityKit';
++import { HuksVault } from './HuksVault';
+ 
+ export type ApiMethod = http.RequestMethod | 'PATCH';
+ 
+@@ -37,8 +39,34 @@
+   return secureMedia(url) && (/^https:\/\/(www\.)?swod\.com\.cn\//.test(url) ||
+     url.startsWith('https://admin.swod.com.cn/api/certificates/') || url === 'https://beian.miit.gov.cn/');
+ }
+-/** Memory-only sessions until the HUKS credential vault has passed device acceptance. */
++/** Sessions and offline inventory use separate HUKS protected vaults. */
+ export class PlatformApi {
++  private vault?: HuksVault;
++  private credentialWrites: Promise<void> = Promise.resolve();
++  cacheInvalidation?: () => void;
++  screenProtected: boolean = false;
++  applicationActive: boolean = true;
++  async initialize(context: common.UIAbilityContext): Promise<void> {
++    this.vault = new HuksVault(context.filesDir, 'member-session');
++    try {
++      const saved = await this.vault.read();
++      if (saved) { const value = JSON.parse(saved) as Credentials; if (value.memberId > 0 && value.sessionId && value.token && value.refreshToken) this.credentials = value; }
++    } catch { this.credentials = undefined; }
++  }
++  private commit(value: Credentials, generation: number, isCurrent: () => boolean, rotation: boolean = false): Promise<void> {
++    const operation = this.credentialWrites.catch(() => {}).then(async () => {
++      if (!value.token || !value.refreshToken || !value.memberId || !value.sessionId || generation !== this.generation || !isCurrent() || !this.vault) throw new PlatformFailure('登录状态无效，请重试', 401);
++      if (rotation && (value.memberId !== this.credentials?.memberId || value.sessionId !== this.credentials?.sessionId)) throw new PlatformFailure('登录会话已变化', 401);
++      await this.vault.save(JSON.stringify(value));
++      if (generation !== this.generation || !isCurrent()) {
++        await this.vault.save(this.credentials ? JSON.stringify(this.credentials) : '');
++        throw new PlatformFailure('登录已取消或账号已切换', 401);
++      }
++      if (!rotation) { this.cacheInvalidation?.(); this.generation++; }
++      this.credentials = value;
++    });
++    this.credentialWrites = operation.catch(() => {}); return operation;
++  }
+   credentials?: Credentials;
+   staff?: StaffCredentials;
+   private generation: number = 0;
+@@ -47,21 +75,21 @@
+     const generation = this.generation;
+     const value = await this.request<Credentials>('/auth/login', http.RequestMethod.POST, { phone: phone, code: code, deviceName: '伊娃东方舞 HarmonyOS' });
+     if (generation !== this.generation || !isCurrent()) throw new PlatformFailure('登录已取消或账号已切换，请重试', 401);
+-    this.generation++; this.credentials = value;
++    await this.commit(value, generation, isCurrent);
+   }
+   async loginWithPassword(phone: string, password: string, isCurrent: () => boolean = () => true): Promise<void> {
+     const generation = this.generation;
+     const value = await this.request<Credentials>('/auth/password-login', http.RequestMethod.POST, { phone: phone, password: password, deviceName: '伊娃东方舞 HarmonyOS' });
+     if (generation !== this.generation || !isCurrent()) throw new PlatformFailure('登录已取消或账号已切换，请重试', 401);
+-    this.generation++; this.credentials = value;
++    await this.commit(value, generation, isCurrent);
+   }
+-  clear(): void { this.generation++; this.credentials = undefined; }
++  clear(): void { this.generation++; this.credentials = undefined; this.cacheInvalidation?.(); this.vault?.save('').catch(() => {}); }
+   async loginWithCarrier(accessToken: string, isCurrent: () => boolean = () => true): Promise<void> {
+     const generation = this.generation;
+     const value = await this.request<Credentials>('/auth/one-tap', http.RequestMethod.POST, { accessToken: accessToken, deviceName: 'SWOD HarmonyOS' });
+     if (generation !== this.generation || !isCurrent()) throw new PlatformFailure('登录已取消或账号已切换，请重试', 401);
+     if (!value.token || !value.refreshToken || !value.memberId) throw new PlatformFailure('登录响应无效，请重试', 502);
+-    this.generation++; this.credentials = value;
++    await this.commit(value, generation, isCurrent);
+   }
+   async logout(): Promise<void> {
+     const token = this.credentials?.token; this.clear();
+@@ -91,7 +119,7 @@
+         try {
+           const renewed = await this.refreshing;
+           if (generation !== this.generation) throw new PlatformFailure('账号已退出', 401);
+-          this.credentials = renewed;
++          await this.commit(renewed, generation, () => true, true);
+         } catch (failure) { if (failure instanceof PlatformFailure && failure.status === 401) this.clear(); throw failure instanceof Error ? failure : new PlatformFailure('请求失败，请重试', 500); }
+         finally { this.refreshing = undefined; }
+       }
+--- recorded-snapshot/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets
++++ current/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets
+@@ -39,6 +39,7 @@
+ }
+ export interface ShopItem { id: string; quantity: number; }
+ export interface WriteBody {
++  device_id?: string; material_version?: string;
+   accessToken?: string;
+   items?: ShopItem[]; recipient?: string; address?: string; deliveryMethod?: string;
+   targetId?: number; provider?: string; expectedTotalFen?: number;
+--- recorded-snapshot/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ current/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -10,6 +10,8 @@
+ import { eventCount, eventAggregate, eventDates, eventState } from '../services/EventPresentation';
+ import { SwodTheme } from '../services/SwodTheme';
+ import { AliyunSecureCacheDriver } from '../services/AliyunSecureCacheDriver';
++import { CourseCacheStore } from '../services/CourseCacheStore';
++import { CachedCourses } from './CachedCourses';
+ import { goodsInput, paymentURL, orderStatus } from '../services/ShopCheckout';
+ import { productPrice, productStock } from '../services/ProductPresentation';
+ 
+@@ -124,9 +126,13 @@
+   private lastCheckpoint: number = 0;
+   private checkpointPending: boolean = false;
+   private cacheDriver?: AliyunSecureCacheDriver;
++  private courseCache?: CourseCacheStore;
+ 
+-  aboutToAppear(): void { this.load(); }
+-  onPageShow(): void { if (!this.busy && (this.route.screen === 'home' || this.route.path.startsWith('/member/authorized-series'))) this.load(); }
++  aboutToAppear(): void {
++    this.courseCache = CourseCacheStore.shared(this.getUIContext().getHostContext() as common.UIAbilityContext, platform);
++    this.loggedIn = platform.credentials !== undefined; this.load();
++  }
++  onPageShow(): void { this.courseCache?.refresh(); if (!this.busy && (this.route.screen === 'home' || this.route.path.startsWith('/member/authorized-series'))) this.load(); }
+   aboutToDisappear(): void { if (this.smsTimer >= 0) clearInterval(this.smsTimer); this.carrierLogin.cancel(); this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.generation++; }
+   onBackPress(): boolean { if (this.history.length === 0) return false; this.back(); return true; }
+   private go(screen: string, title: string, path: string = '', auth: boolean = false, eventID: number = 0, groupID: number = 0, staff: boolean = false): void {
+@@ -759,6 +765,7 @@
+       else {
+         Text(this.detail.name || '我的学习空间').fontSize(18)
+         this.action('我的课程', () => this.go('records', '我的课程', '/member/authorized-series', true))
++        this.action('课程缓存 · 离线观看', () => this.go('cache', '课程缓存', '', true))
+         this.action('课时余额与核销记录', () => this.go('schedule', '期次课时', '/offline/overview', true))
+         this.action('我的比赛', () => this.go('myEvents', '我的比赛', '/member/events', true))
+         this.action('我的订单', () => this.go('shopOrders', '我的订单', '/shop/orders', true))
+@@ -809,6 +816,7 @@
+         this.action('提交报名与音乐', () => this.confirm('确认提交报名、节目名称与音乐？', () => { this.register(); }))
+       }
+     }
++    if (this.route.screen === 'cache' && this.courseCache) { CachedCourses({ cache: this.courseCache }) }
+     if (this.route.screen === 'catalog') {
+       if (this.unlockedSeries.includes(this.currentSeriesID()) && platform.credentials) {
+         Text('✓ 已解锁').fontSize(16).fontColor('#15803d')
+@@ -867,7 +875,8 @@
+       }.width('100%')
+       if (this.videoSettings) {
+         Text('课程缓存联网时自动续期，可连续离线观看最长 24 小时；学习权益到期或撤销后停止使用。').fontSize(14).fontColor(SwodTheme.muted)
+-        Text('课程安全缓存尚未开放，请先在线观看').fontSize(14).fontColor(SwodTheme.muted)
++        this.action('缓存当前课节', () => { this.courseCache?.download(Number(this.currentLessonID), this.route.title, this.videoCourseTitle).then(() => { this.go('cache', '课程缓存', '', true); }); })
++        this.action('管理课程缓存', () => this.go('cache', '课程缓存', '', true))
+         if (this.videoQualities.length > 1) {
+           Select(this.videoQualities.map((quality: MediaQuality): SelectOption => ({ value: quality.label }))).selected(this.videoQuality).value(this.videoQualities[this.videoQuality]?.label || '自动').onSelect((index: number) => {
+             if (index < 0 || index >= this.videoQualities.length || index === this.videoQuality) return;
+--- recorded-snapshot/app开发/HarmonyOS/EvaDance/entry/src/main/ets/entryability/EntryAbility.ets
++++ current/app开发/HarmonyOS/EvaDance/entry/src/main/ets/entryability/EntryAbility.ets
+@@ -16,6 +16,7 @@
+ import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
+ import { hilog } from '@kit.PerformanceAnalysisKit';
+ import { window } from '@kit.ArkUI';
++import { platform } from '../services/PlatformApi';
+ 
+ const DOMAIN = 0x0000;
+ 
+@@ -37,12 +38,15 @@
+     // Main window is created, set main page for this ability
+     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
+ 
+-    windowStage.loadContent('pages/Index', (err) => {
++    platform.initialize(this.context).then(async () => {
++      try { const main = await windowStage.getMainWindow(); await main.setWindowPrivacyMode(true); platform.screenProtected = true; } catch { platform.screenProtected = false; }
++      windowStage.loadContent('pages/Index', (err) => {
+       if (err.code) {
+         hilog.error(DOMAIN, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err));
+         return;
+       }
+       hilog.info(DOMAIN, 'testTag', 'Succeeded in loading the content.');
++      });
+     });
+   }
+ 
+@@ -52,12 +56,14 @@
+   }
+ 
+   onForeground(): void {
++    platform.applicationActive = true;
+     // Ability has brought to foreground
+     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onForeground');
+   }
+ 
+   onBackground(): void {
++    platform.applicationActive = false;
+     // Ability has back to background
+     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onBackground');
+   }
+-}+}
+--- recorded-snapshot/10-统一平台admin-platform/src/lib/server/aliyun-vod.ts
++++ current/10-统一平台admin-platform/src/lib/server/aliyun-vod.ts
+@@ -613,8 +613,18 @@
+ }
+ 
+ /** Only for the authenticated App cache gateway. Never return server AccessKeys or a source URL. */
++/** A rollout flag cannot prove cloud encryption. Mixed or clear streams fail closed. */
++export function validateVodOfflineStreams(response: any) {
++  const streams = response?.PlayInfoList?.PlayInfo;
++  if (response?.VideoBase?.Status !== 'Normal' || !Array.isArray(streams) || !streams.length ||
++      streams.some((row: any) => String(row?.Encrypt) !== '1' || !['m3u8','mp4'].includes(row?.Format))) {
++    throw new Error('本课节尚无完整的加密离线码流，请在线观看');
++  }
++}
+ export async function getVodDownloadPlayAuth(videoId: string, ttl = 300) {
+   if (!/^[a-fA-F0-9]{32}$/.test(videoId)) throw new Error('VOD ID 无效');
++  const info = await callVodRpc<any>('GetPlayInfo', {VideoId: videoId, Formats: 'm3u8,mp4', ResultType: 'Multiple', AuthTimeout: 100});
++  validateVodOfflineStreams(info);
+   const seconds = Math.min(300, Math.max(100, Math.floor(ttl)));
+   const response = await callVodRpc<any>('GetVideoPlayAuth', { VideoId: videoId, AuthInfoTimeout: seconds });
+   if (response?.VideoMeta?.Status !== 'Normal' || response?.VideoMeta?.VideoId !== videoId || typeof response.PlayAuth !== 'string' || !response.PlayAuth) {
+--- /dev/null
++++ current/app开发/iOS/EvaDance/Sources/EvaCore/VideoCacheClockAnchor.swift
+@@ -0,0 +1,16 @@
++import Foundation
++
++/// An elapsed clock is useful only within the same boot. An unknown boot fails closed.
++public struct VideoCacheClockAnchor: Codable, Equatable {
++    public let serverMS: Double
++    public let elapsedMS: Double
++    public let boot: String
++    public init(serverMS: Double, elapsedMS: Double, boot: String) {
++        self.serverMS = serverMS; self.elapsedMS = elapsedMS; self.boot = boot
++    }
++    public func now(elapsedMS current: Double, boot currentBoot: String) -> Double {
++        guard !boot.isEmpty, boot == currentBoot, serverMS.isFinite, elapsedMS.isFinite,
++              current.isFinite, current >= elapsedMS, elapsedMS >= 0 else { return .nan }
++        return serverMS + current - elapsedMS
++    }
++}
+--- /dev/null
++++ current/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheRecord.swift
+@@ -0,0 +1,33 @@
++import Foundation
++import EvaCore
++
++struct CourseCacheRecord: Codable, Identifiable {
++    var recordID = UUID().uuidString
++    var id: Int { lease.lesson_id }
++    var lease: VideoCacheLease
++    var title: String
++    var course: String
++    var relativeFile: String = ""
++    var state: String = "waiting"
++    var percent: Int = 0
++    var bytes: Int64 = 0
++    var position: Double = 0
++    var duration: Double = 0
++    var revision: Int = 0
++    var pendingProgress: Bool = false
++    var anchor: VideoCacheClockAnchor
++}
++
++struct CourseCacheAuthorization: Decodable {
++    struct Credential: Decodable { let play_auth: String }
++    let lease: VideoCacheLease
++    let credential: Credential?
++    let maxBytes: Int64
++    init(from decoder: Decoder) throws {
++        lease = try VideoCacheLease(from: decoder)
++        let box = try decoder.container(keyedBy: CodingKeys.self)
++        credential = try box.decodeIfPresent(Credential.self, forKey: .credential)
++        maxBytes = try box.decode(Int64.self, forKey: .maxBytes)
++    }
++    enum CodingKeys: String, CodingKey { case credential; case maxBytes = "max_bytes" }
++}
+--- /dev/null
++++ current/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheVault.swift
+@@ -0,0 +1,49 @@
++import Foundation
++import Security
++import Darwin
++import EvaCore
++
++enum CourseCacheVault {
++    private static var service: String { "cn.com.swod.app.offline." + (Bundle.main.bundleIdentifier ?? "unknown") }
++    static func read(_ account: String) -> Data? {
++        var result: CFTypeRef?
++        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
++            kSecAttrAccount as String: account, kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
++        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess else { return nil }
++        return result as? Data
++    }
++    static func write(_ data: Data, account: String) throws {
++        let key: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account]
++        let fields: [String: Any] = [kSecValueData as String: data, kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly]
++        let status = SecItemUpdate(key as CFDictionary, fields as CFDictionary)
++        if status == errSecItemNotFound {
++            guard SecItemAdd(key.merging(fields) { _, new in new } as CFDictionary, nil) == errSecSuccess else { throw failure }
++        } else if status != errSecSuccess { throw failure }
++    }
++    static var failure: Error { NSError(domain: "SWODCache", code: 1, userInfo: [NSLocalizedDescriptionKey: "无法安全保存课程缓存，请重试"]) }
++    static func bytes(_ directory: URL) -> Int64 {
++        guard let walk = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: [.fileSizeKey, .isRegularFileKey]) else { return 0 }
++        var total: Int64 = 0
++        for case let file as URL in walk {
++            guard let values = try? file.resourceValues(forKeys: [.fileSizeKey,.isRegularFileKey]) else { return .max }
++            if values.isRegularFile == true { total += Int64(values.fileSize ?? 0) }
++        }
++        return total
++    }
++    static func elapsed() -> Double {
++        var info = mach_timebase_info_data_t(); mach_timebase_info(&info)
++        return Double(mach_continuous_time()) * Double(info.numer) / Double(info.denom) / 1_000_000
++    }
++    static func boot() -> String {
++        var value = timeval(); var size = MemoryLayout<timeval>.size
++        guard sysctlbyname("kern.boottime", &value, &size, nil, 0) == 0 else { return "" }
++        return "\(value.tv_sec):\(value.tv_usec)"
++    }
++    static func device() throws -> String {
++        if let data = read("installation"), let value = String(data: data, encoding: .utf8), value.range(of: "^[a-f0-9]{64}$", options: .regularExpression) != nil { return value }
++        var bytes = [UInt8](repeating: 0, count: 32)
++        guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else { throw failure }
++        let value = bytes.map { String(format: "%02x", $0) }.joined()
++        try write(Data(value.utf8), account: "installation"); return value
++    }
++}
+--- /dev/null
++++ current/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheStore.swift
+@@ -0,0 +1,177 @@
++import SwiftUI
++import Network
++import EvaCore
++
++@MainActor final class CourseCacheStore: ObservableObject {
++    @Published private(set) var records: [CourseCacheRecord] = []
++    @Published var message = ""
++    @Published private(set) var downloading: Int?
++    unowned private let session: Session
++    private var renewals: [Int: AutomaticVideoCacheRenewal] = [:]
++    private let monitor = NWPathMonitor()
++    private var loop: Task<Void, Never>?
++    private var online = true
++    private var generation = 0
++    #if os(iOS) && !targetEnvironment(simulator)
++    private let driver = AliyunSecureCacheDriver()
++    #endif
++    let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("course-cache", isDirectory: true)
++    init(session: Session) {
++        self.session = session
++        if let data = CourseCacheVault.read("inventory"), let value = try? JSONDecoder().decode([CourseCacheRecord].self, from: data) { records = value }
++        // An interrupted download is never represented as a completed file.
++        for i in records.indices where records[i].state != "ready" { records[i].state = "paused"; records[i].relativeFile = "" }
++        monitor.pathUpdateHandler = { [weak self] path in Task { @MainActor in self?.online = path.status == .satisfied; if path.status == .satisfied { await self?.refresh() } } }
++        monitor.start(queue: DispatchQueue(label: "SWOD.cache.network"))
++        loop = Task { [weak self] in
++            while !Task.isCancelled { await self?.refresh(); do { try await Task.sleep(nanoseconds: 60_000_000_000) } catch { return } }
++        }
++    }
++    var visible: [CourseCacheRecord] { records.filter { current($0.lease) } }
++    private func current(_ lease: VideoCacheLease) -> Bool { session.accountID == lease.member_id && session.credentials?.sessionId == lease.session_id }
++    func usable(_ record: CourseCacheRecord) -> Bool {
++        guard current(record.lease), let device = try? CourseCacheVault.device(), record.state == "ready", file(record) != nil else { return false }
++        return VideoCachePolicy.permits(record.lease, member: record.lease.member_id, session: record.lease.session_id, device: device, lesson: record.id,
++            nowMS: record.anchor.now(elapsedMS: CourseCacheVault.elapsed(), boot: CourseCacheVault.boot()))
++    }
++    func file(_ record: CourseCacheRecord) -> URL? {
++        let relative = record.relativeFile
++        guard !relative.isEmpty, !relative.hasPrefix("/"), !relative.split(separator: "/").contains("..") else { return nil }
++        let target = root.appendingPathComponent(relative).resolvingSymlinksInPath()
++        guard target.path.hasPrefix(root.resolvingSymlinksInPath().path + "/"), FileManager.default.fileExists(atPath: target.path) else { return nil }
++        return target
++    }
++    private func persist() throws { try CourseCacheVault.write(JSONEncoder().encode(records), account: "inventory") }
++    func purge() {
++        generation += 1
++        #if os(iOS) && !targetEnvironment(simulator)
++        driver.stop()
++        #endif
++        downloading = nil; renewals.values.forEach { $0.stop() }; renewals.removeAll(); records = []
++        // Revoke protected metadata before removing ciphertext. Orphans cannot become playable.
++        try? persist(); try? FileManager.default.removeItem(at: root)
++    }
++    func remove(_ id: Int) {
++        if downloading == id {
++            generation += 1
++            #if os(iOS) && !targetEnvironment(simulator)
++            driver.stop()
++            #endif
++            downloading = nil
++        }
++        renewals.removeValue(forKey: id)?.stop()
++        records.removeAll { $0.id == id }; try? persist()
++        try? FileManager.default.removeItem(at: root.appendingPathComponent(String(id)))
++    }
++    func pause(_ id: Int) {
++        guard downloading == id else { return }; generation += 1
++        #if os(iOS) && !targetEnvironment(simulator)
++        driver.stop()
++        #endif
++        downloading = nil
++        if let at = records.firstIndex(where: { $0.id == id }) { records[at].state = "paused" }
++        try? persist()
++    }
++    func refresh() async {
++        guard session.token != nil else { return }
++        let stale = records.filter { !current($0.lease) }.map(\.id); stale.forEach(remove)
++        // Server limit is 20 requests/min/session. Bound inventory to 12 items below.
++        for record in visible where record.state == "ready" {
++            if renewals[record.id] == nil {
++                var stamp: Double = 0
++                let owner = record.lease
++                let renewal = AutomaticVideoCacheRenewal(lease: owner,
++                    trustedNow: { [weak self] in self?.records.first(where: { $0.id == record.id })?.anchor.now(elapsedMS: CourseCacheVault.elapsed(), boot: CourseCacheVault.boot()) ?? .nan },
++                    retryNow: CourseCacheVault.elapsed, isOnline: { [weak self] in self?.online == true },
++                    isCurrent: { [weak self] in self?.current(owner) == true && self?.records.contains(where: { $0.recordID == record.recordID }) == true },
++                    renew: { [weak self] old in
++                        guard let self else { throw CancellationError() }; stamp = CourseCacheVault.elapsed()
++                        let grant = try await self.authorize(old.lesson_id, action: "renew", version: old.material_version)
++                        return grant.lease
++                    }, persist: { [weak self] next in
++                        guard let self, let at = self.records.firstIndex(where: { $0.recordID == record.recordID }), self.current(next) else { throw CancellationError() }
++                        let old = self.records[at]; self.records[at].lease = next
++                        self.records[at].anchor = VideoCacheClockAnchor(serverMS: next.issued_at, elapsedMS: stamp, boot: CourseCacheVault.boot())
++                        do { try self.persist() } catch { self.records[at] = old; throw error }
++                    }, discard: { [weak self] in if self?.records.contains(where: { $0.recordID == record.recordID }) == true { self?.remove(record.id) } })
++                renewals[record.id] = renewal
++            }
++            await renewals[record.id]?.refresh()
++            if online { await syncProgress(record.id) }
++        }
++    }
++    private func authorize(_ id: Int, action: String, version: String = "") async throws -> CourseCacheAuthorization {
++        guard let token = session.token else { throw APIError.sessionExpired }
++        return try await session.api.request("/video/\(id)/cache-authorization", token: token, method: "POST",
++            body: JSONSerialization.data(withJSONObject: ["action": action, "device_id": try CourseCacheVault.device(), "material_version": version]))
++    }
++    func download(_ id: Int, title: String, course: String) async {
++        guard downloading == nil else { message = "请等待当前课节缓存完成，或先取消任务"; return }
++        guard AliyunSecureCacheDriver.configured else { message = "安全缓存授权尚未配置完成，请先在线观看"; return }
++        guard records.count < 12 || records.contains(where: { $0.id == id }) else { message = "最多缓存 12 节，请先删除不需要的缓存"; return }
++        let version = generation; downloading = id; message = "正在验证缓存权限"
++        let stamp = CourseCacheVault.elapsed()
++        do {
++            let grant = try await authorize(id, action: "download")
++            guard version == generation, current(grant.lease), let playAuth = grant.credential?.play_auth else { throw CancellationError() }
++            downloading = nil
++            remove(id) // Invalidate old metadata and remove only this lesson's files.
++            downloading = id; let active = generation
++            let anchor = VideoCacheClockAnchor(serverMS: grant.lease.issued_at, elapsedMS: stamp, boot: CourseCacheVault.boot())
++            var record = CourseCacheRecord(lease: grant.lease, title: title, course: course, state: "downloading", anchor: anchor)
++            if let token = session.token, let progress = try? await session.api.optionalProgress(lessonID: id, token: token) { record.position = progress.progress ?? 0; record.revision = progress.revision ?? 0 }
++            guard active == generation, current(grant.lease) else { throw CancellationError() }
++            records.append(record); try persist()
++            #if os(iOS) && !targetEnvironment(simulator)
++            let used = CourseCacheVault.bytes(root)
++            let available = (try? root.deletingLastPathComponent().deletingLastPathComponent().resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage) ?? 0
++            let limit = min(grant.maxBytes, 2_147_483_648 - used, available - 104_857_600)
++            try driver.start(vodID: grant.lease.vod_video_id, playAuth: playAuth, directory: root.appendingPathComponent(String(id)), maximumBytes: limit,
++                allowed: { [weak self] in
++                    guard let self, self.generation == active, self.current(grant.lease) else { return false }
++                    let live = self.records.first(where: { $0.id == id })
++                    return live != nil && VideoCachePolicy.permits(live!.lease, member: grant.lease.member_id, session: grant.lease.session_id,
++                        device: grant.lease.device_id, lesson: id, nowMS: live!.anchor.now(elapsedMS: CourseCacheVault.elapsed(), boot: CourseCacheVault.boot()))
++                }, progress: { [weak self] percent in
++                    guard let self, self.generation == active, let at = self.records.firstIndex(where: { $0.id == id }) else { return }
++                    self.records[at].percent = min(99, max(0, percent))
++                }, finished: { [weak self] result in
++                    guard let self, self.generation == active, self.current(grant.lease), let at = self.records.firstIndex(where: { $0.id == id }) else { return }
++                    self.downloading = nil
++                    switch result {
++                    case .success(let url):
++                        self.records[at].relativeFile = String(url.path.dropFirst(self.root.path.count + 1))
++                        self.records[at].bytes = CourseCacheVault.bytes(self.root.appendingPathComponent(String(id)))
++                        self.records[at].state = "ready"; self.records[at].percent = 100
++                        do { try self.persist(); self.message = "缓存完成"; Task { await self.refresh() } }
++                        catch { self.remove(id); self.message = "缓存无法安全保存，请重试" }
++                    case .failure(let error): self.remove(id); self.message = error.localizedDescription
++                    }
++                })
++            #else
++            _ = playAuth; throw APIError.service("模拟器不支持安全离线解密，请使用真机")
++            #endif
++        } catch {
++            if version == generation { downloading = nil; if records.first(where: { $0.id == id })?.state != "ready" { remove(id) }; message = error.localizedDescription }
++        }
++    }
++    func checkpoint(_ id: Int, position: Double, duration: Double) {
++        guard let at = records.firstIndex(where: { $0.id == id }), usable(records[at]), let safe = AppPolicy.safeProgress(position: position, duration: duration) else { return }
++        records[at].position = safe["progress"] ?? position; records[at].duration = duration; records[at].pendingProgress = true
++        do { try persist() } catch { message = "本机学习进度保存失败，请重试" }
++    }
++    private func syncProgress(_ id: Int) async {
++        guard let record = records.first(where: { $0.id == id }), record.pendingProgress, usable(record), let token = session.token else { return }
++        do {
++            let result: ProgressRecord = try await session.api.request("/video/\(id)/progress", token: token, method: "POST", body: JSONSerialization.data(withJSONObject: ["progress": record.position, "duration": record.duration, "revision": Double(record.revision)]))
++            guard current(record.lease), let at = records.firstIndex(where: { $0.recordID == record.recordID }), records[at].position == record.position else { return }
++            records[at].revision = result.revision ?? record.revision; records[at].pendingProgress = false; try persist()
++        } catch APIError.progressConflict {
++            guard let newer = try? await session.api.optionalProgress(lessonID: id, token: token), current(record.lease),
++                  let at = records.firstIndex(where: { $0.recordID == record.recordID }), records[at].position == record.position else { return }
++            records[at].revision = newer.revision ?? record.revision; records[at].position = newer.progress ?? record.position
++            records[at].duration = newer.duration ?? record.duration; records[at].pendingProgress = false; try? persist()
++        } catch { /* Keep an account-scoped protected outbox. Never overwrite another device's newer revision. */ }
++    }
++    deinit { monitor.cancel(); loop?.cancel() }
++}
+--- /dev/null
++++ current/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheView.swift
+@@ -0,0 +1,49 @@
++import SwiftUI
++
++struct CourseCacheActions: View {
++    @ObservedObject var cache: CourseCacheStore
++    let lessonID: Int
++    let title: String
++    let course: String
++    var body: some View {
++        NavigationLink("管理课程缓存") { CourseCacheView(cache: cache) }
++        Button(cache.downloading == lessonID ? "正在缓存本节" : "缓存当前课节") { Task { await cache.download(lessonID, title: title, course: course) } }.disabled(cache.downloading != nil)
++        if !cache.message.isEmpty { Text(cache.message).font(.subheadline).foregroundStyle(.secondary) }
++    }
++}
++
++struct CourseCacheView: View {
++    @ObservedObject var cache: CourseCacheStore
++    @Environment(\.scenePhase) private var scenePhase
++    @State private var deleting: Int?
++    var body: some View {
++        List {
++            Section {
++                Text("联网时自动验证和续期；断网可在授权有效期内学习，最长 24 小时。重启设备后需要联网验证。退出账号会删除本机课程缓存。").font(.footnote).foregroundStyle(.secondary)
++                if !cache.message.isEmpty { Text(cache.message).font(.subheadline).foregroundStyle(EvaBrand.red) }
++            }
++            Section("本机缓存 · \(cache.visible.count) 节") {
++                if cache.visible.isEmpty { Text("暂无缓存。在课程播放设置中选择“缓存当前课节”。").foregroundStyle(.secondary) }
++                ForEach(cache.visible) { record in
++                    VStack(alignment: .leading, spacing: 8) {
++                        Text(record.course).font(.caption).foregroundStyle(.secondary)
++                        Text(record.title).font(.headline)
++                        if record.state == "downloading" { ProgressView(value: Double(record.percent), total: 100); Text("正在缓存 \(record.percent)%").font(.caption); Button("暂停缓存") { cache.pause(record.id) }.frame(minHeight: 44) }
++                        else if cache.usable(record) {
++                            NavigationLink("离线观看") { OfflineCoursePlayerView(cache: cache, lessonID: record.id) }
++                            Text(ByteCountFormatter.string(fromByteCount: record.bytes, countStyle: .file) + (record.pendingProgress ? " · 学习进度待自动同步" : " · 已缓存")).font(.caption).foregroundStyle(.secondary)
++                        } else { Text(record.state == "ready" ? "待联网自动验证" : "缓存已暂停，可重新缓存").font(.subheadline).foregroundStyle(.secondary)
++                            if record.state == "paused" { Button("重新缓存") { Task { await cache.download(record.id, title: record.title, course: record.course) } }.frame(minHeight: 44).disabled(cache.downloading != nil) }
++                        }
++                        Button("删除缓存", role: .destructive) { deleting = record.id }.frame(minHeight: 44)
++                    }.padding(.vertical, 6)
++                }
++            }
++        }.evaCompactLayout().evaPageChrome()
++            .task { await cache.refresh() }
++            .onChange(of: scenePhase) { if $0 == .active { Task { await cache.refresh() } } }
++            .confirmationDialog("删除这节课的本机缓存？", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
++                Button("删除缓存", role: .destructive) { if let id = deleting { cache.remove(id) }; deleting = nil }
++            }
++    }
++}
+--- /dev/null
++++ current/app开发/iOS/EvaDance/Sources/EvaDanceApp/OfflineCoursePlayerView.swift
+@@ -0,0 +1,89 @@
++import SwiftUI
++#if os(iOS) && !targetEnvironment(simulator) && canImport(AliyunPlayer)
++import AliyunPlayer
++
++@MainActor final class OfflineCoursePlayer: NSObject, ObservableObject, AVPDelegate {
++    let player = AliPlayer()!
++    @Published var position: Double = 0
++    @Published var duration: Double = 0
++    @Published var ready = false
++    @Published var playing = false
++    @Published var error = ""
++    private var initial: Double = 0
++    func load(_ file: URL, position: Double) {
++        initial = position; player.delegate = self
++        AliPlayer.setEnableLog(false); AliPrivateService.initKey(Bundle.main.path(forResource: "encryptedApp", ofType: "dat"))
++        let source = AVPUrlSource(); source.playerUrl = file
++        player.setUrlSource(source); player.prepare()
++    }
++    func onPlayerEvent(_ player: AliPlayer!, eventType: AVPEventType) {
++        DispatchQueue.main.async { [weak self] in
++            guard let self else { return }
++            if eventType == AVPEventPrepareDone { self.duration = Double(player.duration) / 1000; self.ready = true; player.seek(toTime: Int64(self.initial * 1000), seekMode: AVP_SEEKMODE_INACCURATE) }
++            if eventType == AVPEventCompletion { self.playing = false }
++        }
++    }
++    func onError(_ player: AliPlayer!, errorModel: AVPErrorModel!) { DispatchQueue.main.async { [weak self] in self?.pause(); self?.error = "安全缓存无法解密播放，请联网重新缓存" } }
++    func onCurrentPositionUpdate(_ player: AliPlayer!, position: Int64) { DispatchQueue.main.async { [weak self] in self?.position = Double(position) / 1000 } }
++    func pause() { player.pause(); playing = false }
++    func toggle() { guard ready else { return }; if playing { pause() } else { player.start(); playing = true } }
++    func destroy() { pause(); player.stop(); player.destroy() }
++}
++
++struct OfflineSDKSurface: UIViewRepresentable {
++    let model: OfflineCoursePlayer
++    func makeUIView(context: Context) -> UIView { let view = UIView(); view.backgroundColor = .black; model.player.playerView = view; return view }
++    func updateUIView(_ view: UIView, context: Context) {}
++}
++#endif
++
++struct OfflineCoursePlayerView: View {
++    @ObservedObject var cache: CourseCacheStore
++    let lessonID: Int
++    @Environment(\.scenePhase) private var scenePhase
++    @EnvironmentObject var session: Session
++    @State private var captured = false
++    @State private var loadedRecordID = ""
++    #if os(iOS) && !targetEnvironment(simulator) && canImport(AliyunPlayer)
++    @StateObject private var model = OfflineCoursePlayer()
++    private var record: CourseCacheRecord? { cache.visible.first { $0.id == lessonID } }
++    var body: some View {
++        VStack(spacing: 16) {
++            OfflineSDKSurface(model: model).aspectRatio(16/9, contentMode: .fit)
++                .overlay { if captured || scenePhase != .active || record.map({ !cache.usable($0) }) != false { Color.black } }
++                .overlay(alignment: .topLeading) { Text("SWOD · 学习码 " + (session.credentials?.sessionId.suffix(8).uppercased() ?? "")).font(.caption).foregroundStyle(.white).padding(8).background(.black.opacity(0.4)) }
++            Text(record?.title ?? "课程缓存已失效").font(.headline)
++            Text(model.error).foregroundStyle(EvaBrand.red)
++            if let record, record.recordID == loadedRecordID, cache.usable(record), !captured {
++                Button(model.playing ? "暂停" : "播放") { model.toggle() }.frame(minHeight: 44).disabled(!model.ready)
++                Slider(value: $model.position, in: 0...max(model.duration,1), onEditingChanged: { editing in if !editing { model.player.seek(toTime: Int64(model.position*1000), seekMode: AVP_SEEKMODE_INACCURATE) } }).accessibilityLabel("离线播放进度")
++                Text("\(Int(model.position)) / \(Int(model.duration)) 秒").font(.caption.monospacedDigit())
++            } else { Text("缓存授权待联网自动验证").foregroundStyle(.secondary) }
++            Spacer()
++        }.padding(12).evaPageChrome()
++            .task {
++                captured = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.contains { $0.screen.isCaptured }
++                guard let record, cache.usable(record), let file = cache.file(record) else { return }
++                loadedRecordID = record.recordID
++                model.load(file, position: record.position)
++                var ticks = 0
++                while !Task.isCancelled {
++                    do { try await Task.sleep(nanoseconds: 1_000_000_000) } catch { return }
++                    guard let live = self.record, live.recordID == loadedRecordID, cache.usable(live) else { model.pause(); model.error = "缓存授权待联网自动验证"; continue }
++                    if model.error == "缓存授权待联网自动验证" { model.error = "" }
++                    ticks += 1
++                    if ticks % 15 == 0 { cache.checkpoint(lessonID, position: model.position, duration: model.duration) }
++                    if ticks % 60 == 0 { await cache.refresh() }
++                }
++            }
++            .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
++                captured = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.contains { $0.screen.isCaptured }; if captured { model.pause() }
++            }
++            .onChange(of: scenePhase) { phase in if phase != .active { model.pause(); checkpoint() } else { Task { await cache.refresh() } } }
++            .onDisappear { checkpoint(); model.destroy() }
++    }
++    private func checkpoint() { if record?.recordID == loadedRecordID { cache.checkpoint(lessonID, position: model.position, duration: model.duration) } }
++    #else
++    var body: some View { Text("安全离线播放需要已授权的真机版本").padding().evaPageChrome() }
++    #endif
++}
+--- /dev/null
++++ current/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CacheClock.java
+@@ -0,0 +1,9 @@
++package cn.com.swod.app;
++
++/** No editable wall clock. A boot mismatch or elapsed-clock reset needs a server refresh. */
++final class CacheClock {
++    static long trusted(long server,long anchorElapsed,String anchorBoot,long currentElapsed,String currentBoot){
++        if(server<=0||anchorElapsed<0||currentElapsed<anchorElapsed||anchorBoot==null||anchorBoot.isEmpty()||!anchorBoot.equals(currentBoot))return Long.MIN_VALUE;
++        try{return Math.addExact(server,Math.subtractExact(currentElapsed,anchorElapsed));}catch(ArithmeticException error){return Long.MIN_VALUE;}
++    }
++}
+--- /dev/null
++++ current/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CourseCacheManager.java
+@@ -0,0 +1,103 @@
++package cn.com.swod.app;
++
++import android.content.Context;
++import android.net.ConnectivityManager;
++import android.net.NetworkCapabilities;
++import android.os.Handler;
++import android.os.Looper;
++import android.os.SystemClock;
++import android.provider.Settings;
++import org.json.*;
++import java.io.File;
++import java.util.*;
++import java.util.concurrent.*;
++
++/** Device-keystore protected inventory and progress outbox. Media bytes remain SDK encrypted. */
++final class CourseCacheManager {
++    private static volatile CourseCacheManager instance;
++    static synchronized CourseCacheManager get(Context c){if(instance==null)instance=new CourseCacheManager(c);return instance;}
++    static void clearExisting(){new Handler(Looper.getMainLooper()).post(()->{CourseCacheManager current=instance;if(current!=null)current.purge();});}
++    private final Context context;
++    private final TokenVault vault;
++    private final AliyunSecureCacheDriver driver;
++    private final Handler main=new Handler(Looper.getMainLooper());
++    private final ScheduledExecutorService io=Executors.newSingleThreadScheduledExecutor();
++    private final List<Runnable> listeners=new CopyOnWriteArrayList<>();
++    private JSONObject inventory;
++    private final Map<Integer,AutomaticVideoCacheRenewal> renewals=new HashMap<>();
++    private long generation;
++    private int downloading;
++    volatile String message="";
++    final File root;
++    private CourseCacheManager(Context c){
++        context=c.getApplicationContext();vault=new TokenVault(context,"course-cache");driver=new AliyunSecureCacheDriver(context);root=new File(context.getNoBackupFilesDir(),"course-cache");
++        try{String saved=vault.read();inventory=saved==null?new JSONObject():new JSONObject(saved);if(!inventory.has("device"))inventory.put("device",UUID.randomUUID().toString().replace("-","")+UUID.randomUUID().toString().replace("-",""));
++            if(!inventory.has("items"))inventory.put("items",new JSONArray());for(JSONObject row:all())if(!"ready".equals(row.optString("state"))){row.put("state","paused");row.put("file","");}persist();
++        }catch(Exception e){inventory=new JSONObject();message="安全缓存索引不可用，请联网后重试";}
++        io.scheduleWithFixedDelay(this::refreshNow,0,60,TimeUnit.SECONDS);
++    }
++    void listen(Runnable r){listeners.add(r);}void unlisten(Runnable r){listeners.remove(r);}
++    private void changed(){for(Runnable r:listeners)main.post(r);}
++    synchronized int downloading(){return downloading;}
++    private Api api(){return Api.get(context);}
++    private boolean online(){try{ConnectivityManager cm=(ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);NetworkCapabilities n=cm.getNetworkCapabilities(cm.getActiveNetwork());return n!=null&&n.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);}catch(Exception e){return false;}}
++    private String boot(){try{return "boot:"+Settings.Global.getInt(context.getContentResolver(),Settings.Global.BOOT_COUNT);}catch(Exception e){return "";}}
++    private synchronized String device(){return inventory.optString("device");}
++    private synchronized List<JSONObject> all(){List<JSONObject> out=new ArrayList<>();JSONArray rows=inventory.optJSONArray("items");if(rows!=null)for(int i=0;i<rows.length();i++){JSONObject row=rows.optJSONObject(i);if(row!=null)out.add(row);}return out;}
++    synchronized List<JSONObject> visible(){List<JSONObject> out=new ArrayList<>();for(JSONObject r:all())if(current(r))try{out.add(new JSONObject(r.toString()));}catch(Exception ignored){}return out;}
++    private boolean current(JSONObject r){JSONObject l=r.optJSONObject("lease");return l!=null&&l.optLong("member_id")==api().memberID()&&l.optString("session_id").equals(api().sessionID())&&!api().sessionID().isEmpty();}
++    private synchronized JSONObject row(int id){for(JSONObject r:all())if(r.optInt("id")==id)return r;return null;}
++    private synchronized void persist()throws Exception{vault.save(inventory.toString());}
++    private long now(JSONObject r){return CacheClock.trusted(r.optLong("server"),r.optLong("elapsed",-1),r.optString("boot"),SystemClock.elapsedRealtime(),boot());}
++    synchronized File file(JSONObject r){try{String name=r.optString("file");if(name.isEmpty()||name.startsWith("/")||Arrays.asList(name.split("/")).contains(".."))return null;File f=new File(root,name).getCanonicalFile();return f.getPath().startsWith(root.getCanonicalPath()+File.separator)&&f.isFile()?f:null;}catch(Exception e){return null;}}
++    private AutomaticVideoCacheRenewal.Lease lease(JSONObject l)throws JSONException{return new AutomaticVideoCacheRenewal.Lease(l.getLong("member_id"),l.getString("session_id"),l.getString("device_id"),l.getInt("lesson_id"),l.getInt("series_id"),l.getString("vod_video_id"),l.getString("material_version"),l.getLong("issued_at"),l.getLong("expires_at"),l.getString("mode"));}
++    synchronized boolean usable(JSONObject r){try{return current(r)&&"ready".equals(r.optString("state"))&&file(r)!=null&&device().equals(r.getJSONObject("lease").getString("device_id"))&&lease(r.getJSONObject("lease")).permits(now(r));}catch(Exception e){return false;}}
++    synchronized JSONObject get(int id){for(JSONObject r:visible())if(r.optInt("id")==id)return r;return null;}
++    synchronized void purge(){generation++;downloading=0;main.post(driver::stop);renewals.values().forEach(AutomaticVideoCacheRenewal::close);renewals.clear();try{inventory.put("items",new JSONArray());persist();}catch(Exception e){vault.clear();}deleteTree(root);changed();}
++    synchronized void remove(int id){if(downloading==id){generation++;downloading=0;main.post(driver::stop);}AutomaticVideoCacheRenewal old=renewals.remove(id);if(old!=null)old.close();JSONArray next=new JSONArray();for(JSONObject r:all())if(r.optInt("id")!=id)next.put(r);try{inventory.put("items",next);persist();}catch(Exception e){message="缓存索引保存失败";}deleteTree(new File(root,String.valueOf(id)));changed();}
++    private void deleteTree(File f){try{if(!f.getCanonicalPath().startsWith(context.getNoBackupFilesDir().getCanonicalPath()+File.separator))return;File[] children=f.listFiles();if(children!=null)for(File child:children)deleteTree(child);if(f.exists()&&!f.delete())message="部分缓存待下次清理";}catch(Exception ignored){}}
++    void refresh(){io.execute(this::refreshNow);}
++    synchronized void pause(int id){if(downloading!=id)return;generation++;downloading=0;main.post(driver::stop);try{JSONObject live=row(id);if(live!=null)live.put("state","paused");persist();}catch(Exception e){message="缓存索引保存失败";}changed();}
++    private void refreshNow(){
++        if(!api().loggedIn())return;
++        for(JSONObject stale:all())if(!current(stale))remove(stale.optInt("id"));
++        for(JSONObject snapshot:visible()){
++            int id=snapshot.optInt("id");if(!"ready".equals(snapshot.optString("state")))continue;
++            AutomaticVideoCacheRenewal renewal;
++            synchronized(this){renewal=renewals.get(id);if(renewal==null)try{
++                String nonce=snapshot.getString("nonce");final long[] stamp={0};final JSONObject[] nextGrant={null};
++                renewal=new AutomaticVideoCacheRenewal(lease(snapshot.getJSONObject("lease")),()->{synchronized(this){JSONObject live=row(id);return live==null?Long.MIN_VALUE:now(live);}},SystemClock::elapsedRealtime,this::online,
++                    ()->{synchronized(this){JSONObject live=row(id);return live!=null&&nonce.equals(live.optString("nonce"))&&current(live);}},
++                    old->{stamp[0]=SystemClock.elapsedRealtime();nextGrant[0]=authorize(id,"renew",old.material);return lease(nextGrant[0]);},
++                    next->{synchronized(this){try{JSONObject live=row(id);if(live==null||!nonce.equals(live.optString("nonce"))||!current(live))throw new IllegalStateException();String backup=live.toString();try{live.put("lease",nextGrant[0]);live.put("server",next.issued);live.put("elapsed",stamp[0]);live.put("boot",boot());persist();}catch(Exception failure){JSONArray a=inventory.getJSONArray("items");for(int i=0;i<a.length();i++)if(a.getJSONObject(i).optInt("id")==id)a.put(i,new JSONObject(backup));throw failure;}}catch(Exception failure){throw new IllegalStateException("保存授权失败");}}},
++                    ()->{synchronized(this){JSONObject live=row(id);if(live!=null&&nonce.equals(live.optString("nonce")))remove(id);}});renewals.put(id,renewal);
++                }catch(Exception ignored){} }
++            if(renewal!=null)renewal.refresh();if(online())syncProgress(id);
++        }changed();
++    }
++    private JSONObject authorize(int id,String action,String material)throws Exception{return (JSONObject)api().request("/video/"+id+"/cache-authorization","POST",new JSONObject().put("action",action).put("device_id",device()).put("material_version",material),true);}
++    void download(int id,String title,String course){
++        final long active;
++        synchronized(this){if(downloading!=0){message="请等待当前课节缓存完成，或先取消任务";changed();return;}if(!driver.configured()){message="安全缓存授权尚未配置完成，请先在线观看";changed();return;}if(all().size()>=12&&row(id)==null){message="最多缓存12节，请先删除不需要的缓存";changed();return;}downloading=id;active=generation;}
++        message="正在验证缓存权限";changed();io.execute(()->{long stamp=SystemClock.elapsedRealtime();try{
++            JSONObject grant=authorize(id,"download","");String auth=grant.getJSONObject("credential").getString("play_auth");JSONObject clean=new JSONObject(grant.toString());clean.remove("credential");
++            final JSONObject entry=new JSONObject().put("id",id).put("nonce",UUID.randomUUID().toString()).put("title",title).put("course",course).put("lease",clean).put("server",grant.getLong("issued_at")).put("elapsed",stamp).put("boot",boot()).put("state","downloading").put("percent",0);
++            try{JSONObject progress=(JSONObject)api().request("/video/"+id+"/progress","GET",null,true);entry.put("position",progress.optDouble("progress")).put("revision",progress.optInt("revision"));}catch(Exception ignored){}
++            final long limit;
++            synchronized(this){if(active!=generation||!current(entry))return;downloading=0;remove(id);downloading=id;long used=AliyunSecureCacheDriver.directoryBytes(root);limit=Math.min(grant.getLong("max_bytes"),Math.min(2147483648L-used,context.getNoBackupFilesDir().getUsableSpace()-104857600));inventory.getJSONArray("items").put(entry);persist();}
++            main.post(()->{synchronized(this){if(active!=generation||!current(entry))return;}try{driver.start(grant.getString("vod_video_id"),auth,new File(root,String.valueOf(id)),limit,
++                ()->{synchronized(this){JSONObject live=row(id);try{return active==generation&&live!=null&&entry.getString("nonce").equals(live.optString("nonce"))&&current(live)&&lease(live.getJSONObject("lease")).permits(now(live));}catch(Exception e){return false;}}},
++                new AliyunSecureCacheDriver.Listener(){public void progress(int percent){synchronized(CourseCacheManager.this){JSONObject live=row(id);if(live!=null&&active==generation)try{live.put("percent",Math.max(0,Math.min(99,percent)));}catch(Exception ignored){}}changed();}
++                    public void complete(File f){synchronized(CourseCacheManager.this){if(active!=generation||!current(entry))return;try{entry.put("file",f.getCanonicalPath().substring(root.getCanonicalPath().length()+1)).put("bytes",AliyunSecureCacheDriver.directoryBytes(new File(root,String.valueOf(id)))).put("percent",100).put("state","ready");persist();downloading=0;message="缓存完成";}catch(Exception e){remove(id);message="缓存无法安全保存，请重试";}}changed();refresh();}
++                    public void failure(String text){synchronized(CourseCacheManager.this){if(active!=generation)return;remove(id);message=text;}changed();}});
++            }catch(Exception e){synchronized(this){if(active==generation){remove(id);message="安全缓存失败，请联网重试";}}changed();}});
++        }catch(Exception e){synchronized(this){if(active==generation){downloading=0;message=e.getMessage();}}changed();}});
++    }
++    synchronized void checkpoint(int id,double position,double duration){JSONObject r=row(id);if(r==null||!usable(r)||!Double.isFinite(position)||!Double.isFinite(duration)||duration<=0||position<0||position>duration+1)return;try{r.put("position",Math.min(position,duration)).put("duration",duration).put("pending",true);persist();}catch(Exception e){message="本机学习进度保存失败";}}
++    private void syncProgress(int id){JSONObject snap=get(id);if(snap==null||!snap.optBoolean("pending")||!usable(snap))return;try{
++        JSONObject result=(JSONObject)api().request("/video/"+id+"/progress","POST",new JSONObject().put("progress",snap.optDouble("position")).put("duration",snap.optDouble("duration")).put("revision",snap.optInt("revision")),true);
++        synchronized(this){JSONObject live=row(id);if(live==null||!current(live)||!live.optString("nonce").equals(snap.optString("nonce"))||live.optDouble("position")!=snap.optDouble("position"))return;live.put("revision",result.optInt("revision")).put("pending",false);persist();}
++    }catch(Api.Failure failure){
++        if(failure.status==409)try{JSONObject newer=(JSONObject)api().request("/video/"+id+"/progress","GET",null,true);synchronized(this){JSONObject live=row(id);if(live==null||!current(live)||!live.optString("nonce").equals(snap.optString("nonce"))||live.optDouble("position")!=snap.optDouble("position"))return;live.put("position",newer.optDouble("progress")).put("duration",newer.optDouble("duration",live.optDouble("duration"))).put("revision",newer.optInt("revision")).put("pending",false);persist();}}catch(Exception ignored){}
++    }catch(Exception ignored){/* Keep protected outbox; no replay over another device's newer revision. */}}
++}
+--- /dev/null
++++ current/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CourseCacheActivity.java
+@@ -0,0 +1,30 @@
++package cn.com.swod.app;
++
++import android.app.*;
++import android.os.Bundle;
++import android.content.Intent;
++import android.view.WindowInsets;
++import android.widget.*;
++import org.json.JSONObject;
++
++public final class CourseCacheActivity extends Activity {
++    private CourseCacheManager cache;
++    private LinearLayout list;
++    private final Runnable renderTask=this::render;
++    public void onCreate(Bundle state){super.onCreate(state);getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);cache=CourseCacheManager.get(this);
++        ScrollView scroll=new ScrollView(this);list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);list.setPadding(24,12,24,24);scroll.addView(list);scroll.setBackgroundColor(SwodUi.canvas(this));
++        scroll.setOnApplyWindowInsetsListener((v,i)->{if(android.os.Build.VERSION.SDK_INT>=30){android.graphics.Insets s=i.getInsets(WindowInsets.Type.systemBars());scroll.setPadding(s.left,s.top,s.right,s.bottom);}else scroll.setPadding(i.getSystemWindowInsetLeft(),i.getSystemWindowInsetTop(),i.getSystemWindowInsetRight(),i.getSystemWindowInsetBottom());return i;});setContentView(scroll);render();}
++    private void text(String value,int size){TextView t=new TextView(this);t.setText(value);t.setTextSize(size);t.setTextColor(SwodUi.ink(this));t.setPadding(0,12,0,12);list.addView(t);}
++    private void button(String title,Runnable r){Button b=new Button(this);b.setText(title);b.setAllCaps(false);b.setMinHeight(48);b.setOnClickListener(v->r.run());list.addView(b);}
++    private void render(){if(list==null||isFinishing())return;list.removeAllViews();button("返回",this::finish);text("课程缓存",22);text("联网时自动续期，授权有效期内可离线观看，最长24小时。设备重启后需联网验证；退出账号会删除本机缓存。",14);if(!cache.message.isEmpty())text(cache.message,14);
++        java.util.List<JSONObject> records=cache.visible();if(records.isEmpty())text("暂无缓存，请从课程播放设置中缓存课节。",16);
++        for(JSONObject r:records){int id=r.optInt("id");text(r.optString("course")+"\n"+r.optString("title"),17);String status=r.optString("state");
++            if(status.equals("downloading")){ProgressBar p=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);p.setProgress(r.optInt("percent"));list.addView(p);text("正在缓存 "+r.optInt("percent")+"%",14);button("暂停缓存",()->cache.pause(id));}
++            else if(cache.usable(r)){text(android.text.format.Formatter.formatFileSize(this,r.optLong("bytes"))+(r.optBoolean("pending")?" · 学习进度待自动同步":" · 已缓存"),13);button("离线观看",()->startActivity(new Intent(this,OfflineCourseActivity.class).putExtra("lesson",id)));}
++            else {text(status.equals("ready")?"待联网自动验证":"缓存已暂停，可重新缓存",14);if(status.equals("paused"))button("重新缓存",()->cache.download(id,r.optString("title"),r.optString("course")));}
++            button("删除缓存",()->new AlertDialog.Builder(this).setMessage("删除这节课的本机缓存？").setNegativeButton("取消",null).setPositiveButton("删除",(d,w)->cache.remove(id)).show());
++        }
++    }
++    protected void onResume(){super.onResume();cache.listen(renderTask);cache.refresh();render();}
++    protected void onPause(){cache.unlisten(renderTask);super.onPause();}
++}
+--- /dev/null
++++ current/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/OfflineCourseActivity.java
+@@ -0,0 +1,43 @@
++package cn.com.swod.app;
++
++import android.app.Activity;
++import android.os.*;
++import android.view.*;
++import android.widget.*;
++import com.aliyun.player.*;
++import com.aliyun.player.source.UrlSource;
++import org.json.JSONObject;
++import java.io.*;
++
++/** Only accepts a lesson identifier. No intent-supplied file path or local authorization flag. */
++public final class OfflineCourseActivity extends Activity {
++    private CourseCacheManager cache;private AliPlayer player;private int lesson;private boolean playing,ready,active;
++    private final Handler main=new Handler(Looper.getMainLooper());private TextView status;private Button play;private SeekBar seek;
++    private int ticks;private String recordNonce="";
++    private final Runnable tick=new Runnable(){public void run(){if(!active||player==null)return;JSONObject record=cache.get(lesson);if(record==null||!recordNonce.equals(record.optString("nonce"))||!cache.usable(record)){stopPlayback();status.setText("缓存授权待联网自动验证");main.postDelayed(this,1000);return;}if(ready)play.setEnabled(true);long position=player.getCurrentPosition(),duration=player.getDuration();seek.setMax((int)Math.max(1,duration/1000));seek.setProgress((int)(position/1000));if(++ticks%15==0)cache.checkpoint(lesson,position/1000d,duration/1000d);main.postDelayed(this,1000);}};
++    public void onCreate(Bundle state){super.onCreate(state);getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);cache=CourseCacheManager.get(this);lesson=getIntent().getIntExtra("lesson",0);
++        LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(16,16,16,16);root.setBackgroundColor(SwodUi.canvas(this));root.setOnApplyWindowInsetsListener((v,i)->{if(Build.VERSION.SDK_INT>=30){android.graphics.Insets s=i.getInsets(WindowInsets.Type.systemBars());root.setPadding(s.left+16,s.top+16,s.right+16,s.bottom+16);}return i;});setContentView(root);
++        Button back=new Button(this);back.setText("返回缓存列表");back.setOnClickListener(v->finish());root.addView(back);
++        FrameLayout stage=new FrameLayout(this);SurfaceView surface=new SurfaceView(this);stage.addView(surface,new FrameLayout.LayoutParams(-1,-1));root.addView(stage,new LinearLayout.LayoutParams(-1,(int)(getResources().getDisplayMetrics().widthPixels*9f/16f)));
++        TextView mark=new TextView(this);mark.setText(Api.get(this).learningCode());mark.setTextColor(0xCCFFFFFF);mark.setBackgroundColor(0x55000000);stage.addView(mark,new FrameLayout.LayoutParams(-2,-2,Gravity.TOP|Gravity.END));
++        status=new TextView(this);status.setTextColor(SwodUi.ink(this));status.setTextSize(17);root.addView(status);play=new Button(this);play.setText("播放");play.setEnabled(false);root.addView(play);seek=new SeekBar(this);seek.setContentDescription("离线播放进度");root.addView(seek);
++        JSONObject record=cache.get(lesson);if(record==null||!cache.usable(record)||!new AliyunSecureCacheDriver(this).configured()){status.setText("缓存授权待联网自动验证");return;}
++        recordNonce=record.optString("nonce");
++        try{
++            File key=new File(getNoBackupFilesDir(),"vod-encryptedApp.dat");try(InputStream in=getAssets().open("encryptedApp.dat");FileOutputStream out=new FileOutputStream(key)){byte[] b=new byte[4096];int n;while((n=in.read(b))!=-1)out.write(b,0,n);}
++            com.aliyun.private_service.PrivateService.initService(this,key.getAbsolutePath());com.cicada.player.utils.Logger.getInstance(this).enableConsoleLog(false);
++            player=AliPlayerFactory.createAliPlayer(this);status.setText(record.optString("title"));
++            player.setOnPreparedListener(()->{JSONObject live=cache.get(lesson);if(live==null||!recordNonce.equals(live.optString("nonce"))||!cache.usable(live)){stopPlayback();return;}ready=true;play.setEnabled(true);player.seekTo((long)(record.optDouble("position")*1000));});
++            player.setOnCompletionListener(()->{playing=false;play.setText("播放");checkpoint();});player.setOnErrorListener(e->{stopPlayback();status.setText("安全缓存无法解密，请联网重新缓存");});
++            surface.getHolder().addCallback(new SurfaceHolder.Callback(){public void surfaceCreated(SurfaceHolder h){if(player!=null)player.setDisplay(h);}public void surfaceChanged(SurfaceHolder h,int f,int w,int v){}public void surfaceDestroyed(SurfaceHolder h){if(player!=null){player.pause();playing=false;player.setDisplay(null);}}});
++            UrlSource source=new UrlSource();source.setUri(cache.file(record).getAbsolutePath());player.setDataSource(source);player.prepare();
++            play.setOnClickListener(v->{JSONObject live=cache.get(lesson);if(!ready||live==null||!recordNonce.equals(live.optString("nonce"))||!cache.usable(live)){stopPlayback();return;}if(playing)player.pause();else player.start();playing=!playing;play.setText(playing?"暂停":"播放");});
++            seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(SeekBar s,int p,boolean u){}public void onStartTrackingTouch(SeekBar s){}public void onStopTrackingTouch(SeekBar s){JSONObject live=cache.get(lesson);if(player!=null&&live!=null&&recordNonce.equals(live.optString("nonce"))&&cache.usable(live))player.seekTo(s.getProgress()*1000L);}});
++        }catch(Exception e){stopPlayback();status.setText("安全离线播放器尚未就绪");}
++    }
++    private void checkpoint(){JSONObject live=cache.get(lesson);if(player!=null&&live!=null&&recordNonce.equals(live.optString("nonce")))cache.checkpoint(lesson,player.getCurrentPosition()/1000d,player.getDuration()/1000d);}
++    private void stopPlayback(){if(player!=null)player.pause();playing=false;if(play!=null){play.setText("播放");play.setEnabled(false);}}
++    protected void onResume(){super.onResume();active=true;cache.refresh();main.post(tick);}
++    protected void onPause(){active=false;main.removeCallbacks(tick);checkpoint();stopPlayback();super.onPause();}
++    protected void onDestroy(){if(player!=null){player.stop();player.release();player=null;}super.onDestroy();}
++}
+--- /dev/null
++++ current/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/AliyunSecureCacheDriver.java
+@@ -0,0 +1,54 @@
++package cn.com.swod.app;
++
++import android.content.Context;
++import android.os.Handler;
++import android.os.Looper;
++import com.aliyun.downloader.AliDownloaderFactory;
++import com.aliyun.downloader.AliMediaDownloader;
++import com.aliyun.player.source.VidAuth;
++import com.aliyun.player.nativeclass.TrackInfo;
++import com.aliyun.private_service.PrivateService;
++import java.io.File;
++import java.io.FileOutputStream;
++import java.io.InputStream;
++import java.util.function.BooleanSupplier;
++
++/** SDK encrypted download only. No raw URL downloader or external/shared-storage fallback. */
++final class AliyunSecureCacheDriver {
++    interface Listener { void progress(int percent); void complete(File file); void failure(String message); }
++    private final Context context;
++    private final Handler main=new Handler(Looper.getMainLooper());
++    private AliMediaDownloader worker;
++    private BooleanSupplier allowed=()->false;
++    private Listener listener;
++    private long maximumBytes;
++    private File directory;
++    static long directoryBytes(File folder){try{return countCanonical(folder.getCanonicalFile());}catch(Exception e){return Long.MAX_VALUE;}}
++    private static long countCanonical(File folder)throws Exception{if(!folder.exists())return 0;if(!folder.getAbsolutePath().equals(folder.getCanonicalPath()))return Long.MAX_VALUE;if(folder.isFile())return folder.length();long sum=0;File[] children=folder.listFiles();if(children==null)return Long.MAX_VALUE;for(File child:children)sum=Math.addExact(sum,countCanonical(child));return sum;}
++    private final Runnable guard=new Runnable(){public void run(){if(worker==null)return;if(!allowed.getAsBoolean()){fail("缓存授权待联网更新");return;}if(directoryBytes(directory)>maximumBytes){fail("缓存超出容量限制，请删除不需要的缓存");return;}main.postDelayed(this,1000);}};
++    AliyunSecureCacheDriver(Context context){this.context=context.getApplicationContext();}
++    boolean configured(){
++        try { android.os.Bundle meta=context.getPackageManager().getApplicationInfo(context.getPackageName(),android.content.pm.PackageManager.GET_META_DATA).metaData;
++            if(meta==null||meta.getString("com.aliyun.alivc_license.licensekey","").isEmpty())return false;
++            String cert=meta.getString("com.aliyun.alivc_license.licensefile","").replaceFirst("^assets/","");
++            try(InputStream a=context.getAssets().open("encryptedApp.dat");InputStream b=context.getAssets().open(cert)){return a.read()!=-1&&b.read()!=-1;}
++        }catch(Exception e){return false;}
++    }
++    void start(String vod,String playAuth,File directory,long maxBytes,BooleanSupplier allowed,Listener listener)throws Exception{
++        if(Looper.myLooper()!=Looper.getMainLooper()||!configured()||!allowed.getAsBoolean()||playAuth.isEmpty()||maxBytes<=0)throw new Exception("课程安全缓存尚未开放");
++        stop();String root=context.getNoBackupFilesDir().getCanonicalPath()+File.separator;
++        if(!directory.getCanonicalPath().startsWith(root))throw new Exception("缓存目录无效");
++        if(!directory.isDirectory()&&!directory.mkdirs())throw new Exception("无法创建缓存目录");
++        File key=new File(context.getNoBackupFilesDir(),"vod-encryptedApp.dat");try(InputStream in=context.getAssets().open("encryptedApp.dat");FileOutputStream out=new FileOutputStream(key)){byte[] bytes=new byte[4096];int size;while((size=in.read(bytes))!=-1)out.write(bytes,0,size);}
++        com.cicada.player.utils.Logger.getInstance(context).enableConsoleLog(false);
++        PrivateService.initService(context,key.getAbsolutePath());this.allowed=allowed;this.listener=listener;maximumBytes=maxBytes;this.directory=directory;
++        AliMediaDownloader active=AliDownloaderFactory.create(context);worker=active;active.setSaveDir(directory.getAbsolutePath());
++        active.setOnPreparedListener(info->main.post(()->{if(worker!=active)return;if(!this.allowed.getAsBoolean()){fail("缓存授权已变化");return;}TrackInfo selected=null;for(TrackInfo track:info.getTrackInfos())if(track.getVodFileSize()>0&&track.getVodFileSize()<=maximumBytes&&("m3u8".equals(track.getVodFormat())||"mp4".equals(track.getVodFormat())))if(selected==null||track.getVodFileSize()<selected.getVodFileSize())selected=track;if(selected==null){fail("没有可安全缓存的清晰度或空间不足");return;}active.selectItem(selected.getIndex());active.start();}));
++        active.setOnProgressListener(new AliMediaDownloader.OnProgressListener(){public void onDownloadingProgress(int percent){main.post(()->{if(worker!=active)return;if(AliyunSecureCacheDriver.this.allowed.getAsBoolean())listener.progress(percent);else fail("缓存授权待联网更新");});}public void onProcessingProgress(int percent){}});
++        active.setOnErrorListener(error->main.post(()->{if(worker==active)fail("安全缓存失败，请联网重试");}));
++        active.setOnCompletionListener(()->main.post(()->{if(worker!=active)return;try{File file=new File(active.getFilePath()).getCanonicalFile();if(!this.allowed.getAsBoolean()||!file.getPath().startsWith(directory.getCanonicalPath()+File.separator)||file.length()<=0||directoryBytes(directory)>maximumBytes){fail("缓存文件或授权无效");return;}Listener callback=this.listener;stop();callback.complete(file);}catch(Exception e){fail("无法安全保存缓存");}}));
++        VidAuth source=new VidAuth();source.setVid(vod);source.setPlayAuth(playAuth);active.prepare(source);main.post(guard);
++    }
++    void stop(){main.removeCallbacks(guard);if(worker!=null){worker.stop();worker.release();worker=null;}allowed=()->false;listener=null;}
++    private void fail(String message){Listener callback=listener;if(worker!=null)worker.deleteFile();stop();if(callback!=null)callback.failure(message);}
++}
+--- /dev/null
++++ current/app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/CacheClockTest.java
+@@ -0,0 +1,8 @@
++package cn.com.swod.app;
++import org.junit.Test;
++import static org.junit.Assert.*;
++public class CacheClockTest {
++    @Test public void editableWallClockIsNotAnInput(){assertEquals(86401000L,CacheClock.trusted(1000,2000,"boot:1",86402000,"boot:1"));}
++    @Test public void rebootOrUnknownBootRequiresNetwork(){assertEquals(Long.MIN_VALUE,CacheClock.trusted(1000,2000,"boot:1",3000,"boot:2"));assertEquals(Long.MIN_VALUE,CacheClock.trusted(1000,2000,"",3000,""));assertEquals(Long.MIN_VALUE,CacheClock.trusted(1000,2000,"boot:1",1000,"boot:1"));}
++    @Test public void overflowingAnchorNeverGrantsTime(){assertEquals(Long.MIN_VALUE,CacheClock.trusted(Long.MAX_VALUE,1,"boot:1",10,"boot:1"));}
++}
+--- /dev/null
++++ current/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/HuksVault.ets
+@@ -0,0 +1,62 @@
++import { huks } from '@kit.UniversalKeystoreKit';
++import { cryptoFramework } from '@kit.CryptoArchitectureKit';
++import { fileIo } from '@kit.CoreFileKit';
++import { util } from '@kit.ArkTS';
++
++interface SealedValue { nonce: string; cipher: string; }
++/** AEAD ciphertext in the application sandbox; the key is generated and retained by HUKS. */
++export class HuksVault {
++  private alias: string;
++  private path: string;
++  private queue: Promise<void> = Promise.resolve();
++  constructor(directory: string, name: string) { this.alias = 'cn.com.swod.evadance.' + name; this.path = directory + '/' + name + '.sealed'; }
++  private props(purpose: number): huks.HuksParam[] {
++    return [{ tag: huks.HuksTag.HUKS_TAG_ALGORITHM, value: huks.HuksKeyAlg.HUKS_ALG_AES },
++      { tag: huks.HuksTag.HUKS_TAG_KEY_SIZE, value: 256 }, { tag: huks.HuksTag.HUKS_TAG_PURPOSE, value: purpose },
++      { tag: huks.HuksTag.HUKS_TAG_BLOCK_MODE, value: huks.HuksCipherMode.HUKS_MODE_GCM },
++      { tag: huks.HuksTag.HUKS_TAG_PADDING, value: huks.HuksKeyPadding.HUKS_PADDING_NONE }];
++  }
++  private async key(): Promise<void> {
++    if (await huks.isKeyItemExist(this.alias, { properties: [] })) return;
++    if (fileIo.accessSync(this.path)) throw new Error('安全存储密钥不可用，请重新登录');
++    await huks.generateKeyItem(this.alias, { properties: this.props(huks.HuksKeyPurpose.HUKS_KEY_PURPOSE_ENCRYPT | huks.HuksKeyPurpose.HUKS_KEY_PURPOSE_DECRYPT) });
++  }
++  private async crypt(input: Uint8Array, nonce: Uint8Array, encrypt: boolean): Promise<Uint8Array> {
++    const params = this.props(encrypt ? huks.HuksKeyPurpose.HUKS_KEY_PURPOSE_ENCRYPT : huks.HuksKeyPurpose.HUKS_KEY_PURPOSE_DECRYPT);
++    params.push({ tag: huks.HuksTag.HUKS_TAG_NONCE, value: nonce });
++    params.push({ tag: huks.HuksTag.HUKS_TAG_ASSOCIATED_DATA, value: new util.TextEncoder().encodeInto(this.alias) });
++    let data = input;
++    if (!encrypt) {
++      if (input.length < 16) throw new Error('安全存储无效');
++      params.push({ tag: huks.HuksTag.HUKS_TAG_AE_TAG, value: input.slice(input.length - 16) });
++      data = input.slice(0, input.length - 16);
++    }
++    const handle = await huks.initSession(this.alias, { properties: params });
++    try {
++      const result = await huks.finishSession(handle.handle, { properties: params, inData: data });
++      if (!result.outData) throw new Error('安全存储操作失败');
++      return result.outData;
++    } catch (error) { try { await huks.abortSession(handle.handle, { properties: [] }); } catch {} throw new Error('安全存储操作失败'); }
++  }
++  async read(): Promise<string | undefined> {
++    await this.queue;
++    if (!fileIo.accessSync(this.path)) return undefined;
++    await this.key();
++    const value = JSON.parse(fileIo.readTextSync(this.path)) as SealedValue;
++    const helper = new util.Base64Helper();
++    const plain = await this.crypt(helper.decodeSync(value.cipher), helper.decodeSync(value.nonce), false);
++    return util.TextDecoder.create('utf-8').decodeToString(plain);
++  }
++  save(value: string): Promise<void> {
++    const operation = this.queue.catch(() => {}).then(async () => {
++      await this.key(); const nonce = (await cryptoFramework.createRandom().generateRandom(12)).data;
++      const result = await this.crypt(new util.TextEncoder().encodeInto(value), nonce, true);
++      const helper = new util.Base64Helper();
++      const envelope: SealedValue = { nonce: helper.encodeToStringSync(nonce), cipher: helper.encodeToStringSync(result) };
++      const temp = this.path + '.tmp'; const file = fileIo.openSync(temp, fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC | fileIo.OpenMode.WRITE_ONLY);
++      try { fileIo.writeSync(file.fd, JSON.stringify(envelope)); fileIo.fsyncSync(file.fd); } finally { fileIo.closeSync(file); }
++      fileIo.renameSync(temp, this.path);
++    });
++    this.queue = operation; return operation;
++  }
++}
+--- /dev/null
++++ current/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CacheClock.ets
+@@ -0,0 +1,5 @@
++export interface CacheClockAnchor { server: number; elapsed: number; boot: string; }
++export function trustedCacheTime(anchor: CacheClockAnchor, elapsed: number, boot: string): number {
++  if (!anchor.boot || anchor.boot !== boot || !Number.isFinite(anchor.server) || !Number.isFinite(anchor.elapsed) || !Number.isFinite(elapsed) || anchor.elapsed < 0 || elapsed < anchor.elapsed) return Number.NaN;
++  return anchor.server + elapsed - anchor.elapsed;
++}
+--- /dev/null
++++ current/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CourseCacheStore.ets
+@@ -0,0 +1,179 @@
++import { common } from '@kit.AbilityKit';
++import { fileIo, statfs } from '@kit.CoreFileKit';
++import { systemDateTime, deviceInfo } from '@kit.BasicServicesKit';
++import { connection, http } from '@kit.NetworkKit';
++import { util } from '@kit.ArkTS';
++import { PlatformApi, PlatformFailure } from './PlatformApi';
++import { HuksVault } from './HuksVault';
++import { CacheClockAnchor, trustedCacheTime } from './CacheClock';
++import { VideoCacheLease, permitsCachedVideo } from './VideoCachePolicy';
++import { AutomaticVideoCacheRenewal, CacheRenewalHooks } from './AutomaticVideoCacheRenewal';
++import { AliyunSecureCacheDriver } from './AliyunSecureCacheDriver';
++import { Row } from './Models';
++
++export interface CachedCourse {
++  id: number; nonce: string; title: string; course: string; lease: VideoCacheLease; anchor: CacheClockAnchor;
++  file: string; state: string; percent: number; bytes: number; position: number; duration: number; revision: number; pending: boolean;
++}
++interface CacheInventory { device: string; items: CachedCourse[]; }
++interface CacheCredential { play_auth: string; }
++interface CacheGrant extends VideoCacheLease { credential?: CacheCredential; max_bytes: number; }
++
++export class CourseCacheStore {
++  private static instance?: CourseCacheStore;
++  static shared(context: common.UIAbilityContext, api: PlatformApi): CourseCacheStore {
++    const existing = CourseCacheStore.instance;
++    if (existing) return existing;
++    const store = new CourseCacheStore(context, api);
++    CourseCacheStore.instance = store;
++    store.initialize();
++    return store;
++  }
++  private context: common.UIAbilityContext;
++  private api: PlatformApi;
++  private vault: HuksVault;
++  private driver: AliyunSecureCacheDriver;
++  private inventory: CacheInventory = { device: '', items: [] };
++  private renewals: Map<number, AutomaticVideoCacheRenewal> = new Map();
++  private timer: number = -1;
++  private generation: number = 0;
++  private busy: boolean = false;
++  downloading: number = 0;
++  message: string = '';
++  changed: () => void = () => {};
++  root: string;
++  constructor(context: common.UIAbilityContext, api: PlatformApi) {
++    this.context = context; this.api = api; this.root = context.filesDir + '/course-cache';
++    this.vault = new HuksVault(context.filesDir, 'course-cache'); this.driver = new AliyunSecureCacheDriver(context);
++  }
++  async initialize(): Promise<void> {
++    try {
++      const data = await this.vault.read();
++      if (data) this.inventory = JSON.parse(data) as CacheInventory;
++      if (!this.inventory.device) this.inventory.device = util.generateRandomUUID().replace(/-/g, '') + util.generateRandomUUID().replace(/-/g, '');
++      this.inventory.items.forEach((item: CachedCourse) => { if (item.state !== 'ready') { item.state = 'paused'; item.file = ''; this.deleteFiles(item.id); } });
++      await this.persist();
++      this.api.cacheInvalidation = () => { this.purge(); };
++      this.timer = setInterval(() => { this.refresh(); }, 60000); await this.refresh();
++    } catch { this.inventory.items = []; this.message = '安全缓存索引不可用，请联网后重试'; }
++    this.changed();
++  }
++  private elapsed(): number { return systemDateTime.getUptime(systemDateTime.TimeType.STARTUP, false); }
++  private boot(): string { const count = deviceInfo.bootCount; return count >= 0 ? 'boot:' + count : ''; }
++  private current(lease: VideoCacheLease): boolean { return this.api.credentials?.memberId === lease.member_id && this.api.credentials?.sessionId === lease.session_id; }
++  visible(): CachedCourse[] { return this.inventory.items.filter((item: CachedCourse) => this.current(item.lease)); }
++  get(id: number): CachedCourse | undefined { return this.visible().find((item: CachedCourse) => item.id === id); }
++  file(item: CachedCourse): string {
++    if (!item.file || item.file.startsWith('/') || item.file.split('/').includes('..')) return '';
++    const path = this.root + '/' + item.file;
++    try { return fileIo.statSync(path).isFile() ? path : ''; } catch { return ''; }
++  }
++  usable(item: CachedCourse): boolean {
++    return this.current(item.lease) && item.state === 'ready' && this.file(item).length > 0 &&
++      permitsCachedVideo(item.lease, item.lease.member_id, item.lease.session_id, this.inventory.device, item.id, trustedCacheTime(item.anchor, this.elapsed(), this.boot()));
++  }
++  private persist(): Promise<void> { return this.vault.save(JSON.stringify(this.inventory)); }
++  private deleteTree(path: string): void {
++    if ((path !== this.root && !path.startsWith(this.root + '/')) || path.includes('..')) return;
++    try {
++      if (fileIo.statSync(path).isDirectory()) { fileIo.listFileSync(path, { recursion: false }).forEach((name: string) => this.deleteTree(path + '/' + name)); fileIo.rmdirSync(path); }
++      else fileIo.unlinkSync(path);
++    } catch {}
++  }
++  private deleteFiles(id: number): void { this.deleteTree(this.root + '/' + id); }
++  purge(): void {
++    this.generation++; this.driver.stop(); this.downloading = 0; this.renewals.forEach((renewal: AutomaticVideoCacheRenewal) => renewal.stop()); this.renewals.clear();
++    this.inventory.items = []; this.persist().catch(() => {}); this.deleteTree(this.root); this.changed();
++  }
++  remove(id: number): void {
++    if (this.downloading === id) { this.generation++; this.driver.stop(); this.downloading = 0; }
++    this.renewals.get(id)?.stop(); this.renewals.delete(id); this.inventory.items = this.inventory.items.filter((item: CachedCourse) => item.id !== id);
++    this.persist().catch(() => { this.message = '缓存索引保存失败'; }); this.deleteFiles(id); this.changed();
++  }
++  pause(id: number): void {
++    if (this.downloading !== id) return; this.generation++; this.driver.stop(); this.downloading = 0;
++    const item = this.get(id); if (item) item.state = 'paused'; this.persist().catch(() => {}); this.changed();
++  }
++  private lease(grant: CacheGrant): VideoCacheLease {
++    return { member_id: grant.member_id, session_id: grant.session_id, device_id: grant.device_id, lesson_id: grant.lesson_id, series_id: grant.series_id,
++      vod_video_id: grant.vod_video_id, material_version: grant.material_version, issued_at: grant.issued_at, expires_at: grant.expires_at, mode: grant.mode };
++  }
++  private authorize(id: number, action: string, material: string = ''): Promise<CacheGrant> {
++    return this.api.request<CacheGrant>('/video/' + id + '/cache-authorization', http.RequestMethod.POST,
++      { action: action, device_id: this.inventory.device, material_version: material }, true);
++  }
++  async refresh(): Promise<void> {
++    if (this.busy || !this.api.credentials) return; this.busy = true;
++    try {
++      const stale = this.inventory.items.filter((item: CachedCourse) => !this.current(item.lease)); stale.forEach((item: CachedCourse) => this.remove(item.id));
++      for (const item of this.visible()) {
++        if (item.state !== 'ready') continue;
++        if (!this.renewals.has(item.id)) {
++          let stamp: number = 0;
++          const hooks: CacheRenewalHooks = {
++            trustedNow: () => trustedCacheTime(item.anchor, this.elapsed(), this.boot()), retryNow: () => this.elapsed(),
++            online: () => connection.hasDefaultNetSync(), isCurrent: () => this.current(item.lease) && this.get(item.id)?.nonce === item.nonce,
++            renew: async (old: VideoCacheLease) => { stamp = this.elapsed(); const grant = await this.authorize(item.id, 'renew', old.material_version); return this.lease(grant); },
++            persist: async (next: VideoCacheLease) => {
++              if (this.get(item.id)?.nonce !== item.nonce || !this.current(next)) throw new Error('账号已变化');
++              const old = item.lease; const oldAnchor = item.anchor; item.lease = next; item.anchor = { server: next.issued_at, elapsed: stamp, boot: this.boot() };
++              try { await this.persist(); } catch { item.lease = old; item.anchor = oldAnchor; throw new Error('保存授权失败'); }
++            }, discard: () => { if (this.get(item.id)?.nonce === item.nonce) this.remove(item.id); }
++          };
++          this.renewals.set(item.id, new AutomaticVideoCacheRenewal(item.lease, hooks));
++        }
++        await this.renewals.get(item.id)?.refresh(); await this.syncProgress(item.id);
++      }
++    } finally { this.busy = false; this.changed(); }
++  }
++  async download(id: number, title: string, course: string): Promise<void> {
++    if (this.downloading) { this.message = '请等待当前课节缓存完成，或先取消任务'; this.changed(); return; }
++    if (!await this.driver.configured()) { this.message = '安全缓存授权尚未配置完成，请先在线观看'; this.changed(); return; }
++    if (this.inventory.items.length >= 12 && !this.get(id)) { this.message = '最多缓存12节，请先删除不需要的缓存'; this.changed(); return; }
++    const version = this.generation; this.downloading = id; this.message = '正在验证缓存权限'; this.changed();
++    const stamp = this.elapsed();
++    try {
++      const grant = await this.authorize(id, 'download');
++      if (version !== this.generation || !this.current(grant) || !grant.credential?.play_auth) throw new Error('账号或缓存权限已变化');
++      this.downloading = 0; this.remove(id); this.downloading = id;
++      const item: CachedCourse = { id: id, nonce: util.generateRandomUUID(), title: title, course: course, lease: this.lease(grant),
++        anchor: { server: grant.issued_at, elapsed: stamp, boot: this.boot() }, file: '', state: 'downloading', percent: 0, bytes: 0, position: 0, duration: 0, revision: 0, pending: false };
++      try { const progress = await this.api.request<Row>('/video/' + id + '/progress', http.RequestMethod.GET, undefined, true); item.position = progress.progress || 0; item.revision = progress.revision || 0; } catch {}
++      if (version !== this.generation || !this.current(grant)) return;
++      this.inventory.items.push(item); await this.persist();
++      const used = AliyunSecureCacheDriver.directoryBytes(this.root);
++      const allowed = (): boolean => version === this.generation && this.get(id)?.nonce === item.nonce && this.current(item.lease) && permitsCachedVideo(item.lease, item.lease.member_id, item.lease.session_id, this.inventory.device, id, trustedCacheTime(item.anchor, this.elapsed(), this.boot()));
++      await this.driver.start(grant.vod_video_id, grant.credential.play_auth, this.root + '/' + id, Math.min(grant.max_bytes, 2147483648 - used, statfs.getFreeSizeSync(this.context.filesDir) - 104857600), allowed, {
++        progress: (percent: number) => { if (allowed()) { item.percent = Math.min(99, Math.max(0, percent)); this.changed(); } },
++        complete: (path: string) => {
++          if (!allowed()) { this.remove(id); return; }
++          item.file = path.slice(this.root.length + 1); item.state = 'ready'; item.percent = 100; item.bytes = AliyunSecureCacheDriver.directoryBytes(this.root + '/' + id); this.downloading = 0;
++          this.persist().then(() => { this.message = '缓存完成'; this.changed(); this.refresh(); }).catch(() => { this.remove(id); this.message = '缓存无法安全保存，请重试'; this.changed(); });
++        }, failure: (message: string) => { if (version === this.generation) { this.remove(id); this.message = message; this.changed(); } }
++      });
++    } catch { if (version === this.generation) { this.downloading = 0; this.remove(id); this.message = '安全缓存失败，请联网重试'; this.changed(); } }
++  }
++  checkpoint(id: number, position: number, duration: number): void {
++    const item = this.get(id); if (!item || !this.usable(item) || !Number.isFinite(position) || !Number.isFinite(duration) || duration <= 0 || position < 0 || position > duration + 1) return;
++    item.position = Math.min(position, duration); item.duration = duration; item.pending = true;
++    this.persist().catch(() => { this.message = '本机学习进度保存失败'; });
++  }
++  private async syncProgress(id: number): Promise<void> {
++    const item = this.get(id); if (!item?.pending || !this.usable(item) || !connection.hasDefaultNetSync()) return;
++    const position = item.position;
++    try {
++      const result = await this.api.request<Row>('/video/' + id + '/progress', http.RequestMethod.POST, { progress: position, duration: item.duration, revision: item.revision }, true);
++      if (this.get(id)?.nonce !== item.nonce || !this.current(item.lease) || item.position !== position) return;
++      item.revision = result.revision || item.revision; item.pending = false; await this.persist();
++    } catch (error) {
++      if (error instanceof PlatformFailure && error.status === 409) {
++        try {
++          const newer = await this.api.request<Row>('/video/' + id + '/progress', http.RequestMethod.GET, undefined, true);
++          if (this.get(id)?.nonce !== item.nonce || !this.current(item.lease) || item.position !== position) return;
++          item.position = newer.progress || 0; item.duration = newer.duration || item.duration; item.revision = newer.revision || item.revision; item.pending = false; await this.persist();
++        } catch {}
++      }
++    }
++  }
++  stop(): void { if (this.timer >= 0) clearInterval(this.timer); this.timer = -1; this.driver.stop(); }
++}
+--- /dev/null
++++ current/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/AliyunSecureCacheDriver.ets
+@@ -0,0 +1,71 @@
++import { common } from '@kit.AbilityKit';
++import { fileIo } from '@kit.CoreFileKit';
++import { AliMediaDownloader, AliDownloaderFactory, PrivateService, VidAuth, MediaInfo, TrackInfo, ErrorInfo, Logger } from 'premierlibrary';
++
++export interface CacheDownloadCallbacks { progress: (percent: number) => void; complete: (path: string) => void; failure: (message: string) => void; }
++/** SDK media I/O; application lease checks are mandatory, including during download and completion. */
++export class AliyunSecureCacheDriver {
++  static async initializeKey(context: common.UIAbilityContext): Promise<void> {
++    const bytes = await context.resourceManager.getRawFileContent('encryptedApp.dat');
++    const path = context.filesDir + '/vod-encryptedApp.dat';
++    const file = fileIo.openSync(path, fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC | fileIo.OpenMode.WRITE_ONLY);
++    try { fileIo.writeSync(file.fd, bytes.buffer); fileIo.fsyncSync(file.fd); } finally { fileIo.closeSync(file); }
++    PrivateService.initService(context, path);
++  }
++  static directoryBytes(path: string): number {
++    if (!fileIo.accessSync(path)) return 0;
++    try {
++      const stat = fileIo.statSync(path); if (stat.isFile()) return stat.size;
++      return fileIo.listFileSync(path).reduce((sum: number, name: string) => sum + AliyunSecureCacheDriver.directoryBytes(path + '/' + name), 0);
++    } catch { return Number.MAX_VALUE; }
++  }
++  private worker?: AliMediaDownloader;
++  private guardTimer: number = -1;
++  private allowed: () => boolean = () => false;
++  private callbacks?: CacheDownloadCallbacks;
++  private context: common.UIAbilityContext;
++  constructor(context: common.UIAbilityContext) { this.context = context; }
++  async configured(): Promise<boolean> {
++    try {
++      const metadata = this.context.currentHapModuleInfo.metadata || [];
++      const key = metadata.find((item) => item.name === 'com.aliyun.alivc_license.licensekey')?.value || '';
++      const cert = metadata.find((item) => item.name === 'com.aliyun.alivc_license.licensefile')?.value || '';
++      if (!key || !cert) return false;
++      const secret = await this.context.resourceManager.getRawFileContent('encryptedApp.dat');
++      const license = await this.context.resourceManager.getRawFileContent(cert);
++      return secret.length > 0 && license.length > 0;
++    } catch { return false; }
++  }
++  async start(vod: string, playAuth: string, directory: string, maximumBytes: number, allowed: () => boolean, callbacks: CacheDownloadCallbacks): Promise<void> {
++    if (!await this.configured() || !allowed() || !playAuth || maximumBytes <= 0) throw new Error('课程安全缓存尚未开放');
++    if (!directory.startsWith(this.context.filesDir + '/course-cache/') || directory.includes('..')) throw new Error('缓存目录无效');
++    this.stop(); fileIo.mkdirSync(directory, true);
++    await AliyunSecureCacheDriver.initializeKey(this.context);
++    if (!allowed()) throw new Error('缓存授权已变化');
++    Logger.getInstance(this.context).enableConsoleLog(false);
++    this.allowed = allowed; this.callbacks = callbacks;
++    const active = AliDownloaderFactory.create(this.context); this.worker = active; active.setSaveDir(directory);
++    active.setOnPreparedListener({ onPrepared: (info: MediaInfo) => {
++      if (this.worker !== active) return;
++      if (!this.allowed()) { this.fail('缓存授权已变化'); return; }
++      const tracks = info.getTrackInfos().filter((track: TrackInfo) => ['m3u8', 'mp4'].includes(track.getVodFormat()) && track.getVodFileSize() > 0 && track.getVodFileSize() <= maximumBytes).sort((a: TrackInfo, b: TrackInfo) => a.getVodFileSize() - b.getVodFileSize());
++      if (!tracks.length) { this.fail('没有可安全缓存的清晰度或空间不足'); return; }
++      active.selectItem(tracks[0].getIndex()); active.start();
++    } });
++    active.setOnProgressListener({ onDownloadingProgress: (percent: number) => { if (this.worker !== active) return; if (this.allowed()) callbacks.progress(percent); else this.fail('缓存授权待联网更新'); }, onProcessingProgress: (_percent: number) => {} });
++    active.setOnErrorListener({ onError: (_error: ErrorInfo) => { if (this.worker === active) this.fail('安全缓存失败，请联网重试'); } });
++    active.setOnCompletionListener({ onCompletion: () => {
++      if (this.worker !== active) return;
++      const path = active.getFilePath();
++      try {
++        const stat = fileIo.statSync(path);
++        if (!this.allowed() || !path.startsWith(directory + '/') || path.includes('..') || !stat.isFile() || stat.size <= 0 || AliyunSecureCacheDriver.directoryBytes(directory) > maximumBytes) { this.fail('缓存文件或授权无效'); return; }
++        this.stop(); callbacks.complete(path);
++      } catch { this.fail('无法安全保存缓存'); }
++    } });
++    const source = new VidAuth(); source.setVid(vod); source.setPlayAuth(playAuth); active.prepareVidAuth(source);
++    this.guardTimer = setInterval(() => { if (this.worker && !this.allowed()) this.fail('缓存授权待联网更新'); else if (this.worker && AliyunSecureCacheDriver.directoryBytes(directory) > maximumBytes) this.fail('缓存超出容量限制，请删除不需要的缓存'); }, 1000);
++  }
++  stop(): void { if (this.guardTimer >= 0) clearInterval(this.guardTimer); this.guardTimer = -1; this.worker?.stop(); this.worker?.release(); this.worker = undefined; this.allowed = () => false; this.callbacks = undefined; }
++  private fail(message: string): void { const callbacks = this.callbacks; this.worker?.deleteFile(); this.stop(); callbacks?.failure(message); }
++}
+--- /dev/null
++++ current/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/CachedCourses.ets
+@@ -0,0 +1,108 @@
++import { common } from '@kit.AbilityKit';
++import { AliPlayer, AliPlayerFactory, UrlSource, Logger, ErrorInfo } from 'premierlibrary';
++import { AliyunSecureCacheDriver } from '../services/AliyunSecureCacheDriver';
++import { CourseCacheStore, CachedCourse } from '../services/CourseCacheStore';
++import { platform } from '../services/PlatformApi';
++import { SwodTheme } from '../services/SwodTheme';
++
++@Component
++export struct CachedCourses {
++  cache?: CourseCacheStore;
++  @State private rows: CachedCourse[] = [];
++  @State private message: string = '';
++  @State private selected: number = 0;
++  aboutToAppear(): void {
++    if (this.cache) { this.cache.changed = () => this.reload(); this.reload(); this.cache.refresh(); }
++  }
++  aboutToDisappear(): void { if (this.cache) this.cache.changed = () => {}; }
++  private reload(): void { if (this.cache) { this.rows = JSON.parse(JSON.stringify(this.cache.visible())) as CachedCourse[]; this.message = this.cache.message; } }
++  build() {
++    Column({ space: 12 }) {
++      if (this.cache && this.selected > 0) {
++        CachedOfflinePlayer({ cache: this.cache, lessonID: this.selected, back: () => { this.selected = 0; this.reload(); } })
++      } else {
++        Text('课程缓存').fontSize(22).fontWeight(FontWeight.Bold).width('100%')
++        Text('联网时自动验证和续期；断网可在授权有效期内学习，最长24小时。设备重启后需要联网验证；退出账号会删除本机缓存。').fontSize(14).fontColor(SwodTheme.muted)
++        if (this.message) { Text(this.message).fontSize(14).fontColor(SwodTheme.primary) }
++        if (!this.rows.length) { Text('暂无缓存，请从课程播放设置中缓存课节。').fontSize(16).fontColor(SwodTheme.muted).padding(24) }
++        ForEach(this.rows, (item: CachedCourse) => {
++          Column({ space: 10 }) {
++            Text(item.course).fontSize(12).fontColor(SwodTheme.muted).width('100%')
++            Text(item.title).fontSize(17).fontWeight(FontWeight.Medium).width('100%')
++            if (item.state === 'downloading') { Progress({ value: item.percent, total: 100 }); Text('正在缓存 ' + item.percent + '%').fontSize(13); Button('暂停缓存').constraintSize({ minHeight: 44 }).onClick(() => this.cache?.pause(item.id)) }
++            else if (this.cache?.usable(item)) {
++              Text((item.bytes / 1048576).toFixed(1) + ' MB' + (item.pending ? ' · 学习进度待自动同步' : ' · 已缓存')).fontSize(13).fontColor(SwodTheme.muted)
++              Button('离线观看').constraintSize({ minHeight: 44 }).onClick(() => { this.selected = item.id; })
++            } else { Text(item.state === 'ready' ? '待联网自动验证' : '缓存已暂停，可重新缓存').fontSize(14).fontColor(SwodTheme.muted)
++              if (item.state === 'paused') { Button('重新缓存').constraintSize({ minHeight: 44 }).onClick(() => { this.cache?.download(item.id, item.title, item.course); }) }
++            }
++            Button('删除缓存').fontColor(SwodTheme.primary).backgroundColor(SwodTheme.tonal).constraintSize({ minHeight: 44 }).onClick(() => {
++              this.getUIContext().getPromptAction().showDialog({ message: '删除这节课的本机缓存？', buttons: [{ text: '取消', color: '#777777' }, { text: '删除', color: '#8A2233' }] }).then((result) => { if (result.index === 1) this.cache?.remove(item.id); });
++            })
++          }.alignItems(HorizontalAlign.Start).padding(16).width('100%').backgroundColor(SwodTheme.surface).borderRadius(12)
++        }, (item: CachedCourse) => item.nonce)
++      }
++    }.width('100%').alignItems(HorizontalAlign.Start)
++  }
++}
++
++@Component
++struct CachedOfflinePlayer {
++  cache?: CourseCacheStore;
++  lessonID: number = 0;
++  back: () => void = () => {};
++  private player?: AliPlayer;
++  private surface: XComponentController = new XComponentController();
++  private timer: number = -1;
++  private generation: number = 0;
++  private ticks: number = 0;
++  private recordNonce: string = '';
++  @State private ready: boolean = false;
++  @State private playing: boolean = false;
++  @State private message: string = '';
++  @State private playbackPosition: number = 0;
++  @State private duration: number = 1;
++  private permits(): boolean { const item = this.cache?.get(this.lessonID); return item !== undefined && (!this.recordNonce || this.recordNonce === item.nonce) && this.cache?.usable(item) === true && platform.applicationActive && platform.screenProtected; }
++  private async open(): Promise<void> {
++    const item = this.cache?.get(this.lessonID); if (!item || !this.permits()) { this.message = '缓存授权或安全窗口待验证'; return; }
++    this.recordNonce = item.nonce;
++    const version = this.generation;
++    const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
++    try {
++      await AliyunSecureCacheDriver.initializeKey(context);
++      if (version !== this.generation || !this.permits()) return;
++      Logger.getInstance(context).enableConsoleLog(false);
++      const player = AliPlayerFactory.createAliPlayer(context); this.player = player; player.setSurfaceId(this.surface.getXComponentSurfaceId());
++      player.setOnPreparedListener({ onPrepared: () => { if (!this.permits()) { player.pause(); return; } this.duration = player.getDuration() / 1000; this.ready = true; player.seekTo(item.position * 1000, 1); } });
++      player.setOnErrorListener({ onError: (_error: ErrorInfo) => { this.playing = false; this.ready = false; this.message = '安全缓存无法解密，请联网重新缓存'; } });
++      player.setOnCompletionListener({ onCompletion: () => { this.playing = false; this.checkpoint(); } });
++      const source = new UrlSource(); source.setUri(this.cache?.file(item) || ''); player.setUrlDataSource(source); player.prepare();
++      this.timer = setInterval(() => {
++        if (!this.permits()) { this.player?.pause(); this.playing = false; this.message = '缓存授权待联网自动验证'; return; }
++        this.playbackPosition = (this.player?.getCurrentPosition() || 0) / 1000;
++        if (++this.ticks % 15 === 0) this.checkpoint();
++        if (this.message === '缓存授权待联网自动验证') this.message = '';
++      }, 1000);
++    } catch { this.message = '安全离线播放器尚未就绪'; }
++  }
++  private checkpoint(): void { if (this.cache?.get(this.lessonID)?.nonce === this.recordNonce) this.cache?.checkpoint(this.lessonID, this.playbackPosition, this.duration); }
++  aboutToDisappear(): void { this.generation++; this.checkpoint(); if (this.timer >= 0) clearInterval(this.timer); this.player?.stop(); this.player?.release(); this.player = undefined; }
++  build() {
++    Column({ space: 14 }) {
++      Button('返回缓存列表').constraintSize({ minHeight: 44 }).onClick(() => this.back())
++      Stack({ alignContent: Alignment.TopStart }) {
++        XComponent({ id: 'secure-course-offline', type: XComponentType.SURFACE, controller: this.surface }).width('100%').aspectRatio(16 / 9).onLoad(() => { this.open(); })
++        Text('SWOD · 学习码 ' + (platform.credentials?.sessionId || '').slice(-8).toUpperCase()).fontSize(11).fontColor(Color.White).padding(8).backgroundColor('#55000000')
++      }.width('100%')
++      Text(this.cache?.get(this.lessonID)?.title || '课程缓存').fontSize(18)
++      if (this.message) { Text(this.message).fontSize(14).fontColor(SwodTheme.primary) }
++      Button(this.playing ? '暂停' : '播放').constraintSize({ minHeight: 44 }).enabled(this.ready && this.permits()).onClick(() => {
++        if (!this.permits()) return; if (this.playing) this.player?.pause(); else this.player?.start(); this.playing = !this.playing;
++      })
++      Slider({ value: this.playbackPosition, min: 0, max: Math.max(1, this.duration) }).enabled(this.ready && this.permits()).onChange((value: number, mode: SliderChangeMode) => {
++        if (mode === SliderChangeMode.End && this.permits()) { this.playbackPosition = value; this.player?.seekTo(value * 1000, 1); }
++      })
++      Text(Math.floor(this.playbackPosition) + ' / ' + Math.floor(this.duration) + ' 秒').fontSize(13).fontColor(SwodTheme.muted)
++    }.width('100%')
++  }
++}
+--- /dev/null
++++ current/app开发/HarmonyOS/EvaDance/scripts/cache-clock.test.cjs
+@@ -0,0 +1,7 @@
++const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
++const ts=require(path.resolve(__dirname,'../../../../10-统一平台admin-platform/node_modules/typescript'));
++const moduleObject={exports:{}};
++new Function('module','exports',ts.transpileModule(fs.readFileSync(path.resolve(__dirname,'../entry/src/main/ets/services/CacheClock.ets'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(moduleObject,moduleObject.exports);
++const trusted=moduleObject.exports.trustedCacheTime;
++test('sleep-inclusive elapsed time expires at 24h without using editable wall time',()=>{assert.equal(trusted({server:1000,elapsed:2000,boot:'1'},86402000,'1'),86401000);});
++test('reboot, unavailable boot identity and backwards elapsed time fail closed',()=>{for(const [anchor,elapsed,boot] of [[{server:1000,elapsed:2000,boot:'1'},3000,'2'],[{server:1000,elapsed:2000,boot:''},3000,''],[{server:1000,elapsed:2000,boot:'1'},1000,'1'],[{server:NaN,elapsed:2000,boot:'1'},3000,'1']])assert.ok(Number.isNaN(trusted(anchor,elapsed,boot)));});
+--- /dev/null
++++ current/app开发/共享资料/scripts/prepare_vod_config.py
+@@ -0,0 +1,76 @@
++#!/usr/bin/env python3
++"""Inject only vendor client License/certificate and App-bound download key into isolated builds."""
++import argparse
++import json
++import re
++from pathlib import Path
++import shutil
++import xml.etree.ElementTree as ET
++
++IDENTIFIERS = {'ios': 'cn.com.swod.app', 'android': 'cn.com.swod.app', 'harmony': 'cn.com.swod.evadance'}
++
++def load_assets(platform, private_root=None):
++    folder = (Path(private_root) if private_root else Path.home() / '.config/eva-app/vod') / platform
++    manifest = folder / 'license.json'
++    if not manifest.is_file():
++        return None
++    value = json.loads(manifest.read_text())
++    if value.get('applicationId') != IDENTIFIERS[platform] or not isinstance(value.get('licenseKey'), str) or not value['licenseKey'].strip():
++        raise ValueError('VOD License application binding or key is invalid')
++    cert = folder / 'AliVideoCert.crt'
++    key = folder / 'encryptedApp.dat'
++    for file in [cert, key]:
++        if not file.is_file() or file.is_symlink() or file.stat().st_size == 0:
++            raise ValueError('VOD client certificate or download key missing')
++    try:
++        encoded_key = key.read_text(encoding='utf-8-sig').strip()
++    except UnicodeDecodeError as error:
++        raise ValueError('VOD download key must preserve the vendor encoded file, not decoded bytes') from error
++    if not re.fullmatch(r'[A-Za-z0-9_+/=-]+', encoded_key):
++        raise ValueError('VOD download key is not the vendor encoded file')
++    if platform == 'android' and value.get('signatureMD5') != '460ddea3a2119d0c4f11c43c24889b11':
++        raise ValueError('VOD Android License does not match the original release certificate')
++    return {'licenseKey': value['licenseKey'], 'certificate': str(cert), 'downloadKey': str(key)}
++
++def prepare(platform, staging):
++    assets = load_assets(platform)
++    if not assets:
++        print('VOD client License missing; cache stays unavailable. No credentials copied.')
++        return
++    staging = Path(staging).resolve()
++    source = Path(__file__).resolve().parents[2] / ('Android' if platform == 'android' else 'HarmonyOS') / 'EvaDance'
++    if staging == source or source in staging.parents or staging in source.parents:
++        raise ValueError('VOD credentials may only be injected into an isolated build')
++    if platform == 'android':
++        target = staging / 'app/src/main/assets'
++        manifest = staging / 'app/src/main/AndroidManifest.xml'
++        ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
++        document = ET.parse(manifest); app = document.getroot().find('application')
++        namespace = '{http://schemas.android.com/apk/res/android}'
++        for name, value in [('licensekey', assets['licenseKey']), ('licensefile', 'assets/AliVideoCert.crt')]:
++            full = 'com.aliyun.alivc_license.' + name
++            for old in list(app.findall('meta-data')):
++                if old.get(namespace + 'name') == full: app.remove(old)
++            ET.SubElement(app, 'meta-data', {namespace + 'name': full, namespace + 'value': value})
++        document.write(manifest, encoding='utf-8', xml_declaration=True)
++    else:
++        target = staging / 'entry/src/main/resources/rawfile'
++        manifest = staging / 'entry/src/main/module.json5'
++        document = json.loads(manifest.read_text())
++        items = document['module'].get('metadata', [])
++        items = [row for row in items if not row['name'].startswith('com.aliyun.alivc_license.')]
++        items += [{'name': 'com.aliyun.alivc_license.licensekey', 'value': assets['licenseKey']},
++                  {'name': 'com.aliyun.alivc_license.licensefile', 'value': 'AliVideoCert.crt'}]
++        document['module']['metadata'] = items
++        manifest.write_text(json.dumps(document, ensure_ascii=False, indent=2) + '\n')
++    target.mkdir(parents=True, exist_ok=True)
++    shutil.copyfile(assets['certificate'], target / 'AliVideoCert.crt')
++    shutil.copyfile(assets['downloadKey'], target / 'encryptedApp.dat')
++    print('App-bound VOD client assets prepared in isolated build; values withheld.')
++
++if __name__ == '__main__':
++    parser = argparse.ArgumentParser()
++    parser.add_argument('platform', choices=['android', 'harmony'])
++    parser.add_argument('staging')
++    args = parser.parse_args()
++    prepare(args.platform, args.staging)
+--- /dev/null
++++ current/10-统一平台admin-platform/scripts/vod-secure-download.test.cjs
+@@ -0,0 +1,12 @@
++const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript');
++const m={exports:{}};
++new Function('require','module','exports',ts.transpileModule(fs.readFileSync('src/lib/server/aliyun-vod.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,esModuleInterop:true,target:ts.ScriptTarget.ES2022}}).outputText)(require,m,m.exports);
++const validate=m.exports.validateVodOfflineStreams;
++const response=rows=>({VideoBase:{Status:'Normal'},PlayInfoList:{PlayInfo:rows}});
++test('missing, clear or mixed cloud streams cannot issue an offline credential',()=>{
++ for(const r of [{},response([]),response([{Format:'m3u8',Encrypt:0}]),response([{Format:'m3u8',Encrypt:1},{Format:'mp4',Encrypt:0}]),response([{Format:'mp4'}]),{...response([{Format:'mp4',Encrypt:1}]),VideoBase:{Status:'Transcoding'}}])assert.throws(()=>validate(r));
++});
++test('only a complete encrypted playable set is eligible',()=>{
++ assert.doesNotThrow(()=>validate(response([{Format:'m3u8',Encrypt:'1'},{Format:'mp4',Encrypt:1}])));
++ assert.throws(()=>validate(response([{Format:'flv',Encrypt:1}])));
++});
+--- /dev/null
++++ current/app开发/共享资料/scripts/test_prepare_vod_config.py
+@@ -0,0 +1,35 @@
++import json
++from pathlib import Path
++import tempfile
++import unittest
++from prepare_vod_config import load_assets
++
++class ClientAssetBoundaryTests(unittest.TestCase):
++    def setUp(self):
++        self.temp = tempfile.TemporaryDirectory()
++        self.root = Path(self.temp.name)
++        self.folder = self.root / 'android'
++        self.folder.mkdir()
++        self.manifest = {'applicationId':'cn.com.swod.app','licenseKey':'test-only-license','signatureMD5':'460ddea3a2119d0c4f11c43c24889b11'}
++        self.write_manifest()
++        (self.folder/'AliVideoCert.crt').write_text('TEST ONLY CERTIFICATE')
++        (self.folder/'encryptedApp.dat').write_text('TestOnlyEncodedKey_123-abc',encoding='utf-8-sig')
++    def tearDown(self):
++        self.temp.cleanup()
++    def write_manifest(self):
++        (self.folder/'license.json').write_text(json.dumps(self.manifest))
++    def test_missing_license_keeps_cache_unconfigured(self):
++        (self.folder/'license.json').unlink()
++        self.assertIsNone(load_assets('android',self.root))
++    def test_vendor_text_is_used_without_decoding(self):
++        assets = load_assets('android',self.root)
++        self.assertEqual(Path(assets['downloadKey']).read_text(encoding='utf-8-sig'),'TestOnlyEncodedKey_123-abc')
++    def test_base64_decoded_binary_is_rejected(self):
++        (self.folder/'encryptedApp.dat').write_bytes(bytes(range(256)))
++        with self.assertRaises(ValueError):load_assets('android',self.root)
++    def test_other_android_signature_is_rejected(self):
++        self.manifest['signatureMD5']='0'*32
++        self.write_manifest()
++        with self.assertRaises(ValueError):load_assets('android',self.root)
++
++if __name__ == '__main__':unittest.main()
+--- /dev/null
++++ current/app开发/共享资料/同步更新/20261029-cache-integration/qa/SecureCacheProbe.java
+@@ -0,0 +1,65 @@
++package cn.com.swod.app;
++import android.app.Instrumentation;
++import android.content.Context;
++import android.os.*;
++import android.graphics.SurfaceTexture;
++import android.view.Surface;
++import android.net.*;
++import android.media.MediaMetadataRetriever;
++import com.aliyun.player.*;
++import com.aliyun.player.source.UrlSource;
++import com.aliyun.private_service.PrivateService;
++import org.json.JSONObject;
++import java.io.*;
++import java.util.concurrent.*;
++import java.util.concurrent.atomic.*;
++/** Isolated synthetic media probe; never invokes production member APIs or relaxes their entitlement gates. */
++public final class SecureCacheProbe extends Instrumentation {
++ private Bundle args;
++ private final Bundle result=new Bundle();
++ private AliPlayer player;private Surface surface;private SurfaceTexture texture;
++ @Override public void onCreate(Bundle values){super.onCreate(values);args=values;start();}
++ @Override public void onStart(){try{
++  if("cleanup".equals(args.getString("mode"))){deleteTestTree(root());new File(getTargetContext().getNoBackupFilesDir(),"qa-vod-key.dat").delete();result.putBoolean("testDataRemoved",!root().exists());}
++  else if("download".equals(args.getString("mode")))download();else offline();
++  finish(-1,result);
++ }catch(Exception error){result.putString("failure",error.getMessage());finish(0,result);}}
++ private void deleteTestTree(File file)throws Exception{String base=root().getCanonicalPath();String value=file.getCanonicalPath();if(!value.equals(base)&&!value.startsWith(base+File.separator))throw new Exception("cleanup_path_outside_test");if(file.isDirectory()){File[] children=file.listFiles();if(children!=null)for(File child:children)deleteTestTree(child);}if(file.exists()&&!file.delete())throw new Exception("test_cleanup_failed");}
++ private File root(){return new File(getTargetContext().getNoBackupFilesDir(),"qa-cache-integration-disposable");}
++ private JSONObject read(File file)throws Exception{try(InputStream in=new FileInputStream(file)){return new JSONObject(new String(in.readAllBytes(),java.nio.charset.StandardCharsets.UTF_8));}}
++ private void download()throws Exception{
++  Context context=getTargetContext();JSONObject credential;try(InputStream in=getContext().getAssets().open("vod-qa.json")){credential=new JSONObject(new String(in.readAllBytes(),java.nio.charset.StandardCharsets.UTF_8));}
++  CountDownLatch done=new CountDownLatch(1);AtomicReference<File> output=new AtomicReference<>();AtomicReference<String> failure=new AtomicReference<>();
++  AliyunSecureCacheDriver driver=new AliyunSecureCacheDriver(context);result.putBoolean("driverConfigured",driver.configured());
++  runOnMainSync(()->{try{driver.start(credential.optString("vid"),credential.optString("playAuth"),root(),8*1024*1024,()->true,new AliyunSecureCacheDriver.Listener(){public void progress(int p){}public void complete(File file){output.set(file);done.countDown();}public void failure(String message){failure.set(message);done.countDown();}});}catch(Exception error){failure.set(error.getMessage());done.countDown();}});
++  if(!done.await(100,TimeUnit.SECONDS)){runOnMainSync(driver::stop);throw new Exception("download_timeout");}
++  if(output.get()==null)throw new Exception("download_failed: "+failure.get());
++  File file=output.get();JSONObject receipt=new JSONObject().put("path",file.getAbsolutePath()).put("bytes",file.length());
++  try(FileOutputStream out=new FileOutputStream(new File(root(),"receipt.json"))){out.write(receipt.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));}
++  result.putBoolean("secureDownloadCompleted",true);result.putLong("fileBytes",file.length());
++  MediaMetadataRetriever plain=new MediaMetadataRetriever();boolean rejected=false;
++  try{plain.setDataSource(file.getAbsolutePath());android.graphics.Bitmap frame=plain.getFrameAtTime(1000000);rejected=frame==null;if(frame!=null)frame.recycle();}catch(Exception expected){rejected=true;}finally{plain.release();}
++  result.putBoolean("systemDecoderRejected",rejected);
++ }
++ private void offline()throws Exception{
++  Context context=getTargetContext();ConnectivityManager net=(ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
++  boolean connected=false;for(Network network:net.getAllNetworks()){NetworkCapabilities caps=net.getNetworkCapabilities(network);if(caps!=null&&caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET))connected=true;}
++  result.putBoolean("networkUnavailable",!connected);if(connected)throw new Exception("offline_test_requires_disconnected_emulator");
++  result.putLong("cacheDirectoryBytes",AliyunSecureCacheDriver.directoryBytes(root()));
++  JSONObject receipt=read(new File(root(),"receipt.json"));File file=new File(receipt.getString("path"));
++  if(!file.getCanonicalPath().startsWith(root().getCanonicalPath()+File.separator))throw new Exception("invalid_test_path");
++  File key=new File(context.getNoBackupFilesDir(),"qa-vod-key.dat");try(InputStream in="wrong-key".equals(args.getString("mode"))?getContext().getAssets().open("wrong-app-key.dat"):context.getAssets().open("encryptedApp.dat");FileOutputStream out=new FileOutputStream(key)){out.write(in.readAllBytes());}
++  CountDownLatch rendered=new CountDownLatch(1);AtomicBoolean decoded=new AtomicBoolean(false);AtomicInteger errorCode=new AtomicInteger();
++  runOnMainSync(()->{
++   PrivateService.initService(context,key.getAbsolutePath());player=AliPlayerFactory.createAliPlayer(context);texture=new SurfaceTexture(false);surface=new Surface(texture);player.setSurface(surface);
++   player.setOnPreparedListener(()->{result.putLong("durationMS",player.getDuration());player.start();});
++   player.setOnRenderingStartListener(()->{decoded.set(true);rendered.countDown();});
++   player.setOnErrorListener(error->{errorCode.set(error.getCode().getValue());rendered.countDown();});
++   UrlSource source=new UrlSource();source.setUri(file.getAbsolutePath());player.setDataSource(source);player.prepare();
++  });
++  boolean completed=rendered.await(30,TimeUnit.SECONDS);result.putBoolean("offlineFrameRendered",decoded.get());result.putInt("sdkErrorCode",errorCode.get());
++  runOnMainSync(()->{player.stop();player.release();surface.release();texture.release();});
++  if("wrong-key".equals(args.getString("mode"))){boolean rejected=completed&&!decoded.get()&&errorCode.get()!=0;result.putBoolean("wrongBindingRejected",rejected);if(!rejected)throw new Exception("wrong_binding_not_rejected");}
++  else if(!completed||!decoded.get())throw new Exception("offline_decode_failed");
++ }
++}
+--- /dev/null
++++ current/app开发/共享资料/同步更新/20261029-cache-integration/qa/GenerateCacheTestVideo.swift
+@@ -0,0 +1,51 @@
++import Foundation
++import AVFoundation
++import CoreVideo
++import CoreGraphics
++
++let output = URL(fileURLWithPath: CommandLine.arguments[1])
++// Test-only synthetic frames, no course content or user data.
++let width = 320, height = 180, fps: Int32 = 30, seconds = 10
++let writer = try AVAssetWriter(outputURL: output, fileType: .mp4)
++let settings: [String: Any] = [AVVideoCodecKey: AVVideoCodecType.h264,
++    AVVideoWidthKey: width, AVVideoHeightKey: height,
++    AVVideoCompressionPropertiesKey: [AVVideoAverageBitRateKey: 180_000, AVVideoMaxKeyFrameIntervalKey: 30]]
++let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
++input.expectsMediaDataInRealTime = false
++let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input,
++    sourcePixelBufferAttributes: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32ARGB,
++                                 kCVPixelBufferWidthKey as String: width, kCVPixelBufferHeightKey as String: height,
++                                 kCVPixelBufferCGImageCompatibilityKey as String: true,
++                                 kCVPixelBufferCGBitmapContextCompatibilityKey as String: true])
++writer.add(input)
++guard writer.startWriting() else { fatalError("Test writer failed") }
++writer.startSession(atSourceTime: .zero)
++let colors: [(CGFloat, CGFloat, CGFloat)] = [(0.5,0.08,0.17),(0.1,0.45,0.7),(0.1,0.6,0.35),(0.8,0.6,0.15)]
++for frame in 0..<(Int(fps) * seconds) {
++    let limit = Date().addingTimeInterval(10)
++    while !input.isReadyForMoreMediaData {
++        guard writer.status == .writing && Date() < limit else { fatalError("Test writer stalled") }
++        Thread.sleep(forTimeInterval: 0.002)
++    }
++    var pixel: CVPixelBuffer?
++    guard let pool = adaptor.pixelBufferPool,
++          CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pixel) == kCVReturnSuccess, let buffer = pixel else { fatalError("No frame buffer") }
++    CVPixelBufferLockBaseAddress(buffer, [])
++    let context = CGContext(data: CVPixelBufferGetBaseAddress(buffer), width: width, height: height,
++                           bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
++                           space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)!
++    for column in 0..<4 {
++        let c = colors[(column + frame / 30) % 4]
++        context.setFillColor(red: c.0, green: c.1, blue: c.2, alpha: 1)
++        context.fill(CGRect(x: column * 80, y: 0, width: 80, height: height))
++    }
++    context.setFillColor(CGColor(gray: 1, alpha: 1))
++    context.fill(CGRect(x: frame % width, y: 10, width: 8, height: 15))
++    CVPixelBufferUnlockBaseAddress(buffer, [])
++    guard adaptor.append(buffer, withPresentationTime: CMTime(value: Int64(frame), timescale: fps)) else { fatalError("Cannot append frame") }
++}
++input.markAsFinished()
++let done = DispatchSemaphore(value: 0)
++writer.finishWriting { done.signal() }
++guard done.wait(timeout: .now() + 20) == .success, writer.status == .completed else { fatalError("Test movie not completed") }
++print("Generated 10-second synthetic H.264 test asset, 320x180, video only.")

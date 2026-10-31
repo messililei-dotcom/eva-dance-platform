@@ -9,10 +9,16 @@ import {
   Minus,
   Plus,
   RefreshCw,
+  Share2,
+  ArrowRight,
+  Check,
 } from "lucide-react";
 import { usePageShare } from "@/components/PageShareData";
 import StudentLoginModal from "@/components/StudentLoginModal";
 import { studentApi } from "@/lib/student-api";
+import Link from "next/link";
+import { groupCatalog, productGroupKey, productShareDescription } from "@/lib/product-presentation";
+import "./selection.css";
 
 type Product = {
   id: string;
@@ -24,6 +30,9 @@ type Product = {
   priceFen: number;
   stock: number;
   image: string;
+  groupName?: string;
+  detailText?: string;
+  detailImages?: string[];
 };
 type Item = {
   product_id: string;
@@ -62,7 +71,7 @@ const statuses: Record<string, string> = {
   refunded: "已退款",
 };
 const primary =
-  "rounded-xl bg-emerald-900 px-5 py-3 text-sm font-medium text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40";
+  "min-h-11 rounded-xl bg-emerald-900 px-5 py-3 text-sm font-medium text-white hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-800 disabled:cursor-not-allowed disabled:opacity-40";
 const secondary =
   "rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm hover:border-emerald-700 disabled:opacity-40";
 const field =
@@ -97,7 +106,7 @@ function ProductImage({ product }: { product: Product }) {
           alt={product.name}
           loading="lazy"
           onError={() => setFailed(true)}
-          className="h-full w-full object-contain transition duration-500 group-hover:scale-105"
+          className="h-full w-full object-contain"
         />
       ) : (
         <div className="flex flex-col items-center gap-3 p-4 text-emerald-900/50">
@@ -116,19 +125,23 @@ function Dialog({
   close,
   children,
   busy = false,
+  page = false,
 }: {
   title: string;
   close: () => void;
   children: React.ReactNode;
   busy?: boolean;
+  page?: boolean;
 }) {
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
+    if (page) return;
     const previous = document.activeElement as HTMLElement | null;
     const old = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     ref.current?.focus();
     const handler = (e: KeyboardEvent) => {
+      if (!ref.current?.contains(e.target as Node)) return;
       if (e.key === "Escape" && !busy) close();
       if (e.key === "Tab") {
         const nodes = ref.current?.querySelectorAll<HTMLElement>(
@@ -156,10 +169,11 @@ function Dialog({
       document.removeEventListener("keydown", handler);
       previous?.focus();
     };
-  }, [close, busy]);
+  }, [close, busy, page]);
+  if (page) return <main className="selection-product-page mx-auto max-w-5xl px-4 py-6"><nav className="mb-4 flex items-center justify-between"><Link href="/shop/selection" className="inline-flex min-h-11 items-center text-sm text-emerald-800">返回全部商品</Link><Link href="/shop/selection?orders=1" className="inline-flex min-h-11 items-center text-sm text-emerald-800">我的订单</Link></nav><h2 className="mb-6 text-2xl font-semibold">{title}</h2>{children}</main>;
   return (
     <div
-      className="fixed inset-0 z-[10060] flex items-center justify-center bg-black/50 p-3 backdrop-blur-sm"
+      className="selection-dialog-overlay fixed inset-0 z-[10060] flex items-center justify-center bg-black/50 p-3"
       onClick={() => {
         if (!busy) close();
       }}
@@ -170,7 +184,7 @@ function Dialog({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-[#faf9f5] p-5 shadow-2xl outline-none md:p-8"
+        className="selection-dialog max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-[#faf9f5] p-5 shadow-2xl outline-none md:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-6 flex items-center justify-between gap-4">
@@ -199,6 +213,14 @@ export default function ShopStorefront({ initialProductId = "" }: { initialProdu
   const [search, setSearch] = useState(""),
     [category, setCategory] = useState("全部"),
     [view, setView] = useState<"goods" | "orders">("goods");
+  const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [sort, setSort] = useState("available");
+  const [notice, setNotice] = useState("");
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(""), 2500);
+    return () => clearTimeout(timer);
+  }, [notice]);
   const [selected, setSelected] = useState<Product | null>(null),
     [cartOpen, setCartOpen] = useState(false),
     [login, setLogin] = useState(false);
@@ -229,8 +251,8 @@ export default function ShopStorefront({ initialProductId = "" }: { initialProdu
     setSelected(products.find(p => p.id === initialProductId) || null);
   }, [products, initialProductId]);
   usePageShare(selected ? {
-    title: selected.name,
-    desc: [selected.category, selected.spec, selected.size, selected.color, '伊娃甄选 · 官方商城'].filter(Boolean).join(' · '),
+    title: selected.groupName || selected.name,
+    desc: productShareDescription(selected),
     link: `/shop/products/${encodeURIComponent(selected.id)}`,
     imgUrl: selected.image,
   } : null);
@@ -379,11 +401,21 @@ export default function ShopStorefront({ initialProductId = "" }: { initialProdu
       setBusy(false);
     }
   };
-  const add = (p: Product) =>
+  const add = (p: Product) => {
+    if (p.stock < 1) return;
     setCart((old) => ({
       ...old,
       [p.id]: Math.min(99, p.stock, (old[p.id] || 0) + 1),
     }));
+    setNotice(`已将${p.name}加入购物袋`);
+  };
+  const buy = (p: Product) => {
+    if (p.stock < 1) return;
+    if (!(cart[p.id] > 0)) add(p);
+    if (!initialProductId) setSelected(null);
+    setCartOpen(true);
+    void loadProducts(true);
+  };
   const change = (id: string, q: number) =>
     setCart((old) => {
       const next = { ...old };
@@ -401,13 +433,15 @@ export default function ShopStorefront({ initialProductId = "" }: { initialProdu
     const p = products.find((p) => p.id === id);
     return !p || p.stock < q;
   });
-  const filtered = products.filter(
-    (p) =>
-      (category === "全部" || p.category === category) &&
-      `${p.name} ${p.category} ${p.spec} ${p.color}`
-        .toLowerCase()
-        .includes(search.toLowerCase()),
-  );
+  const groups = groupCatalog(products);
+  const selectedVariants = selected ? products.filter(p => productGroupKey(p) === productGroupKey(selected)) : [];
+  const filtered = groups.filter(group =>
+    (category === "全部" || group.category === category) &&
+    (!onlyAvailable || group.stock > 0) &&
+    group.variants.some(p => `${p.groupName || ""} ${p.name} ${p.category} ${p.spec} ${p.size} ${p.color}`.toLowerCase().includes(search.trim().toLowerCase()))
+  ).sort((a, b) => sort === "price-low" ? a.priceFen - b.priceFen
+    : sort === "price-high" ? b.priceFen - a.priceFen
+    : Number(b.stock > 0) - Number(a.stock > 0));
   const pay = async (order: Order) => {
     setView("orders");
     setCartOpen(false);
@@ -488,26 +522,23 @@ export default function ShopStorefront({ initialProductId = "" }: { initialProdu
       void loadProducts(true);
     });
   return (
-    <div data-mobile-surface="shop" className="mobile-shop-surface min-h-screen bg-[#faf9f5] pb-20 text-stone-800">
-      <section className="bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-800 px-4 pb-14 pt-40 text-white md:pb-20 md:pt-48">
+    <div data-mobile-surface="shop" className="mobile-shop-surface min-h-screen bg-[#faf9f5] pb-40 text-stone-800">
+      <section className={`bg-emerald-950 px-4 text-white ${initialProductId ? "pb-4 pt-24" : "pb-8 pt-28 md:pb-10 md:pt-32"}`}>
         <div className="mx-auto max-w-7xl">
-          <div className="mt-8 flex flex-col justify-between gap-8 md:flex-row md:items-end">
+          <div className="mt-4 flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
-              <p className="mb-4 text-xs tracking-[.3em] text-emerald-200">
-                EVA SELECTION · 伊娃东方舞商城
-              </p>
-              <h1 className="font-serif text-4xl md:text-6xl">
-                为每一次起舞，精选。
+              <h1 className="font-serif text-3xl md:text-5xl">
+                {initialProductId ? "伊娃甄选" : "为每一次起舞，精选。"}
               </h1>
-              <p className="mt-6 max-w-xl leading-8 text-emerald-50/75">
+              <p className={`${initialProductId ? "hidden" : ""} mt-4 max-w-xl leading-7 text-emerald-100`}>
                 从日常练习到舞台时刻，找到与你相伴的东方舞好物。
               </p>
             </div>
-            <div className="flex items-center gap-3 rounded-2xl border border-white/20 px-5 py-4 text-sm">
+            <div className={`${initialProductId ? "hidden" : "flex"} items-center gap-3 text-sm`}>
               <Truck size={24} strokeWidth={1.5} />
               <div>
                 <p>快递包邮</p>
-                <p className="mt-1 text-xs text-white/60">
+                <p className="mt-1 text-xs text-emerald-100">
                   精选舞服 · 练习装备
                 </p>
               </div>
@@ -515,7 +546,7 @@ export default function ShopStorefront({ initialProductId = "" }: { initialProdu
           </div>
         </div>
       </section>
-      <main className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+      <main className={`${initialProductId && view === "goods" ? "hidden" : ""} mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8`}>
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 pb-5">
           <div className="flex gap-2">
             <button
@@ -559,33 +590,28 @@ export default function ShopStorefront({ initialProductId = "" }: { initialProdu
             </button>
           </div>
         )}
-        {view === "goods" ? (
+        {view === "goods" && initialProductId ? null : view === "goods" ? (
           <>
-            <div className="mb-8 flex flex-col justify-between gap-5 md:flex-row">
-              <div className="flex flex-wrap gap-2">
-                {[
-                  "全部",
-                  ...new Set(products.map((p) => p.category).filter(Boolean)),
-                ].map((c) => (
-                  <button
-                    key={c}
-                    className={`rounded-full px-4 py-2 text-sm ${category === c ? "bg-emerald-100 text-emerald-950" : "border border-stone-200 hover:bg-white"}`}
-                    onClick={() => setCategory(c)}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-              <label className="flex shrink-0 items-center gap-2 rounded-xl border border-stone-200 bg-white px-4">
-                <Search size={18} className="text-stone-400" />
-                <input
-                  aria-label="搜索商品"
-                  placeholder="寻找你的心仪好物"
-                  className="min-w-0 bg-transparent py-3 text-sm outline-none"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
+            <div className="selection-tools mb-6 space-y-4">
+              <label className="flex items-center gap-3 rounded-xl border border-stone-300 bg-white px-4 focus-within:ring-2 focus-within:ring-emerald-700">
+                <Search size={20} className="shrink-0 text-stone-500" />
+                <input aria-label="搜索商品" placeholder="搜索商品、款式、尺码或颜色" className="min-w-0 flex-1 bg-transparent py-3.5 text-base outline-none placeholder:text-stone-500" value={search} onChange={(e) => setSearch(e.target.value)} />
+                {search && <button aria-label="清空搜索" className="min-h-11 px-2" onClick={() => setSearch("")}><X size={18} /></button>}
               </label>
+              <div className="flex flex-wrap items-center gap-3 text-sm">
+                <label className="selection-filter">分类
+                  <select aria-label="商品分类" value={category} onChange={e => setCategory(e.target.value)}>
+                    {["全部", ...new Set(products.map(p => p.category).filter(Boolean))].map(c => <option key={c}>{c}</option>)}
+                  </select>
+                </label>
+                <label className="selection-filter">排序
+                  <select aria-label="商品排序" value={sort} onChange={e => setSort(e.target.value)}>
+                    <option value="available">有货优先</option><option value="price-low">价格从低到高</option><option value="price-high">价格从高到低</option>
+                  </select>
+                </label>
+                <label className="flex min-h-11 cursor-pointer items-center gap-2"><input type="checkbox" checked={onlyAvailable} onChange={e => setOnlyAvailable(e.target.checked)} className="h-4 w-4 accent-emerald-800" />只看有货</label>
+                <span role="status" className="text-stone-600 md:ml-auto">{loading ? "正在更新…" : `共 ${filtered.length} 件好物`}</span>
+              </div>
             </div>
             {loading && !products.length ? (
               <p role="status" className="py-20 text-center text-stone-500">
@@ -603,6 +629,7 @@ export default function ShopStorefront({ initialProductId = "" }: { initialProdu
                   onClick={() => {
                     setSearch("");
                     setCategory("全部");
+                    setOnlyAvailable(false);
                     void loadProducts();
                   }}
                   className={`${secondary} mt-5`}
@@ -611,49 +638,39 @@ export default function ShopStorefront({ initialProductId = "" }: { initialProdu
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 md:gap-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
                 {filtered.map((p) => (
                   <article
                     key={p.id}
-                    className="group overflow-hidden rounded-2xl border border-stone-200/70 bg-white"
+                    className="selection-product group flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white"
                   >
-                    <button
-                      onClick={() => setSelected(p)}
-                      className="block w-full text-left"
-                      aria-label={`查看${p.name}`}
-                    >
-                      <ProductImage product={p} />
-                    </button>
-                    <div className="p-4 md:p-5">
+                    <Link href={`/shop/products/${encodeURIComponent(p.id)}`} className="block w-full text-left" aria-label={`查看${p.displayName}`}><ProductImage product={{...p, name:p.displayName}} /></Link>
+                    <div className="flex flex-1 flex-col p-3 md:p-5">
                       <p className="mb-2 text-xs text-stone-500">
-                        {p.category} · {p.size}
+                        {p.category}
                       </p>
-                      <button
-                        onClick={() => setSelected(p)}
-                        className="text-left font-medium leading-6"
-                      >
-                        {p.name}
-                      </button>
-                      <p className="mt-2 truncate text-xs text-stone-500">
-                        {p.color} · {p.spec}
+                      <Link href={`/shop/products/${encodeURIComponent(p.id)}`} className="min-h-12 text-left font-medium leading-6 break-words">{p.displayName}</Link>
+                      <p className="mt-2 min-h-8 text-xs leading-4 text-stone-600">
+                        {p.variants.length > 1 ? `${new Set(p.variants.map(v => v.color)).size} 色 · ${new Set(p.variants.map(v => v.size)).size} 个尺码可选` : [p.color !== "默认" ? p.color : "", p.size, p.spec].filter(Boolean).join(" · ")}
                       </p>
-                      <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-serif text-xl text-emerald-950">
-                          {money(p.priceFen)}
+                      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-4">
+                        <span className="text-xl font-semibold tabular-nums text-emerald-950">
+                          {money(p.priceFen)}{p.maxPriceFen > p.priceFen && <span className="ml-1 text-xs font-normal">起</span>}
                         </span>
                         <button
-                          aria-label={`将${p.name}加入购物袋`}
-                          disabled={p.stock < 1 || (cart[p.id] || 0) >= p.stock}
-                          onClick={() => add(p)}
-                          className="rounded-full bg-emerald-50 p-2 text-emerald-900 hover:bg-emerald-100 disabled:opacity-40"
+                          aria-label={`选择${p.displayName}的规格`}
+                          disabled={p.stock < 1}
+                          onClick={() => setSelected(products.find(v => v.id === p.id) || null)}
+                          className="min-h-11 min-w-11 rounded-xl bg-emerald-50 p-2 text-emerald-900 hover:bg-emerald-100 disabled:opacity-40"
                         >
                           <Plus size={20} />
                         </button>
                       </div>
-                      <p className="mt-2 text-xs text-stone-400">
+                      <p className="mt-2 text-xs text-stone-600">
                         {p.stock > 0 ? `可售 ${p.stock} 件` : "暂时售罄"}
-                        {cart[p.id] ? ` · 已选 ${cart[p.id]} 件` : ""}
+
                       </p>
+                      <button className={`${primary} mt-3 w-full px-2`} disabled={p.stock < 1} onClick={() => setSelected(products.find(v => v.id === p.id) || null)}>{p.stock > 0 ? "选购商品" : "暂时售罄"}</button>
                     </div>
                   </article>
                 ))}
@@ -829,44 +846,48 @@ export default function ShopStorefront({ initialProductId = "" }: { initialProdu
           <p>快递包邮 · 发货信息可在「我的订单」查询 · 售后可提交退款申请</p>
         </div>
       </main>
-      {selected && (
-        <Dialog title={selected.name} close={closeSelected}>
+      {notice && <div role="status" className="selection-notice fixed left-1/2 z-[10200] flex w-max max-w-[90vw] -translate-x-1/2 items-center gap-2 rounded-xl bg-emerald-950 px-4 py-3 text-sm text-white shadow-lg"><Check size={18} className="shrink-0" />{notice}</div>}
+      {view === "goods" && count > 0 && !cartOpen && !selected && <div className="selection-cart-bar fixed z-[10010] flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 shadow-xl">
+        <div className="min-w-0"><p className="text-xs text-stone-600">已选 {count} 件 · 包邮</p><p className="text-xl font-semibold tabular-nums text-emerald-950">{loading && !products.length ? "核对价格中…" : invalid ? "请核对商品" : money(total)}</p></div>
+        <button className={primary} onClick={() => { setCartOpen(true); void loadProducts(true); }}>查看购物袋 · 去结算<ArrowRight size={16} className="ml-2 inline" /></button>
+      </div>}
+      {initialProductId && view === "goods" && !selected && !cartOpen && <section className="mx-auto max-w-5xl px-4 py-10"><p role="status" className="text-stone-600">{loading ? "正在载入商品…" : "商品信息暂不可用，请刷新重试或返回商城。"}</p><Link href="/shop/selection" className={`${secondary} mt-5 inline-block`}>返回全部商品</Link>{!loading && <button className={`${primary} ml-3`} onClick={() => void loadProducts()}>重新加载</button>}</section>}
+      {selected && view === "goods" && !cartOpen && (
+        <Dialog title={selected.groupName || selected.name} close={closeSelected} page={Boolean(initialProductId)}>
           <div className="grid gap-6 md:grid-cols-2">
             <ProductImage product={selected} />
             <div className="flex flex-col justify-center">
               <p className="text-sm text-stone-500">{selected.category}</p>
-              <button type="button" className="mt-3 inline-block text-sm text-emerald-800 underline" onClick={() => window.dispatchEvent(new Event("website-share-open"))}>分享这件商品到微信</button>
-              <p className="my-4 font-serif text-3xl text-emerald-950">
-                {money(selected.priceFen)}
-              </p>
-              <div className="space-y-3 text-sm">
-                <p>款式：{selected.spec}</p>
-                <p>尺码：{selected.size}</p>
-                <p>颜色：{selected.color}</p>
-                <p>
-                  可售库存：
-                  {products.find((p) => p.id === selected.id)?.stock ?? 0} 件
-                </p>
-                <p className="text-emerald-800">快递包邮</p>
+              <p className="my-4 text-3xl font-semibold tabular-nums text-emerald-950">{money(selected.priceFen)}</p>
+              {selectedVariants.length > 1 && <div className="space-y-4 pb-5">
+                {([['color', '颜色'], ['size', '尺码'], ['spec', '款式']] as const).map(([field, label]) => <fieldset key={field}><legend className="mb-2 text-sm font-medium">{label}</legend><div className="flex flex-wrap gap-2">
+                  {[...new Set(selectedVariants.map(v => v[field]))].map(value => {
+                    const matches = selectedVariants.filter(v => v[field] === value && (field === 'color' || v.color === selected.color) && (field !== 'spec' || v.size === selected.size));
+                    const next = matches.find(v => v.size === selected.size && v.spec === selected.spec) || matches.find(v => v.stock > 0) || matches[0];
+                    return <button key={value} type="button" aria-pressed={selected[field] === value} disabled={!next} className={`min-h-11 rounded-xl border px-4 py-2 text-sm disabled:opacity-40 ${selected[field] === value ? 'border-emerald-800 bg-emerald-50 text-emerald-900' : 'border-stone-300 bg-white'}`} onClick={() => next && setSelected(next)}>{value || '未填写'}{matches.length > 0 && matches.every(v => v.stock < 1) ? ' · 售罄' : ''}</button>;
+                  })}
+                </div></fieldset>)}
+                {selectedVariants.filter(v => v.color === selected.color && v.size === selected.size && v.spec === selected.spec).length > 1 && <fieldset><legend className="mb-2 text-sm font-medium">规格条目</legend><div className="flex flex-wrap gap-2">{selectedVariants.filter(v => v.color === selected.color && v.size === selected.size && v.spec === selected.spec).map(v => <button key={v.id} type="button" aria-pressed={selected.id === v.id} className={secondary} onClick={() => setSelected(v)}>{v.name} · {money(v.priceFen)} · 库存 {v.stock}</button>)}</div></fieldset>}
+              </div>}
+              <dl className="selection-specs text-sm">
+                <div><dt>款式</dt><dd>{selected.spec || "未填写"}</dd></div>
+                <div><dt>尺码</dt><dd>{selected.size || "未填写"}</dd></div>
+                <div><dt>颜色</dt><dd>{selected.color || "未填写"}</dd></div>
+                <div><dt>库存</dt><dd>{selected.stock > 0 ? `${selected.stock} 件` : "暂时售罄"}</dd></div>
+              </dl>
+              <p className="mt-4 flex items-center gap-2 text-sm text-emerald-800"><Truck size={18} />快递包邮 · 支持自提</p>
+              <button type="button" className={`${secondary} mt-5 flex items-center justify-center gap-2`} onClick={() => window.dispatchEvent(new Event("website-share-open"))}><Share2 size={17} />分享商品给朋友</button>
+              <div className="selection-detail-actions mt-5 grid grid-cols-2 gap-3">
+                <button disabled={selected.stock < 1 || (cart[selected.id] || 0) >= Math.min(99, selected.stock)} className={secondary} onClick={() => add(selected)}>加入购物袋</button>
+                <button disabled={selected.stock < 1} className={primary} onClick={() => buy(selected)}>去结算<ArrowRight size={16} className="ml-1 inline" /></button>
               </div>
-              <button
-                disabled={
-                  !products.find((p) => p.id === selected.id)?.stock ||
-                  (cart[selected.id] || 0) >=
-                    (products.find((p) => p.id === selected.id)?.stock || 0)
-                }
-                className={`${primary} mt-7`}
-                onClick={() => {
-                  const current = products.find((p) => p.id === selected.id);
-                  if (current) add(current);
-                  setSelected(null);
-                  setCartOpen(true);
-                }}
-              >
-                加入购物袋
-              </button>
+              <p className="mt-3 text-xs leading-5 text-stone-600">请核对款式、尺码和颜色；结算时可调整数量。</p>
             </div>
           </div>
+          <section className="mt-8 border-t border-stone-200 pt-6"><h3 className="mb-4 text-lg font-semibold">商品详情</h3>
+            <p className="whitespace-pre-wrap break-words text-sm leading-7 text-stone-600">{selected.detailText || '更多商品信息与尺码建议，请联系客服确认。请以下单时所选款式、颜色和尺码为准。'}</p>
+            <div className="mt-5 space-y-4">{selected.detailImages?.map((src, index) => <img key={`${src}-${index}`} src={src.startsWith('/') ? `https://admin.swod.com.cn${src}` : src} alt={`${selected.groupName || selected.name} · 详情图 ${index + 1}`} loading="lazy" className="h-auto w-full rounded-xl object-contain" />)}</div>
+          </section>
         </Dialog>
       )}
       {cartOpen && (
@@ -882,13 +903,13 @@ export default function ShopStorefront({ initialProductId = "" }: { initialProdu
           ) : (
             <>
               <div className="mb-3 flex justify-between text-sm"><span className="font-semibold">伊娃甄选</span><span className="text-stone-500">共 {entries.reduce((sum, [, q]) => sum + q, 0)} 件商品</span></div>
-              <div className="space-y-3 rounded-2xl bg-stone-100 p-3">
+              <div className="divide-y divide-stone-200">
                 {entries.map(([id, q]) => {
                   const p = products.find((item) => item.id === id);
                   return (
                     <div
                       key={id}
-                      className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 shadow-sm"
+                      className="flex flex-wrap items-center gap-3 py-4"
                     >
                       <div className="w-20 shrink-0 overflow-hidden rounded-lg">{p && <ProductImage product={p} />}</div>
                       <div className="min-w-[110px] flex-1">

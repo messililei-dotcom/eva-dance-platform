@@ -1,0 +1,51 @@
+{
+  "automationId": "swod",
+  "verifiedAt": "2026-10-30T02:38:00+08:00",
+  "ios": {
+    "version": "1.0.1",
+    "build": 10,
+    "submissionID": "99787940-9b2a-41c4-a459-cd2fdebb0e9a",
+    "access": "login-required",
+    "currentReviewStatusVerified": false,
+    "lastKnownStatus": "waiting-for-review",
+    "currentPublicStatusVerified": false,
+    "newUserAction": "请在现有App Store Connect页面重新登录。"
+  },
+  "androidHuawei": {
+    "appId": "119475083",
+    "version": "1.0.1",
+    "build": 11,
+    "versionId": "2067391391952053568",
+    "status": "in-review",
+    "uiStatus": "正在审核",
+    "evidenceSource": "官方管理页的精确版本菜单；正文iframe未能读出，未推断新审核意见。",
+    "currentPublicStatusVerified": false
+  },
+  "harmonyHuawei": {
+    "appId": "6917617955633704973",
+    "version": "1.0.1",
+    "build": 9,
+    "versionId": "2071129556072323840",
+    "status": "waiting-for-review",
+    "uiStatus": "正在等待审核",
+    "evidenceSource": "官方管理页的精确版本菜单；正文iframe未能读出，未推断新审核意见。",
+    "currentPublicStatusVerified": false
+  },
+  "remainingChannels": {
+    "candidateBuild": 11,
+    "submitted": false,
+    "blockersChanged": false,
+    "notes": "沿用最新渠道记录；版权证书、当前截图、签章及业务事实等待项无新增资料，不重复提审或追问同一缺项。"
+  },
+  "mutations": {
+    "submitted": false,
+    "withdrawn": false,
+    "filingChanged": false,
+    "signingChanged": false,
+    "productionCapabilitiesEnabled": false
+  },
+  "notification": {
+    "decision": "NOTIFY",
+    "reason": "首次记录到本次ASC会话过期，需要用户重新登录；安卓、鸿蒙审核状态不变。"
+  }
+}

@@ -14,10 +14,12 @@ import java.nio.charset.StandardCharsets;
 /** Ciphertext only in private storage; the AES key never leaves AndroidKeyStore. */
 final class TokenVault {
     private final Context context;
-    TokenVault(Context context) { this.context = context.getApplicationContext(); }
+    private final String namespace;
+    TokenVault(Context context) { this(context,"session"); }
+    TokenVault(Context context,String namespace) { this.context = context.getApplicationContext(); this.namespace=namespace; }
     private SecretKey key() throws Exception {
         KeyStore store = KeyStore.getInstance("AndroidKeyStore"); store.load(null);
-        String alias = "cn.com.swod.app.session";
+        String alias = "cn.com.swod.app."+namespace;
         if (!store.containsAlias(alias)) {
             KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
             generator.init(new KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
@@ -29,16 +31,16 @@ final class TokenVault {
     void save(String value) throws Exception {
         Cipher c = Cipher.getInstance("AES/GCM/NoPadding"); c.init(Cipher.ENCRYPT_MODE, key());
         String encoded = Base64.encodeToString(c.getIV(), Base64.NO_WRAP) + ":" + Base64.encodeToString(c.doFinal(value.getBytes(StandardCharsets.UTF_8)), Base64.NO_WRAP);
-        if (!context.getSharedPreferences("session", Context.MODE_PRIVATE).edit().putString("encrypted", encoded).commit()) throw new Exception("登录保存失败，请重试");
+        if (!context.getSharedPreferences(namespace, Context.MODE_PRIVATE).edit().putString("encrypted", encoded).commit()) throw new Exception("安全保存失败，请重试");
     }
     String read() {
         try {
-            String value = context.getSharedPreferences("session", Context.MODE_PRIVATE).getString("encrypted", "");
+            String value = context.getSharedPreferences(namespace, Context.MODE_PRIVATE).getString("encrypted", "");
             if (value.isEmpty()) return null;
             String[] parts = value.split(":", 2);
             Cipher c = Cipher.getInstance("AES/GCM/NoPadding"); c.init(Cipher.DECRYPT_MODE, key(), new GCMParameterSpec(128, Base64.decode(parts[0], Base64.NO_WRAP)));
             return new String(c.doFinal(Base64.decode(parts[1], Base64.NO_WRAP)), StandardCharsets.UTF_8);
         } catch (Exception e) { clear(); return null; }
     }
-    void clear() { context.getSharedPreferences("session", Context.MODE_PRIVATE).edit().clear().commit(); }
+    void clear() { context.getSharedPreferences(namespace, Context.MODE_PRIVATE).edit().clear().commit(); }
 }

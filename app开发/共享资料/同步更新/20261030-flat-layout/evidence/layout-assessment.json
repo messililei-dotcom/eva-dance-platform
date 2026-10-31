@@ -1,0 +1,16 @@
+{
+  "mode": "Operate",
+  "direction": "Preserve wine/white palette and compact cover images; use continuous content rows, typography, separators and meaningful proximity instead of nested cards.",
+  "readingOrder": "Brand/context, search/filter, shortcuts and course/product/event content; current five-tab navigation retained.",
+  "spacing": "Groups 6-8, sections 12-16; iOS taps >=44, Android/Harmony controls >=48.",
+  "adaptation": "Existing 112-wide bounded course thumbnails retained; accessibility text can expand, iOS shop collapses to single column, Android shortcuts stack at large font/narrow width.",
+  "interaction": "Course scope/category filters, native search clear/IME completion, read-only main-page pull refresh, quiet native row feedback.",
+  "mechanicalScan": "Returned empty array; native SwiftUI/Android Views/ArkUI coverage is limited and not proof of visual correctness.",
+  "separateReadOnlyReview": "Two skill-directed assessments completed before edits; final source audit found no material defect. Identified Harmony refresh-indicator race was corrected with page generation binding and navigation reset.",
+  "finalNativeVisuals": [
+    "iphone-light.png",
+    "ipad-light.png",
+    "ipad-dark-large.png"
+  ],
+  "physicalDevices": "skipped at user request"
+}

@@ -1,0 +1,249 @@
+- banner:
+  - generic: 安卓应用管理
+  - generic: 全国SDK管理服务平台
+  - generic: 帮助文档
+  - generic: 联系客服
+  - text: 站内信
+  - generic: "75"
+  - generic: 伊娃文化艺术发展（湖南）有限公司
+- generic: 软件
+- generic: 首页
+- generic: 基础服务
+- generic: 运营服务
+- generic: 数据服务
+- generic: 腾讯生态服务
+- generic: 基础信息
+- generic: 申请上架
+- generic: 工单系统
+- generic: 基础信息 为了更好的在应用宝客户端展示您的应用信息，请您务必完善基础信息
+- button "取消":
+  - generic: 取消
+- button "保存" [active]:
+  - generic: 保存
+- generic: 基本信息
+- generic "应用名称"
+- textbox "请填写应用名称": SWOD
+- generic: 请填写与应用备案名称、软著一致的名字
+- generic "应用类型"
+- generic: 软件
+- generic "应用子分类"
+- radio "生活"
+- text: 生活
+- radio "购物"
+- text: 购物
+- radio "视频"
+- text: 视频
+- radio "音乐"
+- text: 音乐
+- radio "阅读"
+- text: 阅读
+- radio "摄影"
+- text: 摄影
+- radio "系统"
+- text: 系统
+- radio "工具"
+- text: 工具
+- radio "社交"
+- text: 社交
+- radio "办公"
+- text: 办公
+- radio "教育" [checked]
+- text: 教育
+- radio "理财"
+- text: 理财
+- radio "交通出行"
+- text: 交通出行
+- radio "旅游出行"
+- text: 旅游出行
+- radio "健康"
+- text: 健康
+- radio "美食"
+- text: 美食
+- radio "母婴"
+- text: 母婴
+- radio "汽车"
+- text: 汽车
+- radio "游戏辅助"
+- text: 游戏辅助
+- generic "应用运营方"
+- textbox "请填写应用运营方" [disabled]: 伊娃文化艺术发展（湖南）有限公司
+- generic "应用研发方"
+- textbox "请填写应用研发方": 伊娃文化艺术发展（湖南）有限公司
+- generic: 请您填写与APP内隐私协议主体一致的研发方名称
+- generic "应用简介"
+- textbox "请您填写60至500字的应用简介，让用户更了解您的应用": SWOD 伊娃东方舞为学员提供东方舞线上课程学习、视频目录、学习进度、线下课程与赛事信息服务。登录后可查看我的课程和本人已解锁课程，继续学习并使用笔记、书签等学习工具。应用提供官方商城、订单查询、客服、消息中心、通知设置和登录设备管理。课程权益由服务端验证；账号注销申请在7个工作日内处理并提供完成回执。
+- generic: 152/500
+- generic "一句话简介"
+- textbox "请您填写5至15字的一句话简介，用户可快速了解您的应用": 东方舞课程学习与赛事服务
+- generic: 12/15
+- generic "年龄分级"
+- combobox:
+  - generic "3周岁+"
+- generic: 图标素材
+- generic "应用图标"
+- button
+- generic "1793325767166179165_80706.png"
+- generic: ①请您上传1张512*512像素200KB以内的PNG格式直角图标
+- generic: ②上传成功后平台将对图片进行统一规范化处理
+- generic "应用截图"
+- button
+- button "+":
+  - generic: +
+- generic: ①请上传4-5张，建议尺寸1080*1920px，最小不低于320*480px；JPG/PNG格式，单张图片不超过1M
+- generic: ②此图片用于应用宝终端、pc应用宝、手机管家等应用市场里应用详情页展示拉取
+- generic: 适配信息
+- generic "支持屏幕大小"
+- radio "全部" [checked]
+- text: 全部
+- radio "480*320以上"
+- text: 480*320以上
+- radio "640*480以上"
+- text: 640*480以上
+- radio "960*720以上"
+- text: 960*720以上
+- generic "支持语言"
+- radio "中文" [checked]
+- text: 中文
+- radio "英文"
+- text: 英文
+- radio "多语言"
+- text: 多语言
+- generic "支持IPv6"
+- radio "支持" [checked]
+- text: 支持
+- radio "不支持"
+- text: 不支持
+- generic "设备信息"
+- radio "Phone" [checked]
+- text: Phone
+- radio "Pad"
+- text: Pad
+- radio "同时支持Phone和Pad"
+- text: 同时支持Phone和Pad
+- generic: 发布终端
+- generic "发布终端"
+- checkbox "移动端" [checked] [disabled]
+- generic: 移动端
+- checkbox "车载端"
+- generic: 车载端
+- checkbox "PC电脑(含腾讯应用宝电脑版、腾讯手游助手等）"
+- generic: PC电脑(含腾讯应用宝电脑版、腾讯手游助手等）
+- checkbox "平板电脑"
+- generic: 平板电脑
+- checkbox "其它智能设备(如智能手表、智能眼镜、相机、掌机等)"
+- generic: 其它智能设备(如智能手表、智能眼镜、相机、掌机等)
+- generic: APP备案信息（APP备案号和备案情况在审核后将自动更新）
+- generic: 当您完成APP备案并提交审核后，我们会使用您的主体备案证件号和APP包名等信息自动获取APP备案结果，此处您无需填写任何信息。请确保您已经完成APP备案，且您提交审核的主体信息、APP信息与您备案时提交的信息一致。
+- generic "应用主体备案证件号"
+- generic: [登记标识隐藏]
+- generic: ①备案证件号为应用在工信部进行备案时使用的统一社会信用代码或身份证号，需要和当前账号主体的统一社会信用代码或身份证号保持一致
+- generic: ②请查看应用备案指引
+- generic "APP备案号"
+- generic: 湘ICP备2026005683号-5A
+- generic "备案情况"
+- generic: 已备案
+- generic: 资质证明
+- generic: 电子版权证书或计算机软件著作权证书两者可任选一项进行上传
+- generic "电子版权证书"
+- button "点击上传 或拖拽文件到这里":
+  - generic: 点击上传 或拖拽文件到这里
+- generic: 请您上传最少1张最多3张10M以内JPG/PNG格式的软著版权证明图片或者一张电子版权证书
+- generic: 查看样例
+- generic: 请您上传1份5M以内PDF格式的电子版权认证证书。
+- generic: 电子版权认证证书官方申请通道
+- generic: 电子版权认证证书补领通道
+- generic "计算机软件著作权证书"
+- button "点击上传 或拖拽文件到这里":
+  - generic: 点击上传 或拖拽文件到这里
+- generic: 请您上传最少1张最多3张10M以内JPG/PNG格式的软著版权证明图片或者一张电子版权证书
+- generic: 请参考
+- generic: 版权证明指引
+- generic: ①请上传《计算机软件著作权登记证书》
+- generic: 查看样例
+- generic: ②如您的应用软著为电子软著，请上传《软件著作权认证证书》和《电子版权认证证书》，并以拼图形式拼接成一张图上传，
+- generic: 查看样例
+- generic "软著资质是否包含转授权"
+- radio "是"
+- text: 是
+- radio "否" [checked]
+- text: 否
+- generic "特殊行业资质评估"
+- text: 已评估
+- button "重新评估":
+  - generic: 重新评估
+- text: 根据您应用的具体业务，可能会涉及特殊资质，请点击上方按钮评估
+- list:
+  - generic: 在线视频课程、教职工/学生/家长为主要用户 下载资质示例
+  - generic: "提交条件: 3项条件需要都满足"
+  - list:
+    - listitem: ①.《办学许可证》
+    - listitem: ②. 教育移动互联网应用程序备案管理平台网址：http://app.eduyun.cn“备案截图证明
+    - listitem: ③. 营业执照范围包含教育
+- generic "其他版权证明"
+- button "点击上传 或拖拽文件到这里":
+  - generic: 点击上传 或拖拽文件到这里
+- generic: 请填写特殊行业资质
+- generic: 查看样例
+- generic: ①ICP证（增值电信业务经营许可证）或ICP备案截图加盖公章（备案上的官网内容需要与应用内容存在关联）
+- generic: ② 普通类型应用请上传
+- generic: 应用发布承诺函
+- generic: ；以下特殊类型应用请上传专用发布承诺函
+- generic: 【金融理财】类应用发布承诺函
+- generic: 【网络购物】类应用发布承诺函
+- generic: 【医疗健康】类应用发布承诺函
+- generic: 【网赚】类应用发布承诺函
+- generic: ③特殊行业资质（请根据特殊行业资质评估结果上传资质材料）
+- generic: 注：如特殊行业资质属于授权性质的，请您上传【授权书】和【授权方营业执照】
+- generic: 请参考
+- generic: 资质要求指引
+- generic "安全评估报告"
+- button "点击上传 或拖拽文件到这里":
+  - generic: 点击上传 或拖拽文件到这里
+- generic: 查看样例
+- generic: APP含有社交、弹幕、私信、即时通信等具备舆论属性或社会动员能力的功能或服务的，请您务必上传安全评估报告，否则会被拒绝上架。
+- generic: 请您上传【安全评估报告图片】 请参考
+- generic: 如何进行安全评估
+- generic: 隐私限制
+- generic "隐私政策"
+- radio "输入URL" [checked]
+- text: 输入URL
+- radio "输入文本内容"
+- text: 输入文本内容
+- generic: 隐私政策提交内容及审核规范
+- textbox "请输入隐私政策URL，以http://或https://开头": https://www.swod.com.cn/app/privacy.html
+- generic: ①应用宝会解析url内容用于App隐私合规自动化检测，确保可正常解析。
+- generic: ②请使用标准的url格式，静态html页面。不支持博客、微博、Github、云笔记、word、图片等格式，请不要将站点嵌套在iframe标签内。
+- generic: 注：URL检测失败会导致无法正常进行App隐私合规检测，请您修改url格式或者使用“输入文本内容”。
+- generic "隐私自查"
+- checkbox "隐私政策独立一致性 查看样例" [checked]
+- generic: 隐私政策独立一致性
+- button "查看样例":
+  - generic: 查看样例
+- checkbox "隐私政策声明主体 查看样例" [checked]
+- generic: 隐私政策声明主体
+- button "查看样例":
+  - generic: 查看样例
+- checkbox "隐私政策注销流程 查看样例" [checked]
+- generic: 隐私政策注销流程
+- button "查看样例":
+  - generic: 查看样例
+- checkbox "注册/登录界面提醒用户阅读隐私政策 查看样例" [checked]
+- generic: 注册/登录界面提醒用户阅读隐私政策
+- button "查看样例":
+  - generic: 查看样例
+- checkbox "隐私政策个性化 查看样例" [checked]
+- generic: 隐私政策个性化
+- button "查看样例":
+  - generic: 查看样例
+- checkbox "儿童隐私政策 查看样例" [checked]
+- generic: 儿童隐私政策
+- button "查看样例":
+  - generic: 查看样例
+- contentinfo:
+  - generic: 联系我们
+  - text: "|"
+  - generic: 投诉举报
+  - text: "|"
+  - generic: Complaint Guidelines
+  - generic: Copyright © 1998 - 2026 Tencent. All Rights Reserved. 腾讯公司 版权所有
+- textbox

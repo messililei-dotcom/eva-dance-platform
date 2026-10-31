@@ -1,0 +1,428 @@
+--- before/Android/MainActivity.java
++++ after/Android/MainActivity.java
+@@ -26,12 +26,13 @@
+     private Api api;
+     private LinearLayout root, content;
+     private TextView title;
++    private TextView loginFeedback;
+     private Button backButton;
+     private ScrollView pageScroll;
+     private final Button[] tabButtons = new Button[5];
+     private boolean memberWriteBusy;
+     private boolean authBusy, smsBusy;
+-    private long smsSentAt;
++    private final java.util.Map<String,Long> smsSentTimes = new java.util.HashMap<>();
+     private Runnable page;
+     private volatile int generation;
+     private String staffToken;
+@@ -78,14 +79,14 @@
+     private void selectTab(int selected){String[] icons={"learn","calendar","trophy","bag","person"};for(int i=0;i<tabButtons.length;i++){Button b=tabButtons[i];if(b!=null){boolean active=i==selected;b.setSelected(active);b.setTextColor(active?red:SwodUi.muted(this));b.setTypeface(null,active?android.graphics.Typeface.BOLD:android.graphics.Typeface.NORMAL);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],active?red:SwodUi.muted(this)),null,null);b.setBackground(SwodUi.touch(this,active?SwodUi.tonal(this):SwodUi.surface(this),14));}}}
+     private void hero(String name,String description){LinearLayout box=column();box.setPadding(dp(4),dp(6),dp(4),dp(12));TextView heading=text(name,22);heading.setTypeface(null,android.graphics.Typeface.BOLD);box.addView(heading);TextView summary=text(description,14);summary.setTextColor(SwodUi.muted(this));box.addView(summary);content.addView(box);}
+     private void section(String name){TextView label=text(name,18);label.setTypeface(null,android.graphics.Typeface.BOLD);label.setPadding(dp(4),dp(16),dp(4),dp(8));content.addView(label);}
+-    private void begin(String name) { courseAccessVisible=false; generation++; content.removeAllViews(); title.setText(name);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
++    private void begin(String name) { loginFeedback=null;courseAccessVisible=false; generation++; content.removeAllViews(); title.setText(name);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
+     private int dp(int x) {return Math.round(x*getResources().getDisplayMetrics().density);}
+     private LinearLayout column(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.VERTICAL);return v;}
+     private LinearLayout row(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.HORIZONTAL);v.setGravity(Gravity.CENTER_VERTICAL);return v;}
+     private TextView text(String s,int size){TextView v=new TextView(this);v.setText(s);v.setTextSize(size);v.setTextColor(SwodUi.ink(this));v.setPadding(dp(4),dp(5),dp(4),dp(5));return v;}
+     private Button button(String s,Runnable tap){Button b=new Button(this);b.setText(s);b.setTextSize(15);b.setTextColor(new android.content.res.ColorStateList(new int[][]{new int[]{-android.R.attr.state_enabled},new int[]{}},new int[]{SwodUi.muted(this),red}));b.setMinHeight(dp(48));b.setMinimumHeight(dp(48));b.setAllCaps(false);b.setStateListAnimator(null);b.setElevation(0);b.setPadding(dp(16),dp(10),dp(16),dp(10));b.setBackground(SwodUi.touch(this,SwodUi.surface(this),14));b.setOnClickListener(v->tap.run());return b;}
+     private void action(String s,Runnable tap){LinearLayout.LayoutParams layout=new LinearLayout.LayoutParams(-1,-2);layout.topMargin=dp(8);Button b=button(s,tap);b.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);b.setCompoundDrawablesWithIntrinsicBounds(null,null,SwodUi.icon(this,"next",SwodUi.muted(this)),null);content.addView(b,layout);}
+-    private void info(String s){content.addView(text(s,14));}
++    private void info(String s){if(loginFeedback!=null){loginFeedback.setText(s);loginFeedback.setVisibility(View.VISIBLE);return;}content.addView(text(s,14));}
+     private EditText field(LinearLayout box,String hint, boolean digits){EditText v=new EditText(this);v.setHint(hint);v.setContentDescription(hint);v.setTextSize(16);v.setTextColor(SwodUi.ink(this));v.setHintTextColor(SwodUi.muted(this));v.setPadding(dp(16),dp(12),dp(16),dp(12));v.setBackground(SwodUi.shape(this,SwodUi.surface(this),12));v.setSingleLine(true);if(digits)v.setInputType(android.text.InputType.TYPE_CLASS_PHONE);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(12);v.setMinimumHeight(dp(52));box.addView(v,p);return v;}
+     private interface Result{void receive(Object value)throws Exception;}
+     private void load(String path,String method,JSONObject body,boolean auth,Result result){
+@@ -251,8 +252,8 @@
+     private void sendSMS(String phone){
+         if(smsBusy)return;
+         if(!phone.matches("1[3-9][0-9]{9}")){info("请填写有效手机号");return;}
+-        long elapsed=android.os.SystemClock.elapsedRealtime();if(smsSentAt>0&&elapsed-smsSentAt<60000){info("验证码已发送，请稍后再试");return;}
+-        int version=generation;smsBusy=true;io.execute(()->{try{api.request("/send-code","POST",body("phone",phone),false);runOnUiThread(()->{smsBusy=false;smsSentAt=android.os.SystemClock.elapsedRealtime();if(version==generation)info("验证码已发送");});}catch(Exception e){runOnUiThread(()->{smsBusy=false;if(version==generation)info(e.getMessage());});}});
++        long elapsed=android.os.SystemClock.elapsedRealtime();if(smsSentTimes.containsKey(phone)&&elapsed-smsSentTimes.get(phone)<60000){info("验证码已发送，请稍后再试");return;}
++        int version=generation;smsBusy=true;io.execute(()->{try{api.request("/send-code","POST",body("phone",phone),false);runOnUiThread(()->{smsBusy=false;smsSentTimes.put(phone,android.os.SystemClock.elapsedRealtime());if(version==generation)info("验证码已发送");});}catch(Exception e){runOnUiThread(()->{smsBusy=false;if(version==generation)info(e.getMessage());});}});
+     }
+     private final CarrierLogin carrierLogin = new CarrierLogin();
+     private void loginWithCarrier(CheckBox consent){
+@@ -272,34 +273,80 @@
+             });});
+         }catch(Exception error){runOnUiThread(()->{authBusy=false;if(version==generation&&!isFinishing())info(error.getMessage());});}});
+     }
+-    private void login(){login(false);}
+-    private void login(boolean passwordMode){
+-        begin("欢迎回来");hero("东方舞圈", "登录后同步课程、学习进度与个人资料");section("手机号登录");
+-        EditText phone=field(content,"手机号",true),secret=field(content,passwordMode?"密码":"短信验证码",!passwordMode);
+-        phone.setContentDescription("手机号");secret.setContentDescription(passwordMode?"密码":"短信验证码");
+-        secret.setSaveEnabled(false);
+-        if(passwordMode){
+-            secret.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+-            secret.setImportantForAutofill(android.view.View.IMPORTANT_FOR_AUTOFILL_NO);
+-            info("使用已设置密码的会员账号；未设置密码可使用短信登录。");
+-        }
+-        CheckBox consent=new CheckBox(this);consent.setText("我已阅读并同意隐私政策和服务条款");content.addView(consent);
+-        action("本机号码一键登录",()->loginWithCarrier(consent));
+-        action("阅读隐私政策",()->open(()->legalDocument("隐私政策","app-privacy.txt")));action("阅读服务条款",()->open(()->legalDocument("服务条款","app-terms.txt")));
+-        if(!passwordMode)action("获取验证码",()->{if(!consent.isChecked()){info("请阅读并同意协议");return;}sendSMS(phone.getText().toString().trim());});
+-        action("登录",()->{
++    private Button loginAction(String label,Runnable tap){
++        Button view=button(label,tap);view.setGravity(Gravity.CENTER);
++        view.setTextColor(new android.content.res.ColorStateList(new int[][]{new int[]{-android.R.attr.state_enabled},new int[]{}},new int[]{SwodUi.muted(this),SwodUi.dark(this)?android.graphics.Color.BLACK:android.graphics.Color.WHITE}));
++        view.setBackgroundTintList(new android.content.res.ColorStateList(new int[][]{new int[]{-android.R.attr.state_enabled},new int[]{}},new int[]{SwodUi.tonal(this),red}));
++        return view;
++    }
++    private EditText loginInput(LinearLayout box,String hint,boolean digits){
++        EditText view=field(box,hint,digits);view.setBackground(SwodUi.shape(this,SwodUi.canvas(this),12));view.setSaveEnabled(false);return view;
++    }
++    private void login(){login(false,"");}
++    private void login(boolean passwordMode){login(passwordMode,"");}
++    private void login(boolean passwordMode,String initialPhone){
++        begin("登录");int pageVersion=generation;
++        LinearLayout branding=column();branding.setGravity(Gravity.CENTER);branding.setPadding(0,dp(12),0,dp(20));
++        ImageView logo=new ImageView(this);logo.setImageResource(cn.com.swod.app.R.drawable.brand_logo);logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
++        logo.setPadding(dp(6),dp(6),dp(6),dp(6));logo.setBackground(SwodUi.shape(this,android.graphics.Color.WHITE,18));logo.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
++        branding.addView(logo,new LinearLayout.LayoutParams(dp(80),dp(80)));
++        TextView name=text("伊娃东方舞",26);name.setTypeface(null,android.graphics.Typeface.BOLD);name.setGravity(Gravity.CENTER);branding.addView(name);
++        TextView tagline=text("舞者成长系统",14);tagline.setGravity(Gravity.CENTER);tagline.setTextColor(SwodUi.muted(this));branding.addView(tagline);content.addView(branding);
++        LinearLayout card=column();card.setPadding(dp(20),dp(20),dp(20),dp(16));card.setBackground(SwodUi.shape(this,SwodUi.surface(this),20));
++        LinearLayout.LayoutParams cardLayout=new LinearLayout.LayoutParams(Math.min(dp(440),getResources().getDisplayMetrics().widthPixels-dp(32)),-2);cardLayout.gravity=Gravity.CENTER_HORIZONTAL;content.addView(card,cardLayout);
++        CheckBox consent=new CheckBox(this);consent.setText("我已阅读并同意以下协议");consent.setTextColor(SwodUi.ink(this));consent.setMinHeight(dp(48));consent.setChecked(false);consent.setSaveEnabled(false);
++        boolean[] carrierAvailable={false};
++        Button carrier=loginAction("手机号一键登录",()->loginWithCarrier(consent));card.addView(carrier,new LinearLayout.LayoutParams(-1,-2));
++        TextView carrierStatus=text("正在检查本机号码登录…",12);carrierStatus.setTextColor(SwodUi.muted(this));carrierStatus.setGravity(Gravity.CENTER);card.addView(carrierStatus);
++        TextView divider=text(passwordMode?"或使用账号密码登录":"或使用验证码登录",12);divider.setGravity(Gravity.CENTER);divider.setTextColor(SwodUi.muted(this));divider.setPadding(0,dp(16),0,dp(12));card.addView(divider);
++        card.addView(text("手机号",14));EditText phone=loginInput(card,"请输入手机号",true);phone.setText(initialPhone);phone.setContentDescription("手机号");
++        card.addView(text(passwordMode?"账号密码":"验证码",14));
++        LinearLayout codeRow=row();boolean large=getResources().getConfiguration().fontScale>1.4f;if(large)codeRow.setOrientation(LinearLayout.VERTICAL);card.addView(codeRow);
++        EditText secret=loginInput(codeRow,passwordMode?"请输入账号密码":"请输入验证码",!passwordMode);
++        secret.setContentDescription(passwordMode?"密码":"短信验证码");secret.setLayoutParams(new LinearLayout.LayoutParams(passwordMode||large?-1:0,-2,passwordMode||large?0:1));
++        if(passwordMode){secret.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);secret.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO);}
++        else secret.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
++        Button send=button("获取验证码",()->sendSMS(phone.getText().toString().trim()));send.setBackground(SwodUi.touch(this,SwodUi.tonal(this),12));
++        if(!passwordMode){LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(large?-1:-2,-2);params.leftMargin=large?0:dp(10);codeRow.addView(send,params);}
++        card.addView(consent);
++        LinearLayout links=row();links.setGravity(Gravity.CENTER);if(large)links.setOrientation(LinearLayout.VERTICAL);
++        Button privacy=button("《隐私政策》",()->open(()->legalDocument("隐私政策","app-privacy.txt")));
++        Button terms=button("《服务条款》",()->open(()->legalDocument("服务条款","app-terms.txt")));
++        links.addView(privacy);links.addView(terms);card.addView(links);
++        loginFeedback=text("",14);loginFeedback.setVisibility(View.GONE);card.addView(loginFeedback);
++        Button submit=loginAction(passwordMode?"密码登录":"验证码登录",()->{
+             if(authBusy)return;
+             if(!consent.isChecked()){consent.setError("请阅读并同意协议");consent.requestFocus();return;}
+             String number=phone.getText().toString().trim(),credential=secret.getText().toString();
+             if(!number.matches("1[3-9][0-9]{9}")){phone.setError("请填写有效手机号");phone.requestFocus();return;}
+             if(passwordMode?credential.isEmpty():!credential.matches("[0-9]{6}")){secret.setError(passwordMode?"请填写密码":"请填写六位验证码");secret.requestFocus();return;}
+-            int version=generation;authBusy=true;secret.setText("");
++            int version=generation;long accountVersion=api.accountGeneration();authBusy=true;secret.setText("");
+             io.execute(()->{try{
+                 JSONObject response=object(api.request(passwordMode?"/auth/password-login":"/auth/login","POST",body("phone",number,passwordMode?"password":"code",credential,"deviceName","伊娃东方舞 Android"),false));
+-                runOnUiThread(()->{authBusy=false;if(version!=generation||isFinishing())return;try{api.accept(response);history.clear();page=this::account;account();}catch(Exception e){info(e.getMessage());}});
++                runOnUiThread(()->{authBusy=false;if(version!=generation||accountVersion!=api.accountGeneration()||isFinishing())return;try{api.accept(response);history.clear();page=this::account;account();}catch(Exception e){info(e.getMessage());}});
+             }catch(Exception e){runOnUiThread(()->{authBusy=false;if(version==generation&&!isFinishing())info(e.getMessage());});}});
+         });
+-        action(passwordMode?"切换为短信登录":"切换为密码登录",()->{if(!authBusy){secret.setText("");page=()->login(!passwordMode);page.run();}});
++        card.addView(submit,new LinearLayout.LayoutParams(-1,-2));
++        TextView fallback=text("授权失败时可使用短信验证码登录",12);fallback.setTextColor(SwodUi.muted(this));fallback.setGravity(Gravity.CENTER);card.addView(fallback);
++        Button alternate=button(passwordMode?"使用验证码登录":"使用账号密码登录",()->{if(!authBusy){String number=phone.getText().toString();secret.setText("");page=()->login(!passwordMode,number);page.run();}});
++        card.addView(alternate,new LinearLayout.LayoutParams(-1,-2));
++        Button cancel=button("返回",()->{secret.setText("");carrierLogin.cancel();back();});LinearLayout.LayoutParams cancelLayout=new LinearLayout.LayoutParams(-2,-2);cancelLayout.gravity=Gravity.CENTER_HORIZONTAL;cancelLayout.topMargin=dp(20);content.addView(cancel,cancelLayout);
++        TextView shared=text("与官网、小程序共用学习账号",12);shared.setGravity(Gravity.CENTER);shared.setTextColor(SwodUi.muted(this));content.addView(shared);
++        Runnable update=()->{
++            boolean idle=!authBusy&&!smsBusy,agreed=consent.isChecked(),valid=phone.getText().toString().trim().matches("1[3-9][0-9]{9}");
++            long sent=smsSentTimes.getOrDefault(phone.getText().toString().trim(),0L);
++            int seconds=sent==0?0:(int)Math.max(0,Math.ceil((60000-(android.os.SystemClock.elapsedRealtime()-sent))/1000.0));
++            send.setText(smsBusy?"发送中…":seconds>0?seconds+" 秒后重发":"获取验证码");send.setEnabled(idle&&agreed&&valid&&seconds==0);
++            submit.setEnabled(idle&&agreed&&valid&&(passwordMode?secret.length()>0:secret.getText().toString().matches("[0-9]{6}")));
++            carrier.setEnabled(idle&&agreed&&carrierAvailable[0]);alternate.setEnabled(idle);phone.setEnabled(idle);secret.setEnabled(idle);consent.setEnabled(idle);
++        };
++        TextWatcher edits=new TextWatcher(){public void beforeTextChanged(CharSequence v,int a,int c,int d){}public void onTextChanged(CharSequence v,int a,int b,int c){update.run();}public void afterTextChanged(Editable e){}};
++        secret.addTextChangedListener(edits);
++        phone.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence v,int a,int c,int d){}public void onTextChanged(CharSequence v,int a,int b,int c){secret.setText("");update.run();}public void afterTextChanged(Editable e){}});
++        consent.setOnCheckedChangeListener((v,checked)->update.run());update.run();
++        android.os.Handler timer=new android.os.Handler(android.os.Looper.getMainLooper());
++        timer.postDelayed(new Runnable(){public void run(){if(pageVersion!=generation||isFinishing())return;update.run();timer.postDelayed(this,1000);}},1000);
++        io.execute(()->{try{JSONObject config=object(api.request("/config","GET",null,false));runOnUiThread(()->{if(pageVersion!=generation||isFinishing())return;carrierAvailable[0]=config.optBoolean("oneTapLogin");carrierStatus.setText(carrierAvailable[0]?"由运营商验证本机号码，登录前请先同意下方协议":"本机号码登录暂未开放，请使用短信验证或账号密码登录");update.run();});}catch(Exception e){runOnUiThread(()->{if(pageVersion==generation)carrierStatus.setText("暂时无法检查本机号码登录，请使用短信验证");});}});
+     }
+     private void assistant(){begin("学习助手");info("根据已有课程制定练习安排");action("20 分钟：热身 4 · 技巧 12 · 复习 4",()->open(()->records("最近学习","/member/recent-courses","",r->play(r.optInt("video_id"),first(r,"course_name")))));action("30 分钟：热身 6 · 技巧 18 · 复习 6",()->open(()->records("最近学习","/member/recent-courses","",r->play(r.optInt("video_id"),first(r,"course_name")))));}
+     private void myEvents(){begin("我的比赛");load("/member/events","GET",null,true,v->{JSONArray entries=array(object(v).opt("entries"));if(entries.length()==0){info("暂无比赛报名和结果记录");return;}for(int i=0;i<entries.length();i++){JSONObject r=entries.getJSONObject(i);String detail=first(r,"groupName")+(first(r,"playerNo").isEmpty()?"":" · 选手号 "+first(r,"playerNo"));if(!first(r,"entrantName").isEmpty())detail+="\n参赛人："+first(r,"entrantName");if(!first(r,"performanceTitle").isEmpty())detail+="\n节目："+first(r,"performanceTitle");detail+="\n"+CompetitionRecord.audit(r.optString("auditStatus"))+" · "+CompetitionRecord.paid(r.optString("paidStatus"))+" · "+first(r,"startDate");detail+="\n"+CompetitionRecord.result(r.opt("resultPublished"),first(r,"totalScore"),r.optInt("rankNo"),first(r,"awardName"));card(content,first(r,"competitionName"),detail,null);int id=r.optInt("competitionId");if(id>0)action("赛事详情",()->open(()->event(id)));}});}
+--- before/HarmonyOS/Index.ets
++++ after/HarmonyOS/Index.ets
+@@ -66,6 +66,12 @@
+   @State private username: string = '';
+   @State private password: string = '';
+   @State private consent: boolean = false;
++  @State private carrierReady: boolean = false;
++  @State private carrierHint: string = '正在检查本机号码登录…';
++  @State private smsSeconds: number = 0;
++  @State private loginNotice: string = '';
++  private smsSentTimes: Map<string, number> = new Map<string, number>();
++  private smsTimer: number = -1;
+   @State private name: string = '';
+   @State private organization: string = '';
+   @State private teacher: string = '';
+@@ -114,11 +120,12 @@
+ 
+   aboutToAppear(): void { this.load(); }
+   onPageShow(): void { if (!this.busy && (this.route.screen === 'home' || this.route.path.startsWith('/member/authorized-series'))) this.load(); }
+-  aboutToDisappear(): void { this.carrierLogin.cancel(); this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.generation++; }
++  aboutToDisappear(): void { if (this.smsTimer >= 0) clearInterval(this.smsTimer); this.carrierLogin.cancel(); this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.generation++; }
+   onBackPress(): boolean { if (this.history.length === 0) return false; this.back(); return true; }
+   private go(screen: string, title: string, path: string = '', auth: boolean = false, eventID: number = 0, groupID: number = 0, staff: boolean = false): void {
+     this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.playURL = '';
+     this.history.push(this.route);
++    if (screen === 'login') { this.phone = ''; this.code = ''; this.memberPassword = ''; this.consent = false; this.memberLoginMode = 'sms'; this.loginNotice = ''; }
+     this.route = { screen: screen, title: title, path: path, auth: auth, eventID: eventID, groupID: groupID, staff: staff };
+     this.query = ''; this.rows = []; this.detail = {}; this.error = ''; this.refundReason = ''; this.generation++; this.load();
+   }
+@@ -135,7 +142,32 @@
+     return !!platform.credentials && this.unlockedSeries.includes(String(row.series_id || row.id));
+   }
+   private currentSeriesID(): string { return this.route.path.split('/')[3] || ''; }
++  private async prepareMemberLogin(): Promise<void> {
++    const version = this.generation;
++    this.busy = false; this.carrierReady = false; this.carrierHint = '正在检查本机号码登录…';
++    if (this.smsTimer >= 0) clearInterval(this.smsTimer);
++    this.updateSMSCooldown();
++    this.smsTimer = setInterval(() => {
++      if (this.route.screen !== 'login') { clearInterval(this.smsTimer); this.smsTimer = -1; return; }
++      this.updateSMSCooldown();
++    }, 1000);
++    try {
++      const config = await platform.request<Row>('/config');
++      if (version !== this.generation) return;
++      this.carrierReady = config.oneTapLogin === true;
++      this.carrierHint = this.carrierReady ? '由运营商验证本机号码，登录前请同意下方协议' : '本机号码登录暂未开放，请使用短信验证或账号密码登录';
++    } catch { if (version === this.generation) this.carrierHint = '暂时无法检查本机号码登录，请使用短信验证'; }
++  }
++  private updateSMSCooldown(): void {
++    const sent = this.smsSentTimes.get(this.phone) || 0;
++    this.smsSeconds = sent ? Math.max(0, Math.min(60, Math.ceil((60000 - (Date.now() - sent)) / 1000))) : 0;
++  }
++  private validLoginInput(): boolean {
++    return !this.busy && this.consent && /^1[3-9][0-9]{9}$/.test(this.phone) &&
++      (this.memberLoginMode === 'password' ? this.memberPassword.length > 0 : /^[0-9]{6}$/.test(this.code));
++  }
+   private async load(): Promise<void> {
++    if (this.route.screen === 'login') { await this.prepareMemberLogin(); return; }
+     if (['offlineDetail', 'product'].includes(this.route.screen) && !this.route.path) { this.busy = false; this.error = ''; return; }
+     const version = this.generation; const route = this.route;
+     this.busy = true; this.error = '';
+@@ -294,7 +326,7 @@
+       if (!config.oneTapLogin) throw new Error('本机号码登录暂未开放，请使用短信登录');
+       const token = await this.carrierLogin.token(this.getUIContext().getHostContext() as common.UIAbilityContext);
+       if (version !== this.generation) return;
+-      await platform.loginWithCarrier(token);
++      await platform.loginWithCarrier(token, () => version === this.generation && this.route.screen === 'login');
+       if (version !== this.generation) return;
+       this.loggedIn = true; this.tab('account', '个人中心', '/member/profile', true);
+     } catch (failure) {
+@@ -304,16 +336,19 @@
+   private async login(): Promise<void> {
+     if (this.busy || !this.consent || !/^1[3-9][0-9]{9}$/.test(this.phone)) { this.error = '请填写有效手机号并阅读同意协议'; return; }
+     if (this.memberLoginMode === 'password' && !this.memberPassword) { this.error = '请输入密码'; return; }
++    if (this.memberLoginMode === 'sms' && !/^[0-9]{6}$/.test(this.code)) { this.error = '请填写六位验证码'; return; }
++    const version = this.generation;
+     const secret = this.memberPassword;
+     this.memberPassword = '';
+     this.busy = true;
+     try {
+-      if (this.memberLoginMode === 'password') await platform.loginWithPassword(this.phone, secret);
+-      else await platform.login(this.phone, this.code);
++      if (this.memberLoginMode === 'password') await platform.loginWithPassword(this.phone, secret, () => version === this.generation && this.route.screen === 'login');
++      else await platform.login(this.phone, this.code, () => version === this.generation && this.route.screen === 'login');
++      if (version !== this.generation) return;
+       this.loggedIn = true; this.code = ''; this.tab('account', '个人中心', '/member/profile', true);
+     }
+-    catch (failure) { this.error = failure instanceof Error ? failure.message : '登录失败'; }
+-    finally { this.busy = false; }
++    catch (failure) { if (version === this.generation) this.error = failure instanceof Error ? failure.message : '登录失败'; }
++    finally { if (version === this.generation) this.busy = false; }
+   }
+   private async loginStaff(): Promise<void> {
+     if (this.busy) return; this.busy = true; const secret = this.password; this.password = '';
+@@ -322,11 +357,15 @@
+     finally { this.busy = false; }
+   }
+   private async sendCode(): Promise<void> {
+-    if (!this.consent || !/^1[3-9][0-9]{9}$/.test(this.phone) || this.busy) { this.error = '请填写有效手机号并阅读同意协议'; return; }
+-    this.busy = true;
+-    try { await platform.request<Row>('/send-code', http.RequestMethod.POST, { phone: this.phone }); this.error = '验证码已发送'; }
+-    catch (failure) { this.error = failure instanceof Error ? failure.message : '发送失败'; }
+-    finally { this.busy = false; }
++    this.updateSMSCooldown();
++    if (!this.consent || !/^1[3-9][0-9]{9}$/.test(this.phone) || this.busy || this.smsSeconds > 0) { this.error = '请填写有效手机号、同意协议并等待验证码冷却结束'; return; }
++    const phone = this.phone; const version = this.generation; this.busy = true; this.error = ''; this.loginNotice = '';
++    try {
++      await platform.request<Row>('/send-code', http.RequestMethod.POST, { phone: phone });
++      this.smsSentTimes.set(phone, Date.now()); this.updateSMSCooldown();
++      if (version === this.generation) this.loginNotice = '验证码已发送，请查收短信';
++    } catch (failure) { if (version === this.generation) this.error = failure instanceof Error ? failure.message : '发送失败'; }
++    finally { if (version === this.generation) this.busy = false; }
+   }
+   private openURL(url: string): void {
+     if (!externalURLAllowed(url)) return;
+@@ -515,24 +554,63 @@
+   }
+   @Builder
+   private loginForm() {
+-    this.intro('东方舞圈', '登录后同步课程、学习进度与个人资料')
+-    TextInput({ placeholder: '手机号', text: this.phone }).type(InputType.PhoneNumber).onChange((v: string) => { this.phone = v; })
+-    if (this.memberLoginMode === 'sms') {
+-      TextInput({ placeholder: '短信验证码', text: this.code }).type(InputType.Number).onChange((v: string) => { this.code = v; })
+-    } else {
+-      TextInput({ placeholder: '密码', text: this.memberPassword }).type(InputType.Password).onChange((v: string) => { this.memberPassword = v; })
+-    }
+-    Row() { Checkbox().select(this.consent).onChange((v: boolean) => { this.consent = v; }); Text('我已阅读并同意隐私政策和服务条款').fontSize(12).layoutWeight(1) }
+-    this.action('本机号码一键登录', () => { this.loginCarrier(); })
+-    this.action('阅读隐私政策', () => this.openURL('https://www.swod.com.cn/privacy'))
+-    this.action('阅读服务条款', () => this.openURL('https://www.swod.com.cn/terms'))
+-    if (this.memberLoginMode === 'sms') { this.action('获取验证码', () => { this.sendCode(); }) }
+-    this.action('登录', () => { this.login(); })
+-    if (this.memberLoginMode === 'sms') {
+-      this.action('使用密码登录', () => { this.memberLoginMode = 'password'; this.code = ''; this.error = ''; })
+-    } else {
+-      this.action('使用短信验证码登录', () => { this.memberLoginMode = 'sms'; this.memberPassword = ''; this.error = ''; })
+-    }
++    Column({ space: 8 }) {
++      Image($r('app.media.brand_logo')).width(80).height(80).padding(8).objectFit(ImageFit.Contain).backgroundColor(Color.White).borderRadius(18).accessibilityLevel('no')
++      Text('伊娃东方舞').fontSize(26).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink)
++      Text('舞者成长系统').fontSize(14).fontColor(SwodTheme.muted)
++    }.width('100%').padding({ top: 12, bottom: 20 })
++    Column({ space: 12 }) {
++      Button('手机号一键登录', { type: ButtonType.Normal })
++        .fontSize(17).fontWeight(FontWeight.Bold).fontColor(this.carrierReady && this.consent && !this.busy ? Color.White : SwodTheme.muted)
++        .backgroundColor(this.carrierReady && this.consent && !this.busy ? SwodTheme.primary : SwodTheme.tonal)
++        .borderRadius(12).constraintSize({ minHeight: 48 }).width('100%')
++        .enabled(this.carrierReady && this.consent && !this.busy).onClick(() => this.loginCarrier())
++      Text(this.carrierHint).fontSize(12).fontColor(SwodTheme.muted).textAlign(TextAlign.Center).width('100%')
++      Text(this.memberLoginMode === 'sms' ? '或使用验证码登录' : '或使用账号密码登录').fontSize(12).fontColor(SwodTheme.muted).textAlign(TextAlign.Center).width('100%').margin({ top: 4 })
++      Text('手机号').fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
++      TextInput({ placeholder: '请输入手机号', text: this.phone }).type(InputType.PhoneNumber)
++        .backgroundColor(SwodTheme.canvas).fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).constraintSize({ minHeight: 48 })
++        .enabled(!this.busy).onChange((v: string) => { this.phone = v; this.code = ''; this.error = ''; this.updateSMSCooldown(); }).accessibilityText('手机号')
++      if (this.memberLoginMode === 'sms') {
++        Text('验证码').fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
++        Row({ space: 10 }) {
++          TextInput({ placeholder: '请输入验证码', text: this.code }).type(InputType.Number).layoutWeight(1)
++            .backgroundColor(SwodTheme.canvas).fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).constraintSize({ minHeight: 48 })
++            .enabled(!this.busy).onChange((v: string) => { this.code = v; }).accessibilityText('短信验证码')
++          Button(this.smsSeconds > 0 ? this.smsSeconds + ' 秒后重发' : '获取验证码', { type: ButtonType.Normal })
++            .fontSize(14).fontColor(SwodTheme.primary).backgroundColor(SwodTheme.tonal).borderRadius(12).width(124).constraintSize({ minHeight: 48 })
++            .enabled(!this.busy && this.consent && /^1[3-9][0-9]{9}$/.test(this.phone) && this.smsSeconds === 0).onClick(() => this.sendCode())
++        }.width('100%')
++      } else {
++        Text('账号密码').fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
++        TextInput({ placeholder: '请输入账号密码', text: this.memberPassword }).type(InputType.Password)
++          .backgroundColor(SwodTheme.canvas).fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).constraintSize({ minHeight: 48 })
++          .enabled(!this.busy).onChange((v: string) => { this.memberPassword = v; }).accessibilityText('账号密码')
++      }
++      Row({ space: 4 }) {
++        Checkbox().select(this.consent).selectedColor(SwodTheme.primary).onChange((v: boolean) => { this.consent = v; }).enabled(!this.busy).accessibilityText('我已阅读并同意以下协议')
++        Column({ space: 0 }) {
++          Text('我已阅读并同意').fontSize(12).fontColor(SwodTheme.muted).width('100%')
++          Flex({ wrap: FlexWrap.Wrap }) {
++            Button('《隐私政策》', { type: ButtonType.Normal }).fontSize(12).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 44 }).onClick(() => this.openURL('https://www.swod.com.cn/privacy'))
++            Button('《服务条款》', { type: ButtonType.Normal }).fontSize(12).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 44 }).onClick(() => this.openURL('https://www.swod.com.cn/terms'))
++          }.width('100%')
++        }.layoutWeight(1)
++      }.width('100%')
++      if (this.error) { Text(this.error).fontSize(14).fontColor(SwodTheme.primary).width('100%') }
++      if (this.loginNotice) { Text(this.loginNotice).fontSize(14).fontColor(SwodTheme.muted).width('100%') }
++      Button(this.memberLoginMode === 'sms' ? '验证码登录' : '密码登录', { type: ButtonType.Normal })
++        .fontSize(17).fontWeight(FontWeight.Bold).fontColor(this.validLoginInput() ? Color.White : SwodTheme.muted)
++        .backgroundColor(this.validLoginInput() ? SwodTheme.primary : SwodTheme.tonal).borderRadius(12).constraintSize({ minHeight: 48 }).width('100%')
++        .enabled(this.validLoginInput()).onClick(() => this.login())
++      Text('授权失败时可使用短信验证码登录').fontSize(12).fontColor(SwodTheme.muted).textAlign(TextAlign.Center).width('100%')
++      Button(this.memberLoginMode === 'sms' ? '使用账号密码登录' : '使用验证码登录', { type: ButtonType.Normal })
++        .fontSize(14).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 44 }).width('100%')
++        .enabled(!this.busy).onClick(() => { this.memberLoginMode = this.memberLoginMode === 'sms' ? 'password' : 'sms'; this.memberPassword = ''; this.code = ''; this.error = ''; })
++    }.width('100%').constraintSize({ maxWidth: 440 }).padding(20).backgroundColor(SwodTheme.surface).borderRadius(20)
++    Button('返回', { type: ButtonType.Normal }).fontSize(14).fontColor(SwodTheme.primary).backgroundColor(SwodTheme.tonal).constraintSize({ minHeight: 44 })
++      .margin({ top: 10 }).onClick(() => { this.memberPassword = ''; this.code = ''; this.carrierLogin.cancel(); this.back(); })
++    Text('与官网、小程序共用学习账号').fontSize(12).fontColor(SwodTheme.muted).textAlign(TextAlign.Center).width('100%')
+   }
+   @Builder
+   private staffForm() {
+@@ -857,7 +935,7 @@
+     }
+     if (this.route.screen === 'messages' && this.detail.hasMore) { this.action('下一页', () => this.go('messages', '学习消息', '/member/messages?limit=20&cursor=' + this.detail.nextCursor, true)) }
+     if (this.busy) { Row({ space: 12 }) { LoadingProgress().width(24).height(24).color(SwodTheme.primary); Text('正在加载…').fontSize(14).fontColor(SwodTheme.muted) }.padding(20).width('100%').justifyContent(FlexAlign.Center) }
+-    if (this.error) { Text(this.error).fontSize(14).fontColor(SwodTheme.primary); this.action('重新加载', () => { this.load(); }); if (!this.loggedIn && this.route.auth && !this.route.staff) { this.action('手机号登录', () => this.go('login', '手机号登录')) } }
++    if (this.error && this.route.screen !== 'login') { Text(this.error).fontSize(14).fontColor(SwodTheme.primary); this.action('重新加载', () => { this.load(); }); if (!this.loggedIn && this.route.auth && !this.route.staff) { this.action('手机号登录', () => this.go('login', '手机号登录')) } }
+     if (!this.busy && !this.error && this.rows.length === 0 && ['home', 'offline', 'events', 'records', 'certificates'].includes(this.route.screen)) { Text('暂无可展示的记录，请稍后刷新').fontSize(14).fontColor(SwodTheme.muted).padding(24) }
+   }
+   build() {
+@@ -865,7 +943,7 @@
+       Row({ space: 8 }) {
+         if (this.history.length > 0) { Button({ type: ButtonType.Normal }) { Image($r('app.media.nav_back_on')).width(24).height(24) }.width(48).height(48).backgroundColor(Color.Transparent).onClick(() => this.back()).accessibilityText('返回上一页') }
+         Text(this.route.title).fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).layoutWeight(1)
+-        Button('刷新', { type: ButtonType.Normal }).constraintSize({ minWidth: 48, minHeight: 48 }).backgroundColor(Color.Transparent).fontColor(SwodTheme.primary).onClick(() => { if (this.route.screen === 'web') this.reloadWeb(); else this.load(); })
++        Button('刷新', { type: ButtonType.Normal }).constraintSize({ minWidth: 48, minHeight: 48 }).backgroundColor(Color.Transparent).fontColor(SwodTheme.primary).enabled(!(this.route.screen === 'login' && this.busy)).onClick(() => { if (this.route.screen === 'web') this.reloadWeb(); else this.load(); })
+       }.padding({ left: 20, right: 12, top: 6, bottom: 6 }).width('100%').backgroundColor(SwodTheme.surface)
+       if (this.route.screen === 'web') {
+         Column({ space: 0 }) {
+@@ -893,7 +971,7 @@
+             .onHttpErrorReceive((event: OnHttpErrorReceiveEvent) => { if (event.request.isMainFrame()) { this.webLoading = false; this.webError = '网页暂时不可用，请稍后重试'; } })
+         }.layoutWeight(1).width('100%')
+       } else {
+-        Scroll(this.catalogScroller) { Column({ space: 10 }) { this.content() }.alignItems(HorizontalAlign.Start).padding({ left: 16, right: 16, top: 10, bottom: 20 }).width('100%').constraintSize({ maxWidth: 760 }) }.layoutWeight(1).width('100%')
++        Scroll(this.catalogScroller) { Column({ space: 10 }) { this.content() }.alignItems(this.route.screen === 'login' ? HorizontalAlign.Center : HorizontalAlign.Start).padding({ left: 16, right: 16, top: 10, bottom: 20 }).width('100%').constraintSize({ maxWidth: 760 }) }.layoutWeight(1).width('100%')
+       }
+       Row({ space: 4 }) {
+         this.navItem('线上学院', 'home', this.activeTab === 'home' ? $r('app.media.nav_learn_on') : $r('app.media.nav_learn'), '线上学院', '/public/series')
+--- before/HarmonyOS/PlatformApi.ets
++++ after/HarmonyOS/PlatformApi.ets
+@@ -43,19 +43,23 @@
+   staff?: StaffCredentials;
+   private generation: number = 0;
+   private refreshing?: Promise<Credentials>;
+-  async login(phone: string, code: string): Promise<void> {
++  async login(phone: string, code: string, isCurrent: () => boolean = () => true): Promise<void> {
++    const generation = this.generation;
+     const value = await this.request<Credentials>('/auth/login', http.RequestMethod.POST, { phone: phone, code: code, deviceName: '伊娃东方舞 HarmonyOS' });
++    if (generation !== this.generation || !isCurrent()) throw new PlatformFailure('登录已取消或账号已切换，请重试', 401);
+     this.generation++; this.credentials = value;
+   }
+-  async loginWithPassword(phone: string, password: string): Promise<void> {
++  async loginWithPassword(phone: string, password: string, isCurrent: () => boolean = () => true): Promise<void> {
++    const generation = this.generation;
+     const value = await this.request<Credentials>('/auth/password-login', http.RequestMethod.POST, { phone: phone, password: password, deviceName: '伊娃东方舞 HarmonyOS' });
++    if (generation !== this.generation || !isCurrent()) throw new PlatformFailure('登录已取消或账号已切换，请重试', 401);
+     this.generation++; this.credentials = value;
+   }
+   clear(): void { this.generation++; this.credentials = undefined; }
+-  async loginWithCarrier(accessToken: string): Promise<void> {
++  async loginWithCarrier(accessToken: string, isCurrent: () => boolean = () => true): Promise<void> {
+     const generation = this.generation;
+     const value = await this.request<Credentials>('/auth/one-tap', http.RequestMethod.POST, { accessToken: accessToken, deviceName: 'SWOD HarmonyOS' });
+-    if (generation !== this.generation) throw new PlatformFailure('账号已切换，请重新登录', 401);
++    if (generation !== this.generation || !isCurrent()) throw new PlatformFailure('登录已取消或账号已切换，请重试', 401);
+     if (!value.token || !value.refreshToken || !value.memberId) throw new PlatformFailure('登录响应无效，请重试', 502);
+     this.generation++; this.credentials = value;
+   }
+--- before/HarmonyOS/platform-api.test.cjs
++++ after/HarmonyOS/platform-api.test.cjs
+@@ -173,3 +173,25 @@
+   assert.equal(f.calls[0].options.usingCache, false);
+   assert.equal(await f.redirects[0].interceptorHandle({}, {}), false);
+ });
++
++for (const method of ['sms', 'password', 'carrier']) {
++  for (const reason of ['account changed', 'login screen closed']) {
++    test(method + ' login cannot commit a delayed response after ' + reason, async () => {
++      const f = fixture(); let release; let current = true;
++      const original = f.api.credentials;
++      const wait = new Promise(resolve => { release = resolve; });
++      f.replies.push({ status: 200, wait, data: { success: true, data: {
++        token: 'late-token', refreshToken: 'late-refresh', memberId: 99
++      } } });
++      const active = () => current;
++      const pending = method === 'sms' ? f.api.login('13800000000', '123456', active) :
++        method === 'password' ? f.api.loginWithPassword('13800000000', 'fixture-secret', active) :
++        f.api.loginWithCarrier('operator-issued-fixture', active);
++      if (reason === 'account changed') f.api.clear(); else current = false;
++      release();
++      await assert.rejects(pending, /登录已取消或账号已切换/);
++      assert.equal(f.api.credentials, reason === 'account changed' ? undefined : original);
++      assert.equal(f.calls.length, 1);
++    });
++  }
++}

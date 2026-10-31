@@ -164,7 +164,7 @@ type PlaybackGesture = {
 
 const CATALOG_PAGE_SIZE = 50;
 const PLAYBACK_RATE_OPTIONS = [0.75, 1, 1.25, 1.5] as const;
-const AUTH_CONTACT_TEXT = '联系客服老师  申请授权学习';
+const AUTH_CONTACT_TEXT = '当前未开通学习权限';
 const customerServiceQRCodes = [
   { name: 'Monica 海艳老师', src: '/images/contact/wechat-monica-haiyan.jpg', note: '课程咨询' },
   { name: 'Elin 伊琳老师', src: '/images/contact/wechat-elin-yilin.jpg', note: '报名咨询' },
@@ -846,7 +846,7 @@ export default function WebsiteCourseVideoPage() {
         requireLogin(activeVideo);
         return;
       }
-      if (message.includes('403') || message.includes('授权')) {
+      if (message.includes('403') || message.includes('授权') || message.includes('学习权限')) {
         setError(AUTH_CONTACT_TEXT);
         return;
       }
@@ -1917,13 +1917,18 @@ export default function WebsiteCourseVideoPage() {
                   <div className="relative z-10">
                     <PlayCircle className="mx-auto mb-3 h-10 w-10 text-[#C8A96E]" />
                     {error === AUTH_CONTACT_TEXT ? (
-                      <button
-                        type="button"
-                        onClick={() => setShowAuthorizationContact(true)}
-                        className="course-video-auth-button rounded-full bg-white/12 px-5 py-2 text-lg font-bold text-white underline-offset-4 transition hover:bg-white/20 hover:underline md:text-xl"
-                      >
-                        点击申请授权
-                      </button>
+                      learningSeriesId ? (
+                        <a
+                          href={`/checkout/online/${encodeURIComponent(learningSeriesId)}`}
+                          className="course-video-auth-button rounded-full bg-white/12 px-5 py-2 text-lg font-bold text-white underline-offset-4 transition hover:bg-white/20 hover:underline md:text-xl"
+                        >
+                          立即购买 · 前往支付
+                        </a>
+                      ) : (
+                        <button type="button" onClick={() => setShowAuthorizationContact(true)} className="course-video-auth-button rounded-full bg-white/12 px-5 py-2 text-lg font-bold text-white underline-offset-4 transition hover:bg-white/20 hover:underline md:text-xl">
+                          联系客服确认课程
+                        </button>
+                      )
                     ) : (
                       <p className="font-semibold">{error || (hasStartedPlayback ? '暂无可播放视频' : '点击下方目录')}</p>
                     )}

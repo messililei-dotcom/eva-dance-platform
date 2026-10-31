@@ -1,0 +1,26 @@
+[
+  {
+    "path": "Sources/EvaDanceApp/EvaDanceApp.swift",
+    "sha256": "a5bbbe95aa7a1adfc7492c609c387ce8a81be4baf0d5c946663dc9678ef11826"
+  },
+  {
+    "path": "Sources/EvaDanceApp/CarrierLogin.swift",
+    "sha256": "154675f69a1eb882dad2b4e68be5a7ff9b4cbfdf1ed4c690c51fde454f09ec86"
+  },
+  {
+    "path": "Sources/EvaDanceApp/Session.swift",
+    "sha256": "1efe47df71e7626cbd610a2119df2dff4d557c689550c883d5351f7e48db09bd"
+  },
+  {
+    "path": "scripts/generate_project.py",
+    "sha256": "38431b17268a72921b2a1ff6e154fbeab948f11fc813352e3fb62c8d7c7348aa"
+  },
+  {
+    "path": "Tests/EvaCoreTests/EvaCoreTests.swift",
+    "sha256": "57aa4e162eea054ed0617b961a0cadf9ba8d11f338383600552c44d1e3a1a633"
+  },
+  {
+    "path": "scripts/fixture_server.py",
+    "sha256": "710e9726340e69f5f76f7bdac6ed4e3b6392d8a660f6aa0c9dfc986aa45c7a18"
+  }
+]

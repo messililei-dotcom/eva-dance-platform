@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.com.swod.app.CacheClockTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-29T13:19:02.280Z" hostname="Eva-Mac-mini.local" time="0.0">
+  <properties/>
+  <testcase name="editableWallClockIsNotAnInput" classname="cn.com.swod.app.CacheClockTest" time="0.0"/>
+  <testcase name="overflowingAnchorNeverGrantsTime" classname="cn.com.swod.app.CacheClockTest" time="0.0"/>
+  <testcase name="rebootOrUnknownBootRequiresNetwork" classname="cn.com.swod.app.CacheClockTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

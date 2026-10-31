@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-28",
+  "scope": "iOS / Android / HarmonyOS compact UI, course artwork, playback catalog/quality, carrier SDK integration",
+  "baseline": {
+    "miniProgramName": "东方舞圈",
+    "observed": "WeChat Developer Tools current local project and authenticated preview",
+    "productionVersionIndependentlyVerified": false
+  },
+  "sourceChanged": true,
+  "builds": {
+    "android": {
+      "passed": true,
+      "log": "android-verified-final.log"
+    },
+    "ios": {
+      "passed": true,
+      "log": "ios-verified-final.log"
+    },
+    "harmony": {
+      "passed": true,
+      "log": "harmony-verified-final.log"
+    }
+  },
+  "androidUnitTests": {
+    "tests": 17,
+    "failures": 0
+  },
+  "androidLint": {
+    "Error": 0,
+    "Warning": 17
+  },
+  "harmonyTests": {
+    "tests": 21,
+    "passed": 21,
+    "log": "harmony-tests-final.log"
+  },
+  "iosCarrierDeviceTarget": "unsigned iphoneos Release compilation passed before last layout-only changes; ios-carrier-build.log",
+  "runtime": {
+    "iOS": "isolated simulator bundle cn.com.swod.app.parityqa; public academy screenshot",
+    "Android": "not run this turn",
+    "HarmonyOS": "not run this turn",
+    "realDeviceLoginOrPlayback": false,
+    "iOSScreenshot": "ios-academy-final.png"
+  },
+  "carrierLogin": {
+    "sdkIntegrated": [
+      "iOS",
+      "Android",
+      "HarmonyOS"
+    ],
+    "operatorSchemeSyncVerified": true,
+    "serverOneTapLoginFlag": false,
+    "realSIMVerified": false
+  },
+  "wechatLogin": {
+    "userConfirmedApprovedMobileApp": true,
+    "mobileConfigurationLocated": false,
+    "miniProgramConfigurationLocated": true,
+    "implemented": false,
+    "managementConsole": "browser site safety blocked; no workaround attempted",
+    "websiteConfigRecovered": true,
+    "websiteConfigSourceDate": "2026-07-29",
+    "searchEvidence": "wechat-config-search.json"
+  },
+  "remaining": [
+    "Verify current production mini-program version against the observed local preview",
+    "Complete WeChat mobile AppID/secret/callback configuration and native SDK integration",
+    "Enable and validate carrier login on real SIM devices after server readiness",
+    "Finish remaining player parity such as casting, picture-in-picture, fullscreen and autoplay according to the operating mini-program",
+    "Complete all-page and real-device acceptance, including images and authentication"
+  ],
+  "uploaded": false,
+  "submitted": false,
+  "published": false,
+  "deployedServer": false
+}

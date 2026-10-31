@@ -1,0 +1,174 @@
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/java/cn/com/swod/app/TokenVault.java:45: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [ApplySharedPref]
+    void clear() { context.getSharedPreferences(namespace, Context.MODE_PRIVATE).edit().clear().commit(); }
+                                                                                                ~~~~~~~~
+
+   Explanation for issues of type "ApplySharedPref":
+   Consider using apply() instead of commit on shared preferences. Whereas
+   commit blocks and writes its data to persistent storage immediately, apply
+   will handle it in the background.
+
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/AndroidManifest.xml:8: Warning: Attribute enableOnBackInvokedCallback is only used in API level 33 and higher (current min is 26) [UnusedAttribute]
+    <application android:name=".SwodApplication" android:label="SWOD" android:theme="@style/AppTheme" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:dataExtractionRules="@xml/data_extraction_rules" android:fullBackupContent="false" android:enableOnBackInvokedCallback="true" android:allowBackup="false" android:usesCleartextTraffic="false" android:supportsRtl="true">
+                                                                                                                                                                                                                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UnusedAttribute":
+   This check finds attributes set in XML files that were introduced in a
+   version newer than the oldest version targeted by your application (with
+   the minSdkVersion attribute).
+
+   This is not an error; the application will simply ignore the attribute.
+   However, if the attribute is important to the appearance or functionality
+   of your application, you should consider finding an alternative way to
+   achieve the same result with only available attributes, and then you can
+   optionally create a copy of the layout in a layout-vNN folder which will be
+   used on API NN or higher where you can take advantage of the newer
+   attribute.
+
+   Note: This check does not only apply to attributes. For example, some tags
+   can be unused too, such as the new <tag> element in layouts introduced in
+   API 21.
+
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/gradle/wrapper/gradle-wrapper.properties:3: Warning: A newer version of Gradle than 8.13 is available: 8.14.6 [AndroidGradlePluginVersion]
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.13-bin.zip
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "AndroidGradlePluginVersion":
+   This detector looks for usage of the Android Gradle Plugin where the
+   version you are using is not the current stable release. Using older
+   versions is fine, and there are cases where you deliberately want to stick
+   with an older version. However, you may simply not be aware that a more
+   recent version is available, and that is what this lint check helps find.
+
+/Users/lilei/.gradle/caches/modules-2/files-2.1/com.aliyun.ams/alicloud-android-utdid/2.6.0/e8f61b41df65ea5008cec480e09a63e5621f58bb/alicloud-android-utdid-2.6.0.jar: Warning: checkClientTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+
+   Explanation for issues of type "TrustAllX509TrustManager":
+   This check looks for X509TrustManager implementations whose
+   checkServerTrusted or checkClientTrusted methods do nothing (thus trusting
+   any certificate chain) which could result in insecure network traffic
+   caused by trusting arbitrary TLS/SSL certificates presented by peers.
+
+   https://goo.gle/TrustAllX509TrustManager
+
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/res/mipmap-anydpi-v26: Warning: This folder configuration (v26) is unnecessary; minSdkVersion is 26. Merge all the resources in this folder into mipmap-anydpi. [ObsoleteSdkInt]
+
+   Explanation for issues of type "ObsoleteSdkInt":
+   This check flags version checks that are not necessary, because the
+   minSdkVersion (or surrounding known API level) is already at least as high
+   as the version checked for.
+
+   Similarly, it also looks for resources in -vNN folders, such as values-v14
+   where the version qualifier is less than or equal to the minSdkVersion,
+   where the contents should be merged into the best folder.
+
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/java/cn/com/swod/app/CourseCacheManager.java:88: Warning: Consider also using StorageManager#getAllocatableBytes and allocateBytes which will consider clearable cached data [UsableSpace]
+            synchronized(this){if(active!=generation||!current(entry))return;downloading=0;remove(id);downloading=id;long used=AliyunSecureCacheDriver.directoryBytes(root);limit=Math.min(grant.getLong("max_bytes"),Math.min(2147483648L-used,context.getNoBackupFilesDir().getUsableSpace()-104857600));inventory.getJSONArray("items").put(entry);persist();}
+                                                                                                                                                                                                                                                                              ~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UsableSpace":
+   When you need to allocate disk space for large files, consider using the
+   new allocateBytes(FileDescriptor, long) API, which will automatically clear
+   cached files belonging to other apps (as needed) to meet your request.
+
+   When deciding if the device has enough disk space to hold your new data,
+   call getAllocatableBytes(UUID) instead of using getUsableSpace(), since the
+   former will consider any cached data that the system is willing to clear on
+   your behalf.
+
+   Note that these methods require API level 26. If your app is running on
+   older devices, you will probably need to use both APIs, conditionally
+   switching on Build.VERSION.SDK_INT. Lint only looks in the same compilation
+   unit to see if you are already using both APIs, so if it warns even though
+   you are already using the new API, consider moving the calls to the same
+   file or suppressing the warning.
+
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/res/mipmap-hdpi/ic_launcher.png: Warning: Launcher icons should not fill every pixel of their square region; see the design guide for details [IconLauncherShape]
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/res/mipmap-mdpi/ic_launcher.png: Warning: Launcher icons should not fill every pixel of their square region; see the design guide for details [IconLauncherShape]
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/res/mipmap-xhdpi/ic_launcher.png: Warning: Launcher icons should not fill every pixel of their square region; see the design guide for details [IconLauncherShape]
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/res/mipmap-xxhdpi/ic_launcher.png: Warning: Launcher icons should not fill every pixel of their square region; see the design guide for details [IconLauncherShape]
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png: Warning: Launcher icons should not fill every pixel of their square region; see the design guide for details [IconLauncherShape]
+
+   Explanation for issues of type "IconLauncherShape":
+   According to the Android Design Guide
+   (https://d.android.com/r/studio-ui/designer/material/iconography) your
+   launcher icons should "use a distinct silhouette", a "three-dimensional,
+   front view, with a slight perspective as if viewed from above, so that
+   users perceive some depth."
+
+   The unique silhouette implies that your launcher icon should not be a
+   filled square.
+
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml:2: Warning: The application adaptive icon is missing a monochrome tag [MonochromeLauncherIcon]
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/ic_launcher_background"/><foreground android:drawable="@drawable/ic_launcher_foreground"/></adaptive-icon>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml:2: Warning: The application adaptive roundIcon is missing a monochrome tag [MonochromeLauncherIcon]
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/ic_launcher_background"/><foreground android:drawable="@drawable/ic_launcher_foreground"/></adaptive-icon>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "MonochromeLauncherIcon":
+   If android:roundIcon and android:icon are both in your manifest, you must
+   either remove the reference to android:roundIcon if it is not needed; or,
+   supply the monochrome icon in the drawable defined by the android:roundIcon
+   and android:icon attribute.
+
+   For example, if android:roundIcon and android:icon are both in the
+   manifest, a launcher might choose to use android:roundIcon over
+   android:icon to display the adaptive app icon. Therefore, your themed
+   application iconwill not show if your monochrome attribute is not also
+   specified in android:roundIcon.
+
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/res/drawable/brand_logo.png: Warning: Found bitmap drawable res/drawable/brand_logo.png in densityless folder [IconLocation]
+
+   Explanation for issues of type "IconLocation":
+   The res/drawable folder is intended for density-independent graphics such
+   as shapes defined in XML. For bitmaps, move it to drawable-mdpi and
+   consider providing higher and lower resolution versions in drawable-ldpi,
+   drawable-hdpi and drawable-xhdpi. If the icon really is density independent
+   (for example a solid color) you can place it in drawable-nodpi.
+
+   https://developer.android.com/guide/practices/screens_support.html
+
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/java/cn/com/swod/app/MainActivity.java:51: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+    private void updateMessageBadge(){if(tabButtons[4]!=null){tabButtons[4].setText("个人中心"+(unreadMessages>0?" · "+(unreadMessages>99?"99+":unreadMessages):""));tabButtons[4].setContentDescription("个人中心"+(unreadMessages>0?"，"+unreadMessages+" 条未读消息":""));}}
+                                                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/java/cn/com/swod/app/MainActivity.java:224: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            JSONArray rows=array(v);total.setText(rows.length()+"\n赛事总数");people.setText(EventPresentation.aggregate(rows,true)+"\n累计参赛");records.setText(EventPresentation.aggregate(rows,false)+"\n记录数据");
+                                                  ~~~~~~~~~~~~~~~~~~~~~~
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/java/cn/com/swod/app/MainActivity.java:224: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            JSONArray rows=array(v);total.setText(rows.length()+"\n赛事总数");people.setText(EventPresentation.aggregate(rows,true)+"\n累计参赛");records.setText(EventPresentation.aggregate(rows,false)+"\n记录数据");
+                                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/java/cn/com/swod/app/MainActivity.java:224: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            JSONArray rows=array(v);total.setText(rows.length()+"\n赛事总数");people.setText(EventPresentation.aggregate(rows,true)+"\n累计参赛");records.setText(EventPresentation.aggregate(rows,false)+"\n记录数据");
+                                                                                                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/java/cn/com/swod/app/MainActivity.java:290: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            runOnUiThread(()->{if(version!=generation||isFinishing())return;musicBytes=payload;musicFilename=selected;musicLabel.setText("已选择："+selected);});
+                                                                                                                                         ~~~~~~~~~~~~~~~
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/java/cn/com/swod/app/PlayerActivity.java:32: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+    private final Runnable progressDisplay=new Runnable(){public void run(){if(destroyed||!resumed)return;if(ready){String percent=CoursePolicy.percent(video.getCurrentPosition()/1000.0,video.getDuration()/1000.0,false)+"%";learningProgress.setText("学习进度 "+percent+" · 已看到 "+clock(video.getCurrentPosition()/1000.0));if(currentProgress!=null)currentProgress.setText(percent);}timer.postDelayed(this,1000);}};
+                                                                                                                                                                                                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/java/cn/com/swod/app/PlayerActivity.java:98: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        if(CoursePolicy.isAudio(getIntent().getStringExtra("title"))){TextView audio=new TextView(this);audio.setText("SWOD · 音频课程，播放时没有视频画面");audio.setTextSize(18);content.addView(audio,0);}
+                                                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/java/cn/com/swod/app/PlayerActivity.java:191: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+    private void saveProgress(){if(ready&&learningProgress!=null){learningProgress.setText("学习进度 "+CoursePolicy.percent(video.getCurrentPosition()/1000.0,video.getDuration()/1000.0,false)+"% · 已看到 "+clock(video.getCurrentPosition()/1000.0));}if(!ready||destroyed||api.accountGeneration()!=playbackAccount)return;double position=video.getCurrentPosition()/1000.0,duration=video.getDuration()/1000.0;if(duration<=0||position<0)return;
+                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/java/cn/com/swod/app/PlayerActivity.java:205: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        }catch(Exception e){runOnUiThread(()->{if(!destroyed){authorizationPending=false;endHoldSpeed();video.pause();ready=false;status.setText("权限验证失败，请返回后重试："+e.getMessage());}});}});
+                                                                                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/private/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.SloKP9/app/src/main/java/cn/com/swod/app/PrivacyConsent.java:23: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        TextView heading = new TextView(activity); heading.setText("欢迎使用 SWOD"); heading.setTextSize(24); heading.setTextColor(SwodUi.ink(activity)); root.addView(heading);
+                                                                   ~~~~~~~~~~~
+
+   Explanation for issues of type "SetTextI18n":
+   When calling TextView#setText
+   * Never call Number#toString() to format numbers; it will not handle
+   fraction separators and locale-specific digits properly. Consider using
+   String#format with proper format specifications (%d or %f) instead.
+   * Do not pass a string literal (e.g. "Hello") to display text. Hardcoded
+   text can not be properly translated to other languages. Consider using
+   Android resource strings instead.
+   * Do not build messages by concatenating text chunks. Such messages can not
+   be properly translated.
+
+   https://developer.android.com/guide/topics/resources/localization.html
+
+0 errors, 24 warnings

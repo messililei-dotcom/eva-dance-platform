@@ -1,0 +1,9 @@
+{
+  "source": "营业执照副本_原始照片.jpeg",
+  "uploadAlias": "swod-business-license-original.jpg",
+  "sha256": "0ae68727d867ae9a441e676aff057b7f54f23b13477e9e7db113e2c8551ef2c3",
+  "byteIdentical": true,
+  "pixelChanges": false,
+  "recipient": "OPPO SWOD 37977416 only",
+  "reason": "OPPO field rejects .jpeg suffix; file remains original JPEG bytes"
+}

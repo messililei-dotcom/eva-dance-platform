@@ -1,0 +1,5 @@
+src/app/privacy/page.tsx
+src/components/ChildrenPrivacyNotice.tsx
+src/content/children-privacy.json
+public/app/privacy.html
+public/app/children-privacy.html

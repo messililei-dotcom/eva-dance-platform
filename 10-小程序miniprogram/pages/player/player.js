@@ -34,6 +34,7 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     this.loadCourse(options.seriesId, options.videoId);
   },
   async onShow() {
+    this.playerHidden = false;
     if (!this.catalogLoaded || !this.data.seriesId) return;
     try { await this.refreshCourseCatalog(); }
     catch (err) {
@@ -110,7 +111,7 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
         return wx.showToast({ title: "当前课程暂未配置可播放视频", icon: "none" });
       }
       const requested = findCourseVideoSelection(outline, initialVideoId);
-      const resume = outline.filter(item => item.progressPercent > 0).sort((a, b) => String(b.lastPlayAt).localeCompare(String(a.lastPlayAt)))[0];
+      const resume = outline.filter(item => item.lastPlayAt || item.progressPercent > 0).sort((a, b) => String(b.lastPlayAt).localeCompare(String(a.lastPlayAt)))[0];
       const target = requested || resume || outline[0];
       this.setData({
         course: { ...course, ...coursePrice(course, !auth ? null : !!auth.authorized && auth.reason !== "free_series" && Number(course.is_free) !== 1) }, outline, visibleOutline: outline, videoId: target.videoId, courseId: target.courseId,
@@ -279,9 +280,9 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     const duration = Math.floor(this.data.currentDuration || this.data.video.duration || 0);
     if (videoId && current && duration) api.saveVideoProgress(videoId, current, duration).catch(() => {});
   },
-  onPause() { this.endHoldSpeed(); this.setData({ isPlaying: false }); this.saveCurrentProgress(); },
-  onHide() { this.endHoldSpeed(); this.cancelAutoplay(); this.clearPlayerControlsTimer(); this.setData({ showVideoControls: false, showPlayerMenu: false }); this.saveCurrentProgress(); },
-  onUnload() { this.endHoldSpeed(); this.catalogDisposed = true; this.cancelAutoplay(); this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1; this.clearPlayerControlsTimer(); this.saveCurrentProgress(); this.setData({ catalogQuery: "", catalogResultText: "" }); },
+  onPause() { this.endHoldSpeed(); this.clearPlayerControlsTimer(); this.setData({ isPlaying: false, showVideoControls: true }); this.saveCurrentProgress(); },
+  onHide() { this.playerHidden = true; this.endHoldSpeed(); this.cancelAutoplay(); this.clearPlayerControlsTimer(); this.setData({ showVideoControls: false, showPlayerMenu: false, isSeeking: false }); this.saveCurrentProgress(); },
+  onUnload() { this.playerHidden = true; this.endHoldSpeed(); this.catalogDisposed = true; this.cancelAutoplay(); this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1; this.clearPlayerControlsTimer(); this.saveCurrentProgress(); this.setData({ catalogQuery: "", catalogResultText: "" }); },
   onVideoError(event) { this.endHoldSpeed(); this.cancelAutoplay(); console.error("课程视频播放失败", event.detail || event); wx.showToast({ title: "课程视频暂时无法播放", icon: "none" }); },
   onEnded() { this.endHoldSpeed();
     const duration = this.data.currentDuration || this.data.video.duration || 1;
@@ -342,7 +343,7 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
   requestAuthorization() {
     if (this.data.course.canPurchase) return this.buyCourse();
     wx.showModal({
-      title: "课程权限", content: "请联系客服老师申请课程授权：\n海艳老师 153 6787 0529\n伊琳老师 193 1002 9982",
+      title: "课程权限", content: "当前课程暂不可购买，请联系客服确认：\n海艳老师 153 6787 0529\n伊琳老师 193 1002 9982",
       confirmText: "联系客服", cancelText: "稍后", showCancel: true,
       success: result => {
         if (!result.confirm) return;
@@ -441,9 +442,9 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
   },
   schedulePlayerControlsHide() {
     this.clearPlayerControlsTimer();
-    if (this.data.showPlayerMenu) return;
+    if (this.data.showPlayerMenu || this.data.isSeeking || !this.data.isPlaying || this.data.lessonEnded) return;
     this.playerControlsTimer = setTimeout(() => {
-      this.setData({ showVideoControls: false });
+      if (this.data.isPlaying && !this.data.isSeeking && !this.data.showPlayerMenu && !this.data.lessonEnded) this.setData({ showVideoControls: false });
       this.playerControlsTimer = null;
     }, 3000);
   },
@@ -496,7 +497,10 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     if (this.data.isPlaying) this.videoContext.pause(); else this.resumePlayback();
     this.schedulePlayerControlsHide();
   },
+  onSeekStart() { this.clearPlayerControlsTimer(); this.setData({ isSeeking: true, showVideoControls: true }); },
+  onSeekCancel() { this.setData({ isSeeking: false }); this.schedulePlayerControlsHide(); },
   seekPlayback(event) {
+    this.setData({ isSeeking: false });
     this.cancelAutoplay();
     this.setData({ lessonEnded: false });
     if (!this.videoContext || !this.data.currentDuration) return;
@@ -535,8 +539,14 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
       return;
     }
     const current = Math.floor(this.data.currentSeconds || 0);
-    this.setData({ playUrl: quality.url, currentQuality: quality.value, currentQualityLabel: quality.label, showPlayerMenu: false });
-    setTimeout(() => { if (current > 0) this.videoContext.seek(current); this.videoContext.playbackRate(this.data.playbackRate); this.videoContext.play(); }, 500);
+    const wasPlaying = this.data.isPlaying, videoId = this.data.videoId, requestId = this.videoLoadRequestId;
+    this.setData({ playUrl: quality.url, currentQuality: quality.value, currentQualityLabel: quality.label, showPlayerMenu: false, hasStartedPlayback: !!wasPlaying });
+    setTimeout(() => {
+      if (!this.videoContext || this.playerHidden || this.catalogDisposed || this.videoLoadRequestId !== requestId || this.data.videoId !== videoId || this.data.playUrl !== quality.url) return;
+      if (current > 0) this.videoContext.seek(current);
+      this.videoContext.playbackRate(this.data.playbackRate);
+      if (wasPlaying) this.videoContext.play();
+    }, 500);
     this.schedulePlayerControlsHide();
   },
   setRate(event) { this.endHoldSpeed();

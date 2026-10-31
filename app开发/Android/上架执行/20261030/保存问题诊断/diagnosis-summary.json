@@ -1,0 +1,96 @@
+{
+  "checkedAt": "2026-10-30T11:31:27+08:00",
+  "productSourceChanged": false,
+  "filingChanged": false,
+  "originalSignatureChanged": false,
+  "reviewsWithdrawn": false,
+  "newReviewSubmitted": false,
+  "vivo": {
+    "currentPageSelection": [
+      "教育学习",
+      "成人学习",
+      "审核通过后立即发布"
+    ],
+    "normalSaveObserved": true,
+    "httpStatus": 200,
+    "responseCode": 0,
+    "saveRequestIncludesCategoryOrPublishType": false,
+    "restoredDraftIncludesCategoryOrPublishType": false,
+    "synDate": "",
+    "fieldRestoreSucceeded": false,
+    "finding": "Official support confirmed category and publication time are intentionally excluded from drafts, not a save failure.",
+    "workaround": "Select both fields on the current final-submission form; after reload, reselect. Current editor and a persistent intent note remain available.",
+    "freshRemarkRestoredOnIndependentWindow": true,
+    "currentEditorSelectionRetained": true,
+    "officialWebsiteAndPrivacyURLVerified": true,
+    "rootCauseScope": "Observed official frontend draft serialization and restore omit these fields; vendor design intent unconfirmed.",
+    "officialSupportAgent": "8024",
+    "officialDesignConfirmed": true,
+    "priorHypothesisCorrected": true,
+    "vendorBugFixRequired": false,
+    "fieldRestoreExpected": false,
+    "finalSubmissionInstructionConfirmed": true,
+    "draftRestoreMatchesOfficialDesign": true
+  },
+  "oppo": {
+    "versionCodeLastParsed": 12,
+    "workingEditorAPKPresent": true,
+    "secondWindowSavedDraftAPKPresent": false,
+    "draftSaveSuccessToast": true,
+    "screenshotsAndLicensePreserved": true,
+    "serverCauseVerified": false,
+    "workaround": "Retain working editor with original-signed12; do not refresh. Use separate read-only check window and close after checking.",
+    "freshRemarkRestoredOnIndependentWindow": true,
+    "developerObservationUnavailable": true,
+    "rootCauseScope": "Loss localized to APK draft association/restore through normal UI; exact server cause unverified."
+  },
+  "supportRequests": {
+    "prepared": true,
+    "sent": false,
+    "rawCredentialsOrRequestsIncluded": false,
+    "authorizationPending": false,
+    "userAuthorized": true,
+    "formalTicketsConfirmed": false,
+    "vivoIssueContentSent": true,
+    "vivoScreenshotsSent": 2,
+    "vivoHumanAgent": "8024",
+    "oppoTicketSystemMaintenance": true,
+    "oppoCurrentPrivacyConsentPending": false,
+    "statusRecord": "../support-submission-status.json",
+    "vivoFullDescriptionFileSent": true,
+    "vivoFeedbackInProgress": false,
+    "meaningOfSentFlag": "Formal ticket creation remains unverified; consultation and attachments sent to both official support channels.",
+    "vivoOfficialDesignExplanationReceived": true,
+    "vivoBugTicketRequired": false,
+    "vivoConsultationResolved": true,
+    "vivoDoNotResubmitAsBug": true,
+    "oppoIssueContentSent": true,
+    "oppoScreenshotsSent": 2,
+    "oppoFullDescriptionFileSent": true,
+    "oppoHumanAgent": "小暖 B0872",
+    "oppoFeedbackInProgress": true,
+    "oppoEscalationConfirmed": true,
+    "oppoOfficialReplySender": "kfzfw@heytap.com",
+    "oppoFormalTicketNumber": null,
+    "oppoRootCauseVerified": false
+  },
+  "workPages": {
+    "oppo": {
+      "tabId": "895628960",
+      "url": "https://open.oppomobile.com/frontendframe/appService/generalApp?app_id=37977416&pkg_symbol=0&type=add",
+      "preserveWithoutRefresh": true,
+      "workingBuild": 12
+    },
+    "vivo": {
+      "tabId": "895628974",
+      "url": "https://dev.vivo.com.cn/appPerfect/858399",
+      "preserveWithoutRefresh": true,
+      "category": [
+        "教育学习",
+        "成人学习"
+      ],
+      "publishSetting": "审核通过后立即发布"
+    }
+  },
+  "updatedAt": "2026-10-30T15:39:09+08:00"
+}

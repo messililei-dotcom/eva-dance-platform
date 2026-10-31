@@ -1,3 +1,4 @@
+import { parseProductPresentation } from '@/lib/product-presentation';
 import { hasAuth, openCommerceDb, unauthorized } from '../../_db';
 
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const routeParams = await params;
   if (!hasAuth(request)) return unauthorized();
   const body = await request.json().catch(() => ({}));
+  const presentation = parseProductPresentation(body);
+  if (presentation.error) return Response.json({ error: presentation.error }, { status: 400 });
   const db = openCommerceDb();
   try {
     return db.transaction(() => {
@@ -57,6 +60,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       new Date().toISOString(),
       routeParams.id,
     );
+    for (const [field, value] of Object.entries(presentation.values)) db.prepare(`UPDATE shop_products SET ${field}=? WHERE id=?`).run(value, routeParams.id);
     return Response.json({ success: true });
     })();
   } finally {

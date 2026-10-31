@@ -30,7 +30,7 @@ struct LessonCatalogView: View {
     let id: Int
     let title: String
     private var lessons: [JSONValue] { CoursePresentation.catalog(store.data, progress: progress) }
-    private var filtered: [JSONValue] { lessons.filter { query.trimmingCharacters(in: .whitespaces).isEmpty || $0["name"].text.localizedCaseInsensitiveContains(query.trimmingCharacters(in: .whitespaces)) } }
+    private var filtered: [JSONValue] { lessons.filter { query.trimmingCharacters(in: .whitespaces).isEmpty || ($0["name"].text + " " + $0["subtitle"].text).localizedCaseInsensitiveContains(query.trimmingCharacters(in: .whitespaces)) } }
     private var pages: Int { max(1, (filtered.count + 49) / 50) }
     private var visible: [JSONValue] { Array(filtered.dropFirst((min(page, pages) - 1) * 50).prefix(50)) }
     var body: some View {
@@ -56,6 +56,7 @@ struct LessonCatalogView: View {
                                 Text(lesson.value["ordinal"].text).font(.subheadline.monospacedDigit()).frame(width: 30, height: 30).background(selectedID == lesson.id ? EvaBrand.softAccent : EvaBrand.canvas, in: RoundedRectangle(cornerRadius: 8))
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text(lesson.value["name"].text).font(.body.weight(selectedID == lesson.id ? .semibold : .regular)).fixedSize(horizontal: false, vertical: true)
+                                    Text(lesson.value["subtitle"].text).font(.caption).foregroundStyle(.secondary)
                                     HStack { Text(duration(lesson.value["duration"].number)); if selectedID == lesson.id { Text("当前课节").foregroundStyle(EvaBrand.red) } }.font(.caption).foregroundStyle(.secondary)
                                 }.frame(maxWidth: .infinity, alignment: .leading)
                                 Text(status(lesson.value)).font(.caption).foregroundStyle(.secondary)
@@ -66,9 +67,14 @@ struct LessonCatalogView: View {
                     if pages > 1 { pagination(proxy) }
                 }
             }.navigationDestination(isPresented: $showPlayer) {
-                if let selectedID, let lessonID = Int(selectedID), let lesson = lessons.first(where: { $0["id"].text == selectedID }) { AuthGate { PlayerView(lessonID: lessonID, title: lesson["name"].text) } }
+                if let selectedID, let lessonID = Int(selectedID), let lesson = lessons.first(where: { $0["id"].text == selectedID }) {
+                    AuthGate { PlayerView(lessonID: lessonID, title: lesson["name"].text, playlist: lessons.compactMap { row in
+                        guard let id = Int(row["id"].text), id > 0 else { return nil }
+                        return Lesson(id: id, name: row["name"].text, duration: row["duration"].number, subtitle: row["subtitle"].text, percent: row["percent"] == .null ? nil : row["percent"].number)
+                    }, courseTitle: title, seriesID: id) }
+                }
             }
-        }.evaCompactLayout().navigationTitle(title).task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
     }
     private func pagination(_ proxy: ScrollViewProxy) -> some View {
         HStack {

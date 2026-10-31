@@ -154,6 +154,13 @@
       <view wx:else class="empty-row">暂无证书</view>
     </view>
 
+    <view class="content-section">
+      <view class="content-title">客服与售后</view>
+      <view class="record-meta">课程购买、学习权限和订单问题可联系课程顾问</view>
+      <button size="mini" data-phone="15367870529" bindtap="callCourseSupport">海艳老师 · 153 6787 0529</button>
+      <button size="mini" data-phone="19310029982" bindtap="callCourseSupport">伊琳老师 · 193 1002 9982</button>
+    </view>
+
     <view class="admin-row" wx:if="{{isAdmin}}" bindtap="goAdmin">
       <text>管理后台</text>
       <text>{{adminRole || '管理员'}} ›</text>

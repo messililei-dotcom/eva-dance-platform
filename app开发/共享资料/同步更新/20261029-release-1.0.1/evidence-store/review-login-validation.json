@@ -1,0 +1,11 @@
+{
+  "verifiedAt": "2026-10-29T14:24:42.451498+00:00",
+  "memberId": 859,
+  "phoneSuffix": "5558",
+  "existingCredentialRecoveredFromRestrictedBackup": true,
+  "loginHTTP": 200,
+  "validationSessionLoggedOut": true,
+  "passwordReset": false,
+  "reviewCredentialFilledToHuaweiAndroid": true,
+  "plaintextRecorded": false
+}

@@ -1,0 +1,36 @@
+{
+  "automationId": "swod",
+  "triggerUTC": "2026-10-30T14:34:09.849Z",
+  "checkedAt": "2026-10-30T22:37:46+08:00",
+  "ios": {
+    "appId": "6826038106",
+    "version": "1.0.2",
+    "build": 11,
+    "submissionId": "e6ac9f82-67e9-4eb0-b68d-ca9970019383",
+    "status": "waiting-for-review",
+    "currentReviewStatusVerified": true,
+    "authoritativeEvidence": "Temporary same-IAB official review detail page AX: iOS App1.0.2, 1.0.2(11), 等待审核, submitted2026-10-30 21:19 and matching submission ID.",
+    "screenshotSaved": true,
+    "screenshotAccessFailure": false,
+    "publicStoreCheck": "not repeated because current update is still waiting for review"
+  },
+  "huaweiAndroidAndHarmony": {
+    "currentReviewStatusVerified": false,
+    "access": "Mac locked; automatic unlock failed; no further Chrome UI actions taken",
+    "lastKnownStatesPreserved": true
+  },
+  "androidOtherChannels": {
+    "currentReviewStatusVerified": false,
+    "newMaterialsOrUserResponseReceived": false,
+    "latestCandidateBuild": 18,
+    "noNewUploadOrSubmission": true
+  },
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "originalSignaturesChanged": false,
+  "productionFeatureFlagsChanged": false,
+  "notificationDecision": "DONT_NOTIFY",
+  "reason": "Apple still waiting; same previously reported lock/login/material blockers; no new actionable result.",
+  "temporaryVerificationTab": "unmarked for automatic cleanup; explicit close/mark API became unavailable",
+  "workingChromeEditorsPreserved": true
+}

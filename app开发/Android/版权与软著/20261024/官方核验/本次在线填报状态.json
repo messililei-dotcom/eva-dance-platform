@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-24",
+  "loggedIn": true,
+  "publication": "未发表",
+  "completionDate": "2026-10-24",
+  "completionDateFinallyConfirmed": true,
+  "ownershipFinallyConfirmed": true,
+  "flowNumber": "2026R11L3720301",
+  "status": "待提交材料／待上传签章页",
+  "sourceUploaded": true,
+  "manualUploaded": true,
+  "submitted": false,
+  "signed": false,
+  "certificateIssued": false,
+  "blocker": "官方签章页要求未使用AI开发编写代码、撰写文档或生成申请材料；本次材料有AI参与，不能如实作出声明",
+  "aiUseDisclosureRequired": true,
+  "addressCorrectionSavedVerified": false,
+  "note": "编辑联系地址后列表仍显示原截断地址，不能记为已修正；继续办理前复核。"
+}

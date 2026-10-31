@@ -33,18 +33,28 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
   },
 
   onShow() {
+    this.profileVisible = true;
+    this.loginOpening = false;
     this.stopUnreadPolling();
     this.unreadTimer = setInterval(() => { if (this.data.isLoggedIn) this.loadUnreadMessages(); }, 60000);
     const app = getApp();
     if (app && typeof app.ensureSilentLogin === "function") {
-      app.ensureSilentLogin().catch(() => null).then(() => this.applyLocalLoginState(true));
+      app.ensureSilentLogin().catch(() => null).then(() => { if (this.profileVisible) { this.applyLocalLoginState(true); this.promptGuestLogin(); } });
       return;
     }
     this.applyLocalLoginState(true);
+    this.promptGuestLogin();
   },
 
-  onHide() { this.stopUnreadPolling(); },
-  onUnload() { this.stopUnreadPolling(); },
+  onHide() { this.profileVisible = false; this.stopUnreadPolling(); },
+  onUnload() { this.profileVisible = false; this.stopUnreadPolling(); },
+  onPullDownRefresh() { return Promise.resolve(this.data.isLoggedIn ? this.loadProfile() : null).finally(() => wx.stopPullDownRefresh()); },
+  promptGuestLogin() {
+    if (wx.getStorageSync('token') && wx.getStorageSync('memberId')) return;
+    const app = getApp();
+    if (app.globalData.profileLoginCancelled) return wx.switchTab({ url: '/pages/' + (app.globalData.lastPublicTab || 'home') + '/' + (app.globalData.lastPublicTab || 'home') });
+    this.goLogin();
+  },
   stopUnreadPolling() { if (this.unreadTimer) clearInterval(this.unreadTimer); this.unreadTimer = null; },
   applyLocalLoginState(loadRemote) {
     // 检查登录状态
@@ -62,6 +72,9 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     
     if (this.eventsMemberId !== memberId) {
       this.eventsMemberId = memberId;
+      this.profileRequestId = (this.profileRequestId || 0) + 1;
+      this.profileMember = null;
+      this.setData({ authorizedCourses: [], offlineCourses: [], certificates: [], unreadMessageCount: 0, isAdmin: false, adminRole: '', profileOpen: false, profileDraft: {}, profileDirty: false, profileError: '' });
       this.eventsRequestId = (this.eventsRequestId || 0) + 1;
       this.setData({ myEventsOpen: false, eventsLoading: false, eventsError: "", eventRegistrations: [] });
     }
@@ -474,11 +487,13 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     try {
       const result = await api.getUnreadMessageCount();
       if (memberId === wx.getStorageSync('memberId')) this.setData({ unreadMessageCount: Number(result.count || 0) });
-    } catch (_) { this.setData({ unreadMessageCount: 0 }); }
+    } catch (_) { if (memberId === wx.getStorageSync('memberId')) this.setData({ unreadMessageCount: 0 }); }
   },
   goMessages() { wx.navigateTo({ url: '/pages/messages/messages' }); },
   goLogin() {
-    videoFeature.navigateTo({ url: "/pages/login/login" });
+    if (this.loginOpening) return;
+    this.loginOpening = true;
+    wx.navigateTo({ url: '/pages/login/login?returnTab=profile', fail: () => { this.loginOpening = false; } });
   },
 
   // 退出登录
@@ -533,6 +548,11 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
         }
       }
     });
+  },
+
+  callCourseSupport(event) {
+    const phone = String(event.currentTarget.dataset.phone || "");
+    if (["15367870529", "19310029982"].includes(phone)) wx.makePhoneCall({ phoneNumber: phone });
   },
 
   onAvatarError() {

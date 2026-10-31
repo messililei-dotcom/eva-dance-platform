@@ -13,12 +13,12 @@
   </view>
   <view class="list-head">
     <view class="list-title">全部赛事</view>
-    <view class="event-search"><input value="{{keyword}}" placeholder="搜索赛事或地点" bindinput="onSearchInput" /></view>
+    <view class="event-search"><input value="{{keyword}}" placeholder="搜索赛事或地点" aria-label="搜索赛事或地点" confirm-type="search" bindconfirm="onSearchConfirm" bindinput="onSearchInput" /><button wx:if="{{keyword}}" aria-label="清空搜索" bindtap="onClearSearch">×</button></view>
   </view>
   <view wx:if="{{loading}}" class="empty-card">赛事加载中…</view>
   <view wx:elif="{{error}}" class="empty-card"><text>{{error}}</text><button class="event-button" bindtap="loadEvents">重新加载</button></view>
   <view wx:elif="{{visibleEvents.length}}" class="event-list">
-    <view class="event-card" wx:for="{{visibleEvents}}" wx:key="id">
+    <view class="event-card" hover-class="row-pressed" hover-stay-time="80" wx:for="{{visibleEvents}}" wx:key="id">
       <view class="event-cover" bindtap="openEvent" data-id="{{item.id}}">
         <image wx:if="{{item.coverUrl}}" src="{{item.coverUrl}}" mode="aspectFill" binderror="onImageError" data-index="{{index}}"></image>
         <view wx:else class="event-cover-fallback">赛事</view>

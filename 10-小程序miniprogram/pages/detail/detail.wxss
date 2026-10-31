@@ -171,3 +171,5 @@
 .bottom-bar .primary-btn {
   flex: 1;
 }
+
+.detail-page{padding:20rpx 28rpx calc(150rpx + env(safe-area-inset-bottom));background:#fff;box-sizing:border-box}.hero-card{padding:16rpx 0;border:0;border-radius:0;box-shadow:none}.cover{background:transparent;border:0;border-radius:8rpx}.cover image{padding:0;border:0}.intro-card,.outline-card{border:0;border-radius:0;box-shadow:none}

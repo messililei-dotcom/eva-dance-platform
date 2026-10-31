@@ -1,0 +1,17 @@
+[
+  {
+    "platform": "android",
+    "fileBytes": 1369,
+    "matchesPrivateVendorFile": true
+  },
+  {
+    "platform": "harmony",
+    "fileBytes": 1369,
+    "matchesPrivateVendorFile": true
+  },
+  {
+    "platform": "ios",
+    "fileBytes": 1369,
+    "matchesPrivateVendorFile": true
+  }
+]

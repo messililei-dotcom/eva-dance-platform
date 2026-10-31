@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "applicationType": "mobile",
+  "applicationName": "SWOD伊娃东方舞",
+  "appId": "wxc1e3dafe3d3b70c6",
+  "universalLink": "https://www.swod.com.cn/app/wechat/",
+  "loginEnabled": false,
+  "permissionStatus": "user_confirmed_enabled",
+  "iosBundleId": "cn.com.swod.app",
+  "androidPackageName": "cn.com.swod.app",
+  "androidSignatureMD5": "460ddea3a2119d0c4f11c43c24889b11",
+  "harmonyBundleName": "cn.com.swod.evadance",
+  "harmonyIdentifier": "6917617955633704973"
+}

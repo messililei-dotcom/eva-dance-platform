@@ -1,0 +1,78 @@
+{
+  "status": "NOT_READY",
+  "packageName": "cn.com.swod.app",
+  "versionCode": 12,
+  "versionName": "1.0.1",
+  "productionWrites": false,
+  "checks": {
+    "manifest": {
+      "passed": true,
+      "scope": "app-owned source manifest, not an SDK merged-manifest audit",
+      "exportedActivities": [
+        ".MainActivity",
+        ".PushPopupActivity"
+      ],
+      "allowedExportedActivities": [
+        ".MainActivity",
+        ".PushPopupActivity"
+      ],
+      "unexpectedExportedActivities": [],
+      "oemEntryReference": "https://help.aliyun.com/zh/document_detail/434684.html"
+    },
+    "resourceXML": {
+      "passed": true
+    },
+    "sdk": {
+      "passed": true,
+      "licenseAccepted": true
+    },
+    "privateSigningConfig": {
+      "passed": true
+    },
+    "signedAPK": {
+      "passed": true,
+      "path": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/Android/发布准备包/20261030-privacy-build12/installers/SWOD-1.0.1-12-release.apk",
+      "apkExists": true,
+      "sha256": "1ea2ac9bab6017279ee93a7fb7e5b2260179eabe8d2fe7b87532820838f9ec73",
+      "certificateMatchesFiling": true
+    },
+    "artifactIdentity": {
+      "passed": true,
+      "packageName": "cn.com.swod.app",
+      "versionCode": 12,
+      "versionName": "1.0.1"
+    },
+    "filingDisplay": {
+      "passed": true,
+      "number": "湘ICP备2026005683号-5A",
+      "basis": "用户在本次对话确认备案完成并提供最终编号",
+      "officialConsoleReverified": false
+    },
+    "publicCourses": {
+      "passed": true,
+      "httpStatus": 200
+    },
+    "appConfig": {
+      "passed": true,
+      "httpStatus": 200
+    },
+    "appProducts": {
+      "passed": true,
+      "httpStatus": 200
+    },
+    "invalidSessionDenied": {
+      "passed": true,
+      "httpStatus": 401
+    },
+    "deviceAcceptance": {
+      "passed": false
+    },
+    "storeMaterialAcceptance": {
+      "passed": false
+    }
+  },
+  "blockers": [
+    "deviceAcceptance",
+    "storeMaterialAcceptance"
+  ]
+}

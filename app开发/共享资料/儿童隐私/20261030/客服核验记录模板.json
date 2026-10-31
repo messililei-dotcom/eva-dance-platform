@@ -1,0 +1,18 @@
+{
+  "templateOnly": true,
+  "warning": "空模板。真实个案须另存受限加密位置，不得放入代码仓库或公开目录。null表示尚未核实，不代表同意。",
+  "policyVersion": "2026-10-30-children-v1",
+  "caseId": null,
+  "responsiblePerson": "李雷",
+  "service": { "type": null, "courseSeriesOrEventId": null, "purpose": null, "necessaryFields": [], "retentionReviewAt": null },
+  "child": { "businessRecordId": null, "minimumNameOrAliasIfNeeded": null, "under14Confirmed": null },
+  "guardian": { "name": null, "verifiedContactRestrictedRef": null, "relationship": null, "guardianVerified": false, "verificationMethod": null, "verificationConclusion": null },
+  "consent": { "requiredProcessingChoice": null, "scope": [], "noticeDeliveredAt": null, "confirmedAt": null, "restrictedEvidenceRef": null, "withdrawalReceivedAt": null },
+  "optionalPublicDisplay": { "displayChoice": null, "eventId": null, "fields": [], "channels": [], "purpose": null, "endsAt": null, "restrictedSeparateConsentRef": null },
+  "verification": { "handledBy": null, "handledAt": null, "reviewedBy": null, "reviewedAt": null, "approvedScope": [], "approvedForOpening": false },
+  "execution": { "openedOrRegisteredBy": null, "at": null, "actualBusinessRecordRef": null },
+  "storage": { "encryptedRestrictedLocationRef": null, "authorizedRoles": [], "rawProofDeletionDueAt": null, "rawProofDeletedAt": null, "consentRetentionBasis": null, "consentReviewDueAt": null },
+  "accessLog": [],
+  "rightsRequest": { "type": null, "receivedAt": null, "requesterVerifiedAt": null, "processingStoppedAt": null, "accountDeletionBusinessDayDeadline": null, "completedAt": null, "deletedScope": [], "retainedScope": [], "financeConfirmedBasisFieldsAndTerm": null, "restrictedRetentionLocationRef": null, "notificationChannel": null, "notifiedAt": null, "deliveryResult": null },
+  "changeLog": []
+}

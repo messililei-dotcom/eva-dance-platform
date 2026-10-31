@@ -1,0 +1,52 @@
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/OfflineCoursePlayerView.swift
++++ app开发/iOS/EvaDance/Sources/EvaDanceApp/OfflineCoursePlayerView.swift
+@@ -1,4 +1,5 @@
+ import SwiftUI
++import AVFoundation
+ #if os(iOS) && !targetEnvironment(simulator) && canImport(AliyunPlayer)
+ import AliyunPlayer
+ 
+@@ -10,6 +11,9 @@
+     @Published var playing = false
+     @Published var error = ""
+     private var initial: Double = 0
++    private var audioActivated = false
++    private var audioTask: Task<Void, Never>?
++    private var playRequest = 0
+     func load(_ file: URL, position: Double) {
+         initial = position; player.delegate = self
+         AliPlayer.setEnableLog(false); AliPrivateService.initKey(Bundle.main.path(forResource: "encryptedApp", ofType: "dat"))
+@@ -25,8 +29,31 @@
+     }
+     func onError(_ player: AliPlayer!, errorModel: AVPErrorModel!) { DispatchQueue.main.async { [weak self] in self?.pause(); self?.error = "安全缓存无法解密播放，请联网重新缓存" } }
+     func onCurrentPositionUpdate(_ player: AliPlayer!, position: Int64) { DispatchQueue.main.async { [weak self] in self?.position = Double(position) / 1000 } }
+-    func pause() { player.pause(); playing = false }
+-    func toggle() { guard ready else { return }; if playing { pause() } else { player.start(); playing = true } }
++    func pause() {
++        player.pause(); playing = false; playRequest += 1
++        if audioActivated || audioTask != nil { CourseAudioSession.deactivate() }
++        audioTask?.cancel(); audioTask = nil; audioActivated = false
++    }
++    func toggle() {
++        guard ready else { return }
++        if playing || audioTask != nil { pause() }
++        else {
++            playRequest += 1
++            let request = playRequest
++            audioTask = Task { [weak self] in
++                guard let self, !Task.isCancelled, self.playRequest == request else { return }
++                do {
++                    try await CourseAudioSession.activate()
++                    guard !Task.isCancelled, self.playRequest == request else { return }
++                    self.audioTask = nil; self.audioActivated = true; self.player.start(); self.playing = true
++                } catch {
++                    guard self.playRequest == request else { return }
++                    self.audioTask = nil
++                    if !(error is CancellationError) { self.error = "无法启用课程声音，请稍后重新播放。" }
++                }
++            }
++        }
++    }
+     func destroy() { pause(); player.stop(); player.destroy() }
+ }
+ 

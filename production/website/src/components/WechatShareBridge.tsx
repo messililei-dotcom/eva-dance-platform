@@ -70,6 +70,9 @@ function ShareBridge() {
   const [copied, setCopied] = useState('');
   const [status, setStatus] = useState('');
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => setImageFailed(false), [share?.imgUrl]);
   useEffect(() => {
     if (!entryUrl.current) entryUrl.current = window.location.href.split('#')[0];
     setOpen(false);
@@ -132,9 +135,19 @@ function ShareBridge() {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
     closeRef.current?.focus();
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    const oldOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.stopImmediatePropagation(); setOpen(false); }
+      if (e.key !== 'Tab') return;
+      const nodes = panelRef.current?.querySelectorAll<HTMLElement>('button,input,a[href]');
+      if (!nodes?.length) return;
+      const first = nodes[0], last = nodes[nodes.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
     window.addEventListener('keydown', key);
-    return () => { window.removeEventListener('keydown', key); previous?.focus(); };
+    return () => { window.removeEventListener('keydown', key); document.body.style.overflow = oldOverflow; previous?.focus(); };
   }, [open]);
 
   async function copy() {
@@ -153,11 +166,14 @@ function ShareBridge() {
   return <>
     <button type="button" aria-label="分享本页到微信" onClick={() => { setShare(readShare()); setCopied(''); setOpen(true); }} className="fixed right-3 bottom-24 z-40 flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-2.5 text-sm text-emerald-900 shadow-lg lg:bottom-8 lg:right-6"><Share2 size={17} />分享</button>
     {open && share && <div className="fixed inset-0 z-[11000] flex items-center justify-center bg-black/40 px-5" onClick={() => setOpen(false)}>
-      <section role="dialog" aria-modal="true" aria-label="微信分享" className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-        <button ref={closeRef} type="button" aria-label="关闭分享" className="absolute right-3 top-3 p-2" onClick={() => setOpen(false)}><X size={20} /></button>
+      <section ref={panelRef} role="dialog" aria-modal="true" aria-label="微信分享" className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+        <button ref={closeRef} type="button" aria-label="关闭分享" className="absolute right-3 top-3 min-h-11 min-w-11 p-2" onClick={() => setOpen(false)}><X size={20} /></button>
         <h2 className="pr-9 text-lg font-semibold">微信分享</h2>
-        <p className="mt-4 font-medium">{share.title}</p>
-        <p className="mt-2 text-sm text-stone-500">{share.desc}</p>
+        <div className="mt-5 flex items-center gap-4 rounded-xl bg-stone-50 p-3">
+          {!imageFailed && <img src={share.imgUrl} alt="" onError={() => setImageFailed(true)} className="h-20 w-20 shrink-0 rounded-lg bg-white object-contain" />}
+          <div className="min-w-0"><p className="break-words font-medium leading-6">{share.title}</p><p className="mt-1 break-words text-xs leading-5 text-stone-600">{share.desc}</p></div>
+        </div>
+        {/\/shop\/products\//.test(share.link) && <p className="mt-3 text-xs leading-5 text-stone-600">朋友打开链接可查看这件商品，核对规格后下单。价格与库存以打开后的页面为准。</p>}
         <p className="mt-4 text-sm leading-6">{status || '复制链接后，打开微信粘贴给朋友；也可以在微信中打开后，点击右上角“…”转发。'}</p>
         <button type="button" onClick={copy} className="mt-4 w-full rounded-xl bg-emerald-900 px-4 py-3 text-white">复制分享链接</button>
         <p role="status" className="mt-2 text-sm text-emerald-800">{copied}</p>

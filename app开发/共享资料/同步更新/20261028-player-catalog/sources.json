@@ -1,0 +1,30 @@
+[
+  {
+    "file": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "sha256": "82f8fb63c0190133c1374a057d54375f29901e2b871efc03560bd0acfe2642e6"
+  },
+  {
+    "file": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "sha256": "20b3a9ef82afcb36054d6b8b4fc86cf466f9bb28c524dbd7dce0af142b9c065c"
+  },
+  {
+    "file": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+    "sha256": "dfcd6b3f0e5f9067c4741a237af542408bded56e5dd515522e2f447592bbe18d"
+  },
+  {
+    "file": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets",
+    "sha256": "862f78834329bb3b9b1fc9f75bc53f1a63f3188970b61757005eab66c9ff1829"
+  },
+  {
+    "file": "app开发/iOS/EvaDance/Sources/EvaCore/Models.swift",
+    "sha256": "ef31e91ba7f993432e59b6d0df92e00648e3f8384753508f5d4544a2dc27d048"
+  },
+  {
+    "file": "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift",
+    "sha256": "1ca9d56042dec717ef523a008f6d0b7f3811831746fe6fb6cfe344eee61bbf4c"
+  },
+  {
+    "file": "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift",
+    "sha256": "272c507d8ed437e47f1c3abf813492cb54b1d096566ebd8a92333e6fded6dd52"
+  }
+]

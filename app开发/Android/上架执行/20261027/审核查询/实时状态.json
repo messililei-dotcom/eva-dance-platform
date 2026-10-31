@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-27T16:19:23.875562+08:00",
+  "scope": "官方后台实时只读查询，未执行上传、保存或提交",
+  "xiaomi": {
+    "appId": "2882303761520603185",
+    "packageName": "cn.com.swod.app",
+    "versionName": "1.0.0",
+    "versionCode": 9,
+    "apkPresentInDraft": true,
+    "state": "等待提交审核／草稿／未发布",
+    "reviewSubmitted": false,
+    "publicListingVerified": false,
+    "missingVisibleFields": [
+      "应用分类",
+      "图标",
+      "关键词",
+      "审核测试账号",
+      "至少4张应用截图",
+      "软件著作权证书或APP电子版权认证证书",
+      "资质材料评估",
+      "生成合成服务问卷",
+      "联系人手机验证码"
+    ],
+    "filingReadback": "湘ICP备2026005683号-5A"
+  },
+  "vivo": {
+    "state": "会话过期，需重新登录",
+    "reviewStateVerified": false
+  },
+  "tencent_yingyongbao": {
+    "state": "需QQ登录",
+    "reviewStateVerified": false
+  },
+  "oppo": {
+    "state": "需登录，登录组件SDK加载失败；重新打开后仍停留登录页",
+    "reviewStateVerified": false
+  },
+  "huawei": {
+    "state": "华为账号登录页，需扫码或本人登录",
+    "reviewStateVerified": false
+  },
+  "uploadChat": {
+    "threadId": "01a1775f-4d7f-72c4-b873-e330ea0af03b",
+    "state": "durable主机不可用，无法读取进展；未重复发送消息"
+  },
+  "evidenceDirectory": "20261027/审核查询",
+  "note": "历史公司认证状态保留为历史记录，不把无法登录解释为审核失败或仍在审核。最新版本9已在小米官方草稿解析，不代表正式提审。"
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "path": "app开发/Android/EvaDance/app/build.gradle",
+    "before": "428a22df623a338c685bc0894029c4da3ea1b61ae1bfd0ea25533d51290575c2",
+    "after": "2d23b49e38cb66404ca0ee1a87ad0d5823459e40c2c9219645dcfbea8d3985cd"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/ProductPresentationTest.java",
+    "before": null,
+    "after": "d897afad0eaaf882f06e34bee311e4e9f96b4dfd4b46de32d6551ae4557de257"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/ProductPresentation.java",
+    "before": null,
+    "after": "e504974d87a3debcef4fb3f378b0ffffa75d059c378e73816b259dfafcf6d9ac"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "before": "cb12e503421bc1d87cb93cd8036c5b05b1dd8a5dc66b838e4fc049387add148f",
+    "after": "4eaa1960722f78a6efc54068d021b3e9448fdeb400f295f05c684555f7dd45c6"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "before": "8bb78899e6a43d3b175e481e6882abe7aa1995d5b98ec7fe468b36746b0175f3",
+    "after": "2392368407ecf124737b1a21f1bdb9eba9e25f2989e0fd0c9f61fe3700ba3aaa"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "before": "0beba928b381ab7604aaa8fd232817546d776fe058965c62e0e8a29ef9cc0ea8",
+    "after": "c94382a4523d9f7d1299d7b2d00e0d0ff500bd0c578c0f9ef032685e834f2d95"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj",
+    "before": "8f83a4961f4e10570d58bfc499d0505cf189a20b58f9945cb617ecc527df27e2",
+    "after": "b3a25587d6419e9b8ec4825b381f6a1ce0165282660c5b2318a2bd882582fc9b"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Tests/EvaCoreTests/EvaCoreTests.swift",
+    "before": "41f4d0b9797ba540265afde10895dfb5b62e0c6f258dee5e798050c410c1f8fb",
+    "after": "57aa4e162eea054ed0617b961a0cadf9ba8d11f338383600552c44d1e3a1a633"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/scripts/generate_project.py",
+    "before": "d81dab24fab0a79e3bf8b52e35a6caa1820eebac578aa965362d49a599d415d9",
+    "after": "85759f6cc0f345d4624e17b5d0d202a7263d290fc9a4322253c95edf82532ad6"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/CoursePresentation.swift",
+    "before": "b44cc695d09f978659219d5223315cc64ec1df413cb251082300964fb318c133",
+    "after": "c7d4e02a2e6794ca7457a55368b0ed5e8b5139418aaed051ca7e3c6cf16ef966"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/ProductPresentation.swift",
+    "before": null,
+    "after": "6f7fe9dadb610a6982fd86098757644a01d761ff605fd6ada0d958b5a7b21b5f"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/ShopViews.swift",
+    "before": "d69bc32d63f0e0bf84d123a2e8415b42644f9e4ed77de9534084f045f8d94472",
+    "after": "9e31e763ffd9f5ad34e7faee8faf34112efe5db458e3b5659d42ef041db39326"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift",
+    "before": "ad9e985297d4c210205e5ef3dc58307240a951108b13864b37bed58c65c3bd80",
+    "after": "b0631f54cc1699e68f50271e787d83d318c3f9d495a21d45bf0b3fab8f10536a"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift",
+    "before": "a9601a744f9122a0a48aa1d3dd36c5e23309b9dfe5a4f4c8319a8e3b59edc340",
+    "after": "010c96869c124c3c1f619ca41be52d9f1582290b78deed269f0f02cfb3e18163"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/scripts/build_release.py",
+    "before": "bbcfb5ec83cd52f2be49954c744f426f531a21a757dedd4f1c4bc02b62a65a86",
+    "after": "e710a5202c37cca1e5fdde73d559725920e2028bdb0090baa797adfb4401a416"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/AppScope/app.json5",
+    "before": "f8d496e2194ff2ec19a068257a35dfb3b50f9de727f74ede7888c281f27a6834",
+    "after": "3011046347895ec05ac5c3e948f876c5af18dceecea90945e390eb6bb47a5e6c"
+  }
+]

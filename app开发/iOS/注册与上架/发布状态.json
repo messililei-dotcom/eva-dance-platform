@@ -1,57 +1,57 @@
 {
-  "asOf": "2026-10-02",
-  "stage": "local-fullsite-parity-development",
-  "uploaded": false,
-  "submitted": false,
-  "public": false,
+  "asOf": "2026-10-23",
+  "stage": "build6-approved-automatically-released-public-store-verified",
+  "uploaded": true,
+  "submitted": true,
+  "public": true,
   "gates": [
     {
       "id": "appleMembership",
-      "description": "组织会员、Team 与 App ID",
-      "passed": false,
-      "evidence": null
+      "description": "组织 App Store Connect 账号可访问，Bundle ID 已注册且已创建商店记录",
+      "passed": true,
+      "evidence": "发布准备包/20261023/evidence/app-info.txt"
     },
     {
       "id": "xcodeIOSBuild",
-      "description": "完整 Xcode 的 iOS SDK 构建",
+      "description": "构建6 Release模拟器构建及最终设备未签名归档通过；签名导出另列",
       "passed": true,
-      "evidence": "注册与上架/调试证据-20261002/iphone-simulator-build.log"
+      "evidence": "发布准备包/20261023/evidence/build6-archive.log"
     },
     {
       "id": "appSession",
-      "description": "App 会话已通过本地测试，待部署及真实登录联调",
-      "passed": false,
-      "evidence": "注册与上架/调试证据-20261002/backend-tests.log"
+      "description": "正式HTTPS账号密码登录、原用户身份、17门权益、受保护媒体、匿名拒绝、刷新退出接口通过；界面/真机验收另列",
+      "passed": true,
+      "evidence": "发布准备包/20261023/evidence/event-summary-login-playback-regression.json"
     },
     {
       "id": "accountDeletion",
-      "description": "应用内注销及服务端删除流程",
-      "passed": false,
-      "evidence": null
+      "description": "实际删除、财务最小留存和无需登录完成回执已实现并隔离HTTP验收；正式服务部署通过，无真实删除；人工履约及真机另列",
+      "passed": true,
+      "evidence": "发布准备包/20261023/evidence/deletion-stage-smoke.json"
     },
     {
       "id": "deviceAcceptance",
-      "description": "iPhone/iPad 真机播放与权限验收",
+      "description": "用户要求当前跳过真机连接与测试；仍未验收",
       "passed": false,
       "evidence": null
     },
     {
       "id": "privacyReview",
-      "description": "隐私政策、清单与数据收集核对",
-      "passed": false,
-      "evidence": null
+      "description": "已按实际数据流及用户非营销声明核对10类关联数据；标签草稿保存并重开，未发布；构建6最终包内检查另列",
+      "passed": true,
+      "evidence": "发布准备包/20261023/隐私与审核核对.md"
     },
     {
       "id": "storeAssets",
-      "description": "正式图标、截图、支持页与审核账号",
-      "passed": false,
-      "evidence": null
+      "description": "商店资料、三类截图及审核账号保留；构建6登录/注销/支付说明已保存并独立重开确认",
+      "passed": true,
+      "evidence": "发布准备包/20261023/evidence/store-build6-reopened.txt"
     },
     {
       "id": "chinaFiling",
-      "description": "中国大陆发行所需备案核验",
-      "passed": false,
-      "evidence": null
+      "description": "已只读核对阿里云已通过备案记录及实际iOS特征；未修改备案",
+      "passed": true,
+      "evidence": "发布准备包/20261023/备案签名核对/后台登记特征.txt"
     },
     {
       "id": "testFlight",
@@ -64,7 +64,505 @@
       "description": "小程序用户端逐页对齐与增强功能验收",
       "passed": false,
       "evidence": "注册与上架/小程序对齐与增强验收-20261002.md"
+    },
+    {
+      "id": "signedDistribution",
+      "description": "构建6实际签名证书、公钥、团队、应用标识、分发描述文件及备案号均匹配；备案未变更",
+      "passed": true,
+      "evidence": "发布准备包/20261023/备案签名核对/构建6签名检查.json"
+    },
+    {
+      "id": "paymentPolicy",
+      "description": "首版无数字销售或定向外部支付导流，服务端禁止线上课下单/外部支付；Reader资格仍由苹果审核判断",
+      "passed": true,
+      "evidence": "发布准备包/20261023/首版发行与审核账号准备.md"
+    },
+    {
+      "id": "eventRegistrationRegression",
+      "description": "真实可播放PCM音频及伪造WAV拦截验证；全部36项后台用例通过",
+      "passed": true,
+      "evidence": "发布准备包/20261023/evidence/backend-tests-valid-audio.log"
+    },
+    {
+      "id": "storeCompliance",
+      "description": "免费发行、DSA、版权、年龄资料及隐私标签已完成，苹果提审校验通过；内容/政策仍受正式审核",
+      "passed": true,
+      "evidence": "发布准备包/20261023/evidence/app-review-waiting.txt"
+    },
+    {
+      "id": "buildProcessing",
+      "description": "构建6已上传、苹果二进制已验证，TestFlight准备提交；1.0.0商店草稿已关联并独立重开确认",
+      "passed": true,
+      "evidence": "发布准备包/20261023/evidence/store-build6-verification.json"
+    },
+    {
+      "id": "filingSignatureMatch",
+      "description": "构建6实际签名证书、公钥、团队、应用标识、分发描述文件及备案号均匹配；备案未变更",
+      "passed": true,
+      "evidence": "发布准备包/20261023/备案签名核对/构建6签名检查.json"
+    },
+    {
+      "id": "eventSummaryDeployment",
+      "passed": true,
+      "description": "新增赛事汇总接口已上线，服务器45项用例通过；正式匿名/学员/伪造凭据均401；工作台正向验收另列",
+      "evidence": "发布准备包/20261023/evidence/event-summary-production-smoke.json"
+    },
+    {
+      "id": "freeGlobalPricing",
+      "passed": true,
+      "description": "重开当前价格表核验全球175地区均0；全部地区供应已保存，尚未发布",
+      "evidence": "发布准备包/20261023/evidence/global-free-pricing-verified.json"
+    },
+    {
+      "id": "contentRights",
+      "passed": true,
+      "description": "用户确认已获授权，苹果第三方内容权利声明已保存；未独立审阅合同",
+      "evidence": "发布准备包/20261023/evidence/content-rights-saved.txt"
+    },
+    {
+      "id": "euDSA",
+      "passed": true,
+      "description": "用户确认交易商及公开电话邮箱并完成验证；苹果合规表显示数字服务法有效，覆盖27地区",
+      "evidence": "发布准备包/20261023/evidence/eu-dsa-valid.txt"
+    },
+    {
+      "id": "ageRating",
+      "passed": true,
+      "description": "按用户敏感内容声明及实际功能填写，苹果计算13+，保留区域差异及两地区限制",
+      "evidence": "发布准备包/20261023/evidence/app-info-rights-age-persisted.txt"
+    },
+    {
+      "id": "privacyLabelPublication",
+      "passed": true,
+      "description": "用户当前确认隐私声明后已发布10类标签；苹果显示发布者及时间",
+      "evidence": "发布准备包/20261023/evidence/privacy-published.txt"
+    },
+    {
+      "id": "appUIAcceptance",
+      "passed": false,
+      "description": "构建6注销与完成回执的App完整界面验收尚未进行",
+      "evidence": null
+    },
+    {
+      "id": "publicStoreRelease",
+      "passed": true,
+      "description": "苹果批准构建6且后台可分发；中国大陆公开商店及中美官方目录均确认免费1.0.0；未冒称完成真机测试",
+      "evidence": "发布准备包/20261023/evidence/release-confirmed-20261028.json"
     }
   ],
-  "productRequirement": "界面和功能对齐小程序，在此基础上更全面、更便捷、更智能"
+  "productRequirement": "界面和功能对齐小程序，在此基础上更全面、更便捷、更智能",
+  "appStoreConnect": {
+    "appID": "6826038106",
+    "bundleID": "cn.com.swod.app",
+    "sku": "SWOD-iOS-001",
+    "version": "1.0.0",
+    "status": "可分发",
+    "releaseType": "AFTER_APPROVAL",
+    "build": "6",
+    "buildStatus": "准备提交",
+    "buildUUID": "ab1c8e19-da78-4a8e-a994-7a5757fda783",
+    "selectedBuild": "6",
+    "reviewCredentialsSaved": true,
+    "reviewStatus": "已批准"
+  },
+  "filingNumber": "湘ICP备2026005683号-5A",
+  "releaseReady": false,
+  "deviceTestPreference": "2026-10-23 用户要求当前跳过连接手机和真机测试；此项未验收，不标记通过",
+  "signingAuthorization": "2026-10-23 用户明确允许自动配置签名",
+  "signingAttempt": "构建6实际IPA证书、公钥、团队、标识及分发描述文件匹配原备案；上传成功，苹果二进制已验证并关联草稿；未改备案、未提审或发布。",
+  "buildUploadEvidence": "发布准备包/20261023/evidence/build6-upload.log",
+  "filingChanged": false,
+  "filingChangeAllowed": false,
+  "requiredSigningCertificateSHA1": "4245EB5CBABD61041F59514C549ACEE964501C68",
+  "supersededBuilds": [
+    {
+      "build": "3",
+      "reason": "签名证书不匹配备案，不用于正式发布"
+    }
+  ],
+  "distributionIPA": "发布准备包/20261023/build/SWOD-1.0.0-6-AppStore.ipa",
+  "filedIdentityReference": "发布准备包/20261023/备案签名核对/已核验备案签名.json",
+  "digitalCourseStrategy": {
+    "confirmedByUser": "2026-10-23",
+    "mode": "existing-entitlement-learning-only",
+    "inAppDigitalSales": false,
+    "externalDigitalPurchase": false,
+    "serverEntitlementRequired": true,
+    "policyAudit": "发布准备包/20261023/首版发行与审核账号准备.md"
+  },
+  "reviewAccount": {
+    "status": "configured-and-server-verified",
+    "confirmedByUser": "2026-10-23",
+    "missing": [
+      "app-ui-login-and-playback-acceptance"
+    ],
+    "usesRealStudentIdentity": false,
+    "requestedPhone": "13548955558",
+    "memberId": 859,
+    "displayName": "李雷测试",
+    "existingCourseAuthorizationCount": 17,
+    "existingLearningProgressCount": 36,
+    "reuseConfirmed": true,
+    "reuseConfirmedOn": "2026-10-23",
+    "productionLoginVerified": true,
+    "appStoreCredentialsSaved": true,
+    "existingDataPreserved": true,
+    "passwordExpiresAt": 1800501996258
+  },
+  "candidateBuild": {
+    "build": "6",
+    "feature": "7工作日注销、实际删除、必要凭证最小留存、无需登录完成回执；移除未启用号码认证SDK",
+    "uploaded": true,
+    "backendDeployed": true,
+    "archivePassed": true,
+    "exportPassed": true,
+    "filingSignatureMatch": true,
+    "testEvidence": "发布准备包/20261023/evidence/deletion-tests.log",
+    "productionSmokePassed": true,
+    "physicalDeviceAccepted": false,
+    "serverFullSuite": {
+      "passed": 58,
+      "failed": 0,
+      "evidence": "发布准备包/20261023/evidence/deletion-server-all58.log"
+    },
+    "distributionIPA": "发布准备包/20261023/build/SWOD-1.0.0-6-AppStore.ipa",
+    "ipaSHA256": "9fa66862e2c888f620c113e90d695bb853e1d18876408c6458473f5d7b17a132",
+    "signatureEvidence": "发布准备包/20261023/备案签名核对/构建6签名检查.json",
+    "privacyManifestVerified": true,
+    "uploadStatus": "processed-and-associated",
+    "processingVerified": true,
+    "appleBinaryStatus": "已验证",
+    "buildStatus": "准备提交",
+    "buildUUID": "ab1c8e19-da78-4a8e-a994-7a5757fda783",
+    "storeAssociationVerified": true,
+    "reviewNotesSaved": true,
+    "reviewNotesReopenedVerified": true,
+    "submitted": true,
+    "submissionID": "868230b8-c8df-41e0-b335-7fb9f8057094",
+    "public": true,
+    "reviewApproved": true,
+    "publicReleaseVerified": true
+  },
+  "deployment": {
+    "date": "2026-10-23",
+    "backup": "/www/backups/dongfangwuquan/ios-password-20261023",
+    "rollbackScript": "/www/backups/dongfangwuquan/ios-password-20261023/rollback.sh",
+    "productionSmokeEvidence": "发布准备包/20261023/evidence/server-production-smoke.json",
+    "sourceFilesChanged": 2,
+    "stagingServerStopped": true
+  },
+  "storeDistributionDecision": {
+    "confirmedByUser": "2026-10-23",
+    "downloadPrice": "free",
+    "scope": "all-available-territories",
+    "userWording": "全球",
+    "futureTerritories": true,
+    "published": false,
+    "saved": true,
+    "territoryCount": 175,
+    "allPricesZeroVerified": true,
+    "evidence": "发布准备包/20261023/evidence/global-free-pricing-verified.json",
+    "platformRestrictionAfterAgeQuestionnaire": [
+      "Afghanistan",
+      "Morocco"
+    ]
+  },
+  "contentRightsDeclaration": {
+    "confirmedByUser": "2026-10-23",
+    "scope": [
+      "课程视频",
+      "音乐",
+      "图片",
+      "赛事展示人员信息"
+    ],
+    "authorized": true,
+    "basis": "用户明确声明已取得授权",
+    "documentsIndependentlyReviewed": false,
+    "appStoreStatementSaved": true,
+    "evidence": "发布准备包/20261023/evidence/content-rights-saved.txt"
+  },
+  "euDSA": {
+    "status": "valid",
+    "mandatoryForEU": true,
+    "verificationComplete": true,
+    "source": "https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-trader-requirements",
+    "trader": true,
+    "confirmedByUser": "2026-10-23",
+    "publicContactConsent": true,
+    "publicPhone": "+8613548955558",
+    "publicEmail": "13548955558@qq.com",
+    "contactsEntered": true,
+    "evidence": "发布准备包/20261023/evidence/eu-dsa-valid.txt",
+    "verifiedTerritoryCount": 27
+  },
+  "eventSummaryDeployment": {
+    "deployed": true,
+    "date": "2026-10-23",
+    "sourceFilesAdded": 1,
+    "databaseChanged": false,
+    "backup": "/www/backups/dongfangwuquan/ios-event-summary-20261023",
+    "rollbackScript": "/www/backups/dongfangwuquan/ios-event-summary-20261023/rollback.sh",
+    "stagingServerStopped": true,
+    "evidence": "发布准备包/20261023/evidence/event-summary-final-check.json"
+  },
+  "rollbackOrder": [
+    "/www/backups/dongfangwuquan/ios-deletion-20261023/rollback.py",
+    "/www/backups/dongfangwuquan/ios-event-summary-20261023/rollback.sh",
+    "/www/backups/dongfangwuquan/ios-password-20261023/rollback.sh"
+  ],
+  "ageContentDeclaration": {
+    "confirmedByUser": "2026-10-23",
+    "userWording": "均无。",
+    "scope": [
+      "粗俗语言",
+      "恐怖",
+      "烟酒毒品",
+      "医疗或治疗建议",
+      "成人暗示",
+      "裸露色情",
+      "暴力",
+      "赌博"
+    ],
+    "questionnaireSaved": true,
+    "pending": [],
+    "basis": "用户内容声明与实际功能分开核对；健康体能主题单独申报",
+    "gunsOrOtherWeapons": "NONE",
+    "weaponBasis": "用户明确确认没有刀剑等道具；课程介绍虽提及剑技，按用户对当前实际视频的声明填写",
+    "medicalOrTreatmentInformation": "NONE",
+    "healthOrWellnessTopics": true,
+    "contests": "FREQUENT",
+    "contestBasis": "赛事为App核心栏目，包含报名及竞争排名，符合苹果竞赛定义",
+    "calculatedRating": "13+",
+    "legacyGlobalRating": "12+ (regional exceptions)",
+    "regionalExamples": {
+      "Vietnam": "12+",
+      "Korea": "12+"
+    },
+    "unavailableTerritories": [
+      "Afghanistan",
+      "Morocco"
+    ],
+    "evidence": "发布准备包/20261023/evidence/app-info-rights-age-persisted.txt"
+  },
+  "accountDeletionDecision": {
+    "confirmedByUser": "2026-10-23",
+    "processingTime": "7个工作日内",
+    "implementationComplete": true,
+    "notificationComplete": true,
+    "financeDecision": "逐项确认法定依据、必要字段和期限，其余删除",
+    "notificationChannel": "App内无需登录的本机持久回执；无短信/邮件/推送",
+    "processingMode": "人工单件处理；内部7自然日截止",
+    "realAccountsDeleted": 0,
+    "physicalDeviceAcceptance": false,
+    "procedure": "发布准备包/20261023/账号注销处理规程.md"
+  },
+  "privacyDecision": {
+    "confirmedByUser": "2026-10-23",
+    "purposes": [
+      "学习服务",
+      "运营统计",
+      "客服"
+    ],
+    "marketingContact": false,
+    "appStoreDraftSaved": true,
+    "reopenedVerified": true,
+    "published": true,
+    "linkedDataTypes": 10,
+    "tracking": false,
+    "numberAuthSDKInCandidate": false,
+    "evidence": "发布准备包/20261023/evidence/privacy-build6-draft-reopened.txt",
+    "finalSignedManifestVerified": true,
+    "finalDraftReopenedEvidence": "发布准备包/20261023/evidence/privacy-build6-final-draft.txt",
+    "publicationConfirmedByUser": true,
+    "publicationEvidence": "发布准备包/20261023/evidence/privacy-published.txt"
+  },
+  "accountDeletionDeployment": {
+    "deployed": true,
+    "date": "2026-10-23",
+    "sourceFiles": 8,
+    "backup": "/www/backups/dongfangwuquan/ios-deletion-20261023",
+    "rollbackScript": "/www/backups/dongfangwuquan/ios-deletion-20261023/rollback.py",
+    "restoresDatabase": false,
+    "evidence": "发布准备包/20261023/evidence/deletion-production-smoke.json",
+    "stagingServerStopped": true,
+    "isolatedCopiesRemoved": true,
+    "retentionKeyBackedUpPrivately": true
+  },
+  "submission": {
+    "id": "868230b8-c8df-41e0-b335-7fb9f8057094",
+    "date": "2026-10-23",
+    "time": "22:23",
+    "timezone": "Asia/Shanghai",
+    "version": "1.0.0",
+    "build": "6",
+    "status": "已完成审核",
+    "releaseType": "AFTER_APPROVAL",
+    "public": true,
+    "url": "https://appstoreconnect.apple.com/apps/6826038106/distribution/reviewsubmissions/details/868230b8-c8df-41e0-b335-7fb9f8057094",
+    "evidence": "发布准备包/20261023/evidence/app-review-waiting.txt",
+    "itemStatus": "已批准"
+  },
+  "releaseAuthorization": {
+    "date": "2026-10-23",
+    "userInstruction": "提交，提审 发布",
+    "privacyStatementConfirmed": true,
+    "automaticReleaseAfterApproval": true,
+    "outstandingAcceptanceKeptUnverified": true,
+    "filingChangeAuthorized": false
+  },
+  "latestReviewCheck": {
+    "checkedAt": "2026-10-28T14:49:06+08:00",
+    "verifiedCurrentStatus": true,
+    "version": "1.0.0",
+    "build": "6",
+    "submissionID": "868230b8-c8df-41e0-b335-7fb9f8057094",
+    "status": "已完成审核",
+    "itemStatus": "已批准",
+    "appDistributionStatus": "可分发",
+    "approved": true,
+    "publicReleaseVerified": true,
+    "releaseType": "AFTER_APPROVAL",
+    "automaticReleaseObserved": true,
+    "manualReleasePerformedThisCheck": false,
+    "requiresUserLogin": false,
+    "publicChecks": [
+      {
+        "country": "cn",
+        "resultCount": 1,
+        "apps": [
+          {
+            "trackId": 6826038106,
+            "trackName": "SWOD",
+            "bundleId": "cn.com.swod.app",
+            "version": "1.0.0",
+            "trackViewUrl": "https://apps.apple.com/cn/app/swod/id6826038106?uo=4",
+            "releaseDate": "2026-10-27T07:00:00Z",
+            "currentVersionReleaseDate": "2026-10-27T18:38:29Z",
+            "price": 0.0,
+            "currency": "CNY",
+            "sellerName": "Eva Culture And Art Development (hunan) Co., Ltd"
+          }
+        ],
+        "source": "https://itunes.apple.com/lookup?id=6826038106&country=cn"
+      },
+      {
+        "country": "us",
+        "resultCount": 1,
+        "apps": [
+          {
+            "trackId": 6826038106,
+            "trackName": "SWOD",
+            "bundleId": "cn.com.swod.app",
+            "version": "1.0.0",
+            "trackViewUrl": "https://apps.apple.com/us/app/swod/id6826038106?uo=4",
+            "releaseDate": "2026-10-27T07:00:00Z",
+            "currentVersionReleaseDate": "2026-10-27T18:38:29Z",
+            "price": 0.0,
+            "currency": "USD",
+            "sellerName": "Eva Culture And Art Development (hunan) Co., Ltd"
+          }
+        ],
+        "source": "https://itunes.apple.com/lookup?id=6826038106&country=us"
+      }
+    ],
+    "cnPublicPageVerified": true,
+    "cnPublicURL": "https://apps.apple.com/cn/app/swod/id6826038106",
+    "usCatalogVerified": true,
+    "usBrowserPageVerified": false,
+    "usBrowserLimitation": "Browser redirected to China storefront homepage; US availability verified via Apple public catalog API",
+    "allTerritoriesIndividuallyVerified": false,
+    "physicalDeviceDownloadTested": false,
+    "evidence": [
+      "发布准备包/20261023/evidence/review-approved-20261028.txt",
+      "发布准备包/20261023/evidence/store-cn-live-20261028.txt",
+      "发布准备包/20261023/evidence/public-store-check-20261028.json"
+    ],
+    "automationStatus": "PAUSED",
+    "automationChanged": false
+  },
+  "releaseReadyNote": "Public release verified; original physical-device and app acceptance gates remain unverified, not retroactively passed.",
+  "releaseConfirmation": {
+    "checkedAt": "2026-10-28T14:49:06+08:00",
+    "verifiedCurrentStatus": true,
+    "version": "1.0.0",
+    "build": "6",
+    "submissionID": "868230b8-c8df-41e0-b335-7fb9f8057094",
+    "status": "已完成审核",
+    "itemStatus": "已批准",
+    "appDistributionStatus": "可分发",
+    "approved": true,
+    "publicReleaseVerified": true,
+    "releaseType": "AFTER_APPROVAL",
+    "automaticReleaseObserved": true,
+    "manualReleasePerformedThisCheck": false,
+    "requiresUserLogin": false,
+    "publicChecks": [
+      {
+        "country": "cn",
+        "resultCount": 1,
+        "apps": [
+          {
+            "trackId": 6826038106,
+            "trackName": "SWOD",
+            "bundleId": "cn.com.swod.app",
+            "version": "1.0.0",
+            "trackViewUrl": "https://apps.apple.com/cn/app/swod/id6826038106?uo=4",
+            "releaseDate": "2026-10-27T07:00:00Z",
+            "currentVersionReleaseDate": "2026-10-27T18:38:29Z",
+            "price": 0.0,
+            "currency": "CNY",
+            "sellerName": "Eva Culture And Art Development (hunan) Co., Ltd"
+          }
+        ],
+        "source": "https://itunes.apple.com/lookup?id=6826038106&country=cn"
+      },
+      {
+        "country": "us",
+        "resultCount": 1,
+        "apps": [
+          {
+            "trackId": 6826038106,
+            "trackName": "SWOD",
+            "bundleId": "cn.com.swod.app",
+            "version": "1.0.0",
+            "trackViewUrl": "https://apps.apple.com/us/app/swod/id6826038106?uo=4",
+            "releaseDate": "2026-10-27T07:00:00Z",
+            "currentVersionReleaseDate": "2026-10-27T18:38:29Z",
+            "price": 0.0,
+            "currency": "USD",
+            "sellerName": "Eva Culture And Art Development (hunan) Co., Ltd"
+          }
+        ],
+        "source": "https://itunes.apple.com/lookup?id=6826038106&country=us"
+      }
+    ],
+    "cnPublicPageVerified": true,
+    "cnPublicURL": "https://apps.apple.com/cn/app/swod/id6826038106",
+    "usCatalogVerified": true,
+    "usBrowserPageVerified": false,
+    "usBrowserLimitation": "Browser redirected to China storefront homepage; US availability verified via Apple public catalog API",
+    "allTerritoriesIndividuallyVerified": false,
+    "physicalDeviceDownloadTested": false,
+    "evidence": [
+      "发布准备包/20261023/evidence/review-approved-20261028.txt",
+      "发布准备包/20261023/evidence/store-cn-live-20261028.txt",
+      "发布准备包/20261023/evidence/public-store-check-20261028.json"
+    ],
+    "automationStatus": "PAUSED",
+    "automationChanged": false
+  },
+  "pendingUpdate": {
+    "checkedAt": "2026-10-29T14:14:08.584170+00:00",
+    "version": "1.0.1",
+    "build": "10",
+    "uploaded": true,
+    "submitted": true,
+    "status": "等待审核",
+    "submissionID": "99787940-9b2a-41c4-a459-cd2fdebb0e9a",
+    "submittedAt": "2026-10-29T22:01:00+08:00",
+    "releaseType": "AFTER_APPROVAL",
+    "public": false,
+    "filingChanged": false,
+    "evidence": "../../共享资料/同步更新/20261029-release-1.0.1/evidence-store/swod-ios-101-10-waiting-review.png"
+  }
 }

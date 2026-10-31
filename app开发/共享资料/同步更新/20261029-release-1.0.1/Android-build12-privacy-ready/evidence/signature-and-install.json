@@ -1,0 +1,12 @@
+{
+  "aabJarSignatureVerified": true,
+  "aabCertificateMatchesOriginal": true,
+  "certificateSHA256": "58ecee1c1cd0adc08f797ab9bb75dcb45e6a3b747c535939020d8ae8f0d548fe",
+  "emulator": "EvaRelease36 API36 arm64",
+  "installResult": "Success",
+  "installedPackage": "cn.com.swod.app",
+  "installedVersionCode": 12,
+  "installedVersionName": "1.0.1",
+  "installationOnlyNotUIAcceptance": true,
+  "physicalDeviceTests": "skipped-at-user-request"
+}

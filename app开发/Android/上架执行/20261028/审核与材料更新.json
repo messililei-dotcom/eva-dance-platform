@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-10-28T14:45:08.556780+08:00",
+  "xiaomi": {
+    "appId": "2882303761520603185",
+    "packageName": "cn.com.swod.app",
+    "versionCode": 9,
+    "versionName": "1.0.0",
+    "state": "等待提交审核／草稿／未发布",
+    "draftSaved": true,
+    "savedAtReadback": "2026-10-28 14:44",
+    "supplemented": [
+      "学习教育/教育分类",
+      "东方舞、舞蹈学习关键词",
+      "512x512正式图标",
+      "审核操作说明",
+      "既有受控审核会员凭据，仅官方字段使用，未抄入材料"
+    ],
+    "reviewSubmitted": false,
+    "publicListingVerified": false,
+    "remaining": [
+      "版权证书",
+      "最新版截图",
+      "特殊行业资质评估",
+      "生成合成服务问卷核实",
+      "联系人手机验证",
+      "真机验收"
+    ]
+  },
+  "oppo": {
+    "state": "登录组件恢复；需本人登录",
+    "reviewStateVerified": false
+  },
+  "vivo": {
+    "state": "需重新登录",
+    "reviewStateVerified": false
+  },
+  "tencent_yingyongbao": {
+    "state": "需QQ登录",
+    "reviewStateVerified": false
+  },
+  "huawei": {
+    "state": "需本人扫码或登录",
+    "reviewStateVerified": false
+  },
+  "newOtpSent": false,
+  "submittedAnyApp": false,
+  "screenshotDecision": "现有7版学院截图课程名称与9版保留原名称的调整可能不一致，原件保留，未上传为9版最终素材。",
+  "emulator": "启动既有EvaRelease36看到隐私页，未接受条款、未做业务验收，已关闭本轮启动实例。",
+  "newPlatformNotice": "小米2026-10-27公告提示10月31日前导航条沉浸适配；当前源码已有WindowInsets处理，但尚无真机证明，不标验收完成。"
+}

@@ -1,0 +1,8 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {buildCalendar,swipeMonth}=require('../shared/offline-calendar');
+const rows=[{id:'offline-1',name:'跨年课',start_date:'2026-12-28',end_date:'2027-01-05',category:'集训'},{id:'offline-2',name:'重叠课',start_date:'2027-01-01',end_date:'2027-01-03',category:'认证班'},{id:'invalid',name:'无效日期',start_date:'2027-02-30'}];
+test('Monday-first calendar includes adjacent-month days and splits cross-year periods',()=>{const calendar=buildCalendar(rows,2027,1);assert.equal(calendar.calendarCount,2);assert.equal(calendar.calendarWeeks[0].days[0].key,'2026-12-28');assert.equal(calendar.calendarWeeks[0].segments.length,2);assert.equal(calendar.calendarWeeks[1].segments.length,1);assert.equal(calendar.calendarWeeks[1].segments[0].id,'offline-1');});
+test('overlapping courses get separate lanes; full titles and period identifiers survive',()=>{const [a,b]=buildCalendar(rows,2027,1).calendarWeeks[0].segments;assert.notEqual(a.top,b.top);assert.equal(a.name,'跨年课');assert.equal(b.tone,'blue');assert.equal(a.left,0);assert.equal(a.width,100);});
+test('invalid and reversed dates are excluded; leap day and empty months work',()=>{assert.equal(buildCalendar(rows,2027,2).calendarCount,0);assert.equal(buildCalendar([{id:1,start_date:'2028-02-29'}],2028,2).calendarCount,1);assert.equal(buildCalendar([{id:2,start_date:'2027-02-02',end_date:'2027-02-01'}],2027,2).calendarCount,0);assert.equal(buildCalendar([],2027,2).calendarWeeks.length,4);});
+test('swipes distinguish direction, threshold and vertical/diagonal scroll',()=>{assert.equal(swipeMonth(-80,5),1);assert.equal(swipeMonth(80,5),-1);assert.equal(swipeMonth(30,0),0);assert.equal(swipeMonth(60,80),0);assert.equal(swipeMonth(60,50),0);});

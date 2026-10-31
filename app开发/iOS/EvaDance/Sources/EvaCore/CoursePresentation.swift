@@ -1,6 +1,21 @@
 import Foundation
 
 public enum CoursePresentation {
+    /// Resume only a lesson in this catalog using the current member's server history.
+    public static func startingLessonID(_ lessons: [JSONValue], progress: JSONValue) -> Int? {
+        let ids = lessons.compactMap { Int($0["id"].text) }.filter { $0 > 0 }
+        var selected = ids.first
+        var latest = ""
+        for record in progress.list {
+            guard let id = Int(record["video_id"].text), ids.contains(id) else { continue }
+            let playedAt = record["last_play_at"].text.replacingOccurrences(of: "T", with: " ")
+            if !playedAt.isEmpty && playedAt > latest { latest = playedAt; selected = id }
+        }
+        return selected
+    }
+    public static func isAudio(_ name: String) -> Bool {
+        name.hasPrefix("音频") || name.range(of: "\\.(m4a|mp3|aac|wav|flac|ogg)$", options: [.regularExpression, .caseInsensitive]) != nil
+    }
     public static func price(_ row: JSONValue) -> String {
         if row["period_status"] == .null && row["is_free"].bool { return "免费" }
         let amount = row["promo_price"].number > 0 ? row["promo_price"].number : row["price"].number
@@ -42,7 +57,7 @@ public enum CoursePresentation {
             let checkpoint = progress.list.first { $0["video_id"].text == video["id"].text }
             let duration = checkpoint?["duration"].number ?? video["duration"].number
             let percent = checkpoint.map { $0["completed"].bool || (duration > 0 && $0["progress"].number >= duration) ? 100 : duration > 0 ? min(99, Int($0["progress"].number / duration * 100)) : 0 }
-            rows.append(.object(["id": video["id"], "ordinal": .number(Double(rows.count + 1)), "name": .string(unit["name"].text), "duration": .number(duration), "percent": percent.map { .number(Double($0)) } ?? .null]))
+            rows.append(.object(["id": video["id"], "ordinal": .number(Double(rows.count + 1)), "name": .string(video.firstText("name").isEmpty ? unit["name"].text : video["name"].text), "subtitle": unit["name"], "mediaKind": .string(isAudio(video["name"].text) ? "audio" : "video"), "duration": .number(duration), "percent": percent.map { .number(Double($0)) } ?? .null]))
         }}
         return rows
     }

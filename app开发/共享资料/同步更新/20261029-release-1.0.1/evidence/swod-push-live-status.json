@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-10-29T09:52:16.224Z",
+  "services": [
+    {
+      "name": "admin-platform",
+      "status": "online",
+      "pushEnabled": false
+    },
+    {
+      "name": "dongfangwuquan-website",
+      "status": "online",
+      "pushEnabled": false
+    },
+    {
+      "name": "app-push-worker",
+      "status": "online",
+      "pushEnabled": false
+    }
+  ],
+  "tables": {
+    "AppPushDevice": 0,
+    "AppPushPermit": 0,
+    "AppPushOutbox": 0
+  }
+}

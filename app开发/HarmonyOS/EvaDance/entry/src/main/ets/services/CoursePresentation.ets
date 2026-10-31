@@ -30,7 +30,18 @@ export function catalogLessons(units: Row[], records: Row[]): Row[] {
     const record = records.find((item: Row) => String(item.video_id) === String(video.id));
     const duration = Number(record?.duration || video.duration || 0);
     const percent = record ? record.completed === 1 ? 100 : duration > 0 ? Math.min(100, Math.floor(Number(record.progress || 0) / duration * 100)) : 0 : undefined;
-    result.push({ id: video.id, name: unit.name, duration: duration, ordinal: result.length + 1, percent: percent });
+    result.push({ id: video.id, name: video.name || unit.name, subtitle: unit.name, mediaKind: /\.(m4a|mp3|aac|wav|flac|ogg)$/i.test(video.name || '') || (video.name || '').startsWith('音频') ? 'audio' : 'video', duration: duration, ordinal: result.length + 1, percent: percent });
   }));
   return result;
+}
+export function startingLesson(lessons: Row[], records: Row[]): Row | undefined {
+  const valid = lessons.filter((lesson: Row) => Number(lesson.id) > 0);
+  let selected: Row | undefined = valid[0];
+  let latest = '';
+  records.forEach((record: Row) => {
+    const lesson = valid.find((item: Row) => String(item.id) === String(record.video_id));
+    const playedAt = (record.last_play_at || '').replace('T', ' ');
+    if (lesson && playedAt && playedAt > latest) { latest = playedAt; selected = lesson; }
+  });
+  return selected;
 }

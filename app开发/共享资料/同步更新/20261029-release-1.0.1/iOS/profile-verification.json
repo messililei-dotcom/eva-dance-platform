@@ -1,0 +1,10 @@
+{
+  "name": "SWOD-AppStore-Push-Filing-20261029",
+  "uuid": "ceea2465-fc82-4e17-b524-e9ea2b05de6d",
+  "certificateSHA1": [
+    "4245EB5CBABD61041F59514C549ACEE964501C68"
+  ],
+  "apsEnvironment": "production",
+  "applicationIdentifier": "RT4J8ZD4JU.cn.com.swod.app",
+  "filingUnchanged": true
+}

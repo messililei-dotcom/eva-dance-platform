@@ -34,7 +34,7 @@ function normalizeImage(value?: string) {
 }
 
 function resolveCourseImage(platformImage?: string, fallbackImage?: string) {
-  return normalizeImage(resolveStaticSeriesCover(platformImage) || fallbackImage);
+  return normalizeImage(resolveStaticSeriesCover(platformImage) || platformImage || fallbackImage);
 }
 
 function findStaticMatchByName(name: string) {

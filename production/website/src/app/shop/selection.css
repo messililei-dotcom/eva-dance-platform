@@ -1,0 +1,39 @@
+/* Shop-only refinements; the existing phone/PWA brand colors remain authoritative. */
+.mobile-shop-surface { --shop-accent: #064e3b; }
+.mobile-shop-surface button:focus-visible,
+.mobile-shop-surface select:focus-visible,
+.mobile-shop-surface input:focus-visible,
+.mobile-shop-surface textarea:focus-visible { outline: 2px solid var(--shop-accent); outline-offset: 3px; }
+.mobile-shop-surface ::selection { background: #d1fae5; color: #022c22; }
+.mobile-shop-surface input, .mobile-shop-surface textarea { caret-color: var(--shop-accent); }
+.selection-filter { display:flex; align-items:center; gap:8px; color:#57534e; }
+.selection-filter select { min-height:44px; max-width:180px; border:1px solid #d6d3d1; border-radius:10px; background:#fff; padding:8px; color:#292524; }
+.selection-product button { overflow-wrap:anywhere; }
+.selection-specs { border-top:1px solid #e7e5e4; }
+.selection-specs>div { display:grid; grid-template-columns:48px minmax(0,1fr); gap:12px; padding:10px 0; border-bottom:1px solid #e7e5e4; }
+.selection-specs dt { color:#57534e; }
+.selection-specs dd { font-weight:500; overflow-wrap:anywhere; }
+.selection-cart-bar { bottom:24px; left:50%; transform:translateX(-50%); width:min(680px,calc(100% - 32px)); }
+.selection-notice { bottom:110px; }
+.selection-dialog { overscroll-behavior:contain; scrollbar-color:#a8a29e transparent; }
+@media (max-width:767px) {
+  .mobile-shop-surface { --shop-accent:#9f1d20; }
+  .mobile-shop-surface>section:first-child p.mt-4 { margin-top:10px; color:#616773; font-size:14px; }
+  .selection-tools { padding-top:4px; }
+  .selection-filter { gap:6px; }
+  .selection-filter select { max-width:135px; font-size:14px; }
+  .selection-dialog-overlay { padding:0; align-items:flex-end; }
+  .selection-dialog { max-height:calc(100dvh - env(safe-area-inset-top) - 20px); border-radius:16px 16px 0 0; padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
+  .selection-dialog input,.selection-dialog textarea,.selection-dialog select { font-size:16px; }
+  .selection-detail-actions { position:sticky; bottom:0; background:#faf9f5; padding:12px 0; }
+  .selection-cart-bar { bottom:calc(88px + env(safe-area-inset-bottom)); width:calc(100% - 24px); padding:10px 12px; }
+  .selection-cart-bar button { padding:12px; }
+  .selection-notice { bottom:calc(170px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .mobile-shop-surface * { scroll-behavior:auto; }
+}
+@media (max-width:767px) {
+  .selection-product-page .selection-detail-actions { position:fixed; z-index:10010; left:12px; bottom:calc(88px + env(safe-area-inset-bottom)); width:calc(100% - 24px); margin:0; padding:10px 12px; border-radius:12px; background:#fff; box-shadow:0 8px 24px rgb(32 33 36 / 12%); }
+  body:has(.selection-product-page) button[aria-label="分享本页到微信"], body:has(.selection-cart-bar) button[aria-label="分享本页到微信"] { display:none; }
+}

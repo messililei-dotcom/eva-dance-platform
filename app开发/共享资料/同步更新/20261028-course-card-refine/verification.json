@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-10-28T23:07:17.218019+08:00",
+  "scope": "revert equal-width course card; restore old text line counts, modest 96-to-112 thumbnail width, text-driven image height 84...160",
+  "iOS": {
+    "version": "1.0.0(8)",
+    "simulatorBuild": "passed",
+    "deviceUnsignedRelease": "passed",
+    "runtime": "ordinary-font original-style course cards inspected and screenshot saved"
+  },
+  "Android": {
+    "version": "1.0.0(9)",
+    "build": "Debug, signed APK/AAB, lint and existing signing verified",
+    "tests": {
+      "tests": 21,
+      "failures": 0,
+      "errors": 0
+    },
+    "runtime": "package installed; page UI not verified"
+  },
+  "HarmonyOS": {
+    "version": "1.0.0(8)",
+    "build": "signed HAP/APP and existing profile verification passed",
+    "runtime": "not verified; emulator unavailable"
+  },
+  "filingChanged": false,
+  "serverChanged": false,
+  "storeUpload": false,
+  "artifacts": [
+    {
+      "path": "HarmonyOS/installers/SWOD-1.0.0-8-release.hap",
+      "sha256": "f3c76c332bbf7ed5dbd962407ff4912b26406e8c7b5bb1a152c3176e149868b6"
+    },
+    {
+      "path": "HarmonyOS/installers/SWOD-1.0.0-8-release.app",
+      "sha256": "0dee697dce1a77be6718d8402d88c5b53e3f610aae252f206223a40720265b67"
+    },
+    {
+      "path": "Android/installers/SWOD-1.0.0-9-refined-card-release.apk",
+      "sha256": "579c6fe6be044f2adad5ebdddf53272102971fd8286136351fbeedfcf6a7cc08"
+    },
+    {
+      "path": "Android/installers/SWOD-1.0.0-9-refined-card-release.aab",
+      "sha256": "9b24988d54ecddbd3dd7754294dc0d5f00965a37591ce8c0026aad4ccb5c7342"
+    }
+  ]
+}

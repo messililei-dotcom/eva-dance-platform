@@ -1,0 +1,16 @@
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "mpush:Push"
+      ],
+      "Resource": [
+        "acs:mhub:*:1646141000038945:app/335759307",
+        "acs:mhub:*:1646141000038945:app/335759338",
+        "acs:mhub:*:1646141000038945:app/335759346"
+      ]
+    }
+  ]
+}

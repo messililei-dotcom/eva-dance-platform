@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-10-28T21:18:18.490704+08:00",
+  "reference": "user supplied two mini-program screenshots",
+  "colorDecision": "reference layout only; retain existing EvaBrand colors",
+  "scope": "LoginView.swift layout only",
+  "version": "1.0.0(8) local simulator development preview",
+  "builds": {
+    "simulator": "passed",
+    "iphoneosReleaseUnsigned": "passed"
+  },
+  "ui": {
+    "centeredBrandHeader": true,
+    "oneTapAndSMSInSameCard": true,
+    "passwordAuxiliaryToggle": true,
+    "validInputAndConsentEnableSMSSubmit": true,
+    "carrierRemainsDisabledOnSimulator": true,
+    "closeAndReopenClearInput": true,
+    "largeFontWrapAndScroll": true,
+    "darkMode": true
+  },
+  "realSMSOrLoginSubmittedThisTurn": false,
+  "newBackendChanges": false,
+  "filingChanged": false,
+  "storeUploadOrSubmit": false
+}

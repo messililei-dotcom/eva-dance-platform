@@ -43,7 +43,7 @@ struct StudyAssistantView: View {
                 NavigationLink { GrowthView() } label: { Label("练习后打卡", systemImage: "checkmark.circle") }
             }
             Section("建议来源") { Text("由本机根据已授权课程、最近学习顺序和所选时间生成规则建议；不进行动作识别或 AI 教学评价。播放时仍会核验当前课程权限。").font(.caption).foregroundStyle(.secondary) }
-        }.evaCompactLayout().navigationTitle("智能学习助手").task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
     }
     private func load() async {
         guard !loading, let token = session.token else { return }
@@ -97,7 +97,7 @@ struct UnifiedSearchView: View {
                     if rows.isEmpty && !products.busy && products.error == nil { Text("没有匹配商品") }
                 }
             }
-        }.evaCompactLayout().navigationTitle("全站搜索").searchable(text: $query, prompt: "课程、老师、赛事、商品")
+        }.evaCompactLayout().evaPageChrome().searchable(text: $query, prompt: "课程、老师、赛事、商品")
             .task { await load() }.refreshable { await load() }
     }
     private func load() async {

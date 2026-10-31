@@ -1,0 +1,36 @@
+{
+  "verifiedAt": "2026-10-29T10:57:37.419371+08:00",
+  "source": "real_aliyun_vod_read_only_rpc",
+  "productionWrites": false,
+  "mediaTotal": 1935,
+  "samples": [
+    {
+      "failed": true,
+      "status": 404,
+      "code": "InvalidVideo.NoneStream"
+    },
+    {
+      "failed": true,
+      "status": 404,
+      "code": "InvalidVideo.NoneStream"
+    },
+    {
+      "videoIdSuffix": "d4490102",
+      "status": "Normal",
+      "streams": [
+        {
+          "format": "m3u8",
+          "encrypt": 0,
+          "encryptType": null
+        },
+        {
+          "format": "m3u8",
+          "encrypt": 0,
+          "encryptType": null
+        }
+      ],
+      "downloadPlayAuthIssued": false
+    }
+  ],
+  "signedURLsSaved": false
+}

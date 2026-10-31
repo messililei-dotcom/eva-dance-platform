@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import re
+import zipfile
 import subprocess
 import urllib.error
 import urllib.request
@@ -13,6 +14,28 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parents[1]
 ANDROID = PROJECT.parent
 NS = '{http://schemas.android.com/apk/res/android}'
+
+def source_manifest_check(manifest):
+    """Audit app-owned declarations; SDK merged components need their own audit.
+
+    Aliyun's OEM notification trampoline must be exported. Keep the exception
+    exact rather than accepting arbitrary exported activities:
+    https://help.aliyun.com/zh/document_detail/434684.html
+    """
+    app = manifest.find('application')
+    allowed = {'.MainActivity', '.PushPopupActivity'}
+    activities = app.findall('activity')
+    exported = {a.get(NS+'name') for a in activities if a.get(NS+'exported') == 'true'}
+    explicit = all(a.get(NS+'exported') in {'true', 'false'} for a in activities)
+    aliases_private = all(a.get(NS+'exported') == 'false' for a in app.findall('activity-alias'))
+    return {'passed': app.get(NS+'allowBackup') == 'false'
+        and app.get(NS+'usesCleartextTraffic') == 'false'
+        and explicit and aliases_private and exported == allowed,
+        'scope': 'app-owned source manifest, not an SDK merged-manifest audit',
+        'exportedActivities': sorted(exported),
+        'allowedExportedActivities': sorted(allowed),
+        'unexpectedExportedActivities': sorted(exported - allowed),
+        'oemEntryReference': 'https://help.aliyun.com/zh/document_detail/434684.html'}
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -34,10 +57,7 @@ def http_check(path, predicate, token=False):
 def run(output, apk=None, acceptance=None):
     checks = {}
     manifest = ET.parse(PROJECT/'app/src/main/AndroidManifest.xml').getroot()
-    app = manifest.find('application')
-    activities = app.findall('activity')
-    checks['manifest'] = {'passed':app.get(NS+'allowBackup') == 'false' and app.get(NS+'usesCleartextTraffic') == 'false'
-        and all(a.get(NS+'exported') == 'false' for a in activities if a.get(NS+'name') != '.MainActivity')}
+    checks['manifest'] = source_manifest_check(manifest)
     resource = PROJECT/'app/src/main/res'
     try:
         for file in resource.rglob('*.xml'):
@@ -61,6 +81,29 @@ def run(output, apk=None, acceptance=None):
         artifact.update(passed=result.returncode == 0 and bool(cert) and cert.group(1).upper() == expected,
             certificateMatchesFiling=bool(cert) and cert.group(1).upper() == expected)
     checks['signedAPK'] = artifact
+    # Read the exact installable artifact instead of claiming the source version is installed.
+    metadata = {}
+    if apk.is_file():
+        aapt = sdk/'build-tools/36.0.0/aapt'
+        badging = subprocess.run([str(aapt),'dump','badging',str(apk)],capture_output=True,text=True)
+        identity = re.search(r"package: name='([^']+)' versionCode='([^']+)' versionName='([^']+)'",badging.stdout)
+        if identity:
+            metadata = dict(packageName=identity[1],versionCode=int(identity[2]),versionName=identity[3])
+        with zipfile.ZipFile(apk) as archive:
+            try:
+                filing = json.loads(archive.read('assets/release-info.json'))
+            except (KeyError, ValueError):
+                filing = {}
+        checks['artifactIdentity'] = {'passed':metadata.get('packageName') == 'cn.com.swod.app'
+            and metadata.get('versionCode',0) > 0, **metadata}
+        source_filing = json.loads((PROJECT/'app/src/main/assets/release-info.json').read_text())
+        checks['filingDisplay'] = {'passed':bool(re.fullmatch(r'湘ICP备\d+号-\d+A',filing.get('filingNumber','')))
+            and filing == source_filing and filing.get('applicationId') == metadata.get('packageName'),
+            'number':filing.get('filingNumber'), 'basis':filing.get('filingEvidence'),
+            'officialConsoleReverified':False}
+    else:
+        checks['artifactIdentity'] = {'passed':False}
+        checks['filingDisplay'] = {'passed':False}
     checks['publicCourses'] = http_check('mini/public/series',lambda c,d:c == 200 and d.get('success') is True and isinstance(d.get('data'),list))
     checks['appConfig'] = http_check('app/v1/config',lambda c,d:c == 200 and d.get('success') is True and d.get('data',{}).get('version') == 1)
     checks['appProducts'] = http_check('app/v1/shop/products',lambda c,d:c == 200 and d.get('success') is True and isinstance(d.get('data',{}).get('products'),list))
@@ -69,10 +112,11 @@ def run(output, apk=None, acceptance=None):
     evidence = json.loads(evidence_path.read_text()) if evidence_path.is_file() else {}
     checks['deviceAcceptance'] = {'passed':bool(apk_sha) and evidence.get('apkSHA256') == apk_sha and
         all(evidence.get(k) is True for k in ['nativeUI','loginLogout','courseAuthorization','playbackProgress','notesBookmarks','profile','orders','events','privacyDeletion'])}
-    checks['filingAndStoreMaterial'] = {'passed':evidence.get('filingVerified') is True and evidence.get('storeMaterialVerified') is True}
+    checks['storeMaterialAcceptance'] = {'passed':bool(apk_sha) and evidence.get('apkSHA256') == apk_sha
+        and evidence.get('storeMaterialVerified') is True}
     blockers = [key for key,value in checks.items() if not value['passed']]
     report = {'status':'READY_FOR_RELEASE_REVIEW' if not blockers else 'NOT_READY',
-        'packageName':'cn.com.swod.app', 'versionName':'1.0.0','versionCode':5,
+        **metadata,
         'productionWrites':False,'checks':checks,'blockers':blockers}
     output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')

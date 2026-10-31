@@ -67,7 +67,7 @@ struct StaffLoginView: View {
             } }.disabled(busy || username.isEmpty || password.isEmpty)
             if busy { ProgressView() }
             if let error { Text(error).foregroundStyle(.red) }
-        }.evaCompactLayout().navigationTitle("工作人员登录")
+        }.evaCompactLayout().evaPageChrome()
     }
 }
 struct StaffCompetitionsView: View {
@@ -86,7 +86,7 @@ struct StaffCompetitionsView: View {
                     }
                 }
             }
-        }.evaCompactLayout().navigationTitle("赛事管理").searchable(text: $query, prompt: "搜索赛事名称、编号或地点")
+        }.evaCompactLayout().evaPageChrome().searchable(text: $query, prompt: "搜索赛事名称、编号或地点")
             .task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/event/competitions", staff: staff) }
@@ -112,7 +112,7 @@ struct StaffCompetitionView: View {
                 Button("隐藏评委评分") { operation = "hideJudgeScores" }
             }.disabled(store.busy)
             StaffStatus(store: store) { }
-        }.evaCompactLayout().navigationTitle("赛事工作台")
+        }.evaCompactLayout().evaPageChrome()
         .confirmationDialog("确认修改此赛事的报名或公示设置？", isPresented: Binding(get: {operation != nil}, set: {if !$0 {operation = nil}})) {
             if let operation { Button("确认修改") { Task { _ = await store.send("/event/competitions/\(event["id"].text)", method: "PATCH", body: ["action": operation], staff: staff); self.operation = nil } } }
         }
@@ -134,7 +134,7 @@ struct StaffGroupsView: View {
                     }
                 }
             }
-        }.evaCompactLayout().navigationTitle("组别管理").searchable(text: $query, prompt: "搜索完整组别名称")
+        }.evaCompactLayout().evaPageChrome().searchable(text: $query, prompt: "搜索完整组别名称")
             .task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/event/groups?competitionId=\(eventID)", staff: staff) }
@@ -154,7 +154,7 @@ struct StaffGroupView: View {
             Text("重新编排只修改本组有效报名的出场顺序，选手编号与节目编号保持独立。").font(.caption)
             if !done.isEmpty { Text(done) }
             StaffStatus(store: store) { }
-        }.evaCompactLayout().navigationTitle("组别工作台")
+        }.evaCompactLayout().evaPageChrome()
         .confirmationDialog("重新随机安排“\(group["name"].text)”的出场顺序？", isPresented: $confirm) {
             Button("确认重新编排") { Task {
                 if let result = await store.send("/event/players/batch", method: "PATCH", body: ["action": "randomize_sequence", "competitionId": Int(eventID) ?? 0, "groupId": Int(group["id"].text) ?? 0], staff: staff) { done = "已编排 \(result["updated"].text) 条报名，请打开报名列表查看。" }
@@ -197,7 +197,7 @@ struct StaffEntriesView: View {
                 }
             }
             if let csv { ShareLink("分享当前报名表 CSV", item: csv) }
-        }.evaCompactLayout().navigationTitle(contestants ? "选手汇总" : "报名和音乐").searchable(text: $query, prompt: "搜索姓名、编号、组别或音乐")
+        }.evaCompactLayout().evaPageChrome().searchable(text: $query, prompt: "搜索姓名、编号、组别或音乐")
             .task { await load() }.refreshable { await load() }
             .toolbar { if !contestants { Button("导出") { exportCSV() }.disabled(store.busy || rows.isEmpty) } }
             .onDisappear { if let csv { try? FileManager.default.removeItem(at: csv); self.csv = nil } }
@@ -240,7 +240,7 @@ struct StaffPlayerView: View {
                 }
                 NavigationLink("修正报名资料") { StaffPlayerEditor(player: player) }
             }
-        }.evaCompactLayout().navigationTitle("报名详情").task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/event/players/\(id)", staff: staff) }
 }
@@ -265,7 +265,7 @@ struct StaffPlayerEditor: View {
             Button("保存修正") { confirm = true }.disabled(store.busy || name.isEmpty || phone.isEmpty || title.isEmpty || done)
             if done { Text("报名资料已更新") }
             StaffStatus(store: store) { }
-        }.evaCompactLayout().navigationTitle("报名修正").task { name = player["name"].text; phone = player["phone"].text; organization = player["organization"].text; teacher = player["teacher"].text; title = player["performanceTitle"].text; remark = player["remark"].text }
+        }.evaCompactLayout().evaPageChrome().task { name = player["name"].text; phone = player["phone"].text; organization = player["organization"].text; teacher = player["teacher"].text; title = player["performanceTitle"].text; remark = player["remark"].text }
         .confirmationDialog("保存本条报名的资料修正？", isPresented: $confirm) { Button("确认保存") { Task { done = await store.send("/event/players/\(player["id"].text)", method: "PUT", body: ["name": name, "phone": phone, "organization": organization, "teacher": teacher, "performanceTitle": title, "remark": remark], staff: staff) != nil } } }
     }
 }
@@ -293,7 +293,7 @@ struct StaffPaymentView: View {
             Button("提交登记") { confirm = true }.disabled(store.busy || done || Double(amount) == nil)
             if done { Text("流水登记成功") }
             StaffStatus(store: store) { }
-        }.evaCompactLayout().navigationTitle("缴费登记").task { amount = String(format: "%.2f", player["registrationFee"].number) }
+        }.evaCompactLayout().evaPageChrome().task { amount = String(format: "%.2f", player["registrationFee"].number) }
         .confirmationDialog("确认已经实际完成这笔收款或退款，并登记 ¥\(amount)？", isPresented: $confirm) {
             Button("确认实际完成并登记") { Task {
                 if await store.send("/event/players/\(player["id"].text)/payments", body: ["kind": kind, "method": method, "amount": Double(amount) ?? 0, "paidAt": ISO8601DateFormatter().string(from: date), "remark": remark, "requestKey": requestKey], staff: staff) != nil { done = true }
@@ -312,7 +312,7 @@ struct StaffRecordView: View {
         List {
             StaffStatus(store: store) { Task { await load() } }
             ForEach(records) { row in VStack(alignment: .leading, spacing: 4) { ForEach(fields, id: \.self) { key in if !row.value[key].text.isEmpty { Text(row.value[key].text) } } } }
-        }.evaCompactLayout().navigationTitle(title).task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load(path, staff: staff) }
 }
@@ -329,7 +329,7 @@ struct StaffMusicView: View {
             if busy { ProgressView("正在验证音乐访问权限…") }
             if let error { Text(error).foregroundStyle(.red) }
             if player != nil { Button("播放 / 暂停") { if player?.isPlaying == true { player?.pause() } else { player?.play() } } }
-        }.padding().navigationTitle("音乐试听").task {
+        }.padding().evaPageChrome().task {
             defer { busy = false }
             guard let token = staff.credentials?.token else { return }
             do {

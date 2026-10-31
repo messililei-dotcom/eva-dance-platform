@@ -1,0 +1,45 @@
+{
+  "layoutProject": [
+    "python3",
+    "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance/scripts/create_layout_test_project.py",
+    "/tmp/SWODLayoutQA"
+  ],
+  "audioProject": [
+    "python3",
+    "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance/scripts/create_layout_test_project.py",
+    "/tmp/SWODPlaybackQA",
+    "--testable"
+  ],
+  "releaseLayout": [
+    "xcodebuild",
+    "-project",
+    "/tmp/SWODLayoutQA/EvaDance.xcodeproj",
+    "-scheme",
+    "EvaLayoutQA",
+    "-configuration",
+    "Release",
+    "-destination",
+    "platform=iOS Simulator,name=SWOD-Layout-iPhone14Pro-20261030",
+    "CODE_SIGNING_ALLOWED=NO",
+    "test"
+  ],
+  "audio": [
+    "xcodebuild",
+    "-project",
+    "/tmp/SWODPlaybackQA/EvaDance.xcodeproj",
+    "-scheme",
+    "EvaPlaybackQA",
+    "-configuration",
+    "Release",
+    "-destination",
+    "platform=iOS Simulator,name=iPhone 18 Pro",
+    "CODE_SIGNING_ALLOWED=NO",
+    "test"
+  ],
+  "harmonyLayout": [
+    "python3",
+    "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/HarmonyOS/EvaDance/scripts/check_top_layout.py",
+    "--output",
+    "/tmp/swod-harmony-layout-check"
+  ]
+}

@@ -1,3 +1,4 @@
 {
-  "navigationBarTitleText": "线上学院"
+  "navigationBarTitleText": "线上学院",
+  "enablePullDownRefresh": true
 }

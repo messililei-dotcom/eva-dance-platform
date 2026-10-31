@@ -1,0 +1,14 @@
+{
+  "tests": {
+    "tests": 29,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "huaweiSDKConfigured": true,
+  "originalSigningVerified": true,
+  "productionPushEnabled": false,
+  "realDeliveryAccepted": false,
+  "uploaded": false,
+  "submitted": false
+}

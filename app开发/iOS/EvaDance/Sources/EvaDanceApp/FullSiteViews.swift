@@ -42,18 +42,23 @@ struct AuthGate<Content: View>: View {
 struct CourseCard: View {
     var online = false
     let row: JSONValue
+    var showCover = true
+    @Environment(\.dynamicTypeSize) private var typeSize
     var body: some View {
-        HStack(alignment: .center, spacing: 14) {
-            ZStack {
-                EvaBrand.softAccent
-                if let url = AppPolicy.secureMediaURL(row["cover_image"].text) {
-                    AsyncImage(url: url) { image in image.resizable().scaledToFill() } placeholder: { Image(systemName: "play.rectangle").font(.title2).foregroundStyle(EvaBrand.red) }
-                } else { Image(systemName: "play.rectangle").font(.title2).foregroundStyle(EvaBrand.red) }
-            }.frame(width: 96, height: 88).clipped().clipShape(RoundedRectangle(cornerRadius: 12)).accessibilityHidden(true)
+        Group {
+            if showCover { CourseCardSplitLayout() { artwork; details } }
+            else { details }
+        }.padding(.vertical, 4).frame(maxWidth: .infinity, alignment: .leading)
+    }
+    private var artwork: some View {
+        ArtworkImage(url: AppPolicy.secureMediaURL(row["cover_image"].text), symbol: "play.rectangle", ratio: nil)
+            .frame(maxWidth: .infinity, maxHeight: .infinity).accessibilityHidden(true)
+    }
+    private var details: some View {
             VStack(alignment: .leading, spacing: 7) {
-                Text(row.firstText("name", "title")).font(.headline).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
+                Text(row.firstText("name", "title")).font(.headline).foregroundStyle(.primary).lineLimit(showCover && !typeSize.isAccessibilitySize ? 2 : nil).fixedSize(horizontal: false, vertical: true)
                 if !row.firstText("subtitle", "teacher", "category").isEmpty {
-                    Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary).lineLimit(showCover && !typeSize.isAccessibilitySize ? 1 : nil).fixedSize(horizontal: false, vertical: true)
                 }
                 if !row["total_courses"].text.isEmpty {
                     Text([row["teacher"].text, "\(row["total_courses"].text) 节课"].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
@@ -61,39 +66,61 @@ struct CourseCard: View {
                 if !row["location"].text.isEmpty { Label(row["location"].text, systemImage: "mappin").font(.caption) }
                 if row["price"] != .null { CoursePriceLine(online: online, row: row) }
             }
-            Spacer(minLength: 0)
-        }.padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 struct DiscoverView: View {
     @EnvironmentObject var session: Session
     @StateObject private var store = SiteStore()
     @State private var search = ""
-    var rows: [SiteRow] { store.data.rows.filter { row in search.isEmpty || ["name", "subtitle", "teacher", "category"].contains { row.value[$0].text.localizedCaseInsensitiveContains(search) } } }
+    @State private var onlyUnlocked = false
+    @State private var category = ""
+    private var categories: [String] { Set(store.data.rows.map { $0.value["category"].text }.filter { !$0.isEmpty }).sorted() }
+    var rows: [SiteRow] { store.data.rows.filter { row in
+        let matches = search.isEmpty || ["name", "subtitle", "teacher", "category"].contains { row.value[$0].text.localizedCaseInsensitiveContains(search) }
+        return matches && (category.isEmpty || row.value["category"].text == category)
+            && (!onlyUnlocked || (session.courseAccessReady && session.isCourseUnlocked(row.value["id"].text)))
+    } }
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
-                if search.isEmpty {
-                    BrandHeader(title: "伊娃东方舞", subtitle: "线上学院 · 舞蹈作品 · 每天进步一点", icon: "play.rectangle")
-                    LearningShortcuts()
-                }
+            LazyVStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
+                        Text("伊娃东方舞").font(.title2.bold())
+                        Text("线上学院 · 从基础到进阶，找到适合你的课程").font(.subheadline).foregroundStyle(.secondary)
+                    }.padding(.vertical, 2)
+                EvaSearchField(text: $search, prompt: "搜索课程、老师或分类")
+                LearningShortcuts()
                 HStack {
-                    Text(search.isEmpty ? "探索课程" : "搜索结果").font(.title3.bold())
+                    Text(search.isEmpty ? "课程列表" : "搜索结果").font(.title3.bold())
                     Spacer()
                     if !store.busy && store.error == nil { Text("\(rows.count) 门课程").font(.subheadline).foregroundStyle(.secondary) }
+                    Menu {
+                        Button("全部课程") { onlyUnlocked = false; category = "" }
+                        Button("已解锁") { if session.token == nil { session.showLogin = true } else { onlyUnlocked = true } }
+                        if !categories.isEmpty { Picker("课程分类", selection: $category) { Text("全部分类").tag(""); ForEach(categories, id: \.self) { Text($0).tag($0) } } }
+                        Button("清除筛选") { onlyUnlocked = false; category = ""; search = "" }
+                    } label: { Label("筛选", systemImage: "line.3.horizontal.decrease").frame(minWidth: 44, minHeight: 44) }
+                        .accessibilityIdentifier("course.filter")
+                        .accessibilityValue([onlyUnlocked ? "已解锁" : "全部课程", category].filter { !$0.isEmpty }.joined(separator: "，"))
                 }
+                if onlyUnlocked || !category.isEmpty { Text([onlyUnlocked ? "已解锁" : "", category].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(EvaBrand.red) }
                 LoadState(store: store) { Task { await load() } }
                 ForEach(rows) { row in NavigationLink {
                     if session.isCourseUnlocked(row.value["id"].text), let id = Int(row.value["id"].text) { CatalogByIDView(id: id, title: row.value["name"].text) }
                     else { PublicCourseView(row: row.value) }
                 } label: {
                     HStack(spacing: 4) { CourseCard(online: true, row: row.value); Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.secondary) }
-                        .padding(.horizontal, 14).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 16))
-                }.buttonStyle(.plain) }
-                if !store.busy && store.error == nil && rows.isEmpty { Label("暂无匹配课程，请换个关键词", systemImage: "magnifyingglass").foregroundStyle(.secondary).padding(.vertical, 24) }
+                        .contentShape(Rectangle())
+                }.buttonStyle(EvaPressStyle()); Divider() }
+                if onlyUnlocked && !session.courseAccessReady {
+                    Text("学习权益暂无法确认，请重试").foregroundStyle(.secondary)
+                    Button("重新查询学习权益") { Task { await session.refreshCourseAccess() } }.frame(minHeight: 44)
+                } else if !store.busy && store.error == nil && rows.isEmpty {
+                    Label("暂无匹配课程，请换个关键词", systemImage: "magnifyingglass").foregroundStyle(.secondary).padding(.vertical, 12)
+                    Button("清除搜索与筛选") { search = ""; category = ""; onlyUnlocked = false }.frame(minHeight: 44)
+                }
                 NavigationLink { InformationView() } label: { Label("了解伊娃东方舞", systemImage: "info.circle").font(.subheadline).frame(minHeight: 44) }.padding(.top, 4)
-            }.padding(20).frame(maxWidth: 760).frame(maxWidth: .infinity)
-        }.evaHomeLayout().navigationTitle("线上学院").evaSearch(text: $search, prompt: "搜索课程、老师或分类")
+            }.padding(.horizontal, 16).padding(.vertical, 6).frame(maxWidth: 760).frame(maxWidth: .infinity)
+        }.evaHomeLayout().evaCompactLayout().evaPageChrome(root: true)
         .task(id: session.accountID) { await load() }.refreshable { await load() }
     }
     private func load() async { await session.refreshCourseAccess(); await store.load("/public/series", session: session, publicRead: true) }
@@ -103,38 +130,50 @@ struct PublicCourseView: View {
     let row: JSONValue
     var body: some View {
         List {
-            CourseCard(online: true, row: row)
+            if let url = AppPolicy.secureMediaURL(row["cover_image"].text) {
+                ArtworkImage(url: url, symbol: "play.rectangle", label: row["name"].text + "课程封面")
+                    .frame(maxWidth: .infinity).listRowInsets(EdgeInsets())
+            }
+            CourseCard(online: true, row: row, showCover: false)
             if !row["description"].text.isEmpty { Text(plain(row["description"].text)).textSelection(.enabled) }
             Text("教师：\(row["teacher"].text)")
             Text("课节：\(row["total_courses"].text)")
             if let id = Int(row["id"].text), id > 0 {
                 NavigationLink(session.isCourseUnlocked(row["id"].text) ? "继续学习" : "查看课程目录") {
-                    CatalogByIDView(id: id, title: row["name"].text)
+                    if session.isCourseUnlocked(row["id"].text) { CatalogByIDView(id: id, title: row["name"].text) }
+                    else { LessonCatalogView(id: id, title: row["name"].text) }
                 }
             }
+            NavigationLink("客服与售后") { CourseSupportView() }
             if session.token == nil { Button("登录查看学习权限") { session.showLogin = true } }
-        }.evaCompactLayout().navigationTitle(row["name"].text).task(id: session.accountID) { await session.refreshCourseAccess() }
+        }.evaCompactLayout().evaPageChrome().task(id: session.accountID) { await session.refreshCourseAccess() }
     }
 }
 struct CatalogByIDView: View {
     let id: Int
     let title: String
-    var body: some View { LessonCatalogView(id: id, title: title) }
+    var body: some View { CourseStudyEntryView(id: id, title: title) }
 }
 struct OfflineView: View {
     @EnvironmentObject var session: Session
     @StateObject private var store = SiteStore()
     @State private var search = ""
+    @State private var calendarMode = false
     var body: some View {
         List {
             BrandHeader(title: "线下课", subtitle: "购买期次课时 · 到课核销扣减", icon: "calendar")
             NavigationLink("课时余额与核销记录") { AuthGate { OfflineScheduleView() } }
             LoadState(store: store) { Task { await load() } }
+            Picker("课程视图", selection: $calendarMode) { Text("课程列表").tag(false); Text("课程日历").tag(true) }.pickerStyle(.segmented)
+            if calendarMode && !store.busy && store.error == nil {
+                OfflineMonthCalendar(courses: store.data.list).listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+            } else if !calendarMode {
             ForEach(JSONValue.array(CoursePresentation.grouped(store.data.list)).rows.filter { search.isEmpty || $0.value["name"].text.localizedCaseInsensitiveContains(search) }) { row in
                 NavigationLink { OfflineCourseDetailView(row: row.value, periods: CoursePresentation.periods(store.data.list, for: row.value)) } label: { CourseCard(row: row.value) }
             }
+            }
             if !store.busy && store.error == nil && store.data.list.isEmpty { Text("暂无线下课程") }
-        }.evaCompactLayout().evaHomeLayout().navigationTitle("线下课程").evaSearch(text: $search, prompt: "搜索课程或期次").task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaHomeLayout().evaPageChrome(root: true).evaSearch(text: $search, prompt: "搜索课程或期次").task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/public/offline-courses", session: session, publicRead: true) }
 }
@@ -163,7 +202,7 @@ struct OfflineCourseDetailView: View {
                     }.padding(.vertical, 8)
                 }
             }
-        }.evaCompactLayout().navigationTitle(row["name"].text)
+        }.evaCompactLayout().evaPageChrome()
     }
 }
 struct OfflineScheduleView: View {
@@ -190,29 +229,9 @@ struct OfflineScheduleView: View {
                     }
                 }
             }
-        }.evaCompactLayout().navigationTitle("期次课时").task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/offline/overview" + (courseID.isEmpty ? "" : "?course_ids=\(courseID)"), session: session) }
-}
-struct EventsView: View {
-    @EnvironmentObject var session: Session
-    @StateObject private var store = SiteStore()
-    @State private var search = ""
-    var body: some View {
-        List {
-            BrandHeader(title: "AiwaRaks赛事平台", subtitle: "赛事、报名、赛程与成绩", icon: "trophy")
-            NavigationLink("工作人员 · 赛事管理") { StaffEventRootView() }
-            NavigationLink("我的比赛") { AuthGate { MyCompetitionsView() } }
-            LoadState(store: store) { Task { await load() } }
-            ForEach(store.data.rows.filter { search.isEmpty || $0.value["name"].text.localizedCaseInsensitiveContains(search) }) { row in
-                NavigationLink { EventDetailView(id: row.id) } label: { VStack(alignment: .leading, spacing: 6) {
-                    Text(row.value["name"].text).font(.headline)
-                    Text("\(row.value.firstText("startDate","start_date")) · \(row.value.firstText("city","venue"))").foregroundStyle(.secondary)
-                }.padding(.vertical, 3) }
-            }
-        }.evaCompactLayout().evaHomeLayout().navigationTitle("东方舞赛事").evaSearch(text: $search, prompt: "搜索赛事名称").task { await load() }.refreshable { await load() }
-    }
-    private func load() async { await store.load("/events", session: session, publicRead: true) }
 }
 struct EventDetailView: View {
     @EnvironmentObject var session: Session
@@ -245,7 +264,7 @@ struct EventDetailView: View {
             Section("已发布成绩") { ForEach(store.data["rankings"].scopedRows("rankings"), id: \.listID) { row in
                 Text("\(row.value["rankNo"].text)  \(row.value["playerName"].text)  \(row.value["groupName"].text)  \(row.value["publishedTotal"].text)")
             } }
-        }.evaCompactLayout().navigationTitle("赛事详情").task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/events/\(id)", session: session, publicRead: true) }
 }
@@ -279,7 +298,7 @@ struct EventRegistrationView: View {
             if busy { ProgressView("正在上传报名与音乐…") }
             if !result.isEmpty { Text(result).foregroundStyle(.green) }
             if let error { Text(error).foregroundStyle(.red) }
-        }.evaCompactLayout().navigationTitle("赛事报名")
+        }.evaCompactLayout().evaPageChrome()
         .fileImporter(isPresented: $picker, allowedContentTypes: [.audio, .data]) { selection in
             do {
                 let url = try selection.get()
@@ -320,7 +339,7 @@ struct RecordListView: View {
                 }
             }.padding(.vertical, 3) }
             if !store.busy && store.error == nil && rows.isEmpty { Text("暂无记录") }
-        }.evaCompactLayout().navigationTitle(title).task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load(path, session: session) }
 }

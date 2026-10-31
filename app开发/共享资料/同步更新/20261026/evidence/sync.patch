@@ -1,0 +1,260 @@
+--- a/app开发/Android/EvaDance/app/build.gradle
++++ b/app开发/Android/EvaDance/app/build.gradle
+@@ -6,7 +6,7 @@
+ android {
+     namespace 'cn.com.swod.app'
+     compileSdk 36
+-    defaultConfig { applicationId 'cn.com.swod.app'; minSdk 26; targetSdk 36; versionCode 7; versionName '1.0.0' }
++    defaultConfig { applicationId 'cn.com.swod.app'; minSdk 26; targetSdk 36; versionCode 8; versionName '1.0.0' }
+     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+     signingConfigs {
+         if (signingFile.exists()) release {
+--- a/app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/ProductPresentationTest.java
++++ b/app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/ProductPresentationTest.java
+@@ -0,0 +1,7 @@
++package cn.com.swod.app;
++import org.junit.Test;
++import static org.junit.Assert.*;
++public class ProductPresentationTest {
++ @Test public void handlesRealAmountsAndMissingData(){assertEquals("¥169.00",ProductPresentation.price(16900));assertEquals("¥0.00",ProductPresentation.price(0));for(Object n:new Object[]{null,-1,1.5,Double.NaN,Double.POSITIVE_INFINITY,"16900"})assertEquals("价格待确认",ProductPresentation.price(n));assertEquals("库存 39",ProductPresentation.stock(39));assertEquals("暂时售罄",ProductPresentation.stock(0));assertEquals("库存待确认",ProductPresentation.stock(null));}
++ @Test public void distinguishesAudioFromVideo(){assertTrue(CoursePolicy.isAudio("音频-东方舞的历史发展.m4a"));assertTrue(CoursePolicy.isAudio("lesson.MP3"));assertFalse(CoursePolicy.isAudio("动作.mp4"));assertFalse(CoursePolicy.isAudio(null));}
++}
+--- a/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/ProductPresentation.java
++++ b/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/ProductPresentation.java
+@@ -0,0 +1,12 @@
++package cn.com.swod.app;
++import java.util.Locale;
++public final class ProductPresentation {
++    private static Double valid(Object value) {
++        if (!(value instanceof Number)) return null;
++        double number=((Number)value).doubleValue();
++        return Double.isFinite(number) && number>=0 && number<=9007199254740991d && number==Math.floor(number) ? number : null;
++    }
++    public static String price(Object value) { Double amount=valid(value); return amount==null?"价格待确认":String.format(Locale.ROOT,"¥%.2f",amount/100); }
++    public static String stock(Object value) { Double stock=valid(value); return stock==null?"库存待确认":stock==0?"暂时售罄":String.format(Locale.ROOT,"库存 %.0f",stock); }
++    private ProductPresentation() {}
++}
+--- a/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ b/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -158,10 +158,10 @@
+     private void catalog(int id,String name){
+         begin(name);load("/public/series/"+id+"/courses","GET",null,false,v->{
+             JSONArray units=array(v);java.util.List<JSONObject> lessons=new java.util.ArrayList<>();
+-            for(int i=0;i<units.length();i++){JSONObject unit=units.getJSONObject(i);JSONArray videos=array(unit.opt("videos"));for(int j=0;j<videos.length();j++){JSONObject video=videos.getJSONObject(j);lessons.add(body("id",video.optInt("id"),"name",unit.optString("name"),"ordinal",lessons.size()+1,"duration",video.optDouble("duration",0)));}}
++            for(int i=0;i<units.length();i++){JSONObject unit=units.getJSONObject(i);JSONArray videos=array(unit.opt("videos"));for(int j=0;j<videos.length();j++){JSONObject video=videos.getJSONObject(j);lessons.add(body("id",video.optInt("id"),"name",first(video,"name").isEmpty()?unit.optString("name"):video.optString("name"),"subtitle",unit.optString("name"),"ordinal",lessons.size()+1,"duration",video.optDouble("duration",0)));}}
+             final int[] pageNumber={1};final boolean[] synced={false};final java.util.Map<Integer,JSONObject> progress=new java.util.HashMap<>();
+             EditText search=field(content,"搜索课节名称",false);LinearLayout results=column();content.addView(results);final Runnable[] render={null};
+-            render[0]=()->{results.removeAllViews();String keyword=search.getText().toString().trim().toLowerCase(Locale.ROOT);java.util.List<JSONObject> filtered=new java.util.ArrayList<>();for(JSONObject lesson:lessons)if(lesson.optString("name").toLowerCase(Locale.ROOT).contains(keyword))filtered.add(lesson);
++            render[0]=()->{results.removeAllViews();String keyword=search.getText().toString().trim().toLowerCase(Locale.ROOT);java.util.List<JSONObject> filtered=new java.util.ArrayList<>();for(JSONObject lesson:lessons)if((lesson.optString("name")+" "+lesson.optString("subtitle")).toLowerCase(Locale.ROOT).contains(keyword))filtered.add(lesson);
+                 int pages=Math.max(1,(filtered.size()+49)/50);pageNumber[0]=Math.max(1,Math.min(pages,pageNumber[0]));TextView heading=text("课节目录 · 共 "+lessons.size()+" 节",18);heading.setTypeface(null,android.graphics.Typeface.BOLD);results.addView(heading);
+                 if(catalogSelection.containsKey(id))results.addView(button("定位当前",()->{search.setText("");int selected=catalogSelection.get(id);for(int i=0;i<lessons.size();i++)if(lessons.get(i).optInt("id")==selected)pageNumber[0]=i/50+1;render[0].run();pageScroll.smoothScrollTo(0,0);}));
+                 if(pages>1){LinearLayout nav=row();Button prev=button("上一页",()->{pageNumber[0]--;render[0].run();pageScroll.smoothScrollTo(0,0);});prev.setEnabled(pageNumber[0]>1);nav.addView(prev,new LinearLayout.LayoutParams(0,-2,1));nav.addView(text("第 "+pageNumber[0]+" / "+pages+" 页",14));Button next=button("下一页",()->{pageNumber[0]++;render[0].run();pageScroll.smoothScrollTo(0,0);});next.setEnabled(pageNumber[0]<pages);nav.addView(next,new LinearLayout.LayoutParams(0,-2,1));results.addView(nav);}
+@@ -216,9 +216,9 @@
+         }catch(Exception e){runOnUiThread(()->{if(version==generation&&!isFinishing())info(e.getMessage());});}});
+     }
+ 
+-    private void shop(){begin("伊娃甄选");hero("伊娃甄选","东方舞生活 · 官方商城");action("我的商城订单",()->open(this::orders));action("收货地址",()->open(this::shipping));section("精选商品");load("/shop/products","GET",null,false,v->{JSONArray products=array(object(v).opt("products"));EditText query=field(content,"搜索商品、颜色或尺码",false);Spinner category=new Spinner(this);java.util.ArrayList<String> categories=new java.util.ArrayList<>();categories.add("全部商品");for(int i=0;i<products.length();i++){String c=products.optJSONObject(i).optString("category");if(!c.isEmpty()&&!categories.contains(c))categories.add(c);}category.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,categories));content.addView(category);LinearLayout list=column();content.addView(list);Runnable render=()->{list.removeAllViews();String keyword=query.getText().toString().trim().toLowerCase(Locale.ROOT),selected=categories.get(category.getSelectedItemPosition());for(int i=0;i<products.length();i++){JSONObject r=products.optJSONObject(i);if(r==null||(!selected.equals("全部商品")&&!selected.equals(r.optString("category"))))continue;String search=(r.optString("name")+" "+r.optString("color")+" "+r.optString("size")+" "+r.optString("spec")).toLowerCase(Locale.ROOT);if(!search.contains(keyword))continue;int index=list.getChildCount();card(list,r.optString("name"),productSpec(r)+" · ¥"+Commerce.money(r.optLong("priceFen"))+" · "+(r.optInt("stock")>0?"有货":"售罄"),()->open(()->product(r)));cover((LinearLayout)list.getChildAt(index),first(r,"image"),true);}if(list.getChildCount()==0)list.addView(text("暂无符合条件的商品",14));};query.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence s,int a,int c,int f){}public void onTextChanged(CharSequence s,int a,int b,int c){render.run();}public void afterTextChanged(Editable e){}});category.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){public void onNothingSelected(AdapterView<?> p){}public void onItemSelected(AdapterView<?> p,View v,int at,long id){render.run();}});render.run();});}
++    private void shop(){begin("伊娃甄选");hero("伊娃甄选","东方舞生活 · 官方商城");action("我的商城订单",()->open(this::orders));action("收货地址",()->open(this::shipping));section("精选商品");load("/shop/products","GET",null,false,v->{JSONArray products=array(object(v).opt("products"));EditText query=field(content,"搜索商品、颜色或尺码",false);Spinner category=new Spinner(this);java.util.ArrayList<String> categories=new java.util.ArrayList<>();categories.add("全部商品");for(int i=0;i<products.length();i++){String c=products.optJSONObject(i).optString("category");if(!c.isEmpty()&&!categories.contains(c))categories.add(c);}category.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,categories));content.addView(category);LinearLayout list=column();content.addView(list);Runnable render=()->{list.removeAllViews();String keyword=query.getText().toString().trim().toLowerCase(Locale.ROOT),selected=categories.get(category.getSelectedItemPosition());for(int i=0;i<products.length();i++){JSONObject r=products.optJSONObject(i);if(r==null||(!selected.equals("全部商品")&&!selected.equals(r.optString("category"))))continue;String search=(r.optString("name")+" "+r.optString("color")+" "+r.optString("size")+" "+r.optString("spec")).toLowerCase(Locale.ROOT);if(!search.contains(keyword))continue;int index=list.getChildCount();card(list,r.optString("name"),productSpec(r)+" · "+ProductPresentation.price(r.opt("priceFen"))+" · "+ProductPresentation.stock(r.opt("stock")),()->open(()->product(r)));cover((LinearLayout)list.getChildAt(index),first(r,"image"),true);}if(list.getChildCount()==0)list.addView(text("暂无符合条件的商品",14));};query.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence s,int a,int c,int f){}public void onTextChanged(CharSequence s,int a,int b,int c){render.run();}public void afterTextChanged(Editable e){}});category.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){public void onNothingSelected(AdapterView<?> p){}public void onItemSelected(AdapterView<?> p,View v,int at,long id){render.run();}});render.run();});}
+     private String productSpec(JSONObject r){java.util.ArrayList<String> values=new java.util.ArrayList<>();for(String key:new String[]{"spec","color","size"}){String value=first(r,key);if(!value.isEmpty())values.add(value);}return String.join(" · ",values);}
+-    private void product(JSONObject r){begin(r.optString("name"));cover(content,first(r,"image"),true);hero(r.optString("name"),productSpec(r));info(strip(first(r,"description")));info("¥"+Commerce.money(r.optLong("priceFen"))+" · 库存 "+r.optInt("stock"));info("App 暂未开放下单，可查看商品及已有订单。");action("查看我的订单",()->open(this::orders));}
++    private void product(JSONObject r){begin(r.optString("name"));cover(content,first(r,"image"),true);hero(r.optString("name"),productSpec(r));info(strip(first(r,"description")));info(ProductPresentation.price(r.opt("priceFen"))+" · "+ProductPresentation.stock(r.opt("stock")));info("App 暂未开放下单，可查看商品及已有订单。");action("查看我的订单",()->open(this::orders));}
+     private void shipping(){begin("收货地址");load("/shop/shipping","GET",null,true,v->{JSONObject o=object(v);JSONObject a=o.optJSONObject("shipping");if(a==null)a=o;EditText name=field(content,"收件人",false),phone=field(content,"手机号",true),address=field(content,"完整收货地址（省市区和门牌）",false);name.setText(first(a,"recipient","name"));phone.setText(a.optString("phone"));address.setText(a.optString("address"));action("保存地址",()->{String n=name.getText().toString().trim(),p=phone.getText().toString().trim(),d=address.getText().toString().trim();if(n.isEmpty()||n.length()>60||!p.matches("1[3-9][0-9]{9}")||d.length()<5||d.length()>200){info("请填写收件人、有效手机号和完整地址");return;}memberWrite("/shop/shipping","PUT",body("recipient",n,"phone",p,"address",d),this::shipping);});});}
+     private void orders(){begin("我的商城订单");load("/shop/orders","GET",null,true,v->{JSONArray rows=array(object(v).opt("orders"));for(int i=0;i<rows.length();i++){JSONObject r=rows.getJSONObject(i);card(content,"订单 "+r.optString("id"),Commerce.status(r.optString("status"),r.optString("kind"))+" · ¥"+Commerce.money(r.optLong("totalFen"))+" · "+first(r,"createdAt"),()->open(()->order(r.optString("id"))));}if(rows.length()==0)info("暂无商城订单");});}
+     private void order(String id){begin("订单详情");String path="/shop/orders/"+Uri.encode(id);load(path,"GET",null,true,v->{JSONObject r=object(v).optJSONObject("order");if(r==null)throw new Exception("订单不存在");hero("订单 "+r.optString("id"),Commerce.status(r.optString("status"),r.optString("kind")));info("合计 ¥"+Commerce.money(r.optLong("totalFen")));JSONArray items=array(r.opt("items"));for(int i=0;i<items.length();i++){JSONObject item=items.getJSONObject(i);card(content,item.optString("name"),"¥"+Commerce.money(item.optLong("unit_fen"))+" × "+item.optInt("quantity"),null);}info(first(r,"createdAt"));info(first(r,"carrier")+" "+first(r,"trackingNo"));info(first(r,"recipient")+" · "+mask(r.optString("phone"))+" · "+first(r,"address"));JSONObject shipping=r.optJSONObject("shipping");if(shipping!=null)info(first(shipping,"recipient")+" · "+mask(shipping.optString("phone"))+" · "+shipping.optString("address"));action("同步最新订单状态",()->memberWrite(path+"/refresh","POST",body(),()->order(id)));String state=r.optString("status");if(state.equals("pending"))action("取消订单",()->confirm("确认取消此订单？",()->memberWrite(path+"/cancel","POST",body(),()->order(id))));if(state.equals("shipped")&&r.optString("kind").equals("goods"))action("确认收货",()->confirm("请确认已经收到商品",()->memberWrite(path+"/received","POST",body(),()->order(id))));if(Commerce.refundable(state)){EditText reason=field(content,"退款原因",false);action("申请退款",()->{String message=reason.getText().toString().trim();if(message.isEmpty()||message.length()>300){info("请填写300字以内退款原因");return;}confirm("确认提交退款申请？结果以平台审核为准",()->memberWrite(path+"/refund","POST",body("reason",message),()->order(id)));});}});}
+--- a/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java
++++ b/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java
+@@ -60,6 +60,7 @@
+         TextView title=new TextView(this);title.setText(getIntent().getStringExtra("title"));title.setTextSize(18);root.addView(title);
+         video=new VideoView(this);root.addView(video,new LinearLayout.LayoutParams(-1,0,1));MediaController controls=new MediaController(this);controls.setAnchorView(video);video.setMediaController(controls);
+         status=new TextView(this);status.setText("正在验证课程权限…");root.addView(status);
++        if(CoursePolicy.isAudio(getIntent().getStringExtra("title"))){TextView audio=new TextView(this);audio.setText("SWOD · 音频课程，播放时没有视频画面");audio.setTextSize(18);root.addView(audio,1);}
+         LinearLayout actions=new LinearLayout(this);CheckBox mirror=new CheckBox(this);mirror.setText("镜像");mirror.setOnCheckedChangeListener((b,on)->video.setScaleX(on?-1:1));actions.addView(mirror);
+         CheckBox loop=new CheckBox(this);loop.setText("循环播放");actions.addView(loop);
+         Spinner speed=new Spinner(this);speed.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"0.75×","1.0×","1.25×","1.5×"}));speed.setSelection(1);actions.addView(speed);root.addView(actions);
+--- a/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CoursePolicy.java
++++ b/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CoursePolicy.java
+@@ -8,5 +8,6 @@
+  public static boolean canBuy(String status,String end,double price,double capacity,double remaining,int id,long now){String today=Instant.ofEpochMilli(now).atZone(ZoneId.of("Asia/Shanghai")).toLocalDate().toString();return ("active".equals(status)||"planned".equals(status))&&price>0&&id>0&&(end.isEmpty()||end.substring(0,Math.min(10,end.length())).compareTo(today)>=0)&&(capacity<=0||remaining>0);}
+  public static int percent(double position,double duration,boolean completed){return completed?100:duration>0?(int)Math.min(100,Math.max(0,position/duration*100)):0;}
+  public static boolean paymentURL(String url){if(!Policy.secureURL(url))return false;try{return java.util.Arrays.asList("openapi.alipay.com","mapi.alipay.com","wx.tenpay.com").contains(java.net.URI.create(url).getHost());}catch(Exception error){return false;}}
++ public static boolean isAudio(String name){return name!=null&&(name.startsWith("音频")||name.toLowerCase(Locale.ROOT).matches(".*\\.(m4a|mp3|aac|wav|flac|ogg)$"));}
+  private CoursePolicy(){}
+ }
+--- a/app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj
++++ b/app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj
+@@ -221,7 +221,7 @@
+ "PRODUCT_BUNDLE_IDENTIFIER" = "cn.com.swod.app";
+ "PRODUCT_NAME" = "$(TARGET_NAME)";
+ "MARKETING_VERSION" = "1.0.0";
+-"CURRENT_PROJECT_VERSION" = "6";
++"CURRENT_PROJECT_VERSION" = "7";
+ "IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+ "TARGETED_DEVICE_FAMILY" = "1,2";
+ "SDKROOT" = "iphoneos";
+@@ -253,7 +253,7 @@
+ "PRODUCT_BUNDLE_IDENTIFIER" = "cn.com.swod.app";
+ "PRODUCT_NAME" = "$(TARGET_NAME)";
+ "MARKETING_VERSION" = "1.0.0";
+-"CURRENT_PROJECT_VERSION" = "6";
++"CURRENT_PROJECT_VERSION" = "7";
+ "IPHONEOS_DEPLOYMENT_TARGET" = "16.0";
+ "TARGETED_DEVICE_FAMILY" = "1,2";
+ "SDKROOT" = "iphoneos";
+--- a/app开发/iOS/EvaDance/Tests/EvaCoreTests/EvaCoreTests.swift
++++ b/app开发/iOS/EvaDance/Tests/EvaCoreTests/EvaCoreTests.swift
+@@ -219,7 +219,20 @@
+         XCTAssertEqual(lessons[0]["name"].text,"修改后的课节")
+         XCTAssertEqual(lessons[0]["percent"].number,100)
+         print("Course pricing, period availability, official introductions and catalog progress checks passed")
+-        print("19 contract checks; failures=\(failures)")
++        XCTAssertEqual(ProductPresentation.price(.object(["priceFen":.number(16900)])), "¥169.00")
++        XCTAssertEqual(ProductPresentation.price(.object(["priceFen":.number(0)])), "¥0.00")
++        for invalid: JSONValue in [.null,.number(-1),.number(1.5),.number(.nan),.string("16900")] {
++            XCTAssertEqual(ProductPresentation.price(.object(["priceFen":invalid])), "价格待确认")
++            XCTAssertEqual(ProductPresentation.stock(.object(["stock":invalid])), "库存待确认")
++        }
++        XCTAssertEqual(ProductPresentation.stock(.object(["stock":.number(0)])), "暂时售罄")
++        XCTAssertEqual(ProductPresentation.stock(.object(["stock":.number(39)])), "库存 39")
++        let audioCatalog: JSONValue = .array([.object(["name":.string("第1课"),"videos":.array([.object(["id":.number(2543),"name":.string("音频-东方舞的历史发展.m4a")])])])])
++        let audio = CoursePresentation.catalog(audioCatalog, progress:.null)[0]
++        XCTAssertEqual(audio["name"].text, "音频-东方舞的历史发展.m4a")
++        XCTAssertEqual(audio["mediaKind"].text, "audio")
++        XCTAssertEqual(audio["subtitle"].text, "第1课")
++        print("21 contract checks; failures=\(failures)")
+         if failures > 0 { exit(1) }
+     }
+ }
+--- a/app开发/iOS/EvaDance/scripts/generate_project.py
++++ b/app开发/iOS/EvaDance/scripts/generate_project.py
+@@ -43,7 +43,7 @@
+ for mode in ['Debug','Release']:
+     configs.append(put('target-'+mode, 'XCBuildConfiguration', name=mode, buildSettings={
+         'PRODUCT_BUNDLE_IDENTIFIER':'cn.com.swod.app', 'PRODUCT_NAME':'$(TARGET_NAME)',
+-        'MARKETING_VERSION':'1.0.0','CURRENT_PROJECT_VERSION':'6', 'IPHONEOS_DEPLOYMENT_TARGET':'16.0',
++        'MARKETING_VERSION':'1.0.0','CURRENT_PROJECT_VERSION':'7', 'IPHONEOS_DEPLOYMENT_TARGET':'16.0',
+         'TARGETED_DEVICE_FAMILY':'1,2', 'SDKROOT':'iphoneos','SUPPORTED_PLATFORMS':'iphoneos iphonesimulator',
+         'SWIFT_VERSION':'5.0','CODE_SIGN_STYLE':'Automatic','INFOPLIST_FILE':'Resources/Info.plist',
+         'GENERATE_INFOPLIST_FILE':'NO', 'SWIFT_OPTIMIZATION_LEVEL':'-Onone' if mode=='Debug' else '-O',
+--- a/app开发/iOS/EvaDance/Sources/EvaCore/CoursePresentation.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaCore/CoursePresentation.swift
+@@ -1,6 +1,9 @@
+ import Foundation
+ 
+ public enum CoursePresentation {
++    public static func isAudio(_ name: String) -> Bool {
++        name.hasPrefix("音频") || name.range(of: "\\.(m4a|mp3|aac|wav|flac|ogg)$", options: [.regularExpression, .caseInsensitive]) != nil
++    }
+     public static func price(_ row: JSONValue) -> String {
+         if row["period_status"] == .null && row["is_free"].bool { return "免费" }
+         let amount = row["promo_price"].number > 0 ? row["promo_price"].number : row["price"].number
+@@ -42,7 +45,7 @@
+             let checkpoint = progress.list.first { $0["video_id"].text == video["id"].text }
+             let duration = checkpoint?["duration"].number ?? video["duration"].number
+             let percent = checkpoint.map { $0["completed"].bool || (duration > 0 && $0["progress"].number >= duration) ? 100 : duration > 0 ? min(99, Int($0["progress"].number / duration * 100)) : 0 }
+-            rows.append(.object(["id": video["id"], "ordinal": .number(Double(rows.count + 1)), "name": .string(unit["name"].text), "duration": .number(duration), "percent": percent.map { .number(Double($0)) } ?? .null]))
++            rows.append(.object(["id": video["id"], "ordinal": .number(Double(rows.count + 1)), "name": .string(video.firstText("name").isEmpty ? unit["name"].text : video["name"].text), "subtitle": unit["name"], "mediaKind": .string(isAudio(video["name"].text) ? "audio" : "video"), "duration": .number(duration), "percent": percent.map { .number(Double($0)) } ?? .null]))
+         }}
+         return rows
+     }
+--- a/app开发/iOS/EvaDance/Sources/EvaCore/ProductPresentation.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaCore/ProductPresentation.swift
+@@ -0,0 +1,16 @@
++import Foundation
++public enum ProductPresentation {
++    private static func valid(_ value: JSONValue) -> Double? {
++        guard case .number(let number) = value, number.isFinite, number >= 0,
++              number <= 9007199254740991, number.rounded() == number else { return nil }
++        return number
++    }
++    public static func price(_ row: JSONValue) -> String {
++        guard let amount = valid(row["priceFen"]) else { return "价格待确认" }
++        return String(format: "¥%.2f", locale: Locale(identifier: "en_US_POSIX"), amount / 100)
++    }
++    public static func stock(_ row: JSONValue) -> String {
++        guard let stock = valid(row["stock"]) else { return "库存待确认" }
++        return stock == 0 ? "暂时售罄" : String(format: "库存 %.0f", locale: Locale(identifier: "en_US_POSIX"), stock)
++    }
++}
+--- a/app开发/iOS/EvaDance/Sources/EvaDanceApp/ShopViews.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaDanceApp/ShopViews.swift
+@@ -60,8 +60,8 @@
+             VStack(alignment: .leading, spacing: 8) {
+                 Text(product["name"].text).font(.headline).lineLimit(2)
+                 Text(product["spec"].text).font(.caption).foregroundStyle(.secondary)
+-                Text(money(product["priceFen"].number)).font(.headline).foregroundStyle(EvaBrand.red)
+-                Text(product["stock"].number > 0 ? "有货" : "售罄").font(.caption).foregroundStyle(.secondary)
++                Text(ProductPresentation.price(product)).font(.headline).foregroundStyle(EvaBrand.red)
++                Text(ProductPresentation.stock(product)).font(.caption).foregroundStyle(.secondary)
+             }.padding(.horizontal, 12).padding(.bottom, 12)
+         }.background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14))
+             .clipShape(RoundedRectangle(cornerRadius: 14))
+@@ -77,8 +77,8 @@
+             VStack(alignment: .leading, spacing: 6) {
+                 Text(product["name"].text).font(.headline)
+                 Text([product["spec"].text,product["size"].text,product["color"].text].filter { !$0.isEmpty }.joined(separator: " · ")).font(.subheadline)
+-                Text(money(product["priceFen"].number)).foregroundStyle(.red)
+-                Text(product["stock"].number > 0 ? "库存 \(product["stock"].text)" : "暂时缺货").font(.caption).foregroundStyle(.secondary)
++                Text(ProductPresentation.price(product)).foregroundStyle(.red)
++                Text(ProductPresentation.stock(product)).font(.caption).foregroundStyle(.secondary)
+             }
+         }.padding(.vertical,6)
+     }
+--- a/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift
+@@ -30,7 +30,7 @@
+     let id: Int
+     let title: String
+     private var lessons: [JSONValue] { CoursePresentation.catalog(store.data, progress: progress) }
+-    private var filtered: [JSONValue] { lessons.filter { query.trimmingCharacters(in: .whitespaces).isEmpty || $0["name"].text.localizedCaseInsensitiveContains(query.trimmingCharacters(in: .whitespaces)) } }
++    private var filtered: [JSONValue] { lessons.filter { query.trimmingCharacters(in: .whitespaces).isEmpty || ($0["name"].text + " " + $0["subtitle"].text).localizedCaseInsensitiveContains(query.trimmingCharacters(in: .whitespaces)) } }
+     private var pages: Int { max(1, (filtered.count + 49) / 50) }
+     private var visible: [JSONValue] { Array(filtered.dropFirst((min(page, pages) - 1) * 50).prefix(50)) }
+     var body: some View {
+@@ -56,6 +56,7 @@
+                                 Text(lesson.value["ordinal"].text).font(.subheadline.monospacedDigit()).frame(width: 30, height: 30).background(selectedID == lesson.id ? EvaBrand.softAccent : EvaBrand.canvas, in: RoundedRectangle(cornerRadius: 8))
+                                 VStack(alignment: .leading, spacing: 8) {
+                                     Text(lesson.value["name"].text).font(.body.weight(selectedID == lesson.id ? .semibold : .regular)).fixedSize(horizontal: false, vertical: true)
++                                    Text(lesson.value["subtitle"].text).font(.caption).foregroundStyle(.secondary)
+                                     HStack { Text(duration(lesson.value["duration"].number)); if selectedID == lesson.id { Text("当前课节").foregroundStyle(EvaBrand.red) } }.font(.caption).foregroundStyle(.secondary)
+                                 }.frame(maxWidth: .infinity, alignment: .leading)
+                                 Text(status(lesson.value)).font(.caption).foregroundStyle(.secondary)
+--- a/app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
+@@ -123,10 +123,11 @@
+     var body: some View {
+         ScrollView {
+             VStack(spacing: 10) {
++                if CoursePresentation.isAudio(title) { Label("SWOD · 音频课程，播放时没有视频画面", systemImage: "waveform").padding() }
+                 VideoPlayer(player: model.player)
+                     .scaleEffect(x: mirror ? -1 : 1, y: 1)
+                     .allowsHitTesting(false)
+-                    .accessibilityLabel("课程视频画面")
++                    .accessibilityLabel(CoursePresentation.isAudio(title) ? "课程音频播放器" : "课程视频画面")
+                     .aspectRatio(16 / 9, contentMode: .fit)
+                     .background(.black)
+                     .overlay {
+--- a/app开发/HarmonyOS/EvaDance/scripts/build_release.py
++++ b/app开发/HarmonyOS/EvaDance/scripts/build_release.py
+@@ -78,7 +78,10 @@
+          '-outCertChain', evidence / 'hap-cert-chain.cer', '-outProfile', evidence / 'hap-profile.p7b'],
+         'verify-hap.log', 'verify-app success')
+     assert (evidence / 'hap-profile.p7b').read_bytes() == profile.read_bytes()
+-    shutil.copy2(work / 'build/outputs/default/EvaDance-default-signed.app', app)
++    signed_apps = list((work / 'build/outputs/default').glob('*-default-signed.app'))
++    if len(signed_apps) != 1:
++        raise SystemExit('无法唯一确定本次签名 APP：' + str(signed_apps))
++    shutil.copy2(signed_apps[0], app)
+     run([java, '-jar', sdk / 'hap-sign-tool.jar', 'verify-app', '-inFile', app,
+          '-outCertChain', evidence / 'app-cert-chain.cer', '-outProfile', evidence / 'app-profile.p7b'],
+         'verify-app.log', 'verify-app success')
+--- a/app开发/HarmonyOS/EvaDance/AppScope/app.json5
++++ b/app开发/HarmonyOS/EvaDance/AppScope/app.json5
+@@ -2,7 +2,7 @@
+   "app": {
+     "bundleName": "cn.com.swod.evadance",
+     "vendor": "SWOD",
+-    "versionCode": 7,
++    "versionCode": 8,
+     "versionName": "1.0.0",
+     "icon": "$media:brand_logo",
+     "label": "$string:app_name"

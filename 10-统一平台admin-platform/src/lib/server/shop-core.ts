@@ -73,6 +73,9 @@ export function ensureShop(db: AdminDb) {
     );`);
   const productColumns = db.prepare('PRAGMA table_info(shop_products)').all<{name:string}>();
   if (productColumns.length && !productColumns.some(column => column.name === 'is_hidden')) db.exec('ALTER TABLE shop_products ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0');
+  for (const field of ['group_name', 'storefront_category', 'detail_text', 'detail_images']) {
+    if (productColumns.length && !productColumns.some(column => column.name === field)) db.exec(`ALTER TABLE shop_products ADD COLUMN ${field} TEXT NOT NULL DEFAULT ''`);
+  }
   const columns = db.prepare('PRAGMA table_info(shop_online_orders)').all<{name:string}>();
   if (!columns.some(column=>column.name==='payment_app_id')) db.exec("ALTER TABLE shop_online_orders ADD COLUMN payment_app_id TEXT NOT NULL DEFAULT ''");
 

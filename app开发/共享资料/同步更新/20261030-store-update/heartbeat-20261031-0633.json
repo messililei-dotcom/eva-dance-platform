@@ -1,0 +1,42 @@
+{
+  "automationId": "swod",
+  "triggerUTC": "2026-10-30T22:33:19.586Z",
+  "checkedAt": "2026-10-31T06:35:02+08:00",
+  "ios": {
+    "appId": "6826038106",
+    "version": "1.0.2",
+    "build": 11,
+    "submissionId": "e6ac9f82-67e9-4eb0-b68d-ca9970019383",
+    "access": "Temporary official App Store Connect review-detail navigation redirected to account login with authResult=FAILED.",
+    "currentReviewStatusVerified": false,
+    "currentPublicStatusVerified": false,
+    "lastKnownReviewStatus": "waiting-for-review",
+    "lastKnownVerifiedAt": "2026-10-30T22:37:46+08:00",
+    "sameAuthenticationBlockerAsPriorRun": true,
+    "loginRequiredAlreadyNotifiedAt": "2026-10-31T02:41:09+08:00",
+    "noRepeatedSignInAttempt": true
+  },
+  "otherPlatforms": {
+    "access": "Mac remains locked; automatic unlock failed; no additional Chrome UI operations taken.",
+    "currentReviewStatusVerified": false,
+    "samePreviouslyReportedBlocker": true,
+    "historicalStatesPreserved": true
+  },
+  "latestCandidateVersion": "1.0.2",
+  "latestCandidateBuilds": {
+    "ios": 11,
+    "android": 18,
+    "harmony": 15
+  },
+  "newMaterialsOrLoginConfirmationReceived": false,
+  "newUploadOrSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "originalSignaturesChanged": false,
+  "productionFeatureFlagsChanged": false,
+  "temporaryVerificationPageClosed": true,
+  "originalAppleLoginPagePreservationCouldNotBeReconfirmed": true,
+  "workingChromeEditorsMarkedForHandoff": true,
+  "notificationDecision": "DONT_NOTIFY",
+  "reason": "Same Apple authentication, Mac-lock and material blockers already reported; no newly verified review or public result."
+}

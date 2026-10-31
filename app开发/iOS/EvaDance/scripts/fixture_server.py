@@ -4,10 +4,10 @@ These fixtures are not a replacement for backend integration tests.
 """
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
-import json,time
+import json,time,os
 series=[dict(id=1,name='东方舞基础训练',subtitle='从基本功到组合',teacher='测试老师',category='基础',description='本地演示数据，用于界面验收。',total_courses=2,cover_image=''),dict(id=2,name='舞台表现与成品舞',subtitle='节奏、表达与舞台',teacher='测试老师',total_courses=1,cover_image='')]
 products=[dict(id='fixture-dress',name='练习舞裙',category='舞服',spec='练习款',size='M',color='酒红',priceFen=19900,stock=8,image='')]
-notes=[];bookmarks=[]
+notes=[];bookmarks=[];fixture_unread=True
 profile=dict(id=1,name='测试学员',phone='13800000000',gender='女',birthday='',country='中国',province='湖南',city='长沙',address='长沙市测试街道1号',stats=dict(authorized_count=2,completed_count=1),growth={})
 shipping=dict(recipient='测试学员',phone='13800000000',address='湖南省长沙市测试街道1号')
 class Handler(BaseHTTPRequestHandler):
@@ -21,9 +21,14 @@ class Handler(BaseHTTPRequestHandler):
   body=json.dumps(dict(success=status<400,**({'message':message} if message else {'data':data})),ensure_ascii=False).encode()
   self.send_response(status);self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
  def dispatch(self):
+  global fixture_unread
   path=urlsplit(self.path).path.removeprefix('/api/app/v1');method=self.command
   body=json.loads(self.rfile.read(int(self.headers.get('Content-Length','0'))) or '{}')
+  if path=='/config':return self.reply(dict(oneTapLogin=False,minimumVersion='1.0.0',push=dict(enabled=os.environ.get('EVA_FIXTURE_PUSH')=='1',provider='aliyun',previews=False)))
   if path=='/send-code':return self.reply({})
+  if path=='/auth/password-login':
+   if body.get('phone')!='13800000000' or body.get('password')!='fixture-only-password':return self.reply(status=401,message='手机号或密码不正确')
+   return self.reply(dict(token='fixture-access',refreshToken='fixture-refresh',expiresAt=int(time.time()*1000)+900000,memberId=1,sessionId='fixture-device'))
   if path in ['/auth/login','/auth/refresh']:
    if path.endswith('login') and (body.get('phone')!='13800000000' or body.get('code')!='123456'):return self.reply(status=400,message='测试账号为 13800000000 / 123456')
    return self.reply(dict(token='fixture-access',refreshToken='fixture-refresh',expiresAt=int(time.time()*1000)+900000,memberId=1,sessionId='fixture-device'))
@@ -40,7 +45,12 @@ class Handler(BaseHTTPRequestHandler):
    return self.reply(profile)
   if path=='/member/authorized-series':return self.reply([dict(series_id=s['id'],series_name=s['name']) for s in series])
   if path=='/member/recent-courses':return self.reply([dict(video_id=100,course_name='基础站姿与重心',series_name='东方舞基础训练',progress=12)])
-  if path=='/member/messages':return self.reply(dict(items=[dict(id='1',recipientId='9',title='课程更新',content='练习内容已更新。本条为本地测试消息。',status='unread',createdAt='2026-10-02')],unreadCount=1,nextCursor=0,hasMore=False))
+  if path in ['/member/messages/9/read','/member/messages/read-all'] and method in ['POST','PATCH']:
+   fixture_unread=False
+   return self.reply(dict(changed=1))
+  if path=='/member/messages/unread-count':return self.reply(dict(count=int(fixture_unread)))
+  if path=='/member/messages/9':return self.reply(dict(id='1',recipientId='9',title='课程更新',content='练习内容已更新。本条为本地测试消息。',status='unread' if fixture_unread else 'read',createdAt='2026-10-29'))
+  if path=='/member/messages':return self.reply(dict(items=[dict(id='1',recipientId='9',title='课程更新',content='练习内容已更新。本条为本地测试消息。',status='unread' if fixture_unread else 'read',createdAt='2026-10-02')],unreadCount=int(fixture_unread),nextCursor=0,hasMore=False))
   if path=='/certificates':return self.reply([dict(id=1,certificateNo='FIXTURE-001',courseName='基础训练结业',issueDate='2026-10-02',status='active',verifyUrl='')])
   if path=='/member/growth':return self.reply(dict(growth=dict(level_display='初学者',experience_total=120),ledger=[dict(id=1,description='完成练习',points_delta=10,occurred_at='2026-10-02')]))
   if path=='/offline/overview':return self.reply(dict(entitlements=[dict(id=1,course_name='周末集训',course_period='2026年10月',available_sessions=3,used_sessions=1)],consumes=[dict(id=1,course_name='周末集训',consume_date='2026-10-10',count=1)]))
@@ -58,5 +68,6 @@ class Handler(BaseHTTPRequestHandler):
   if method=='GET':return self.reply([])
   return self.reply(dict(changed=1,status='pending'))
 if __name__=='__main__':
- print('UI fixture server: http://127.0.0.1:18765/api/app/v1 (no production access)',flush=True)
- ThreadingHTTPServer(('127.0.0.1',18765),Handler).serve_forever()
+ port=int(os.environ.get('EVA_FIXTURE_PORT','18765'))
+ print(f'UI fixture server: http://127.0.0.1:{port}/api/app/v1 (no production access)',flush=True)
+ ThreadingHTTPServer(('127.0.0.1',port),Handler).serve_forever()

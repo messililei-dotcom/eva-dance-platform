@@ -1,0 +1,13 @@
+{
+  "videoID": "b0f27b56d36471f1b7610361c0c60102",
+  "status": "Normal",
+  "streams": [
+    {
+      "format": "m3u8",
+      "encrypt": 1,
+      "encryption": "AliyunVoDEncryption",
+      "size": 141188
+    }
+  ],
+  "requestID": "01A18669-2573-55B3-A29F-BEF676F02B37"
+}

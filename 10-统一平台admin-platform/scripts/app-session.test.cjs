@@ -15,10 +15,12 @@ dbtest('App handler validates sessions, strips self-reported identity and blocks
  const cred=api.createAppSession(db,1,'a');let forwarded;
  const route=load('src/app/api/app/v1/[...path]/route.ts',name=>{
  if(name.endsWith('event-music-upload'))return load('src/lib/server/event-music-upload.ts');
+ if(name.endsWith('app-push'))return {pushCapability:()=>({enabled:false})};
  if(name.endsWith('app-session'))return api;
  if(name.endsWith('app-platform'))return load('src/lib/server/app-platform.ts',name=>name==='./app-session'?api:require(name));
  if(name.endsWith('app-profile'))return load('src/lib/server/app-profile.ts',()=>api);
  if(name.endsWith('app-shop'))return {appShopPayment:()=>({alipay:false,wechat:false})};
+ if(name.endsWith('app-video-cache'))return {videoCacheCapability:()=>({enabled:false})};
  if(name.endsWith('app-carrier-auth'))return {carrierLoginEnabled:()=>false};
  if(name.endsWith('mini/_helpers'))return{withDb:f=>f(db),memberToken:({id})=>'internal-'+id};
  if(name.endsWith('mini/_auth'))return{upsertPhoneMember:()=>({id:1})};
@@ -67,10 +69,12 @@ dbtest('Android and Harmony login keep shared accounts with their own source and
  const platform=load('src/lib/server/app-platform.ts',name=>name==='./app-session'?api:require(name));
  const route=load('src/app/api/app/v1/[...path]/route.ts',name=>{
  if(name.endsWith('event-music-upload'))return load('src/lib/server/event-music-upload.ts');
+ if(name.endsWith('app-push'))return {pushCapability:()=>({enabled:false})};
  if(name.endsWith('app-session'))return api;
  if(name.endsWith('app-platform'))return platform;
  if(name.endsWith('app-profile'))return load('src/lib/server/app-profile.ts',()=>api);
  if(name.endsWith('app-shop'))return {appShopPayment:()=>({alipay:false,wechat:false})};
+ if(name.endsWith('app-video-cache'))return {videoCacheCapability:()=>({enabled:false})};
  if(name.endsWith('app-carrier-auth'))return {carrierLoginEnabled:()=>false};
  if(name.endsWith('mini/_helpers'))return {withDb:f=>f(db)};
  if(name.endsWith('mini/_auth'))return {upsertPhoneMember:(db,phone,options)=>{sources.push(options.source);return {id:1}}};
@@ -83,4 +87,50 @@ dbtest('Android and Harmony login keep shared accounts with their own source and
  assert.equal(db.prepare('SELECT device_name FROM AppSession WHERE id=?').get(data.sessionId).device_name,platform.appDeviceName(value));
  }
  assert.deepEqual(sources,['android_app','harmony_app']);
+});
+dbtest('provisioned password authenticates only its member, stores a salted digest and rotates sessions',db=>{
+ const password='test-only-strong-password-123!'; const old=api.createAppSession(db,1,'old',1000);
+ api.setAppPassword(db,1,password,1000000,1001);
+ const row=db.prepare('SELECT * FROM AppPasswordCredential').get();assert.notEqual(row.digest,password);assert.equal(row.digest.length,64);assert.equal(row.salt.length,32);
+ assert.throws(()=>api.authenticateApp(db,old.token,1002));
+ assert.equal(api.verifyAppPassword(db,'13800000000',password,'ip1',1002),1);
+ assert.throws(()=>api.verifyAppPassword(db,'13900000000',password,'ip1',1003),e=>e.status===401);
+ assert.throws(()=>api.verifyAppPassword(db,'13800000000',password,'ip1',1000000),e=>e.status===401);
+});
+dbtest('password failures persist and throttle across IPs without enrolling unknown accounts',db=>{
+ api.setAppPassword(db,1,'test-only-strong-password-123!',1000000,1000);
+ for(let i=0;i<5;i++)assert.throws(()=>api.verifyAppPassword(db,'13800000000','wrong','ip'+i,1001),e=>e.status===401);
+ assert.throws(()=>api.verifyAppPassword(db,'13800000000','test-only-strong-password-123!','another-ip',1002),e=>e.status===429);
+ assert.equal(api.verifyAppPassword(db,'13800000000','test-only-strong-password-123!','another-ip',601002),1);
+ assert.throws(()=>api.verifyAppPassword(db,'13700000000','wrong','ip',601003),e=>e.status===401);
+ assert.equal(db.prepare('SELECT count(*) n FROM Member').get().n,2);
+});
+dbtest('password refuses revocation, disabled, merged, deletion-pending and ambiguous phone accounts',db=>{
+ const password='test-only-strong-password-123!';api.setAppPassword(db,1,password,1000000,1000);
+ db.exec('UPDATE AppPasswordCredential SET revoked_at=1001');assert.throws(()=>api.verifyAppPassword(db,'13800000000',password,'ip',1002));
+ db.exec("UPDATE AppPasswordCredential SET revoked_at=NULL;UPDATE Member SET status='disabled' WHERE id=1");assert.throws(()=>api.verifyAppPassword(db,'13800000000',password,'ip',1003));
+ db.exec("UPDATE Member SET status='active',merged_to_member_id=2 WHERE id=1");assert.throws(()=>api.verifyAppPassword(db,'13800000000',password,'ip',1004));
+ db.exec('UPDATE Member SET merged_to_member_id=NULL WHERE id=1');api.requestAccountDeletion(db,1,1005);assert.throws(()=>api.verifyAppPassword(db,'13800000000',password,'ip',1006));
+ db.exec("DELETE FROM AppDeletionRequest;INSERT INTO Member VALUES(3,'duplicate','13800000000','active',NULL)");assert.throws(()=>api.verifyAppPassword(db,'13800000000',password,'ip',601007));
+});
+dbtest('password HTTP login ignores client identity and returns a normal revocable AppSession',async db=>{
+ const password='test-only-strong-password-123!';api.setAppPassword(db,1,password,Date.now()+86400000);
+ const route=load('src/app/api/app/v1/[...path]/route.ts',n=>{
+  if(n.endsWith('app-push'))return {pushCapability:()=>({enabled:false})};
+  if(n.endsWith('app-session'))return api;
+  if(n.endsWith('mini/_helpers'))return {withDb:f=>f(db)};
+  if(n.endsWith('app-platform'))return load('src/lib/server/app-platform.ts',()=>api);
+  if(/event-music-upload|app-shop|app-profile|app-carrier-auth|app-video-cache|mini\/_auth|app-route-map/.test(n))return {};
+  throw Error(n);
+ });
+ const call=body=>route.POST(new Request('https://admin.test/api/app/v1/auth/password-login',{method:'POST',headers:{'x-real-ip':'test-ip'},body:JSON.stringify(body)}),{params:Promise.resolve({path:['auth','password-login']})});
+ assert.equal((await call({phone:'13800000000',password:{}})).status,401);
+ assert.equal((await call({phone:'13800000000',password:'wrong'})).status,401);
+ const response=await call({phone:'13800000000',password,memberId:2,role:'admin'});assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'private, no-store');
+ const data=(await response.json()).data;assert.equal(data.memberId,1);assert.equal(api.authenticateApp(db,data.token).member_id,1);assert.equal(data.password,undefined);
+ api.revokeAppSession(db,1,data.sessionId);assert.throws(()=>api.authenticateApp(db,data.token));
+});
+dbtest('revoking password immediately invalidates its login and all existing App sessions',db=>{
+ const password='test-only-strong-password-123!';api.setAppPassword(db,1,password,1000000,1000);const session=api.createAppSession(db,1,'phone',1001);
+ api.revokeAppPassword(db,1,1002);assert.throws(()=>api.verifyAppPassword(db,'13800000000',password,'ip',1003),e=>e.status===401);assert.throws(()=>api.authenticateApp(db,session.token,1003));
 });

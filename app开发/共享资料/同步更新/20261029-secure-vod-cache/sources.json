@@ -1,0 +1,121 @@
+[
+  {
+    "file": "10-统一平台admin-platform/scripts/app-session.test.cjs",
+    "sha256": "884b7e91272383c2975c1626143f92f1624ec458cfd18854217f90c01c724b80"
+  },
+  {
+    "file": "10-统一平台admin-platform/scripts/app-shop.test.cjs",
+    "sha256": "c4061c937b8648e642bd0363c783a4b9ef92701d5433c9a6b9b22b6ee168fad4"
+  },
+  {
+    "file": "10-统一平台admin-platform/src/app/api/app/v1/[...path]/route.ts",
+    "sha256": "e5e061f4ff07b4eeff8b56b098959e0ee38877f550c58c876acfc5ceb52802f0"
+  },
+  {
+    "file": "10-统一平台admin-platform/src/lib/server/aliyun-vod.ts",
+    "sha256": "09ee7c34bc1572c4663a2de2461461957acfd89444f09c135b66c798a7915566"
+  },
+  {
+    "file": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/Api.java",
+    "sha256": "63879efa885022d0b7844d6643ddf1fbfe7805007806c6237ed994ed05c5816f"
+  },
+  {
+    "file": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "sha256": "a7079fd7021a8b6e75a4160a1fce0ffcf69ad03881a71f2beed22801809d4a6d"
+  },
+  {
+    "file": "app开发/HarmonyOS/EvaDance/entry/oh-package.json5",
+    "sha256": "83f44ea6152900e1e51027fcef6af8d4cbcab8ead01be2fcf6811fd5a6a2a11c"
+  },
+  {
+    "file": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+    "sha256": "faa129a2d867c4031735ff15df15fe1cc1007fc2547431f794fb79b8864540c1"
+  },
+  {
+    "file": "app开发/iOS/EvaDance/Sources/EvaCore/APIClient.swift",
+    "sha256": "5fa0f06bbec81b75795f283a0cba25341dc25638a6c2adf7655c389e45aa545e"
+  },
+  {
+    "file": "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift",
+    "sha256": "d1564afcfe09855a9fd9ea48ee0f033f849c47b2c320296caa8170f7048fece5"
+  },
+  {
+    "file": "app开发/iOS/EvaDance/Tests/EvaCoreTests/EvaCoreTests.swift",
+    "sha256": "fd1f68c60e73c648cfc3fca67066908b6533697f431255f6bbaf0d068ce153dc"
+  },
+  {
+    "file": "app开发/iOS/EvaDance/scripts/generate_project.py",
+    "sha256": "6a3e187d9ea937c04d4f94817221282edf4fd3d90df6c74b08ed634a4999e1de"
+  },
+  {
+    "file": "10-统一平台admin-platform/src/lib/server/app-video-cache.ts",
+    "sha256": "492c21ef27aadfeb25eb449f049689d8ba6f0a476a5591bafa8a6f9a0ad6206c"
+  },
+  {
+    "file": "10-统一平台admin-platform/scripts/app-video-cache.test.cjs",
+    "sha256": "e62672841d143e6dbcaefcfb40d98d30c9208caf50f110f4bbd38f23bba0cc1a"
+  },
+  {
+    "file": "app开发/iOS/EvaDance/Sources/EvaCore/VideoCachePolicy.swift",
+    "sha256": "3224f1c31af8be55fe9de7924a03375b345deaa4740ff85671d66633777c9be3"
+  },
+  {
+    "file": "app开发/iOS/EvaDance/Sources/EvaCore/AutomaticVideoCacheRenewal.swift",
+    "sha256": "0f93cf7438ce207a5360fdf08e76fe9dde112e085c3584f957787a7ac86e614a"
+  },
+  {
+    "file": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AliyunSecureCacheDriver.swift",
+    "sha256": "1090566bfcd53cfbef3c8a41b190d77a1241a0934d2790451dad71b63910e2cc"
+  },
+  {
+    "file": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/VideoCachePolicy.java",
+    "sha256": "15bba5e4296fe7a0c71d1d66d3322735047daad6ada542689510aa9303be864f"
+  },
+  {
+    "file": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/AutomaticVideoCacheRenewal.java",
+    "sha256": "a81d6092f33419fa46a0838ea3c5566c2e9d3c9c4e1c2845359b0016414dafb9"
+  },
+  {
+    "file": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/AliyunSecureCacheDriver.java",
+    "sha256": "6222d2e641cf6d45ae45ac8934ad8d7a8d40ea52a8adf71d03cd906f3032f6b7"
+  },
+  {
+    "file": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/VideoCachePolicyTest.java",
+    "sha256": "02292bd16b6ee9f63e42f73db1bca43d92fa2e69746c70bd20bd8fdb85dc3002"
+  },
+  {
+    "file": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/AutomaticVideoCacheRenewalTest.java",
+    "sha256": "f28e060fde0764b235e827fb7dd9ff656862c36a1c4eb9eb1903ef45367e7842"
+  },
+  {
+    "file": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/VideoCachePolicy.ets",
+    "sha256": "1ab19bb1edd694dab7d545650614a24b8a32b4c18768b4a3946b549cdf3aedb3"
+  },
+  {
+    "file": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/AutomaticVideoCacheRenewal.ets",
+    "sha256": "aaccd483c87037b92f577036c4be22f93c621a1fc8c334355aefee2a719b9990"
+  },
+  {
+    "file": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/AliyunSecureCacheDriver.ets",
+    "sha256": "9752a2b5b7562d8c33c7ec97553e439ee33281324b361e9c1e6b32a8c8c6a0ab"
+  },
+  {
+    "file": "app开发/HarmonyOS/EvaDance/scripts/video-cache-policy.test.cjs",
+    "sha256": "0f2c8ea1808d56350dea0af670d229b4cc3555d59b0b8b59ab837d634f3f2569"
+  },
+  {
+    "file": "app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj",
+    "sha256": "42b51acfc4cec2ab3017d1c67aee7989d1c8e481a169828b43cb5e19b23eb8b5",
+    "generated": true
+  },
+  {
+    "file": "app开发/iOS/EvaDance/Resources/Info.plist",
+    "sha256": "233fafb7aec61c9309865a076917e9125f37eff34be4add9d834725c1888be53",
+    "generated": true
+  },
+  {
+    "file": "app开发/iOS/EvaDance/Resources/PrivacyInfo.xcprivacy",
+    "sha256": "35e73b2193a8f3f97f1b8b15ef4cad23c44ac0b662aa1c152aa0b93f66d70d55",
+    "generated": true
+  }
+]

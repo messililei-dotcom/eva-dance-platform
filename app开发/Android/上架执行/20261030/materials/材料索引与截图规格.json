@@ -1,0 +1,132 @@
+{
+  "date": "2026-10-30",
+  "version": "1.0.1",
+  "build": 12,
+  "allNewChannelsReviewSubmitted": false,
+  "unchangedExistingReviews": [
+    "iOS10",
+    "HuaweiAndroid11",
+    "Harmony9"
+  ],
+  "copyrightCertificateObtained": false,
+  "materials": [
+    {
+      "channel": "oppo",
+      "path": "app开发/Android/版权与软著/20261024/待签章/OPPO通用承诺函已填待核对.pdf",
+      "exists": true,
+      "status": "UNSIGNED_PREPARATION_ONLY_NOT_UPLOADABLE",
+      "sha256": "e1a27c1365dba155dbfcba2b42442ab98d0c04e7b0ad097f85bc3269a749b55b"
+    },
+    {
+      "channel": "tencent",
+      "path": "app开发/Android/版权与软著/20261024/待签章/应用宝应用发布承诺函已填待核对.pdf",
+      "exists": true,
+      "status": "UNSIGNED_PREPARATION_ONLY_NOT_UPLOADABLE",
+      "sha256": "2502ca53d67a02e1903f73bb6f08571a8ab25845a6656f036d43a4e45ebb5fdd"
+    }
+  ],
+  "screenshotRequirements": {
+    "tencent": {
+      "count": [
+        4,
+        5
+      ],
+      "format": [
+        "JPG",
+        "PNG"
+      ],
+      "maxBytes": 1000000,
+      "recommendedSize": [
+        1080,
+        1920
+      ]
+    },
+    "vivo": {
+      "count": [
+        3,
+        5
+      ],
+      "format": [
+        "JPG",
+        "PNG"
+      ],
+      "maxBytes": 2000000,
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    "oppo": {
+      "count": [
+        3,
+        5
+      ],
+      "format": [
+        "JPG",
+        "PNG"
+      ],
+      "maxBytes": 1000000,
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    "xiaomi": {
+      "count": [
+        4,
+        5
+      ],
+      "format": [
+        "PNG"
+      ],
+      "maxBytes": 5000000,
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    "honor": {
+      "currentConsoleAccess": "authenticated embedded content blank",
+      "requirements": "not reverified"
+    }
+  },
+  "screenshotCapture": {
+    "sourceRequired": "actual signed build12 guest UI",
+    "oldBuild7ImagesReused": false,
+    "physicalDeviceTest": "skipped-at-user-request",
+    "alternativeADBExplicitAuthorization": true,
+    "localGuestConsentExplicitAuthorization": true,
+    "status": "four real guest screenshots captured and visually checked; uploaded to tencent/oppo/vivo/xiaomi, durable draft confirmed for oppo/vivo/xiaomi",
+    "count": 4,
+    "receipt": "../evidence/screenshots-build12.json"
+  },
+  "businessLicense": {
+    "authorizedRecipients": [
+      "OPPO37977416",
+      "vivo106168720"
+    ],
+    "othersAuthorized": false,
+    "reopenedVerifiedOnBoth": true,
+    "isCopyrightProof": false
+  },
+  "commonRemaining": [
+    "issued copyright certificate",
+    "signed/stamped release promises and ICP evidence where required",
+    "applicable education qualifications",
+    "per-channel contact verification"
+  ],
+  "remainingByChannel": {
+    "oppo": [
+      "APK draft association absent after reload"
+    ],
+    "tencent": [
+      "base form cannot save until rights/qualification material complete"
+    ],
+    "vivo": [
+      "category and release-choice not restored after reload"
+    ],
+    "honor": [
+      "console blank; screenshot and build12 upload not completed"
+    ]
+  }
+}

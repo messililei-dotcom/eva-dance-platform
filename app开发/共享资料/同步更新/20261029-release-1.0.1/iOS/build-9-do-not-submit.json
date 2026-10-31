@@ -1,0 +1,7 @@
+{
+  "build": 9,
+  "uploaded": true,
+  "submitted": false,
+  "releasable": false,
+  "reason": "Provisioning profile has production APNs, but unsigned archive export omitted executable aps-environment entitlement."
+}

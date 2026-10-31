@@ -1,0 +1,5 @@
+<resources>
+    <style name="CarrierAuthTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorAccent">#9F1D20</item>
+    </style>
+</resources>

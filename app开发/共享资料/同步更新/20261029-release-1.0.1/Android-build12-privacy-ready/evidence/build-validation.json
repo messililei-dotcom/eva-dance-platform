@@ -1,0 +1,42 @@
+{
+  "asOf": "2026-10-30T08:56:18+08:00",
+  "package": "cn.com.swod.app",
+  "versionName": "1.0.1",
+  "versionCode": 12,
+  "artifacts": {
+    "SWOD-1.0.1-12-release.apk": {
+      "bytes": 28926363,
+      "sha256": "1ea2ac9bab6017279ee93a7fb7e5b2260179eabe8d2fe7b87532820838f9ec73"
+    },
+    "SWOD-1.0.1-12-release.aab": {
+      "bytes": 15422379,
+      "sha256": "08c4fbf4a51eff2f84761566cdd597a1e54fce8fd81bae14ea4cd09327bb1aae"
+    }
+  },
+  "checks": {
+    "tests": 29,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "lintErrors": 0,
+    "lintWarnings": 24,
+    "dexUnchangedFromBuild11": true,
+    "changedZipEntries": [
+      "AndroidManifest.xml",
+      "assets/app-privacy.txt",
+      "assets/release-info.json"
+    ],
+    "policyVersion": "2026-10-30-children-v1",
+    "filingNumber": "湘ICP备2026005683号-5A",
+    "policyAssetMatchesSource": true,
+    "buildWorkDirectory": "/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/eva-android-build.Wcf6ud"
+  },
+  "preflightRegressionTests": 5,
+  "signingCertificateSHA256": "58ecee1c1cd0adc08f797ab9bb75dcb45e6a3b747c535939020d8ae8f0d548fe",
+  "filingChanged": false,
+  "originalSignaturePreserved": true,
+  "emulatorInstallVerified": true,
+  "nativeUIAcceptanceComplete": false,
+  "physicalDeviceTests": "skipped-at-user-request",
+  "storeReviewSubmitted": false
+}

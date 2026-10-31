@@ -1,0 +1,133 @@
+# Dependencies
+**/node_modules/
+**/miniprogram_npm/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Build output and generated caches
+**/.next/
+**/.next-build/
+**/.next-preview/
+**/.turbo/
+**/out/
+**/build/
+**/dist/
+**/coverage/
+**/test-results/
+**/playwright-report/
+**/unpackage/
+**/wxcomponents/
+**/*.tsbuildinfo
+**/next-env.d.ts
+
+# Environment and secrets
+**/.env
+**/.env.local
+**/.env.development
+**/.env.production
+**/.env.test
+**/.env.*.local
+**/private.*
+**/*.pem
+**/*.key
+**/*.crt
+**/*.p12
+**/*.pfx
+
+# Logs and cloud-server runtime files
+**/logs/
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.pnpm-debug.log*
+**/*.pid
+**/*.pid.lock
+**/*.sock
+**/.pm2/
+**/.eslintcache
+
+# Local databases and backups
+**/*.db
+**/*.db-*
+**/*.db.*
+**/*.sqlite
+**/*.sqlite3
+**/*.sqlite-*
+**/*.sqlite3-*
+**/*.sqlite-wal
+**/*.sqlite-shm
+**/*.db-wal
+**/*.db-shm
+**/*.bak
+**/*.backup
+**/*.dump
+**/*.tar
+**/*.tar.gz
+**/*.tgz
+
+# OS, IDE and local tool state
+**/.gradle/
+**/local.properties
+**/signing.local.properties
+**/*.jks
+**/*.keystore
+**/.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+**/*.swp
+**/*.swo
+**/*~
+**/.WeDrive
+**/project.private.config.json
+**/project.private.config.*
+
+# Python caches and local virtual environments
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.venv/
+**/venv/
+
+# Temporary files and scratch space
+tmp-*.sh
+**/private/
+**/tmp/
+**/.cache/
+**/*.tmp
+
+# Uploaded/private runtime assets
+**/uploads/
+
+# Local archives, audits and generated deliverables
+outputs/
+版本检查/
+02-官方网站工程设计/官方网站/
+00-数据库备份/
+已删除开发数据/
+证书-伊娃东方舞/
+10-赛事系统/旧程序数据/
+
+# macOS resource forks created on external disks
+**/._*
+
+# Local recovery snapshots and dated operational evidence
+.local-cleanup-backups/
+ops/
+00-云服务器备份归档/
+.local-db-backups/
+数据库备份/
+backups/
+
+# Patch-editor residue; archives live outside runtime source
+**/*.orig
+**/*.rej
+**/number-auth.local.json

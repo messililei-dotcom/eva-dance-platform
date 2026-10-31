@@ -1,0 +1,60 @@
+{
+  "source": "actual signed Android1.0.1(12) guest UI",
+  "apkSHA256": "1ea2ac9bab6017279ee93a7fb7e5b2260179eabe8d2fe7b87532820838f9ec73",
+  "captureMethod": "user-authorized official Android SDK ADB screencap",
+  "userAuthorizedLocalGuestConsent": true,
+  "pixelEditing": false,
+  "cropping": false,
+  "resampling": false,
+  "screenSizeOverride": [
+    1080,
+    1920
+  ],
+  "temporarySystemNotificationIconsHidden": true,
+  "systemNotificationIconsRestored": true,
+  "account": "guest; no credentials entered",
+  "visualInspection": "all four native images checked; course and event covers loaded",
+  "physicalDeviceAcceptance": "skipped at user request",
+  "wholeAppAcceptanceComplete": false,
+  "files": [
+    {
+      "file": "01-online-courses.png",
+      "sha256": "86bfe3ce68b50e7948fd3b1531fe92467e3f61dd15293a7804d19a1d7fd7405a",
+      "bytes": 617589,
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    {
+      "file": "02-offline-classes.png",
+      "sha256": "f43566983aaedd0a7073bcec297e6f8ac986bf0a81aa56d5de516be141c2c8df",
+      "bytes": 524060,
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    {
+      "file": "03-events.png",
+      "sha256": "474ca194f4e4d8a60e9c8248427a713126f326b28e0d03bdeeaae8226167b26a",
+      "bytes": 862841,
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    {
+      "file": "04-profile-guest.png",
+      "sha256": "5c34edef11d97045c125b4fcedeffc0b57e4974b84a8a4cf832d1e921cb8b2e5",
+      "bytes": 140502,
+      "size": [
+        1080,
+        1920
+      ]
+    }
+  ],
+  "screenSizeRestored": true,
+  "temporaryNotificationAppearanceRestored": true,
+  "capturedAt": "2026-10-30T10:57:25+08:00"
+}

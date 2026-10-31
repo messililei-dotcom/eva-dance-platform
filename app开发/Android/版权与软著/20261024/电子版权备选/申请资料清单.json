@@ -1,0 +1,19 @@
+{
+  "provider": "易版权（腾讯官方版权说明页链接指向的服务商）",
+  "serviceURL": "https://www.yibanquan.com.cn/product/cc.at",
+  "service": "APP软著认证电子版权（无需既有软著登记证书）",
+  "observedPriceCNY": 600,
+  "observedReferenceDays": "10-15个工作日",
+  "observedAt": "2026-10-24",
+  "requirements": {
+    "businessLicense": "已定位原始照片，尚未向此服务商提交",
+    "operatorID": "服务商页面要求经办人身份证；尚未向此服务商提交",
+    "manual": "已准备",
+    "source": "已准备，少于60页全部交存，须以服务商实际填报要求为准"
+  },
+  "paid": false,
+  "orderCreated": false,
+  "termsAccepted": false,
+  "dataUploaded": false,
+  "issuedCertificate": false
+}

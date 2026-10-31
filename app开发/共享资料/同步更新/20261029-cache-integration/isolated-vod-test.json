@@ -1,0 +1,17 @@
+{
+  "testName": "SWOD-cache-QA-10s-20261029",
+  "existingCoursesModified": false,
+  "productionAppCacheEnabled": false,
+  "createdAt": "2026-10-29T06:45:31.863553+00:00",
+  "templateGroupID": "f5c17b658fde096ceed6dbbbb1825562",
+  "templateRequestID": "01A18668-1BB2-5FE4-92BE-CB44377581BF",
+  "videoID": "b0f27b56d36471f1b7610361c0c60102",
+  "uploadAllocated": true,
+  "uploadRequestID": "01A18668-1D00-5E44-A881-AA4ACBEBA86B",
+  "uploaded": true,
+  "sourceBytes": 24130,
+  "sourceSHA256": "f24066ce941357b55a214e4f356eafd0f3c602f9fc21c02ae79d3e41f4acd80a",
+  "requestedEncryption": "AliyunVoDEncryption",
+  "requestedTranscodeStreams": 1,
+  "maximumSourceDurationSeconds": 10
+}

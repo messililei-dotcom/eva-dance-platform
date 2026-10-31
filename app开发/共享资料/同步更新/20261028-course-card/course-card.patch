@@ -1,0 +1,119 @@
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift
+@@ -43,18 +43,31 @@
+     var online = false
+     let row: JSONValue
+     var showCover = true
+-    var body: some View {
+-        HStack(alignment: .center, spacing: 14) {
+-            if showCover { ZStack {
+-                EvaBrand.softAccent
+-                if let url = AppPolicy.secureMediaURL(row["cover_image"].text) {
+-                    AsyncImage(url: url) { image in image.resizable().scaledToFit() } placeholder: { Image(systemName: "play.rectangle").font(.title2).foregroundStyle(EvaBrand.red) }
+-                } else { Image(systemName: "play.rectangle").font(.title2).foregroundStyle(EvaBrand.red) }
+-            }.frame(width: 96, height: 72).clipped().clipShape(RoundedRectangle(cornerRadius: 10)).accessibilityHidden(true) }
++    @Environment(\.dynamicTypeSize) private var typeSize
++    var body: some View {
++        Group {
++            if !showCover { details }
++            else if typeSize.isAccessibilitySize {
++                VStack(alignment: .leading, spacing: 12) { artwork.aspectRatio(1.25, contentMode: .fit); details }
++            } else {
++                CourseCardSplitLayout() { artwork; details }
++            }
++        }.padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
++    }
++    private var artwork: some View {
++        ZStack {
++            EvaBrand.softAccent
++            if let url = AppPolicy.secureMediaURL(row["cover_image"].text) {
++                AsyncImage(url: url) { image in image.resizable().scaledToFit() }
++                    placeholder: { Image(systemName: "play.rectangle").font(.largeTitle).foregroundStyle(EvaBrand.red) }
++            } else { Image(systemName: "play.rectangle").font(.largeTitle).foregroundStyle(EvaBrand.red) }
++        }.clipped().clipShape(RoundedRectangle(cornerRadius: 12)).accessibilityHidden(true)
++    }
++    private var details: some View {
+             VStack(alignment: .leading, spacing: 7) {
+-                Text(row.firstText("name", "title")).font(.headline).foregroundStyle(.primary).lineLimit(showCover ? 2 : nil).fixedSize(horizontal: false, vertical: true)
++                Text(row.firstText("name", "title")).font(.headline).foregroundStyle(.primary).lineLimit(showCover && !typeSize.isAccessibilitySize ? 3 : nil).fixedSize(horizontal: false, vertical: true)
+                 if !row.firstText("subtitle", "teacher", "category").isEmpty {
+-                    Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary).lineLimit(showCover ? 1 : nil).fixedSize(horizontal: false, vertical: true)
++                    Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary).lineLimit(showCover && !typeSize.isAccessibilitySize ? 2 : nil).fixedSize(horizontal: false, vertical: true)
+                 }
+                 if !row["total_courses"].text.isEmpty {
+                     Text([row["teacher"].text, "\(row["total_courses"].text) 节课"].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
+@@ -62,8 +75,6 @@
+                 if !row["location"].text.isEmpty { Label(row["location"].text, systemImage: "mappin").font(.caption) }
+                 if row["price"] != .null { CoursePriceLine(online: online, row: row) }
+             }
+-            Spacer(minLength: 0)
+-        }.padding(.vertical, 6).frame(maxWidth: .infinity, alignment: .leading)
+     }
+ }
+ struct DiscoverView: View {
+--- before/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -146,11 +146,12 @@
+     }
+     private void cover(LinearLayout box,String source,boolean goods){
+         String url=source.startsWith("/")?(goods?"https://www.swod.com.cn":"https://admin.swod.com.cn")+source:source;
+-        if(!Policy.secureURL(url))return;
++        boolean validCover=Policy.secureURL(url);if(!validCover&&goods)return;
+         ImageView image=new ImageView(this);image.setScaleType(ImageView.ScaleType.CENTER);image.setImageDrawable(SwodUi.icon(this,goods?"bag":"learn",red));image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);image.setBackground(SwodUi.shape(this,SwodUi.tonal(this),12));image.setClipToOutline(true);
+-        if(!goods&&box!=content){LinearLayout details=column();while(box.getChildCount()>0){View child=box.getChildAt(0);box.removeViewAt(0);details.addView(child);}box.setOrientation(LinearLayout.HORIZONTAL);box.setGravity(Gravity.CENTER_VERTICAL);LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(dp(96),dp(72));picture.rightMargin=dp(12);box.addView(image,picture);box.addView(details,new LinearLayout.LayoutParams(0,-2,1));}
++        if(!goods&&box!=content){LinearLayout details=column();while(box.getChildCount()>0){View child=box.getChildAt(0);box.removeViewAt(0);details.addView(child);}box.setOrientation(LinearLayout.HORIZONTAL);box.setGravity(Gravity.CENTER_VERTICAL);LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(0,dp(160),1);picture.rightMargin=dp(12);box.addView(image,picture);
++            image.addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->{int width=r-l;if(width>0&&v.getLayoutParams().height!=width){android.view.ViewGroup.LayoutParams params=v.getLayoutParams();params.height=width;v.setLayoutParams(params);}});box.addView(details,new LinearLayout.LayoutParams(0,-2,1));}
+         else{LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(-1,dp(goods?220:Math.min(240,(getResources().getConfiguration().screenWidthDp-32)*3/4)));picture.bottomMargin=dp(12);box.addView(image,0,picture);}
+-        int version=generation;imageIO.execute(()->{if(version!=generation)return;try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(!isFinishing()&&version==generation&&bitmap!=null){image.setScaleType(ImageView.ScaleType.FIT_CENTER);image.setImageBitmap(bitmap);}});}catch(Exception ignored){/* Keep a stable, non-deceptive cover placeholder. */}});
++        if(!validCover)return;int version=generation;imageIO.execute(()->{if(version!=generation)return;try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(!isFinishing()&&version==generation&&bitmap!=null){image.setScaleType(ImageView.ScaleType.FIT_CENTER);image.setImageBitmap(bitmap);}});}catch(Exception ignored){/* Keep a stable, non-deceptive cover placeholder. */}});
+     }
+     private void learningShortcuts(){LinearLayout shortcuts=row();String[] labels={"我的课程","课时与核销","报名与成绩"};String[] icons={"learn","calendar","trophy"};Runnable[] targets={()->open(this::myCourses),()->open(this::schedule),()->open(this::myEvents)};for(int i=0;i<labels.length;i++){Button b=button(labels[i],targets[i]);b.setTextSize(14);b.setGravity(Gravity.CENTER);b.setPadding(dp(4),dp(12),dp(4),dp(12));b.setMinimumHeight(dp(64));b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);b.setCompoundDrawablePadding(dp(8));b.setBackground(SwodUi.touch(this,SwodUi.surface(this),14));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1);if(i<2)p.rightMargin=dp(10);shortcuts.addView(b,p);}content.addView(shortcuts);}
+     private void courses(){begin("线上学院");hero("伊娃东方舞","线上学院 · 从基础到进阶，找到适合你的课程");learningShortcuts();section("课程列表");load("/public/series","GET",null,false,v->{JSONArray rows=array(v);if(rows.length()>0&&!rows.getJSONObject(0).optBoolean("course_access_known",true))retryCourseAccess();searchable(rows,new String[]{"name","teacher","category"},r->open(()->{if(r.optBoolean("learning_unlocked"))catalog(r.optInt("id"),r.optString("name"));else course(r);}));action("东方舞圈 · 官网资讯",()->open(this::website));});}
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -539,12 +539,17 @@
+   private card(row: Row) {
+     Row({ space: 14 }) {
+       if (this.route.screen === 'home' || this.route.screen === 'offline') {
+-        if (coverImageURL(row.cover_image || '')) { Image(coverImageURL(row.cover_image || '')).width(96).height(72).objectFit(ImageFit.Contain).borderRadius(12).accessibilityLevel('no') }
+-        else { Image($r('app.media.nav_learn_on')).width(96).height(72).objectFit(ImageFit.ScaleDown).backgroundColor(SwodTheme.tonal).borderRadius(12).accessibilityLevel('no') }
++        if (coverImageURL(row.cover_image || '')) { Image(coverImageURL(row.cover_image || '')).layoutWeight(1).aspectRatio(1).objectFit(ImageFit.Contain).borderRadius(12).accessibilityLevel('no') }
++        else { Image($r('app.media.nav_learn_on')).layoutWeight(1).aspectRatio(1).objectFit(ImageFit.ScaleDown).backgroundColor(SwodTheme.tonal).borderRadius(12).accessibilityLevel('no') }
+       }
+       Column({ space: 8 }) {
+-        Text(this.title(row)).fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+-        if (this.summary(row)) { Text(this.summary(row)).fontSize(14).fontColor(SwodTheme.muted).width('100%') }
++        if (this.route.screen === 'home' || this.route.screen === 'offline') {
++          Text(this.title(row)).fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%').maxLines(3).textOverflow({ overflow: TextOverflow.Ellipsis })
++        } else { Text(this.title(row)).fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%') }
++        if (this.summary(row)) {
++          if (this.route.screen === 'home' || this.route.screen === 'offline') { Text(this.summary(row)).fontSize(14).fontColor(SwodTheme.muted).width('100%').maxLines(2).textOverflow({ overflow: TextOverflow.Ellipsis }) }
++          else { Text(this.summary(row)).fontSize(14).fontColor(SwodTheme.muted).width('100%') }
++        }
+         if (this.route.screen === 'shop') {
+           Text(productPrice(row)).fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary)
+           Text(productStock(row)).fontSize(14).fontColor(SwodTheme.muted)
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCardSplitLayout.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCardSplitLayout.swift
+@@ -0,0 +1,21 @@
++import SwiftUI
++
++/// Equal image and text widths; the row grows with the text instead of clipping it.
++struct CourseCardSplitLayout: Layout {
++    private let gap: CGFloat = 12
++    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
++        let width = max(0, proposal.width ?? 360)
++        let column = max(0, (width - gap) / 2)
++        let text = subviews.last?.sizeThatFits(ProposedViewSize(width: column, height: nil)) ?? .zero
++        return CGSize(width: width, height: max(column, text.height))
++    }
++    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
++        guard subviews.count == 2 else { return }
++        let column = max(0, (bounds.width - gap) / 2)
++        let text = subviews[1].sizeThatFits(ProposedViewSize(width: column, height: nil))
++        subviews[0].place(at: CGPoint(x: bounds.minX, y: bounds.midY - column / 2),
++                         proposal: ProposedViewSize(width: column, height: column))
++        subviews[1].place(at: CGPoint(x: bounds.minX + column + gap, y: bounds.midY - text.height / 2),
++                         proposal: ProposedViewSize(width: column, height: text.height))
++    }
++}

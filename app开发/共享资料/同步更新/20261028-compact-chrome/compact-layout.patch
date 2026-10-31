@@ -1,0 +1,805 @@
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/EvaDanceApp.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/EvaDanceApp.swift
+@@ -84,7 +84,7 @@
+                 }
+                 if !loading && series.isEmpty { Text("暂无已解锁课程，下拉刷新查看最新内容。").foregroundStyle(.secondary) }
+             }
+-        }.evaCompactLayout().navigationTitle("我的课程")
++        }.evaCompactLayout().evaPageChrome()
+         .toolbar { Button("刷新") { Task { await load() } }.disabled(loading) }
+         .task { await load() }.refreshable { await load() }
+     }
+@@ -126,7 +126,7 @@
+             if more { Button("加载更多") { Task { await load(reset: false) } }.disabled(busy) }
+             if busy { ProgressView() }
+             if !busy && items.isEmpty { Text("暂无消息") }
+-        }.evaCompactLayout().navigationTitle("学习消息").task { await load(reset: true) }.refreshable { await load(reset: true) }
++        }.evaCompactLayout().evaPageChrome().task { await load(reset: true) }.refreshable { await load(reset: true) }
+     }
+     private func load(reset: Bool) async {
+         guard !busy else { return }; busy = true; defer { busy = false }
+@@ -151,7 +151,7 @@
+                 Text("伊娃东方舞 1.0.0")
+             }
+             Button("退出登录", role: .destructive) { confirmLogout = true }
+-        }.evaCompactLayout().navigationTitle("个人中心")
++        }.evaCompactLayout().evaPageChrome()
+         .confirmationDialog("退出当前账号？", isPresented: $confirmLogout) {
+             Button("退出登录", role: .destructive) { session.logout() }
+         }
+@@ -175,7 +175,7 @@
+                 }.padding(.vertical, 6)
+             }
+             if !loading && items.isEmpty { Text("暂无已颁发证书") }
+-        }.evaCompactLayout().navigationTitle("我的证书").task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+     }
+     private func load() async {
+         loading = true; defer { loading = false }
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
+@@ -202,7 +202,7 @@
+                     }
+                 }
+             }.padding()
+-        }.evaCompactLayout().navigationTitle(title)
++        }.evaCompactLayout().evaPageChrome()
+         .task { model.activate(); await model.load(id: lessonID, session: session); await model.monitor(id: lessonID, session: session) }
+         .onChange(of: scenePhase) { phase in
+             if phase != .active { model.endHold(); model.player.pause(); model.playing = false; Task { await model.save(id: lessonID, session: session) } }
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift
+@@ -73,22 +73,18 @@
+     var rows: [SiteRow] { store.data.rows.filter { row in search.isEmpty || ["name", "subtitle", "teacher", "category"].contains { row.value[$0].text.localizedCaseInsensitiveContains(search) } } }
+     var body: some View {
+         ScrollView {
+-            LazyVStack(alignment: .leading, spacing: 14) {
++            LazyVStack(alignment: .leading, spacing: 10) {
+                 VStack(alignment: .leading, spacing: 6) {
+                         Text("伊娃东方舞").font(.title2.bold())
+                         Text("线上学院 · 从基础到进阶，找到适合你的课程").font(.subheadline).foregroundStyle(.secondary)
+-                    }.padding(.vertical, 8)
++                    }.padding(.vertical, 2)
++                EvaSearchField(text: $search, prompt: "搜索课程、老师或分类")
+                 LearningShortcuts()
+                 HStack {
+                     Text(search.isEmpty ? "课程列表" : "搜索结果").font(.title3.bold())
+                     Spacer()
+                     if !store.busy && store.error == nil { Text("\(rows.count) 门课程").font(.subheadline).foregroundStyle(.secondary) }
+                 }
+-                HStack(spacing: 10) {
+-                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
+-                    TextField("搜索课程、老师或分类", text: $search).accessibilityLabel("搜索课程、老师或分类")
+-                    if !search.isEmpty { Button { search = "" } label: { Image(systemName: "xmark.circle.fill") }.frame(minWidth: 44, minHeight: 44).accessibilityLabel("清空搜索") }
+-                }.padding(.horizontal, 12).frame(minHeight: 48).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 12))
+                 LoadState(store: store) { Task { await load() } }
+                 ForEach(rows) { row in NavigationLink {
+                     if session.isCourseUnlocked(row.value["id"].text), let id = Int(row.value["id"].text) { CatalogByIDView(id: id, title: row.value["name"].text) }
+@@ -99,8 +95,8 @@
+                 }.buttonStyle(.plain) }
+                 if !store.busy && store.error == nil && rows.isEmpty { Label("暂无匹配课程，请换个关键词", systemImage: "magnifyingglass").foregroundStyle(.secondary).padding(.vertical, 24) }
+                 NavigationLink { InformationView() } label: { Label("了解伊娃东方舞", systemImage: "info.circle").font(.subheadline).frame(minHeight: 44) }.padding(.top, 4)
+-            }.padding(16).frame(maxWidth: 760).frame(maxWidth: .infinity)
+-        }.evaHomeLayout().evaCompactLayout().navigationTitle("线上学院")
++            }.padding(.horizontal, 16).padding(.vertical, 6).frame(maxWidth: 760).frame(maxWidth: .infinity)
++        }.evaHomeLayout().evaCompactLayout().evaPageChrome(root: true)
+         .task(id: session.accountID) { await load() }.refreshable { await load() }
+     }
+     private func load() async { await session.refreshCourseAccess(); await store.load("/public/series", session: session, publicRead: true) }
+@@ -125,7 +121,7 @@
+             }
+             NavigationLink("客服与售后") { CourseSupportView() }
+             if session.token == nil { Button("登录查看学习权限") { session.showLogin = true } }
+-        }.evaCompactLayout().navigationTitle(row["name"].text).task(id: session.accountID) { await session.refreshCourseAccess() }
++        }.evaCompactLayout().evaPageChrome().task(id: session.accountID) { await session.refreshCourseAccess() }
+     }
+ }
+ struct CatalogByIDView: View {
+@@ -146,7 +142,7 @@
+                 NavigationLink { OfflineCourseDetailView(row: row.value, periods: CoursePresentation.periods(store.data.list, for: row.value)) } label: { CourseCard(row: row.value) }
+             }
+             if !store.busy && store.error == nil && store.data.list.isEmpty { Text("暂无线下课程") }
+-        }.evaCompactLayout().evaHomeLayout().navigationTitle("线下课程").evaSearch(text: $search, prompt: "搜索课程或期次").task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaHomeLayout().evaPageChrome(root: true).evaSearch(text: $search, prompt: "搜索课程或期次").task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/public/offline-courses", session: session, publicRead: true) }
+ }
+@@ -175,7 +171,7 @@
+                     }.padding(.vertical, 8)
+                 }
+             }
+-        }.evaCompactLayout().navigationTitle(row["name"].text)
++        }.evaCompactLayout().evaPageChrome()
+     }
+ }
+ struct OfflineScheduleView: View {
+@@ -202,7 +198,7 @@
+                     }
+                 }
+             }
+-        }.evaCompactLayout().navigationTitle("期次课时").task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/offline/overview" + (courseID.isEmpty ? "" : "?course_ids=\(courseID)"), session: session) }
+ }
+@@ -237,7 +233,7 @@
+             Section("已发布成绩") { ForEach(store.data["rankings"].scopedRows("rankings"), id: \.listID) { row in
+                 Text("\(row.value["rankNo"].text)  \(row.value["playerName"].text)  \(row.value["groupName"].text)  \(row.value["publishedTotal"].text)")
+             } }
+-        }.evaCompactLayout().navigationTitle("赛事详情").task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/events/\(id)", session: session, publicRead: true) }
+ }
+@@ -271,7 +267,7 @@
+             if busy { ProgressView("正在上传报名与音乐…") }
+             if !result.isEmpty { Text(result).foregroundStyle(.green) }
+             if let error { Text(error).foregroundStyle(.red) }
+-        }.evaCompactLayout().navigationTitle("赛事报名")
++        }.evaCompactLayout().evaPageChrome()
+         .fileImporter(isPresented: $picker, allowedContentTypes: [.audio, .data]) { selection in
+             do {
+                 let url = try selection.get()
+@@ -312,7 +308,7 @@
+                 }
+             }.padding(.vertical, 3) }
+             if !store.busy && store.error == nil && rows.isEmpty { Text("暂无记录") }
+-        }.evaCompactLayout().navigationTitle(title).task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load(path, session: session) }
+ }
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/ShopViews.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/ShopViews.swift
+@@ -42,7 +42,7 @@
+                 }
+                 if !store.busy && store.error == nil && filtered.isEmpty { Text("暂无匹配商品") }
+             }.padding(20).frame(maxWidth: 960).frame(maxWidth: .infinity)
+-        }.evaHomeLayout().navigationTitle("商城").evaSearch(text: $search, prompt: "搜索商品")
++        }.evaHomeLayout().evaPageChrome(root: true).evaSearch(text: $search, prompt: "搜索商品")
+             .task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/shop/products", session: session, publicRead: true) }
+@@ -93,7 +93,7 @@
+             Text("实物商品，价格与库存以平台最终核验为准。")
+             Button(added ? "已加入，可继续添加" : "加入购物清单") { cart.add(product); added = true }.disabled(product["stock"].number < 1)
+             NavigationLink("查看购物清单") { CartView(cart: cart) }
+-        }.evaCompactLayout().navigationTitle(product["name"].text)
++        }.evaCompactLayout().evaPageChrome()
+     }
+ }
+ struct CartView: View {
+@@ -128,7 +128,7 @@
+                         .disabled(total == nil || cart.quantities.isEmpty)
+                 } else { Text("当前版本暂未开放结算").foregroundStyle(.secondary) }
+             }
+-        }.evaCompactLayout().navigationTitle("购物清单").task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/shop/products",session:session,publicRead:true) }
+ }
+@@ -148,7 +148,7 @@
+             } }.disabled(!valid || store.busy)
+             if saved { Text("地址已保存").foregroundStyle(.green) }
+             LoadState(store:store) { Task { await load() } }
+-        }.evaCompactLayout().navigationTitle("收货地址").task { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }
+     }
+     private func load() async {
+         await store.load("/shop/shipping",session:session)
+@@ -169,7 +169,7 @@
+                 } }
+             }
+             if !store.busy && store.error == nil && store.data["orders"].list.isEmpty { Text("暂无商城订单") }
+-        }.evaCompactLayout().navigationTitle("商城订单").task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/shop/orders",session:session) }
+ }
+@@ -206,7 +206,7 @@
+                 TextField("退款原因",text:$reason,axis:.vertical)
+                 Button("申请退款") { action="refund" }.disabled(reason.trimmingCharacters(in:.whitespaces).isEmpty)
+             }
+-        }.evaCompactLayout().navigationTitle("订单详情").task { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }
+         .onChange(of: scenePhase) { phase in
+             if phase == .active { Task { if await store.send("/shop/orders/\(id)/refresh",session:session) != nil { await load() } } }
+         }
+@@ -248,7 +248,7 @@
+                     .disabled(submitting || store.busy || cart.quantities.isEmpty || !store.data["payment"][provider].bool || recipient.isEmpty || phone.isEmpty || address.count < 8)
+             }
+             LoadState(store:store) { Task { await load() } }
+-        }.navigationTitle("确认订单").task { await load() }
++        }.evaPageChrome().task { await load() }
+     }
+     private func load() async {
+         await store.load("/shop/products",session:session,publicRead:true)
+@@ -306,7 +306,7 @@
+                 Button("报名并付款"){Task{await submit()}}.disabled(submitting || store.busy || !store.data["payment"][provider].bool)
+             } else {NavigationLink("查看订单／继续付款"){ShopOrderDetail(id:orderID)}}
+             LoadState(store:store){Task{await load()}}
+-        }.navigationTitle("确认课程订单").task{await load()}
++        }.evaPageChrome().task{await load()}
+         .navigationDestination(isPresented:$showRights){OfflineScheduleView(courseID:courseID)}
+         .onChange(of:scenePhase){phase in if phase == .active && !orderID.isEmpty && !confirmed {Task{if let result=await store.send("/shop/orders/\(orderID)/refresh",session:session),["paid","completed"].contains(result["order"]["status"].text){confirmed=true;showRights=true}}}}
+     }
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift
+@@ -80,7 +80,7 @@
+                 NavigationLink("帮助、品牌与隐私") { InformationView() }
+                 Text("SWOD \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""))")
+             }
+-        }.evaCompactLayout().evaHomeLayout().navigationTitle("个人中心").task(id:session.accountID) { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaHomeLayout().evaPageChrome(root: true).task(id:session.accountID) { await load() }.refreshable { await load() }
+         .confirmationDialog("确认退出当前账号？",isPresented:$logout) { Button("退出登录",role:.destructive) { session.logout() } }
+     }
+     private func load() async {
+@@ -102,7 +102,7 @@
+             Button("保存资料") { Task { if await store.send("/member/profile",method:"PUT",body:values,session:session) != nil { saved=true } } }.disabled(store.busy || (values["name"] ?? "").trimmingCharacters(in:.whitespaces).isEmpty)
+             if saved { Text("资料已保存").foregroundStyle(.green) }
+             LoadState(store:store) { Task { await load() } }
+-        }.evaCompactLayout().navigationTitle("编辑资料").task { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }
+     }
+     private func load() async { await store.load("/member/profile",session:session); if store.error == nil { for (_,key) in fields {values[key]=store.data[key].text} } }
+ }
+@@ -122,7 +122,7 @@
+                 Text(row.value.firstText("description","title","reason","event_type"))
+                 Text("\(row.value.firstText("points_delta","points","experience")) · \(row.value.firstText("occurred_at","created_at","createdAt"))").foregroundStyle(.secondary)
+             } } }
+-        }.evaCompactLayout().navigationTitle("成长与打卡").task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/member/growth",session:session) }
+ }
+@@ -145,7 +145,7 @@
+                 }
+             } }
+             if !store.busy && store.error == nil && store.data.list.isEmpty { Text(kind == "notes" ? "暂无笔记，可在播放器中添加。" : "暂无收藏，可在播放器中添加。") }
+-        }.evaCompactLayout().navigationTitle(kind == "notes" ? "学习笔记" : "视频收藏").searchable(text: $query, prompt: "搜索课节或内容").task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaPageChrome().searchable(text: $query, prompt: "搜索课节或内容").task { await load() }.refreshable { await load() }
+         .confirmationDialog("确认删除这条记录？",isPresented:Binding(get:{deletion != nil},set:{if !$0 {deletion=nil}})) {
+             if let row=deletion { Button("删除",role:.destructive) { Task { if await store.send("/\(kind)/\(row.id)",method:"DELETE",session:session) != nil {await load()} } } }
+         }
+@@ -170,7 +170,7 @@
+                 if await store.send(bookmark ? "/bookmarks" : "/notes",body:body,session:session) != nil {dismiss()}
+             } }.disabled(content.trimmingCharacters(in:.whitespaces).isEmpty || content.count>5000 || store.busy)
+             if let error=store.error {Text(error).foregroundStyle(.red)}
+-        }.evaCompactLayout().navigationTitle("记录练习").toolbar {Button("关闭"){dismiss()}} }
++        }.evaCompactLayout().evaPageChrome().toolbar {Button("关闭"){dismiss()}} }
+     }
+ }
+ struct DevicesView: View {
+@@ -185,7 +185,7 @@
+                 Text(row.value["current"].bool ? "当前设备" : "其他登录设备").foregroundStyle(.secondary)
+                 Button("退出此设备",role:.destructive){selected=row}.disabled(store.busy)
+             }}
+-        }.evaCompactLayout().navigationTitle("登录设备").task{await load()}
++        }.evaCompactLayout().evaPageChrome().task{await load()}
+         .confirmationDialog("确认撤销此设备登录？",isPresented:Binding(get:{selected != nil},set:{if !$0 {selected=nil}})) {
+             if let row=selected {Button("撤销登录",role:.destructive){Task{
+                 if await store.send("/devices/\(row.id)",method:"DELETE",session:session) != nil {if row.value["current"].bool{session.clear()}else{await load()}}
+@@ -213,7 +213,7 @@
+             TextField("输入“注销账号”确认",text:$confirmation)
+             Button("申请注销",role:.destructive){confirm=true}.disabled(code.count != 6 || confirmation != "注销账号" || store.busy)
+             if let error=store.error{Text(error).foregroundStyle(.red)}
+-        }.evaCompactLayout().navigationTitle("注销账号").task{await store.load("/member/profile",session:session)}
++        }.evaCompactLayout().evaPageChrome().task{await store.load("/member/profile",session:session)}
+         .confirmationDialog("确认发起账号注销？",isPresented:$confirm){Button("确认申请注销",role:.destructive){Task{
+             do {
+                 let receipt = try session.prepareDeletionReceipt()
+@@ -250,7 +250,7 @@
+                     Link("查询备案信息", destination: URL(string: "https://beian.miit.gov.cn/")!)
+                 }
+             }
+-        }.evaCompactLayout().navigationTitle("帮助与关于")
++        }.evaCompactLayout().evaPageChrome()
+     }
+ }
+ 
+@@ -263,6 +263,6 @@
+                 Link("伊琳老师 · 193 1002 9982", destination: URL(string: "tel:19310029982")!)
+                 Link("查看微信客服二维码", destination: URL(string: "https://www.swod.com.cn/contact")!)
+             }
+-        }.navigationTitle("客服与售后")
+-    }
+-}
++        }.evaPageChrome()
++    }
++}
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/StudyAssistantView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/StudyAssistantView.swift
+@@ -43,7 +43,7 @@
+                 NavigationLink { GrowthView() } label: { Label("练习后打卡", systemImage: "checkmark.circle") }
+             }
+             Section("建议来源") { Text("由本机根据已授权课程、最近学习顺序和所选时间生成规则建议；不进行动作识别或 AI 教学评价。播放时仍会核验当前课程权限。").font(.caption).foregroundStyle(.secondary) }
+-        }.evaCompactLayout().navigationTitle("智能学习助手").task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+     }
+     private func load() async {
+         guard !loading, let token = session.token else { return }
+@@ -97,7 +97,7 @@
+                     if rows.isEmpty && !products.busy && products.error == nil { Text("没有匹配商品") }
+                 }
+             }
+-        }.evaCompactLayout().navigationTitle("全站搜索").searchable(text: $query, prompt: "课程、老师、赛事、商品")
++        }.evaCompactLayout().evaPageChrome().searchable(text: $query, prompt: "课程、老师、赛事、商品")
+             .task { await load() }.refreshable { await load() }
+     }
+     private func load() async {
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/StaffEventViews.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/StaffEventViews.swift
+@@ -67,7 +67,7 @@
+             } }.disabled(busy || username.isEmpty || password.isEmpty)
+             if busy { ProgressView() }
+             if let error { Text(error).foregroundStyle(.red) }
+-        }.evaCompactLayout().navigationTitle("工作人员登录")
++        }.evaCompactLayout().evaPageChrome()
+     }
+ }
+ struct StaffCompetitionsView: View {
+@@ -86,7 +86,7 @@
+                     }
+                 }
+             }
+-        }.evaCompactLayout().navigationTitle("赛事管理").searchable(text: $query, prompt: "搜索赛事名称、编号或地点")
++        }.evaCompactLayout().evaPageChrome().searchable(text: $query, prompt: "搜索赛事名称、编号或地点")
+             .task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/event/competitions", staff: staff) }
+@@ -112,7 +112,7 @@
+                 Button("隐藏评委评分") { operation = "hideJudgeScores" }
+             }.disabled(store.busy)
+             StaffStatus(store: store) { }
+-        }.evaCompactLayout().navigationTitle("赛事工作台")
++        }.evaCompactLayout().evaPageChrome()
+         .confirmationDialog("确认修改此赛事的报名或公示设置？", isPresented: Binding(get: {operation != nil}, set: {if !$0 {operation = nil}})) {
+             if let operation { Button("确认修改") { Task { _ = await store.send("/event/competitions/\(event["id"].text)", method: "PATCH", body: ["action": operation], staff: staff); self.operation = nil } } }
+         }
+@@ -134,7 +134,7 @@
+                     }
+                 }
+             }
+-        }.evaCompactLayout().navigationTitle("组别管理").searchable(text: $query, prompt: "搜索完整组别名称")
++        }.evaCompactLayout().evaPageChrome().searchable(text: $query, prompt: "搜索完整组别名称")
+             .task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/event/groups?competitionId=\(eventID)", staff: staff) }
+@@ -154,7 +154,7 @@
+             Text("重新编排只修改本组有效报名的出场顺序，选手编号与节目编号保持独立。").font(.caption)
+             if !done.isEmpty { Text(done) }
+             StaffStatus(store: store) { }
+-        }.evaCompactLayout().navigationTitle("组别工作台")
++        }.evaCompactLayout().evaPageChrome()
+         .confirmationDialog("重新随机安排“\(group["name"].text)”的出场顺序？", isPresented: $confirm) {
+             Button("确认重新编排") { Task {
+                 if let result = await store.send("/event/players/batch", method: "PATCH", body: ["action": "randomize_sequence", "competitionId": Int(eventID) ?? 0, "groupId": Int(group["id"].text) ?? 0], staff: staff) { done = "已编排 \(result["updated"].text) 条报名，请打开报名列表查看。" }
+@@ -197,7 +197,7 @@
+                 }
+             }
+             if let csv { ShareLink("分享当前报名表 CSV", item: csv) }
+-        }.evaCompactLayout().navigationTitle(contestants ? "选手汇总" : "报名和音乐").searchable(text: $query, prompt: "搜索姓名、编号、组别或音乐")
++        }.evaCompactLayout().evaPageChrome().searchable(text: $query, prompt: "搜索姓名、编号、组别或音乐")
+             .task { await load() }.refreshable { await load() }
+             .toolbar { if !contestants { Button("导出") { exportCSV() }.disabled(store.busy || rows.isEmpty) } }
+             .onDisappear { if let csv { try? FileManager.default.removeItem(at: csv); self.csv = nil } }
+@@ -240,7 +240,7 @@
+                 }
+                 NavigationLink("修正报名资料") { StaffPlayerEditor(player: player) }
+             }
+-        }.evaCompactLayout().navigationTitle("报名详情").task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/event/players/\(id)", staff: staff) }
+ }
+@@ -265,7 +265,7 @@
+             Button("保存修正") { confirm = true }.disabled(store.busy || name.isEmpty || phone.isEmpty || title.isEmpty || done)
+             if done { Text("报名资料已更新") }
+             StaffStatus(store: store) { }
+-        }.evaCompactLayout().navigationTitle("报名修正").task { name = player["name"].text; phone = player["phone"].text; organization = player["organization"].text; teacher = player["teacher"].text; title = player["performanceTitle"].text; remark = player["remark"].text }
++        }.evaCompactLayout().evaPageChrome().task { name = player["name"].text; phone = player["phone"].text; organization = player["organization"].text; teacher = player["teacher"].text; title = player["performanceTitle"].text; remark = player["remark"].text }
+         .confirmationDialog("保存本条报名的资料修正？", isPresented: $confirm) { Button("确认保存") { Task { done = await store.send("/event/players/\(player["id"].text)", method: "PUT", body: ["name": name, "phone": phone, "organization": organization, "teacher": teacher, "performanceTitle": title, "remark": remark], staff: staff) != nil } } }
+     }
+ }
+@@ -293,7 +293,7 @@
+             Button("提交登记") { confirm = true }.disabled(store.busy || done || Double(amount) == nil)
+             if done { Text("流水登记成功") }
+             StaffStatus(store: store) { }
+-        }.evaCompactLayout().navigationTitle("缴费登记").task { amount = String(format: "%.2f", player["registrationFee"].number) }
++        }.evaCompactLayout().evaPageChrome().task { amount = String(format: "%.2f", player["registrationFee"].number) }
+         .confirmationDialog("确认已经实际完成这笔收款或退款，并登记 ¥\(amount)？", isPresented: $confirm) {
+             Button("确认实际完成并登记") { Task {
+                 if await store.send("/event/players/\(player["id"].text)/payments", body: ["kind": kind, "method": method, "amount": Double(amount) ?? 0, "paidAt": ISO8601DateFormatter().string(from: date), "remark": remark, "requestKey": requestKey], staff: staff) != nil { done = true }
+@@ -312,7 +312,7 @@
+         List {
+             StaffStatus(store: store) { Task { await load() } }
+             ForEach(records) { row in VStack(alignment: .leading, spacing: 4) { ForEach(fields, id: \.self) { key in if !row.value[key].text.isEmpty { Text(row.value[key].text) } } } }
+-        }.evaCompactLayout().navigationTitle(title).task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load(path, staff: staff) }
+ }
+@@ -329,7 +329,7 @@
+             if busy { ProgressView("正在验证音乐访问权限…") }
+             if let error { Text(error).foregroundStyle(.red) }
+             if player != nil { Button("播放 / 暂停") { if player?.isPlaying == true { player?.pause() } else { player?.play() } } }
+-        }.padding().navigationTitle("音乐试听").task {
++        }.padding().evaPageChrome().task {
+             defer { busy = false }
+             guard let token = staff.credentials?.token else { return }
+             do {
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/MyCompetitionsView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/MyCompetitionsView.swift
+@@ -22,7 +22,7 @@
+                 }.padding(.vertical, 8)
+             }
+             if !store.busy && store.error == nil && entries.isEmpty { Text("暂无比赛报名和结果记录").foregroundStyle(.secondary) }
+-        }.evaCompactLayout().navigationTitle("我的比赛")
++        }.evaCompactLayout().evaPageChrome()
+         .task(id: session.accountID) { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/member/events", session: session) }
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift
+@@ -74,7 +74,7 @@
+                     }) }
+                 }
+             }
+-        }.evaCompactLayout().navigationTitle(title).task { await load() }.refreshable { await load() }
++        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+     }
+     private func pagination(_ proxy: ScrollViewProxy) -> some View {
+         HStack {
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/DeletionReceiptView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/DeletionReceiptView.swift
+@@ -42,7 +42,7 @@
+                 Text("如无法查看回执，可拨打 13548955558 联系平台核查。请勿向他人提供短信验证码。")
+             }
+         }
+-        .evaCompactLayout().navigationTitle("注销进度与结果")
++        .evaCompactLayout().evaPageChrome()
+         .task { await load() }
+         .onChange(of: scenePhase) { phase in if phase == .active { Task { await load() } } }
+     }
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/LoginView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/LoginView.swift
+@@ -32,7 +32,7 @@
+             }
+             .background(EvaBrand.canvas)
+             .scrollDismissesKeyboard(.interactively)
+-            .navigationTitle("登录")
++            .evaPageChrome()
+             #if os(iOS)
+             .navigationBarTitleDisplayMode(.inline)
+             #endif
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/EventsView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/EventsView.swift
+@@ -6,7 +6,6 @@
+     @Environment(\.dynamicTypeSize) private var typeSize
+     @StateObject private var store = SiteStore()
+     @State private var search = ""
+-    @FocusState private var searchFocused: Bool
+     private var events: [SiteRow] {
+         let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
+         return store.data.rows.filter {
+@@ -16,12 +15,17 @@
+     private var loaded: Bool { if case .array = store.data { return true }; return false }
+     var body: some View {
+         ScrollView {
+-            VStack(alignment: .leading, spacing: 18) {
++            VStack(alignment: .leading, spacing: 12) {
++                HStack(spacing: 8) {
++                    EvaSearchField(text: $search, prompt: "搜索赛事或地点").accessibilityIdentifier("events.search")
++                    NavigationLink { AuthGate { MyCompetitionsView() } } label: {
++                        Label("我的比赛", systemImage: "person.crop.circle").labelStyle(.iconOnly).frame(width: 44, height: 44)
++                    }
++                    NavigationLink { StaffEventRootView() } label: {
++                        Label("赛事管理", systemImage: "person.badge.key").labelStyle(.iconOnly).frame(width: 44, height: 44)
++                    }
++                }
+                 overview
+-                ViewThatFits(in: .horizontal) {
+-                    HStack(spacing: 14) { sectionTitle; searchField.frame(width: 190) }
+-                    VStack(alignment: .leading, spacing: 12) { sectionTitle; searchField }
+-                }
+                 LoadState(store: store) { Task { await load() } }
+                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2), alignment: .leading, spacing: 14) {
+                     ForEach(events) { row in
+@@ -33,23 +37,13 @@
+                     Text(search.isEmpty ? "暂无公开赛事" : "未找到匹配赛事，请更换名称或地点。")
+                         .font(.subheadline).foregroundStyle(.secondary).frame(maxWidth: .infinity, minHeight: 80)
+                 }
+-            }.frame(maxWidth: 760).padding(16).frame(maxWidth: .infinity)
++            }.frame(maxWidth: 760).padding(.horizontal, 16).padding(.vertical, 6).frame(maxWidth: .infinity)
+         }
+         .scrollDismissesKeyboard(.interactively)
+-        .background(EvaBrand.canvas).navigationTitle("赛事")
++        .background(EvaBrand.canvas).evaPageChrome(root: true)
+         #if os(iOS)
+         .navigationBarTitleDisplayMode(.inline)
+         #endif
+-        .toolbar {
+-            ToolbarItemGroup(placement: .primaryAction) {
+-                NavigationLink { AuthGate { MyCompetitionsView() } } label: {
+-                    Label("我的比赛", systemImage: "person.crop.circle").labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
+-                }
+-                NavigationLink { StaffEventRootView() } label: {
+-                    Label("赛事管理", systemImage: "person.badge.key").labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
+-                }
+-            }
+-        }
+         .task { await load() }.refreshable { await load() }
+     }
+     private var overview: some View {
+@@ -72,16 +66,6 @@
+             Text(value).font(.headline).monospacedDigit().lineLimit(1).minimumScaleFactor(0.75)
+             Text(label).font(.caption2)
+         }.frame(maxWidth: .infinity)
+-    }
+-    private var sectionTitle: some View { Text("全部赛事").font(.title2.bold()).frame(maxWidth: .infinity, alignment: .leading) }
+-    private var searchField: some View {
+-        HStack(spacing: 8) {
+-            Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+-            TextField("搜索赛事或地点", text: $search).font(.subheadline).autocorrectionDisabled()
+-                .focused($searchFocused).submitLabel(.search).onSubmit { searchFocused = false }
+-                .accessibilityIdentifier("events.search")
+-        }.padding(.horizontal, 12).frame(minHeight: 44)
+-            .background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 22))
+     }
+     private func eventCard(_ row: JSONValue) -> some View {
+         let state = EventPresentation.state(row), open = state == "报名中"
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/BrandViews.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/BrandViews.swift
+@@ -76,14 +76,26 @@
+ }
+ 
+ /// Compact phone navigation, with touch targets and Dynamic Type kept intact.
++private struct CompactListInsets: ViewModifier {
++    func body(content: Content) -> some View {
++        #if os(iOS)
++        if #available(iOS 17.0, *) {
++            content.contentMargins(.top, 4, for: .scrollContent).listSectionSpacing(12)
++        } else { content }
++        #else
++        content
++        #endif
++    }
++}
+ struct CompactLearningLayout: ViewModifier {
+     func body(content: Content) -> some View {
+         #if os(iOS)
+         content.navigationBarTitleDisplayMode(.inline)
+             .listStyle(.insetGrouped)
++            .modifier(CompactListInsets())
+             .scrollContentBackground(.hidden)
+             .background(EvaBrand.canvas)
+-            .environment(\.defaultMinListRowHeight, 52)
++            .environment(\.defaultMinListRowHeight, 48)
+             .environment(\.defaultMinListHeaderHeight, 24)
+         #else
+         content.listStyle(.inset)
+@@ -119,10 +131,10 @@
+     func body(content: Content) -> some View {
+         #if os(iOS)
+         content.navigationBarTitleDisplayMode(.inline).background(EvaBrand.canvas)
+-            .toolbar {
++            .safeAreaInset(edge: .top, spacing: 0) {
+                 #if DEBUG
+                 if ProcessInfo.processInfo.environment["EVA_API_BASE"] != nil {
+-                    ToolbarItem(placement: .navigationBarTrailing) { Text("测试数据").font(.caption2).foregroundStyle(.secondary).accessibilityLabel("本地测试数据，非真实课程") }
++                    Text("本地测试数据，非真实课程").font(.caption2).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+                 }
+                 #endif
+             }
+@@ -133,11 +145,37 @@
+ }
+ extension View {
+     func evaHomeLayout() -> some View { modifier(EvaHomeLayout()) }
+-    @ViewBuilder func evaSearch(text: Binding<String>, prompt: String) -> some View {
++    func evaSearch(text: Binding<String>, prompt: String) -> some View {
++        VStack(spacing: 6) {
++            EvaSearchField(text: text, prompt: prompt).padding(.horizontal, 16).padding(.top, 4)
++            self
++        }.background(EvaBrand.canvas)
++    }
++    @ViewBuilder func evaPageChrome(root: Bool = false) -> some View {
+         #if os(iOS)
+-        searchable(text: text, placement: .navigationBarDrawer(displayMode: .always), prompt: prompt)
++        self.navigationTitle("").navigationBarTitleDisplayMode(.inline)
++            .toolbar(root ? .hidden : .visible, for: .navigationBar)
+         #else
+-        searchable(text: text, prompt: prompt)
++        self.navigationTitle("")
+         #endif
+     }
+ }
++
++struct EvaSearchField: View {
++    @Binding var text: String
++    let prompt: String
++    @FocusState private var focused: Bool
++    var body: some View {
++        HStack(spacing: 8) {
++            Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
++            TextField(prompt, text: $text).font(.subheadline).autocorrectionDisabled()
++                .focused($focused).submitLabel(.search).onSubmit { focused = false }
++                .accessibilityLabel(prompt)
++            if !text.isEmpty {
++                Button { text = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
++                    .frame(minWidth: 44, minHeight: 44).accessibilityLabel("清空搜索")
++            }
++        }.padding(.horizontal, 12).frame(maxWidth: 760, minHeight: 44)
++            .background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 12))
++    }
++}
+--- before/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -24,7 +24,7 @@
+     private final ExecutorService imageIO = Executors.newFixedThreadPool(2);
+     private final ArrayDeque<Runnable> history = new ArrayDeque<>();
+     private Api api;
+-    private LinearLayout root, content, pageActions;
++    private LinearLayout root, content, pageActions, chromeBar;
+     private TextView title;
+     private TextView loginFeedback;
+     private Button backButton;
+@@ -52,16 +52,16 @@
+         api = Api.get(this); red = SwodUi.primary(this);
+         root = column(); root.setBackgroundColor(SwodUi.canvas(this));
+         root.setOnApplyWindowInsetsListener((v, insets) -> {
+-            if (android.os.Build.VERSION.SDK_INT >= 30) { android.graphics.Insets safe = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.ime()); root.setPadding(safe.left,safe.top,safe.right,safe.bottom); }
++            if (android.os.Build.VERSION.SDK_INT >= 30) { android.graphics.Insets safe = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.ime() | WindowInsets.Type.displayCutout()); root.setPadding(safe.left,safe.top,safe.right,safe.bottom); }
+             else root.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());
+             return insets;
+         });
+-        LinearLayout bar = row(); bar.setPadding(dp(8),dp(6),dp(12),dp(6));bar.setBackgroundColor(SwodUi.surface(this));
++        LinearLayout bar = row(); chromeBar=bar;bar.setPadding(dp(8),0,dp(8),0);bar.setBackgroundColor(SwodUi.surface(this));
+         backButton = button("", () -> back());backButton.setPadding(dp(12),dp(12),dp(12),dp(12));backButton.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"back",red),null,null,null);backButton.setContentDescription("返回上一页"); bar.addView(backButton,new LinearLayout.LayoutParams(dp(48),dp(48)));
+         title = text("线上学院",20);title.setTypeface(null,android.graphics.Typeface.BOLD); title.setGravity(Gravity.CENTER_VERTICAL); bar.addView(title,new LinearLayout.LayoutParams(0,dp(48),1));
+         pageActions=row();bar.addView(pageActions);
+         Button refresh = button("", () -> { if (page != null) page.run(); });refresh.setPadding(dp(12),dp(12),dp(12),dp(12));refresh.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"refresh",red),null,null,null);refresh.setContentDescription("刷新当前页面");bar.addView(refresh,new LinearLayout.LayoutParams(dp(48),dp(48))); root.addView(bar);
+-        pageScroll = new ScrollView(this);pageScroll.setFillViewport(true); content = column();int inset=Math.max(16,(getResources().getConfiguration().screenWidthDp-760)/2);content.setPadding(dp(inset),dp(12),dp(inset),dp(24));pageScroll.addView(content);
++        pageScroll = new ScrollView(this);pageScroll.setFillViewport(true); content = column();int inset=Math.max(16,(getResources().getConfiguration().screenWidthDp-760)/2);content.setPadding(dp(inset),dp(4),dp(inset),dp(16));pageScroll.addView(content);
+         LinearLayout tabs = row(); String[] names={"线上学院","线下课","赛事","商城","个人中心"};
+         boolean expanded=getResources().getConfiguration().screenWidthDp>=600;if(expanded){tabs.setOrientation(LinearLayout.VERTICAL);tabs.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL);}
+         String[] icons={"learn","calendar","trophy","bag","person"};
+@@ -80,7 +80,7 @@
+     private void selectTab(int selected){String[] icons={"learn","calendar","trophy","bag","person"};for(int i=0;i<tabButtons.length;i++){Button b=tabButtons[i];if(b!=null){boolean active=i==selected;b.setSelected(active);b.setTextColor(active?red:SwodUi.muted(this));b.setTypeface(null,active?android.graphics.Typeface.BOLD:android.graphics.Typeface.NORMAL);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],active?red:SwodUi.muted(this)),null,null);b.setBackground(SwodUi.touch(this,active?SwodUi.tonal(this):SwodUi.surface(this),14));}}}
+     private void hero(String name,String description){LinearLayout box=column();box.setPadding(dp(4),dp(6),dp(4),dp(12));TextView heading=text(name,22);heading.setTypeface(null,android.graphics.Typeface.BOLD);box.addView(heading);TextView summary=text(description,14);summary.setTextColor(SwodUi.muted(this));box.addView(summary);content.addView(box);}
+     private void section(String name){TextView label=text(name,18);label.setTypeface(null,android.graphics.Typeface.BOLD);label.setPadding(dp(4),dp(16),dp(4),dp(8));content.addView(label);}
+-    private void begin(String name) { if(pageActions!=null)pageActions.removeAllViews();loginFeedback=null;courseAccessVisible=false; generation++; content.removeAllViews(); title.setText(name);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
++    private void begin(String name) { if(pageActions!=null)pageActions.removeAllViews();loginFeedback=null;courseAccessVisible=false; generation++; content.removeAllViews(); title.setText("");title.setContentDescription(name);chromeBar.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
+     private int dp(int x) {return Math.round(x*getResources().getDisplayMetrics().density);}
+     private LinearLayout column(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.VERTICAL);return v;}
+     private LinearLayout row(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.HORIZONTAL);v.setGravity(Gravity.CENTER_VERTICAL);return v;}
+@@ -88,7 +88,7 @@
+     private Button button(String s,Runnable tap){Button b=new Button(this);b.setText(s);b.setTextSize(15);b.setTextColor(new android.content.res.ColorStateList(new int[][]{new int[]{-android.R.attr.state_enabled},new int[]{}},new int[]{SwodUi.muted(this),red}));b.setMinHeight(dp(48));b.setMinimumHeight(dp(48));b.setAllCaps(false);b.setStateListAnimator(null);b.setElevation(0);b.setPadding(dp(16),dp(10),dp(16),dp(10));b.setBackground(SwodUi.touch(this,SwodUi.surface(this),14));b.setOnClickListener(v->tap.run());return b;}
+     private void action(String s,Runnable tap){LinearLayout.LayoutParams layout=new LinearLayout.LayoutParams(-1,-2);layout.topMargin=dp(8);Button b=button(s,tap);b.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);b.setCompoundDrawablesWithIntrinsicBounds(null,null,SwodUi.icon(this,"next",SwodUi.muted(this)),null);content.addView(b,layout);}
+     private void info(String s){if(loginFeedback!=null){loginFeedback.setText(s);loginFeedback.setVisibility(View.VISIBLE);return;}content.addView(text(s,14));}
+-    private EditText field(LinearLayout box,String hint, boolean digits){EditText v=new EditText(this);v.setHint(hint);v.setContentDescription(hint);v.setTextSize(16);v.setTextColor(SwodUi.ink(this));v.setHintTextColor(SwodUi.muted(this));v.setPadding(dp(16),dp(12),dp(16),dp(12));v.setBackground(SwodUi.shape(this,SwodUi.surface(this),12));v.setSingleLine(true);if(digits)v.setInputType(android.text.InputType.TYPE_CLASS_PHONE);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(12);v.setMinimumHeight(dp(52));box.addView(v,p);return v;}
++    private EditText field(LinearLayout box,String hint, boolean digits){EditText v=new EditText(this);v.setHint(hint);v.setContentDescription(hint);v.setTextSize(16);v.setTextColor(SwodUi.ink(this));v.setHintTextColor(SwodUi.muted(this));v.setPadding(dp(16),dp(12),dp(16),dp(12));v.setBackground(SwodUi.shape(this,SwodUi.surface(this),12));v.setSingleLine(true);if(digits)v.setInputType(android.text.InputType.TYPE_CLASS_PHONE);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(8);v.setMinimumHeight(dp(48));box.addView(v,p);return v;}
+     private interface Result{void receive(Object value)throws Exception;}
+     private void load(String path,String method,JSONObject body,boolean auth,Result result){
+         if(path.matches("/public/series(?:/\\d+/detail)?")||path.equals("/member/authorized-series"))courseAccessVisible=true;
+@@ -137,7 +137,7 @@
+     private String publicSummary(JSONObject r){String detail="online".equals(r.optString("course_access_scope"))?first(r,"teacher","category"):first(r,"subtitle","teacher","groupName","category","venue","location");if(r.has("total_courses"))detail+=" · "+r.optInt("total_courses")+" 节课程";if(r.has("price"))detail+="\n"+coursePrice(r);if(r.has("start_date")&&!r.has("registrationStatus"))detail+=" · "+first(r,"start_date")+" · 期次课时";return detail;}
+     private interface RowTap{void tap(JSONObject row);}
+     private void searchable(JSONArray rows,String[] fields,RowTap tap){
+-        EditText search=field(content,java.util.Arrays.asList(fields).contains("category")?"搜索课程、老师或分类":"搜索名称、老师或组别",false); LinearLayout results=column();content.addView(results);
++        EditText search=field(content,java.util.Arrays.asList(fields).contains("category")?"搜索课程、老师或分类":"搜索名称、老师或组别",false); if(history.isEmpty()){content.removeView(search);content.addView(search,0);} LinearLayout results=column();content.addView(results);
+         Runnable render=()->{results.removeAllViews();String query=search.getText().toString().trim().toLowerCase(Locale.ROOT);int count=0;
+             for(int i=0;i<rows.length();i++){JSONObject r=rows.optJSONObject(i);if(r==null)continue;String all="";for(String f:fields)all+=r.optString(f)+" ";boolean match=true;for(String part:query.split("\\s+"))if(!all.toLowerCase(Locale.ROOT).contains(part))match=false;
+                 if(match){count++;int before=results.getChildCount();card(results,first(r,"name","series_name","course_name","competitionName"),publicSummary(r),()->tap.tap(r));if("online".equals(r.optString("course_access_scope"))&&r.optBoolean("learning_unlocked"))unlockedBadge((LinearLayout)results.getChildAt(before),14);String cover=first(r,"cover_image","image");if(!cover.isEmpty())cover((LinearLayout)results.getChildAt(before),cover,false);}}
+@@ -201,10 +201,11 @@
+         LinearLayout totals=row();TextView total=eventMetric("—","赛事总数",true),people=eventMetric("—","累计参赛",true),records=eventMetric("—","记录数据",true);
+         totals.addView(total,new LinearLayout.LayoutParams(0,-2,1));totals.addView(people,new LinearLayout.LayoutParams(0,-2,1));totals.addView(records,new LinearLayout.LayoutParams(0,-2,1));overview.addView(totals);
+         content.addView(overview);
+-        Button mine=button("",()->open(this::myEvents));mine.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"person",red),null,null,null);mine.setContentDescription("我的比赛");pageActions.addView(mine,new LinearLayout.LayoutParams(dp(48),dp(48)));
+-        Button manage=button("",()->open(this::staffHome));manage.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"trophy",red),null,null,null);manage.setContentDescription("赛事管理");pageActions.addView(manage,new LinearLayout.LayoutParams(dp(48),dp(48)));
+-        section("全部赛事");
+-        EditText search=field(content,"搜索赛事或地点",false);
++        LinearLayout eventActions=row();Button mine=button("",()->open(this::myEvents));mine.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"person",red),null,null,null);mine.setContentDescription("我的比赛");eventActions.addView(mine,new LinearLayout.LayoutParams(dp(48),dp(48)));
++        Button manage=button("",()->open(this::staffHome));manage.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"trophy",red),null,null,null);manage.setContentDescription("赛事管理");eventActions.addView(manage,new LinearLayout.LayoutParams(dp(48),dp(48)));
++
++        EditText search=field(content,"搜索赛事或地点",false);content.removeView(search);
++        LinearLayout searchRow=row();searchRow.addView(search,new LinearLayout.LayoutParams(0,-2,1));searchRow.addView(eventActions);content.addView(searchRow,0);
+         LinearLayout grid=column();content.addView(grid);
+         load("/events","GET",null,false,v->{
+             JSONArray rows=array(v);total.setText(rows.length()+"\n赛事总数");people.setText(EventPresentation.aggregate(rows,true)+"\n累计参赛");records.setText(EventPresentation.aggregate(rows,false)+"\n记录数据");
+@@ -277,7 +278,7 @@
+         }catch(Exception e){runOnUiThread(()->{if(version==generation&&!isFinishing())info(e.getMessage());});}});
+     }
+ 
+-    private void shop(){begin("伊娃甄选");hero("伊娃甄选","东方舞生活 · 官方商城");action("我的商城订单",()->open(this::orders));action("收货地址",()->open(this::shipping));section("精选商品");load("/shop/products","GET",null,false,v->{JSONArray products=array(object(v).opt("products"));EditText query=field(content,"搜索商品、颜色或尺码",false);Spinner category=new Spinner(this);java.util.ArrayList<String> categories=new java.util.ArrayList<>();categories.add("全部商品");for(int i=0;i<products.length();i++){String c=products.optJSONObject(i).optString("category");if(!c.isEmpty()&&!categories.contains(c))categories.add(c);}category.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,categories));content.addView(category);LinearLayout list=column();content.addView(list);Runnable render=()->{list.removeAllViews();String keyword=query.getText().toString().trim().toLowerCase(Locale.ROOT),selected=categories.get(category.getSelectedItemPosition());for(int i=0;i<products.length();i++){JSONObject r=products.optJSONObject(i);if(r==null||(!selected.equals("全部商品")&&!selected.equals(r.optString("category"))))continue;String search=(r.optString("name")+" "+r.optString("color")+" "+r.optString("size")+" "+r.optString("spec")).toLowerCase(Locale.ROOT);if(!search.contains(keyword))continue;int index=list.getChildCount();card(list,r.optString("name"),productSpec(r)+" · "+ProductPresentation.price(r.opt("priceFen"))+" · "+ProductPresentation.stock(r.opt("stock")),()->open(()->product(r)));cover((LinearLayout)list.getChildAt(index),first(r,"image"),true);}if(list.getChildCount()==0)list.addView(text("暂无符合条件的商品",14));};query.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence s,int a,int c,int f){}public void onTextChanged(CharSequence s,int a,int b,int c){render.run();}public void afterTextChanged(Editable e){}});category.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){public void onNothingSelected(AdapterView<?> p){}public void onItemSelected(AdapterView<?> p,View v,int at,long id){render.run();}});render.run();});}
++    private void shop(){begin("伊娃甄选");hero("伊娃甄选","东方舞生活 · 官方商城");action("我的商城订单",()->open(this::orders));action("收货地址",()->open(this::shipping));section("精选商品");load("/shop/products","GET",null,false,v->{JSONArray products=array(object(v).opt("products"));EditText query=field(content,"搜索商品、颜色或尺码",false);content.removeView(query);content.addView(query,0);Spinner category=new Spinner(this);java.util.ArrayList<String> categories=new java.util.ArrayList<>();categories.add("全部商品");for(int i=0;i<products.length();i++){String c=products.optJSONObject(i).optString("category");if(!c.isEmpty()&&!categories.contains(c))categories.add(c);}category.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,categories));content.addView(category);LinearLayout list=column();content.addView(list);Runnable render=()->{list.removeAllViews();String keyword=query.getText().toString().trim().toLowerCase(Locale.ROOT),selected=categories.get(category.getSelectedItemPosition());for(int i=0;i<products.length();i++){JSONObject r=products.optJSONObject(i);if(r==null||(!selected.equals("全部商品")&&!selected.equals(r.optString("category"))))continue;String search=(r.optString("name")+" "+r.optString("color")+" "+r.optString("size")+" "+r.optString("spec")).toLowerCase(Locale.ROOT);if(!search.contains(keyword))continue;int index=list.getChildCount();card(list,r.optString("name"),productSpec(r)+" · "+ProductPresentation.price(r.opt("priceFen"))+" · "+ProductPresentation.stock(r.opt("stock")),()->open(()->product(r)));cover((LinearLayout)list.getChildAt(index),first(r,"image"),true);}if(list.getChildCount()==0)list.addView(text("暂无符合条件的商品",14));};query.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence s,int a,int c,int f){}public void onTextChanged(CharSequence s,int a,int b,int c){render.run();}public void afterTextChanged(Editable e){}});category.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){public void onNothingSelected(AdapterView<?> p){}public void onItemSelected(AdapterView<?> p,View v,int at,long id){render.run();}});render.run();});}
+     private String productSpec(JSONObject r){java.util.ArrayList<String> values=new java.util.ArrayList<>();for(String key:new String[]{"spec","color","size"}){String value=first(r,key);if(!value.isEmpty())values.add(value);}return String.join(" · ",values);}
+     private void product(JSONObject r){begin(r.optString("name"));cover(content,first(r,"image"),true);hero(r.optString("name"),productSpec(r));info(strip(first(r,"description")));info(ProductPresentation.price(r.opt("priceFen"))+" · "+ProductPresentation.stock(r.opt("stock")));info("App 暂未开放下单，可查看商品及已有订单。");action("查看我的订单",()->open(this::orders));}
+     private void shipping(){begin("收货地址");load("/shop/shipping","GET",null,true,v->{JSONObject o=object(v);JSONObject a=o.optJSONObject("shipping");if(a==null)a=o;EditText name=field(content,"收件人",false),phone=field(content,"手机号",true),address=field(content,"完整收货地址（省市区和门牌）",false);name.setText(first(a,"recipient","name"));phone.setText(a.optString("phone"));address.setText(a.optString("address"));action("保存地址",()->{String n=name.getText().toString().trim(),p=phone.getText().toString().trim(),d=address.getText().toString().trim();if(n.isEmpty()||n.length()>60||!p.matches("1[3-9][0-9]{9}")||d.length()<5||d.length()>200){info("请填写收件人、有效手机号和完整地址");return;}memberWrite("/shop/shipping","PUT",body("recipient",n,"phone",p,"address",d),this::shipping);});});}
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -593,6 +593,13 @@
+   }
+   @Builder
+   private eventsPage() {
++    Row({ space: 6 }) {
++      TextInput({ placeholder: '搜索赛事或地点', text: this.query }).layoutWeight(1).height(44).fontSize(14)
++        .fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).backgroundColor(SwodTheme.surface).borderRadius(12).onChange((v: string) => { this.query = v; })
++      Button('我的比赛', { type: ButtonType.Normal }).fontSize(12).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 44, minWidth: 44 }).onClick(() => this.go('myEvents', '我的比赛', '/member/events', true))
++      Button('管理', { type: ButtonType.Normal }).fontSize(12).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 44, minWidth: 44 }).accessibilityText('赛事管理').onClick(() => this.go(this.staffLoggedIn ? 'staffHome' : 'staffLogin', '赛事管理', this.staffLoggedIn ? '/event/competitions' : '', false, 0, 0, true))
++    }.width('100%')
++
+     Column({ space: 14 }) {
+       Text('东方舞赛事平台').fontSize(12).fontColor(SwodTheme.onPrimary).width('100%')
+       Text('AiwaRaks赛事平台').fontSize(22).fontWeight(FontWeight.Bold).fontColor(SwodTheme.onPrimary).width('100%')
+@@ -602,11 +609,6 @@
+         this.eventMetric(this.busy || this.error ? '—' : eventAggregate(this.rows, false), '记录数据', true)
+       }.width('100%')
+     }.padding(18).width('100%').backgroundColor(SwodTheme.primary).borderRadius(16)
+-    Row({ space: 12 }) {
+-      Text('全部赛事').fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).layoutWeight(1)
+-      TextInput({ placeholder: '搜索赛事或地点', text: this.query }).width('56%').constraintSize({ minHeight: 48 }).fontSize(14)
+-        .fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).backgroundColor(SwodTheme.surface).borderRadius(24).onChange((v: string) => { this.query = v; })
+-    }.width('100%').margin({ top: 4, bottom: 4 })
+     GridRow({ columns: { xs: 2, sm: 2, md: 2, lg: 2 }, gutter: 12 }) {
+       ForEach(this.rows.filter((row: Row) => !this.query.trim() || ((row.name || '') + ' ' + (row.location || row.city || row.venue || '')).toLowerCase().includes(this.query.trim().toLowerCase())), (row: Row) => {
+         GridCol() { this.eventTile(row) }.margin({ bottom: 12 })
+@@ -708,6 +710,10 @@
+   }
+   @Builder
+   private content() {
++    if (['home', 'offline', 'shop'].includes(this.route.screen)) {
++      TextInput({ placeholder: this.route.screen === 'home' ? '搜索课程、老师或分类' : this.route.screen === 'shop' ? '搜索商品' : '搜索课程或期次', text: this.query })
++        .height(44).fontSize(14).fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).backgroundColor(SwodTheme.surface).borderRadius(12).onChange((v: string) => { this.query = v; })
++    }
+     if (this.route.screen === 'home') {
+       this.intro('伊娃东方舞', '线上学院 · 从基础到进阶，找到适合你的课程')
+       Row({ space: 10 }) {
+@@ -793,7 +799,7 @@
+       }
+       this.action('客服与售后', () => this.go('support', '客服与售后'))
+       Row() { Text('课节目录 · 共 ' + catalogLessons(this.rows, this.progressRows).length + ' 节').fontSize(18).fontWeight(FontWeight.Bold).layoutWeight(1); if (catalogLessons(this.rows, this.progressRows).some((lesson: Row) => String(lesson.id) === this.currentLessonID)) { Button('定位当前').constraintSize({ minHeight: 48 }).onClick(() => { this.query = ''; const index = catalogLessons(this.rows, this.progressRows).findIndex((lesson: Row) => String(lesson.id) === this.currentLessonID); this.catalogPage = index >= 0 ? Math.floor(index / 50) + 1 : 1; this.catalogScroller.scrollEdge(Edge.Top); }) } }
+-      TextInput({ placeholder: '搜索课节名称', text: this.query }).height(52).fontSize(16).backgroundColor(SwodTheme.surface).borderRadius(12).onChange((value: string) => { this.query = value; this.catalogPage = 1; })
++      TextInput({ placeholder: '搜索课节名称', text: this.query }).height(44).fontSize(14).backgroundColor(SwodTheme.surface).borderRadius(12).onChange((value: string) => { this.query = value; this.catalogPage = 1; })
+       if (this.catalogPages() > 1) {
+         Row({ space: 12 }) { Button('上一页').constraintSize({ minHeight: 48 }).enabled(this.catalogPage > 1).onClick(() => { this.catalogPage--; this.catalogScroller.scrollEdge(Edge.Top); }); Text('第 ' + this.catalogPage + ' / ' + this.catalogPages() + ' 页').layoutWeight(1).textAlign(TextAlign.Center); Button('下一页').constraintSize({ minHeight: 48 }).enabled(this.catalogPage < this.catalogPages()).onClick(() => { this.catalogPage++; this.catalogScroller.scrollEdge(Edge.Top); }) }.width('100%')
+       }
+@@ -986,7 +992,9 @@
+     }
+     if (this.route.screen === 'message') { Text(this.detail.content || '').fontSize(16) }
+     if (this.route.screen !== 'catalog' && this.route.screen !== 'shopOrders' && this.route.screen !== 'events' && this.rows.length > 0) {
+-      TextInput({ placeholder: this.route.screen === 'home' ? '搜索课程、老师或分类' : '搜索名称、老师、组别或音乐', text: this.query }).height(52).fontSize(16).fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).backgroundColor(SwodTheme.surface).borderRadius(12).onChange((v: string) => { this.query = v; })
++      if (!['home', 'offline', 'shop'].includes(this.route.screen)) {
++      TextInput({ placeholder: this.route.screen === 'home' ? '搜索课程、老师或分类' : '搜索名称、老师、组别或音乐', text: this.query }).height(44).fontSize(14).fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).backgroundColor(SwodTheme.surface).borderRadius(12).onChange((v: string) => { this.query = v; })
++      }
+       ForEach(this.filtered(), (row: Row) => { this.card(row) }, (row: Row) => String(row.id || row.video_id || row.series_id))
+       if (!this.busy && !this.error && this.query.trim() && this.filtered().length === 0) {
+         Text('未找到匹配结果，请更换关键词').fontSize(14).fontColor(SwodTheme.muted)
+@@ -1000,15 +1008,17 @@
+   }
+   build() {
+     Column({ space: 0 }) {
++      if (this.history.length > 0) {
+       Row({ space: 8 }) {
+         if (this.history.length > 0) { Button({ type: ButtonType.Normal }) { Image($r('app.media.nav_back_on')).width(24).height(24) }.width(48).height(48).backgroundColor(Color.Transparent).onClick(() => this.back()).accessibilityText('返回上一页') }
+-        Text(this.route.title).fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).layoutWeight(1)
++        Blank().layoutWeight(1)
+         if (this.route.screen === 'events') {
+           Button('我的比赛', { type: ButtonType.Normal }).fontSize(12).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 48, minWidth: 48 }).onClick(() => this.go('myEvents', '我的比赛', '/member/events', true))
+           Button('赛事管理', { type: ButtonType.Normal }).fontSize(12).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 48, minWidth: 48 }).onClick(() => this.go(this.staffLoggedIn ? 'staffHome' : 'staffLogin', '赛事管理', this.staffLoggedIn ? '/event/competitions' : '', false, 0, 0, true))
+         }
+         Button('刷新', { type: ButtonType.Normal }).constraintSize({ minWidth: 48, minHeight: 48 }).backgroundColor(Color.Transparent).fontColor(SwodTheme.primary).enabled(!(this.route.screen === 'login' && this.busy)).onClick(() => { if (this.route.screen === 'web') this.reloadWeb(); else this.load(); })
+-      }.padding({ left: 20, right: 12, top: 6, bottom: 6 }).width('100%').backgroundColor(SwodTheme.surface)
++      }.padding({ left: 12, right: 12, top: 0, bottom: 0 }).width('100%').backgroundColor(SwodTheme.surface)
++      }
+       if (this.route.screen === 'web') {
+         Column({ space: 0 }) {
+           if (this.webLoading) { Row({ space: 8 }) { LoadingProgress().width(20).height(20).color(SwodTheme.primary); Text('正在加载网页…').fontSize(14).fontColor(SwodTheme.muted) }.padding(8).justifyContent(FlexAlign.Center).width('100%') }
+@@ -1035,7 +1045,7 @@
+             .onHttpErrorReceive((event: OnHttpErrorReceiveEvent) => { if (event.request.isMainFrame()) { this.webLoading = false; this.webError = '网页暂时不可用，请稍后重试'; } })
+         }.layoutWeight(1).width('100%')
+       } else {
+-        Scroll(this.catalogScroller) { Column({ space: 10 }) { this.content() }.alignItems(this.route.screen === 'login' ? HorizontalAlign.Center : HorizontalAlign.Start).padding({ left: 16, right: 16, top: 10, bottom: 20 }).width('100%').constraintSize({ maxWidth: 760 }) }.layoutWeight(1).width('100%')
++        Scroll(this.catalogScroller) { Column({ space: 8 }) { this.content() }.alignItems(this.route.screen === 'login' ? HorizontalAlign.Center : HorizontalAlign.Start).padding({ left: 16, right: 16, top: 4, bottom: 16 }).width('100%').constraintSize({ maxWidth: 760 }) }.layoutWeight(1).width('100%')
+       }
+       Row({ space: 4 }) {
+         this.navItem('线上学院', 'home', this.activeTab === 'home' ? $r('app.media.nav_learn_on') : $r('app.media.nav_learn'), '线上学院', '/public/series')

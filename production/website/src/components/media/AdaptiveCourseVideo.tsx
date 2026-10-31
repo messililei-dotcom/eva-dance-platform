@@ -30,9 +30,7 @@ export default function AdaptiveCourseVideo({
 
     let hls: Hls | null = null;
     let recoveryTimer = 0;
-    let recoveryCount = 0;
     let destroyed = false;
-    let recoveryResume: (() => void) | null = null;
     const remoteSource = document.createElement('source');
     remoteSource.src = src;
     remoteSource.type = remotePlaybackSourceType(src);
@@ -44,37 +42,27 @@ export default function AdaptiveCourseVideo({
       recoveryTimer = 0;
     };
 
-    const recoverNativePlayback = () => {
+    const recoverStalledPlayback = () => {
       if (destroyed || video.paused || video.ended || video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) return;
       if (hls) {
         hls.startLoad();
         return;
       }
-      const resumeAt = video.currentTime;
-      recoveryCount += 1;
-      video.load();
-      const resume = () => {
-        video.removeEventListener('loadedmetadata', resume);
-        recoveryResume = null;
-        if (destroyed) return;
-        if (resumeAt > 0 && Number.isFinite(resumeAt)) video.currentTime = resumeAt;
-        video.play().catch(() => undefined);
-      };
-      recoveryResume = resume;
-      video.addEventListener('loadedmetadata', resume);
+      // Native HLS owns buffering and retries. Calling load() here discards
+      // its buffer and frame, resets currentTime to zero and only seeks back
+      // after metadata arrives. A slow connection must not restart the lesson.
     };
 
     const scheduleRecovery = () => {
       clearRecoveryTimer();
-      // Safari usually recovers short network fluctuations itself. Only
-      // intervene after a sustained stall, and at most twice per source.
-      if (recoveryCount >= 2 || video.paused || video.ended) return;
-      recoveryTimer = window.setTimeout(recoverNativePlayback, 8000);
+      // Only HLS.js needs our explicit network retry. Native playback must
+      // retain its current media resource and position while buffering.
+      if (!hls || video.paused || video.ended) return;
+      recoveryTimer = window.setTimeout(recoverStalledPlayback, 8000);
     };
 
     const markHealthy = () => {
       clearRecoveryTimer();
-      recoveryCount = 0;
     };
 
     video.addEventListener('waiting', scheduleRecovery);
@@ -124,10 +112,6 @@ export default function AdaptiveCourseVideo({
     return () => {
       destroyed = true;
       clearRecoveryTimer();
-      if (recoveryResume) {
-        video.removeEventListener('loadedmetadata', recoveryResume);
-        recoveryResume = null;
-      }
       video.removeEventListener('waiting', scheduleRecovery);
       video.removeEventListener('stalled', scheduleRecovery);
       video.removeEventListener('playing', markHealthy);

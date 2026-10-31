@@ -1,0 +1,68 @@
+{
+  "status": "NOT_READY",
+  "packageName": "cn.com.swod.app",
+  "versionCode": 10,
+  "versionName": "1.0.1",
+  "productionWrites": false,
+  "checks": {
+    "manifest": {
+      "passed": false
+    },
+    "resourceXML": {
+      "passed": true
+    },
+    "sdk": {
+      "passed": true,
+      "licenseAccepted": true
+    },
+    "privateSigningConfig": {
+      "passed": true
+    },
+    "signedAPK": {
+      "passed": true,
+      "path": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/共享资料/同步更新/20261029-release-1.0.1/Android/installers/SWOD-1.0.1-10-release.apk",
+      "apkExists": true,
+      "sha256": "a16ff13e10c5ee294ebffea5abab49820a6b7082f09de026f508648d1425eec3",
+      "certificateMatchesFiling": true
+    },
+    "artifactIdentity": {
+      "passed": true,
+      "packageName": "cn.com.swod.app",
+      "versionCode": 10,
+      "versionName": "1.0.1"
+    },
+    "filingDisplay": {
+      "passed": true,
+      "number": "湘ICP备2026005683号-5A",
+      "basis": "用户在本次对话确认备案完成并提供最终编号",
+      "officialConsoleReverified": false
+    },
+    "publicCourses": {
+      "passed": true,
+      "httpStatus": 200
+    },
+    "appConfig": {
+      "passed": true,
+      "httpStatus": 200
+    },
+    "appProducts": {
+      "passed": true,
+      "httpStatus": 200
+    },
+    "invalidSessionDenied": {
+      "passed": true,
+      "httpStatus": 401
+    },
+    "deviceAcceptance": {
+      "passed": false
+    },
+    "storeMaterialAcceptance": {
+      "passed": false
+    }
+  },
+  "blockers": [
+    "manifest",
+    "deviceAcceptance",
+    "storeMaterialAcceptance"
+  ]
+}

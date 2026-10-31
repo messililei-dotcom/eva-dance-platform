@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-10-28T22:57:35.509207+08:00",
+  "scope": "course cards equal image/text width, larger complete-fit artwork",
+  "sourceSHA256": {
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift": "dd39ddcd554dfde1116830c7939a43db423fcaf39e419d5950fa19edc0840201",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "fabf2fd2316c1dda2ab66747548f212feec0c2bb12744c9cb740e22825260079",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "986d168f4983a8918b66828a39f67b71aea447bdfc99596e10fe2c020104eb6e",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCardSplitLayout.swift": "726bd113354e639749802ac08a6a37b61924f4201e62f24707b52fc03bc5deb5"
+  },
+  "iOS": {
+    "version": "1.0.0(8)",
+    "build": "simulator and unsigned device Release passed",
+    "runtime": "ordinary type equal-width card and accessibility stacked image/text inspected; restored normal font and scrolled to top"
+  },
+  "Android": {
+    "version": "1.0.0(9)",
+    "build": "debug, signed APK/AAB, lint and signature passed",
+    "tests": {
+      "tests": 21,
+      "failures": 0,
+      "errors": 0
+    },
+    "runtime": "new package installed and main activity started; course UI still unverified"
+  },
+  "HarmonyOS": {
+    "version": "1.0.0(8)",
+    "build": "signed HAP/APP and original identity verification passed",
+    "runtime": "unverified; emulator unavailable"
+  },
+  "filingChanged": false,
+  "serverChanged": false,
+  "storeUploaded": false,
+  "artifacts": [
+    {
+      "path": "HarmonyOS/installers/SWOD-1.0.0-8-release.hap",
+      "sha256": "a09fce51092eacad3ad325cf98578229d3d599c96db555b35a35eea859479828"
+    },
+    {
+      "path": "HarmonyOS/installers/SWOD-1.0.0-8-release.app",
+      "sha256": "8977f10338b608e79f8856bcaef271ec8780fa457435e9bf3d94a86534d4b2ff"
+    },
+    {
+      "path": "Android/installers/SWOD-1.0.0-9-course-card-release.apk",
+      "sha256": "7e425981668b70d805c454f01c69ae47e08ca32e39b09c8d022297ce1ce48adb"
+    },
+    {
+      "path": "Android/installers/SWOD-1.0.0-9-course-card-release.aab",
+      "sha256": "8ff67989be38246452097c406601d5c44c8e7b3dc5e35f4e50c46564a1fd28dc"
+    }
+  ]
+}

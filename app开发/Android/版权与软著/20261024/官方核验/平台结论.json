@@ -1,0 +1,79 @@
+{
+  "asOf": "2026-10-24",
+  "method": "官方公开页面浏览器可见正文，保留关键条款；不采信第三方博客为结论依据",
+  "platforms": [
+    {
+      "platform": "小米",
+      "conclusion": "需要版权证书，可使用APP电子版权认证证书替代传统软著登记证书",
+      "certificateRequired": true,
+      "traditionalRegistrationOnly": false,
+      "alternatives": [
+        "APP电子版权认证证书"
+      ],
+      "sources": [
+        "https://dev.mi.com/xiaomihyperos/documentation/detail?pId=1321"
+      ],
+      "verified": "官方可见正文 三 合规 1.1-1.3；账号主体和安卓应用信息须一致"
+    },
+    {
+      "platform": "OPPO",
+      "conclusion": "教育/其他类型均要求版权证书；三类证书选一，通用承诺函不代替证书",
+      "certificateRequired": true,
+      "traditionalRegistrationOnly": false,
+      "alternatives": [
+        "APP电子版权证书",
+        "软件著作权认证证书"
+      ],
+      "sources": [
+        "https://open.oppomobile.com/documentation/page/info?id=12133",
+        "https://open.oppomobile.com/bbs/forum.php?mod=viewthread&tid=6304"
+      ],
+      "verified": "官方从业资质规范 教育学习及其他类型；上传流程 软件版权证书"
+    },
+    {
+      "platform": "vivo",
+      "conclusion": "其他类型也要求三种版权证书之一；不能仅凭营业执照无证上架",
+      "certificateRequired": true,
+      "traditionalRegistrationOnly": false,
+      "alternatives": [
+        "APP电子版权证书",
+        "软件著作权认证证书"
+      ],
+      "sources": [
+        "https://dev.vivo.com.cn/documentCenter/doc/90"
+      ],
+      "verified": "特殊行业类资质要求，更新时间2026-09-14，其他类型应用栏"
+    },
+    {
+      "platform": "应用宝",
+      "conclusion": "创建移动应用的基础信息要求三种版权证书之一；另需适用发布承诺函和备案材料",
+      "certificateRequired": true,
+      "traditionalRegistrationOnly": false,
+      "alternatives": [
+        "APP电子版权证书",
+        "软件著作权认证证书"
+      ],
+      "sources": [
+        "https://wikinew.open.qq.com/index.html#/iwiki/4007776088",
+        "https://wikinew.open.qq.com/index.html#/iwiki/889016882"
+      ],
+      "verified": "官方创建移动应用 4.3.2 资质证明；不是把选填电子证书误读为整个版权证明可选"
+    },
+    {
+      "platform": "华为 Android",
+      "conclusion": "通用资质页称APP软著非必选，但版权配置页明确是HarmonyOS且大陆手机版权附件必选，不能据此保证Android草稿无证可提交",
+      "certificateRequired": null,
+      "traditionalRegistrationOnly": false,
+      "alternatives": [
+        "通用说明列APP电子版权证书或软件著作权认证证书；Android表单待实查"
+      ],
+      "sources": [
+        "https://developer.huawei.com/consumer/cn/doc/doccenter-submission/80301",
+        "https://developer.huawei.com/consumer/cn/doc/App/agc-help-release-app-copyright-0000002278981450"
+      ],
+      "verified": "通用资质更新时间2026-10-15，版权配置更新时间2026-10-13；Android控制台本轮空白无法确认具体栏位；不操作HarmonyOS应用"
+    }
+  ],
+  "noPlatformConfirmedTraditionalOnly": true,
+  "noCertificateIssuedOrUploaded": true
+}

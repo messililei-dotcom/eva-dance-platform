@@ -1,0 +1,310 @@
+Window: "HUAWEI Developer", App: Google Chrome.
+0 标准窗口 HUAWEI Developer - 属于“📦 SWOD 更新提审”群组 - Google Chrome, URL: developer.huawei.com/consumer/cn/hdc-console/, Secondary Actions: Raise
+	1 container HUAWEI Developer - 属于“📦 SWOD 更新提审”群组 - Google Chrome, URL: developer.huawei.com/consumer/cn/hdc-console/
+		2 container
+			3 工具栏
+				4 按钮 返回
+				5 按钮 (disabled) 前进
+				6 按钮 重新加载
+				7 按钮 首页
+				8 container
+					9 弹出式按钮 查看网站信息
+					11 按钮 为此标签页添加书签
+				12 弹出式按钮 扩展程序
+				13 按钮 Eva
+				14 弹出式按钮 Chrome
+			15 工具栏 书签
+				16 工具栏 已保存的标签页分组
+					17 “已保存的标签页分组”按钮 “📦 SWOD 更新提审”分组 - 已打开
+					18 “已保存的标签页分组”按钮 “🔎 SWOD审核跟进”分组 - 已关闭
+					19 “已保存的标签页分组”按钮 “🔎 SWOD审核跟进”分组 - 已关闭
+					20 按钮 标签页分组
+				21 分离器 分隔符
+				22 书签按钮 YouTube
+				23 书签按钮 chatGPT
+				24 书签按钮 Images2
+				25 书签按钮 Gemini
+				26 书签按钮 Google
+				27 书签按钮 微信小店
+				28 书签按钮 抖店
+				29 弹出式按钮 包含隐藏书签的菜单
+				30 书签文件夹按钮 所有书签
+				31 分离器 分隔符
+			32 container
+				33 滚动区
+					34 HTML 内容 HUAWEI Developer, URL: developer.huawei.com/consumer/cn/hdc-console/
+						35 container
+							36 container
+								37 link 要获取缺失的图片说明，请打开上下文菜单。, Value: developer.huawei.com/consumer/cn/hdc-console
+								38 link 开发者管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+								39 link 应用管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+								40 link 智能体管理, Value: developer.huawei.com/consumer/cn/hag/hagindex.html?isInFrame=true&lang=zh_CN
+								41 container 互动中心
+									43 文本 7
+								44 弹出式按钮
+								46 弹出式按钮 135******58 伊娃文化艺术发展（湖南）有限公司
+									48 文本 135******58
+									49 文本 伊娃文化艺术发展（湖南）有限公司
+							50 container
+								51 弹出式按钮 SWOD cn.com.swod.evadance
+									53 文本 SWOD
+									54 文本 cn.com.swod.evadance
+								55 文本 全部折叠
+								56 菜单栏
+									57 link 基础信息, Value: developer.huawei.com/consumer/cn/hdc-console/
+									58 分发
+										59 container
+											60 文本 分发
+											61 图像
+										62 菜单 Secondary Actions: Cancel
+											63 应用上架
+												64 container
+													65 文本 应用上架
+													66 图像
+												67 菜单 Secondary Actions: Cancel
+													68 link 应用信息, Value: developer.huawei.com/consumer/cn/hdc-console/
+													69 link 软件包管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													70 版本信息
+														71 container
+															72 文本 版本信息
+															73 图像
+														74 container Secondary Actions: Cancel
+															75 link 1.0.2 新版本 - 正在等待审核, Value: developer.huawei.com/consumer/cn/hdc-console/
+															76 link 1.0.0 已上架, Value: developer.huawei.com/consumer/cn/hdc-console/
+													77 链接 版本/升级
+														78 版本/升级
+															79 文本 版本/升级
+													80 link 版本历史记录, Value: developer.huawei.com/consumer/cn/hdc-console/
+													81 link 价格与销售范围, Value: developer.huawei.com/consumer/cn/hdc-console/
+											82 应用测试
+												83 container
+													84 文本 应用测试
+													85 图像
+												86 container Secondary Actions: Cancel
+													87 link 测试版本列表, Value: developer.huawei.com/consumer/cn/hdc-console/
+													88 link 测试用户, Value: developer.huawei.com/consumer/cn/hdc-console/
+													89 link 测试反馈, Value: developer.huawei.com/consumer/cn/hdc-console/
+											90 更多服务
+												91 container
+													92 文本 更多服务
+													93 图像
+												94 container Secondary Actions: Cancel
+													95 link 协议服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+													96 link 应用系列管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													97 link 用户列表, Value: developer.huawei.com/consumer/cn/hdc-console/
+									98 开放能力配置
+										99 container
+											100 文本 开放能力配置
+											101 图像
+										102 container Secondary Actions: Cancel
+											103 link 华为账号服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											104 link 钱包服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											105 link 机器学习服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											106 link 云空间服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											107 link 数字版权管理服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											108 link 地图服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											109 link 定位服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											110 link AirTouch, Value: developer.huawei.com/consumer/cn/hdc-console/
+											111 link 星盾机密风控引擎, Value: developer.huawei.com/consumer/cn/hdc-console/
+									112 质量和运维
+										113 container
+											114 文本 质量和运维
+											115 图像
+										116 菜单 Secondary Actions: Cancel
+											117 link 云测试, Value: developer.huawei.com/consumer/cn/hdc-console/
+											118 link 云调试, Value: developer.huawei.com/consumer/cn/hdc-console/
+											119 APMS
+												120 container
+													121 文本 APMS
+													122 图像
+												123 container Secondary Actions: Cancel
+													124 link 数据总览, Value: developer.huawei.com/consumer/cn/hdc-console/
+													125 link 故障告警, Value: developer.huawei.com/consumer/cn/hdc-console/
+													126 link 故障指标, Value: developer.huawei.com/consumer/cn/hdc-console/
+													127 link 故障分析, Value: developer.huawei.com/consumer/cn/hdc-console/
+													128 link 质量报告, Value: developer.huawei.com/consumer/cn/hdc-console/
+													129 link 配置管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+											130 云监控
+												131 container
+													132 文本 云监控
+													133 图像
+												134 container Secondary Actions: Cancel
+													135 link 监控大盘, Value: developer.huawei.com/consumer/cn/hdc-console/
+													136 link 日志服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+													137 link 告警管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+									138 推广运营
+										139 container
+											140 文本 推广运营
+											141 图像
+										142 菜单 Secondary Actions: Cancel
+											143 增长运营
+												144 container
+													145 文本 增长运营
+													146 图像
+												147 菜单 Secondary Actions: Cancel
+													148 link 推送服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+													149 link Push用户增长, Value: developer.huawei.com/consumer/cn/hdc-console/
+													150 link 直达应用快服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+													151 link 远程配置, Value: developer.huawei.com/consumer/cn/hdc-console/
+													152 link 应用内消息, Value: developer.huawei.com/consumer/cn/hdc-console/
+													153 视频编辑服务
+														154 container
+															155 文本 视频编辑服务
+															156 图像
+														157 container Secondary Actions: Cancel
+															158 link 我的素材, Value: developer.huawei.com/consumer/cn/hdc-console/
+															159 link 应用内容运营, Value: developer.huawei.com/consumer/cn/hdc-console/
+															160 link 参数配置, Value: developer.huawei.com/consumer/cn/hdc-console/
+													161 link 素材上传, Value: developer.huawei.com/consumer/cn/hdc-console/
+													162 link 服务直达, Value: developer.huawei.com/consumer/cn/hdc-console/
+													163 link 推广任务管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													164 link 探索流服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+													165 App Linking
+														166 container
+															167 文本 App Linking
+															168 图像
+														169 container Secondary Actions: Cancel
+															170 link 应用链接, Value: developer.huawei.com/consumer/cn/hdc-console/
+															171 link 聚合链接, Value: developer.huawei.com/consumer/cn/hdc-console/
+											172 产品运营
+												173 container
+													174 文本 产品运营
+													175 图像
+												176 container Secondary Actions: Cancel
+													177 link 商品管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													178 link 退款管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+											179 活动运营
+												180 container
+													181 文本 活动运营
+													182 图像
+												183 link 奖品流水, Value: developer.huawei.com/consumer/cn/hdc-console/
+											184 用户运营
+												185 container
+													186 文本 用户运营
+													187 图像
+												188 link 互动评论, Value: developer.huawei.com/consumer/cn/hdc-console/
+									189 盈利
+										190 container
+											191 文本 盈利
+											192 图像
+										193 菜单 Secondary Actions: Cancel
+											194 AGD Pro应用变现服务
+												195 container
+													196 文本 AGD Pro应用变现服务
+													197 图像
+												198 container Secondary Actions: Cancel
+													199 link 概览, Value: developer.huawei.com/consumer/cn/hdc-console/
+													200 link 媒体管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													201 link 展示位管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													202 link 屏蔽管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													203 link 接入测试, Value: developer.huawei.com/consumer/cn/hdc-console/
+													204 link 数据报表, Value: developer.huawei.com/consumer/cn/hdc-console/
+											205 link 应用内购买服务 （HarmonyOS NEXT）, Value: developer.huawei.com/consumer/cn/hdc-console/
+											206 鸿蒙支付服务
+												207 container
+													208 文本 鸿蒙支付服务
+													209 图像
+												210 link 支付服务（非虚拟类）, Value: developer.huawei.com/consumer/cn/hdc-console/
+									211 分析
+										212 container
+											213 文本 分析
+											214 图像
+										215 菜单 Secondary Actions: Cancel
+											216 概览
+												217 container
+													218 文本 概览
+													219 图像
+												220 container Secondary Actions: Cancel
+													221 link 本应用概览, Value: developer.huawei.com/consumer/cn/hdc-console/
+													222 link 所有应用概览, Value: developer.huawei.com/consumer/cn/hdc-console/
+											223 分发分析
+												224 container
+													225 文本 分发分析
+													226 图像
+												227 container Secondary Actions: Cancel
+													228 link 下载安装, Value: developer.huawei.com/consumer/cn/hdc-console/
+													229 link 用户分析, Value: developer.huawei.com/consumer/cn/hdc-console/
+													230 link 行为分析, Value: developer.huawei.com/consumer/cn/hdc-console/
+											231 运营分析
+												232 container
+													233 文本 运营分析
+													234 图像
+												235 菜单 Secondary Actions: Cancel
+													236 link 应用内付费, Value: developer.huawei.com/consumer/cn/hdc-console/
+													237 数字商品服务分析
+														238 container
+															239 文本 数字商品服务分析
+															240 图像
+														241 container Secondary Actions: Cancel
+															242 link 概览, Value: developer.huawei.com/consumer/cn/hdc-console/
+															243 link 销售 - 产品销量, Value: developer.huawei.com/consumer/cn/hdc-console/
+															244 link 销售 - 销售额, Value: developer.huawei.com/consumer/cn/hdc-console/
+															245 link 订阅摘要, Value: developer.huawei.com/consumer/cn/hdc-console/
+															246 link 订阅 - 持续使用情况, Value: developer.huawei.com/consumer/cn/hdc-console/
+															247 link 订阅 - 状态, Value: developer.huawei.com/consumer/cn/hdc-console/
+															248 link 订阅 - 事件, Value: developer.huawei.com/consumer/cn/hdc-console/
+											249 质量分析
+												250 container
+													251 文本 质量分析
+													252 图像
+												253 link 安装失败, Value: developer.huawei.com/consumer/cn/hdc-console/
+							255 container
+								256 文本 华为开发者联盟 版权所有 ©2018-2026
+								257 内容列表
+									258 链接 问题反馈
+										259 文本 问题反馈
+									260 链接 使用条款
+										261 文本 使用条款
+									262 链接 关于华为开发者联盟与隐私的声明
+										263 文本 关于华为开发者联盟与隐私的声明
+									264 链接 关于华为 HarmonyOS 开发者中心应用管理与隐私的声明
+										265 文本 关于华为 HarmonyOS 开发者中心应用管理与隐私的声明
+									266 链接 隐私政策
+										267 文本 隐私政策
+									268 链接 Cookies
+										269 文本 Cookies
+									270 链接 开源软件声明
+										271 文本 开源软件声明
+						272 container
+			273 container 信息栏容器
+				274 container 信息栏
+					275 container
+						276 文本 “ChatGPT”已开始调试此浏览器
+						277 按钮 取消
+					278 按钮 关闭
+			279 弹出式按钮 标签页搜索
+			280 container
+				281 标签页组
+					282 标签页组 分组“📦 SWOD 更新提审”- 7 个标签页•  HUAWEI Developer•  AppGallery Connect•  OPPO开放平台•  open首页•  vivo开放平台-应用以及另外 2 个 - 已展开
+					283 标签 (selected, settable, boolean) HUAWEI Developer - 属于“📦 SWOD 更新提审”群组 - 内存用量 - 187 MB, Value: on
+						284 按钮 关闭
+					285 标签 (settable, boolean) AppGallery Connect - 属于“📦 SWOD 更新提审”群组 - 内存用量 - 163 MB, Value: off
+						286 按钮 关闭
+					287 标签 (settable, boolean) OPPO开放平台 - 属于“📦 SWOD 更新提审”群组 - 内存用量 - 56.1 MB, Value: off
+						288 按钮 关闭
+					289 标签 (settable, boolean) open首页 - 属于“📦 SWOD 更新提审”群组, Value: off
+						290 按钮 关闭
+					291 标签 (settable, boolean) vivo开放平台-应用 - 属于“📦 SWOD 更新提审”群组, Value: off
+						292 按钮 关闭
+					293 标签 (settable, boolean) 管理中心 | 小米澎湃OS开发者平台 - 属于“📦 SWOD 更新提审”群组, Value: off
+						294 按钮 关闭
+					295 标签 (settable, boolean) 荣耀开发者服务平台 | 创造属于每个人的智慧新世界 - 属于“📦 SWOD 更新提审”群组, Value: off
+						296 按钮 关闭
+			297 按钮 新标签页
+			298 按钮 打开 Chrome 中的 Gemini
+	299 关闭按钮
+	300 全屏幕按钮 Help: 此按钮也可以执行缩放窗口的操作, Secondary Actions: 缩放窗口
+	301 最小化按钮
+302 menu bar
+	303 Chrome
+	304 文件
+	305 编辑
+	306 显示
+	307 历史记录
+	308 书签
+	309 个人资料
+	310 标签页
+	311 窗口
+	312 帮助
+
+The focused UI element is 34 HTML 内容 HUAWEI Developer, URL: developer.huawei.com/consumer/cn/hdc-console/

@@ -5,6 +5,9 @@
   "main": "",
   "author": "",
   "license": "",
-  "dependencies": {}
+  "dependencies": {
+    "@aliyun/push": "1.2.5",
+    "numberauth_standard": "file:libs/auth_number_product-v2.0.25-log-online-standard-release.har",
+    "premierlibrary": "file:libs/AliyunPlayer-7.18.0.har"
+  }
 }
-

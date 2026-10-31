@@ -1,0 +1,1005 @@
+Window: "HUAWEI Developer", App: Google Chrome.
+0 标准窗口 HUAWEI Developer - 属于“📦 SWOD 更新提审”群组 - Google Chrome, URL: …, Secondary Actions: Raise
+	1 container HUAWEI Developer - 属于“📦 SWOD 更新提审”群组 - Google Chrome, URL: …
+		2 container
+			3 工具栏
+				4 按钮 返回
+				5 按钮 (disabled) 前进
+				6 按钮 重新加载
+				7 按钮 首页
+				8 container
+					9 弹出式按钮 查看网站信息
+					11 按钮 管理您的密码
+					12 按钮 为此标签页添加书签
+				13 弹出式按钮 扩展程序
+				14 按钮 Eva
+				15 弹出式按钮 Chrome
+			16 工具栏 书签
+				17 工具栏 已保存的标签页分组
+					18 “已保存的标签页分组”按钮 “📦 SWOD 更新提审”分组 - 已打开
+					19 “已保存的标签页分组”按钮 “🔎 SWOD审核跟进”分组 - 已关闭
+					20 “已保存的标签页分组”按钮 “🔎 SWOD审核跟进”分组 - 已关闭
+					21 按钮 标签页分组
+				22 分离器 分隔符
+				23 书签按钮 YouTube
+				24 书签按钮 chatGPT
+				25 书签按钮 Images2
+				26 书签按钮 Gemini
+				27 书签按钮 Google
+				28 书签按钮 微信小店
+				29 书签按钮 抖店
+				30 弹出式按钮 包含隐藏书签的菜单
+				31 书签文件夹按钮 所有书签
+				32 分离器 分隔符
+			33 container
+				34 滚动区
+					35 HTML 内容 HUAWEI Developer, URL: …
+						36 container
+							37 container
+								38 link 要获取缺失的图片说明，请打开上下文菜单。, Value: developer.huawei.com/consumer/cn/hdc-console
+								39 link 开发者管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+								40 link 应用管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+								41 link 智能体管理, Value: developer.huawei.com/consumer/cn/hag/hagindex.html?isInFrame=true&lang=zh_CN
+								42 container 互动中心
+									44 文本 7
+								45 弹出式按钮
+								47 弹出式按钮 135******58 伊娃文化艺术发展（湖南）有限公司
+									49 文本 135******58
+									50 文本 伊娃文化艺术发展（湖南）有限公司
+							51 container
+								52 弹出式按钮 SWOD cn.com.swod.evadance
+									54 文本 SWOD
+									55 文本 cn.com.swod.evadance
+								56 文本 全部折叠
+								57 菜单栏
+									58 link 基础信息, Value: developer.huawei.com/consumer/cn/hdc-console/
+									59 分发
+										60 container
+											61 文本 分发
+											62 图像
+										63 菜单 Secondary Actions: Cancel
+											64 应用上架
+												65 container
+													66 文本 应用上架
+													67 图像
+												68 菜单 Secondary Actions: Cancel
+													69 link 应用信息, Value: developer.huawei.com/consumer/cn/hdc-console/
+													70 link 软件包管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													71 版本信息
+														72 container
+															73 文本 版本信息
+															74 图像
+														75 container Secondary Actions: Cancel
+															76 link 1.0.1 新版本 - 待修改, Value: developer.huawei.com/consumer/cn/hdc-console/
+															77 link 1.0.0 已上架, Value: developer.huawei.com/consumer/cn/hdc-console/
+													78 链接 版本/升级
+														79 版本/升级
+															80 文本 版本/升级
+													81 link 版本历史记录, Value: developer.huawei.com/consumer/cn/hdc-console/
+													82 link 价格与销售范围, Value: developer.huawei.com/consumer/cn/hdc-console/
+											83 应用测试
+												84 container
+													85 文本 应用测试
+													86 图像
+												87 container Secondary Actions: Cancel
+													88 link 测试版本列表, Value: developer.huawei.com/consumer/cn/hdc-console/
+													89 link 测试用户, Value: developer.huawei.com/consumer/cn/hdc-console/
+													90 link 测试反馈, Value: developer.huawei.com/consumer/cn/hdc-console/
+											91 更多服务
+												92 container
+													93 文本 更多服务
+													94 图像
+												95 container Secondary Actions: Cancel
+													96 link 协议服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+													97 link 应用系列管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													98 link 用户列表, Value: developer.huawei.com/consumer/cn/hdc-console/
+									99 开放能力配置
+										100 container
+											101 文本 开放能力配置
+											102 图像
+										103 container Secondary Actions: Cancel
+											104 link 华为账号服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											105 link 钱包服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											106 link 机器学习服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											107 link 云空间服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											108 link 数字版权管理服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											109 link 地图服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											110 link 定位服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+											111 link AirTouch, Value: developer.huawei.com/consumer/cn/hdc-console/
+											112 link 星盾机密风控引擎, Value: developer.huawei.com/consumer/cn/hdc-console/
+									113 质量和运维
+										114 container
+											115 文本 质量和运维
+											116 图像
+										117 菜单 Secondary Actions: Cancel
+											118 link 云测试, Value: developer.huawei.com/consumer/cn/hdc-console/
+											119 link 云调试, Value: developer.huawei.com/consumer/cn/hdc-console/
+											120 APMS
+												121 container
+													122 文本 APMS
+													123 图像
+												124 container Secondary Actions: Cancel
+													125 link 数据总览, Value: developer.huawei.com/consumer/cn/hdc-console/
+													126 link 故障告警, Value: developer.huawei.com/consumer/cn/hdc-console/
+													127 link 故障指标, Value: developer.huawei.com/consumer/cn/hdc-console/
+													128 link 故障分析, Value: developer.huawei.com/consumer/cn/hdc-console/
+													129 link 质量报告, Value: developer.huawei.com/consumer/cn/hdc-console/
+													130 link 配置管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+											131 云监控
+												132 container
+													133 文本 云监控
+													134 图像
+												135 container Secondary Actions: Cancel
+													136 link 监控大盘, Value: developer.huawei.com/consumer/cn/hdc-console/
+													137 link 日志服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+													138 link 告警管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+									139 推广运营
+										140 container
+											141 文本 推广运营
+											142 图像
+										143 菜单 Secondary Actions: Cancel
+											144 增长运营
+												145 container
+													146 文本 增长运营
+													147 图像
+												148 菜单 Secondary Actions: Cancel
+													149 link 推送服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+													150 link Push用户增长, Value: developer.huawei.com/consumer/cn/hdc-console/
+													151 link 直达应用快服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+													152 link 远程配置, Value: developer.huawei.com/consumer/cn/hdc-console/
+													153 link 应用内消息, Value: developer.huawei.com/consumer/cn/hdc-console/
+													154 视频编辑服务
+														155 container
+															156 文本 视频编辑服务
+															157 图像
+														158 container Secondary Actions: Cancel
+															159 link 我的素材, Value: developer.huawei.com/consumer/cn/hdc-console/
+															160 link 应用内容运营, Value: developer.huawei.com/consumer/cn/hdc-console/
+															161 link 参数配置, Value: developer.huawei.com/consumer/cn/hdc-console/
+													162 link 素材上传, Value: developer.huawei.com/consumer/cn/hdc-console/
+													163 link 服务直达, Value: developer.huawei.com/consumer/cn/hdc-console/
+													164 link 推广任务管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													165 link 探索流服务, Value: developer.huawei.com/consumer/cn/hdc-console/
+													166 App Linking
+														167 container
+															168 文本 App Linking
+															169 图像
+														170 container Secondary Actions: Cancel
+															171 link 应用链接, Value: developer.huawei.com/consumer/cn/hdc-console/
+															172 link 聚合链接, Value: developer.huawei.com/consumer/cn/hdc-console/
+											173 产品运营
+												174 container
+													175 文本 产品运营
+													176 图像
+												177 container Secondary Actions: Cancel
+													178 link 商品管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													179 link 退款管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+											180 活动运营
+												181 container
+													182 文本 活动运营
+													183 图像
+												184 link 奖品流水, Value: developer.huawei.com/consumer/cn/hdc-console/
+											185 用户运营
+												186 container
+													187 文本 用户运营
+													188 图像
+												189 link 互动评论, Value: developer.huawei.com/consumer/cn/hdc-console/
+									190 盈利
+										191 container
+											192 文本 盈利
+											193 图像
+										194 菜单 Secondary Actions: Cancel
+											195 AGD Pro应用变现服务
+												196 container
+													197 文本 AGD Pro应用变现服务
+													198 图像
+												199 container Secondary Actions: Cancel
+													200 link 概览, Value: developer.huawei.com/consumer/cn/hdc-console/
+													201 link 媒体管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													202 link 展示位管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													203 link 屏蔽管理, Value: developer.huawei.com/consumer/cn/hdc-console/
+													204 link 接入测试, Value: developer.huawei.com/consumer/cn/hdc-console/
+													205 link 数据报表, Value: developer.huawei.com/consumer/cn/hdc-console/
+											206 link 应用内购买服务 （HarmonyOS NEXT）, Value: developer.huawei.com/consumer/cn/hdc-console/
+											207 鸿蒙支付服务
+												208 container
+													209 文本 鸿蒙支付服务
+													210 图像
+												211 link 支付服务（非虚拟类）, Value: developer.huawei.com/consumer/cn/hdc-console/
+									212 分析
+										213 container
+											214 文本 分析
+											215 图像
+										216 菜单 Secondary Actions: Cancel
+											217 概览
+												218 container
+													219 文本 概览
+													220 图像
+												221 container Secondary Actions: Cancel
+													222 link 本应用概览, Value: developer.huawei.com/consumer/cn/hdc-console/
+													223 link 所有应用概览, Value: developer.huawei.com/consumer/cn/hdc-console/
+											224 分发分析
+												225 container
+													226 文本 分发分析
+													227 图像
+												228 container Secondary Actions: Cancel
+													229 link 下载安装, Value: developer.huawei.com/consumer/cn/hdc-console/
+													230 link 用户分析, Value: developer.huawei.com/consumer/cn/hdc-console/
+													231 link 行为分析, Value: developer.huawei.com/consumer/cn/hdc-console/
+											232 运营分析
+												233 container
+													234 文本 运营分析
+													235 图像
+												236 菜单 Secondary Actions: Cancel
+													237 link 应用内付费, Value: developer.huawei.com/consumer/cn/hdc-console/
+													238 数字商品服务分析
+														239 container
+															240 文本 数字商品服务分析
+															241 图像
+														242 container Secondary Actions: Cancel
+															243 link 概览, Value: developer.huawei.com/consumer/cn/hdc-console/
+															244 link 销售 - 产品销量, Value: developer.huawei.com/consumer/cn/hdc-console/
+															245 link 销售 - 销售额, Value: developer.huawei.com/consumer/cn/hdc-console/
+															246 link 订阅摘要, Value: developer.huawei.com/consumer/cn/hdc-console/
+															247 link 订阅 - 持续使用情况, Value: developer.huawei.com/consumer/cn/hdc-console/
+															248 link 订阅 - 状态, Value: developer.huawei.com/consumer/cn/hdc-console/
+															249 link 订阅 - 事件, Value: developer.huawei.com/consumer/cn/hdc-console/
+											250 质量分析
+												251 container
+													252 文本 质量分析
+													253 图像
+												254 link 安装失败, Value: developer.huawei.com/consumer/cn/hdc-console/
+							256 container
+								257 HTML 内容 agc-app-manage, URL: …
+									258 container
+										259 container
+											260 text 1.0.1 新版本 -  待修改
+											261 文本 知会：华为致力于构建透明、公开的商业合作环境，帮助开发者了解和知悉华为政策和要求，以尊重并保护开发者和华为共同利益。为此，请确保您上传物项的行为符合所有应适用的法律法规，包括中国、联合国安理会、美国（含美国商务部相关实体清单要求）、欧盟等。
+											262 按钮 (disabled) 保存草稿
+											263 按钮 提交审核
+										264 container
+											265 文本 填写
+											266 链接 应用信息
+												267 文本 应用信息
+										268 弹出式按钮 选择版本信息 (1.0.1)
+											269 container
+												270 文本 选择
+												271 链接 版本信息
+													272 文本 版本信息
+												273 文本  (1.0.1)
+										274 文本 未提交
+										275 container
+											276 container 状态：
+												277 文本 状态：
+												278 文本 待修改
+											279 container 审核附件：
+												280 文本 审核附件：
+												281 链接 审核附件.zip
+													282 文本 审核附件.zip
+											283 container 审核意见：
+												284 文本 审核意见：
+												285 container
+													286 text 您的应用“SWOD”（包名：cn.com.swod.evadance）未通过审核。 您可以参考
+													287 链接 审核报告
+														288 文本 审核报告
+													289 文本 修改您的应用，并重新提交审核，我们非常愿意为您再次进行审核。
+										290 文本 软件版本
+										291 container
+											292 container 包名：
+												293 文本 包名：
+												294 文本 cn.com.swod.evadance
+											295 container 发布版本：
+												296 文本 发布版本：
+												297 container
+													298 按钮 去选择
+													299 文本 为保障用户体验，建议您可以在“
+													300 链接 云测试
+														301 文本 云测试
+													302 文本 ”提前完成自检，也可以通过
+													303 link DevEco Studio, Value: developer.huawei.com/consumer/cn/doc/harmonyos-guides/ide-app-analyzer
+													304 文本 、
+													305 link DevEco Testing, Value: developer.huawei.com/consumer/cn/deveco-testing
+													306 文本 等本地测试工具自检，及早发现应用质量体验等问题。
+													307 container
+														308 表格
+															309 row
+																310 列标题
+																	311 文本 文件名
+																312 列标题
+																	313 container
+																		314 text 版本 （版本号）
+																315 列标题
+																	316 文本 构建版本
+																317 列标题
+																	318 文本 上传时间
+																319 列标题
+																	320 文本 大小
+																321 列标题
+																	322 文本 操作
+														323 表格
+															324 row
+																325 单元格
+																	326 文本 SWOD-1.0.1-9-release.app
+																327 单元格
+																	328 container
+																		329 text 1.0.1 （9）
+																330 单元格
+																	331 文本 --
+																332 单元格
+																	333 文本 2026-10-29 21:49:38
+																334 单元格
+																	335 文本 7.24 MB
+																336 单元格
+																	337 链接 下载
+																		338 文本 下载
+											339 文本 *
+											340 文本 软件包加密
+											342 文本 ：
+											343 * 软件包加密 ：
+												344 container
+													345 单选按钮 加密（推荐）, Value: 1
+													346 文本 加密（推荐）
+												347 container
+													348 单选按钮 不加密, Value: 0
+													349 文本 不加密
+											350 container
+												351 图像
+												352 文本 软件包中只有abc格式文件支持加密。so格式文件不支持加密，会被明文打包进应用包，可评估是否需要有额外的安全加固措施。注意：加密后的应用在程序启动和运行过程中可能会小幅度增加性能开销。
+												353 link 查看详情, Value: developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/code-protect-V5
+										354 文本 发布国家或地区
+										355 container
+											356 container * AppGallery华为应用市场：
+												357 container
+													358 text * AppGallery华为应用市场：
+												359 container
+													360 单选按钮 所有国家或地区, Value: 0
+													361 文本 所有国家或地区
+													362 文本 App将在所有200个国家或地区发布，如果将来开通了新的国家或地区，App也将自动发布到这些国家或地区。
+													363 单选按钮 上一次选择的国家或地区, Value: 1
+													364 文本 上一次选择的国家或地区
+													365 text 选择最近一次选择的国家或地区发布App。 已选择 200 个国家或（地区）以及新国家或区域
+													366 复选框 全球, Value: 1
+													367 文本 全球
+													368 按钮 反选
+													369 复选框 1
+													370 文本 中国大陆
+													371 复选框 1
+													372 文本 欧洲
+													373 复选框 1
+													374 文本 非洲
+													375 复选框 1
+													376 文本 中东
+													377 复选框 1
+													378 文本 北美
+													379 复选框 1
+													380 文本 亚太
+													381 复选框 1
+													382 文本 拉丁美洲和加勒比
+													383 复选框 中国大陆, Value: 1
+													384 container
+														385 文本 中国大陆
+													386 container
+														387 复选框 新国家或区域, Value: 1
+														388 文本 新国家或区域
+													390 文本 签约主体：
+													391 内容列表
+														392 文本  香港服务
+														393 文本  Aspiegel SE
+														394 文本  华为软件技术有限公司
+														395 文本  深圳市华为思义技术有限公司
+													396 文本 您所选的部分国家未匹配到本地化语言，当前仅能显示默认语言。为提升应用下载量，推荐您使用“
+													397 按钮 翻译服务
+													398 文本 ”获取本地化语言内容。
+											399 container
+												400 复选框 1
+												401 文本 我同意应用分发到境外的国家或地区，并将开发或分发的数据出境到境外的华为关联公司进行应用运营，详情请参考《
+												402 link 个人信息出境授权声明, Value: developer.huawei.com/consumer/cn/doc/app/20250303
+												403 文本 》
+											404 container
+												405 文本 注意：由于欧洲《数字服务法》（DSA）要求华为验证并显示开发者联系信息。验证完成后，此信息将在欧洲相关国家的AppGallery中显示，且仅用于展示。因此发布欧洲相关国家必须补充邓白氏号/营业执照、电话号码、地址，否则无法发布。
+												406 link 去补充, Value: developer.huawei.com/consumer/cn/console/setting/profile
+										407 文本 可本地化基础信息
+										408 文本 正确填写应用多语言信息，有助于增加应用在应用市场曝光，输入的文字会以文本方式展示，不支持html标签。
+										409 container
+											410 文本 *
+											411 文本 语言：
+											412 container
+												413 组合框 * 语言：
+												414 文本 简体中文 - 默认
+												415 图像
+										416 container
+											417 文本 *
+											418 文本 应用介绍：
+											419 container
+查看线下课程期次、个人课时与核销记录，以及个人参赛、订单和售后信息。个人中心提供学习消息、通知设置、登录设备及账号注销服务。注销申请在7个工作日内处理，可查看完成回执。
+当前版本未开放课程离线下载、本机号码一键登录及远程推送。课程权益和服务状态以实时展示为准。
+App备案号：湘ICP备2026005683号-5A
+												421 文本 268 / 8000
+											422 container
+												423 文本 请仔细检查应用介绍是否符合审核要求。
+												424 link 了解详情, Value: developer.huawei.com/consumer/cn/doc/app/50104-01
+											425 文本 *
+											426 文本 应用一句话简介（小编推荐）：
+											427 container
+												429 文本 13 / 17
+											430 container
+												431 文本 请仔细检查简介是否符合审核要求。
+												432 link 了解详情, Value: developer.huawei.com/consumer/cn/doc/app/50104-01
+											433 文本 *
+											434 文本 新版本特性：
+											435 container
+												437 文本 51 / 1000
+											438 文本 您可以使用以下场景化模板，点击后即可拼接在左侧输入框的底部
+											439 按钮 新增功能
+											440 按钮 新增内容
+											441 按钮 界面优化
+											442 按钮 bug修复
+											443 按钮 功能预告
+											444 按钮 历史特性介绍
+											445 按钮 通用模板
+											446 文本 如果新版本的功能与上个版本差异不大，您也可以直接复制上个版本的“新版本特性”描述内容，并做适当修改
+											447 按钮 从上个版本复制
+											448 文本 请您参考模板补充完整的更新描述，可以有效提升更新及时率。
+											449 container
+												450 文本 请仔细检查特性介绍是否符合审核要求。
+												451 link 了解详情, Value: developer.huawei.com/consumer/cn/doc/app/50104-01
+										452 container * 应用截图和视频：
+											453 container
+												454 text * 应用截图和视频：
+											455 container
+												456 文本 您可以在这里上传应用详情页展示的素材。介绍截图是必填素材，其他素材可选填，如果您提交了其他素材可能会让该应用在华为应用市场客户端有更好的展示效果。
+												457 标签页组
+													458 标签 (selected) *应用介绍截图, Value: 1
+													459 标签 (settable, integer) 应用介绍视频, Value: 0
+													460 标签 (settable, integer) 推荐视频, Value: 0
+													461 标签 (settable, integer) 更新截图/视频, Value: 0
+												462 container *应用介绍截图
+													463 radio-group
+														464 container
+															465 单选按钮 横向截图, Value: 0
+															466 文本 横向截图
+														467 container
+															468 单选按钮 竖向截图, Value: 1
+															469 文本 竖向截图
+													470 按钮
+													471 按钮
+													472 按钮
+													473 按钮
+													474 按钮
+													475 按钮
+													476 按钮
+													477 按钮
+													478 按钮
+													479 按钮
+													480 文本 需上传 3~10 张。最低尺寸（请确保宽高比9:16）：1080*1920px；格式：PNG、 JPG、 JPEG (均在 5 MB 以内)，以及 WEBP (200 KB 以内)。
+										481 文本 应用内资费
+										482 container
+											483 文本 应用内资费类型：
+											484 container 应用内资费类型：
+												485 container
+													486 复选框 激活收费, Value: 0
+													487 文本 激活收费
+												488 container
+													489 复选框 道具收费, Value: 0
+													490 文本 道具收费
+												491 container
+													492 复选框 关卡收费, Value: 0
+													493 文本 关卡收费
+												494 container
+													495 复选框 购买虚拟币, Value: 0
+													496 文本 购买虚拟币
+												497 container
+													498 复选框 部分章节收费（图书阅读类）, Value: 0
+													499 文本 部分章节收费（图书阅读类）
+												500 container
+													501 复选框 课程收费, Value: 1
+													502 文本 课程收费
+												503 container
+													504 复选框 会员收费, Value: 0
+													505 文本 会员收费
+												506 container
+													507 复选框 其它, Value: 0
+													508 文本 其它
+										509 文本 内容分级
+										510 文本 内容分级将用于标识您的应用适宜用户的年龄段，请按应用内容如实填写
+										511 container * 年龄分级：
+											512 container
+												513 text * 年龄分级：
+											514 container
+												515 按钮 设置
+												516 container
+													517 按钮 收起
+													518 图像
+												519 文本 内容分级用途：
+												520 内容列表
+													521 container
+														522 AXListMarker • 
+														523 文本 告知消费者，您的应用适宜用户的年龄段；
+													524 container
+														525 AXListMarker • 
+														526 文本 依法在特定区域或特定用户屏蔽或过滤您的内容。
+												527 文本 开发者责任：
+												528 内容列表
+													529 container
+														530 AXListMarker • 
+														531 文本 为您的应用或更新版本完成内容分级，当您的应用提供的内容发生变化时，应立即重新进行内容分级；
+													532 container
+														533 AXListMarker • 
+														534 文本 开发者应当保证其提交的与年龄分级相关的信息的真实性、准确性和合法性，并承担相应责任。对内容的不如实描述可能导致应用审核不通过、下架或封停。
+												535 文本 华为权限：
+												536 内容列表
+													537 container
+														538 AXListMarker • 
+														539 文本 华为有权对开发者的自检分级结果和相关材料进行审核，并根据审核情况对应用分级结果进行调整。
+													540 container
+														541 AXListMarker • 
+														542 文本 如果华为发现或者接到用户投诉认为开发者的应用存在任何不符合法律法规规定或华为相关标准的内容的，华为有权根据判断结果采取下架、屏蔽、断开链接等措施。
+													543 container
+														544 AXListMarker • 
+														545 文本 为实施该制度并对开发者提交的应用进行相应审核、分级和调整，不意味着华为对开发者的应用的合法、合规性承担任何明示或默示的担保、承诺，开发者仍需就其应用内容承担完全的担保责任。
+													546 container
+														547 AXListMarker • 
+														548 文本 华为有权对应用分级制度、年龄分级标准进行调整并通知开发者。
+												549 container
+													550 表格
+														551 row
+															552 列标题
+																553 文本 分级系统
+															554 列标题
+																555 文本 适用区域
+															556 列标题
+																557 文本 分级类别
+															558 列标题
+																559 文本 分级描述
+													560 表格
+														561 row
+															562 单元格
+																563 文本 年龄分级标准
+															564 单元格
+																565 文本 中国区
+															566 单元格
+																567 文本 16+
+															568 单元格
+																569 文本 年满 16 周岁
+														570 row
+															571 单元格
+																572 文本 年龄分级标准
+															573 单元格
+																574 文本 巴西
+															575 单元格
+															577 单元格
+																578 文本 年满 18 周岁
+														579 row
+															580 单元格
+																581 文本 年龄分级标准
+															582 单元格
+																583 文本 其他区域
+															584 单元格
+																585 文本 16+
+															586 单元格
+																587 文本 年满 16 周岁
+										588 文本 隐私声明
+										589 container
+											590 文本 请选择隐私政策和用户协议，供上架审核和客户端展示。为规范化、标准化您的隐私声明内容，提升应用审核通过率，建议您使用
+											591 链接 协议服务
+												592 文本 协议服务
+											593 文本 ，基于标准化模板生成自己的隐私声明，使用
+											594 link “隐私托管”, Value: …
+											595 文本 的方式提交隐私政策，并删除软件包中预置的隐私弹窗代码和隐私声明页面。您可以查看
+											596 link 华为应用市场审核指南, Value: developer.huawei.com/consumer/cn/doc/app/50104-07
+											597 文本  和 
+											598 link APP常见个人信息保护问题FAQs, Value: …
+											599 文本 ，了解隐私政策规范。
+										600 container
+											601 文本 管理方式：
+											602 管理方式：
+												603 container
+													604 单选按钮 隐私托管, Value: 0
+													605 文本 隐私托管
+												606 container
+													607 单选按钮 自定义隐私政策, Value: 1
+													608 文本 自定义隐私政策
+											609 文本 *
+											610 文本 隐私政策网址：
+											611 container
+											614 文本 隐私权利：
+										616 文本 隐私标签信息录入
+										617 container
+											618 文本 将在您应用的详情界面展示，告知用户您的应用如何使用个人数据。
+											619 link 查看隐私标签如何展示。, Value: …
+										620 文本 若检测到您的包体中存在PAC文件，我们将提取并在此录入PAC文件中声明的个人数据，您也可以选择修改此处已录入的个人数据。
+										621 container
+											622 container * 是否涉及个人信息收集：
+												623 container
+													624 text * 是否涉及个人信息收集：
+												625 container
+													626 单选按钮 是, Value: 1
+													627 文本 是
+													628 单选按钮 否, Value: 0
+													629 文本 否
+											630 文本 选择业务场景：
+											631 container 选择业务场景：
+												632 container
+													633 复选框 应用功能, Value: 1
+													634 文本 应用功能
+												635 container
+													636 复选框 产品个性化, Value: 0
+													637 文本 产品个性化
+												638 container
+													639 复选框 分析, Value: 1
+													640 文本 分析
+												641 container
+													642 复选框 广告与营销, Value: 0
+													643 文本 广告与营销
+												644 container
+													645 复选框 向第三方披露, Value: 0
+													646 文本 向第三方披露
+												647 container
+													648 复选框 跨境传输, Value: 0
+													649 文本 跨境传输
+												650 container
+													651 复选框 其他用途, Value: 0
+													652 文本 其他用途
+											653 标签页组
+												654 标签 (selected) 关联到用户数据汇总, Value: 1
+												655 标签 (settable, integer) 应用功能, Value: 0
+												656 标签 (settable, integer) 分析, Value: 0
+											657 container 关联到用户数据汇总
+												658 container
+													659 表格
+														660 row
+															661 列标题
+															662 列标题
+																663 文本 数据类别
+															664 列标题
+																665 文本 数据项
+															666 列标题
+																667 文本 数据说明
+													668 表格
+														669 row
+															670 单元格
+																671 文本 1
+															672 单元格
+															674 单元格
+															676 单元格
+														678 row
+															679 单元格
+																680 文本 2
+															681 单元格
+															683 单元格
+															685 单元格
+														687 row
+															688 单元格
+																689 文本 3
+															690 单元格
+															692 单元格
+															694 单元格
+														696 row
+															697 单元格
+																698 文本 4
+															699 单元格
+															701 单元格
+															703 单元格
+														705 row
+															706 单元格
+																707 文本 5
+															708 单元格
+															710 单元格
+															712 单元格
+														714 row
+															715 单元格
+																716 文本 6
+															717 单元格
+															719 单元格
+															721 单元格
+														723 row
+															724 单元格
+																725 文本 7
+															726 单元格
+															728 单元格
+															730 单元格
+														732 row
+															733 单元格
+																734 文本 8
+															735 单元格
+															737 单元格
+														739 row
+															740 单元格
+																741 文本 9
+															742 单元格
+															744 单元格
+														746 row
+															747 单元格
+																748 文本 10
+															749 单元格
+															751 单元格
+															753 单元格
+														755 row
+															756 单元格
+																757 文本 11
+															758 单元格
+															760 单元格
+															762 单元格
+														764 row
+															765 单元格
+																766 文本 12
+															767 单元格
+															769 单元格
+															771 单元格
+														773 row
+															774 单元格
+																775 文本 13
+															776 单元格
+															778 单元格
+															780 单元格
+														782 row
+															783 单元格
+																784 文本 14
+															785 单元格
+															787 单元格
+															789 单元格
+														791 row
+															792 单元格
+																793 文本 15
+															794 单元格
+															796 单元格
+															798 单元格
+														800 row
+															801 单元格
+																802 文本 16
+															803 单元格
+															805 单元格
+															807 单元格
+														809 row
+															810 单元格
+																811 文本 17
+															812 单元格
+															814 单元格
+															816 单元格
+														818 row
+															819 单元格
+																820 文本 18
+															821 单元格
+															823 单元格
+															825 单元格
+														827 row
+															828 单元格
+																829 文本 19
+															830 单元格
+															832 单元格
+															834 单元格
+														836 row
+															837 单元格
+																838 文本 20
+															839 单元格
+															841 单元格
+															843 单元格
+														845 row
+															846 单元格
+																847 文本 21
+															848 单元格
+															850 单元格
+														852 row
+															853 单元格
+																854 文本 22
+															855 单元格
+															857 单元格
+														859 row
+															860 单元格
+																861 文本 23
+															862 单元格
+															864 单元格
+										866 文本 AI功能声明
+										867 container
+											868 文本 *
+											869 文本 AI生成合成服务：
+											870 * AI生成合成服务：
+												871 container
+													872 单选按钮 不涉及, Value: 1
+													873 文本 不涉及
+												874 container
+													875 单选按钮 涉及, Value: 0
+													876 文本 涉及
+										877 文本 版权信息
+										878 container
+											879 图像
+											880 文本 【官方合作渠道】
+											881 按钮 办理版权资质
+										882 container
+											883 文本 电子版权证书：
+											885 按钮 浏览
+												886 按钮 浏览
+											887 文本 请上传PDF格式文件，不能超过5MB。
+											888 文本 《电子版权认证证书》可作为应用版权证书在此上传并可在线验证。申请通道可办理《电子版权认证证书》，已获得纸质《软件著作权登记证书》的App也可免费补领《电子版权认证证书》。
+											889 链接 【易版权】电子版权认证证书申请通道
+												890 文本 【易版权】电子版权认证证书申请通道
+											891 链接 【易版权】电子版权认证证书补领通道
+												892 文本 【易版权】电子版权认证证书补领通道
+											893 container
+												894 文本 【官方合作渠道】
+												895 按钮 办理版权资质
+											896 container 应用版权证书或代理证书：
+												897 文本 应用版权证书或代理证书：
+												898 container
+													899 按钮
+													900 按钮
+													901 文本 版权授权书（软著方授权发行方），如自研可不提供（选填）
+													902 link 版权授权书模板, Value: …
+													903 按钮
+													904 按钮
+													905 按钮
+													906 链接 应用版权证书或代理证书详细说明请参考版权资质说明
+														907 文本 应用版权证书或代理证书详细说明请参考版权资质说明
+													908 链接 应用资质FAQ
+														909 文本 应用资质FAQ
+											910 container 授权书及其他材料：
+												911 文本 授权书及其他材料：
+												912 container
+													913 按钮 上传
+													914 文本 请上传zip格式文件，不能超过200M。压缩包内支持包含JPG、JPEG、BMP格式图片和PDF格式的文件，文件夹层级最多三层，累计不超过200个文件。
+										915 文本 应用内商品
+										916 文本 如果要向您的应用中添加新类型的数字商品（例如，您之前的应用版本只提供消耗型商品，计划从这个版本开始提供自动续费订阅商品），则必须把该商品随应用版本一起提交审核。
+										917 按钮 添加商品
+										918 文本 备案信息
+										919 container
+											920 文本 请提供在工信部认证的备案信息。建议您在提交版本前校验证件号，有助于快速审核通过。
+											921 link 查看详情。, Value: …
+										922 container
+											923 文本 *
+											924 文本 APP类型信息：
+											925 * APP类型信息：
+												926 container
+													927 单选按钮 您的APP服务器在中国大陆, Value: 1
+													928 文本 您的APP服务器在中国大陆
+												929 container
+													930 单选按钮 您的APP服务器不在中国大陆, Value: 0
+													931 文本 您的APP服务器不在中国大陆
+												932 container
+													933 单选按钮 您的APP为单机APP, Value: 0
+													934 文本 您的APP为单机APP
+											935 文本 *
+											936 文本 主办单位类型：
+											937 * 主办单位类型：
+												938 container
+													939 单选按钮 企业, Value: 1
+													940 文本 企业
+												941 container
+													942 单选按钮 个人, Value: 0
+													943 文本 个人
+												944 container
+													945 单选按钮 机构, Value: 0
+													946 文本 机构
+											948 文本 *
+											949 文本 主办单位：
+											950 * 主办单位：
+												951 container
+													952 单选按钮 与开发者账号主体一致, Value: 1
+													953 文本 与开发者账号主体一致
+												954 container
+													955 单选按钮 与开发者账号主体不一致, Value: 0
+													956 文本 与开发者账号主体不一致
+											957 文本 *
+											958 文本 主办单位名称：
+											960 文本 主办单位名称需要与工信部备案信息保持一致，该名称将会在应用详情页展示给用户。
+											961 文本 *
+											962 文本 统一社会信用代码：
+											963 container
+												965 图像
+											966 按钮 校验证件号
+											967 文本 验证上限为5次/日，达到上限后不影响版本提交发布。
+										968 文本 应用审核信息
+										969 文本 如果您的App部分功能需要用户进行身份验证（例如，提供登录权限、查看应用内容、在线购买等）后才能使用，请提供测试帐号信息，该测试帐号会被审核员使用，以便完成登录、查看、购买等功能的审核。
+										970 container
+											971 container
+												972 复选框 需要登录进行审核, Value: 1
+												973 文本 需要登录进行审核
+											974 文本 测试帐号
+											976 container
+												978 图像
+											979 文本 备注：
+											980 container
+												982 文本 192 / 300
+											984 container 自测文件：
+												985 文本 自测文件：
+												986 container
+													987 按钮 选择文件
+													988 文本 请上传docx（不超过15MB）或mp4文件，最多可上传5个，总大小不超过500MB。提交自测文件可有效提高审核通过率，若APP内的功能需要连接设备或需要特殊的运行环境等场景才能使用，请您提供自测文件。
+										989 文本 联系方式
+										990 文本 我们将通过电话、邮箱、企业微信等渠道，为您解答应用审核问题、告知上架审核结果、通知应用整改或下架事宜。
+										991 container
+											992 文本 *
+											993 文本 应用负责人手机号码：
+											994 container
+												995 文本 +86
+												997 文本 11 / 11
+											998 文本 *
+											999 文本 应用负责人邮箱：
+											1000 container
+												1002 文本 18 / 500
+											1003 文本 *
+											1004 文本 应用负责人姓名：
+											1005 container
+												1007 文本 2 / 256
+										1008 文本 发布类型
+										1009 container
+											1010 文本 *
+											1011 文本 发布类型：
+											1012 * 发布类型：
+												1013 container
+													1014 单选按钮 全网发布, Value: 1
+													1015 文本 全网发布
+												1016 container
+													1017 单选按钮 分阶段发布（7天内自动更新）, Value: 0
+													1018 文本 分阶段发布（7天内自动更新）
+										1020 文本 上架
+										1021 container * 上架时间：
+											1022 container
+												1023 text * 上架时间：
+											1024 container
+												1025 radio-group
+													1026 container
+														1027 单选按钮 审核通过立即上架, Value: 1
+														1028 文本 审核通过立即上架
+													1029 container
+														1030 单选按钮 指定时间, Value: 0
+														1031 文本 指定时间
+												1032 container
+													1033 图像
+								1035 文本 华为开发者联盟 版权所有 ©2018-2026
+								1036 内容列表
+									1037 链接 问题反馈
+										1038 文本 问题反馈
+									1039 链接 使用条款
+										1040 文本 使用条款
+									1041 链接 关于华为开发者联盟与隐私的声明
+										1042 文本 关于华为开发者联盟与隐私的声明
+									1043 链接 关于华为 HarmonyOS 开发者中心应用管理与隐私的声明
+										1044 文本 关于华为 HarmonyOS 开发者中心应用管理与隐私的声明
+									1045 链接 隐私政策
+										1046 文本 隐私政策
+									1047 链接 Cookies
+										1048 文本 Cookies
+									1049 链接 开源软件声明
+										1050 文本 开源软件声明
+						1051 container
+			1052 container 信息栏容器
+				1053 container 信息栏
+					1054 container
+						1055 文本 “ChatGPT”已开始调试此浏览器
+						1056 按钮 取消
+					1057 按钮 关闭
+			1058 弹出式按钮 标签页搜索
+			1059 container
+				1060 标签页组
+					1061 标签页组 分组“📦 SWOD 更新提审”- 6 个标签页•  HUAWEI Developer•  OPPO开放平台•  open首页•  vivo开放平台-应用•  管理中心 | 小米澎湃OS开发者平台以及另外 1 个 - 已展开
+					1062 标签 (selected, settable, boolean) HUAWEI Developer - 属于“📦 SWOD 更新提审”群组 - 内存用量 - 289 MB, Value: on
+						1063 按钮 关闭
+					1064 标签 (settable, boolean) OPPO开放平台 - 属于“📦 SWOD 更新提审”群组 - 内存用量 - 56.1 MB, Value: off
+						1065 按钮 关闭
+					1066 标签 (settable, boolean) open首页 - 属于“📦 SWOD 更新提审”群组, Value: off
+						1067 按钮 关闭
+					1068 标签 (settable, boolean) vivo开放平台-应用 - 属于“📦 SWOD 更新提审”群组, Value: off
+						1069 按钮 关闭
+					1070 标签 (settable, boolean) 管理中心 | 小米澎湃OS开发者平台 - 属于“📦 SWOD 更新提审”群组, Value: off
+						1071 按钮 关闭
+					1072 标签 (settable, boolean) vivo开放平台-应用 - 属于“📦 SWOD 更新提审”群组, Value: off
+						1073 按钮 关闭
+			1074 按钮 新标签页
+			1075 按钮 打开 Chrome 中的 Gemini
+		1076 文本 https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2071129556072323840?appId=6917617955633704973&projectId=101653523865196397
+	1077 关闭按钮
+	1078 全屏幕按钮 Help: 此按钮也可以执行缩放窗口的操作, Secondary Actions: 缩放窗口
+	1079 最小化按钮
+1080 menu bar
+	1081 Chrome
+	1082 文件
+	1083 编辑
+	1084 显示
+	1085 历史记录
+	1086 书签
+	1087 个人资料
+	1088 标签页
+	1089 窗口
+	1090 帮助
+
+The focused UI element is 1091 1.0.1 新版本 - 待修改

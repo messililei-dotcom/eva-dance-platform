@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-23",
+  "officialSource": "https://open.oppomobile.com/new/developmentDoc/info?id=10035",
+  "images": [
+    {
+      "file": "01-线上学院.png",
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 351723,
+      "sha256": "f74d3bfd586478b8db945e18cd40b8309943426c2ba4f43725b21fde3ae9c051"
+    },
+    {
+      "file": "02-线下课.png",
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 425205,
+      "sha256": "bd5a8718077796a611ec98c9233d6d9bcab0946b4ce6700b3bd8b86a32f52da6"
+    },
+    {
+      "file": "03-真实赛事详情.png",
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 169160,
+      "sha256": "618d69589c7b2b671ab94b3a267e82ba63b2240876797d774a7bd03b6d2a0632"
+    },
+    {
+      "file": "04-商城.png",
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 127943,
+      "sha256": "eb03b0ba897115090af73a99ca77b5cbced7b346f26c071e2503e501d8901615"
+    },
+    {
+      "file": "05-个人中心.png",
+      "size": [
+        1080,
+        1920
+      ],
+      "bytes": 137412,
+      "sha256": "9ca9e24f01882b10001fd30f06a0f684b5da12d72e9bb386d7a2d77657f021be"
+    }
+  ],
+  "icon": "icon-512.png",
+  "notificationsHiddenBySystemSetting": true,
+  "pixelEditing": false,
+  "uploaded": false
+}

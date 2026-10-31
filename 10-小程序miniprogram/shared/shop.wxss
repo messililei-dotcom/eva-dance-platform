@@ -4,3 +4,8 @@
 .shop-header .outline{width:180rpx;min-width:180rpx;padding:18rpx 14rpx}.shop-header .subtitle{font-size:23rpx;line-height:1.6}
 
 .shop-page{padding:32rpx 32rpx 200rpx}.brand{font-size:44rpx}.subtitle{color:#616773;font-size:26rpx}.product-card,.panel{border-radius:24rpx}.product-card image,.image-placeholder{height:300rpx;background:#f0f1f4}.product-name{font-size:30rpx}.stock{font-size:24rpx;color:#616773;float:none;display:block}.primary,.outline{min-height:88rpx;font-size:27rpx;white-space:normal}.chip{min-height:88rpx;align-items:center;font-size:26rpx}.bottom-bar{padding-left:32rpx;padding-right:32rpx}.text-button{min-height:88rpx;display:flex;align-items:center}.quantity button{width:88rpx;height:88rpx;line-height:88rpx}.search{height:88rpx}.shop-header .subtitle{font-size:25rpx}.muted{color:#616773}
+
+/* Continuous merchandise rows with a square, centered aspect-fill thumbnail. */
+.shop-page{padding:20rpx 28rpx 190rpx;background:#fff;box-sizing:border-box}.shop-header{margin-bottom:16rpx}.brand{font-size:40rpx}.categories{margin:12rpx 0}.chip{border-radius:12rpx}
+.product-grid{display:flex;flex-direction:column;gap:0}.product-card{display:flex;align-items:center;gap:20rpx;padding:20rpx 0;border-radius:0;background:transparent;border-bottom:1rpx solid #eceff3;overflow:hidden}
+.product-card image,.product-card .image-placeholder{width:224rpx;height:224rpx;flex-shrink:0;border:0;padding:0;border-radius:8rpx;background:transparent}.product-info{flex:1;min-width:0;padding:0}.product-name{overflow-wrap:break-word}.hero-image{height:694rpx;max-width:100%;border:0;border-radius:0;padding:0;background:transparent;display:block}.panel{border-radius:0;box-shadow:none;padding:20rpx 0;border-bottom:1rpx solid #eceff3;background:transparent}

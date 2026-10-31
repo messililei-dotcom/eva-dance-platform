@@ -30,6 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DanceCircleArticlePage({ params }: Props) {
   const article = getDanceCircleArticle((await params).slug);
   if (!article) notFound();
+  const isSchedule = article.slug === 'course-schedule-2026-2027';
 
   return (
     <article className="min-h-screen bg-[#FBF7EF] pb-16 pt-20 md:pb-24 md:pt-28">
@@ -38,22 +39,22 @@ export default async function DanceCircleArticlePage({ params }: Props) {
           <ArrowLeft className="h-4 w-4" /> 返回东方舞圈
         </Link>
 
-        <header className="mt-7 text-center">
-          <span className="inline-flex rounded-full bg-[#2C1810] px-3 py-1 text-xs font-semibold text-white">{article.category}</span>
-          <h1 className="mx-auto mt-5 max-w-3xl font-serif text-3xl font-bold leading-tight text-[#2C1810] md:text-5xl">{article.title}</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#746454]">{article.summary}</p>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-[#9A8875]">
+        <header className={isSchedule ? 'mx-auto mt-4 max-w-3xl' : 'mt-7 text-center'}>
+          <span className="inline-flex rounded-full bg-[#2C1810] px-3 py-1 text-xs font-semibold text-white">{isSchedule ? '课程公告' : article.category}</span>
+          <h1 className={isSchedule ? 'mt-3 text-balance font-sans text-2xl font-bold leading-tight text-[#2C1810] md:text-4xl' : 'mx-auto mt-5 max-w-3xl font-serif text-3xl font-bold leading-tight text-[#2C1810] md:text-5xl'}>{article.title}</h1>
+          <p className={isSchedule ? 'mt-2 text-pretty text-sm leading-6 text-[#746454]' : 'mx-auto mt-5 max-w-2xl text-base leading-8 text-[#746454]'}>{article.summary}</p>
+          <div className={isSchedule ? 'mt-3 flex flex-wrap items-center gap-4 text-xs text-[#9A8875]' : 'mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-[#9A8875]'}>
             <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4" />{article.date}</span>
             {article.location ? <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" />{article.location}</span> : null}
-            <span>编辑：伊娃东方舞</span>
+            {!isSchedule ? <span>编辑：伊娃东方舞</span> : null}
           </div>
         </header>
 
-        <div className="relative mt-9 aspect-[16/9] overflow-hidden rounded-2xl bg-[#E8DDCB] shadow-lg md:mt-12">
+        {!isSchedule ? <div className="relative mt-9 aspect-[16/9] overflow-hidden rounded-2xl bg-[#E8DDCB] shadow-lg md:mt-12">
           <Image src={article.image} alt={article.title} fill priority unoptimized sizes="(min-width: 896px) 896px, 100vw" className="object-cover" />
-        </div>
+        </div> : null}
 
-        <div className="mx-auto mt-9 max-w-3xl md:mt-12">
+        <div className={isSchedule ? 'mx-auto mt-6 max-w-3xl' : 'mx-auto mt-9 max-w-3xl md:mt-12'}>
           {article.sections.map((section, index) => (
             <section key={`${article.slug}-${index}`} className="mb-9">
               {section.heading ? <h2 className="mb-4 font-serif text-2xl font-bold text-[#2C1810]">{section.heading}</h2> : null}
@@ -81,7 +82,7 @@ export default async function DanceCircleArticlePage({ params }: Props) {
               ) : null}
             </p>
           ) : null}
-          {article.relatedHref ? (
+          {article.relatedHref && !isSchedule ? (
             <Link href={article.relatedHref} className="mt-8 inline-flex items-center gap-2 rounded-full bg-crimson px-6 py-3 text-sm font-semibold text-white transition hover:bg-crimson-dark">
               {article.relatedLabel || '查看相关内容'} <ArrowRight className="h-4 w-4" />
             </Link>

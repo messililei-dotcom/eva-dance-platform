@@ -40,5 +40,13 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>SWODAppFilingNumber</key>
+	<string>湘ICP备2026005683号-5A</string>
+	<key>SWODWeChatAppID</key>
+	<string>wxc1e3dafe3d3b70c6</string>
+	<key>SWODWeChatUniversalLink</key>
+	<string>https://www.swod.com.cn/app/wechat/</string>
+	<key>SWODWeChatLoginEnabled</key>
+	<false/>
 </dict>
 </plist>

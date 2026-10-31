@@ -1,0 +1,26 @@
+{
+  "source": "Aliyun console details observed 2026-10-28",
+  "operatorSync": {
+    "iOS": [
+      "移动同步成功",
+      "联通同步成功",
+      "电信同步成功"
+    ],
+    "Android": [
+      "移动同步成功",
+      "联通同步成功",
+      "电信同步成功"
+    ],
+    "HarmonyOS": [
+      "移动同步成功",
+      "联通同步成功",
+      "电信同步成功"
+    ]
+  },
+  "androidPackageMatches": true,
+  "androidSchemeSignatureMatches": true,
+  "harmonyBundleMatches": true,
+  "harmonySchemeSignatureMatches": true,
+  "realSimVerified": false,
+  "serverFlagEnabled": false
+}

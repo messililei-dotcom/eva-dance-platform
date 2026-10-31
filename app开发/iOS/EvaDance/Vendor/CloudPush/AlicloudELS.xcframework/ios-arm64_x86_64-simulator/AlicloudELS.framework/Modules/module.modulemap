@@ -1,0 +1,6 @@
+framework module AlicloudELS {
+  umbrella header "AlicloudELS.h"
+  export *
+
+  module * { export * }
+}

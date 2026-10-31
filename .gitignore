@@ -130,3 +130,26 @@ backups/
 # Patch-editor residue; archives live outside runtime source
 **/*.orig
 **/*.rej
+**/number-auth.local.json
+
+# User-supplied WeChat credentials; never commit or bundle.
+/微信开发配置.rtf
+
+# Generated notification worker; runtime settings remain private.
+10-统一平台admin-platform/.push-worker/
+
+# Generated mobile installers and private release evidence; keep original files locally.
+**/*.apk
+**/*.aab
+**/*.ipa
+**/*.hap
+**/*.app
+**/*.app/
+**/*.dSYM/
+**/*.mobileprovision
+**/vendor-downloads/
+**/source-before/
+/app开发/Android/发布准备包/
+/app开发/HarmonyOS/发布准备包/
+/app开发/iOS/发布准备包/
+/版权登记/

@@ -1,0 +1,40 @@
+{
+  "version": "1.0.2",
+  "build": 18,
+  "source": "Original-signed release APK on local Android emulator; guest; official ADB capture authorized",
+  "privacyConsentSource": "User current response to call_a3583b43ae054fc2ace98bd5fecbe904",
+  "pixelEditing": false,
+  "realDeviceTest": false,
+  "nativeResolutionForCapture": "1080x1920 density420; original physical1080x2400",
+  "screenshots": [
+    {
+      "file": "screenshots-android18/01-online.png",
+      "width": 1080,
+      "height": 1920,
+      "size": 617608,
+      "sha256": "c625a64af73a8301fc2c1c74da128bd97b27183eb8df5bf9dfed4c3a47231788"
+    },
+    {
+      "file": "screenshots-android18/02-offline.png",
+      "width": 1080,
+      "height": 1920,
+      "size": 702860,
+      "sha256": "b217e549aed26119101f713f43e66a41d6f46255b366d0a2fa91573e5f5241d3"
+    },
+    {
+      "file": "screenshots-android18/03-events.png",
+      "width": 1080,
+      "height": 1920,
+      "size": 1119554,
+      "sha256": "735cb04e7a7fde2ef2e4937289cf05fd72fb32b22152ad6f6854358f16f83559"
+    },
+    {
+      "file": "screenshots-android18/04-login.png",
+      "width": 1080,
+      "height": 1920,
+      "size": 169743,
+      "sha256": "d0dbc826072faf7124fcf8e1a9608376545d95c98a6f0199ce18abd7824296b6"
+    }
+  ],
+  "shopScreenshotExcluded": "Some products showed actual placeholder fallback; shop capture is diagnostic only."
+}

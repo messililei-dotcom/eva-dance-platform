@@ -1,0 +1,9 @@
+{
+  "signedUpgradeFrom": 7,
+  "signedUpgradeTo": 8,
+  "dataCleared": false,
+  "fiveTabs": true,
+  "filingAndVersionVisible": true,
+  "productionBusinessWrites": false,
+  "physicalDevice": false
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "platform": "ios",
+    "applicationID": "cn.com.swod.app",
+    "certificateBytes": 1895,
+    "downloadKeyBytes": 1369,
+    "privateFilesMode": "0600",
+    "licenseExpiresAt": "2026-11-30T00:00:00+08:00",
+    "serviceEnvironment": "China",
+    "sdkRuntimeLicenseVerified": false,
+    "downloadKeyRuntimeVerified": false
+  },
+  {
+    "platform": "android",
+    "applicationID": "cn.com.swod.app",
+    "certificateBytes": 1895,
+    "downloadKeyBytes": 1369,
+    "privateFilesMode": "0600",
+    "licenseExpiresAt": "2026-11-30T00:00:00+08:00",
+    "serviceEnvironment": "China",
+    "sdkRuntimeLicenseVerified": true,
+    "downloadKeyRuntimeVerified": true
+  },
+  {
+    "platform": "harmony",
+    "applicationID": "cn.com.swod.evadance",
+    "certificateBytes": 1895,
+    "downloadKeyBytes": 1369,
+    "privateFilesMode": "0600",
+    "licenseExpiresAt": "2026-11-30T00:00:00+08:00",
+    "serviceEnvironment": "China",
+    "sdkRuntimeLicenseVerified": false,
+    "downloadKeyRuntimeVerified": false
+  }
+]

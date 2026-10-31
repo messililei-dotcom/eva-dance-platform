@@ -1,0 +1,7 @@
+{
+  "operation": "ListSummaryApps",
+  "expected": "denied",
+  "httpStatus": 400,
+  "vendorCode": "NoPermission",
+  "denied": true
+}

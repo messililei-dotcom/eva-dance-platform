@@ -1,0 +1,21 @@
+{
+  "passed": false,
+  "checks": {
+    "signedApplicationIdentifier": true,
+    "pushEntitlementMatchesProfile": false,
+    "bundleID": true,
+    "certificateSHA1": true,
+    "publicKey": true,
+    "teamID": true,
+    "profileIdentity": true,
+    "distributionProfile": true,
+    "filingNumber": true
+  },
+  "bundleID": "cn.com.swod.app",
+  "version": "1.0.1",
+  "build": "9",
+  "certificateSHA1": "4245EB5CBABD61041F59514C549ACEE964501C68",
+  "ipaSHA256": "8c8c33448d1eebfea103d86c5396daa66da881887eb712af40fbbdf4f588fa37",
+  "reference": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/发布准备包/20261023/备案签名核对/已核验备案签名.json",
+  "filingChanged": false
+}

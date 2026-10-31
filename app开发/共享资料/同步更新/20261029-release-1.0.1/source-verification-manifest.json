@@ -1,0 +1,594 @@
+[
+  {
+    "path": "10-统一平台admin-platform/scripts/app-push-worker.ts",
+    "sha256": "260e3aa23b1796dbf8ba08007f14e7af5d8dfde7b784ca4851b6c2aaaa13818b"
+  },
+  {
+    "path": "10-统一平台admin-platform/scripts/app-push.test.cjs",
+    "sha256": "6b1d3a1ca07675e9387d6b1ab76c49e610174815a705a2bd83db34b8ee287f6f"
+  },
+  {
+    "path": "10-统一平台admin-platform/scripts/build-push-worker.cjs",
+    "sha256": "81f48e4777688ddbe82333536d2e14989c855194e6949a7c71f7b3e7f7565106"
+  },
+  {
+    "path": "10-统一平台admin-platform/src/lib/server/aliyun-push.ts",
+    "sha256": "5a1a18a3452cc2e9cc0f705e70a5c7bc10640c719b4a38d7b550ec804f4546e6"
+  },
+  {
+    "path": "10-统一平台admin-platform/src/lib/server/app-push.ts",
+    "sha256": "77ef34602cef1360e7fa6444771683c1dc03179e781ef59599e19a2b5483426e"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/AndroidManifest.xml",
+    "sha256": "38bf8b3f161aeb375658c4e2904eb9926d5c3cc1f60af4c4587792e4e12a5e4a"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/assets/official-offline-content.json",
+    "sha256": "df34f00b930c9546158e217cf14c42a44674d434c7f1b0cad15ad2a83d025398"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/assets/release-info.json",
+    "sha256": "edfd82f381e6a5483ef1fb5eb58b009f37ba649b12d98af34900366cc2cc12ed"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/assets/wechat-mobile.public.json",
+    "sha256": "cd2242283836fb5f5f8bd776f6b4b4410d760ff576c6c024f807dd3a89bc7f79"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/AliyunSecureCacheDriver.java",
+    "sha256": "6efe17d8ebdca38270cb006f3fe804c3189debab1670e630cc5440742d279c52"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/Api.java",
+    "sha256": "92af47c72980d4bd53d3709e8f46a1228deb9d118acf6edfb51403a842f1a5c0"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/AppPush.java",
+    "sha256": "cca99250455b6ad7977ec8a342c3c23b393d01db148d44b7278ef1860bdf1d4e"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/AutomaticVideoCacheRenewal.java",
+    "sha256": "a81d6092f33419fa46a0838ea3c5566c2e9d3c9c4e1c2845359b0016414dafb9"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CacheClock.java",
+    "sha256": "c7f751406813fc8685f2ca928b36d6fdf4f0b3452fb8e0412826e0d2da2dcf7e"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CarrierLogin.java",
+    "sha256": "5e18f8036dadf8f7cc4805ef71bbb9b93a6c273bd7c4f38c5c540c4c8c659557"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/Commerce.java",
+    "sha256": "b6e97b128841663210bcddd8d6e4a2fc9904cf35ab9fd438b42a93c0ec096e1c"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "sha256": "bbce4c40eddf1eb121c67aecf6c920a689b88970a6d5c607d01114c24d54b6cd"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "sha256": "b1539dd4143ba1e7be7dd61ecc17fbb025b363ae9f45bc0596698c82c2c64cfc"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CourseCacheActivity.java",
+    "sha256": "90b1c6eafbd53257107d176724bfbd24d87b06b546c9e6b3384072278051b410"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CourseCacheManager.java",
+    "sha256": "783de063d9115b374ca8dfe2dbb30d972d2b9f2f94b6b15c16f1030a8684c243"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "sha256": "d4c64b4919b965bce43ded2574e2d11055122a9baed71ef18689fe63641b8008"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "sha256": "c94382a4523d9f7d1299d7b2d00e0d0ff500bd0c578c0f9ef032685e834f2d95"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/EventPresentation.java",
+    "sha256": "0ab6e7506ad5409981fbe3c39637cc1494f24706e0d5966bcb40cd9e58a7a1e2"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/Images.java",
+    "sha256": "82f0de1412f2e0f9f0595ef5572d9dfeed20766dbe376c218b921095fd0a56ac"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "sha256": "dacf48d39ec5646d7219c9e54d9399471667714af0d1cd9e6a137165438082cd"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/OfflineCourseActivity.java",
+    "sha256": "70db0571263036f9211c3df54ab19f91f38004ac0bec71ccb742300171a67e66"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "sha256": "7d9fe191074062455d5b7ada3570ccc11efb6e5f595bcb16c6647d10e9809d07"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/Policy.java",
+    "sha256": "46072c5acd4ac9215f0b66cb75200dffcc840444371243cce9c5697854bb108e"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "sha256": "495bc6c58914debd16433c99d0f1670ec32416b1782d531720abf79229925372"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/ProductPresentation.java",
+    "sha256": "e504974d87a3debcef4fb3f378b0ffffa75d059c378e73816b259dfafcf6d9ac"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PushPopupActivity.java",
+    "sha256": "d3c1e67bf8c9bbfb63f39ec009c8f376e98e624807de4c05806e708ec5f31a89"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "sha256": "a85e33fab9dfcb4aa0cd58546add774450a3c69ede735f131bb8be75a2d15dc7"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodApplication.java",
+    "sha256": "87f18c60f421cb243e430971e49cdfe79d479904446f8aec1d953095ae80a423"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodPushReceiver.java",
+    "sha256": "f4336028afd15db2aed8fb452e818f0b36d5987763625696ab19a8c4a797a077"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "sha256": "6623eba84aa4bfe62879a63a6e314096f00e5bd8b541543190118b18672e08f4"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "sha256": "a729a2e121174e2933425f8dc4d12ab68ac4aa47cfbbde6b9d23e4248791a23a"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/VideoCachePolicy.java",
+    "sha256": "15bba5e4296fe7a0c71d1d66d3322735047daad6ada542689510aa9303be864f"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+    "sha256": "7a33a1ef4f0ab40bbaec897dbfbe652d6cabb4def263c084ca0ce0ded1d3183e"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+    "sha256": "7a33a1ef4f0ab40bbaec897dbfbe652d6cabb4def263c084ca0ce0ded1d3183e"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/res/values/carrier_auth.xml",
+    "sha256": "d88ea5b79adbc0c2714efde52e26777ad7db82bc5b67f895e4494c2a316e6130"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/res/values/colors.xml",
+    "sha256": "cd76b3fb39e2c973f06bda974a6cfc3e89e41113255c14d0b8622e443833c2bb"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/res/values/styles.xml",
+    "sha256": "01e56e38f3e59dc719df5df5f9e2010a7fb01b1b764f771df614808b7be9dfda"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/res/values-night/styles.xml",
+    "sha256": "bcbc0f9d69f7b328bf2e1001275408f2c08712b98738422a81d414b5c317c881"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/res/xml/data_extraction_rules.xml",
+    "sha256": "6776a6a01f449fd8dcd49a6fdd63429ea883dca62304b9bc345808494c7c2f8e"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/AutomaticVideoCacheRenewalTest.java",
+    "sha256": "f28e060fde0764b235e827fb7dd9ff656862c36a1c4eb9eb1903ef45367e7842"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/CacheClockTest.java",
+    "sha256": "cb0c6a7f70119945ff9e1665bf36166205c9cca89a75519c474043d7baf06c1e"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/CommerceTest.java",
+    "sha256": "2e02c8375cfd82e99a8915a4716e04d42836352bb6d93c627e1b61abc64f494c"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/CompetitionRecordTest.java",
+    "sha256": "8e19c6b380118de12992176d94220568c5d5d2d4faab7ef9f11e0b26d84f8c31"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/CourseAccessPolicyTest.java",
+    "sha256": "9a686aab02eeda2331f2f1d1b8fa65da4e3950d44d9c5f9dda17ccc854aabb90"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/CoursePolicyTest.java",
+    "sha256": "b8ef4f5dc044bed5d23f9cf8f5d47bbe914ac1ff2eb2c1fefed6fa859d90cd09"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/EventPresentationTest.java",
+    "sha256": "b8f5fc44125b234547f41c1fd272b912575b167e86e7938d7476f7a3499cab25"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/PolicyTest.java",
+    "sha256": "9db41429eb32d7dc695f158df52bbbc3905ffd45e260e306522a5574910df9d1"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/ProductPresentationTest.java",
+    "sha256": "d897afad0eaaf882f06e34bee311e4e9f96b4dfd4b46de32d6551ae4557de257"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/VideoCachePolicyTest.java",
+    "sha256": "02292bd16b6ee9f63e42f73db1bca43d92fa2e69746c70bd20bd8fdb85dc3002"
+  },
+  {
+    "path": "app开发/Android/EvaDance/scripts/build-release.sh",
+    "sha256": "b0cc279fe05dda04846d05004f46ffddf605fe7d97b55924c5810e4d0bf69222"
+  },
+  {
+    "path": "app开发/Android/EvaDance/scripts/prepare_distribution.py",
+    "sha256": "12a36842ff3a43a189f1b9449b8774920561be7cdab1e342ef351f46681b619d"
+  },
+  {
+    "path": "app开发/Android/EvaDance/scripts/prepare_release.py",
+    "sha256": "64d25007815eed763e75c790b0a8f5ed21c1008fb24c68347f462a22fe793ebd"
+  },
+  {
+    "path": "app开发/Android/EvaDance/scripts/release_preflight.py",
+    "sha256": "171f386d43714b7266174a7a2d36d69197807a645245c3219623b6a8a78f583e"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/entryability/EntryAbility.ets",
+    "sha256": "fa2ec7526c6d2ab28353fc1a5b51064f25fec8ea2da06b382d829aff83a1817e"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/CachedCourses.ets",
+    "sha256": "42b4d52f9a8b6914691aa75c3aa4b2c2729fe64c29d1f338f6d65108c5d7af18"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+    "sha256": "8e7062d006de5233ec64220c13cfa315a7c8b8b8e4bde2e121a9463c24e04e49"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/AliyunSecureCacheDriver.ets",
+    "sha256": "3b53b22e514bf0d6d1e7547d145d91d9283b5be8587eeeb89222b796147cb553"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/AppPush.ets",
+    "sha256": "888ee7cc058c77ff7ccc66a25a4f3bb68dcf24c20c89e268950096e0e2d18d89"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/AutomaticVideoCacheRenewal.ets",
+    "sha256": "aaccd483c87037b92f577036c4be22f93c621a1fc8c334355aefee2a719b9990"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CacheClock.ets",
+    "sha256": "76169e09d4c4de8e5496497148626510312affb49cd578740592f0c87ead0282"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CarrierLogin.ets",
+    "sha256": "a0ea85a7ebc97ea758f5012cfa94502e35ea797025afc8cb747df595ca27b060"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CourseCacheStore.ets",
+    "sha256": "b885a82512351d7c84a6b49101e482e211e1aaec5b5446af1b098300e423c087"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CoursePresentation.ets",
+    "sha256": "1eea6950194ed4d6160269344a2d4c03bd274e2130a719223715ef9cc5de5b3d"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/EventPresentation.ets",
+    "sha256": "463ff324ccfd46fedff31602fb8ca0d20a4e37417ed362c6a6de797535015cdf"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/HuksVault.ets",
+    "sha256": "68ba8b4f6af20bc6ef10280889da740236f7c4aa7a2c6857580f10a6d894bea0"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets",
+    "sha256": "3ed061359a5d99720f099a93a50a058b8af20572de32ae950d14d1ec16bfc305"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/OfficialOfflineCopy.ets",
+    "sha256": "30c68448169ff65980e6166907a2565d3442513bd6c8c7158ebe12416730dbc1"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/PlatformApi.ets",
+    "sha256": "2dd9bdaef7da5d9a6f8e7d0388b279d92503c1df975e6d8cc1fcc09fe26b45d9"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/ProductPresentation.ets",
+    "sha256": "f58580d626a3a223cc82c42b066560b5e27dc6fe5498b13f241e992a98961e36"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/ShopCheckout.ets",
+    "sha256": "344a6d02c525e6b7e4b25f58108a613416141a6d743eab5a4e72b9c2c23525db"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/SwodTheme.ets",
+    "sha256": "517f695d43115e75d27270b2343ee59f1bff8f3e675e9c6e5e0a87dc478ae6a2"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/VideoCachePolicy.ets",
+    "sha256": "c1d46ba264dd679b94d13d9d57c307aeddfde1d8e0c4fd1234079eb37e66e8f2"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/module.json5",
+    "sha256": "40ec73503bd47a9056037dff81f2ffe22dac6791a7d5b5674824dfb4c41bb031"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/element/color.json",
+    "sha256": "026f7ca009206633ec407c6467d5c7efe7c5efeffb7ebfa13ed15225b00a229e"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/element/float.json",
+    "sha256": "8db02f7a08f7b7b73d6eb95b09a6643463d10258b757901e70f255de0a2c83ef"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/element/string.json",
+    "sha256": "6bf875656ed2114f3b148333d9d5b568958431b76b080c9d4576ce7a3b1c91bf"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/profile/backup_config.json",
+    "sha256": "467a97321341fba6872a6c79a25d89b16eded554c94dae3d4a2faa0d99e59358"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/profile/main_pages.json",
+    "sha256": "f21984fb1d5096f0db41314da0bb94c573e7ad018e5afae3044f8d5ff71b0bfc"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/element/color.json",
+    "sha256": "8700229c19ee0800518114f176f89a1ce884850d729a267e4eaa94ca7e98edcf"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/resources/rawfile/wechat-mobile.public.json",
+    "sha256": "cd2242283836fb5f5f8bd776f6b4b4410d760ff576c6c024f807dd3a89bc7f79"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/scripts/build_release.py",
+    "sha256": "8164fb72bb7171e79d9c22cd7dc9a8b52eb7bddd1abd3007fead3d99a6ef0a0d"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/scripts/check_debug_tools.py",
+    "sha256": "14159b59c8bfa8d4774f6a9c634fe07632b821e217dbecb56f66e7e67df80fdf"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/scripts/check_environment.py",
+    "sha256": "e7bda7d993ef33907c485586d01d535dcb563f67e08f460ee0b7698471a827be"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/scripts/prepare_login_config.py",
+    "sha256": "556eecd76fcffd4c097108217a79bb3bde17702df4ba4c26598f96e39e3dc500"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json",
+    "sha256": "1f5a9b04c62a79b6489d3d4952e78e2f5f9e0ef03bad17d2a82b7dd9250c06ec"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Resources/Assets.xcassets/BrandLogo.imageset/Contents.json",
+    "sha256": "f92eb0a62acd1066d451d38f8fcb97ab936194a786c4180bb28f660e1efb3033"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Resources/Assets.xcassets/Contents.json",
+    "sha256": "a3393322cd7b4c1e0aa93bebe09abaa91ad891290d1225b0b5d10b5c6f216025"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Resources/Info.plist",
+    "sha256": "f50b962d02c713d59fdc1e432617c31944363e335dd67e7db4ae89c86ba42eef"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Resources/PrivacyInfo.xcprivacy",
+    "sha256": "1ab0d239f00c034e513065c11a7d91e98d0b952395be9ffe0fc915c61a746d28"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Resources/wechat-mobile.public.json",
+    "sha256": "cd2242283836fb5f5f8bd776f6b4b4410d760ff576c6c024f807dd3a89bc7f79"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/APIClient.swift",
+    "sha256": "864aa616cf3b12018b292826ae7f1db550fb680848e4270d0018b3b3021fb47d"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/AutomaticVideoCacheRenewal.swift",
+    "sha256": "0f93cf7438ce207a5360fdf08e76fe9dde112e085c3584f957787a7ac86e614a"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/CompetitionRecord.swift",
+    "sha256": "c52a8b54b2f8b1f174dbe11f2f8cc6d7a2b848bea1b960125c3d9d3d34375134"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/CoursePresentation.swift",
+    "sha256": "c7d4e02a2e6794ca7457a55368b0ed5e8b5139418aaed051ca7e3c6cf16ef966"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/EventPresentation.swift",
+    "sha256": "4f3469a7e2e5fe73e0bc1e856ee3d36a6dd9d174d1dd9ead4eaabb3af505fa4d"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/LoginInputPolicy.swift",
+    "sha256": "77e8adfb07e22c331537c928823f0160ee9e29c6cf8b89fef8bf3e60d79f900c"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/Models.swift",
+    "sha256": "ef31e91ba7f993432e59b6d0df92e00648e3f8384753508f5d4544a2dc27d048"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/MultipartMusic.swift",
+    "sha256": "804d2c2296b4eae0f60849cfae84e1eb99823e6bfc999ed669edfd5543daf1ed"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/OfficialOfflineCopy.swift",
+    "sha256": "993f1040ba1ec46d318fc57feb0370bb15b62dd543c6153f7af0540e07512f02"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/PracticePlan.swift",
+    "sha256": "c7e6d0230c4740f03399e8a863659eb462cdb3f7e34aa921650cbc24a8137589"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/ProductPresentation.swift",
+    "sha256": "6f7fe9dadb610a6982fd86098757644a01d761ff605fd6ada0d958b5a7b21b5f"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/SiteData.swift",
+    "sha256": "30c436830d8712f613251d8ceedbb083f69bf8192fb875eae03e2217173efe52"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/StaffModels.swift",
+    "sha256": "45df2b5d2fcbafd635cd9172a54d7dc2d2c7dffb9ea58a1d3079e7df36956167"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/VideoCacheClockAnchor.swift",
+    "sha256": "17f056ede263159f5901936975fad74518921d99e7c19262f6670cd4f0a883e0"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaCore/VideoCachePolicy.swift",
+    "sha256": "3224f1c31af8be55fe9de7924a03375b345deaa4740ff85671d66633777c9be3"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift",
+    "sha256": "a11438c7d35eac4224ea9dd84919fcf8058ca9157948f7d6a3a6b73a12d78259"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AliyunSecureCacheDriver.swift",
+    "sha256": "77eb0aa619a22fc362b49467c9fb56a2f594cf10899437b50179333f10cd4adf"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AppNotifications.swift",
+    "sha256": "df2b7d4306776ebb41e72e7fc74471277e0da60e5be03aabc7a5e254cbf57128"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AppPushDelegate.swift",
+    "sha256": "8d7b4e76c8ef012f9857c7e0dd944ae28a227890c6ffabf90388c13ad56d9429"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/BrandViews.swift",
+    "sha256": "1a30e0d3db56ba3894ce75d008558fc0569c96041669ab6a9b2c8259d6cdfd97"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/CarrierLogin.swift",
+    "sha256": "59aa90d37b4832e77cfdcf9d594252f92ff66ad496deac8564b4220454112bbd"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheRecord.swift",
+    "sha256": "cd23d5c9104fb37dddadcf4d9d5794518377473144dd3146ae7b056c0124ddd5"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheStore.swift",
+    "sha256": "6a1b4f5035521bb0590ef9e97cd93ff7cb0db1b1b3e7ff84ee56fb380f73e806"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheVault.swift",
+    "sha256": "6b535df77b35101d2d9e482fde0b92828205800afef0eb4ed9713b89b64547fa"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheView.swift",
+    "sha256": "2ad66a9a3c444c431cb6cd6d76c3630f9fea38e41b5a941fb95fb7b3529e5be7"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCardSplitLayout.swift",
+    "sha256": "abb261c8478da5eb52e368cdc03ab8f7dc378207e2eecedad2ab0fdb7ae1491f"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift",
+    "sha256": "1ca9d56042dec717ef523a008f6d0b7f3811831746fe6fb6cfe344eee61bbf4c"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/DeletionReceiptView.swift",
+    "sha256": "70cdf6e94d96cfdbc9bf1b19e7fe7a1e6da9e50313aa4103380800888de970dd"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/EvaDanceApp.swift",
+    "sha256": "03b2fe794a9f53e1c5b235a18fd5c7c179659c87bf452355a0d3516d004b261a"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventsView.swift",
+    "sha256": "9a9bfc8551cbf6f9452aebbe8d7803cdb258836eb49f9833b886ba538b982f91"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift",
+    "sha256": "fb306792b42ba00994d7c4d05c8e3c628f1be8ff9a96891a7634c8e6c530b340"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/LocalDeletionReceipt.swift",
+    "sha256": "f723a70beb7741152aaefe7ada203f7b0cf9c529b2bcff66c39c818b33ac4646"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/LoginState.swift",
+    "sha256": "05555036cc2cf37170ce468f94a4f864bcb99b14f175a2e589b8de32b5ebe0cc"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/LoginView.swift",
+    "sha256": "939bf9e0c5dea2fbd4b0a8f7f696344762cac1ed5049cac2ef5fb43536c43f0c"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/MessageDetailView.swift",
+    "sha256": "3be42c646eef5c3b0e132ef7f3fdbc2c866ce088381da6300bcc9431abf00782"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/MessageNoticeView.swift",
+    "sha256": "58e5d0605876a83a8cc60a89f0d47cf1da6c86b76c652c173d2bb39f4d69892c"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/MyCompetitionsView.swift",
+    "sha256": "2cefae276a36a2d74e85ba41bb757c8a83f886f71f91830379fa550e857df7be"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/OfflineCoursePlayerView.swift",
+    "sha256": "8c0c624afb0fbd4663c8a50c63a8f21da39de37fa8a26bbd56b9f8918d280ff7"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift",
+    "sha256": "55df1fbf9efe7085a01960c2dc378c388afcdc20d2f2baf3ff0dfc9693cc2eed"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/Session.swift",
+    "sha256": "af115c1ac85b914bf88477eeff0ac2017ced5d4822ae5e6ebcb906a533132968"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/ShopViews.swift",
+    "sha256": "50db99e43c07f2c134c1ac89e25f63d99c9aed68ea055d96a728eeff961f2705"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/StaffEventViews.swift",
+    "sha256": "413ab45b680803c8579eabb3de4db21b57484978a41c0d5c152fbf1c170cdda8"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/StudyAssistantView.swift",
+    "sha256": "3978a14f27334b225a0746fe22a8eb161d959c5a2f6ec0be990f5f0d32d5328d"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/scripts/check_release.py",
+    "sha256": "bcc54cffea1376834eaa41bc696e85cf40a5df9102bbf686b5c8614f3839b8ea"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/scripts/fixture_server.py",
+    "sha256": "696bf92d61f51f43f9669f946c6aa2447559bedcc0fe55a9a12a82436f56d4de"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/scripts/generate_project.py",
+    "sha256": "336d1c78cb48fb1a8989b1938e763d5899550eda6052fe9dd93da777ca255d3b"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/scripts/verify_filing_signature.py",
+    "sha256": "ca397a1e015206f76cdef1fae5b50471ddeb5bdf91ca5a26de7181e759e87ecf"
+  },
+  {
+    "path": "production/website/public/app/privacy.html",
+    "sha256": "66c9b9ccd60441dae05043baead7668e00123361463d93cfcef3236eb261be9c"
+  },
+  {
+    "path": "production/website/public/app/processors.html",
+    "sha256": "f573b423197cbb8bfca6eba205bd117c014f76b5de7113b0609b27709acaa92f"
+  },
+  {
+    "path": "production/website/public/app/terms.html",
+    "sha256": "9410693104e48e832089dc7028dee36e77aef2872870c3e812ac4b89aefc4537"
+  },
+  {
+    "path": "production/website/src/app/privacy/page.tsx",
+    "sha256": "82c2a0ce5ef80ae06b091c37375bfc25d8fb659f4d83189fce53b048735bf67a"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/scripts/assemble_signed_app.cjs",
+    "sha256": "3ed07bd03089878d7f1bd71cfb68d480168bc324dc26dd82ac54916d68d5d882"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/build.gradle",
+    "sha256": "4bf34db674e36fef026db69405721955bdcd9b171079d7140803d3c103e34bce"
+  }
+]

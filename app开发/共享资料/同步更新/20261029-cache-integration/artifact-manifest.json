@@ -1,0 +1,22 @@
+[
+  {
+    "path": "Android/installers/SWOD-1.0.0-9-release.apk",
+    "bytes": 25798487,
+    "sha256": "4d8597803e865131b3715082c8b4941e54d0136fe6d7c99953adaaa1b024e0c3"
+  },
+  {
+    "path": "Android/installers/SWOD-1.0.0-9-release.aab",
+    "bytes": 13074256,
+    "sha256": "34c34b71d2901ea408373ab3cfcce68d92b75a3c07757e4b63124679740795f9"
+  },
+  {
+    "path": "HarmonyOS/installers/SWOD-1.0.0-8-release.hap",
+    "bytes": 12435455,
+    "sha256": "d15d2d4cb673071380bd96c9ea65b157c4f3131739f1f45a56464bd2d8689231"
+  },
+  {
+    "path": "HarmonyOS/installers/SWOD-1.0.0-8-release.app",
+    "bytes": 5669085,
+    "sha256": "d5c37349babeb08768d5450ee48b6113f59a98fbb549fcb2a7fcf3be59aadf20"
+  }
+]

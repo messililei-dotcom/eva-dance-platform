@@ -425,3 +425,6 @@ button.my-events-toggle{display:flex;width:100%;margin:0;text-align:left;line-he
 .my-events-actions button,.events-feedback button,.events-refresh{min-height:88rpx;padding:20rpx 24rpx;display:flex;align-items:center;justify-content:center;border-radius:18rpx;font-size:26rpx;line-height:1.4;color:#9f1d20;background:#fff;border:1rpx solid #dcb5b6}
 .my-events-actions .event-pay{color:#fff;background:#9f1d20;border-color:#9f1d20}
 .events-feedback{padding:24rpx;color:#616773;font-size:27rpx;line-height:1.6}.events-feedback button{margin-top:20rpx}.events-refresh{margin-top:24rpx;width:100%}
+
+.profile-page{padding:12rpx 28rpx 40rpx;background:#fff;box-sizing:border-box}.profile-shell{border-radius:0;box-shadow:none}.content-section{margin-top:20rpx;border-radius:0;box-shadow:none}.link-row,.course-row,.certificate-row{border-radius:0;box-shadow:none;min-height:88rpx}.course-cover{width:224rpx;height:192rpx;border-radius:8rpx}
+.online-course,.record-card,.my-events-panel .record-card{margin-top:0;padding:20rpx 0;border-radius:0;background:transparent;box-shadow:none;border-bottom:1rpx solid #eceff3}.empty-row{background:transparent;border-radius:0;padding:16rpx 0}.content-section{padding-left:0;padding-right:0}

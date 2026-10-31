@@ -17,12 +17,13 @@ import android.graphics.drawable.RippleDrawable;
 final class SwodUi {
     private SwodUi() {}
     static boolean dark(Context c) { return (c.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES; }
-    static int canvas(Context c) { return Color.parseColor(dark(c) ? "#141619" : "#F5F6F8"); }
+    static int canvas(Context c) { return surface(c); }
+    static int field(Context c) { return Color.parseColor(dark(c) ? "#141619" : "#F6F7F9"); }
     static int surface(Context c) { return Color.parseColor(dark(c) ? "#202328" : "#FFFFFF"); }
-    static int ink(Context c) { return Color.parseColor(dark(c) ? "#F3F4F6" : "#20242B"); }
-    static int muted(Context c) { return Color.parseColor(dark(c) ? "#B5BAC4" : "#626A77"); }
+    static int ink(Context c) { return Color.parseColor(dark(c) ? "#F3F4F6" : "#202124"); }
+    static int muted(Context c) { return Color.parseColor(dark(c) ? "#B5BAC4" : "#616773"); }
     static int primary(Context c) { return Color.parseColor(dark(c) ? "#FFACA9" : "#9F1D20"); }
-    static int tonal(Context c) { return Color.parseColor(dark(c) ? "#3C272A" : "#F9EDEC"); }
+    static int tonal(Context c) { return Color.parseColor(dark(c) ? "#3C272A" : "#F9EAEA"); }
     static int line(Context c) { return Color.parseColor(dark(c) ? "#373D46" : "#E2E5EA"); }
     static GradientDrawable shape(Context c, int color, int radius) {
         GradientDrawable d = new GradientDrawable(); d.setColor(color);
@@ -30,6 +31,11 @@ final class SwodUi {
     }
     static Drawable touch(Context c, int color, int radius) {
         return new RippleDrawable(ColorStateList.valueOf(dark(c) ? 0x28FFFFFF : 0x189F1D20), shape(c,color,radius), shape(c,Color.WHITE,radius));
+    }
+    static Drawable row(Context c) {
+        GradientDrawable rule=shape(c,line(c),0);
+        android.graphics.drawable.LayerDrawable result=new android.graphics.drawable.LayerDrawable(new Drawable[]{touch(c,Color.TRANSPARENT,0),rule});
+        result.setLayerHeight(1,Math.max(1,Math.round(c.getResources().getDisplayMetrics().density*0.5f)));result.setLayerGravity(1,android.view.Gravity.BOTTOM);return result;
     }
     static Drawable icon(Context c, String kind, int color) { return new Icon(kind,color,Math.round(24*c.getResources().getDisplayMetrics().density)); }
     private static final class Icon extends Drawable {

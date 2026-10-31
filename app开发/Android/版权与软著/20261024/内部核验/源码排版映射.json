@@ -1,0 +1,7312 @@
+[
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 13,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 15,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 17,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 18,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 19,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 20,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 21,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 22,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 22,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 22,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 23,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 24,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 25,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 25,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 25,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 26,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 27,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 28,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 29,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 30,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 31,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 31,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 32,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 33,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 34,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 35,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 36,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 37,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 37,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 38,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 39,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 40,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 41,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 42,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 43,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 44,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 45,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 46,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 46,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 47,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 47,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 48,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 49,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 50,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 51,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 52,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 53,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 54,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 55,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 56,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 56,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 57,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 58,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 59,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 60,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 61,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 61,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 62,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 63,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 64,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 65,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 66,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 67,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 68,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 68,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 69,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 70,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 71,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 71,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 72,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 72,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 73,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 74,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 74,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 75,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 76,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 76,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 77,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 77,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 78,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 79,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 80,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 81,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 82,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 83,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 84,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 85,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 85,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 85,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 86,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 87,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 87,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 88,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 88,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 89,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 90,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 91,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 92,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 93,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 93,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 94,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 95,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 96,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 97,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 98,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 98,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 99,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 100,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 101,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 101,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 102,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 103,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 103,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 104,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 105,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 105,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 106,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 107,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 108,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 109,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 109,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 110,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 110,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 111,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 112,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Api.java",
+    "originalLine": 114,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 13,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 15,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 17,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 18,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 19,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 20,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 21,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 22,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 23,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 24,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+    "originalLine": 25,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 11,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 13,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 14,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 15,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 13,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 15,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 17,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 18,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 19,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 20,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 21,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 22,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 23,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 24,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 25,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+    "originalLine": 26,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 2,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 7,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 7,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 7,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 8,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 8,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 8,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 9,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 10,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 10,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 2,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 6,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 7,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 8,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 8,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 8,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 9,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 10,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 10,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 13,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 15,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 17,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 18,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 19,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 20,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 21,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 22,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 23,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 24,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 25,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 26,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 27,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 28,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 29,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 30,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 31,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 32,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 33,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 34,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 35,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 36,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 37,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 38,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 38,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 39,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 40,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 41,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 42,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 43,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 44,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 45,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Images.java",
+    "originalLine": 46,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 13,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 15,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 17,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 18,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 19,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 21,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 22,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 23,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 24,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 25,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 26,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 27,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 28,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 29,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 30,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 31,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 32,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 33,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 34,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 35,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 36,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 37,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 38,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 39,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 40,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 41,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 42,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 43,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 44,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 45,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 46,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 47,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 48,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 49,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 50,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 51,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 52,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 53,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 54,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 54,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 55,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 55,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 56,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 57,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 58,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 59,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 59,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 59,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 60,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 60,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 61,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 61,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 61,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 62,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 62,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 62,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 63,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 64,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 64,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 65,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 66,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 67,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 67,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 67,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 67,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 67,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 68,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 69,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 69,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 69,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 69,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 70,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 71,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 71,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 71,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 72,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 73,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 74,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 75,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 76,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 77,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 78,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 78,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 78,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 78,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 78,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 79,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 79,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 79,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 79,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 80,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 80,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 81,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 81,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 82,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 83,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 83,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 84,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 84,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 85,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 85,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 86,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 86,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 86,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 86,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 86,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 87,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 87,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 87,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 88,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 89,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 89,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 89,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 89,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 89,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 90,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 91,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 92,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 93,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 94,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 95,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 95,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 96,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 97,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 98,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 98,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 99,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 100,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 101,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 102,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 103,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 104,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 104,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 105,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 105,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 106,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 106,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 107,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 107,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 107,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 107,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 107,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 107,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 107,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 108,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 109,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 110,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 111,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 112,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 112,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 112,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 112,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 112,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 112,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 113,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 114,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 115,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 116,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 116,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 117,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 118,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 119,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 120,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 121,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 121,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 122,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 123,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 124,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 125,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 126,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 127,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 128,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 128,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 129,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 130,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 131,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 132,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 132,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 133,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 134,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 134,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 134,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 134,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 134,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 134,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 135,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 135,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 135,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 136,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 137,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 138,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 138,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 139,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 139,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 140,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 140,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 140,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 141,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 141,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 141,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 141,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 142,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 143,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 143,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 143,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 144,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 145,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 146,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 147,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 148,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 148,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 148,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 149,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 149,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 149,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 149,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 150,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 150,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 151,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 151,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 151,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 151,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 152,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 153,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 153,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 153,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 153,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 153,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 153,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 153,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 153,
+    "wrappedPart": 7
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 154,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 154,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 154,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 154,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 154,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 155,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 155,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 155,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 155,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 155,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 155,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 156,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 156,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 156,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 156,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 156,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 156,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 156,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 157,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 157,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 157,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 157,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 158,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 159,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 160,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 161,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 161,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 161,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 162,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 162,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 163,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 163,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 164,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 164,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 164,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 165,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 165,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 165,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 166,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 166,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 166,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 167,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 167,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 167,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 167,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 167,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 168,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 168,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 168,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 168,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 168,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 168,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 168,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 168,
+    "wrappedPart": 7
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 168,
+    "wrappedPart": 8
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 169,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 170,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 171,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 171,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 171,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 172,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 172,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 172,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 172,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 173,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 174,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 175,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 176,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 176,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 176,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 177,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 177,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 177,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 177,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 177,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 178,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 178,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 178,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 178,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 178,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 178,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 178,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 178,
+    "wrappedPart": 7
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 178,
+    "wrappedPart": 8
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 178,
+    "wrappedPart": 9
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 178,
+    "wrappedPart": 10
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 7
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 8
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 9
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 10
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 11
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 12
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 13
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 14
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 15
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 179,
+    "wrappedPart": 16
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 180,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 181,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 181,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 181,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 181,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 181,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 181,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 181,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 182,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 183,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 183,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 183,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 184,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 184,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 184,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 184,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 184,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 186,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 187,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 188,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 189,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 190,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 190,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 190,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 191,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 192,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 192,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 193,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 194,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 195,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 195,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 196,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 197,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 198,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 198,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 198,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 199,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 200,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 200,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 201,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 201,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 202,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 202,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 203,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 204,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 205,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 206,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 207,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 208,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 208,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 209,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 210,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 211,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 211,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 212,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 212,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 213,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 213,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 213,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 213,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 214,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 214,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 215,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 215,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 216,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 217,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 7
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 8
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 9
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 10
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 11
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 12
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 13
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 14
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 15
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 16
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 219,
+    "wrappedPart": 17
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 220,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 220,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 220,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 221,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 221,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 221,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 222,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 222,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 222,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 222,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 222,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 222,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 222,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 223,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 223,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 223,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 223,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 7
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 8
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 9
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 10
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 11
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 12
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 13
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 224,
+    "wrappedPart": 14
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 225,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 225,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 225,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 225,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 226,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 226,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 226,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 226,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 226,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 226,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 226,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 226,
+    "wrappedPart": 7
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 226,
+    "wrappedPart": 8
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 226,
+    "wrappedPart": 9
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 7
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 8
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 9
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 10
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 11
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 12
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 13
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 14
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 227,
+    "wrappedPart": 15
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 228,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 228,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 228,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 228,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 228,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 228,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 229,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 229,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 230,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 230,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 230,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 230,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 230,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 230,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 230,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 230,
+    "wrappedPart": 7
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 231,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 231,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 231,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 231,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 231,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 232,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 232,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 232,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 232,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 232,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 232,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 233,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 233,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 233,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 233,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 234,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 235,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 236,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 236,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 237,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 238,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 238,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 239,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 239,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 239,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 240,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 241,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 242,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 243,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 244,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 245,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 246,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 246,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 247,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 247,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 247,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 247,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 248,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 249,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 250,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 251,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 252,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 252,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 253,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 254,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 255,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 256,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 256,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 257,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 258,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 259,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 260,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 260,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 261,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 261,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 262,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 262,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 263,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 264,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 265,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 266,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 267,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 268,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 268,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 269,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 270,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 271,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 271,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 272,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 272,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 273,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 273,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 274,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 275,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 275,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 276,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 277,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 277,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 277,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 277,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 278,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 278,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 278,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 278,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 278,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 278,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 278,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 278,
+    "wrappedPart": 7
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 279,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 279,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 279,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 279,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 280,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 280,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 280,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 280,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 281,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 281,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 282,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 282,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 283,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 283,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 284,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 285,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 286,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 287,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 288,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 288,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 289,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 289,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 290,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 291,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 291,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 292,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 292,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 292,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 293,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 294,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 295,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 296,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 297,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 298,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 299,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 299,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 300,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 300,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 301,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 301,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 302,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 302,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 302,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 303,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 304,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 305,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 306,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 306,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 307,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 308,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 309,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 310,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 311,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 312,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 313,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 314,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 314,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 315,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 315,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 316,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 317,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 318,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 318,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 319,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 320,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 321,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 321,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 321,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 322,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 323,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 324,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 325,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 326,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 327,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 327,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 328,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 329,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 330,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 330,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 330,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 331,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 331,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 332,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 333,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 333,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 334,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 334,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 334,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 335,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 336,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 337,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 338,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 339,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 340,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 340,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 341,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 342,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 342,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 343,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 344,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 345,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 346,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 347,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 347,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 347,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 348,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 348,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 348,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 349,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 350,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 350,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 350,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 350,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 351,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 352,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 353,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 354,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 354,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 355,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 355,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 355,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 356,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 356,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 357,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 357,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 358,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 359,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 359,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 360,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 360,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 360,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 360,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 361,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 362,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "originalLine": 364,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 13,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 17,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 18,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 19,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 20,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 21,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 22,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 23,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 24,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 25,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 26,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 27,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 28,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 28,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 29,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 30,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 31,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 32,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 33,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 34,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 35,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 36,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 37,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 37,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 38,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 39,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 40,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 40,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 41,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 42,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 43,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 44,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 44,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 45,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 45,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 46,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 46,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 47,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 48,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 49,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 50,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 51,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 52,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 53,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 54,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 55,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 55,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 56,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 57,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 58,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 59,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 59,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 59,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 59,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 60,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 60,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 61,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 61,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 62,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 63,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 63,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 64,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 65,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 65,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 65,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 66,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 66,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 67,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 67,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 67,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 67,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 67,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 68,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 69,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 69,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 69,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 69,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 70,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 71,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 72,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 73,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 74,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 74,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 75,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 75,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 75,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 75,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 75,
+    "wrappedPart": 4
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 75,
+    "wrappedPart": 5
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 75,
+    "wrappedPart": 6
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 76,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 77,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 78,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 78,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 78,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 79,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 80,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 81,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 81,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 82,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 83,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 84,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 85,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 85,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 86,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 86,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 86,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 87,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 87,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 87,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 88,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 89,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 90,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 91,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 91,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 92,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 92,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 93,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 93,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "originalLine": 94,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 13,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 13,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 15,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 16,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 17,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 18,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 19,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 20,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 20,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 21,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 22,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 23,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 24,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 24,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 25,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 26,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 27,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 28,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 29,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 29,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 30,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 30,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 31,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 32,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+    "originalLine": 33,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 10,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 12,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 13,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 15,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 17,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 18,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 19,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 20,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 21,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 22,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 23,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 23,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 24,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 25,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 25,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 25,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 26,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 27,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 28,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 29,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 30,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 31,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 31,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 32,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 33,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 34,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 35,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 36,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 37,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 38,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 39,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 40,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 40,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 41,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 42,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 43,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 43,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 44,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 44,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 45,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 46,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 47,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 48,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 48,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 49,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 50,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 51,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+    "originalLine": 52,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 13,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 15,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 17,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 18,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 19,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 20,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 21,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 22,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 23,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 23,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 24,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 25,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 26,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 27,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+    "originalLine": 28,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 13,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 17,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 18,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 19,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 19,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 20,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 21,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 22,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 23,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 24,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 25,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 26,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 27,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 28,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 29,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 30,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 31,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 32,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 32,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 33,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 34,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 34,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 35,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 36,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 37,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 38,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 38,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 39,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 40,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 41,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 41,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 42,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 43,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 44,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 45,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 46,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 46,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 47,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 47,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 48,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 49,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 50,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 51,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 52,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 53,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 54,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 55,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 56,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 57,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 58,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 59,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 60,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "originalLine": 61,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 15,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 17,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 18,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 19,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 20,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 21,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 22,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 23,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 23,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 24,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 24,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 25,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 26,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 27,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 28,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 29,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 30,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 31,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 31,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 32,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 32,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 33,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 34,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 35,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 36,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 37,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 38,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 39,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 39,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 40,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 41,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 42,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 43,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+    "originalLine": 44,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+    "originalLine": 2,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+    "originalLine": 2,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+    "originalLine": 2,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+    "originalLine": 2,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/res/values/colors.xml",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/res/values/colors.xml",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values/styles.xml",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/res/values/styles.xml",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values/styles.xml",
+    "originalLine": 2,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values/styles.xml",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values/styles.xml",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values/styles.xml",
+    "originalLine": 4,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/res/values/styles.xml",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values/styles.xml",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values-night/styles.xml",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/res/values-night/styles.xml",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values-night/styles.xml",
+    "originalLine": 2,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values-night/styles.xml",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values-night/styles.xml",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values-night/styles.xml",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values-night/styles.xml",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values-night/styles.xml",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values-night/styles.xml",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/values-night/styles.xml",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 2,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 9,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 10,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 11,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 12,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 13,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 14,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 15,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/res/xml/data_extraction_rules.xml",
+    "originalLine": 16,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": null,
+    "type": "file_separator"
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 1,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 2,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 3,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 3,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 3,
+    "wrappedPart": 2
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 3,
+    "wrappedPart": 3
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 4,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 5,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 6,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 6,
+    "wrappedPart": 1
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 7,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 8,
+    "wrappedPart": 0
+  },
+  {
+    "path": "app/src/main/AndroidManifest.xml",
+    "originalLine": 9,
+    "wrappedPart": 0
+  }
+]

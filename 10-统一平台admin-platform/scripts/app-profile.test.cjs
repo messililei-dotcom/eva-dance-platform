@@ -24,7 +24,9 @@ function routeFixture(){
  const source=ts.transpileModule(fs.readFileSync('src/app/api/app/v1/[...path]/route.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
  new Function('require','module','exports',source)(name=>{
   if(name.endsWith('app-profile'))return m.exports;
-  if(name.endsWith('app-session'))return{AppError,ensureAppSchema(){},authenticateApp:(_,token)=>{if(token!=='valid')throw new AppError('unauthenticated',401);return{member_id:42,member:{phone:saved.phone}};}};
+  if(name.endsWith('app-video-cache'))return {videoCacheCapability:()=>({enabled:false})};
+  if(name.endsWith('app-push'))return {pushCapability:()=>({enabled:false})};
+ if(name.endsWith('app-session'))return{AppError,ensureAppSchema(){},authenticateApp:(_,token)=>{if(token!=='valid')throw new AppError('unauthenticated',401);return{member_id:42,member:{phone:saved.phone}};}};
   if(name.endsWith('app-platform'))return{appPlatform:()=> 'android'};
   if(name.endsWith('app-shop')||name.endsWith('app-carrier-auth')||name.endsWith('mini/_auth'))return{};
   if(name.endsWith('event-music-upload'))return{MusicUploadError:class extends Error{}};

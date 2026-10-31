@@ -1,0 +1,24 @@
+{
+  "builtAt": "2026-10-30T20:58:58.491112+08:00",
+  "bundleName": "cn.com.swod.evadance",
+  "version": "1.0.2-15",
+  "filingNumber": "湘ICP备2026005683号-5A",
+  "releaseBuild": true,
+  "signatureVerified": true,
+  "appSigned": true,
+  "deviceAccepted": false,
+  "uploaded": false,
+  "published": false,
+  "artifacts": [
+    {
+      "file": "installers/SWOD-1.0.2-15-release.hap",
+      "bytes": 16120283,
+      "sha256": "cc6b774a496ca8dc07073a6d4f8b158cb29a1120c79d1028e70977710bd5e6dc"
+    },
+    {
+      "file": "installers/SWOD-1.0.2-15-release.app",
+      "bytes": 7599911,
+      "sha256": "86091378e8500578d81b72de044044c09a3d7f508bdb41fe5e79a3e9d4d68688"
+    }
+  ]
+}

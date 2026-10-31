@@ -1,0 +1,65 @@
+{
+  "asOf": "2026-10-26",
+  "apk": "installers/SWOD-1.0.0-8-release.apk",
+  "sha256": "e03b4a63dcb6c68b718624310bea4026231c5326cb112671b38cce3aac1d8cb8",
+  "technicalArtifactReady": true,
+  "releasePreflight": "NOT_READY",
+  "commonRemainingGates": [
+    "本轮精确APK真机验收未完成",
+    "渠道版权/签章替代材料按官方实际字段确认；不签不实AI声明、不付款",
+    "审核凭据提交前通过既有受控文件核实；不重置共享审核密码"
+  ],
+  "stores": [
+    {
+      "store": "小米",
+      "accountStatus": "enterprise_approved",
+      "basis": "2026-10-26父任务提供的今日官方确认",
+      "nextAction": "父任务创建手机应用并上传APK草稿；小米手机应用列表为空，账号已认证",
+      "uploadedByThisTask": false,
+      "submittedByThisTask": false
+    },
+    {
+      "store": "OPPO",
+      "accountStatus": "enterprise_approved",
+      "basis": "2026-10-26父任务提供的今日官方确认",
+      "nextAction": "可由父任务开始上传草稿，签章材料按官网要求确认",
+      "uploadedByThisTask": false,
+      "submittedByThisTask": false
+    },
+    {
+      "store": "vivo",
+      "accountStatus": "review_pending_last_local_record",
+      "basis": "2026-10-25本地权威注册记录，今日未浏览器核验",
+      "nextAction": "待父任务核验企业审核/打款步骤",
+      "uploadedByThisTask": false,
+      "submittedByThisTask": false
+    },
+    {
+      "store": "华为Android",
+      "accountStatus": "enterprise_verified_existing_draft_code_6",
+      "basis": "2026-10-25本地权威记录，Android App ID 119475083",
+      "nextAction": "父任务核验草稿并替换为8；原签名一致；不要操作HarmonyOS在审记录",
+      "uploadedByThisTask": false,
+      "submittedByThisTask": false
+    },
+    {
+      "store": "荣耀",
+      "accountStatus": "unknown",
+      "basis": "本地上架执行记录未发现荣耀账号证据",
+      "nextAction": "待父任务核验账号和应用记录；不能假定华为账号通用",
+      "uploadedByThisTask": false,
+      "submittedByThisTask": false
+    },
+    {
+      "store": "腾讯应用宝",
+      "accountStatus": "base_profile_approved_QQ_QR_pending",
+      "basis": "2026-10-26父任务证据，浏览器由01a1775f-4d7f-72c4-b873-e330ea0af03b持有",
+      "nextAction": "等待该任务处理QQ扫码；不重复登录",
+      "uploadedByThisTask": false,
+      "submittedByThisTask": false
+    }
+  ],
+  "harmonyExistingReview": "2026-10-25 v1.0.0(7)预审中，未撤回；本轮8仅本地候选",
+  "noBrowserOperations": true,
+  "parentLatestObservation": "小米手机应用列表为空且账号已认证；其余商店登录已失效，由父任务恢复正常入口。未签车机分发协议。"
+}

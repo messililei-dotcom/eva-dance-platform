@@ -31,12 +31,13 @@
       </view>
     </view>
   </view>
+  <scroll-view scroll-x class="catalog-filters"><view class="catalog-filter-row"><button class="catalog-chip {{unlockedOnly ? 'selected' : ''}}" aria-label="筛选已解锁课程" aria-pressed="{{unlockedOnly}}" bindtap="toggleUnlocked">✓ 已解锁</button><button wx:for="{{categories}}" wx:key="*this" class="catalog-chip {{activeCategory === item ? 'selected' : ''}}" data-category="{{item}}" bindtap="switchCategory">{{item}}</button></view></scroll-view>
   <view class="search-result" wx:if="{{searchCountText}}">{{searchCountText}}</view>
 
   <view wx:if="{{loading}}" class="empty-card">课程加载中…</view>
   <view wx:elif="{{error}}" class="empty-card"><text>{{error}}</text><button class="all-btn" bindtap="loadHomeSections">重新加载</button></view>
   <view class="course-list" wx:elif="{{courseRows.length}}">
-    <view class="course-row" wx:for="{{courseRows}}" wx:key="id" bindtap="goCard" data-id="{{item.id}}" data-source="{{item.sourceType}}">
+    <view class="course-row" hover-class="row-pressed" hover-stay-time="80" wx:for="{{courseRows}}" wx:key="id" bindtap="goCard" data-id="{{item.id}}" data-source="{{item.sourceType}}">
       <view class="row-cover">
         <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" binderror="onImageError" data-path="courseRows[{{index}}].cover_image"></image>
         <view wx:else class="cover-fallback">课程</view>

@@ -1,0 +1,82 @@
+{
+  "checkedAt": "2026-10-30T10:59:01+08:00",
+  "build": 12,
+  "newReviewSubmitted": false,
+  "filingChanged": false,
+  "signatureChanged": false,
+  "existingReviewsWithdrawn": false,
+  "imageCount": 4,
+  "pixelEditing": false,
+  "channels": {
+    "tencent": {
+      "appId": "1112541998",
+      "currentScreenshotsUploaded": true,
+      "currentScreenshotsCount": 4,
+      "screenshotsSavedAndReopenedVerified": false,
+      "screenshotsEvidence": "../20261030/evidence/tencent-build12-screenshots-unsaved.png",
+      "baseInfoSaved": false,
+      "blockers": [
+        "已签发软著或电子版权证书",
+        "盖章ICP备案截图、签章应用发布承诺函",
+        "适用教育资质待核实及补齐",
+        "基础信息保存仍被版权及特殊行业资质校验阻止；四张截图已回显并通过数量校验"
+      ]
+    },
+    "oppo": {
+      "appId": "37977416",
+      "currentScreenshotsUploaded": true,
+      "currentScreenshotsCount": 4,
+      "screenshotsSavedAndReopenedVerified": true,
+      "screenshotsEvidence": "../20261030/evidence/oppo-build12-screenshots-reopened.png",
+      "baseInfoSaved": null,
+      "blockers": [
+        "版权证书",
+        "已签章通用承诺函及课程补充承诺",
+        "邮箱及手机验证",
+        "APK附件与四张截图一并保存后重开仍为空，持久关联未核验通过"
+      ]
+    },
+    "vivo": {
+      "appId": "106168720",
+      "currentScreenshotsUploaded": true,
+      "currentScreenshotsCount": 4,
+      "screenshotsSavedAndReopenedVerified": true,
+      "screenshotsEvidence": "../20261030/evidence/vivo-build12-screenshots-reopened.png",
+      "baseInfoSaved": null,
+      "blockers": [
+        "分类和发布时间保存后重开仍未恢复，尚不能核实其持久状态",
+        "版权证明"
+      ]
+    },
+    "xiaomi": {
+      "appId": "2882303761520603185",
+      "currentScreenshotsUploaded": true,
+      "currentScreenshotsCount": 4,
+      "screenshotsSavedAndReopenedVerified": true,
+      "screenshotsEvidence": "../20261030/evidence/xiaomi-build12-screenshots-reopened.png",
+      "baseInfoSaved": null,
+      "blockers": [
+        "版权证书",
+        "资质评估",
+        "联系人手机验证"
+      ]
+    },
+    "honor": {
+      "appId": "104599763",
+      "currentScreenshotsUploaded": false,
+      "currentScreenshotsCount": null,
+      "screenshotsSavedAndReopenedVerified": null,
+      "screenshotsEvidence": null,
+      "baseInfoSaved": null,
+      "blockers": [
+        "分发后台嵌入页空白，刷新一次未恢复；构建12尚未上传",
+        "版权证书",
+        "当前版本截图",
+        "语言素材保存校验未通过",
+        "内容分级与资质评估",
+        "备案凭证",
+        "联系人验证"
+      ]
+    }
+  }
+}

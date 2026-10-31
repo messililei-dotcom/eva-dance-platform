@@ -1,0 +1,176 @@
+{
+  "asOf": "2026-10-24",
+  "softwareFullName": "SWOD东方舞学习服务软件",
+  "shortName": "SWOD",
+  "version": "1.0.0",
+  "androidVersionCode": 7,
+  "scope": "Android client first-party Java and XML only; excludes backend and third-party runtime code",
+  "sourceFiles": [
+    {
+      "path": "app/src/main/java/cn/com/swod/app/Api.java",
+      "sha256": "be518daf409bec0433cefe68afe988d03a01b968ab14a50dffdb3e476a8cfa73",
+      "physicalSourceLines": 114,
+      "nonemptySourceLines": 111
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/Commerce.java",
+      "sha256": "b6e97b128841663210bcddd8d6e4a2fc9904cf35ab9fd438b42a93c0ec096e1c",
+      "physicalSourceLines": 25,
+      "nonemptySourceLines": 23
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/CompetitionRecord.java",
+      "sha256": "bbce4c40eddf1eb121c67aecf6c920a689b88970a6d5c607d01114c24d54b6cd",
+      "physicalSourceLines": 16,
+      "nonemptySourceLines": 15
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/CourseAccessPolicy.java",
+      "sha256": "b1539dd4143ba1e7be7dd61ecc17fbb025b363ae9f45bc0596698c82c2c64cfc",
+      "physicalSourceLines": 26,
+      "nonemptySourceLines": 24
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/CourseContent.java",
+      "sha256": "d4c64b4919b965bce43ded2574e2d11055122a9baed71ef18689fe63641b8008",
+      "physicalSourceLines": 11,
+      "nonemptySourceLines": 11
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/CoursePolicy.java",
+      "sha256": "0beba928b381ab7604aaa8fd232817546d776fe058965c62e0e8a29ef9cc0ea8",
+      "physicalSourceLines": 12,
+      "nonemptySourceLines": 12
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/Images.java",
+      "sha256": "82f0de1412f2e0f9f0595ef5572d9dfeed20766dbe376c218b921095fd0a56ac",
+      "physicalSourceLines": 46,
+      "nonemptySourceLines": 44
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/MainActivity.java",
+      "sha256": "cb12e503421bc1d87cb93cd8036c5b05b1dd8a5dc66b838e4fc049387add148f",
+      "physicalSourceLines": 364,
+      "nonemptySourceLines": 359
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+      "sha256": "8bb78899e6a43d3b175e481e6882abe7aa1995d5b98ec7fe468b36746b0175f3",
+      "physicalSourceLines": 94,
+      "nonemptySourceLines": 92
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/Policy.java",
+      "sha256": "e8250888f1788548b0ac9c7e8d54969ce318fbe59d79d2377ff7e63853ee486b",
+      "physicalSourceLines": 33,
+      "nonemptySourceLines": 31
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/PrivacyConsent.java",
+      "sha256": "f6c114029d09263612b687d15f865f6d2a2ef13d1012a068f6b2e881f8bbe1c5",
+      "physicalSourceLines": 52,
+      "nonemptySourceLines": 50
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/ReleaseInfo.java",
+      "sha256": "a85e33fab9dfcb4aa0cd58546add774450a3c69ede735f131bb8be75a2d15dc7",
+      "physicalSourceLines": 28,
+      "nonemptySourceLines": 26
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/SwodUi.java",
+      "sha256": "3700532c3a5ca9eab039fef84bd9670b19ed54956cadb78295fc40f4a0b0a585",
+      "physicalSourceLines": 61,
+      "nonemptySourceLines": 59
+    },
+    {
+      "path": "app/src/main/java/cn/com/swod/app/TokenVault.java",
+      "sha256": "1d187602b493a601d5380fdd93d55761fa63f947e7728d9e22b830fb477bd071",
+      "physicalSourceLines": 44,
+      "nonemptySourceLines": 42
+    },
+    {
+      "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "sha256": "7a33a1ef4f0ab40bbaec897dbfbe652d6cabb4def263c084ca0ce0ded1d3183e",
+      "physicalSourceLines": 2,
+      "nonemptySourceLines": 2
+    },
+    {
+      "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+      "sha256": "7a33a1ef4f0ab40bbaec897dbfbe652d6cabb4def263c084ca0ce0ded1d3183e",
+      "physicalSourceLines": 2,
+      "nonemptySourceLines": 2
+    },
+    {
+      "path": "app/src/main/res/values/colors.xml",
+      "sha256": "cd76b3fb39e2c973f06bda974a6cfc3e89e41113255c14d0b8622e443833c2bb",
+      "physicalSourceLines": 1,
+      "nonemptySourceLines": 1
+    },
+    {
+      "path": "app/src/main/res/values/styles.xml",
+      "sha256": "01e56e38f3e59dc719df5df5f9e2010a7fb01b1b764f771df614808b7be9dfda",
+      "physicalSourceLines": 6,
+      "nonemptySourceLines": 6
+    },
+    {
+      "path": "app/src/main/res/values-night/styles.xml",
+      "sha256": "bcbc0f9d69f7b328bf2e1001275408f2c08712b98738422a81d414b5c317c881",
+      "physicalSourceLines": 9,
+      "nonemptySourceLines": 9
+    },
+    {
+      "path": "app/src/main/res/xml/data_extraction_rules.xml",
+      "sha256": "6776a6a01f449fd8dcd49a6fdd63429ea883dca62304b9bc345808494c7c2f8e",
+      "physicalSourceLines": 16,
+      "nonemptySourceLines": 16
+    },
+    {
+      "path": "app/src/main/AndroidManifest.xml",
+      "sha256": "b750544f0af0d69cbfa5235b5fb1e10556ab0e5d79cf5557972bf4bd31a0ca65",
+      "physicalSourceLines": 9,
+      "nonemptySourceLines": 9
+    }
+  ],
+  "totalOriginalLines": 971,
+  "nonemptyOriginalLines": 944,
+  "pdfVisualRows": 1462,
+  "pdfOriginalPages": 30,
+  "submissionPageIndicesOneBased": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30
+  ],
+  "selection": "all pages because fewer than 60",
+  "originalsUnmodified": true,
+  "lineWrapping": "PDF presentation soft-wraps existing long lines; no filler or duplicated source",
+  "apkSHA256": "797bf23afca7e27781099ab7653d383be2677ffe7d01939bf16567e0aa282267"
+}

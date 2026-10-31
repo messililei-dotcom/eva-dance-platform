@@ -1,0 +1,129 @@
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift
+@@ -46,13 +46,9 @@
+     @Environment(\.dynamicTypeSize) private var typeSize
+     var body: some View {
+         Group {
+-            if !showCover { details }
+-            else if typeSize.isAccessibilitySize {
+-                VStack(alignment: .leading, spacing: 12) { artwork.aspectRatio(1.25, contentMode: .fit); details }
+-            } else {
+-                CourseCardSplitLayout() { artwork; details }
+-            }
+-        }.padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
++            if showCover { CourseCardSplitLayout() { artwork; details } }
++            else { details }
++        }.padding(.vertical, 6).frame(maxWidth: .infinity, alignment: .leading)
+     }
+     private var artwork: some View {
+         ZStack {
+@@ -65,9 +61,9 @@
+     }
+     private var details: some View {
+             VStack(alignment: .leading, spacing: 7) {
+-                Text(row.firstText("name", "title")).font(.headline).foregroundStyle(.primary).lineLimit(showCover && !typeSize.isAccessibilitySize ? 3 : nil).fixedSize(horizontal: false, vertical: true)
++                Text(row.firstText("name", "title")).font(.headline).foregroundStyle(.primary).lineLimit(showCover && !typeSize.isAccessibilitySize ? 2 : nil).fixedSize(horizontal: false, vertical: true)
+                 if !row.firstText("subtitle", "teacher", "category").isEmpty {
+-                    Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary).lineLimit(showCover && !typeSize.isAccessibilitySize ? 2 : nil).fixedSize(horizontal: false, vertical: true)
++                    Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary).lineLimit(showCover && !typeSize.isAccessibilitySize ? 1 : nil).fixedSize(horizontal: false, vertical: true)
+                 }
+                 if !row["total_courses"].text.isEmpty {
+                     Text([row["teacher"].text, "\(row["total_courses"].text) 节课"].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCardSplitLayout.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCardSplitLayout.swift
+@@ -1,21 +1,25 @@
+ import SwiftUI
+ 
+-/// Equal image and text widths; the row grows with the text instead of clipping it.
++/// Original thumbnail-and-text proportions, with a modestly larger thumbnail.
++/// The text determines row height; oversized accessibility text remains readable.
+ struct CourseCardSplitLayout: Layout {
+-    private let gap: CGFloat = 12
++    private let gap: CGFloat = 14
++    private func imageWidth(_ width: CGFloat) -> CGFloat { min(112, max(0, width * 0.36)) }
+     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+         let width = max(0, proposal.width ?? 360)
+-        let column = max(0, (width - gap) / 2)
+-        let text = subviews.last?.sizeThatFits(ProposedViewSize(width: column, height: nil)) ?? .zero
+-        return CGSize(width: width, height: max(column, text.height))
++        let textWidth = max(0, width - imageWidth(width) - gap)
++        let text = subviews.last?.sizeThatFits(ProposedViewSize(width: textWidth, height: nil)) ?? .zero
++        return CGSize(width: width, height: max(84, text.height))
+     }
+     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+         guard subviews.count == 2 else { return }
+-        let column = max(0, (bounds.width - gap) / 2)
+-        let text = subviews[1].sizeThatFits(ProposedViewSize(width: column, height: nil))
+-        subviews[0].place(at: CGPoint(x: bounds.minX, y: bounds.midY - column / 2),
+-                         proposal: ProposedViewSize(width: column, height: column))
+-        subviews[1].place(at: CGPoint(x: bounds.minX + column + gap, y: bounds.midY - text.height / 2),
+-                         proposal: ProposedViewSize(width: column, height: text.height))
++        let image = imageWidth(bounds.width)
++        let textWidth = max(0, bounds.width - image - gap)
++        let text = subviews[1].sizeThatFits(ProposedViewSize(width: textWidth, height: nil))
++        let imageHeight = min(160, bounds.height)
++        subviews[0].place(at: CGPoint(x: bounds.minX, y: bounds.midY - imageHeight / 2),
++                         proposal: ProposedViewSize(width: image, height: imageHeight))
++        subviews[1].place(at: CGPoint(x: bounds.minX + image + gap, y: bounds.midY - text.height / 2),
++                         proposal: ProposedViewSize(width: textWidth, height: text.height))
+     }
+ }
+--- before/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -148,8 +148,8 @@
+         String url=source.startsWith("/")?(goods?"https://www.swod.com.cn":"https://admin.swod.com.cn")+source:source;
+         boolean validCover=Policy.secureURL(url);if(!validCover&&goods)return;
+         ImageView image=new ImageView(this);image.setScaleType(ImageView.ScaleType.CENTER);image.setImageDrawable(SwodUi.icon(this,goods?"bag":"learn",red));image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);image.setBackground(SwodUi.shape(this,SwodUi.tonal(this),12));image.setClipToOutline(true);
+-        if(!goods&&box!=content){LinearLayout details=column();while(box.getChildCount()>0){View child=box.getChildAt(0);box.removeViewAt(0);details.addView(child);}box.setOrientation(LinearLayout.HORIZONTAL);box.setGravity(Gravity.CENTER_VERTICAL);LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(0,dp(160),1);picture.rightMargin=dp(12);box.addView(image,picture);
+-            image.addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->{int width=r-l;if(width>0&&v.getLayoutParams().height!=width){android.view.ViewGroup.LayoutParams params=v.getLayoutParams();params.height=width;v.setLayoutParams(params);}});box.addView(details,new LinearLayout.LayoutParams(0,-2,1));}
++        if(!goods&&box!=content){LinearLayout details=column();while(box.getChildCount()>0){View child=box.getChildAt(0);box.removeViewAt(0);details.addView(child);}box.setOrientation(LinearLayout.HORIZONTAL);box.setGravity(Gravity.CENTER_VERTICAL);LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(dp(112),dp(84));picture.rightMargin=dp(12);box.addView(image,picture);
++            details.addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->{int height=Math.min(dp(160),Math.max(dp(84),b-t));if(image.getLayoutParams().height!=height){android.view.ViewGroup.LayoutParams params=image.getLayoutParams();params.height=height;image.setLayoutParams(params);}});box.addView(details,new LinearLayout.LayoutParams(0,-2,1));}
+         else{LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(-1,dp(goods?220:Math.min(240,(getResources().getConfiguration().screenWidthDp-32)*3/4)));picture.bottomMargin=dp(12);box.addView(image,0,picture);}
+         if(!validCover)return;int version=generation;imageIO.execute(()->{if(version!=generation)return;try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(!isFinishing()&&version==generation&&bitmap!=null){image.setScaleType(ImageView.ScaleType.FIT_CENTER);image.setImageBitmap(bitmap);}});}catch(Exception ignored){/* Keep a stable, non-deceptive cover placeholder. */}});
+     }
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -24,6 +24,7 @@
+   @State private rows: Row[] = [];
+   @State private detail: Row = {};
+   @State private query: string = '';
++  @State private courseCardHeights: Map<string, number> = new Map<string, number>();
+   @State private catalogPage: number = 1;
+   @State private currentLessonID: string = '';
+   @State private progressRows: Row[] = [];
+@@ -539,23 +540,25 @@
+   private card(row: Row) {
+     Row({ space: 14 }) {
+       if (this.route.screen === 'home' || this.route.screen === 'offline') {
+-        if (coverImageURL(row.cover_image || '')) { Image(coverImageURL(row.cover_image || '')).layoutWeight(1).aspectRatio(1).objectFit(ImageFit.Contain).borderRadius(12).accessibilityLevel('no') }
+-        else { Image($r('app.media.nav_learn_on')).layoutWeight(1).aspectRatio(1).objectFit(ImageFit.ScaleDown).backgroundColor(SwodTheme.tonal).borderRadius(12).accessibilityLevel('no') }
++        if (coverImageURL(row.cover_image || '')) { Image(coverImageURL(row.cover_image || '')).width(112).height(this.courseCardHeights.get(String(row.id || row.source_id || row.name)) || 96).objectFit(ImageFit.Contain).borderRadius(12).accessibilityLevel('no') }
++        else { Image($r('app.media.nav_learn_on')).width(112).height(this.courseCardHeights.get(String(row.id || row.source_id || row.name)) || 96).objectFit(ImageFit.ScaleDown).backgroundColor(SwodTheme.tonal).borderRadius(12).accessibilityLevel('no') }
+       }
+       Column({ space: 8 }) {
+-        if (this.route.screen === 'home' || this.route.screen === 'offline') {
+-          Text(this.title(row)).fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%').maxLines(3).textOverflow({ overflow: TextOverflow.Ellipsis })
+-        } else { Text(this.title(row)).fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%') }
+-        if (this.summary(row)) {
+-          if (this.route.screen === 'home' || this.route.screen === 'offline') { Text(this.summary(row)).fontSize(14).fontColor(SwodTheme.muted).width('100%').maxLines(2).textOverflow({ overflow: TextOverflow.Ellipsis }) }
+-          else { Text(this.summary(row)).fontSize(14).fontColor(SwodTheme.muted).width('100%') }
+-        }
++        Text(this.title(row)).fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
++        if (this.summary(row)) { Text(this.summary(row)).fontSize(14).fontColor(SwodTheme.muted).width('100%') }
+         if (this.route.screen === 'shop') {
+           Text(productPrice(row)).fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary)
+           Text(productStock(row)).fontSize(14).fontColor(SwodTheme.muted)
+         }
+         if ((this.route.screen === 'home' || this.route.path.startsWith('/member/authorized-series')) && this.isCourseUnlocked(row)) { Text('✓ 已解锁').fontSize(16).fontColor('#15803d'); Text('继续学习').fontSize(14).fontColor('#15803d') } else if (this.route.screen === 'home' && !this.courseAccessReady) { Text('学习权益暂无法确认').fontSize(12).fontColor(SwodTheme.muted) } else if (row.price !== undefined) { Text(coursePrice(row)).fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary); if (originalPrice(row)) { Text(originalPrice(row)).fontSize(12).fontColor(SwodTheme.muted).decoration({ type: TextDecorationType.LineThrough }) } }
+-      }.layoutWeight(1).alignItems(HorizontalAlign.Start)
++      }.layoutWeight(1).alignItems(HorizontalAlign.Start).onAreaChange((_old: Area, area: Area) => {
++        if (this.route.screen !== 'home' && this.route.screen !== 'offline') return;
++        const key = String(row.id || row.source_id || row.name);
++        const height = Math.min(160, Math.max(84, Number(area.height)));
++        if (Number.isFinite(height) && Math.abs((this.courseCardHeights.get(key) || 0) - height) > 1) {
++          const next = new Map<string, number>(this.courseCardHeights); next.set(key, height); this.courseCardHeights = next;
++        }
++      })
+     }.padding(12).backgroundColor(SwodTheme.surface).borderRadius(12).width('100%').constraintSize({ minHeight: 64 }).margin({ bottom: 8 }).onClick(() => this.tap(row)).accessibilityText(this.title(row) + '，' + this.summary(row) + '，查看详情')
+   }
+   @Builder

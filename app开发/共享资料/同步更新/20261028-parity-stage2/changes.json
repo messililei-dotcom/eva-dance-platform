@@ -1,0 +1,18 @@
+[
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java",
+    "sha256": "e63ae1a2797937583999b013a10f04310df6452842727a6cf400ce4640ea64d7"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift",
+    "sha256": "b3f0dd575d80c5501d1b14b439d9725cdc694c1abd9683c05f1bcff2600186ef"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/CarrierLogin.swift",
+    "sha256": "154675f69a1eb882dad2b4e68be5a7ff9b4cbfdf1ed4c690c51fde454f09ec86"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+    "sha256": "0fae9d1dc2538a5ec8a15f0dd386589134f12655995007487b1f7753b610c758"
+  }
+]

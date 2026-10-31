@@ -1,0 +1,17 @@
+[
+  {
+    "sdk": "ios",
+    "sha256": "5263cc8532364034f8988543eda1e87be3f0f5aa4c0318c70b04f4a99e712107",
+    "bytes": 2997779
+  },
+  {
+    "sdk": "els",
+    "sha256": "b2bf0348058b5df6a3fbdf47e3fbfc765d1f61c2ef73ee18b91506312e152236",
+    "bytes": 7252403
+  },
+  {
+    "sdk": "utdid",
+    "sha256": "22abf5daa41cb2c978ea707dfbb869f8ada20def33dd5614f4119f649e4854d9",
+    "bytes": 158569
+  }
+]

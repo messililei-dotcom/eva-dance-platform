@@ -1,0 +1,27 @@
+[
+  {
+    "path": "iOS/export-10-ready/EvaDance.ipa",
+    "size": 12008981,
+    "sha256": "cd8440c0f4f4f234f59e91aaa3867f4d59514a5c9f72b706666686ef747fcc69"
+  },
+  {
+    "path": "../20261030-player-clean/Android-build13/installers/SWOD-1.0.1-13-release.aab",
+    "size": 15419669,
+    "sha256": "84923fd34185a7c4c3e3d06a49010b29b075c7606dd0079f2cfad3c7f98144cb"
+  },
+  {
+    "path": "../20261030-player-clean/Android-build13/installers/SWOD-1.0.1-13-release.apk",
+    "size": 28923557,
+    "sha256": "05e21596bf790cdca86a26b84ac94d1a3f06fb02821ef69a0491f4336357de9d"
+  },
+  {
+    "path": "../20261030-player-clean/HarmonyOS-build10/installers/SWOD-1.0.1-10-release.app",
+    "size": 7595033,
+    "sha256": "4f9f10a730940faa95b9f1ad8abbed4968e6ccf27142d882414825fa2617ae40"
+  },
+  {
+    "path": "../20261030-player-clean/HarmonyOS-build10/installers/SWOD-1.0.1-10-release.hap",
+    "size": 16105288,
+    "sha256": "083af2f9b54604772bce94cb1b9bceb44e9b33cd52a80e425bd98f578986df33"
+  }
+]

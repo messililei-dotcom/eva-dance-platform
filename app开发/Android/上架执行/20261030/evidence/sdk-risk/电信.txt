@@ -1,0 +1,76 @@
+- link "全国SDK管理服务平台":
+  - /url: "#/home"
+  - generic: 全国SDK管理服务平台
+- link "首页":
+  - /url: "#/home"
+  - generic: 首页
+- link "新闻通知":
+  - /url: "#/public/news/1"
+  - generic: 新闻通知
+- link "政策标准":
+  - /url: "#/public/policy/1"
+  - generic: 政策标准
+- link "开发者控制台":
+  - /url: "#/developer"
+  - generic: 开发者控制台
+- button "登 录":
+  - generic: 登 录
+- button "注 册":
+  - generic: 注 册
+- generic: 风险 SDK 信息
+- generic: RISK SDK INFORMATION
+- generic: "SDK搜索:"
+- textbox "请输入名称/开发者/类型的关键词" [active]: 电信
+- button "close-circle":
+  - img "close-circle":
+- button "search":
+  - img "search":
+- checkbox "全部" [checked]
+- generic: 全部
+- checkbox "只看存在违规行为SDK"
+- generic: 只看存在违规行为SDK
+- checkbox "只看建议版本更新SDK"
+- generic: 只看建议版本更新SDK
+- checkbox "只看产品不再运营SDK"
+- generic: 只看产品不再运营SDK
+- alert:
+  - img "info-circle":
+  - generic: 存在违规行为SDK：在工信部“侵害用户权益行为的APP（SDK）通报”名单中的SDK，建议APP开发者及时更新更换。
+  - generic: 建议版本更新SDK：在工信部抽检过程中发现违规行为，并已在期限内完成整改更新的SDK，建议APP开发者及时更新至SDK最新版本。
+  - generic: 产品不再运营SDK：停止对外提供服务、后续不再运营维护的SDK，建议APP开发者不再使用。
+- img "left":
+- tablist:
+  - tab "全部" [selected]
+  - tab "特定工具类"
+  - tab "游戏联运类"
+  - tab "广告类"
+  - tab "安全风控类"
+  - tab "地图类"
+  - tab "第三方登录类"
+  - tab "支付类"
+  - tab "认证类"
+  - tab "社交类"
+  - tab "客服类"
+  - tab "框架类"
+  - tab "实时音视频类"
+  - tab "统计类"
+  - tab "推送类"
+  - tab "性能监控类"
+  - tab "人工智能类"
+  - tab "平台服务类"
+- tabpanel "全部"
+- img "right":
+- generic: 暂无数据
+- list:
+  - listitem "上一页":
+    - button "left" [disabled]:
+      - img "left":
+  - listitem "1":
+    - generic: "1"
+  - listitem "下一页":
+    - button "right" [disabled]:
+      - img "right":
+- paragraph: 版权所有©：中国信息通信研究院
+- paragraph: 中国信息通信研究院技术与标准研究所
+- paragraph: 联系方式：010-62300568
+- generic: 反馈通道

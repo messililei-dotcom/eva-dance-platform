@@ -1,3 +1,4 @@
+import { revokePushInstallation, reservePushPermit, bindPushDevice, unbindPushDevice, ownedInboxMessage, pushCapability } from '@/lib/server/app-push';
 import { normalizedMusicForm, MusicUploadError } from '@/lib/server/event-music-upload';
 import { appPlatform, appMemberSource, appDeviceName } from '@/lib/server/app-platform';
 import { appShopPayment } from '@/lib/server/app-shop';
@@ -5,7 +6,8 @@ import { mergeAppProfile } from '@/lib/server/app-profile';
 import { carrierLoginEnabled, getCarrierPhone } from '@/lib/server/app-carrier-auth';
 import { withDb, memberToken } from '../../../mini/_helpers';
 import { upsertPhoneMember } from '../../../mini/_auth';
-import { AppError, reserveCarrierAttempt, ensureAppSchema, createAppSession, authenticateApp, rotateAppSession, revokeAppSession, verifyAppSMS, requestAccountDeletion, saveAppCheckpoint } from '@/lib/server/app-session';
+import { AppError, reserveCarrierAttempt, ensureAppSchema, createAppSession, authenticateApp, rotateAppSession, revokeAppSession, verifyAppSMS, verifyAppPassword, requestAccountDeletion, accountDeletionReceipt, saveAppCheckpoint } from '@/lib/server/app-session';
+import { authorizeVideoCache, videoCacheCapability } from '@/lib/server/app-video-cache';
 import { findAppRoute } from '@/lib/server/app-route-map';
 
 export const dynamic = 'force-dynamic';
@@ -39,9 +41,9 @@ async function handle(request: Request, context: Context) {
     const multipart = method === "POST" && /^events\/[1-9]\d*\/register$/.test(path) && request.headers.get("content-type")?.startsWith("multipart/form-data;");
     const body = multipart ? {} : await readBody(request);
     if (path === 'config' && method === 'GET') return json({
-      version: 1, oneTapLogin: carrierLoginEnabled(), offlineDownload: false, digitalPurchase: false, physicalCheckout: Object.values(appShopPayment()).some(Boolean),
+      version: 1, push: pushCapability(platform), oneTapLogin: carrierLoginEnabled(), offlineDownload: videoCacheCapability(platform).enabled, videoCache: videoCacheCapability(platform), digitalPurchase: false, physicalCheckout: Object.values(appShopPayment()).some(Boolean),
       privacyURL: 'https://www.swod.com.cn/privacy', termsURL: 'https://www.swod.com.cn/terms',
-      accountDeletion: 'request', minimumVersion: '1.0.0',
+      accountDeletion: 'request-with-receipt', accountDeletionWorkingDays: 7, minimumVersion: '1.0.0',
     });
     if (path === 'send-code' && method === 'POST') {
       const { POST } = await import('../../../mini/send-code/route');
@@ -56,6 +58,14 @@ async function handle(request: Request, context: Context) {
           const member = upsertPhoneMember(db, String(body.phone), { source: appMemberSource(platform) });
           return json(createAppSession(db, Number(member.id), String(body.deviceName || appDeviceName(platform))));
         })();
+      });
+    }
+    if (path === 'auth/password-login' && method === 'POST') {
+      if (typeof body.phone !== 'string' || typeof body.password !== 'string') throw new AppError('手机号或密码不正确', 401);
+      return withDb(db => {
+        ensureAppSchema(db);
+        const memberId = verifyAppPassword(db, body.phone, body.password, request.headers.get('x-real-ip') || 'unknown');
+        return json(createAppSession(db, memberId, String(body.deviceName || appDeviceName(platform))));
       });
     }
     if (path === 'auth/one-tap' && method === 'POST') {
@@ -77,11 +87,22 @@ async function handle(request: Request, context: Context) {
     if (path === 'auth/refresh' && method === 'POST') return withDb(db => {
       ensureAppSchema(db); return json(rotateAppSession(db, String(body.refreshToken || '')));
     });
+    if (path === 'account-deletion-receipt' && method === 'POST') return withDb(db => {
+      ensureAppSchema(db); return json(accountDeletionReceipt(db, String(body.receiptToken || ''), body.acknowledge === true));
+    });
+    if (path === 'push/unbind' && method === 'POST') return withDb(db => json(revokePushInstallation(db, String(body.installationId || ''), String(body.pushSessionId || ''))));
     const route = findAppRoute(path, method);
     const publicRead = route?.public === true || (path === 'shop/products' && method === 'GET');
     const session = publicRead && !bearer(request) ? null : withDb(db => {
       ensureAppSchema(db); return authenticateApp(db, bearer(request));
     });
+    if (/^video\/[1-9]\d*\/cache-authorization$/.test(path) && method === 'POST' && session) {
+      return withDb(async db => json(await authorizeVideoCache(db, bearer(request), platform, Number(parts[1]), body)));
+    }
+    if (path === 'push/permits' && method === 'POST' && session) return withDb(db => json(reservePushPermit(db, bearer(request), platform, String(body.installationId || ''))));
+    if (path === 'push/devices' && method === 'PUT' && session) return withDb(db => json(bindPushDevice(db, bearer(request), platform, body)));
+    if (path === 'push/devices' && method === 'DELETE' && session) return withDb(db => json(unbindPushDevice(db, bearer(request), String(body.installationId || ''))));
+    if (/^member\/messages\/[1-9]\d*$/.test(path) && method === 'GET' && session) return withDb(db => json(ownedInboxMessage(db, session.member_id, Number(parts[2]))));
     if (path === 'auth/logout' && method === 'POST' && session) return withDb(db => {
       revokeAppSession(db, session.member_id, session.id); return json({ loggedOut: true });
     });
@@ -94,14 +115,14 @@ async function handle(request: Request, context: Context) {
     if (path === 'account-deletion-requests' && method === 'POST' && session) return withDb(db => {
       if (body.confirmation !== '注销账号') throw new AppError('请确认注销账号');
       verifyAppSMS(db, String(session.member.phone || ''), String(body.code || ''));
-      return json(requestAccountDeletion(db, session.member_id), 202);
+      return json(requestAccountDeletion(db, session.member_id, Date.now(), String(body.receiptToken || '')), 202);
     });
     // The legacy member token never leaves the server. Session revocation is checked on every request above.
     const headers = new Headers({'Content-Type':'application/json', 'x-client-platform':platform});
     if (session) headers.set('authorization', `Bearer ${memberToken({id:session.member_id,phone:session.member.phone})}`);
     if (parts[0] === 'shop') {
       const shopPath = parts.slice(1).join('/');
-      const payment = appShopPayment();
+      const payment = appShopPayment(platform);
       const checkout = Object.values(payment).some(Boolean);
       const allowed = (method === 'GET' && (shopPath === 'products' || /^courses\/offline\/[1-9][0-9]*$/.test(shopPath) || shopPath === 'shipping' || shopPath === 'orders' || /^orders\/[A-Za-z0-9_-]+$/.test(shopPath)))
         || (method === 'PUT' && shopPath === 'shipping')

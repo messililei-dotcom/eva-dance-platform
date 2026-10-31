@@ -1,0 +1,608 @@
+--- before/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -170,18 +170,19 @@
+                 int pages=Math.max(1,(filtered.size()+49)/50);pageNumber[0]=Math.max(1,Math.min(pages,pageNumber[0]));TextView heading=text("课节目录 · 共 "+lessons.size()+" 节",18);heading.setTypeface(null,android.graphics.Typeface.BOLD);results.addView(heading);
+                 if(catalogSelection.containsKey(id))results.addView(button("定位当前",()->{search.setText("");int selected=catalogSelection.get(id);for(int i=0;i<lessons.size();i++)if(lessons.get(i).optInt("id")==selected)pageNumber[0]=i/50+1;render[0].run();pageScroll.smoothScrollTo(0,0);}));
+                 if(pages>1){LinearLayout nav=row();Button prev=button("上一页",()->{pageNumber[0]--;render[0].run();pageScroll.smoothScrollTo(0,0);});prev.setEnabled(pageNumber[0]>1);nav.addView(prev,new LinearLayout.LayoutParams(0,-2,1));nav.addView(text("第 "+pageNumber[0]+" / "+pages+" 页",14));Button next=button("下一页",()->{pageNumber[0]++;render[0].run();pageScroll.smoothScrollTo(0,0);});next.setEnabled(pageNumber[0]<pages);nav.addView(next,new LinearLayout.LayoutParams(0,-2,1));results.addView(nav);}
+-                for(int i=(pageNumber[0]-1)*50;i<Math.min(filtered.size(),pageNumber[0]*50);i++){JSONObject lesson=filtered.get(i);int videoId=lesson.optInt("id");JSONObject record=progress.get(videoId);int percent=record==null?0:CoursePolicy.percent(record.optDouble("progress",0),record.optDouble("duration",lesson.optDouble("duration",0)),record.optInt("completed")==1);boolean current=catalogSelection.getOrDefault(id,0)==videoId;int duration=(int)lesson.optDouble("duration",0);String state=record==null&&!synced[0]?"进度待同步":percent>=100?"已学完":percent>0?"已学 "+percent+"%":"未开始";int before=results.getChildCount();card(results,lesson.optInt("ordinal")+"  "+lesson.optString("name"),(duration>0?String.format(Locale.ROOT,"%d:%02d",duration/60,duration%60):"时长待更新")+" · "+state+(current?" · 当前课节":""),()->{catalogSelection.put(id,videoId);render[0].run();playPlaylist(videoId,lesson.optString("name"),lessons);});if(current)results.getChildAt(before).setBackground(SwodUi.shape(this,SwodUi.tonal(this),16));}
++                for(int i=(pageNumber[0]-1)*50;i<Math.min(filtered.size(),pageNumber[0]*50);i++){JSONObject lesson=filtered.get(i);int videoId=lesson.optInt("id");JSONObject record=progress.get(videoId);int percent=record==null?0:CoursePolicy.percent(record.optDouble("progress",0),record.optDouble("duration",lesson.optDouble("duration",0)),record.optInt("completed")==1);boolean current=catalogSelection.getOrDefault(id,0)==videoId;int duration=(int)lesson.optDouble("duration",0);String state=record==null&&!synced[0]?"进度待同步":percent>=100?"已学完":percent>0?"已学 "+percent+"%":"未开始";int before=results.getChildCount();card(results,lesson.optInt("ordinal")+"  "+lesson.optString("name"),(duration>0?String.format(Locale.ROOT,"%d:%02d",duration/60,duration%60):"时长待更新")+" · "+state+(current?" · 当前课节":""),()->{catalogSelection.put(id,videoId);render[0].run();playPlaylist(videoId,lesson.optString("name"),lessons,id,name,progress,synced[0]);});if(current)results.getChildAt(before).setBackground(SwodUi.shape(this,SwodUi.tonal(this),16));}
+                 if(filtered.isEmpty())results.addView(text(keyword.isEmpty()?"暂无课节":"未找到匹配课节",14));
+             };
+             search.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence x,int a,int c,int f){}public void onTextChanged(CharSequence x,int a,int b,int c){pageNumber[0]=1;render[0].run();}public void afterTextChanged(Editable x){}});render[0].run();
+             if(api.loggedIn()){int version=generation;io.execute(()->{try{JSONArray records=array(api.request("/public/series/"+id+"/progress","GET",null,true));runOnUiThread(()->{if(version!=generation||isFinishing())return;for(int i=0;i<records.length();i++){JSONObject record=records.optJSONObject(i);if(record!=null)progress.put(record.optInt("video_id"),record);}synced[0]=true;render[0].run();});}catch(Exception ignored){}});}
+         });
+     }
+-    private void playPlaylist(int id,String name,java.util.List<JSONObject> lessons){
++    private void playPlaylist(int id,String name,java.util.List<JSONObject> lessons,int seriesId,String seriesTitle,java.util.Map<Integer,JSONObject> progress,boolean synced){
+         if(!api.loggedIn()){open(this::login);return;}
+         int[] ids=new int[lessons.size()];String[] names=new String[lessons.size()];
+-        for(int i=0;i<lessons.size();i++){ids[i]=lessons.get(i).optInt("id");names[i]=lessons.get(i).optString("name");}
+-        startActivity(new Intent(this,PlayerActivity.class).putExtra("lesson",id).putExtra("title",name).putExtra("playlistIds",ids).putExtra("playlistNames",names));
++        JSONArray metadata=new JSONArray();
++        for(int i=0;i<lessons.size();i++){JSONObject source=lessons.get(i);ids[i]=source.optInt("id");names[i]=source.optString("name");JSONObject record=progress.get(ids[i]);JSONObject row=body("id",ids[i],"duration",source.optDouble("duration"),"subtitle",source.optString("subtitle"));if(record!=null){try{row.put("percent",CoursePolicy.percent(record.optDouble("progress"),record.optDouble("duration",source.optDouble("duration")),record.optInt("completed")==1));}catch(org.json.JSONException ignored){}}metadata.put(row);}
++        startActivity(new Intent(this,PlayerActivity.class).putExtra("lesson",id).putExtra("title",name).putExtra("playlistIds",ids).putExtra("playlistNames",names).putExtra("playlistMetadata",metadata.toString()).putExtra("seriesId",seriesId).putExtra("seriesTitle",seriesTitle));
+     }
+     private void play(int id,String name){playAt(id,name,-1);}
+     private void playAt(int id,String name,int seconds){if(id<=0){info("课节信息无效，请刷新后重试");return;}if(!api.loggedIn()){open(this::login);return;}Intent intent=new Intent(this,PlayerActivity.class).putExtra("lesson",id).putExtra("title",name);if(seconds>=0)intent.putExtra("positionSeconds",seconds);startActivity(intent);}
+--- before/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java
+@@ -27,7 +27,13 @@
+     private int[] playlistIds;
+     private String[] playlistNames;
+     private int playlistIndex = -1;
+-    private TextView status;
++    private TextView status, learningProgress, currentProgress;
++    private final Runnable progressDisplay=new Runnable(){public void run(){if(destroyed||!resumed)return;if(ready){String percent=CoursePolicy.percent(video.getCurrentPosition()/1000.0,video.getDuration()/1000.0,false)+"%";learningProgress.setText("学习进度 "+percent+" · 已看到 "+clock(video.getCurrentPosition()/1000.0));if(currentProgress!=null)currentProgress.setText(percent);}timer.postDelayed(this,1000);}};
++    private LinearLayout directoryPanel,notesPanel,introPanel;
++    private JSONArray playlistMetadata=new JSONArray();
++    private int directoryPage=1;
++    private String directoryQuery="";
++    private final java.util.ArrayList<Button> tabs=new java.util.ArrayList<>();
+     private String currentURL = "";
+     private MediaPlayer media;
+     private float selectedRate=1,holdX,holdY;
+@@ -69,38 +75,47 @@
+         super.onCreate(saved);getOnBackPressedDispatcher().addCallback(this,new androidx.activity.OnBackPressedCallback(true){@Override public void handleOnBackPressed(){if(fullscreen)setFullscreen(false);else finish();}});api=Api.get(this);playbackAccount=api.accountGeneration();lesson=getIntent().getIntExtra("lesson",0);
+         LinearLayout root=new LinearLayout(this);playerRoot=root;inlineVideoHeight=Math.round(getResources().getDisplayMetrics().widthPixels*9f/16f);root.setOrientation(LinearLayout.VERTICAL);
+         root.setOnApplyWindowInsetsListener((v,insets)->{if(android.os.Build.VERSION.SDK_INT>=30){android.graphics.Insets p=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.ime());root.setPadding(p.left,p.top,p.right,p.bottom);}else root.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});
+-        TextView title=new TextView(this);title.setText(getIntent().getStringExtra("title"));title.setTextSize(18);root.addView(title);
++        root.setBackgroundColor(SwodUi.canvas(this));
+         video=new VideoView(this);root.addView(video,new LinearLayout.LayoutParams(-1,inlineVideoHeight));MediaController controls=new MediaController(this);controls.setAnchorView(video);video.setMediaController(controls);
+         ScrollView scroll=new ScrollView(this);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+-        LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);int gap=Math.round(12*getResources().getDisplayMetrics().density);content.setPadding(gap,0,gap,gap);scroll.addView(content);
+-        status=new TextView(this);status.setText("正在验证课程权限…");content.addView(status);
++        LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);int gap=Math.round(12*getResources().getDisplayMetrics().density);content.setPadding(gap,gap,gap,gap);scroll.addView(content);
++        TextView title=label(getIntent().getStringExtra("title"),18,false);title.setTypeface(null,android.graphics.Typeface.BOLD);content.addView(title);
++        learningProgress=label("进度待同步",12,true);content.addView(learningProgress);
++        status=new TextView(this);status.setText("正在验证课程权限…");status.setTextSize(12);status.setTextColor(SwodUi.muted(this));content.addView(status);
++        try{playlistMetadata=new JSONArray(getIntent().getStringExtra("playlistMetadata"));}catch(Exception ignored){}
++        LinearLayout settings=panel();settings.setVisibility(android.view.View.GONE);
+         playlistIds=getIntent().getIntArrayExtra("playlistIds");playlistNames=getIntent().getStringArrayExtra("playlistNames");
+         if(playlistIds!=null&&playlistNames!=null&&playlistIds.length==playlistNames.length){
+             for(int i=0;i<playlistIds.length;i++)if(playlistIds[i]==lesson)playlistIndex=i;
+-            if(playlistIndex>=0){
++        }
+                 LinearLayout navigation=new LinearLayout(this);
+                 Button previous=new Button(this);previous.setText("上一节");previous.setEnabled(playlistIndex>0);previous.setOnClickListener(v->selectLesson(playlistIndex-1));
+-                Button catalog=new Button(this);catalog.setText("目录 · "+playlistIds.length+" 节");catalog.setOnClickListener(v->{showDirectory();});
+-                Button next=new Button(this);next.setText("下一节");next.setEnabled(playlistIndex+1<playlistIds.length);next.setOnClickListener(v->selectLesson(playlistIndex+1));
++                Button catalog=new Button(this);catalog.setText("播放设置");catalog.setOnClickListener(v->settings.setVisibility(settings.getVisibility()==android.view.View.VISIBLE?android.view.View.GONE:android.view.View.VISIBLE));
++                Button next=new Button(this);next.setText("下一节");next.setEnabled(playlistIndex>=0&&playlistIds!=null&&playlistIndex+1<playlistIds.length);next.setOnClickListener(v->selectLesson(playlistIndex+1));
+                 for(Button item:new Button[]{previous,catalog,next}){item.setAllCaps(false);item.setMinimumHeight(Math.round(48*getResources().getDisplayMetrics().density));navigation.addView(item,new LinearLayout.LayoutParams(0,-2,1));}content.addView(navigation);
+-            }
+-        }
+         if(CoursePolicy.isAudio(getIntent().getStringExtra("title"))){TextView audio=new TextView(this);audio.setText("SWOD · 音频课程，播放时没有视频画面");audio.setTextSize(18);content.addView(audio,0);}
+         LinearLayout actions=new LinearLayout(this);CheckBox mirror=new CheckBox(this);mirror.setText("镜像");mirror.setOnCheckedChangeListener((b,on)->video.setScaleX(on?-1:1));actions.addView(mirror);
+         CheckBox loop=new CheckBox(this);loop.setText("循环播放");actions.addView(loop);
+-        Spinner speed=new Spinner(this);speed.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"0.75×","1.0×","1.25×","1.5×"}));speed.setSelection(1);actions.addView(speed);content.addView(actions);
+-        Spinner quality=new Spinner(this);quality.setContentDescription("视频清晰度");content.addView(quality);
+-        EditText note=new EditText(this);note.setHint("记录练习笔记");content.addView(note);Button add=new Button(this);add.setText("保存本节笔记");content.addView(add);
++        Spinner speed=new Spinner(this);speed.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"0.75×","1.0×","1.25×","1.5×"}));speed.setSelection(1);actions.addView(speed);settings.addView(actions);content.addView(settings);
++        Spinner quality=new Spinner(this);quality.setContentDescription("视频清晰度");settings.addView(quality);
++        LinearLayout tabBar=new LinearLayout(this);tabBar.setBackground(SwodUi.shape(this,SwodUi.surface(this),12));content.addView(tabBar);
++        String[] labels={"目录("+(playlistIds==null?0:playlistIds.length)+"节)","笔记","简介"};
++        for(int i=0;i<labels.length;i++){final int at=i;Button button=new Button(this);button.setText(labels[i]);button.setTextSize(15);button.setAllCaps(false);button.setMinHeight(dp(48));button.setOnClickListener(v->selectTab(at));tabs.add(button);tabBar.addView(button,new LinearLayout.LayoutParams(0,-2,1));}
++        directoryPanel=panel();notesPanel=panel();introPanel=panel();content.addView(directoryPanel);content.addView(notesPanel);content.addView(introPanel);
++        if(playlistIndex>=0)directoryPage=playlistIndex/50+1;renderDirectory();selectTab(0);
++        introPanel.addView(label(getIntent().getStringExtra("seriesTitle"),18,false));TextView description=label("暂无课程简介",16,true);introPanel.addView(description);
++        int seriesId=getIntent().getIntExtra("seriesId",0);if(seriesId>0)io.execute(()->{try{JSONObject detail=(JSONObject)api.request("/public/series/"+seriesId+"/detail","GET",null,false);String text=detail.optString("rich_description",detail.optString("description"));runOnUiThread(()->{if(!destroyed)description.setText(text.isEmpty()?"暂无课程简介":android.text.Html.fromHtml(text,android.text.Html.FROM_HTML_MODE_LEGACY));});}catch(Exception ignored){}});
++        EditText note=new EditText(this);note.setHint("记录本节练习笔记");note.setMinLines(4);notesPanel.addView(note);Button add=new Button(this);add.setText("保存本节笔记");notesPanel.addView(add);
+         add.setOnClickListener(v->{String text=note.getText().toString().trim();if(text.isEmpty()||text.length()>5000||!ready)return;int at=video.getCurrentPosition()/1000;add.setEnabled(false);io.execute(()->{try{api.request("/notes","POST",new JSONObject().put("video_id",lesson).put("timestamp_seconds",at).put("content",text),true);runOnUiThread(()->{if(!destroyed){note.setText("");status.setText("笔记已保存");}});}catch(Exception e){message(e.getMessage());}finally{runOnUiThread(()->{if(!destroyed)add.setEnabled(true);});}});});
+-        Button bookmark=new Button(this);bookmark.setText("在当前位置添加书签");content.addView(bookmark);
++        Button bookmark=new Button(this);bookmark.setText("在当前位置添加书签");notesPanel.addView(bookmark);
+         bookmark.setOnClickListener(v->{if(!ready)return;int at=video.getCurrentPosition()/1000;bookmark.setEnabled(false);io.execute(()->{try{api.request("/bookmarks","POST",new JSONObject().put("video_id",lesson).put("timestamp_seconds",at).put("label","练习位置 "+at+" 秒"),true);message("书签已保存，可在个人中心打开");}catch(Exception e){message(e.getMessage());}finally{runOnUiThread(()->{if(!destroyed)bookmark.setEnabled(true);});}});});
+-        Button expand=new Button(this);expand.setText("全屏播放");expand.setOnClickListener(v->setFullscreen(true));content.addView(expand,0);
++        Button expand=new Button(this);expand.setText("全屏播放");expand.setOnClickListener(v->setFullscreen(true));settings.addView(expand);
+         setContentView(root);
+         installHoldSpeed();
+         if(lesson<=0){status.setText("课节无效，请返回课程目录");return;}
+         video.setOnCompletionListener(p->{endHoldSpeed();saveProgress();});
+         video.setOnErrorListener((p,what,extra)->{endHoldSpeed();ready=false;status.setText("视频播放失败，请返回后重试");return true;});
+-        video.setOnPreparedListener(p->{if(destroyed)return;endHoldSpeed();media=p;ready=true;quality.setEnabled(quality.getCount()>1);p.setLooping(loop.isChecked());video.seekTo((int)Math.min(seek,Math.max(0,video.getDuration()-1000)));if(resumed&&resumePlayback)video.start();status.setText("已验证学习权限");loop.setOnCheckedChangeListener((b,on)->p.setLooping(on));speed.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onNothingSelected(android.widget.AdapterView<?> v){}public void onItemSelected(android.widget.AdapterView<?> v,android.view.View x,int at,long id){endHoldSpeed();selectedRate=new float[]{.75f,1f,1.25f,1.5f}[at];applyPlaybackRate(selectedRate);}});if(resumed)timer.postDelayed(checkpoint,15000);});
++        video.setOnPreparedListener(p->{if(destroyed)return;endHoldSpeed();media=p;ready=true;quality.setEnabled(quality.getCount()>1);p.setLooping(loop.isChecked());video.seekTo((int)Math.min(seek,Math.max(0,video.getDuration()-1000)));if(resumed&&resumePlayback)video.start();status.setText("已验证学习权限");loop.setOnCheckedChangeListener((b,on)->p.setLooping(on));speed.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onNothingSelected(android.widget.AdapterView<?> v){}public void onItemSelected(android.widget.AdapterView<?> v,android.view.View x,int at,long id){endHoldSpeed();selectedRate=new float[]{.75f,1f,1.25f,1.5f}[at];applyPlaybackRate(selectedRate);}});renderDirectory();if(resumed)timer.postDelayed(checkpoint,15000);});
+         io.execute(()->{try{
+             Object checkpoint=api.request("/video/"+lesson+"/progress","GET",null,true);
+             if(checkpoint instanceof JSONObject){JSONObject c=(JSONObject)checkpoint;revision=c.optInt("revision");seek=c.optDouble("duration",0)>0&&c.optDouble("progress",0)>=c.optDouble("duration",0)?0:Math.round(c.optDouble("progress")*1000);}
+@@ -138,27 +153,35 @@
+             else getWindow().getInsetsController().show(WindowInsets.Type.systemBars());
+         }
+     }
+-    private void showDirectory(){
+-        endHoldSpeed();
+-        LinearLayout panel=new LinearLayout(this);panel.setOrientation(LinearLayout.VERTICAL);
+-        EditText search=new EditText(this);search.setSingleLine(true);search.setHint("搜索课节");panel.addView(search);
+-        ListView list=new ListView(this);panel.addView(list,new LinearLayout.LayoutParams(-1,Math.round(320*getResources().getDisplayMetrics().density)));
+-        java.util.ArrayList<Integer> indices=new java.util.ArrayList<>();
+-        java.util.ArrayList<String> labels=new java.util.ArrayList<>();
+-        ArrayAdapter<String> adapter=new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,labels);list.setAdapter(adapter);
+-        java.util.function.Consumer<String> filter=query->{indices.clear();labels.clear();for(int i=0;i<playlistNames.length;i++){String name=playlistNames[i]==null?"":playlistNames[i];if(name.toLowerCase(java.util.Locale.ROOT).contains(query.toLowerCase(java.util.Locale.ROOT))){indices.add(i);labels.add((i==playlistIndex?"正在播放 · ":"")+name);}}adapter.notifyDataSetChanged();};
+-        filter.accept("");
+-        search.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int start,int count,int after){}public void onTextChanged(CharSequence s,int start,int before,int count){filter.accept(s.toString());}public void afterTextChanged(android.text.Editable value){}});
+-        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("课节目录").setView(panel).setNegativeButton("关闭",null).create();
+-        list.setOnItemClickListener((parent,view,at,id)->{int index=indices.get(at);dialog.dismiss();selectLesson(index);});dialog.show();
++    private int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
++    private TextView label(String value,int size,boolean muted){TextView text=new TextView(this);text.setText(value);text.setTextSize(size);text.setTextColor(muted?SwodUi.muted(this):SwodUi.ink(this));text.setPadding(0,dp(4),0,dp(4));return text;}
++    private LinearLayout panel(){LinearLayout panel=new LinearLayout(this);panel.setOrientation(LinearLayout.VERTICAL);panel.setPadding(dp(12),dp(12),dp(12),dp(12));panel.setBackground(SwodUi.shape(this,SwodUi.surface(this),14));LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.topMargin=dp(12);panel.setLayoutParams(lp);return panel;}
++    private void selectTab(int at){if(directoryPanel==null)return;directoryPanel.setVisibility(at==0?android.view.View.VISIBLE:android.view.View.GONE);notesPanel.setVisibility(at==1?android.view.View.VISIBLE:android.view.View.GONE);introPanel.setVisibility(at==2?android.view.View.VISIBLE:android.view.View.GONE);for(int i=0;i<tabs.size();i++){Button button=tabs.get(i);button.setSelected(i==at);button.setTextColor(i==at?SwodUi.primary(this):SwodUi.muted(this));button.setBackground(SwodUi.shape(this,i==at?SwodUi.tonal(this):SwodUi.surface(this),8));}}
++    private String clock(double seconds){int value=(int)Math.max(0,Double.isFinite(seconds)?seconds:0);return String.format(java.util.Locale.ROOT,"%d:%02d",value/60,value%60);}
++    private JSONObject metadata(int index){JSONObject row=playlistMetadata.optJSONObject(index);return row==null?new JSONObject():row;}
++    private void renderDirectory(){
++        directoryPanel.removeAllViews();EditText search=new EditText(this);search.setHint("搜索课节");search.setSingleLine(true);search.setTextSize(14);search.setText(directoryQuery);search.setPadding(dp(12),0,dp(12),0);search.setBackground(SwodUi.shape(this,SwodUi.canvas(this),22));directoryPanel.addView(search,new LinearLayout.LayoutParams(-1,dp(44)));
++        LinearLayout results=new LinearLayout(this);results.setOrientation(LinearLayout.VERTICAL);directoryPanel.addView(results);
++        Runnable render=()->{
++            results.removeAllViews();java.util.ArrayList<Integer> indices=new java.util.ArrayList<>();if(playlistNames!=null)for(int i=0;i<playlistNames.length;i++)if((playlistNames[i]+" "+metadata(i).optString("subtitle")).toLowerCase(java.util.Locale.ROOT).contains(directoryQuery.trim().toLowerCase(java.util.Locale.ROOT)))indices.add(i);
++            int pages=Math.max(1,(indices.size()+49)/50);directoryPage=Math.max(1,Math.min(pages,directoryPage));int start=(directoryPage-1)*50,end=Math.min(directoryPage*50,indices.size());
++            LinearLayout paging=new LinearLayout(this);paging.setGravity(android.view.Gravity.CENTER_VERTICAL);Button previous=new Button(this);previous.setText("‹");previous.setContentDescription("上一页课节");previous.setEnabled(directoryPage>1);Button next=new Button(this);next.setText("›");next.setContentDescription("下一页课节");next.setEnabled(directoryPage<pages);
++            previous.setOnClickListener(v->{directoryPage--;renderDirectory();});next.setOnClickListener(v->{directoryPage++;renderDirectory();});TextView range=label((indices.isEmpty()?"0":String.valueOf(start+1))+"–"+end+" / "+indices.size()+" · "+directoryPage+"/"+pages+"页",13,true);range.setGravity(android.view.Gravity.CENTER);paging.addView(previous,new LinearLayout.LayoutParams(dp(48),dp(48)));paging.addView(range,new LinearLayout.LayoutParams(0,-2,1));paging.addView(next,new LinearLayout.LayoutParams(dp(48),dp(48)));results.addView(paging);
++            for(int n=start;n<end;n++){int index=indices.get(n);boolean current=index==playlistIndex;JSONObject meta=metadata(index);LinearLayout row=new LinearLayout(this);row.setGravity(android.view.Gravity.CENTER_VERTICAL);row.setPadding(dp(8),dp(16),dp(8),dp(16));row.setMinimumHeight(dp(84));row.setBackground(SwodUi.shape(this,current?SwodUi.tonal(this):SwodUi.surface(this),8));
++                TextView ordinal=label(String.valueOf(index+1),14,false);ordinal.setGravity(android.view.Gravity.CENTER);ordinal.setTextColor(SwodUi.dark(this)?android.graphics.Color.BLACK:android.graphics.Color.WHITE);ordinal.setBackground(SwodUi.shape(this,SwodUi.primary(this),18));row.addView(ordinal,new LinearLayout.LayoutParams(dp(32),dp(32)));
++                LinearLayout copy=new LinearLayout(this);copy.setOrientation(LinearLayout.VERTICAL);copy.setPadding(dp(12),0,dp(8),0);copy.addView(label(playlistNames[index],16,false));copy.addView(label(meta.optDouble("duration")>0?clock(meta.optDouble("duration")):"时长待更新",12,true));row.addView(copy,new LinearLayout.LayoutParams(0,-2,1));TextView progress=label(current&&ready?CoursePolicy.percent(video.getCurrentPosition()/1000.0,video.getDuration()/1000.0,false)+"%":meta.has("percent")?meta.optInt("percent")+"%":"待同步",12,true);row.addView(progress);if(current)currentProgress=progress;row.setSelected(current);row.setContentDescription("第"+(index+1)+"节，"+playlistNames[index]+(current?"，当前课节":""));if(!current){row.setFocusable(true);row.setOnClickListener(v->selectLesson(index));}results.addView(row);
++            }
++            if(indices.isEmpty())results.addView(label(playlistNames==null?"请从课程目录打开课节以查看完整列表":"未找到匹配课节",14,true));
++        };render.run();search.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int start,int count,int after){}public void onTextChanged(CharSequence s,int start,int before,int count){directoryQuery=s.toString();directoryPage=1;render.run();}public void afterTextChanged(android.text.Editable value){}});
+     }
+     private void selectLesson(int index){
+         if(playlistIds==null||playlistNames==null||index<0||index>=playlistIds.length||index==playlistIndex||playlistIds[index]<=0)return;
+         endHoldSpeed();
+-        startActivity(new Intent(this,PlayerActivity.class).putExtra("lesson",playlistIds[index]).putExtra("title",playlistNames[index]).putExtra("playlistIds",playlistIds).putExtra("playlistNames",playlistNames));
++        if(ready&&playlistIndex>=0){try{JSONObject current=metadata(playlistIndex);current.put("percent",CoursePolicy.percent(video.getCurrentPosition()/1000.0,video.getDuration()/1000.0,false));playlistMetadata.put(playlistIndex,current);}catch(org.json.JSONException ignored){}}
++        Intent next=new Intent(getIntent());next.putExtra("playlistMetadata",playlistMetadata.toString());next.setClass(this,PlayerActivity.class);next.removeExtra("positionSeconds");next.putExtra("lesson",playlistIds[index]).putExtra("title",playlistNames[index]);startActivity(next);
+         finish();
+     }
+-    private void saveProgress(){if(!ready||destroyed||api.accountGeneration()!=playbackAccount)return;double position=video.getCurrentPosition()/1000.0,duration=video.getDuration()/1000.0;if(duration<=0||position<0)return;
++    private void saveProgress(){if(ready&&learningProgress!=null){learningProgress.setText("学习进度 "+CoursePolicy.percent(video.getCurrentPosition()/1000.0,video.getDuration()/1000.0,false)+"% · 已看到 "+clock(video.getCurrentPosition()/1000.0));}if(!ready||destroyed||api.accountGeneration()!=playbackAccount)return;double position=video.getCurrentPosition()/1000.0,duration=video.getDuration()/1000.0;if(duration<=0||position<0)return;
+         io.execute(()->{try{if(api.accountGeneration()!=playbackAccount)return;JSONObject result=(JSONObject)api.request("/video/"+lesson+"/progress","POST",new JSONObject().put("progress",Math.min(position,duration)).put("duration",duration).put("revision",revision),true);revision=result.optInt("revision",revision);}
+             catch(Api.Failure e){if(e.status==409){try{JSONObject c=(JSONObject)api.request("/video/"+lesson+"/progress","GET",null,true);revision=c.optInt("revision");message("另一设备已更新进度，本次没有覆盖。后续学习将继续同步。");}catch(Exception failure){message(failure.getMessage());}}else message(e.getMessage());}
+             catch(Exception e){message("学习进度未同步，请检查网络");}});
+@@ -175,7 +198,7 @@
+         }catch(Exception e){runOnUiThread(()->{if(!destroyed){authorizationPending=false;endHoldSpeed();video.pause();ready=false;status.setText("权限验证失败，请返回后重试："+e.getMessage());}});}});
+     }
+     private void message(String text){runOnUiThread(()->{if(!destroyed)status.setText(text);});}
+-    @Override protected void onPause(){endHoldSpeed();if(ready)resumePlayback=video.isPlaying();resumed=false;saveProgress();video.pause();timer.removeCallbacks(checkpoint);super.onPause();}
+-    @Override protected void onResume(){super.onResume();resumed=true;verifyAccess();if(ready){if(resumePlayback)video.start();timer.removeCallbacks(checkpoint);timer.postDelayed(checkpoint,15000);}}
++    @Override protected void onPause(){endHoldSpeed();if(ready)resumePlayback=video.isPlaying();resumed=false;saveProgress();video.pause();timer.removeCallbacks(checkpoint);timer.removeCallbacks(progressDisplay);super.onPause();}
++    @Override protected void onResume(){super.onResume();resumed=true;timer.removeCallbacks(progressDisplay);timer.post(progressDisplay);verifyAccess();if(ready){if(resumePlayback)video.start();timer.removeCallbacks(checkpoint);timer.postDelayed(checkpoint,15000);}}
+     @Override protected void onDestroy(){endHoldSpeed();media=null;timer.removeCallbacksAndMessages(null);destroyed=true;video.stopPlayback();io.shutdown();super.onDestroy();}
+ }
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -29,9 +29,12 @@
+   @State private currentLessonID: string = '';
+   @State private progressRows: Row[] = [];
+   @State private videoPlaylist: Row[] = [];
+-  @State private videoCatalogOpen: boolean = false;
++  @State private videoTab: number = 0;
++  @State private videoSettings: boolean = false;
++  @State private videoCourseTitle: string = '';
++  @State private videoIntroduction: string = '';
+   @State private videoQuery: string = '';
+-  @State private videoLimit: number = 50;
++  @State private videoPage: number = 1;
+   private lastAuthorization: number = 0;
+   private authorizationPending: boolean = false;
+   @State private videoQualities: MediaQuality[] = [];
+@@ -115,7 +118,7 @@
+   onPageHide(): void { this.endHoldSpeed(); this.videoPlaying = false; this.controller.pause(); this.saveProgress(); }
+   private controller: VideoController = new VideoController();
+   private playbackPosition: number = 0;
+-  private duration: number = 0;
++  @State private duration: number = 0;
+   private revision: number = 0;
+   private lastCheckpoint: number = 0;
+   private checkpointPending: boolean = false;
+@@ -296,15 +299,22 @@
+   private startVideo(row: Row): void {
+     if (!platform.credentials) { this.go('login', '手机号登录'); return; }
+     const fromVideo = this.route.screen === 'video';
+-    if (this.route.screen === 'catalog') this.videoPlaylist = catalogLessons(this.rows, this.progressRows);
+-    else if (!fromVideo) this.videoPlaylist = [];
++    if (this.route.screen === 'catalog') { this.videoPlaylist = catalogLessons(this.rows, this.progressRows); this.videoCourseTitle = this.route.title; this.videoIntroduction = ''; const path = this.route.path.replace('/courses', '/detail'); this.loadVideoIntroduction(path); }
++    else if (!fromVideo) { this.videoPlaylist = []; this.videoCourseTitle = ''; this.videoIntroduction = ''; }
++    if (fromVideo && this.duration > 0) { this.videoPlaylist = this.videoPlaylist.map((item: Row): Row => { if (String(item.id) === this.currentLessonID) item.percent = Math.floor(Math.max(0, Math.min(100, this.playbackPosition / this.duration * 100))); return item; }); }
+     // Capture the old lesson checkpoint before changing the selected lesson.
+     this.saveProgress(); this.duration = 0; this.playbackPosition = 0; this.revision = 0;
+-    this.videoQuery = ''; this.videoLimit = 50; this.lastAuthorization = Date.now();
+-    this.currentLessonID = String(row.id || row.video_id); this.videoCatalogOpen = false; this.videoQualities = []; this.qualityChanging = false; this.qualityResume = -1;
++    this.videoQuery = ''; this.videoPage = Math.floor(Math.max(0, this.videoPlaylist.findIndex((item: Row) => String(item.id) === String(row.id || row.video_id))) / 50) + 1; this.lastAuthorization = Date.now();
++    this.currentLessonID = String(row.id || row.video_id); this.videoTab = 0; this.videoSettings = false; this.videoQualities = []; this.qualityChanging = false; this.qualityResume = -1;
+     this.selected = row; this.go('video', this.title(row), '/video/' + Number(row.id || row.video_id) + '/play', true);
+     if (fromVideo) this.history.pop();
+   }
++  private async loadVideoIntroduction(path: string): Promise<void> {
++    try { const detail = await platform.request<Row>(path, http.RequestMethod.GET, undefined, false); if (this.route.screen === 'video' && this.videoCourseTitle === (detail.name || '')) this.videoIntroduction = detail.rich_description || detail.description || ''; } catch { /* The empty state is explicit. */ }
++  }
++  private videoLessons(): Row[] { const query = this.videoQuery.trim().toLowerCase(); return this.videoPlaylist.filter((row: Row) => ((row.name || '') + ' ' + (row.subtitle || '')).toLowerCase().includes(query)); }
++  private videoPages(): number { return Math.max(1, Math.ceil(this.videoLessons().length / 50)); }
++  private videoPercent(row: Row): string { return String(row.id || row.video_id) === this.currentLessonID && this.duration > 0 ? Math.floor(Math.max(0, Math.min(100, this.playbackPosition / this.duration * 100))) + '%' : row.percent === undefined ? '待同步' : Math.floor(row.percent) + '%'; }
+   private async verifyVideoAccess(): Promise<void> {
+     if (this.authorizationPending || this.route.screen !== 'video' || Date.now() - this.lastAuthorization < 60000) return;
+     const version = this.generation; this.authorizationPending = true;
+@@ -831,7 +841,7 @@
+           Text('本课为音频讲解，请点击播放收听。').fontSize(15)
+         }.width('100%').padding(24).backgroundColor(SwodTheme.tonal).borderRadius(16)
+       }
+-      Video({ src: this.playURL, controller: this.controller, currentProgressRate: this.holdingSpeed ? 2 : this.selectedPlaybackRate }).width('100%').height(this.selected.mediaKind === 'audio' ? 72 : 230).objectFit(ImageFit.Contain).controls(true).loop(this.loop).scale({ x: this.mirror ? -1 : 1 })
++      Video({ src: this.playURL, controller: this.controller, currentProgressRate: this.holdingSpeed ? 2 : this.selectedPlaybackRate }).width('100%').aspectRatio(this.selected.mediaKind === 'audio' ? 5 : 16 / 9).objectFit(ImageFit.Contain).controls(true).loop(this.loop).scale({ x: this.mirror ? -1 : 1 })
+         .onPrepared((event?: VideoDuration) => { this.duration = event?.duration || 0; const position = this.qualityResume >= 0 ? this.qualityResume : this.playbackPosition; this.controller.setCurrentTime(Math.max(0, Math.min(position, this.duration))); this.playbackPosition = position; this.qualityResume = -1; this.qualityChanging = false; })
+         .onUpdate((event?: VideoTime) => { if (this.qualityChanging) return; this.playbackPosition = event?.time || 0; if (Date.now() - this.lastCheckpoint > 15000) { this.lastCheckpoint = Date.now(); this.saveProgress(); this.verifyVideoAccess(); } })
+         .onStart(() => { this.videoPlaying = true; })
+@@ -839,36 +849,61 @@
+         .onFinish(() => { this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); })
+         .onTouch((event: TouchEvent) => { this.onVideoTouch(event); })
+         .onError(() => { this.qualityChanging = false; this.endHoldSpeed(); this.videoPlaying = false; this.error = '媒体暂时无法播放，请返回后重试'; })
+-      if (this.videoQualities.length > 1) {
+-        Select(this.videoQualities.map((quality: MediaQuality): SelectOption => ({ value: quality.label }))).selected(this.videoQuality).value(this.videoQualities[this.videoQuality]?.label || '自动').onSelect((index: number) => {
+-          if (index < 0 || index >= this.videoQualities.length || index === this.videoQuality) return;
+-          this.endHoldSpeed(); this.videoPlaying = false; this.controller.pause(); this.qualityResume = this.playbackPosition; this.qualityChanging = true; this.videoQuality = index; this.playURL = this.videoQualities[index].url;
+-        }).enabled(this.duration > 0 && !this.qualityChanging).accessibilityText('视频清晰度')
++      Column({ space: 6 }) {
++        Text(this.route.title).fontSize(18).fontWeight(FontWeight.Medium).fontColor(SwodTheme.ink).width('100%')
++        if (this.selected.subtitle) { Text(this.selected.subtitle || '').fontSize(14).fontColor(SwodTheme.muted) }
++        Text((this.duration > 0 ? '学习进度 ' + this.videoPercent(this.selected) : '进度待同步') + ' · 已看到 ' + Math.floor(this.playbackPosition / 60) + ':' + String(Math.floor(this.playbackPosition % 60)).padStart(2, '0')).fontSize(12).fontColor(SwodTheme.muted)
++      }.alignItems(HorizontalAlign.Start).padding(12).width('100%').backgroundColor(SwodTheme.surface).borderRadius(12)
++      Row({ space: 8 }) {
++        Button('上一节').constraintSize({ minHeight: 44 }).layoutWeight(1).enabled(this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID) > 0).onClick(() => { const at = this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID); if (at > 0) this.startVideo(this.videoPlaylist[at - 1]); })
++        Button('播放设置').constraintSize({ minHeight: 44 }).layoutWeight(1).onClick(() => { this.videoSettings = !this.videoSettings; })
++        Button('下一节').constraintSize({ minHeight: 44 }).layoutWeight(1).enabled(this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID) >= 0 && this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID) + 1 < this.videoPlaylist.length).onClick(() => { const at = this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID); if (at >= 0 && at + 1 < this.videoPlaylist.length) this.startVideo(this.videoPlaylist[at + 1]); })
++      }.width('100%')
++      if (this.videoSettings) {
++        if (this.videoQualities.length > 1) {
++          Select(this.videoQualities.map((quality: MediaQuality): SelectOption => ({ value: quality.label }))).selected(this.videoQuality).value(this.videoQualities[this.videoQuality]?.label || '自动').onSelect((index: number) => {
++            if (index < 0 || index >= this.videoQualities.length || index === this.videoQuality) return;
++            this.endHoldSpeed(); this.videoPlaying = false; this.controller.pause(); this.qualityResume = this.playbackPosition; this.qualityChanging = true; this.videoQuality = index; this.playURL = this.videoQualities[index].url;
++          }).enabled(this.duration > 0 && !this.qualityChanging).accessibilityText('视频清晰度')
++        }
++        Row({ space: 8 }) { ForEach([0.75, 1, 1.25, 1.5], (rate: number) => { Button(rate + ' 倍').onClick(() => { this.endHoldSpeed(); this.selectedPlaybackRate = rate; }).backgroundColor(this.selectedPlaybackRate === rate ? SwodTheme.tonal : SwodTheme.surface).fontColor(SwodTheme.ink) }, (rate: number) => String(rate)) }
++        Row() { Checkbox().select(this.mirror).onChange((v: boolean) => { this.mirror = v; }); Text('镜像'); Checkbox().select(this.loop).onChange((v: boolean) => { this.loop = v; }); Text('循环') }
+       }
+       if (this.holdingSpeed) { Text('2 倍播放 · 松手恢复').fontSize(14) }
+-      if (this.videoPlaylist.length > 0) {
+-        Row({ space: 8 }) {
+-          Button('上一节').constraintSize({ minHeight: 48 }).layoutWeight(1).enabled(this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID) > 0).onClick(() => { const at = this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID); if (at > 0) this.startVideo(this.videoPlaylist[at - 1]); })
+-          Button('目录').constraintSize({ minHeight: 48 }).layoutWeight(1).onClick(() => { this.videoCatalogOpen = !this.videoCatalogOpen; })
+-          Button('下一节').constraintSize({ minHeight: 48 }).layoutWeight(1).enabled(this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID) >= 0 && this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID) + 1 < this.videoPlaylist.length).onClick(() => { const at = this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID); if (at >= 0 && at + 1 < this.videoPlaylist.length) this.startVideo(this.videoPlaylist[at + 1]); })
+-        }.width('100%')
+-        if (this.videoCatalogOpen) {
+-          Text('课节目录 · 共 ' + this.videoPlaylist.length + ' 节').fontSize(18).fontWeight(FontWeight.Bold)
+-          TextInput({ placeholder: '搜索课节', text: this.videoQuery }).onChange((value: string) => { this.videoQuery = value; this.videoLimit = 50; })
+-          ForEach(this.videoPlaylist.filter((row: Row) => (row.name || '').toLowerCase().includes(this.videoQuery.toLowerCase())).slice(0, this.videoLimit), (row: Row) => {
+-            this.action((String(row.id) === this.currentLessonID ? '当前课节 · ' : '') + (row.name || ''), () => { if (String(row.id) !== this.currentLessonID) this.startVideo(row); })
++      Row() {
++        ForEach([0, 1, 2], (index: number) => {
++          Column() {
++            Text(index === 0 ? '目录(' + this.videoPlaylist.length + '节)' : index === 1 ? '笔记' : '简介').fontSize(16).fontWeight(this.videoTab === index ? FontWeight.Bold : FontWeight.Normal).fontColor(this.videoTab === index ? SwodTheme.primary : SwodTheme.muted).height(48)
++            Divider().strokeWidth(2).color(this.videoTab === index ? SwodTheme.primary : Color.Transparent)
++          }.layoutWeight(1).onClick(() => { this.videoTab = index; }).accessibilityGroup(true).accessibilityText((index === 0 ? '目录' : index === 1 ? '笔记' : '简介') + (this.videoTab === index ? '，已选中' : ''))
++        }, (index: number) => String(index))
++      }.width('100%').backgroundColor(SwodTheme.surface).borderRadius(12)
++      if (this.videoTab === 0) {
++        Column({ space: 8 }) {
++          TextInput({ placeholder: '搜索课节', text: this.videoQuery }).height(44).fontSize(14).backgroundColor(SwodTheme.canvas).borderRadius(22).onChange((value: string) => { this.videoQuery = value; this.videoPage = 1; })
++          Row() {
++            Button('‹').width(44).height(44).enabled(this.videoPage > 1).accessibilityText('上一页课节').onClick(() => { this.videoPage -= 1; })
++            Text((this.videoLessons().length === 0 ? '0' : String((this.videoPage - 1) * 50 + 1)) + '–' + Math.min(this.videoPage * 50, this.videoLessons().length) + ' / ' + this.videoLessons().length + ' · ' + this.videoPage + '/' + this.videoPages() + '页').fontSize(13).fontColor(SwodTheme.muted).layoutWeight(1).textAlign(TextAlign.Center)
++            Button('›').width(44).height(44).enabled(this.videoPage < this.videoPages()).accessibilityText('下一页课节').onClick(() => { this.videoPage += 1; })
++          }.width('100%')
++          ForEach(this.videoLessons().slice((this.videoPage - 1) * 50, this.videoPage * 50), (row: Row) => {
++            Row({ space: 12 }) {
++              Text(String(row.ordinal || this.videoPlaylist.findIndex((item: Row) => String(item.id) === String(row.id)) + 1)).fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.onPrimary).width(32).height(32).textAlign(TextAlign.Center).backgroundColor(SwodTheme.primary).borderRadius(16)
++              Column({ space: 7 }) { Text(row.name || '').fontSize(16).fontColor(SwodTheme.ink).width('100%'); Text(this.lessonDuration(row)).fontSize(12).fontColor(SwodTheme.muted) }.alignItems(HorizontalAlign.Start).layoutWeight(1)
++              Text(this.videoPercent(row)).fontSize(12).fontColor(String(row.id) === this.currentLessonID ? SwodTheme.primary : SwodTheme.muted)
++            }.width('100%').padding({ left: 8, right: 8, top: 16, bottom: 16 }).constraintSize({ minHeight: 80 }).backgroundColor(String(row.id) === this.currentLessonID ? SwodTheme.tonal : SwodTheme.surface).borderRadius(8).onClick(() => { if (String(row.id) !== this.currentLessonID) this.startVideo(row); }).accessibilityGroup(true).accessibilityText((row.name || '') + (String(row.id) === this.currentLessonID ? '，当前课节' : ''))
+           }, (row: Row) => String(row.id))
+-          if (this.videoPlaylist.filter((row: Row) => (row.name || '').toLowerCase().includes(this.videoQuery.toLowerCase())).length > this.videoLimit) { this.action('显示更多课节', () => { this.videoLimit += 50; }) }
+-        }
+-      }
+-      Row({ space: 8 }) {
+-        ForEach([0.75, 1, 1.25, 1.5], (rate: number) => {
+-          Button(rate + ' 倍').onClick(() => { this.endHoldSpeed(); this.selectedPlaybackRate = rate; }).backgroundColor(this.selectedPlaybackRate === rate ? SwodTheme.tonal : SwodTheme.surface).fontColor(SwodTheme.ink)
+-        }, (rate: number) => String(rate))
+-      }
+-      Row() { Checkbox().select(this.mirror).onChange((v: boolean) => { this.mirror = v; }); Text('镜像'); Checkbox().select(this.loop).onChange((v: boolean) => { this.loop = v; }); Text('循环') }
+-      TextInput({ placeholder: '本节学习笔记', text: this.remark }).onChange((v: string) => { this.remark = v; })
+-      this.action('保存笔记', () => { this.write('/notes', { video_id: Number(this.selected.id || this.selected.video_id), timestamp_seconds: this.playbackPosition, content: this.remark }); })
++          if (this.videoLessons().length === 0) { Text(this.videoPlaylist.length === 0 ? '请从课程目录打开课节以查看完整列表' : '未找到匹配课节').fontSize(14).fontColor(SwodTheme.muted).padding(20) }
++        }.padding(12).width('100%').backgroundColor(SwodTheme.surface).borderRadius(14)
++      } else if (this.videoTab === 1) {
++        Column({ space: 12 }) {
++          Text('记录本节练习心得').fontSize(17).fontWeight(FontWeight.Medium)
++          TextInput({ placeholder: '本节学习笔记', text: this.remark }).onChange((v: string) => { this.remark = v; })
++          this.action('保存当前播放位置的笔记', () => { if (this.remark.trim()) this.write('/notes', { video_id: Number(this.selected.id || this.selected.video_id), timestamp_seconds: this.playbackPosition, content: this.remark }); })
++        }.alignItems(HorizontalAlign.Start).padding(16).width('100%').backgroundColor(SwodTheme.surface).borderRadius(14)
++      } else {
++        Column({ space: 12 }) { Text(this.videoCourseTitle || this.route.title).fontSize(18).fontWeight(FontWeight.Medium); Text(this.videoIntroduction.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&') || '暂无课程简介').fontSize(16).fontColor(SwodTheme.muted) }.alignItems(HorizontalAlign.Start).padding(16).width('100%').backgroundColor(SwodTheme.surface).borderRadius(14)
++      }
+     }
+     if (this.route.screen === 'offlineDetail') {
+       if (coverImageURL(this.detail.cover_image || '')) { Image(coverImageURL(this.detail.cover_image || '')).width('100%').aspectRatio(4 / 3).objectFit(ImageFit.Contain).borderRadius(12).accessibilityText((this.detail.name || '') + '课程封面') }
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets
+@@ -17,7 +17,7 @@
+   group_key?: string; promo_price?: number; is_free?: number | boolean; outline?: string[]; period_status?: string; capacity?: number; remaining?: number; total_students?: number; group_total_students?: number;
+   ordinal?: number; percent?: number; completed?: number; priceFen?: number; order?: Row; offer?: CourseOffer; payment?: PaymentFlags; provider?: string; url?: string; period?: string;
+   id?: number | string; name?: string; title?: string; subtitle?: string; teacher?: string; category?: string;
+-  description?: string; cover_image?: string; total_courses?: number; source_id?: number; location?: string;
++  rich_description?: string; description?: string; cover_image?: string; total_courses?: number; source_id?: number; location?: string;
+   start_date?: string; end_date?: string; startDate?: string; endDate?: string; venue?: string;
+   series_id?: number; series_name?: string; video_id?: number; course_name?: string; courseName?: string;
+   videos?: Row[]; duration?: number; progress?: number; revision?: number; play_url?: string; authorized?: boolean;
+--- before/app开发/iOS/EvaDance/Sources/EvaCore/Models.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaCore/Models.swift
+@@ -23,8 +23,10 @@
+     public let id: Int
+     public let name: String
+     public let duration: Double?
+-    public init(id: Int, name: String, duration: Double? = nil) {
+-        self.id = id; self.name = name; self.duration = duration
++    public let subtitle: String?
++    public let percent: Double?
++    public init(id: Int, name: String, duration: Double? = nil, subtitle: String? = nil, percent: Double? = nil) {
++        self.id = id; self.name = name; self.duration = duration; self.subtitle = subtitle; self.percent = percent
+     }
+ }
+ public struct CourseUnit: Decodable, Identifiable {
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift
+@@ -70,8 +70,8 @@
+                 if let selectedID, let lessonID = Int(selectedID), let lesson = lessons.first(where: { $0["id"].text == selectedID }) {
+                     AuthGate { PlayerView(lessonID: lessonID, title: lesson["name"].text, playlist: lessons.compactMap { row in
+                         guard let id = Int(row["id"].text), id > 0 else { return nil }
+-                        return Lesson(id: id, name: row["name"].text, duration: row["duration"].number)
+-                    }) }
++                        return Lesson(id: id, name: row["name"].text, duration: row["duration"].number, subtitle: row["subtitle"].text, percent: row["percent"] == .null ? nil : row["percent"].number)
++                    }, courseTitle: title, seriesID: id) }
+                 }
+             }
+         }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
+@@ -118,91 +118,100 @@
+     @GestureState private var holdTouchActive = false
+     @State private var mirror = false
+     @State private var showNote = false
++    @State private var showSettings = false
+     @State private var directoryQuery = ""
+-    @State private var directoryLimit = 50
+-    private var filteredLessons: [Lesson] { playlist.filter { directoryQuery.isEmpty || $0.name.localizedCaseInsensitiveContains(directoryQuery) } }
++    @State private var directoryPage = 1
++    @State private var tab = 0
++    @State private var introduction = ""
++    @ScaledMetric(relativeTo: .subheadline) private var ordinalSize = 30
+     let lessonID: Int
+     let title: String
+     var playlist: [Lesson] = []
++    var courseTitle = ""
++    var seriesID: Int? = nil
++    private var filteredLessons: [Lesson] {
++        let query = directoryQuery.trimmingCharacters(in: .whitespacesAndNewlines)
++        return playlist.filter { query.isEmpty || ($0.name + " " + ($0.subtitle ?? "")).localizedCaseInsensitiveContains(query) }
++    }
++    private var pages: Int { max(1, (filteredLessons.count + 49) / 50) }
++    private var page: Int { min(directoryPage, pages) }
++    private var visible: [Lesson] { Array(filteredLessons.dropFirst((page - 1) * 50).prefix(50)) }
++    private var current: Lesson? { playlist.first { $0.id == lessonID } }
+     var body: some View {
+-        ScrollView {
+-            VStack(spacing: 10) {
+-                if CoursePresentation.isAudio(title) { Label("SWOD · 音频课程，播放时没有视频画面", systemImage: "waveform").padding() }
+-                VideoPlayer(player: model.player)
+-                    .scaleEffect(x: mirror ? -1 : 1, y: 1)
+-                    .allowsHitTesting(false)
+-                    .accessibilityLabel(CoursePresentation.isAudio(title) ? "课程音频播放器" : "课程视频画面")
+-                    .aspectRatio(16 / 9, contentMode: .fit)
+-                    .background(.black)
+-                    .overlay {
+-                        Rectangle().fill(.clear).contentShape(Rectangle())
+-                            .simultaneousGesture(DragGesture(minimumDistance: 0)
+-                                .updating($holdTouchActive) { _, active, _ in active = true }
+-                                .onChanged { value in
+-                                    model.beginHold()
+-                                    if max(abs(value.translation.width), abs(value.translation.height)) > 12 { model.endHold(resetTracking: false) }
++        ScrollViewReader { proxy in
++            ScrollView {
++                VStack(spacing: 12) {
++                    videoStage
++                    VStack(alignment: .leading, spacing: 7) {
++                        if CoursePresentation.isAudio(title) { Label("音频课程", systemImage: "waveform").font(.caption).foregroundStyle(.secondary) }
++                        Text(title).font(.headline).fixedSize(horizontal: false, vertical: true)
++                        if let subtitle = current?.subtitle, !subtitle.isEmpty { Text(subtitle).font(.subheadline).foregroundStyle(.secondary) }
++                        HStack {
++                            Text(model.duration > 0 ? "学习进度 \(percent(model.position / model.duration * 100))" : current?.percent.map { "学习进度 \(percent($0))" } ?? "进度待同步")
++                            if model.duration > 0 { Text("已看到 \(time(model.position))") }
++                        }.font(.caption).foregroundStyle(.secondary)
++                        if model.loading { ProgressView("正在获取播放权限") }
++                        if let failure = model.failure {
++                            Text(failure).font(.subheadline).foregroundStyle(EvaBrand.red)
++                            Button("重新加载") { Task { await model.load(id: lessonID, session: session) } }.frame(minHeight: 44)
++                        }
++                    }.frame(maxWidth: .infinity, alignment: .leading).padding(14).background(EvaBrand.surface)
++                    HStack(spacing: 0) {
++                        ForEach(0..<3) { index in
++                            Button { tab = index } label: {
++                                VStack(spacing: 0) {
++                                    Text(index == 0 ? "目录(\(playlist.count)节)" : index == 1 ? "笔记" : "简介")
++                                        .font(.subheadline.weight(tab == index ? .semibold : .regular)).frame(maxWidth: .infinity, minHeight: 48)
++                                    Rectangle().fill(tab == index ? EvaBrand.red : .clear).frame(height: 2)
++                                }.foregroundStyle(tab == index ? EvaBrand.red : .secondary)
++                            }.buttonStyle(.plain).accessibilityAddTraits(tab == index ? .isSelected : [])
++                        }
++                    }.background(EvaBrand.surface).clipShape(RoundedRectangle(cornerRadius: 14)).padding(.horizontal, 12)
++                    if tab == 0 {
++                        VStack(spacing: 6) {
++                            EvaSearchField(text: $directoryQuery, prompt: "搜索课节").onChange(of: directoryQuery) { _ in directoryPage = 1 }
++                            HStack {
++                                Button { directoryPage -= 1; proxy.scrollTo("directory", anchor: .top) } label: { Image(systemName: "chevron.left").frame(width: 44, height: 44) }.disabled(page <= 1).accessibilityLabel("上一页课节")
++                                Spacer(minLength: 0)
++                                Text(filteredLessons.isEmpty ? "0 / 0" : "\((page - 1) * 50 + 1)–\(min(page * 50, filteredLessons.count)) / \(filteredLessons.count) · \(page)/\(pages)页").font(.caption.monospacedDigit())
++                                Spacer(minLength: 0)
++                                Button { directoryPage += 1; proxy.scrollTo("directory", anchor: .top) } label: { Image(systemName: "chevron.right").frame(width: 44, height: 44) }.disabled(page >= pages).accessibilityLabel("下一页课节")
++                            }.foregroundStyle(EvaBrand.red).background(EvaBrand.canvas, in: RoundedRectangle(cornerRadius: 10))
++                            LazyVStack(spacing: 0) {
++                                ForEach(visible) { lesson in
++                                    if lesson.id == lessonID { directoryRow(lesson).accessibilityAddTraits(.isSelected) }
++                                    else { NavigationLink { destination(lesson) } label: { directoryRow(lesson) }.buttonStyle(.plain) }
++                                    Divider().padding(.leading, 52)
+                                 }
+-                                .onEnded { _ in model.endHold() })
+-                            .accessibilityHidden(true)
++                            }
++                            if visible.isEmpty { Text(playlist.isEmpty ? "请从课程目录打开课节以查看完整列表" : "未找到匹配课节").font(.subheadline).foregroundStyle(.secondary).padding(.vertical, 24) }
++                        }.padding(12).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14)).padding(.horizontal, 12).id("directory")
++                    } else if tab == 1 {
++                        VStack(alignment: .leading, spacing: 12) {
++                            Text("记录本节练习心得").font(.headline)
++                            Text("笔记与书签会记录当前播放位置，可在个人中心查看。").font(.subheadline).foregroundStyle(.secondary)
++                            Button("写笔记 / 添加书签 · \(time(model.position))") { showNote = true }.frame(minHeight: 44).disabled(model.loading || model.failure != nil)
++                        }.frame(maxWidth: .infinity, alignment: .leading).padding(16).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14)).padding(.horizontal, 12)
++                    } else {
++                        VStack(alignment: .leading, spacing: 12) {
++                            Text(courseTitle.isEmpty ? title : courseTitle).font(.headline)
++                            Text(introduction.isEmpty ? "暂无课程简介" : introduction).font(.body).foregroundStyle(.secondary).textSelection(.enabled)
++                        }.frame(maxWidth: .infinity, alignment: .leading).padding(16).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14)).padding(.horizontal, 12)
+                     }
+-                    .overlay(alignment: .top) {
+-                        if model.holdingSpeed { Text("2 倍播放 · 松手恢复").font(.caption).padding(8).foregroundStyle(.white).allowsHitTesting(false) }
+-                    }
+-                if model.loading { ProgressView("正在获取播放权限") }
+-                if let failure = model.failure {
+-                    Text(failure).foregroundStyle(.red)
+-                    Button("重新加载") { Task { await model.load(id: lessonID, session: session) } }
+-                }
+-                Slider(value: Binding(get: { model.position }, set: { value in
+-                    model.position = value
+-                    model.player.seek(to: CMTime(seconds: value, preferredTimescale: 600))
+-                }), in: 0...max(model.duration, 1), onEditingChanged: { editing in
+-                    if !editing { Task { await model.save(id: lessonID, session: session) } }
+-                }).accessibilityLabel("播放进度").disabled(model.loading)
+-                HStack {
+-                    Text(time(model.position)).monospacedDigit()
+-                    Spacer()
+-                    Button {
+-                        model.toggle()
+-                        if !model.playing { Task { await model.save(id: lessonID, session: session) } }
+-                    } label: { Label(model.playing ? "暂停" : "播放", systemImage: model.playing ? "pause.fill" : "play.fill") }
+-                        .frame(minWidth: 80, minHeight: 44).disabled(model.loading || model.failure != nil)
+-                    Spacer()
+-                    Text(time(model.duration)).monospacedDigit()
+-                }
+-                Button("写笔记 / 添加收藏") { showNote = true }
+-                Toggle("镜面练习", isOn: $mirror)
+-                Toggle("循环本节", isOn: $model.loop)
+-                Picker("播放速度", selection: $model.speed) {
+-                    ForEach([Float(0.75), 1, 1.25, 1.5], id: \.self) { rate in Text("\(rate, specifier: "%.3g") 倍").tag(rate) }
+-                }.onChange(of: model.speed) { speed in model.endHold(); if model.playing { model.player.rate = speed } }
+-                if !model.qualities.isEmpty {
+-                    Picker("清晰度", selection: $model.quality) {
+-                        ForEach(model.qualities) { Text($0.label).tag($0.value) }
+-                    }.disabled(model.loading)
+-                    .onChange(of: model.quality) { value in
+-                        guard !model.loading else { return }
+-                        Task { await model.load(id: lessonID, session: session, selectedQuality: value) }
+-                    }
+-                }
+-                if let index = playlist.firstIndex(where: { $0.id == lessonID }) {
+-                    HStack {
+-                        if index > 0 { nextLink(playlist[index - 1], text: "上一节") }
+-                        Spacer()
+-                        if index + 1 < playlist.count { nextLink(playlist[index + 1], text: "下一节") }
+-                    }
+-                    DisclosureGroup("课节目录 · 共 \(playlist.count) 节") {
+-                        TextField("搜索课节", text: $directoryQuery).textFieldStyle(.roundedBorder).onChange(of: directoryQuery) { _ in directoryLimit = 50 }
+-                        ForEach(Array(filteredLessons.prefix(directoryLimit))) { lesson in
+-                            if lesson.id == lessonID { Label(lesson.name + " · 当前课节", systemImage: "play.circle.fill").foregroundStyle(EvaBrand.red).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }
+-                            else { nextLink(lesson, text: lesson.name).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }
+-                        }
+-                        if filteredLessons.isEmpty { Text("没有匹配的课节").foregroundStyle(.secondary) }
+-                        if filteredLessons.count > directoryLimit { Button("显示更多课节") { directoryLimit += 50 }.frame(minHeight: 44) }
+-                    }
+-                }
+-            }.padding()
+-        }.evaCompactLayout().evaPageChrome()
++                }.padding(.bottom, 16)
++            }.background(EvaBrand.canvas)
++        }.evaPageChrome()
++        #if os(iOS)
++        .toolbar(.hidden, for: .tabBar)
++        .toolbarBackground(EvaBrand.canvas, for: .navigationBar)
++        .toolbarBackground(.visible, for: .navigationBar)
++        #endif
++        .task {
++            directoryPage = (playlist.firstIndex(where: { $0.id == lessonID }) ?? 0) / 50 + 1
++            if let seriesID, let detail: JSONValue = try? await session.api.request("/public/series/\(seriesID)/detail") {
++                introduction = plain(detail["rich_description"].text.isEmpty ? detail["description"].text : detail["rich_description"].text)
++            }
++        }
+         .task { model.activate(); await model.load(id: lessonID, session: session); await model.monitor(id: lessonID, session: session) }
+         .onChange(of: scenePhase) { phase in
+             if phase != .active { model.endHold(); model.player.pause(); model.playing = false; Task { await model.save(id: lessonID, session: session) } }
+@@ -210,10 +219,66 @@
+         .onChange(of: holdTouchActive) { active in if !active { model.endHold() } }
+         .onDisappear { model.stop(); Task { await model.save(id: lessonID, session: session) } }
+         .sheet(isPresented: $showNote) { LessonNoteView(lessonID: lessonID, timestamp: model.position).environmentObject(session) }
+-    }
+-    private func nextLink(_ lesson: Lesson, text: String) -> some View {
+-        NavigationLink(text) { PlayerView(lessonID: lesson.id, title: lesson.name, playlist: playlist).id(lesson.id) }
+-    }
++        .sheet(isPresented: $showSettings) {
++            NavigationStack {
++                Form {
++                    Toggle("镜面练习", isOn: $mirror)
++                    Toggle("循环本节", isOn: $model.loop)
++                    Picker("播放速度", selection: $model.speed) { ForEach([Float(0.75), 1, 1.25, 1.5], id: \.self) { rate in Text("\(rate, specifier: "%.3g") 倍").tag(rate) } }
++                        .onChange(of: model.speed) { speed in model.endHold(); if model.playing { model.player.rate = speed } }
++                    if !model.qualities.isEmpty {
++                        Picker("清晰度", selection: $model.quality) { ForEach(model.qualities) { Text($0.label).tag($0.value) } }.disabled(model.loading)
++                            .onChange(of: model.quality) { value in guard !model.loading else { return }; Task { await model.load(id: lessonID, session: session, selectedQuality: value) } }
++                    }
++                }.navigationTitle("播放设置").navigationBarTitleDisplayMode(.inline).toolbar { Button("完成") { showSettings = false } }
++            }.presentationDetents([.medium, .large])
++        }
++    }
++    private var videoStage: some View {
++        VideoPlayer(player: model.player)
++            .scaleEffect(x: mirror ? -1 : 1, y: 1).allowsHitTesting(false).accessibilityHidden(true)
++            .aspectRatio(16 / 9, contentMode: .fit).background(.black)
++            .overlay {
++                Rectangle().fill(.clear).contentShape(Rectangle())
++                    .simultaneousGesture(DragGesture(minimumDistance: 0).updating($holdTouchActive) { _, active, _ in active = true }
++                        .onChanged { value in model.beginHold(); if max(abs(value.translation.width), abs(value.translation.height)) > 12 { model.endHold(resetTracking: false) } }.onEnded { _ in model.endHold() })
++                    .accessibilityHidden(true)
++            }
++            .overlay(alignment: .topTrailing) {
++                HStack { if model.holdingSpeed { Text("2 倍播放 · 松手恢复").font(.caption) }; Button { showSettings = true } label: { Image(systemName: "slider.horizontal.3").frame(width: 44, height: 44) }.accessibilityLabel("播放设置") }.foregroundStyle(.white).background(.black.opacity(0.45), in: RoundedRectangle(cornerRadius: 10)).padding(8)
++            }
++            .overlay(alignment: .bottom) {
++                VStack(spacing: 0) {
++                    HStack {
++                        if let index = playlist.firstIndex(where: { $0.id == lessonID }), index > 0 { NavigationLink { destination(playlist[index - 1]) } label: { Text("上一节").frame(minWidth: 60, minHeight: 44) } }
++                        Spacer(minLength: 0)
++                        Button { model.toggle(); if !model.playing { Task { await model.save(id: lessonID, session: session) } } } label: { Image(systemName: model.playing ? "pause.fill" : "play.fill").frame(width: 48, height: 44) }.accessibilityLabel(model.playing ? "暂停" : "播放").disabled(model.loading || model.failure != nil)
++                        Spacer(minLength: 0)
++                        if let index = playlist.firstIndex(where: { $0.id == lessonID }), index + 1 < playlist.count { NavigationLink { destination(playlist[index + 1]) } label: { Text("下一节").frame(minWidth: 60, minHeight: 44) } }
++                    }
++                    HStack(spacing: 8) {
++                        Text(time(model.position)).font(.caption.monospacedDigit())
++                        Slider(value: Binding(get: { model.position }, set: { value in model.position = value; model.player.seek(to: CMTime(seconds: value, preferredTimescale: 600)) }), in: 0...max(model.duration, 1), onEditingChanged: { editing in if !editing { Task { await model.save(id: lessonID, session: session) } } }).accessibilityLabel("播放进度").disabled(model.loading || model.failure != nil)
++                        Text(time(model.duration)).font(.caption.monospacedDigit())
++                    }.frame(minHeight: 36)
++                }.padding(.horizontal, 12).foregroundStyle(.white).tint(.white).background(LinearGradient(colors: [.clear, .black.opacity(0.8)], startPoint: .top, endPoint: .bottom))
++            }
++    }
++    private func directoryRow(_ lesson: Lesson) -> some View {
++        HStack(alignment: .center, spacing: 12) {
++            Text("\((playlist.firstIndex(where: { $0.id == lesson.id }) ?? 0) + 1)").font(.subheadline.bold().monospacedDigit()).foregroundStyle(lesson.id == lessonID ? EvaBrand.onAccent : .white).frame(minWidth: ordinalSize, minHeight: ordinalSize).background(lesson.id == lessonID ? EvaBrand.red : Color.secondary, in: Circle())
++            VStack(alignment: .leading, spacing: 7) {
++                Text(lesson.name).font(.body).fixedSize(horizontal: false, vertical: true).foregroundStyle(.primary)
++                Text((lesson.duration ?? 0) > 0 ? time(lesson.duration ?? 0) : "时长待更新").font(.caption).foregroundStyle(.secondary)
++            }.frame(maxWidth: .infinity, alignment: .leading)
++            Text(lesson.id == lessonID && model.duration > 0 ? percent(model.position / model.duration * 100) : lesson.percent.map(percent) ?? "待同步").font(.caption.monospacedDigit()).foregroundStyle(lesson.id == lessonID ? EvaBrand.red : .secondary)
++        }.padding(.horizontal, 8).padding(.vertical, 16).frame(minHeight: 80).background(lesson.id == lessonID ? EvaBrand.softAccent : .clear).accessibilityElement(children: .combine)
++    }
++    private func destination(_ lesson: Lesson) -> some View {
++        let updated = playlist.map { row in row.id == lessonID && model.duration > 0 ? Lesson(id: row.id, name: row.name, duration: model.duration, subtitle: row.subtitle, percent: model.position / model.duration * 100) : row }
++        return PlayerView(lessonID: lesson.id, title: lesson.name, playlist: updated, courseTitle: courseTitle, seriesID: seriesID).id(lesson.id)
++    }
++    private func percent(_ value: Double) -> String { "\(Int(min(100, max(0, value.isFinite ? value : 0))))%" }
+     private func time(_ value: Double) -> String {
+         guard value.isFinite && value >= 0 else { return "0:00" }
+         return String(format: "%d:%02d", Int(value) / 60, Int(value) % 60)

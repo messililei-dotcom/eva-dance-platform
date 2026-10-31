@@ -1,3 +1,4 @@
+const { buildCalendar, swipeMonth } = require("../../shared/offline-calendar");
 const share = require("../../shared/share");
 const api = require("../../utils/api");
 const { formatPrice } = require("../../shared/money-format");
@@ -54,6 +55,10 @@ Page(share.withShare("offline", {
     courseError: "", overviewError: "", sessionCourseName: "", sessionCourseIds: [],
     activeTab: "courses",
     keyword: "",
+    courseView: "list",
+    calendarYear: new Date().getFullYear(), calendarMonth: new Date().getMonth() + 1,
+    calendarWeeks: [], calendarCount: 0, calendarTitle: "",
+    weekdays: ["一", "二", "三", "四", "五", "六", "日"],
     courses: [],
     visibleCourses: [],
     bookings: [],
@@ -70,7 +75,7 @@ Page(share.withShare("offline", {
       { key: "rights", label: "我的课时" }
     ]
   },
-  onShow() {
+  onShow() { if (typeof getApp === 'function') { getApp().globalData.lastPublicTab = 'offline'; getApp().globalData.profileLoginCancelled = false; }
     const targetTab = wx.getStorageSync("offlineTargetTab");
     if (targetTab) {
       wx.removeStorageSync("offlineTargetTab");
@@ -93,6 +98,8 @@ Page(share.withShare("offline", {
     this.setData({ loading: true, courseError: "" });
     try {
       const rows = await api.getOfflineCourses();
+      this.calendarRows = rows || [];
+      this.refreshCalendar();
       const courses = groupOfflineCourses(rows || []).map(normalizeCourse);
       this.setData({ courses, visibleCourses: this.filterCourses(courses, this.data.keyword) });
     } catch (err) {
@@ -133,6 +140,32 @@ Page(share.withShare("offline", {
     const path = event.currentTarget.dataset.path;
     if (path) this.setData({ [path]: "" });
   },
+  switchCourseView(event) { this.setData({ courseView: event.currentTarget.dataset.view }); },
+  refreshCalendar() { this.setData(buildCalendar(this.calendarRows || [], this.data.calendarYear, this.data.calendarMonth)); },
+  moveCalendar(event) {
+    const offset = Number(event.currentTarget.dataset.offset);
+    const date = new Date(Date.UTC(this.data.calendarYear, this.data.calendarMonth - 1 + offset, 1));
+    this.setData(buildCalendar(this.calendarRows || [], date.getUTCFullYear(), date.getUTCMonth() + 1));
+  },
+  currentCalendar() { const now = new Date(); this.setData(buildCalendar(this.calendarRows || [], now.getFullYear(), now.getMonth() + 1)); },
+  calendarTouchStart(event) {
+    this.calendarSuppressUntil = 0;
+    this.calendarGesture = event.touches.length === 1 ? { x:event.touches[0].clientX, y:event.touches[0].clientY, axis:null } : null;
+  },
+  calendarTouchMove(event) {
+    const start=this.calendarGesture;
+    if (!start || event.touches.length !== 1) { this.calendarGesture=null; return; }
+    const dx=Math.abs(event.touches[0].clientX-start.x),dy=Math.abs(event.touches[0].clientY-start.y);
+    if (!start.axis && Math.max(dx,dy)>10) start.axis=dx>dy*1.5 ? 'horizontal' : 'vertical';
+  },
+  calendarTouchCancel() { this.calendarGesture=null; },
+  calendarTouchEnd(event) {
+    const start=this.calendarGesture;this.calendarGesture=null;
+    if (!start || start.axis==='vertical' || event.touches.length || event.changedTouches.length!==1) return;
+    const touch=event.changedTouches[0],offset=swipeMonth(touch.clientX-start.x,touch.clientY-start.y);
+    if (offset) { this.calendarSuppressUntil=Date.now()+500; this.moveCalendar({currentTarget:{dataset:{offset}}}); }
+  },
+  openCalendarCourse(event) { if (Date.now() < (this.calendarSuppressUntil || 0)) return; this.openCourse(event); },
   openCourse(event) {
     wx.navigateTo({ url: `/pages/offline-detail/offline-detail?id=${event.currentTarget.dataset.id}` });
   }

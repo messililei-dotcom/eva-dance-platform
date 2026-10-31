@@ -1,0 +1,89 @@
+{
+  "asOf": "2026-10-23",
+  "appName": "SWOD",
+  "packageName": "cn.com.swod.app",
+  "versionName": "1.0.0",
+  "versionCode": 6,
+  "apkSHA256": "12261f98ea57d3cc34c25188020b732badf6fde1572e56d75356675f74172153",
+  "huawei": {
+    "status": "draft_saved",
+    "accountType": "enterprise",
+    "company": "伊娃文化艺术发展（湖南）有限公司",
+    "enterpriseAuthentication": "verified_in_console",
+    "appId": "119475083",
+    "projectId": "101653523865417801",
+    "projectName": "SWOD-Android",
+    "packageParsed": "cn.com.swod.app",
+    "parsedVersion": "1.0.0 (6)",
+    "state": "准备提交",
+    "apkUploaded": true,
+    "storeMetadataSavedAndReopened": true,
+    "storeCategory": "应用 / 教育 / 学习",
+    "iconPixels": [
+      216,
+      216
+    ],
+    "screenshotsUploaded": 5,
+    "region": "中国大陆",
+    "privacyURL": "https://www.swod.com.cn/app/privacy.html",
+    "contacts": "reused_existing_verified_console_contacts",
+    "filingEntityIDCheck": "验证通过",
+    "filingNumberProvidedByUser": "湘ICP备2026005683号-5A",
+    "reviewLoginRequired": true,
+    "reviewAccountProvided": false,
+    "reviewLoginCheckboxReadback": false,
+    "submittedForReview": false,
+    "publiclyReleased": false,
+    "existingHarmonyAppUnchanged": true
+  },
+  "otherMarkets": {
+    "xiaomi": {
+      "status": "login_required",
+      "enterpriseCertification": "not_yet_visible",
+      "appRecords": "not_yet_visible",
+      "apkUploaded": false,
+      "submittedForReview": false
+    },
+    "oppo": {
+      "status": "login_required",
+      "enterpriseCertification": "not_yet_visible",
+      "appRecords": "not_yet_visible",
+      "apkUploaded": false,
+      "submittedForReview": false
+    },
+    "vivo": {
+      "status": "login_required",
+      "enterpriseCertification": "not_yet_visible",
+      "appRecords": "not_yet_visible",
+      "apkUploaded": false,
+      "submittedForReview": false
+    },
+    "tencent_yingyongbao": {
+      "status": "login_required",
+      "enterpriseCertification": "not_yet_visible",
+      "appRecords": "not_yet_visible",
+      "apkUploaded": false,
+      "submittedForReview": false
+    }
+  },
+  "qualifications": {
+    "huaweiEnterpriseVerified": true,
+    "publicationRetailPermitLocated": true,
+    "publicationRetailPermitExpiryVisible": "2030-10-20",
+    "publicationRetailPermitReplacesSoftwareCopyright": false,
+    "localBusinessLicenseCopyFound": false,
+    "localSoftwareCopyrightFound": false,
+    "connectedDriveSearchResults": 0
+  },
+  "physicalDeviceConnected": false,
+  "pending": [
+    "other_market_login",
+    "software_copyright_or_channel_accepted_ownership_evidence",
+    "controlled_reviewer_login_plan",
+    "physical_device_acceptance",
+    "content_rating_questionnaire"
+  ],
+  "productionBusinessWrites": false,
+  "storeDraftWrites": true,
+  "secretCredentialsArchived": false
+}

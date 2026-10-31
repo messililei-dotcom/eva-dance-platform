@@ -22,7 +22,7 @@ struct MyCompetitionsView: View {
                 }.padding(.vertical, 8)
             }
             if !store.busy && store.error == nil && entries.isEmpty { Text("暂无比赛报名和结果记录").foregroundStyle(.secondary) }
-        }.evaCompactLayout().navigationTitle("我的比赛")
+        }.evaCompactLayout().evaPageChrome()
         .task(id: session.accountID) { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/member/events", session: session) }

@@ -1,0 +1,673 @@
+--- before/iOS/FullSiteViews.swift
++++ after/iOS/FullSiteViews.swift
+@@ -205,26 +205,6 @@
+         }.evaCompactLayout().navigationTitle("期次课时").task { await load() }.refreshable { await load() }
+     }
+     private func load() async { await store.load("/offline/overview" + (courseID.isEmpty ? "" : "?course_ids=\(courseID)"), session: session) }
+-}
+-struct EventsView: View {
+-    @EnvironmentObject var session: Session
+-    @StateObject private var store = SiteStore()
+-    @State private var search = ""
+-    var body: some View {
+-        List {
+-            BrandHeader(title: "AiwaRaks赛事平台", subtitle: "赛事、报名、赛程与成绩", icon: "trophy")
+-            NavigationLink("工作人员 · 赛事管理") { StaffEventRootView() }
+-            NavigationLink("我的比赛") { AuthGate { MyCompetitionsView() } }
+-            LoadState(store: store) { Task { await load() } }
+-            ForEach(store.data.rows.filter { search.isEmpty || $0.value["name"].text.localizedCaseInsensitiveContains(search) }) { row in
+-                NavigationLink { EventDetailView(id: row.id) } label: { VStack(alignment: .leading, spacing: 6) {
+-                    Text(row.value["name"].text).font(.headline)
+-                    Text("\(row.value.firstText("startDate","start_date")) · \(row.value.firstText("city","venue"))").foregroundStyle(.secondary)
+-                }.padding(.vertical, 3) }
+-            }
+-        }.evaCompactLayout().evaHomeLayout().navigationTitle("东方舞赛事").evaSearch(text: $search, prompt: "搜索赛事名称").task { await load() }.refreshable { await load() }
+-    }
+-    private func load() async { await store.load("/events", session: session, publicRead: true) }
+ }
+ struct EventDetailView: View {
+     @EnvironmentObject var session: Session
+--- before/iOS/EventsView.swift
++++ after/iOS/EventsView.swift
+@@ -0,0 +1,138 @@
++import SwiftUI
++import EvaCore
++
++struct EventsView: View {
++    @EnvironmentObject private var session: Session
++    @Environment(\.dynamicTypeSize) private var typeSize
++    @StateObject private var store = SiteStore()
++    @State private var search = ""
++    @FocusState private var searchFocused: Bool
++    private var events: [SiteRow] {
++        let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
++        return store.data.rows.filter {
++            query.isEmpty || ($0.value["name"].text + " " + $0.value.firstText("location", "city", "venue")).localizedCaseInsensitiveContains(query)
++        }
++    }
++    private var loaded: Bool { if case .array = store.data { return true }; return false }
++    var body: some View {
++        ScrollView {
++            VStack(alignment: .leading, spacing: 18) {
++                overview
++                ViewThatFits(in: .horizontal) {
++                    HStack(spacing: 14) { sectionTitle; searchField.frame(width: 190) }
++                    VStack(alignment: .leading, spacing: 12) { sectionTitle; searchField }
++                }
++                LoadState(store: store) { Task { await load() } }
++                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12, alignment: .top), count: typeSize.isAccessibilitySize ? 1 : 2), alignment: .leading, spacing: 14) {
++                    ForEach(events) { row in
++                        NavigationLink { EventDetailView(id: row.id) } label: { eventCard(row.value) }
++                            .buttonStyle(.plain)
++                    }
++                }
++                if loaded && !store.busy && store.error == nil && events.isEmpty {
++                    Text(search.isEmpty ? "暂无公开赛事" : "未找到匹配赛事，请更换名称或地点。")
++                        .font(.subheadline).foregroundStyle(.secondary).frame(maxWidth: .infinity, minHeight: 80)
++                }
++            }.frame(maxWidth: 760).padding(16).frame(maxWidth: .infinity)
++        }
++        .scrollDismissesKeyboard(.interactively)
++        .background(EvaBrand.canvas).navigationTitle("赛事")
++        #if os(iOS)
++        .navigationBarTitleDisplayMode(.inline)
++        #endif
++        .toolbar {
++            ToolbarItemGroup(placement: .primaryAction) {
++                NavigationLink { AuthGate { MyCompetitionsView() } } label: {
++                    Label("我的比赛", systemImage: "person.crop.circle").labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
++                }
++                NavigationLink { StaffEventRootView() } label: {
++                    Label("赛事管理", systemImage: "person.badge.key").labelStyle(.iconOnly).frame(minWidth: 44, minHeight: 44)
++                }
++            }
++        }
++        .task { await load() }.refreshable { await load() }
++    }
++    private var overview: some View {
++        VStack(alignment: .leading, spacing: 12) {
++            Text("东方舞赛事平台").font(.caption.bold()).padding(.horizontal, 10).padding(.vertical, 4)
++                .background(EvaBrand.onAccent.opacity(0.12), in: Capsule())
++            Text("AiwaRaks赛事平台").font(.title2.bold()).fixedSize(horizontal: false, vertical: true)
++            HStack(spacing: 0) {
++                metric(loaded ? String(store.data.list.count) : "—", "赛事总数")
++                Divider().frame(height: 36).overlay(EvaBrand.onAccent.opacity(0.2))
++                metric(loaded ? EventPresentation.aggregate(store.data.list, participant: true) : "—", "累计参赛")
++                Divider().frame(height: 36).overlay(EvaBrand.onAccent.opacity(0.2))
++                metric(loaded ? EventPresentation.aggregate(store.data.list, participant: false) : "—", "记录数据")
++            }.padding(.vertical, 8).background(EvaBrand.onAccent.opacity(0.08))
++        }.padding(16).foregroundStyle(EvaBrand.onAccent)
++            .frame(maxWidth: .infinity, alignment: .leading).background(EvaBrand.red, in: RoundedRectangle(cornerRadius: 16))
++    }
++    private func metric(_ value: String, _ label: String) -> some View {
++        VStack(spacing: 4) {
++            Text(value).font(.headline).monospacedDigit().lineLimit(1).minimumScaleFactor(0.75)
++            Text(label).font(.caption2)
++        }.frame(maxWidth: .infinity)
++    }
++    private var sectionTitle: some View { Text("全部赛事").font(.title2.bold()).frame(maxWidth: .infinity, alignment: .leading) }
++    private var searchField: some View {
++        HStack(spacing: 8) {
++            Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
++            TextField("搜索赛事或地点", text: $search).font(.subheadline).autocorrectionDisabled()
++                .focused($searchFocused).submitLabel(.search).onSubmit { searchFocused = false }
++                .accessibilityIdentifier("events.search")
++        }.padding(.horizontal, 12).frame(minHeight: 44)
++            .background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 22))
++    }
++    private func eventCard(_ row: JSONValue) -> some View {
++        let state = EventPresentation.state(row), open = state == "报名中"
++        return VStack(alignment: .leading, spacing: 0) {
++            GeometryReader { geometry in
++                ZStack(alignment: .topLeading) {
++                    ZStack {
++                        EvaBrand.softAccent
++                        if let url = AppPolicy.secureMediaURL(row.firstText("coverUrl", "cover_url")) {
++                            AsyncImage(url: url) { phase in
++                                if let image = phase.image { image.resizable().scaledToFit() }
++                                else { coverPlaceholder }
++                            }
++                        } else { coverPlaceholder }
++                    }.frame(width: geometry.size.width, height: geometry.size.height)
++                    Text(state).font(.caption2.bold()).padding(.horizontal, 8).padding(.vertical, 5)
++                        .foregroundStyle(open ? EvaBrand.onAccent : Color.primary)
++                        .background(open ? EvaBrand.red : EvaBrand.surface, in: Capsule()).padding(8)
++                }
++            }.aspectRatio(1.25, contentMode: .fit)
++            VStack(alignment: .leading, spacing: 10) {
++                VStack(alignment: .leading, spacing: 3) {
++                    Text(EventPresentation.dateRange(row))
++                    Text(row.firstText("location", "city", "venue").isEmpty ? "地点待定" : row.firstText("location", "city", "venue"))
++                }.font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .topLeading)
++                Text(row["name"].text).font(.subheadline.bold()).foregroundStyle(.primary)
++                    .frame(maxWidth: .infinity, minHeight: 46, alignment: .topLeading).fixedSize(horizontal: false, vertical: true)
++                Divider()
++                HStack(spacing: 2) {
++                    eventMetric(EventPresentation.count(row, "groupCount"), "组别")
++                    eventMetric(EventPresentation.count(row, "playerCount"), "选手")
++                    eventMetric(EventPresentation.count(row, "judgeCount"), "评委")
++                }
++                Text(open ? "点击报名 ›" : "查看详情 ›").font(.subheadline.bold())
++                    .foregroundStyle(open ? EvaBrand.onAccent : EvaBrand.red)
++                    .frame(maxWidth: .infinity, minHeight: 44)
++                    .background(open ? EvaBrand.red : EvaBrand.softAccent, in: RoundedRectangle(cornerRadius: 8))
++            }.padding(10)
++        }.background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14))
++            .clipShape(RoundedRectangle(cornerRadius: 14))
++    }
++    private var coverPlaceholder: some View {
++        VStack(spacing: 8) { Image(systemName: "trophy").font(.title); Text("暂无封面").font(.caption) }
++            .foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
++    }
++    private func eventMetric(_ value: Int?, _ label: String) -> some View {
++        VStack(spacing: 4) {
++            Text(value.map(String.init) ?? "未公开").font(.caption.bold()).foregroundStyle(EvaBrand.red).lineLimit(1).minimumScaleFactor(0.7)
++            Text(label).font(.caption2).foregroundStyle(.secondary)
++        }.frame(maxWidth: .infinity)
++    }
++    private func load() async { await store.load("/events", session: session, publicRead: true) }
++}
+--- before/iOS/EventPresentation.swift
++++ after/iOS/EventPresentation.swift
+@@ -0,0 +1,56 @@
++import Foundation
++
++public enum EventPresentation {
++    public static func count(_ row: JSONValue, _ keys: String...) -> Int? {
++        for key in keys {
++            let value = row[key]
++            if case .null = value { continue }
++            guard let number = Double(value.text), number.isFinite, number >= 0, number.rounded() == number,
++                  number < Double(Int.max) else { continue }
++            return Int(number)
++        }
++        return nil
++    }
++    public static func aggregate(_ rows: [JSONValue], participant: Bool) -> String {
++        var total = 0
++        for row in rows {
++            let value = participant ? count(row, "approvedPlayerCount", "playerCount") : count(row, "rankingCount", "scoreCount")
++            guard let value, value <= Int.max - total else { return participant ? "未公开" : "—" }
++            total += value
++        }
++        return String(total)
++    }
++    public static func dateRange(_ row: JSONValue) -> String {
++        let start = String(row.firstText("startDate", "start_date").prefix(10))
++        let end = String(row.firstText("endDate", "end_date").prefix(10))
++        return start.isEmpty ? "时间待定" : end.isEmpty || start == end ? start : "\(start) 至 \(end)"
++    }
++    private static func date(_ value: String, end: Bool = false) -> Date? {
++        guard !value.isEmpty else { return nil }
++        if value.count == 10 {
++            let formatter = DateFormatter()
++            formatter.locale = Locale(identifier: "en_US_POSIX")
++            formatter.timeZone = TimeZone(identifier: "Asia/Shanghai")
++            formatter.dateFormat = "yyyy-MM-dd"; formatter.isLenient = false
++            guard let parsed = formatter.date(from: value) else { return nil }
++            return end ? parsed.addingTimeInterval(86_400 - 0.001) : parsed
++        }
++        let formatter = ISO8601DateFormatter()
++        if let parsed = formatter.date(from: value) { return parsed }
++        formatter.formatOptions.insert(.withFractionalSeconds)
++        if let parsed = formatter.date(from: value) { return parsed }
++        let local = DateFormatter()
++        local.locale = Locale(identifier: "en_US_POSIX")
++        local.timeZone = TimeZone(identifier: "Asia/Shanghai")
++        local.dateFormat = "yyyy-MM-dd HH:mm:ss"; local.isLenient = false
++        return local.date(from: value.replacingOccurrences(of: "T", with: " "))
++    }
++    public static func state(_ row: JSONValue, now: Date = .now) -> String {
++        if row["status"].text == "cancelled" { return "已取消" }
++        if row["status"].text == "finished" || date(row.firstText("endDate", "end_date"), end: true).map({ $0 < now }) == true { return "已结束" }
++        let start = date(row["registrationStart"].text), end = date(row["registrationEnd"].text, end: true)
++        if let start, start > now { return "报名未开始" }
++        if let end, end < now { return "报名已截止" }
++        return row["registrationStatus"].text == "open" ? "报名中" : "报名未开放"
++    }
++}
+--- before/iOS/EvaCoreTests.swift
++++ after/iOS/EvaCoreTests.swift
+@@ -210,8 +210,29 @@
+     print("Login input, consent, cooldown and operator event checks passed")
+ }
+ 
++private func checkEventPresentation() {
++    let hidden: JSONValue = .object(["playerCount": .null, "groupCount": .number(0)])
++    XCTAssertNil(EventPresentation.count(hidden, "playerCount"))
++    XCTAssertEqual(EventPresentation.count(hidden, "groupCount"), 0)
++    XCTAssertEqual(EventPresentation.aggregate([hidden], participant: true), "未公开")
++    XCTAssertEqual(EventPresentation.aggregate([hidden], participant: false), "—")
++    XCTAssertEqual(EventPresentation.aggregate([.object(["playerCount": .number(4), "approvedPlayerCount": .number(0)])], participant: true), "0")
++    let now = ISO8601DateFormatter().date(from: "2026-11-29T12:00:00Z")!
++    let open: JSONValue = .object(["registrationStatus": .string("open"), "endDate": .string("2026-11-29")])
++    XCTAssertEqual(EventPresentation.state(open, now: now), "报名中")
++    XCTAssertEqual(EventPresentation.state(open, now: now.addingTimeInterval(14_401)), "已结束")
++    XCTAssertEqual(EventPresentation.state(.object(["status": .string("cancelled"), "registrationStatus": .string("open")]), now: now), "已取消")
++    XCTAssertEqual(EventPresentation.state(.object(["registrationStatus": .string("open"), "registrationStart": .string("2026-12-01")]), now: now), "报名未开始")
++    XCTAssertEqual(EventPresentation.state(.object(["registrationStatus": .string("open"), "registrationEnd": .string("2026-11-28")]), now: now), "报名已截止")
++    XCTAssertEqual(EventPresentation.dateRange(.object(["startDate": .string("2026-11-29"), "endDate": .string("2026-11-29")])), "2026-11-29")
++    XCTAssertEqual(EventPresentation.state(.object(["registrationStatus": .string("open"), "registrationStart": .string("2026-11-29 21:00:00")]), now: now), "报名未开始")
++    XCTAssertEqual(EventPresentation.state(.object(["registrationStatus": .string("open"), "registrationEnd": .string("2026-11-29 19:59:59")]), now: now), "报名已截止")
++    print("Event count privacy, zero totals, date range and registration boundary checks passed")
++}
++
+ @main struct Checks {
+     static func main() async throws {
++        checkEventPresentation()
+         checkLoginInputsAndCarrierEvents()
+         let suite = EvaCoreTests()
+         try await suite.testAuthorizedSeriesAndHeaders()
+--- before/Android/MainActivity.java
++++ after/Android/MainActivity.java
+@@ -24,7 +24,7 @@
+     private final ExecutorService imageIO = Executors.newFixedThreadPool(2);
+     private final ArrayDeque<Runnable> history = new ArrayDeque<>();
+     private Api api;
+-    private LinearLayout root, content;
++    private LinearLayout root, content, pageActions;
+     private TextView title;
+     private TextView loginFeedback;
+     private Button backButton;
+@@ -59,6 +59,7 @@
+         LinearLayout bar = row(); bar.setPadding(dp(8),dp(6),dp(12),dp(6));bar.setBackgroundColor(SwodUi.surface(this));
+         backButton = button("", () -> back());backButton.setPadding(dp(12),dp(12),dp(12),dp(12));backButton.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"back",red),null,null,null);backButton.setContentDescription("返回上一页"); bar.addView(backButton,new LinearLayout.LayoutParams(dp(48),dp(48)));
+         title = text("线上学院",20);title.setTypeface(null,android.graphics.Typeface.BOLD); title.setGravity(Gravity.CENTER_VERTICAL); bar.addView(title,new LinearLayout.LayoutParams(0,dp(48),1));
++        pageActions=row();bar.addView(pageActions);
+         Button refresh = button("", () -> { if (page != null) page.run(); });refresh.setPadding(dp(12),dp(12),dp(12),dp(12));refresh.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"refresh",red),null,null,null);refresh.setContentDescription("刷新当前页面");bar.addView(refresh,new LinearLayout.LayoutParams(dp(48),dp(48))); root.addView(bar);
+         pageScroll = new ScrollView(this);pageScroll.setFillViewport(true); content = column();int inset=Math.max(16,(getResources().getConfiguration().screenWidthDp-760)/2);content.setPadding(dp(inset),dp(12),dp(inset),dp(24));pageScroll.addView(content);
+         LinearLayout tabs = row(); String[] names={"线上学院","线下课","赛事","商城","个人中心"};
+@@ -79,7 +80,7 @@
+     private void selectTab(int selected){String[] icons={"learn","calendar","trophy","bag","person"};for(int i=0;i<tabButtons.length;i++){Button b=tabButtons[i];if(b!=null){boolean active=i==selected;b.setSelected(active);b.setTextColor(active?red:SwodUi.muted(this));b.setTypeface(null,active?android.graphics.Typeface.BOLD:android.graphics.Typeface.NORMAL);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],active?red:SwodUi.muted(this)),null,null);b.setBackground(SwodUi.touch(this,active?SwodUi.tonal(this):SwodUi.surface(this),14));}}}
+     private void hero(String name,String description){LinearLayout box=column();box.setPadding(dp(4),dp(6),dp(4),dp(12));TextView heading=text(name,22);heading.setTypeface(null,android.graphics.Typeface.BOLD);box.addView(heading);TextView summary=text(description,14);summary.setTextColor(SwodUi.muted(this));box.addView(summary);content.addView(box);}
+     private void section(String name){TextView label=text(name,18);label.setTypeface(null,android.graphics.Typeface.BOLD);label.setPadding(dp(4),dp(16),dp(4),dp(8));content.addView(label);}
+-    private void begin(String name) { loginFeedback=null;courseAccessVisible=false; generation++; content.removeAllViews(); title.setText(name);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
++    private void begin(String name) { if(pageActions!=null)pageActions.removeAllViews();loginFeedback=null;courseAccessVisible=false; generation++; content.removeAllViews(); title.setText(name);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
+     private int dp(int x) {return Math.round(x*getResources().getDisplayMetrics().density);}
+     private LinearLayout column(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.VERTICAL);return v;}
+     private LinearLayout row(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.HORIZONTAL);v.setGravity(Gravity.CENTER_VERTICAL);return v;}
+@@ -189,7 +190,58 @@
+     private void schedule(){schedule(0);}
+     private void schedule(int courseId){begin("期次课时与核销");load("/offline/overview"+(courseId>0?"?course_ids="+courseId:""),"GET",null,true,v->{JSONObject o=object(v);info("购买课程期次的课时，到课后核销扣减，无需预约。");JSONArray es=array(o.opt("entitlements"));for(int i=0;i<es.length();i++){JSONObject r=es.getJSONObject(i);info(r.optString("course_name")+" · "+r.optString("course_period")+" · 剩余 "+r.optInt("available_sessions")+" 课时 · 已核销 "+r.optInt("used_sessions")+" 课时");}info("核销记录");JSONArray records=array(o.opt("consumes"));for(int i=0;i<records.length();i++){JSONObject r=records.getJSONObject(i);info(r.optString("course_name")+" · "+r.optString("consume_date")+" · 核销 "+r.optInt("count")+" 课时");}});}
+     private void booking(JSONObject r){open(this::schedule);}
+-    private void events(){begin("东方舞赛事");hero("AiwaRaks赛事平台","赛事、报名、赛程与成绩");action("工作人员 · 赛事管理",()->open(this::staffHome));action("我的比赛",()->open(this::myEvents));load("/events","GET",null,false,v->searchable(array(v),new String[]{"name","venue","city"},r->open(()->event(r.optInt("id")))));}
++    private TextView eventMetric(String value,String label,boolean hero){
++        TextView cell=text(value+"\n"+label,hero?16:12);cell.setGravity(Gravity.CENTER);cell.setTextColor(hero?(SwodUi.dark(this)?android.graphics.Color.BLACK:android.graphics.Color.WHITE):red);cell.setTypeface(null,android.graphics.Typeface.BOLD);return cell;
++    }
++    private void events(){
++        begin("赛事");
++        LinearLayout overview=column();overview.setPadding(dp(16),dp(12),dp(16),dp(12));overview.setBackground(SwodUi.shape(this,red,16));
++        TextView chip=text("东方舞赛事平台",12);chip.setTextColor(SwodUi.dark(this)?android.graphics.Color.BLACK:android.graphics.Color.WHITE);overview.addView(chip);
++        TextView heading=text("AiwaRaks赛事平台",22);heading.setTypeface(null,android.graphics.Typeface.BOLD);heading.setTextColor(chip.getCurrentTextColor());overview.addView(heading);
++        LinearLayout totals=row();TextView total=eventMetric("—","赛事总数",true),people=eventMetric("—","累计参赛",true),records=eventMetric("—","记录数据",true);
++        totals.addView(total,new LinearLayout.LayoutParams(0,-2,1));totals.addView(people,new LinearLayout.LayoutParams(0,-2,1));totals.addView(records,new LinearLayout.LayoutParams(0,-2,1));overview.addView(totals);
++        content.addView(overview);
++        Button mine=button("",()->open(this::myEvents));mine.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"person",red),null,null,null);mine.setContentDescription("我的比赛");pageActions.addView(mine,new LinearLayout.LayoutParams(dp(48),dp(48)));
++        Button manage=button("",()->open(this::staffHome));manage.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"trophy",red),null,null,null);manage.setContentDescription("赛事管理");pageActions.addView(manage,new LinearLayout.LayoutParams(dp(48),dp(48)));
++        section("全部赛事");
++        EditText search=field(content,"搜索赛事或地点",false);
++        LinearLayout grid=column();content.addView(grid);
++        load("/events","GET",null,false,v->{
++            JSONArray rows=array(v);total.setText(rows.length()+"\n赛事总数");people.setText(EventPresentation.aggregate(rows,true)+"\n累计参赛");records.setText(EventPresentation.aggregate(rows,false)+"\n记录数据");
++            Runnable render=()->{
++                grid.removeAllViews();LinearLayout line=null;int matches=0;
++                boolean single=getResources().getConfiguration().fontScale>1.4f;
++                String query=search.getText().toString().trim().toLowerCase(Locale.ROOT);
++                for(int i=0;i<rows.length();i++){
++                    JSONObject event=rows.optJSONObject(i);if(event==null)continue;
++                    String location=EventPresentation.value(event,"location","city","venue");
++                    if(!(event.optString("name")+" "+location).toLowerCase(Locale.ROOT).contains(query))continue;
++                    if(single||matches%2==0){line=row();line.setGravity(Gravity.TOP);LinearLayout.LayoutParams rowLayout=new LinearLayout.LayoutParams(-1,-2);rowLayout.bottomMargin=dp(12);grid.addView(line,rowLayout);}
++                    LinearLayout card=column();card.setBackground(SwodUi.shape(this,SwodUi.surface(this),14));card.setClipToOutline(true);
++                    LinearLayout.LayoutParams cardLayout=new LinearLayout.LayoutParams(single?-1:0,-2,single?0:1);if(!single&&matches%2==0)cardLayout.rightMargin=dp(10);line.addView(card,cardLayout);
++                    String state=EventPresentation.state(event);boolean open=state.equals("报名中");
++                    android.widget.FrameLayout artwork=new android.widget.FrameLayout(this);artwork.setBackgroundColor(SwodUi.tonal(this));
++                    int width=(getResources().getConfiguration().screenWidthDp-42)/(single?1:2);card.addView(artwork,new LinearLayout.LayoutParams(-1,dp(Math.min(230,width*4/5))));
++                    ImageView image=new ImageView(this);image.setScaleType(ImageView.ScaleType.FIT_CENTER);image.setImageDrawable(SwodUi.icon(this,"trophy",red));image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);artwork.addView(image,new android.widget.FrameLayout.LayoutParams(-1,-1));
++                    String raw=EventPresentation.value(event,"coverUrl","cover_url"),url=raw.startsWith("/")?"https://admin.swod.com.cn"+raw:raw;
++                    int version=generation;
++                    if(Policy.secureURL(url))imageIO.execute(()->{try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(version==generation&&!isFinishing()&&bitmap!=null)image.setImageBitmap(bitmap);});}catch(Exception ignored){}});
++                    TextView badge=text(state,11);badge.setTextColor(open?(SwodUi.dark(this)?android.graphics.Color.BLACK:android.graphics.Color.WHITE):SwodUi.ink(this));badge.setBackground(SwodUi.shape(this,open?red:SwodUi.surface(this),16));android.widget.FrameLayout.LayoutParams badgeLayout=new android.widget.FrameLayout.LayoutParams(-2,-2);badgeLayout.setMargins(dp(6),dp(6),dp(6),dp(6));artwork.addView(badge,badgeLayout);
++                    LinearLayout body=column();body.setPadding(dp(8),dp(8),dp(8),dp(8));card.addView(body);
++                    TextView date=text(EventPresentation.dates(event)+"\n"+(location.isEmpty()?"地点待定":location),11);date.setTextColor(SwodUi.muted(this));date.setMinHeight(dp(50));body.addView(date);
++                    TextView name=text(event.optString("name"),15);name.setTypeface(null,android.graphics.Typeface.BOLD);name.setMinHeight(dp(64));body.addView(name);
++                    LinearLayout counts=row();String[] keys={"groupCount","playerCount","judgeCount"},labels={"组别","选手","评委"};
++                    for(int j=0;j<keys.length;j++){Long count=EventPresentation.count(event,keys[j]);counts.addView(eventMetric(count==null?"未公开":Long.toString(count),labels[j],false),new LinearLayout.LayoutParams(0,-2,1));}body.addView(counts);
++                    Button entry=loginAction(open?"点击报名 ›":"查看详情 ›",()->open(()->event(event.optInt("id"))));body.addView(entry,new LinearLayout.LayoutParams(-1,-2));
++                    card.setOnClickListener(view->open(()->event(event.optInt("id"))));matches++;
++                }
++                if(!single&&matches%2==1&&line!=null)line.addView(new View(this),new LinearLayout.LayoutParams(0,1,1));
++                if(matches==0)grid.addView(text(query.isEmpty()?"暂无公开赛事":"未找到匹配赛事，请更换名称或地点",14));
++            };
++            search.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence v,int a,int c,int d){}public void onTextChanged(CharSequence v,int a,int b,int c){render.run();}public void afterTextChanged(Editable e){}});
++            render.run();
++        });
++    }
+     private void event(int id){begin("赛事详情");load("/events/"+id,"GET",null,false,v->{JSONObject o=object(v),c=o.optJSONObject("competition");if(c!=null){info(c.optString("name"));info(first(c,"startDate","start_date")+" · "+first(c,"venue"));info(strip(first(c,"description","introduction")));}info("完整组别名称");searchable(array(o.opt("groups")),new String[]{"name"},r->open(()->register(id,r)));info("赛程");displayRows(array(o.opt("sessions")),new String[]{"name","startsAt","venue"},null);info("已发布成绩");displayRows(array(o.opt("rankings")),new String[]{"rankNo","playerName","groupName","publishedTotal"},null);});}
+ 
+     private void register(int id,JSONObject group){
+--- before/Android/EventPresentation.java
++++ after/Android/EventPresentation.java
+@@ -0,0 +1,44 @@
++package cn.com.swod.app;
++
++import org.json.JSONArray;
++import org.json.JSONObject;
++import java.time.*;
++
++final class EventPresentation {
++    static Long number(Object raw){
++        if(raw==null)return null;
++        try{double value=Double.parseDouble(String.valueOf(raw));if(Double.isFinite(value)&&value>=0&&value==Math.rint(value)&&value<Long.MAX_VALUE)return (long)value;}catch(NumberFormatException ignored){}
++        return null;
++    }
++    static Long count(JSONObject row,String... keys){
++        for(String key:keys){Object raw=row.opt(key);if(raw==null||raw==JSONObject.NULL)continue;Long value=number(raw);if(value!=null)return value;}return null;
++    }
++    static String aggregate(JSONArray rows,boolean people){
++        long sum=0;for(int i=0;i<rows.length();i++){JSONObject row=rows.optJSONObject(i);if(row==null)return people?"未公开":"—";
++            Long value=people?count(row,"approvedPlayerCount","playerCount"):count(row,"rankingCount","scoreCount");
++            if(value==null||value>Long.MAX_VALUE-sum)return people?"未公开":"—";sum+=value;
++        }return Long.toString(sum);
++    }
++    static String value(JSONObject row,String... keys){for(String key:keys){String v=row.optString(key,"");if(!v.isEmpty()&&!v.equals("null"))return v;}return "";}
++    static String dates(JSONObject row){String start=value(row,"startDate","start_date"),end=value(row,"endDate","end_date");if(start.length()>10)start=start.substring(0,10);if(end.length()>10)end=end.substring(0,10);return start.isEmpty()?"时间待定":end.isEmpty()||start.equals(end)?start:start+" 至 "+end;}
++    private static Instant instant(String raw,boolean end){
++        if(raw.isEmpty())return null;try{
++            if(raw.length()==10){LocalDate date=LocalDate.parse(raw);return (end?date.plusDays(1).atStartOfDay(ZoneId.of("Asia/Shanghai")).toInstant().minusMillis(1):date.atStartOfDay(ZoneId.of("Asia/Shanghai")).toInstant());}
++            return Instant.parse(raw);
++        }catch(Exception ignored){
++            try{return LocalDateTime.parse(raw.replace(' ','T')).atZone(ZoneId.of("Asia/Shanghai")).toInstant();}catch(Exception invalid){return null;}
++        }
++    }
++    static String state(JSONObject row){return state(row,Instant.now());}
++    static String state(JSONObject row,Instant now){
++        return state(value(row,"status"),value(row,"registrationStatus"),value(row,"endDate","end_date"),value(row,"registrationStart"),value(row,"registrationEnd"),now);
++    }
++    static String state(String status,String registration,String endDate,String registrationStart,String registrationEnd,Instant now){
++        if(status.equals("cancelled"))return "已取消";
++        Instant ended=instant(endDate,true);
++        if(status.equals("finished")||(ended!=null&&ended.isBefore(now)))return "已结束";
++        Instant start=instant(registrationStart,false),end=instant(registrationEnd,true);
++        if(start!=null&&start.isAfter(now))return "报名未开始";if(end!=null&&end.isBefore(now))return "报名已截止";
++        return registration.equals("open")?"报名中":"报名未开放";
++    }
++}
+--- before/Android/EventPresentationTest.java
++++ after/Android/EventPresentationTest.java
+@@ -0,0 +1,29 @@
++package cn.com.swod.app;
++import org.junit.Test;
++import static org.junit.Assert.*;
++import java.time.Instant;
++public class EventPresentationTest {
++    @Test public void unavailableCountsNeverBecomeZero(){
++        assertNull(EventPresentation.number(null));assertNull(EventPresentation.number(-1));
++        assertNull(EventPresentation.number(Double.NaN));assertNull(EventPresentation.number(1.5));
++        assertEquals(Long.valueOf(0),EventPresentation.number(0));
++        assertEquals(Long.valueOf(402),EventPresentation.number(402));
++    }
++    @Test public void eventEndIncludesTheWholeShanghaiDay(){
++        Instant now=Instant.parse("2026-11-29T12:00:00Z");
++        assertEquals("报名中",EventPresentation.state("published","open","2026-11-29","","",now));
++        assertEquals("已结束",EventPresentation.state("published","open","2026-11-29","","",now.plusSeconds(14401)));
++    }
++    @Test public void cancellationAndRegistrationWindowsOverrideOpenSwitch(){
++        Instant now=Instant.parse("2026-11-29T12:00:00Z");
++        assertEquals("已取消",EventPresentation.state("cancelled","open","","","",now));
++        assertEquals("报名未开始",EventPresentation.state("published","open","","2026-12-01","",now));
++        assertEquals("报名已截止",EventPresentation.state("published","open","","","2026-11-28",now));
++        assertEquals("报名未开放",EventPresentation.state("published","closed","","","",now));
++    }
++    @Test public void databaseLocalTimesUseShanghaiInsteadOfTheDeviceZone(){
++        Instant now=Instant.parse("2026-11-29T12:00:00Z");
++        assertEquals("报名未开始",EventPresentation.state("published","open","","2026-11-29 21:00:00","",now));
++        assertEquals("报名已截止",EventPresentation.state("published","open","","","2026-11-29 19:59:59",now));
++    }
++}
+--- before/HarmonyOS/Index.ets
++++ after/HarmonyOS/Index.ets
+@@ -7,6 +7,7 @@
+ import { platform, PlatformFailure, secureMedia, coverImageURL, externalURLAllowed, ApiMethod } from '../services/PlatformApi';
+ import { coursePrice, originalPrice, offlineCopy, offlineDescription, canPurchasePeriod, groupedCourses, catalogLessons } from '../services/CoursePresentation';
+ import { CarrierLogin } from '../services/CarrierLogin';
++import { eventCount, eventAggregate, eventDates, eventState } from '../services/EventPresentation';
+ import { SwodTheme } from '../services/SwodTheme';
+ import { goodsInput, paymentURL, orderStatus } from '../services/ShopCheckout';
+ import { productPrice, productStock } from '../services/ProductPresentation';
+@@ -553,6 +554,69 @@
+     }.padding(12).backgroundColor(SwodTheme.surface).borderRadius(12).width('100%').constraintSize({ minHeight: 64 }).margin({ bottom: 8 }).onClick(() => this.tap(row)).accessibilityText(this.title(row) + '，' + this.summary(row) + '，查看详情')
+   }
+   @Builder
++  private eventMetric(value: string, label: string, hero: boolean = false) {
++    Column({ space: 4 }) {
++      Text(value).fontSize(hero ? 18 : 12).fontWeight(FontWeight.Bold).fontColor(hero ? SwodTheme.onPrimary : SwodTheme.primary)
++      Text(label).fontSize(11).fontColor(hero ? SwodTheme.onPrimary : SwodTheme.muted)
++    }.layoutWeight(1).padding({ top: 8, bottom: 8 })
++  }
++  @Builder
++  private eventTile(row: Row) {
++    Column({ space: 0 }) {
++      Stack({ alignContent: Alignment.TopStart }) {
++        if (row.coverUrl || row.cover_url) {
++          Image(coverImageURL(row.coverUrl || row.cover_url || '')).width('100%').aspectRatio(1.25).objectFit(ImageFit.Contain).backgroundColor(SwodTheme.tonal).accessibilityLevel('no')
++        } else {
++          Column({ space: 8 }) { Image($r('app.media.nav_trophy_on')).width(32).height(32); Text('暂无封面').fontSize(12).fontColor(SwodTheme.muted) }.width('100%').aspectRatio(1.25).justifyContent(FlexAlign.Center).backgroundColor(SwodTheme.tonal)
++        }
++        Text(eventState(row)).fontSize(11).fontWeight(FontWeight.Bold)
++          .fontColor(eventState(row) === '报名中' ? SwodTheme.onPrimary : SwodTheme.ink)
++          .backgroundColor(eventState(row) === '报名中' ? SwodTheme.primary : SwodTheme.surface)
++          .padding({ left: 8, right: 8, top: 5, bottom: 5 }).borderRadius(12).margin(6)
++      }.width('100%')
++      Column({ space: 8 }) {
++        Text(eventDates(row)).fontSize(11).fontColor(SwodTheme.muted).width('100%').constraintSize({ minHeight: 28 })
++        Text(row.location || row.city || row.venue || '地点待定').fontSize(11).fontColor(SwodTheme.muted).width('100%')
++        Text(row.name || '赛事').fontSize(15).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%').constraintSize({ minHeight: 48 })
++        Divider().color(SwodTheme.tonal)
++        Row() {
++          this.eventMetric(eventCount(row.groupCount), '组别')
++          this.eventMetric(eventCount(row.playerCount), '选手')
++          this.eventMetric(eventCount(row.judgeCount), '评委')
++        }.width('100%')
++        Button(eventState(row) === '报名中' ? '点击报名 ›' : '查看详情 ›', { type: ButtonType.Normal })
++          .fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.onPrimary).backgroundColor(SwodTheme.primary).borderRadius(8)
++          .constraintSize({ minHeight: 44 }).width('100%').onClick(() => this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)))
++      }.padding(10).width('100%').alignItems(HorizontalAlign.Start)
++    }.width('100%').backgroundColor(SwodTheme.surface).borderRadius(14).clip(true)
++      .onClick(() => this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)))
++  }
++  @Builder
++  private eventsPage() {
++    Column({ space: 14 }) {
++      Text('东方舞赛事平台').fontSize(12).fontColor(SwodTheme.onPrimary).width('100%')
++      Text('AiwaRaks赛事平台').fontSize(22).fontWeight(FontWeight.Bold).fontColor(SwodTheme.onPrimary).width('100%')
++      Row() {
++        this.eventMetric(this.busy || this.error ? '—' : String(this.rows.length), '赛事总数', true)
++        this.eventMetric(this.busy || this.error ? '—' : eventAggregate(this.rows, true), '累计参赛', true)
++        this.eventMetric(this.busy || this.error ? '—' : eventAggregate(this.rows, false), '记录数据', true)
++      }.width('100%')
++    }.padding(18).width('100%').backgroundColor(SwodTheme.primary).borderRadius(16)
++    Row({ space: 12 }) {
++      Text('全部赛事').fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).layoutWeight(1)
++      TextInput({ placeholder: '搜索赛事或地点', text: this.query }).width('56%').constraintSize({ minHeight: 48 }).fontSize(14)
++        .fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).backgroundColor(SwodTheme.surface).borderRadius(24).onChange((v: string) => { this.query = v; })
++    }.width('100%').margin({ top: 4, bottom: 4 })
++    GridRow({ columns: { xs: 2, sm: 2, md: 2, lg: 2 }, gutter: 12 }) {
++      ForEach(this.rows.filter((row: Row) => !this.query.trim() || ((row.name || '') + ' ' + (row.location || row.city || row.venue || '')).toLowerCase().includes(this.query.trim().toLowerCase())), (row: Row) => {
++        GridCol() { this.eventTile(row) }.margin({ bottom: 12 })
++      }, (row: Row) => String(row.id))
++    }.width('100%')
++    if (!this.busy && !this.error && this.query.trim() && this.rows.filter((row: Row) => ((row.name || '') + ' ' + (row.location || row.city || row.venue || '')).toLowerCase().includes(this.query.trim().toLowerCase())).length === 0) {
++      Text('未找到匹配赛事，请更换名称或地点').fontSize(14).fontColor(SwodTheme.muted).width('100%')
++    }
++  }
++  @Builder
+   private loginForm() {
+     Column({ space: 8 }) {
+       Image($r('app.media.brand_logo')).width(80).height(80).padding(8).objectFit(ImageFit.Contain).backgroundColor(Color.White).borderRadius(18).accessibilityLevel('no')
+@@ -655,11 +719,7 @@
+     }
+     if (this.route.screen === 'assistant') { Text('30分钟：热身6 · 技巧18 · 复习6').fontSize(18); this.action('继续上次课程', () => this.go('records', '最近学习', '/member/recent-courses', true)) }
+     if (this.route.screen === 'offline') { this.intro('线下课', '购买课程期次的课时，到课后核销扣减，无需预约。'); this.action('期次课时与核销', () => this.go('schedule', '期次课时', '/offline/overview', true)) }
+-    if (this.route.screen === 'events') {
+-      this.intro('AiwaRaks赛事平台', '赛事、报名、赛程与成绩')
+-      this.action('我的比赛', () => this.go('myEvents', '我的比赛', '/member/events', true))
+-      this.action('工作人员 · 赛事管理', () => this.go(this.staffLoggedIn ? 'staffHome' : 'staffLogin', '赛事管理', this.staffLoggedIn ? '/event/competitions' : '', false, 0, 0, true))
+-    }
++    if (this.route.screen === 'events') { this.eventsPage() }
+     if (this.route.screen === 'shop') { this.intro('伊娃甄选', '东方舞生活 · 官方商城') }
+     if (this.route.screen === 'login') { this.loginForm() }
+     if (this.route.screen === 'staffLogin') { this.staffForm() }
+@@ -925,7 +985,7 @@
+       if (!this.busy && !this.error && (this.detail.entries || []).length === 0) { Text('暂无比赛报名和结果记录').fontSize(15).fontColor(SwodTheme.muted) }
+     }
+     if (this.route.screen === 'message') { Text(this.detail.content || '').fontSize(16) }
+-    if (this.route.screen !== 'catalog' && this.route.screen !== 'shopOrders' && this.rows.length > 0) {
++    if (this.route.screen !== 'catalog' && this.route.screen !== 'shopOrders' && this.route.screen !== 'events' && this.rows.length > 0) {
+       TextInput({ placeholder: this.route.screen === 'home' ? '搜索课程、老师或分类' : '搜索名称、老师、组别或音乐', text: this.query }).height(52).fontSize(16).fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).backgroundColor(SwodTheme.surface).borderRadius(12).onChange((v: string) => { this.query = v; })
+       ForEach(this.filtered(), (row: Row) => { this.card(row) }, (row: Row) => String(row.id || row.video_id || row.series_id))
+       if (!this.busy && !this.error && this.query.trim() && this.filtered().length === 0) {
+@@ -943,6 +1003,10 @@
+       Row({ space: 8 }) {
+         if (this.history.length > 0) { Button({ type: ButtonType.Normal }) { Image($r('app.media.nav_back_on')).width(24).height(24) }.width(48).height(48).backgroundColor(Color.Transparent).onClick(() => this.back()).accessibilityText('返回上一页') }
+         Text(this.route.title).fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).layoutWeight(1)
++        if (this.route.screen === 'events') {
++          Button('我的比赛', { type: ButtonType.Normal }).fontSize(12).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 48, minWidth: 48 }).onClick(() => this.go('myEvents', '我的比赛', '/member/events', true))
++          Button('赛事管理', { type: ButtonType.Normal }).fontSize(12).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 48, minWidth: 48 }).onClick(() => this.go(this.staffLoggedIn ? 'staffHome' : 'staffLogin', '赛事管理', this.staffLoggedIn ? '/event/competitions' : '', false, 0, 0, true))
++        }
+         Button('刷新', { type: ButtonType.Normal }).constraintSize({ minWidth: 48, minHeight: 48 }).backgroundColor(Color.Transparent).fontColor(SwodTheme.primary).enabled(!(this.route.screen === 'login' && this.busy)).onClick(() => { if (this.route.screen === 'web') this.reloadWeb(); else this.load(); })
+       }.padding({ left: 20, right: 12, top: 6, bottom: 6 }).width('100%').backgroundColor(SwodTheme.surface)
+       if (this.route.screen === 'web') {
+--- before/HarmonyOS/Models.ets
++++ after/HarmonyOS/Models.ets
+@@ -6,6 +6,9 @@
+ export interface PaymentFlags { alipay?: boolean; wechat?: boolean; }
+ export interface MediaQuality { value: string; label: string; url: string; }
+ export interface Row {
++  city?: string; coverUrl?: string; cover_url?: string;
++  registrationStart?: string; registrationEnd?: string;
++  judgeCount?: number | null; approvedPlayerCount?: number | null; rankingCount?: number | null; scoreCount?: number | null;
+   quality_options?: MediaQuality[];
+   oneTapLogin?: boolean;
+   mediaKind?: string;
+@@ -23,7 +26,7 @@
+   groupId?: number; groupName?: string; competitionName?: string; performanceTitle?: string; phone?: string;
+   organization?: string; contestantNumber?: string; programNumber?: string; sequenceNo?: number; playerNo?: string;
+   registrationFee?: number; paidAmount?: number; paidStatus?: string; totalRegistrationFee?: number;
+-  musicName?: string; musicFileId?: number; musicDuration?: number; playerCount?: number; groupCount?: number;
++  musicName?: string; musicFileId?: number; musicDuration?: number; playerCount?: number | null; groupCount?: number;
+   playerId?: string; competitionId?: string; entrantName?: string; resultPublished?: boolean; awardName?: string;
+   auditStatus?: string; totalScore?: number; rankNo?: number; playerName?: string; publishedTotal?: number;
+   startsAt?: string; registrationStatus?: string; status?: string; remark?: string; content?: string; label?: string;
+--- before/HarmonyOS/EventPresentation.ets
++++ after/HarmonyOS/EventPresentation.ets
+@@ -0,0 +1,33 @@
++import { Row } from './Models';
++
++export function eventCount(value: number | null | undefined): string {
++  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 ? String(value) : '未公开';
++}
++export function eventAggregate(rows: Row[], people: boolean): string {
++  let total = 0;
++  for (const row of rows) {
++    const value = people ? (row.approvedPlayerCount ?? row.playerCount) : (row.rankingCount ?? row.scoreCount);
++    if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0 || !Number.isSafeInteger(total + value)) return people ? '未公开' : '—';
++    total += value;
++  }
++  return String(total);
++}
++export function eventDates(row: Row): string {
++  const start = (row.startDate || row.start_date || '').slice(0, 10), end = (row.endDate || row.end_date || '').slice(0, 10);
++  return !start ? '时间待定' : !end || start === end ? start : start + ' 至 ' + end;
++}
++function eventTime(value: string | undefined, end: boolean): number | undefined {
++  if (!value) return undefined;
++  const local = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(value);
++  const time = Date.parse(value.length === 10 ? value + (end ? 'T23:59:59.999+08:00' : 'T00:00:00+08:00') : local ? value.replace(' ', 'T') + '+08:00' : value);
++  return Number.isFinite(time) ? time : undefined;
++}
++export function eventState(row: Row, now: number = Date.now()): string {
++  if (row.status === 'cancelled') return '已取消';
++  const finish = eventTime(row.endDate || row.end_date, true);
++  if (row.status === 'finished' || (finish !== undefined && finish < now)) return '已结束';
++  const start = eventTime(row.registrationStart, false), end = eventTime(row.registrationEnd, true);
++  if (start !== undefined && start > now) return '报名未开始';
++  if (end !== undefined && end < now) return '报名已截止';
++  return row.registrationStatus === 'open' ? '报名中' : '报名未开放';
++}
+--- before/HarmonyOS/event-presentation.test.cjs
++++ after/HarmonyOS/event-presentation.test.cjs
+@@ -0,0 +1,36 @@
++const { test } = require('node:test');
++const assert = require('node:assert/strict');
++const fs = require('node:fs');
++const path = require('node:path');
++const ts = require(path.resolve(__dirname, '../../../../10-统一平台admin-platform/node_modules/typescript'));
++const moduleFixture = { exports: {} };
++const source = fs.readFileSync(path.resolve(__dirname, '../entry/src/main/ets/services/EventPresentation.ets'), 'utf8');
++const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } });
++new Function('module','exports',compiled.outputText)(moduleFixture,moduleFixture.exports);
++const {eventCount,eventAggregate,eventDates,eventState}=moduleFixture.exports;
++test('hidden and missing counts remain unknown, while a real zero stays zero',()=>{
++ for(const value of [null,undefined,-1,NaN,Infinity,1.5]) assert.equal(eventCount(value),'未公开');
++ assert.equal(eventCount(0),'0');
++ assert.equal(eventAggregate([{playerCount:null}],true),'未公开');
++ assert.equal(eventAggregate([{groupCount:0}],false),'—');
++ assert.equal(eventAggregate([{approvedPlayerCount:0,playerCount:4}],true),'0');
++});
++test('the complete Shanghai end date stays open and expires the next day',()=>{
++ const row={registrationStatus:'open',endDate:'2026-11-29'};
++ assert.equal(eventState(row,Date.parse('2026-11-29T12:00:00Z')),'报名中');
++ assert.equal(eventState(row,Date.parse('2026-11-29T16:00:00Z')),'已结束');
++ assert.equal(eventDates({startDate:'2026-11-29',endDate:'2026-11-29'}),'2026-11-29');
++});
++test('cancelled and registration windows take priority over the open switch',()=>{
++ const now=Date.parse('2026-11-29T12:00:00Z');
++ assert.equal(eventState({status:'cancelled',registrationStatus:'open'},now),'已取消');
++ assert.equal(eventState({registrationStatus:'open',registrationStart:'2026-12-01'},now),'报名未开始');
++ assert.equal(eventState({registrationStatus:'open',registrationEnd:'2026-11-28'},now),'报名已截止');
++ assert.equal(eventState({registrationStatus:'closed'},now),'报名未开放');
++});
++
++test('database local timestamps use Shanghai instead of device timezone',()=>{
++ const now=Date.parse('2026-11-29T12:00:00Z');
++ assert.equal(eventState({registrationStatus:'open',registrationStart:'2026-11-29 21:00:00'},now),'报名未开始');
++ assert.equal(eventState({registrationStatus:'open',registrationEnd:'2026-11-29 19:59:59'},now),'报名已截止');
++});
+--- before/HarmonyOS/SwodTheme.ets
++++ after/HarmonyOS/SwodTheme.ets
+@@ -4,6 +4,7 @@
+   static readonly surface: ResourceColor = $r('app.color.swod_surface');
+   static readonly ink: ResourceColor = $r('app.color.swod_ink');
+   static readonly muted: ResourceColor = $r('app.color.swod_muted');
++  static readonly onPrimary: ResourceColor = $r('app.color.swod_on_primary');
+   static readonly primary: ResourceColor = $r('app.color.swod_primary');
+   static readonly tonal: ResourceColor = $r('app.color.swod_tonal');
+ }
+--- before/HarmonyOS/base-color.json
++++ after/HarmonyOS/base-color.json
+@@ -27,6 +27,10 @@
+     {
+       "name": "swod_tonal",
+       "value": "#F9EAEA"
++    },
++    {
++      "name": "swod_on_primary",
++      "value": "#FFFFFF"
+     }
+   ]
+ }
+--- before/HarmonyOS/dark-color.json
++++ after/HarmonyOS/dark-color.json
+@@ -27,6 +27,10 @@
+     {
+       "name": "swod_tonal",
+       "value": "#3C272A"
++    },
++    {
++      "name": "swod_on_primary",
++      "value": "#000000"
+     }
+   ]
+ }

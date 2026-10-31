@@ -1,0 +1,45 @@
+{
+  "automationId": "swod",
+  "ios": {
+    "access": "login-required",
+    "newBlocker": false,
+    "reviewStatusVerified": false,
+    "reason": "现有IAB仍停留登录页；02:38已通知，不重复提醒。"
+  },
+  "androidHuawei": {
+    "appId": "119475083",
+    "versionId": "2067391391952053568",
+    "version": "1.0.1",
+    "build": 11,
+    "access": "login-required",
+    "reviewStatusVerified": false,
+    "lastKnownReviewState": "正在审核",
+    "newBlocker": true
+  },
+  "harmonyHuawei": {
+    "appId": "6917617955633704973",
+    "versionId": "2071129556072323840",
+    "version": "1.0.1",
+    "build": 9,
+    "access": "not-reverified-console-auth-required",
+    "reviewStatusVerified": false,
+    "lastKnownReviewState": "正在等待审核",
+    "note": "安卓核查进入共用华为账号登录页，未在登录门槛前反复打开鸿蒙版本。"
+  },
+  "otherAndroidChannels": {
+    "blockersChanged": false,
+    "submitted": false,
+    "reason": "最新记录的版权证书、截图、签章及业务事实等待项未解决；无新用户材料，不重复提审。"
+  },
+  "newNotification": "华为开发者控制台登录过期，需要用户重新登录；三端最新审核及公开状态不能据旧记录推断。",
+  "actions": {
+    "newSubmissions": 0,
+    "withdrawals": 0,
+    "manualReleases": 0,
+    "filingChanges": 0,
+    "capabilityEnables": 0
+  },
+  "huaweiLoginScreenshot": "evidence-store/swod-huawei-login-required-20261030.png",
+  "checkedAt": "2026-10-30T06:33:30+08:00",
+  "decision": "NOTIFY"
+}

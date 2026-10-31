@@ -1,0 +1,96 @@
+{
+  "app": {
+    "iconId": 16777217,
+    "debug": false,
+    "targetPatchAPIVersion": 0,
+    "minAPIVersion": 60002022,
+    "icon": "$media:brand_logo",
+    "buildMode": "release",
+    "label": "$string:app_name",
+    "bundleType": "app",
+    "versionName": "1.0.1",
+    "versionCode": 11,
+    "appEnvironments": [],
+    "compileSdkType": "HarmonyOS",
+    "labelId": 16777216,
+    "compileSdkVersion": "6.1.1.125",
+    "targetAPIVersion": 60002022,
+    "vendor": "SWOD",
+    "bundleName": "cn.com.swod.evadance",
+    "apiReleaseType": "Release",
+    "targetMinorAPIVersion": 0
+  },
+  "module": {
+    "virtualMachine": "ark13.0.1.0",
+    "mainElement": "EntryAbility",
+    "metadata": [
+      {
+        "name": "com.aliyun.alivc_license.licensekey",
+        "value": "vPb0MFnNjTX1X0o4I071444df695b4b16ba3b0fb5f855cf51"
+      },
+      {
+        "name": "com.aliyun.alivc_license.licensefile",
+        "value": "AliVideoCert.crt"
+      }
+    ],
+    "installationFree": false,
+    "deliveryWithInstall": true,
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.INTERNET"
+      },
+      {
+        "name": "ohos.permission.PRIVACY_WINDOW"
+      },
+      {
+        "name": "ohos.permission.GET_NETWORK_INFO"
+      },
+      {
+        "name": "ohos.permission.SET_NETWORK_INFO"
+      },
+      {
+        "name": "ohos.permission.GET_WIFI_INFO"
+      }
+    ],
+    "description": "$string:module_desc",
+    "compileMode": "esmodule",
+    "type": "entry",
+    "dependencies": [],
+    "abilities": [
+      {
+        "exported": true,
+        "iconId": 16777217,
+        "orientation": "auto_rotation_restricted",
+        "startWindowIconId": 16777217,
+        "icon": "$media:brand_logo",
+        "startWindowIcon": "$media:brand_logo",
+        "startWindowBackgroundId": 16777222,
+        "description": "$string:EntryAbility_desc",
+        "label": "$string:EntryAbility_label",
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "ohos.want.action.home"
+            ]
+          }
+        ],
+        "srcEntry": "./ets/entryability/EntryAbility.ets",
+        "descriptionId": 16777218,
+        "labelId": 16777219,
+        "startWindowBackground": "$color:start_window_background",
+        "name": "EntryAbility"
+      }
+    ],
+    "deviceTypes": [
+      "phone"
+    ],
+    "pages": "$profile:main_pages",
+    "descriptionId": 16777221,
+    "name": "entry",
+    "routerMap": "$profile:default-router-map",
+    "packageName": "entry"
+  }
+}

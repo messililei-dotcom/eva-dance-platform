@@ -23,6 +23,11 @@ public struct Lesson: Decodable, Identifiable, Hashable {
     public let id: Int
     public let name: String
     public let duration: Double?
+    public let subtitle: String?
+    public let percent: Double?
+    public init(id: Int, name: String, duration: Double? = nil, subtitle: String? = nil, percent: Double? = nil) {
+        self.id = id; self.name = name; self.duration = duration; self.subtitle = subtitle; self.percent = percent
+    }
 }
 public struct CourseUnit: Decodable, Identifiable {
     public let id: Int

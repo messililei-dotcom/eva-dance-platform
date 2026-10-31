@@ -15,31 +15,33 @@ enum EvaBrand {
     static let gold = Color(red: 0.725, green: 0.588, blue: 0.322)
     static let gradient = LinearGradient(colors: [red, gold], startPoint: .topLeading, endPoint: .bottomTrailing)
     #if os(iOS)
-    static let canvas = Color(uiColor: .systemGroupedBackground)
-    static let surface = Color(uiColor: .secondarySystemGroupedBackground)
+    static let canvas = Color(uiColor: .systemBackground)
+    static let surface = Color(uiColor: .systemBackground)
+    static let field = Color(uiColor: .secondarySystemBackground)
     static let onAccent = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .black : .white })
     #else
     static let canvas = Color.gray.opacity(0.06)
     static let surface = Color(nsColor: .controlBackgroundColor)
+    static let field = Color.gray.opacity(0.07)
     static let onAccent = Color.white
     #endif
     static let softAccent = red.opacity(0.07)
 }
 struct BrandHeader: View {
-    @ScaledMetric(relativeTo: .title2) private var badgeSize = 44
+    @ScaledMetric(relativeTo: .title2) private var badgeSize = 36
     let title: String
     let subtitle: String
     var icon = "sparkles"
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
             Image(systemName: icon).font(.title2).foregroundStyle(EvaBrand.red)
-                .frame(width: badgeSize, height: badgeSize).background(EvaBrand.softAccent, in: RoundedRectangle(cornerRadius: 12)).accessibilityHidden(true)
+                .frame(width: badgeSize, height: badgeSize).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 6) {
                 Text(title).font(.title3.bold()).foregroundStyle(.primary)
                 Text(subtitle).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
-        }.padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
+        }.padding(.vertical, 4).frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 struct CourseHero: View {
@@ -74,14 +76,27 @@ struct CourseCarousel: View {
 }
 
 /// Compact phone navigation, with touch targets and Dynamic Type kept intact.
+private struct CompactListInsets: ViewModifier {
+    func body(content: Content) -> some View {
+        #if os(iOS)
+        if #available(iOS 17.0, *) {
+            content.contentMargins(.top, 0, for: .scrollContent).listSectionSpacing(8)
+        } else { content }
+        #else
+        content
+        #endif
+    }
+}
 struct CompactLearningLayout: ViewModifier {
     func body(content: Content) -> some View {
         #if os(iOS)
         content.navigationBarTitleDisplayMode(.inline)
-            .listStyle(.insetGrouped)
+            .listStyle(.plain)
+            .modifier(CompactListInsets())
             .scrollContentBackground(.hidden)
             .background(EvaBrand.canvas)
-            .environment(\.defaultMinListRowHeight, 52)
+            .scrollDismissesKeyboard(.interactively)
+            .environment(\.defaultMinListRowHeight, 48)
             .environment(\.defaultMinListHeaderHeight, 24)
         #else
         content.listStyle(.inset)
@@ -96,18 +111,17 @@ struct LearningShortcuts: View {
     var body: some View {
         let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 12)) : AnyLayout(HStackLayout(spacing: 10))
         layout {
-            NavigationLink { AuthGate { CoursesView() } } label: { shortcut("继续学习", "play.fill", primary: true) }
-            NavigationLink { AuthGate { StudyAssistantView() } } label: { shortcut("学习助手", "sparkles") }
-            NavigationLink { UnifiedSearchView() } label: { shortcut("全站搜索", "magnifyingglass") }
-        }.buttonStyle(.plain)
+            NavigationLink { AuthGate { CoursesView() } } label: { shortcut("我的课程", "book") }
+            NavigationLink { AuthGate { OfflineScheduleView() } } label: { shortcut("课时与核销", "calendar") }
+            NavigationLink { AuthGate { MyCompetitionsView() } } label: { shortcut("报名与成绩", "trophy") }
+        }.buttonStyle(EvaPressStyle())
     }
     private func shortcut(_ title: String, _ icon: String, primary: Bool = false) -> some View {
-        let layout = typeSize.isAccessibilitySize ? AnyLayout(HStackLayout(spacing: 16)) : AnyLayout(VStackLayout(spacing: 9))
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 4))
         return layout { Image(systemName: icon).font(.title3); Text(title).font(.subheadline.weight(.medium)) }
             .foregroundStyle(primary ? EvaBrand.onAccent : EvaBrand.red)
-            .frame(maxWidth: .infinity, minHeight: 80).padding(.vertical, 4)
-            .background(primary ? EvaBrand.red : EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14))
-            .contentShape(RoundedRectangle(cornerRadius: 14))
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .contentShape(Rectangle())
             .accessibilityElement(children: .combine)
     }
 }
@@ -116,14 +130,18 @@ struct LearningShortcuts: View {
 struct EvaHomeLayout: ViewModifier {
     func body(content: Content) -> some View {
         #if os(iOS)
-        content.navigationBarTitleDisplayMode(.large).background(EvaBrand.canvas)
-            .toolbar {
-                #if DEBUG
-                if ProcessInfo.processInfo.environment["EVA_API_BASE"] != nil {
-                    ToolbarItem(placement: .navigationBarTrailing) { Text("测试数据").font(.caption2).foregroundStyle(.secondary).accessibilityLabel("本地测试数据，非真实课程") }
-                }
-                #endif
+        let page = content.navigationBarTitleDisplayMode(.inline).background(EvaBrand.canvas).scrollDismissesKeyboard(.interactively)
+        // An empty inset can reserve the full viewport in an optimized build.
+        // Install this diagnostic bar only when it actually has content.
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["EVA_API_BASE"] != nil {
+            page.safeAreaInset(edge: .top, spacing: 0) {
+                    Text("本地测试数据，非真实课程").font(.caption2).foregroundStyle(.secondary).frame(maxWidth: .infinity)
             }
+        } else { page }
+        #else
+        page
+        #endif
         #else
         content.background(EvaBrand.canvas)
         #endif
@@ -131,11 +149,42 @@ struct EvaHomeLayout: ViewModifier {
 }
 extension View {
     func evaHomeLayout() -> some View { modifier(EvaHomeLayout()) }
-    @ViewBuilder func evaSearch(text: Binding<String>, prompt: String) -> some View {
+    func evaSearch(text: Binding<String>, prompt: String) -> some View {
+        VStack(spacing: 6) {
+            EvaSearchField(text: text, prompt: prompt).padding(.horizontal, 16).padding(.top, 4)
+            self
+        }.background(EvaBrand.canvas)
+    }
+    @ViewBuilder func evaPageChrome(root: Bool = false) -> some View {
         #if os(iOS)
-        searchable(text: text, placement: .navigationBarDrawer(displayMode: .always), prompt: prompt)
+        self.navigationTitle("").navigationBarTitleDisplayMode(.inline)
+            .toolbar(root ? .hidden : .visible, for: .navigationBar)
         #else
-        searchable(text: text, prompt: prompt)
+        self.navigationTitle("")
         #endif
+    }
+}
+
+struct EvaSearchField: View {
+    @Binding var text: String
+    let prompt: String
+    @FocusState private var focused: Bool
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
+            TextField(prompt, text: $text).font(.subheadline).autocorrectionDisabled()
+                .focused($focused).submitLabel(.search).onSubmit { focused = false }
+                .accessibilityLabel(prompt)
+            if !text.isEmpty {
+                Button { text = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
+                    .frame(minWidth: 44, minHeight: 44).accessibilityLabel("清空搜索")
+            }
+        }.padding(.horizontal, 12).frame(maxWidth: 760, minHeight: 44)
+            .background(EvaBrand.field, in: RoundedRectangle(cornerRadius: 8))
+            .toolbar {
+                #if os(iOS)
+                if focused { ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("完成") { focused = false } } }
+                #endif
+            }
     }
 }

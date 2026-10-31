@@ -176,8 +176,64 @@ final class EvaCoreTests {
 }
 
 
+private func checkLoginInputsAndCarrierEvents() {
+    XCTAssertEqual(LoginInputPolicy.phone(" +86 138-0000-0000 "), "13800000000")
+    XCTAssertTrue(LoginInputPolicy.validPhone("+86 138 0000 0000"))
+    for bad in ["1380000000", "23800000000", "13800000000x", "１３８００００００００", "13800000000/1"] {
+        XCTAssertFalse(LoginInputPolicy.validPhone(bad))
+    }
+    for bad in ["1", "12345", "1234567", "12a456", "１２３４５６"] { XCTAssertFalse(LoginInputPolicy.validCode(bad)) }
+    XCTAssertTrue(LoginInputPolicy.validCode(" 123456\n"))
+    for method in LoginMethod.allCases {
+        XCTAssertFalse(LoginInputPolicy.canSubmit(method, phone: "13800000000", code: "123456", password: "secret", agreed: false, busy: false, carrierReady: true))
+        XCTAssertFalse(LoginInputPolicy.canSubmit(method, phone: "13800000000", code: "123456", password: "secret", agreed: true, busy: true, carrierReady: true))
+    }
+    XCTAssertFalse(LoginInputPolicy.canSubmit(.carrier, phone: "", code: "", password: "", agreed: true, busy: false, carrierReady: false))
+    XCTAssertTrue(LoginInputPolicy.canSubmit(.carrier, phone: "", code: "", password: "", agreed: true, busy: false, carrierReady: true))
+    XCTAssertFalse(LoginInputPolicy.canSubmit(.sms, phone: "13800000000", code: "1", password: "", agreed: true, busy: false, carrierReady: true))
+    XCTAssertTrue(LoginInputPolicy.canSubmit(.sms, phone: "13800000000", code: "123456", password: "", agreed: true, busy: false, carrierReady: false))
+    XCTAssertFalse(LoginInputPolicy.canSubmit(.password, phone: "13800000000", code: "", password: "", agreed: true, busy: false, carrierReady: false))
+    let now = Date(timeIntervalSince1970: 1000)
+    XCTAssertEqual(LoginInputPolicy.resendSeconds(sentAt: now, now: now), 60)
+    XCTAssertEqual(LoginInputPolicy.resendSeconds(sentAt: now, now: now.addingTimeInterval(59.1)), 1)
+    XCTAssertEqual(LoginInputPolicy.resendSeconds(sentAt: now, now: now.addingTimeInterval(60)), 0)
+    XCTAssertEqual(LoginInputPolicy.resendSeconds(sentAt: now.addingTimeInterval(30), now: now), 60)
+    for code in ["600001", "700002", "700003", "700004", "700006", "700007", "700008", "700009"] {
+        XCTAssertEqual(CarrierTokenEvent.parse(code: code, token: "ignored-operator-token"), .progress)
+    }
+    for code in ["700000", "700001", "700010", "700020"] { XCTAssertEqual(CarrierTokenEvent.parse(code: code, token: nil), .cancelled) }
+    for code in ["600002", "600007", "600008", "600015", "unknown"] { XCTAssertEqual(CarrierTokenEvent.parse(code: code, token: nil), .failed) }
+    XCTAssertEqual(CarrierTokenEvent.parse(code: "600000", token: nil), .failed)
+    XCTAssertEqual(CarrierTokenEvent.parse(code: "600000", token: "short"), .failed)
+    XCTAssertEqual(CarrierTokenEvent.parse(code: "600000", token: "operator-token\ninvalid"), .failed)
+    XCTAssertEqual(CarrierTokenEvent.parse(code: "600000", token: "operator-test-token"), .token("operator-test-token"))
+    print("Login input, consent, cooldown and operator event checks passed")
+}
+
+private func checkEventPresentation() {
+    let hidden: JSONValue = .object(["playerCount": .null, "groupCount": .number(0)])
+    XCTAssertNil(EventPresentation.count(hidden, "playerCount"))
+    XCTAssertEqual(EventPresentation.count(hidden, "groupCount"), 0)
+    XCTAssertEqual(EventPresentation.aggregate([hidden], participant: true), "未公开")
+    XCTAssertEqual(EventPresentation.aggregate([hidden], participant: false), "—")
+    XCTAssertEqual(EventPresentation.aggregate([.object(["playerCount": .number(4), "approvedPlayerCount": .number(0)])], participant: true), "0")
+    let now = ISO8601DateFormatter().date(from: "2026-11-29T12:00:00Z")!
+    let open: JSONValue = .object(["registrationStatus": .string("open"), "endDate": .string("2026-11-29")])
+    XCTAssertEqual(EventPresentation.state(open, now: now), "报名中")
+    XCTAssertEqual(EventPresentation.state(open, now: now.addingTimeInterval(14_401)), "已结束")
+    XCTAssertEqual(EventPresentation.state(.object(["status": .string("cancelled"), "registrationStatus": .string("open")]), now: now), "已取消")
+    XCTAssertEqual(EventPresentation.state(.object(["registrationStatus": .string("open"), "registrationStart": .string("2026-12-01")]), now: now), "报名未开始")
+    XCTAssertEqual(EventPresentation.state(.object(["registrationStatus": .string("open"), "registrationEnd": .string("2026-11-28")]), now: now), "报名已截止")
+    XCTAssertEqual(EventPresentation.dateRange(.object(["startDate": .string("2026-11-29"), "endDate": .string("2026-11-29")])), "2026-11-29")
+    XCTAssertEqual(EventPresentation.state(.object(["registrationStatus": .string("open"), "registrationStart": .string("2026-11-29 21:00:00")]), now: now), "报名未开始")
+    XCTAssertEqual(EventPresentation.state(.object(["registrationStatus": .string("open"), "registrationEnd": .string("2026-11-29 19:59:59")]), now: now), "报名已截止")
+    print("Event count privacy, zero totals, date range and registration boundary checks passed")
+}
+
 @main struct Checks {
     static func main() async throws {
+        checkEventPresentation()
+        checkLoginInputsAndCarrierEvents()
         let suite = EvaCoreTests()
         try await suite.testAuthorizedSeriesAndHeaders()
         try await suite.testCourseIDsRemainSeparateFromLessonIDs()
@@ -219,7 +275,56 @@ final class EvaCoreTests {
         XCTAssertEqual(lessons[0]["name"].text,"修改后的课节")
         XCTAssertEqual(lessons[0]["percent"].number,100)
         print("Course pricing, period availability, official introductions and catalog progress checks passed")
-        print("19 contract checks; failures=\(failures)")
+        XCTAssertEqual(ProductPresentation.price(.object(["priceFen":.number(16900)])), "¥169.00")
+        XCTAssertEqual(ProductPresentation.price(.object(["priceFen":.number(0)])), "¥0.00")
+        for invalid: JSONValue in [.null,.number(-1),.number(1.5),.number(.nan),.string("16900")] {
+            XCTAssertEqual(ProductPresentation.price(.object(["priceFen":invalid])), "价格待确认")
+            XCTAssertEqual(ProductPresentation.stock(.object(["stock":invalid])), "库存待确认")
+        }
+        XCTAssertEqual(ProductPresentation.stock(.object(["stock":.number(0)])), "暂时售罄")
+        XCTAssertEqual(ProductPresentation.stock(.object(["stock":.number(39)])), "库存 39")
+        let audioCatalog: JSONValue = .array([.object(["name":.string("第1课"),"videos":.array([.object(["id":.number(2543),"name":.string("音频-东方舞的历史发展.m4a")])])])])
+        let audio = CoursePresentation.catalog(audioCatalog, progress:.null)[0]
+        XCTAssertEqual(audio["name"].text, "音频-东方舞的历史发展.m4a")
+        XCTAssertEqual(audio["mediaKind"].text, "audio")
+        XCTAssertEqual(audio["subtitle"].text, "第1课")
+        let cacheJSON = #"{"member_id":1,"session_id":"session","device_id":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","lesson_id":10,"series_id":30,"vod_video_id":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","material_version":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","issued_at":1000,"expires_at":86401000,"mode":"aliyun-secure"}"#
+        var cacheLease = try JSONDecoder().decode(VideoCacheLease.self, from: Data(cacheJSON.utf8))
+        XCTAssertTrue(VideoCachePolicy.permits(cacheLease, member: 1, session: "session", device: cacheLease.device_id, lesson: 10, nowMS: 1001))
+        XCTAssertFalse(VideoCachePolicy.permits(cacheLease, member: 2, session: "session", device: cacheLease.device_id, lesson: 10, nowMS: 1001))
+        XCTAssertFalse(VideoCachePolicy.permits(cacheLease, member: 1, session: "other", device: cacheLease.device_id, lesson: 10, nowMS: 1001))
+        XCTAssertFalse(VideoCachePolicy.permits(cacheLease, member: 1, session: "session", device: cacheLease.device_id, lesson: 11, nowMS: 1001))
+        for now in [999.0, 86401000.0, .nan, .infinity] { XCTAssertFalse(VideoCachePolicy.permits(cacheLease, member: 1, session: "session", device: cacheLease.device_id, lesson: 10, nowMS: now)) }
+        cacheLease.expires_at += 1
+        XCTAssertFalse(VideoCachePolicy.permits(cacheLease, member: 1, session: "session", device: cacheLease.device_id, lesson: 10, nowMS: 1001))
+        XCTAssertTrue(VideoCachePolicy.shouldRenew(cacheLease, nowMS: 301000, lastAttemptMS: 1000, online: true))
+        XCTAssertFalse(VideoCachePolicy.shouldRenew(cacheLease, nowMS: 301000, lastAttemptMS: 1000, online: false))
+        try await checkAutomaticRenewal(JSONDecoder().decode(VideoCacheLease.self, from: Data(cacheJSON.utf8)))
+        print("Offline lease identity, 24h expiry and automatic renewal recovery checks passed")
+        let clockAnchor = VideoCacheClockAnchor(serverMS: 1000, elapsedMS: 2000, boot: "boot-1")
+        XCTAssertEqual(clockAnchor.now(elapsedMS: 86_402_000, boot: "boot-1"), 86_401_000)
+        XCTAssertTrue(clockAnchor.now(elapsedMS: 3000, boot: "boot-2").isNaN)
+        XCTAssertTrue(clockAnchor.now(elapsedMS: 1000, boot: "boot-1").isNaN)
+        XCTAssertTrue(VideoCacheClockAnchor(serverMS: 1000, elapsedMS: 2000, boot: "").now(elapsedMS: 3000, boot: "").isNaN)
+        print("Offline elapsed-clock reboot and rollback checks passed")
+        print("21 contract checks; failures=\(failures)")
         if failures > 0 { exit(1) }
     }
+}
+
+@MainActor func checkAutomaticRenewal(_ initial: VideoCacheLease) async throws {
+    var now = 1001.0, stamp = 0.0, online = true, calls = 0, saves = 0, discarded = 0, mode = "ok"
+    let keeper = AutomaticVideoCacheRenewal(lease: initial, trustedNow: { now }, retryNow: { stamp }, isOnline: { online }, isCurrent: { true }, renew: { old in
+        calls += 1
+        if mode == "network" { throw APIError.service("network") }
+        if mode == "denied" { throw APIError.denied }
+        var next = old; next.issued_at = now; next.expires_at = now + 86400000; return next
+    }, persist: { _ in saves += 1 }, discard: { discarded += 1 })
+    await keeper.refresh(); XCTAssertEqual(calls,1); XCTAssertEqual(saves,1)
+    let expiry = keeper.lease.expires_at
+    mode = "network"; now += 301000; stamp += 301000; await keeper.refresh()
+    XCTAssertEqual(keeper.lease.expires_at,expiry); XCTAssertTrue(keeper.canPlay)
+    now = expiry + 1; stamp += 86400000; online = false; await keeper.refresh(); XCTAssertFalse(keeper.canPlay); XCTAssertEqual(calls,2)
+    online = true; mode = "ok"; stamp += 301000; await keeper.refresh(); XCTAssertTrue(keeper.canPlay); XCTAssertEqual(saves,2)
+    mode = "denied"; stamp += 301000; now += 301000; await keeper.refresh(); XCTAssertFalse(keeper.canPlay); XCTAssertEqual(discarded,1)
 }

@@ -1,3 +1,4 @@
+const { filterCatalog, categories } = require('../../shared/catalog-view');
 function courseAccountKey() {
   if (typeof wx === 'undefined' || typeof wx.getStorageSync !== 'function') return 'guest';
   return wx.getStorageSync('token') ? String(wx.getStorageSync('memberId') || 'signed-in') : 'guest';
@@ -33,32 +34,33 @@ function uniqueById(list) {
   });
 }
 function normalizeKeyword(value) { return cleanText(value || "").toLowerCase().replace(/\s+/g, ""); }
-function filterRows(list, keyword) {
-  const query = normalizeKeyword(keyword);
-  if (!query) return list;
-  return list.filter(item => normalizeKeyword([item.title, item.meta, item.category, item.teacher, item.description].filter(Boolean).join(" ")).includes(query));
-}
 
 Page(share.withShare("home", videoFeature.withVideoFeature({
-  data: { loading: true, error: "", carouselCourses: [], allCourseRows: [], searchableCourseRows: [], courseRows: [], searchFocused: false, searchKeyword: "", searchCountText: "" },
-  onShow() { return this.loadHomeSections(); },
+  data: { loading: true, error: "", carouselCourses: [], searchableCourseRows: [], courseRows: [], searchFocused: false, searchKeyword: "", searchCountText: "", categories: ["全部"], activeCategory: "全部", unlockedOnly: false },
+  onShow() {
+    if (typeof getApp === 'function') { getApp().globalData.lastPublicTab = 'home'; getApp().globalData.profileLoginCancelled = false; }
+    if (this.pendingUnlocked) { this.setData({ unlockedOnly: !!wx.getStorageSync('token') }); this.pendingUnlocked = false; }
+    return this.loadHomeSections();
+  },
+  onPullDownRefresh() { return this.loadHomeSections().finally(() => wx.stopPullDownRefresh()); },
+  onUnload() { this.homeRequestId = (this.homeRequestId || 0) + 1; },
   async loadHomeSections() {
     const account = courseAccountKey();
-    this.setData({ loading: true, error: "", allCourseRows: [], searchableCourseRows: [], courseRows: [], carouselCourses: [] });
+    const requestId = this.homeRequestId = (this.homeRequestId || 0) + 1;
+    this.setData({ loading: true, error: "", searchableCourseRows: [], courseRows: [], carouselCourses: [] });
     try {
       const [list, rights] = await Promise.all([api.getSeriesList(), authorizedCourseIds(api)]);
+      if (requestId !== this.homeRequestId) return;
       if (account !== courseAccountKey()) return this.loadHomeSections();
       const courses = uniqueById(list).map(item => normalizeCard(item, rights));
-      const allCourseRows = courses.slice(0, 8);
       this.setData({
         carouselCourses: courses.slice(0, 8),
-        allCourseRows,
-        searchableCourseRows: courses,
-        courseRows: normalizeKeyword(this.data.searchKeyword) ? filterRows(courses, this.data.searchKeyword) : allCourseRows,
-        searchCountText: normalizeKeyword(this.data.searchKeyword) ? `找到 ${filterRows(courses, this.data.searchKeyword).length} 门课程` : "",
+        searchableCourseRows: courses, categories: categories(courses),
+        ...this.courseFilterData(courses),
         loading: false
       });
     } catch (err) {
+      if (requestId !== this.homeRequestId || account !== courseAccountKey()) return;
       this.setData({ loading: false, error: err.message || "课程加载失败，请重试" });
     }
   },
@@ -66,22 +68,25 @@ Page(share.withShare("home", videoFeature.withVideoFeature({
   goMyCourses() { wx.switchTab({ url: "/pages/profile/profile" }); },
   goOffline() { wx.switchTab({ url: "/pages/offline/offline" }); },
   goEvents() { wx.switchTab({ url: "/pages/events/events" }); },
-  onSearchInput(event) {
-    const keyword = event.detail.value || "";
-    const rows = normalizeKeyword(keyword) ? filterRows(this.data.searchableCourseRows, keyword) : this.data.allCourseRows;
-    this.setData({ searchKeyword: keyword, searchFocused: true, courseRows: rows, searchCountText: normalizeKeyword(keyword) ? `找到 ${rows.length} 门课程` : "" });
+  courseFilterData(rows) {
+    const filtered = filterCatalog(rows, { keyword: this.data.searchKeyword, category: this.data.activeCategory, unlockedOnly: this.data.unlockedOnly });
+    const filtering = !!normalizeKeyword(this.data.searchKeyword) || this.data.activeCategory !== '全部' || this.data.unlockedOnly;
+    return { courseRows: filtering ? filtered : filtered.slice(0, 8), searchCountText: filtering ? `找到 ${filtered.length} 门课程` : '' };
   },
-  onClearSearch() {
-    this.setData({ searchKeyword: "", searchFocused: true, courseRows: this.data.allCourseRows, searchCountText: "" });
+  applyCourseFilters() { this.setData(this.courseFilterData(this.data.searchableCourseRows)); },
+  switchCategory(event) { this.setData({ activeCategory: event.currentTarget.dataset.category }); this.applyCourseFilters(); },
+  toggleUnlocked() {
+    if (!wx.getStorageSync('token')) { this.pendingUnlocked = true; return wx.navigateTo({ url: '/pages/login/login' }); }
+    this.setData({ unlockedOnly: !this.data.unlockedOnly }); this.applyCourseFilters();
   },
-  onHide() {
-    this.setData({ searchKeyword: "", searchFocused: false, courseRows: this.data.allCourseRows, searchCountText: "" });
-  },
+  onSearchInput(event) { this.setData({ searchKeyword: event.detail.value || '', searchFocused: true }); this.applyCourseFilters(); },
+  onClearSearch() { this.setData({ searchKeyword: '', searchFocused: true }); this.applyCourseFilters(); },
   onSearchButtonTap() { if (!normalizeKeyword(this.data.searchKeyword)) return this.setData({ searchFocused: true }); this.onSearchConfirm(); },
   onSearchConfirm() {
     const keyword = normalizeKeyword(this.data.searchKeyword);
     if (!keyword) return this.setData({ searchFocused: true });
     this.setData({ searchFocused: false });
+    if (wx.hideKeyboard) wx.hideKeyboard();
     wx.showToast({ title: this.data.searchCountText || "未找到课程", icon: "none" });
   },
   goCard(event) { videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}` }); },

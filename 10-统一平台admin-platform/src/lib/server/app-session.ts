@@ -1,4 +1,4 @@
-import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomUUID, scryptSync, timingSafeEqual } from 'node:crypto';
 import type { AdminDb } from './admin-db';
 
 export class AppError extends Error {
@@ -19,11 +19,25 @@ export function ensureAppSchema(db: AdminDb) {
     CREATE INDEX IF NOT EXISTS app_carrier_attempt_time ON AppCarrierAttempt(created_at);
     CREATE TABLE IF NOT EXISTS AppSpentRefresh (token_hash TEXT PRIMARY KEY, session_id TEXT NOT NULL, expires_at INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS AppLoginAttempt (phone_hash TEXT PRIMARY KEY, attempts INTEGER NOT NULL, window_start INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS AppPasswordCredential (
+      member_id INTEGER PRIMARY KEY, salt TEXT NOT NULL, digest TEXT NOT NULL,
+      expires_at INTEGER NOT NULL, revoked_at INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS AppPasswordAttempt (key_hash TEXT PRIMARY KEY, attempts INTEGER NOT NULL, window_start INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS AppDeletionRequest (
       id TEXT PRIMARY KEY, member_id INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending',
       requested_at INTEGER NOT NULL, completed_at INTEGER, note TEXT NOT NULL DEFAULT ''
     );
     CREATE UNIQUE INDEX IF NOT EXISTS app_pending_deletion ON AppDeletionRequest(member_id) WHERE status='pending';
+    CREATE TABLE IF NOT EXISTS AppDeletionReceipt (
+      token_hash TEXT PRIMARY KEY, request_id TEXT NOT NULL UNIQUE,
+      due_at INTEGER NOT NULL, notice TEXT NOT NULL DEFAULT '', acknowledged_at INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS AppDeletionRetention (
+      id TEXT PRIMARY KEY, request_id TEXT NOT NULL, scope TEXT NOT NULL,
+      basis TEXT NOT NULL, confirmed_by TEXT NOT NULL, expires_at INTEGER NOT NULL,
+      encrypted_data TEXT NOT NULL, created_at INTEGER NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS AppLearningCheckpoint (
       member_id INTEGER NOT NULL, lesson_id INTEGER NOT NULL, position REAL NOT NULL, duration REAL NOT NULL,
       revision INTEGER NOT NULL DEFAULT 1, updated_at INTEGER NOT NULL,
@@ -108,14 +122,84 @@ export function verifyAppSMS(db: AdminDb, phone: string, code: string, now = Dat
   if (consumed.changes !== 1) throw new AppError('验证码已使用');
   db.prepare('DELETE FROM AppLoginAttempt WHERE phone_hash=?').run(key);
 }
-export function requestAccountDeletion(db: AdminDb, memberId: number, now = Date.now()) {
-  return db.transaction(() => {
-    const existing = db.prepare("SELECT id,status FROM AppDeletionRequest WHERE member_id=? AND status='pending'").get(memberId);
-    const id = randomUUID();
-    if (!existing) db.prepare('INSERT INTO AppDeletionRequest(id,member_id,requested_at) VALUES(?,?,?)').run(id, memberId, now);
+
+// Provisioned credentials authenticate the same Member and AppSession as SMS.
+// They never grant course rights or create a member from client-supplied identity.
+export function setAppPassword(db: AdminDb, memberId: number, password: string, expiresAt: number, now = Date.now()) {
+  const member = activeMember(db, memberId);
+  if (Number(member.id) !== memberId || password.length < 16 || password.length > 128 || !Number.isSafeInteger(expiresAt) || expiresAt <= now || expiresAt > now + 90 * 86400_000) throw new AppError('账号、密码长度或有效期不正确');
+  const salt = randomBytes(16).toString('hex');
+  const digest = scryptSync(password, salt, 32, { N: 32768, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }).toString('hex');
+  db.transaction(() => {
+    db.prepare(`INSERT INTO AppPasswordCredential(member_id,salt,digest,expires_at,revoked_at) VALUES(?,?,?,?,NULL)
+      ON CONFLICT(member_id) DO UPDATE SET salt=excluded.salt,digest=excluded.digest,expires_at=excluded.expires_at,revoked_at=NULL`).run(memberId, salt, digest, expiresAt);
     db.prepare('UPDATE AppSession SET revoked_at=? WHERE member_id=? AND revoked_at IS NULL').run(now, memberId);
-    return existing || { id, status: 'pending' };
   })();
+}
+
+export function revokeAppPassword(db: AdminDb, memberId: number, now = Date.now()) {
+  db.transaction(() => {
+    db.prepare('UPDATE AppPasswordCredential SET revoked_at=? WHERE member_id=?').run(now, memberId);
+    db.prepare('UPDATE AppSession SET revoked_at=? WHERE member_id=? AND revoked_at IS NULL').run(now, memberId);
+  })();
+}
+
+export function verifyAppPassword(db: AdminDb, phone: string, password: string, ip: string, now = Date.now()) {
+  if (!/^1\d{10}$/.test(phone) || password.length < 1 || password.length > 128) throw new AppError('手机号或密码不正确', 401);
+  // Persist throttling before verification, including failed and unknown-account requests.
+  db.prepare('DELETE FROM AppPasswordAttempt WHERE window_start<?').run(now - 600000);
+  for (const [key, limit] of [[hash('phone:' + phone), 5], [hash('ip:' + ip), 30]] as const) {
+    const row = db.prepare('SELECT attempts FROM AppPasswordAttempt WHERE key_hash=?').get<{attempts:number}>(key);
+    if (row && row.attempts >= limit) throw new AppError('登录次数较多，请10分钟后重试', 429);
+  }
+  for (const key of [hash('phone:' + phone), hash('ip:' + ip)]) {
+    db.prepare(`INSERT INTO AppPasswordAttempt(key_hash,attempts,window_start) VALUES(?,1,?)
+      ON CONFLICT(key_hash) DO UPDATE SET attempts=attempts+1`).run(key, now);
+  }
+  const members = db.prepare('SELECT id FROM Member WHERE phone=? LIMIT 2').all<{id:number}>(phone);
+  const memberId = members.length === 1 ? Number(members[0].id) : 0;
+  const credential = db.prepare('SELECT * FROM AppPasswordCredential WHERE member_id=?').get<{salt:string;digest:string;expires_at:number;revoked_at:number|null}>(memberId);
+  const valid = credential && /^[a-f0-9]{32}$/.test(credential.salt) && /^[a-f0-9]{64}$/.test(credential.digest);
+  const candidate = scryptSync(password, valid ? credential.salt : '00000000000000000000000000000000', 32, { N: 32768, r: 8, p: 1, maxmem: 64 * 1024 * 1024 });
+  if (!timingSafeEqual(candidate, Buffer.from(valid ? credential.digest : '0'.repeat(64), 'hex')) || !valid || credential.revoked_at !== null || credential.expires_at <= now) throw new AppError('手机号或密码不正确', 401);
+  const member = activeMember(db, memberId);
+  if (Number(member.id) !== memberId) throw new AppError('手机号或密码不正确', 401);
+  // Keep the per-IP counter on success so one valid account cannot clear a burst limit.
+  db.prepare('DELETE FROM AppPasswordAttempt WHERE key_hash=?').run(hash('phone:' + phone));
+  return memberId;
+}
+export function requestAccountDeletion(db: AdminDb, memberId: number, now = Date.now(), receiptToken = '') {
+  if (receiptToken && !/^eva_d_[A-Za-z0-9_-]{43}$/.test(receiptToken)) throw new AppError('注销回执无效');
+  return db.transaction(() => {
+    const existing = db.prepare("SELECT id,status,requested_at FROM AppDeletionRequest WHERE member_id=? AND status='pending'").get<{id:string;status:string;requested_at:number}>(memberId);
+    const id = existing?.id || randomUUID();
+    if (!existing) db.prepare('INSERT INTO AppDeletionRequest(id,member_id,requested_at) VALUES(?,?,?)').run(id, memberId, now);
+    // Seven calendar days is an internal deadline stricter than seven working days;
+    // holiday/weekend adjustments can never postpone this deadline.
+    const dueAt = (existing?.requested_at || now) + 7 * 86400_000;
+    if (receiptToken) {
+      const receipt = db.prepare('SELECT token_hash FROM AppDeletionReceipt WHERE request_id=?').get<{token_hash:string}>(id);
+      if (receipt && receipt.token_hash !== hash(receiptToken)) throw new AppError('注销回执已存在，请使用原回执查询', 409);
+      db.prepare('INSERT OR IGNORE INTO AppDeletionReceipt(token_hash,request_id,due_at) VALUES(?,?,?)').run(hash(receiptToken), id, dueAt);
+    }
+    db.prepare('UPDATE AppSession SET revoked_at=? WHERE member_id=? AND revoked_at IS NULL').run(now, memberId);
+    if (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='MemberDeviceSession'").get()) {
+      db.prepare("UPDATE MemberDeviceSession SET revoked_at_ms=?,revoke_reason='account_deletion' WHERE member_id=? AND revoked_at_ms=0").run(now, memberId);
+    }
+    return { id, status: 'pending', requestedAt: existing?.requested_at || now, dueAt, processingWorkingDays: 7 };
+  })();
+}
+
+export function accountDeletionReceipt(db: AdminDb, token: string, acknowledge = false, now = Date.now()) {
+  if (!/^eva_d_[A-Za-z0-9_-]{43}$/.test(token)) throw new AppError('注销回执不存在', 404);
+  const row = db.prepare(`SELECT r.id,r.status,r.requested_at,r.completed_at,p.due_at,p.notice,p.acknowledged_at
+    FROM AppDeletionReceipt p JOIN AppDeletionRequest r ON r.id=p.request_id WHERE p.token_hash=?`).get<any>(hash(token));
+  if (!row) throw new AppError('注销回执不存在', 404);
+  if (acknowledge && row.status === 'completed') db.prepare('UPDATE AppDeletionReceipt SET acknowledged_at=COALESCE(acknowledged_at,?) WHERE token_hash=?').run(now, hash(token));
+  return { id:row.id, status:row.status, requestedAt:row.requested_at, dueAt:row.due_at, completedAt:row.completed_at,
+    overdue:row.status !== 'completed' && now > row.due_at, processingWorkingDays:7,
+    notice:row.notice || '已受理，将在7个工作日内完成。请保留本机回执，处理完成后在此查看结果。',
+    retention:db.prepare('SELECT id,scope,basis,expires_at AS expiresAt FROM AppDeletionRetention WHERE request_id=? ORDER BY expires_at').all(row.id) };
 }
 
 export function saveAppCheckpoint(db: AdminDb, memberId: number, lessonId: number, input: {progress:number;duration:number;revision:number}, now = Date.now()) {

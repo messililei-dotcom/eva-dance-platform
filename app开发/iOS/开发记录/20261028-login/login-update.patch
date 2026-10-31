@@ -1,0 +1,757 @@
+--- before/Sources/EvaDanceApp/EvaDanceApp.swift
++++ after/Sources/EvaDanceApp/EvaDanceApp.swift
+@@ -21,89 +21,6 @@
+                 Button("知道了") { session.error = nil }
+             } message: { Text(session.error ?? "") }
+         }
+-    }
+-}
+-struct LoginView: View {
+-    @EnvironmentObject var session: Session
+-    @Environment(\.dismiss) private var dismiss
+-    @State private var phone = ""
+-    @State private var code = ""
+-    @State private var password = ""
+-    @State private var passwordLogin = false
+-    @State private var agreed = false
+-    @State private var busy = false
+-    @State private var sentAt: Date?
+-    var body: some View {
+-        NavigationStack {
+-            Form {
+-                Section {
+-                    Image("BrandLogo").resizable().scaledToFit().frame(width: 88, height: 88)
+-                        .accessibilityLabel("伊娃东方舞 SWOD 标志")
+-                    Text("东方舞圈").font(.largeTitle.bold())
+-                    Text("登录后同步课程、学习进度与个人资料").foregroundStyle(.secondary)
+-                }
+-                Section {
+-                    Toggle("我已阅读并同意服务条款和隐私政策", isOn: $agreed)
+-                    HStack {
+-                        Link("隐私政策", destination: URL(string: "https://www.swod.com.cn/privacy")!)
+-                        Spacer()
+-                        Link("服务条款", destination: URL(string: "https://www.swod.com.cn/terms")!)
+-                    }
+-                }
+-                #if os(iOS) && canImport(ATAuthSDK)
+-                Section {
+-                    Button(busy ? "处理中…" : "本机号码一键登录") {
+-                        perform {
+-                            let availability: CarrierAvailability = try await session.transport.request("/config")
+-                            guard availability.oneTapLogin == true else { throw APIError.service("本机号码登录暂未开放，请使用短信验证码。") }
+-                            let token = try await CarrierLogin.shared.token()
+-                            try await session.loginWithCarrier(token: token)
+-                        }
+-                    }.disabled(busy || !agreed)
+-                    Text("请先勾选下方协议；不支持时可使用短信验证码登录。").font(.caption).foregroundStyle(.secondary)
+-                }
+-                #endif
+-                Section("手机号登录") {
+-                    TextField("请输入手机号", text: $phone).textContentType(.telephoneNumber)
+-                    Picker("登录方式", selection: $passwordLogin) {
+-                        Text("短信验证码").tag(false)
+-                        Text("账号密码").tag(true)
+-                    }.pickerStyle(.segmented).disabled(busy)
+-                    if passwordLogin {
+-                        SecureField("账号密码", text: $password).textContentType(.password)
+-                        Text("使用已设置的账号密码；忘记密码时可切换短信登录。").font(.caption).foregroundStyle(.secondary)
+-                    } else {
+-                    TextField("短信验证码", text: $code).textContentType(.oneTimeCode)
+-                    TimelineView(.periodic(from: .now, by: 1)) { context in
+-                        let remaining = max(0, 60 - Int(context.date.timeIntervalSince(sentAt ?? .distantPast)))
+-                        Button(remaining > 0 ? "\(remaining) 秒后重发" : "获取验证码") {
+-                            perform {
+-                                let body = try JSONSerialization.data(withJSONObject: ["phone": phone])
+-                                let _: Empty = try await session.api.request("/send-code", method: "POST", body: body)
+-                                sentAt = .now
+-                            }
+-                        }.disabled(busy || !validPhone || !agreed || remaining > 0)
+-                    }
+-                    }
+-                    Button(busy ? "处理中…" : "登录并开始学习") {
+-                        perform {
+-                            if passwordLogin {
+-                                defer { password = "" }
+-                                try await session.loginWithPassword(phone: phone, password: password)
+-                            } else { try await session.login(phone: phone, code: code) }
+-                        }
+-                    }.disabled(busy || !agreed || !validPhone || (passwordLogin ? password.isEmpty : code.isEmpty))
+-                }
+-            }.disabled(busy).evaCompactLayout().navigationTitle("欢迎回来")
+-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() }.disabled(busy) } }
+-                .onDisappear { password = "" }
+-                .onChange(of: passwordLogin) { _ in password = "" }
+-        }
+-    }
+-    private var validPhone: Bool { phone.range(of: "^1[0-9]{10}$", options: .regularExpression) != nil }
+-    private func perform(_ operation: @escaping () async throws -> Void) {
+-        busy = true
+-        Task { defer { busy = false }; do { try await operation() } catch is CancellationError {} catch { session.handle(error) } }
+     }
+ }
+ struct MainTabs: View {
+--- before/Sources/EvaDanceApp/CarrierLogin.swift
++++ after/Sources/EvaDanceApp/CarrierLogin.swift
+@@ -3,11 +3,29 @@
+ struct CarrierAvailability: Decodable { let oneTapLogin: Bool? }
+ #if os(iOS)
+ import UIKit
++import SwiftUI
+ #if canImport(ATAuthSDK)
+ import ATAuthSDK
+ #endif
+ @MainActor final class CarrierLogin {
+     static let shared = CarrierLogin()
++    static var componentAvailable: Bool {
++        #if canImport(ATAuthSDK)
++        return true
++        #else
++        return false
++        #endif
++    }
++    static var configured: Bool { sdkSecret != nil }
++    private static var sdkSecret: String? {
++        guard let url = Bundle.main.url(forResource: "NumberAuth.local", withExtension: "plist"),
++              let data = try? Data(contentsOf: url),
++              let config = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: String],
++              config["bundleID"] == Bundle.main.bundleIdentifier,
++              let secret = config["sdkSecret"], !secret.isEmpty else { return nil }
++        return secret
++    }
++    func cancel() { finish(.failure(CancellationError())) }
+     private var pending: CheckedContinuation<String, Error>?
+     private var timeoutTask: Task<Void, Never>?
+     private var attempt = UUID()
+@@ -16,11 +34,7 @@
+         throw APIError.service("本机号码登录需要插有 SIM 卡的 iPhone，请在模拟器中使用短信登录。")
+         #elseif canImport(ATAuthSDK)
+         guard pending == nil else { throw APIError.service("正在获取本机号码，请稍候。") }
+-        guard let url = Bundle.main.url(forResource: "NumberAuth.local", withExtension: "plist"),
+-              let data = try? Data(contentsOf: url),
+-              let config = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: String],
+-              config["bundleID"] == Bundle.main.bundleIdentifier,
+-              let secret = config["sdkSecret"], !secret.isEmpty else {
++        guard let secret = Self.sdkSecret else {
+             throw APIError.service("本机号码登录配置未就绪，请使用短信登录。")
+         }
+         guard let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+@@ -28,9 +42,11 @@
+             throw APIError.service("请返回登录页后重试。")
+         }
+         while let presented = controller.presentedViewController { controller = presented }
+-        return try await withCheckedThrowingContinuation { continuation in
++        try Task.checkCancellation()
++        let request = UUID(); attempt = request
++        return try await withTaskCancellationHandler(operation: {
++          try await withCheckedThrowingContinuation { continuation in
+             pending = continuation
+-            let request = UUID(); attempt = request
+             timeoutTask = Task {
+                 do { try await Task.sleep(nanoseconds: 20_000_000_000) } catch { return }
+                 guard self.attempt == request else { return }
+@@ -43,29 +59,46 @@
+                         self.finish(.failure(APIError.service("号码认证初始化失败，请使用短信登录。"))); return
+                     }
+                     let model = TXCustomModel()
+-                    model.navTitle = NSAttributedString(string: "本机号码登录")
+-                    model.loginBtnText = NSAttributedString(string: "一键登录")
++                    let accent = UIColor(EvaBrand.red)
++                    model.navTitle = NSAttributedString(string: "SWOD 本机号码登录", attributes: [.foregroundColor: UIColor.label])
++                    model.navColor = .systemBackground
++                    if let logo = UIImage(named: "BrandLogo") {
++                        model.logoImage = UIGraphicsImageRenderer(size: CGSize(width: 80, height: 80)).image { context in
++                            UIColor.white.setFill(); context.fill(CGRect(x: 0, y: 0, width: 80, height: 80))
++                            logo.draw(in: CGRect(x: 6, y: 6, width: 68, height: 68))
++                        }
++                    }
++                    model.loginBtnText = NSAttributedString(string: "本机号码一键登录", attributes: [.foregroundColor: UIColor(EvaBrand.onAccent), .font: UIFont.preferredFont(forTextStyle: .headline)])
++                    model.changeBtnTitle = NSAttributedString(string: "使用短信验证登录", attributes: [.foregroundColor: accent])
++                    model.privacyColors = [.secondaryLabel, accent]
++                    model.loginBtnBgImgs = [accent, .systemGray4, accent.withAlphaComponent(0.85)].map { color in
++                        UIGraphicsImageRenderer(size: CGSize(width: 1, height: 1)).image { context in
++                            color.setFill(); context.fill(CGRect(x: 0, y: 0, width: 1, height: 1))
++                        }
++                    }
+                     model.checkBoxIsChecked = false
+                     model.privacyOne = ["隐私政策", "https://www.swod.com.cn/privacy"]
+                     model.privacyTwo = ["服务条款", "https://www.swod.com.cn/terms"]
+                     TXCommonHandler.sharedInstance().getLoginToken(withTimeout: 8, controller: controller, model: model) { result in
+                         Task { @MainActor in
+                             guard self.pending != nil, self.attempt == request else { return }
+-                            let code = result["resultCode"] as? String ?? ""
+-                            if code == "600000", let token = result["token"] as? String, !token.isEmpty {
+-                                self.finish(.success(token))
+-                            } else if ["700000", "700001"].contains(code) {
+-                                self.finish(.failure(CancellationError()))
+-                            } else if code == "600001" || code.hasPrefix("700") {
+-                                // Presentation, checkbox and agreement events are not a login result.
+-                            } else {
+-                                self.finish(.failure(APIError.service("暂时无法获取本机号码，请使用短信验证码登录。")))
++                            switch CarrierTokenEvent.parse(code: result["resultCode"] as? String ?? "", token: result["token"] as? String) {
++                            case .token(let token): self.finish(.success(token))
++                            case .cancelled: self.finish(.failure(CancellationError()))
++                            case .progress: break
++                            case .failed: self.finish(.failure(APIError.service("暂时无法获取本机号码，请使用短信验证登录。")))
+                             }
+                         }
+                     }
+                 }
+             }
+-        }
++          }
++        }, onCancel: {
++            Task { @MainActor in
++                guard self.attempt == request else { return }
++                self.finish(.failure(CancellationError()))
++            }
++        })
+         #else
+         throw APIError.service("当前构建不含号码认证组件，请使用短信登录。")
+         #endif
+--- before/Sources/EvaDanceApp/Session.swift
++++ after/Sources/EvaDanceApp/Session.swift
+@@ -56,18 +56,27 @@
+         if let value = TokenStore.read(), let data = value.data(using: .utf8) { credentials = try? JSONDecoder().decode(Login.self, from: data) }
+     }
+     func login(phone: String, code: String) async throws {
++        let version = generation
+         let body = try JSONSerialization.data(withJSONObject: ["phone": phone, "code": code, "deviceName": "伊娃东方舞 iPhone / iPad"])
+         let result: Login = try await transport.request("/auth/login", method: "POST", body: body)
++        try Task.checkCancellation()
++        guard version == generation else { throw CancellationError() }
+         try store(result); showLogin = false
+     }
+     func loginWithPassword(phone: String, password: String) async throws {
++        let version = generation
+         let body = try JSONSerialization.data(withJSONObject: ["phone": phone, "password": password, "deviceName": "伊娃东方舞 iPhone / iPad"])
+         let result: Login = try await transport.request("/auth/password-login", method: "POST", body: body)
++        try Task.checkCancellation()
++        guard version == generation else { throw CancellationError() }
+         try store(result); showLogin = false
+     }
+     func loginWithCarrier(token: String) async throws {
++        let version = generation
+         let body = try JSONSerialization.data(withJSONObject: ["accessToken": token, "deviceName": "伊娃东方舞 iPhone / iPad"])
+         let result: Login = try await transport.request("/auth/one-tap", method: "POST", body: body)
++        try Task.checkCancellation()
++        guard version == generation else { throw CancellationError() }
+         try store(result); showLogin = false
+     }
+     private func store(_ value: Login) throws {
+@@ -94,6 +103,8 @@
+     }
+     func clear() { generation += 1; refreshTask?.cancel(); refreshTask = nil; TokenStore.delete(); credentials = nil; unlockedSeries = []; accessAccount = nil; courseAccessReady = true }
+     func handle(_ error: Error) {
++        // Closing a login sheet or replacing the account cancels obsolete view requests.
++        guard !(error is CancellationError), (error as? URLError)?.code != .cancelled else { return }
+         if case APIError.sessionExpired = error { clear(); showLogin = true }
+         self.error = error.localizedDescription
+     }
+--- before/scripts/generate_project.py
++++ after/scripts/generate_project.py
+@@ -45,7 +45,7 @@
+ for mode in ['Debug','Release']:
+     configs.append(put('target-'+mode, 'XCBuildConfiguration', name=mode, buildSettings={
+         'PRODUCT_BUNDLE_IDENTIFIER':'cn.com.swod.app', 'PRODUCT_NAME':'$(TARGET_NAME)',
+-        'MARKETING_VERSION':'1.0.0','CURRENT_PROJECT_VERSION':'7', 'IPHONEOS_DEPLOYMENT_TARGET':'16.0',
++        'MARKETING_VERSION':'1.0.0','CURRENT_PROJECT_VERSION':'8', 'IPHONEOS_DEPLOYMENT_TARGET':'16.0',
+         'TARGETED_DEVICE_FAMILY':'1,2', 'SDKROOT':'iphoneos','SUPPORTED_PLATFORMS':'iphoneos iphonesimulator',
+         'SWIFT_VERSION':'5.0','CODE_SIGN_STYLE':'Automatic','INFOPLIST_FILE':'Resources/Info.plist',
+         'GENERATE_INFOPLIST_FILE':'NO', 'SWIFT_OPTIMIZATION_LEVEL':'-Onone' if mode=='Debug' else '-O',
+--- before/Tests/EvaCoreTests/EvaCoreTests.swift
++++ after/Tests/EvaCoreTests/EvaCoreTests.swift
+@@ -176,8 +176,43 @@
+ }
+ 
+ 
++private func checkLoginInputsAndCarrierEvents() {
++    XCTAssertEqual(LoginInputPolicy.phone(" +86 138-0000-0000 "), "13800000000")
++    XCTAssertTrue(LoginInputPolicy.validPhone("+86 138 0000 0000"))
++    for bad in ["1380000000", "23800000000", "13800000000x", "１３８００００００００", "13800000000/1"] {
++        XCTAssertFalse(LoginInputPolicy.validPhone(bad))
++    }
++    for bad in ["1", "12345", "1234567", "12a456", "１２３４５６"] { XCTAssertFalse(LoginInputPolicy.validCode(bad)) }
++    XCTAssertTrue(LoginInputPolicy.validCode(" 123456\n"))
++    for method in LoginMethod.allCases {
++        XCTAssertFalse(LoginInputPolicy.canSubmit(method, phone: "13800000000", code: "123456", password: "secret", agreed: false, busy: false, carrierReady: true))
++        XCTAssertFalse(LoginInputPolicy.canSubmit(method, phone: "13800000000", code: "123456", password: "secret", agreed: true, busy: true, carrierReady: true))
++    }
++    XCTAssertFalse(LoginInputPolicy.canSubmit(.carrier, phone: "", code: "", password: "", agreed: true, busy: false, carrierReady: false))
++    XCTAssertTrue(LoginInputPolicy.canSubmit(.carrier, phone: "", code: "", password: "", agreed: true, busy: false, carrierReady: true))
++    XCTAssertFalse(LoginInputPolicy.canSubmit(.sms, phone: "13800000000", code: "1", password: "", agreed: true, busy: false, carrierReady: true))
++    XCTAssertTrue(LoginInputPolicy.canSubmit(.sms, phone: "13800000000", code: "123456", password: "", agreed: true, busy: false, carrierReady: false))
++    XCTAssertFalse(LoginInputPolicy.canSubmit(.password, phone: "13800000000", code: "", password: "", agreed: true, busy: false, carrierReady: false))
++    let now = Date(timeIntervalSince1970: 1000)
++    XCTAssertEqual(LoginInputPolicy.resendSeconds(sentAt: now, now: now), 60)
++    XCTAssertEqual(LoginInputPolicy.resendSeconds(sentAt: now, now: now.addingTimeInterval(59.1)), 1)
++    XCTAssertEqual(LoginInputPolicy.resendSeconds(sentAt: now, now: now.addingTimeInterval(60)), 0)
++    XCTAssertEqual(LoginInputPolicy.resendSeconds(sentAt: now.addingTimeInterval(30), now: now), 60)
++    for code in ["600001", "700002", "700003", "700004", "700006", "700007", "700008", "700009"] {
++        XCTAssertEqual(CarrierTokenEvent.parse(code: code, token: "ignored-operator-token"), .progress)
++    }
++    for code in ["700000", "700001", "700010", "700020"] { XCTAssertEqual(CarrierTokenEvent.parse(code: code, token: nil), .cancelled) }
++    for code in ["600002", "600007", "600008", "600015", "unknown"] { XCTAssertEqual(CarrierTokenEvent.parse(code: code, token: nil), .failed) }
++    XCTAssertEqual(CarrierTokenEvent.parse(code: "600000", token: nil), .failed)
++    XCTAssertEqual(CarrierTokenEvent.parse(code: "600000", token: "short"), .failed)
++    XCTAssertEqual(CarrierTokenEvent.parse(code: "600000", token: "operator-token\ninvalid"), .failed)
++    XCTAssertEqual(CarrierTokenEvent.parse(code: "600000", token: "operator-test-token"), .token("operator-test-token"))
++    print("Login input, consent, cooldown and operator event checks passed")
++}
++
+ @main struct Checks {
+     static func main() async throws {
++        checkLoginInputsAndCarrierEvents()
+         let suite = EvaCoreTests()
+         try await suite.testAuthorizedSeriesAndHeaders()
+         try await suite.testCourseIDsRemainSeparateFromLessonIDs()
+--- before/scripts/fixture_server.py
++++ after/scripts/fixture_server.py
+@@ -4,7 +4,7 @@
+ """
+ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+ from urllib.parse import urlsplit
+-import json,time
++import json,time,os
+ series=[dict(id=1,name='东方舞基础训练',subtitle='从基本功到组合',teacher='测试老师',category='基础',description='本地演示数据，用于界面验收。',total_courses=2,cover_image=''),dict(id=2,name='舞台表现与成品舞',subtitle='节奏、表达与舞台',teacher='测试老师',total_courses=1,cover_image='')]
+ products=[dict(id='fixture-dress',name='练习舞裙',category='舞服',spec='练习款',size='M',color='酒红',priceFen=19900,stock=8,image='')]
+ notes=[];bookmarks=[]
+@@ -23,7 +23,11 @@
+  def dispatch(self):
+   path=urlsplit(self.path).path.removeprefix('/api/app/v1');method=self.command
+   body=json.loads(self.rfile.read(int(self.headers.get('Content-Length','0'))) or '{}')
++  if path=='/config':return self.reply(dict(oneTapLogin=False,minimumVersion='1.0.0'))
+   if path=='/send-code':return self.reply({})
++  if path=='/auth/password-login':
++   if body.get('phone')!='13800000000' or body.get('password')!='fixture-only-password':return self.reply(status=401,message='手机号或密码不正确')
++   return self.reply(dict(token='fixture-access',refreshToken='fixture-refresh',expiresAt=int(time.time()*1000)+900000,memberId=1,sessionId='fixture-device'))
+   if path in ['/auth/login','/auth/refresh']:
+    if path.endswith('login') and (body.get('phone')!='13800000000' or body.get('code')!='123456'):return self.reply(status=400,message='测试账号为 13800000000 / 123456')
+    return self.reply(dict(token='fixture-access',refreshToken='fixture-refresh',expiresAt=int(time.time()*1000)+900000,memberId=1,sessionId='fixture-device'))
+@@ -58,5 +62,6 @@
+   if method=='GET':return self.reply([])
+   return self.reply(dict(changed=1,status='pending'))
+ if __name__=='__main__':
+- print('UI fixture server: http://127.0.0.1:18765/api/app/v1 (no production access)',flush=True)
+- ThreadingHTTPServer(('127.0.0.1',18765),Handler).serve_forever()
++ port=int(os.environ.get('EVA_FIXTURE_PORT','18765'))
++ print(f'UI fixture server: http://127.0.0.1:{port}/api/app/v1 (no production access)',flush=True)
++ ThreadingHTTPServer(('127.0.0.1',port),Handler).serve_forever()
+--- before/Sources/EvaDanceApp/LoginView.swift
++++ after/Sources/EvaDanceApp/LoginView.swift
+@@ -0,0 +1,232 @@
++import SwiftUI
++import EvaCore
++
++struct LoginView: View {
++    @EnvironmentObject private var session: Session
++    @Environment(\.dismiss) private var dismiss
++    @Environment(\.dynamicTypeSize) private var typeSize
++    @StateObject private var state = LoginState()
++    @State private var showPassword = false
++    @FocusState private var focused: Field?
++    private enum Field { case phone, code, password }
++    private enum Layout {
++        static let gap: CGFloat = 24
++        static let cardInset: CGFloat = 20
++        static let corner: CGFloat = 20
++        static let fieldHeight: CGFloat = 54
++        static let contentWidth: CGFloat = 480
++    }
++    var body: some View {
++        NavigationStack {
++            ScrollView {
++                VStack(alignment: .leading, spacing: Layout.gap) {
++                    header
++                    loginCard
++                    agreement
++                    submitButton
++                    VStack(spacing: 8) {
++                        Text("与官网、小程序共用学习账号").foregroundStyle(.secondary)
++                        Link("登录遇到问题？联系客服", destination: URL(string: "https://www.swod.com.cn/contact")!)
++                            .frame(minHeight: 44)
++                    }.font(.subheadline).frame(maxWidth: .infinity)
++                }
++                .frame(maxWidth: Layout.contentWidth)
++                .padding(Layout.gap).frame(maxWidth: .infinity)
++            }
++            .background(EvaBrand.canvas)
++            .scrollDismissesKeyboard(.interactively)
++            .navigationTitle("登录 / 注册")
++            #if os(iOS)
++            .navigationBarTitleDisplayMode(.inline)
++            #endif
++            .toolbar {
++                ToolbarItem(placement: .cancellationAction) {
++                    Button("关闭") { state.cancel(); dismiss() }.accessibilityIdentifier("login.close")
++                }
++                #if os(iOS)
++                ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("完成") { focused = nil } }
++                #endif
++            }
++            .interactiveDismissDisabled(state.busy)
++            .task { await state.refreshCarrier(session: session) }
++            .onChange(of: state.phone) { _ in state.phoneChanged() }
++            .onChange(of: state.method) { _ in state.methodChanged(); showPassword = false; focused = nil }
++            .onDisappear { state.password = "" }
++        }.tint(EvaBrand.red)
++    }
++    private var header: some View {
++        VStack(alignment: .leading, spacing: 18) {
++            HStack(spacing: 12) {
++                Image("BrandLogo").resizable().scaledToFit().frame(width: 44, height: 44)
++                    .padding(6).background(.white, in: RoundedRectangle(cornerRadius: 12)).accessibilityHidden(true)
++                VStack(alignment: .leading, spacing: 4) {
++                    Text("SWOD · 伊娃东方舞").font(.headline)
++                    Text("东方舞圈").font(.subheadline).foregroundStyle(.secondary)
++                }
++            }
++            Text("欢迎回来").font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
++            Text("登录后，继续你的学习与舞台之旅。")
++                .font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++        }.padding(.top, 4)
++    }
++    private var loginCard: some View {
++        VStack(alignment: .leading, spacing: 20) {
++            Group {
++                if typeSize.isAccessibilitySize { methodPicker.pickerStyle(.menu) }
++                else { methodPicker.pickerStyle(.segmented) }
++            }
++            if state.method == .carrier { carrierContent }
++            else {
++                VStack(alignment: .leading, spacing: 8) {
++                    Text("手机号码").font(.subheadline.bold())
++                    HStack(spacing: 12) {
++                        Text("+86").foregroundStyle(.secondary).accessibilityLabel("中国大陆，区号加86")
++                        Divider().frame(height: 20)
++                        phoneField.focused($focused, equals: .phone).accessibilityIdentifier("login.phone")
++                    }.padding(.horizontal, 14).frame(minHeight: Layout.fieldHeight)
++                        .background(EvaBrand.canvas, in: RoundedRectangle(cornerRadius: 12))
++                }
++                if state.method == .sms { smsContent } else { passwordContent }
++            }
++            if let error = state.error {
++                Label(error, systemImage: "exclamationmark.circle.fill")
++                    .font(.subheadline).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
++                    .accessibilityIdentifier("login.error")
++            }
++            if let notice = state.notice {
++                Label(notice, systemImage: "checkmark.circle")
++                    .font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++                    .accessibilityIdentifier("login.notice")
++            }
++        }
++        .padding(Layout.cardInset).frame(maxWidth: .infinity, alignment: .leading)
++        .background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: Layout.corner))
++    }
++    private var methodPicker: some View {
++        Picker("登录方式", selection: $state.method) {
++            ForEach(LoginMethod.allCases) { method in Text(method.title).tag(method) }
++        }.disabled(state.busy).accessibilityIdentifier("login.method")
++    }
++    private var carrierContent: some View {
++        VStack(alignment: .leading, spacing: 14) {
++            Label("本机号码一键登录", systemImage: "simcard")
++                .font(.headline).foregroundStyle(EvaBrand.red)
++            Text(state.carrierMessage).font(.subheadline).foregroundStyle(.secondary)
++                .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("login.carrierStatus")
++            if state.carrierStatus == .ready {
++                Text("选择后由阿里云及运营商验证本机号码，确认授权后登录。")
++                    .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++            }
++            if state.carrierStatus == .checking { ProgressView("检查登录服务") }
++            else if state.carrierStatus != .ready {
++                Button("使用短信验证") { state.method = .sms; focused = .phone }
++                    .buttonStyle(.bordered).controlSize(.large).frame(minHeight: 44)
++                if state.carrierStatus == .failed || state.carrierStatus == .unavailable {
++                    Button("重新检查") { Task { await state.refreshCarrier(session: session) } }.frame(minHeight: 44)
++                }
++            }
++        }
++    }
++    private var phoneField: some View {
++        TextField("请输入手机号", text: $state.phone).textContentType(.telephoneNumber)
++            #if os(iOS)
++            .keyboardType(.phonePad).textInputAutocapitalization(.never)
++            #endif
++            .autocorrectionDisabled().disabled(state.busy)
++    }
++    private var smsContent: some View {
++        VStack(alignment: .leading, spacing: 8) {
++            Text("短信验证码").font(.subheadline.bold())
++            ViewThatFits(in: .horizontal) {
++                HStack(spacing: 10) { codeField; sendCodeButton }
++                VStack(alignment: .leading, spacing: 10) { codeField; sendCodeButton }
++            }
++            Text("未注册的手机号验证后将创建学习账号。")
++                .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++        }
++    }
++    private var codeField: some View {
++        TextField("6 位验证码", text: $state.code).textContentType(.oneTimeCode)
++            #if os(iOS)
++            .keyboardType(.numberPad)
++            #endif
++            .focused($focused, equals: .code).autocorrectionDisabled().disabled(state.busy)
++            .padding(.horizontal, 14).frame(minWidth: 100, minHeight: Layout.fieldHeight)
++            .background(EvaBrand.canvas, in: RoundedRectangle(cornerRadius: 12))
++            .accessibilityIdentifier("login.code")
++    }
++    private var sendCodeButton: some View {
++        TimelineView(.periodic(from: .now, by: 1)) { context in
++            let remaining = state.resendSeconds(now: context.date)
++            Button {
++                focused = nil
++                state.sendCode(session: session)
++            } label: {
++                Text(state.operation == .sendCode ? "发送中…" : remaining > 0 ? "\(remaining) 秒后重发" : "获取验证码")
++                    .font(.subheadline.bold()).fixedSize().frame(minWidth: 104, minHeight: Layout.fieldHeight)
++            }
++            .disabled(state.busy || !state.agreed || !LoginInputPolicy.validPhone(state.phone) || remaining > 0)
++            .accessibilityIdentifier("login.sendCode")
++        }
++    }
++    private var passwordContent: some View {
++        VStack(alignment: .leading, spacing: 8) {
++            Text("账号密码").font(.subheadline.bold())
++            HStack(spacing: 8) {
++                Group {
++                    if showPassword { TextField("请输入账号密码", text: $state.password) }
++                    else { SecureField("请输入账号密码", text: $state.password) }
++                }
++                .textContentType(.password)
++                #if os(iOS)
++                .textInputAutocapitalization(.never)
++                #endif
++                .autocorrectionDisabled().focused($focused, equals: .password).disabled(state.busy)
++                .accessibilityIdentifier("login.password")
++                Button(showPassword ? "隐藏密码" : "显示密码", systemImage: showPassword ? "eye.slash" : "eye") {
++                    showPassword.toggle(); focused = .password
++                }.labelStyle(.iconOnly).frame(width: 44, height: 44).disabled(state.busy)
++            }.padding(.horizontal, 14).frame(minHeight: Layout.fieldHeight)
++                .background(EvaBrand.canvas, in: RoundedRectangle(cornerRadius: 12))
++            Button("忘记密码？使用短信验证登录") { state.method = .sms; focused = .phone }
++                .font(.subheadline).frame(minHeight: 44).disabled(state.busy)
++        }
++    }
++    private var agreement: some View {
++        VStack(alignment: .leading, spacing: 2) {
++            Button { state.agreed.toggle() } label: {
++                HStack(alignment: .center, spacing: 10) {
++                    Image(systemName: state.agreed ? "checkmark.circle.fill" : "circle")
++                        .font(.title3).foregroundStyle(state.agreed ? EvaBrand.red : .secondary)
++                    Text("我已阅读并同意以下协议").font(.subheadline).foregroundStyle(.primary)
++                        .fixedSize(horizontal: false, vertical: true)
++                }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
++            }
++            .buttonStyle(.plain).disabled(state.busy)
++            .accessibilityValue(state.agreed ? "已同意" : "未同意").accessibilityIdentifier("login.consent")
++            ViewThatFits(in: .horizontal) {
++                HStack(spacing: 16) { policyLinks }
++                VStack(alignment: .leading, spacing: 2) { policyLinks }
++            }.font(.subheadline).padding(.leading, 30)
++        }
++    }
++    @ViewBuilder private var policyLinks: some View {
++        Link("《隐私政策》", destination: URL(string: "https://www.swod.com.cn/privacy")!).frame(minHeight: 44).fixedSize(horizontal: true, vertical: false)
++        Link("《服务条款》", destination: URL(string: "https://www.swod.com.cn/terms")!).frame(minHeight: 44).fixedSize(horizontal: true, vertical: false)
++    }
++    private var submitButton: some View {
++        Button {
++            focused = nil
++            state.submit(session: session)
++        } label: {
++            HStack(spacing: 10) {
++                if state.busy && state.operation != .sendCode { ProgressView().tint(EvaBrand.onAccent) }
++                Text(state.busy && state.operation != .sendCode ? "正在登录…" : state.method == .carrier ? "本机号码一键登录" : "登录并开始学习")
++                    .font(.headline).fixedSize(horizontal: false, vertical: true)
++            }.frame(maxWidth: .infinity, minHeight: 44).padding(.vertical, 6)
++        }
++        .buttonStyle(.borderedProminent).controlSize(.large)
++        .foregroundStyle(state.canSubmit ? EvaBrand.onAccent : Color.primary)
++        .disabled(!state.canSubmit).accessibilityIdentifier("login.submit")
++    }
++}
+--- before/Sources/EvaDanceApp/LoginState.swift
++++ after/Sources/EvaDanceApp/LoginState.swift
+@@ -0,0 +1,123 @@
++import SwiftUI
++import EvaCore
++
++@MainActor final class LoginState: ObservableObject {
++    @Published var phone = ""
++    @Published var code = ""
++    @Published var password = ""
++    @Published var method: LoginMethod = .sms
++    @Published var agreed = false
++    @Published private(set) var operation: Operation?
++    @Published private(set) var error: String?
++    @Published private(set) var notice: String?
++    @Published private(set) var carrierStatus: CarrierStatus = .checking
++    @Published private(set) var sentDates: [String: Date] = [:]
++    var methodChosen = false
++    private var work: Task<Void, Never>?
++    private var attempt = UUID()
++    enum Operation { case sendCode, sms, password, carrier }
++    enum CarrierStatus { case checking, ready, simulator, unavailable, unconfigured, missingComponent, failed }
++    var busy: Bool { operation != nil }
++    var canSubmit: Bool {
++        LoginInputPolicy.canSubmit(method, phone: phone, code: code, password: password,
++                                  agreed: agreed, busy: busy, carrierReady: carrierStatus == .ready)
++    }
++    var carrierMessage: String {
++        switch carrierStatus {
++        case .checking: return "正在检查本机号码登录是否可用…"
++        case .ready: return "无需填写手机号和验证码，在运营商授权页确认后即可登录。"
++        case .simulator: return "模拟器无法进行 SIM 卡认证，请使用短信验证或账号密码登录。"
++        case .unavailable: return "本机号码登录暂未开放，请使用短信验证或账号密码登录。"
++        case .unconfigured, .missingComponent: return "此版本暂不支持本机号码登录，请使用短信验证或账号密码登录。"
++        case .failed: return "暂时无法检查登录服务，可重新检查，或使用短信验证、账号密码登录。"
++        }
++    }
++    func refreshCarrier(session: Session) async {
++        carrierStatus = .checking
++        do {
++            let config: CarrierAvailability = try await session.transport.request("/config")
++            try Task.checkCancellation()
++            #if os(iOS)
++            #if targetEnvironment(simulator)
++            carrierStatus = .simulator
++            #else
++            if !CarrierLogin.componentAvailable { carrierStatus = .missingComponent }
++            else if !CarrierLogin.configured { carrierStatus = .unconfigured }
++            else { carrierStatus = config.oneTapLogin == true ? .ready : .unavailable }
++            #endif
++            #else
++            carrierStatus = .missingComponent
++            #endif
++            if carrierStatus == .ready && !methodChosen && phone.isEmpty { method = .carrier }
++        } catch is CancellationError {} catch { carrierStatus = .failed }
++    }
++    func phoneChanged() { code = ""; error = nil; notice = nil }
++    func methodChanged() { methodChosen = true; password = ""; error = nil; notice = nil }
++    func resendSeconds(now: Date) -> Int {
++        LoginInputPolicy.resendSeconds(sentAt: sentDates[LoginInputPolicy.phone(phone)], now: now)
++    }
++    func sendCode(session: Session) {
++        guard agreed, !busy, LoginInputPolicy.validPhone(phone), resendSeconds(now: .now) == 0 else { return }
++        let target = LoginInputPolicy.phone(phone)
++        perform(.sendCode) {
++            let body = try JSONSerialization.data(withJSONObject: ["phone": target])
++            let _: Empty = try await session.transport.request("/send-code", method: "POST", body: body)
++            try Task.checkCancellation()
++            self.sentDates[target] = .now
++            self.notice = "验证码已发送，请查收短信。"
++        }
++    }
++    func submit(session: Session) {
++        guard canSubmit else { return }
++        let phone = LoginInputPolicy.phone(phone), code = LoginInputPolicy.code(code), secret = password
++        switch method {
++        case .sms: perform(.sms) { try await session.login(phone: phone, code: code) }
++        case .password: perform(.password) {
++            defer { self.password = "" }
++            try await session.loginWithPassword(phone: phone, password: secret)
++        }
++        case .carrier:
++            perform(.carrier) {
++                #if os(iOS)
++                // Recheck service before asking the user to authorize their SIM number.
++                let config: CarrierAvailability = try await session.transport.request("/config")
++                guard config.oneTapLogin == true else {
++                    self.carrierStatus = .unavailable
++                    throw APIError.service("本机号码登录暂未开放，请改用短信验证。")
++                }
++                let token = try await CarrierLogin.shared.token()
++                try Task.checkCancellation()
++                try await session.loginWithCarrier(token: token)
++                #else
++                throw APIError.service("当前设备不支持本机号码登录。")
++                #endif
++            }
++        }
++    }
++    func cancel() {
++        attempt = UUID(); work?.cancel(); work = nil; operation = nil; password = ""; code = ""
++        #if os(iOS)
++        CarrierLogin.shared.cancel()
++        #endif
++    }
++    private func perform(_ kind: Operation, operation action: @escaping () async throws -> Void) {
++        guard !busy else { return }
++        let request = UUID(); attempt = request
++        operation = kind; error = nil; notice = nil
++        work = Task {
++            defer { if self.attempt == request { self.operation = nil; self.work = nil } }
++            do { try await action() }
++            catch is CancellationError {
++                if self.attempt == request && kind == .carrier {
++                    self.method = .sms
++                    self.notice = "已取消本机号码登录，可使用短信验证。"
++                }
++            } catch {
++                guard self.attempt == request else { return }
++                if case APIError.sessionExpired = error {
++                    self.error = kind == .password ? "手机号或密码不正确，可切换短信验证登录。" : "验证未通过或已过期，请重新验证。"
++                } else { self.error = error.localizedDescription }
++            }
++        }
++    }
++}
+--- before/Sources/EvaCore/LoginInputPolicy.swift
++++ after/Sources/EvaCore/LoginInputPolicy.swift
+@@ -0,0 +1,55 @@
++import Foundation
++
++public enum LoginMethod: String, CaseIterable, Identifiable {
++    case carrier, sms, password
++    public var id: String { rawValue }
++    public var title: String {
++        switch self {
++        case .carrier: return "一键登录"
++        case .sms: return "短信验证"
++        case .password: return "账号密码"
++        }
++    }
++}
++
++public enum LoginInputPolicy {
++    public static func phone(_ input: String) -> String {
++        let compact = input.filter { !$0.isWhitespace && $0 != "-" }
++        return compact.hasPrefix("+86") ? String(compact.dropFirst(3)) : compact
++    }
++    public static func validPhone(_ input: String) -> Bool {
++        phone(input).range(of: "^1[0-9]{10}$", options: .regularExpression) != nil
++    }
++    public static func code(_ input: String) -> String { input.trimmingCharacters(in: .whitespacesAndNewlines) }
++    public static func validCode(_ input: String) -> Bool {
++        code(input).range(of: "^[0-9]{6}$", options: .regularExpression) != nil
++    }
++    public static func canSubmit(_ method: LoginMethod, phone: String, code: String, password: String,
++                                 agreed: Bool, busy: Bool, carrierReady: Bool) -> Bool {
++        guard agreed && !busy else { return false }
++        switch method {
++        case .carrier: return carrierReady
++        case .sms: return validPhone(phone) && validCode(code)
++        case .password: return validPhone(phone) && !password.isEmpty
++        }
++    }
++    public static func resendSeconds(sentAt: Date?, now: Date) -> Int {
++        guard let sentAt else { return 0 }
++        return max(0, min(60, Int(ceil(60 - now.timeIntervalSince(sentAt)))))
++    }
++}
++
++/// SDK page/checkbox events must never create a member session.
++/// https://help.aliyun.com/zh/pnvs/developer-reference/error-code-2/
++public enum CarrierTokenEvent: Equatable {
++    case token(String), cancelled, progress, failed
++    public static func parse(code: String, token: String?) -> Self {
++        if code == "600000" {
++            guard let token, (16...8192).contains(token.utf8.count), token.rangeOfCharacter(from: .whitespacesAndNewlines) == nil else { return .failed }
++            return .token(token)
++        }
++        if ["700000", "700001", "700010", "700020"].contains(code) { return .cancelled }
++        if ["600001", "700002", "700003", "700004", "700006", "700007", "700008", "700009"].contains(code) { return .progress }
++        return .failed
++    }
++}

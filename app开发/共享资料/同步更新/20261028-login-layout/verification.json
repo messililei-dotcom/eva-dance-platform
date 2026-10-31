@@ -1,0 +1,69 @@
+{
+  "checkedAt": "2026-10-28T21:46:00.590377+08:00",
+  "scope": "iOS Android HarmonyOS member login layout parity; retain native color roles",
+  "platforms": {
+    "iOS": {
+      "version": "1.0.0(8)",
+      "source": "current previous-turn LoginView build unchanged",
+      "build": "simulator and unsigned iphoneos passed",
+      "runtime": "login UI, input/consent, password switch, dark and large fonts previously verified in same conversation"
+    },
+    "Android": {
+      "version": "1.0.0(9)",
+      "build": "debug, release APK, release AAB passed; lintRelease passed",
+      "signing": "existing signing verified; MD5 460ddea3a2119d0c4f11c43c24889b11",
+      "unitTests": {
+        "tests": 17,
+        "failures": 0,
+        "errors": 0
+      },
+      "runtime": "latest release APK installed on emulator; main activity started without AndroidRuntime crash",
+      "loginUIRuntime": "not verified; emulator window unavailable to native UI controller",
+      "aabSignature": "jarsigner reports jar verified; self-signed chain, timestamp and JarInputStream ordering warnings retained in evidence; no store ingestion validation"
+    },
+    "HarmonyOS": {
+      "version": "1.0.0(8)",
+      "build": "release HAP and APP passed",
+      "signing": "existing certificate and original profile verified by build script",
+      "unitTests": {
+        "tests": 27,
+        "failures": 0
+      },
+      "runtime": "not verified; configured emulator did not start and hdc has no targets"
+    }
+  },
+  "productionCarrierEnabled": false,
+  "realSIMVerified": false,
+  "serverDeployment": false,
+  "filingChange": false,
+  "appStoreUpload": false,
+  "submittedOrPublished": false,
+  "artifacts": [
+    {
+      "path": "HarmonyOS/installers/SWOD-1.0.0-8-release.hap",
+      "sha256": "86845be22dd4fe44cd3ab7a6aa163f25091b02e502c46248535ba9eab1a9cb39",
+      "bytes": 1204193
+    },
+    {
+      "path": "HarmonyOS/installers/SWOD-1.0.0-8-release.app",
+      "sha256": "a3f33b766069b30fa4380e53a35f993f64817ae329e4f02a2dfd6e5092ea1668",
+      "bytes": 638575
+    },
+    {
+      "path": "Android/installers/SWOD-1.0.0-9-login-layout-release.apk",
+      "sha256": "13bf4bb398f06b803c7d77463b5a15efcaf30d9ecdeb25e2232c5efbaee78a5c",
+      "bytes": 4495459
+    },
+    {
+      "path": "Android/installers/SWOD-1.0.0-9-login-layout-release.aab",
+      "sha256": "23da9efc32a1c503c210eb0b55ea9e69e39414acb893f671ae76f6b233d79232",
+      "bytes": 3511729
+    }
+  ],
+  "sourceSHA256": {
+    "iOS/LoginView.swift": "91740b57dcc83beceebf1a1b65b6efbafcfe3b0ec4c0af85ac93fd51d80573ca",
+    "Android/MainActivity.java": "536fb463244e96fa7593a44e2964b349e143ee5361dc35c71bcbedca641fb965",
+    "HarmonyOS/Index.ets": "dd25ce5ae760b1f1d4279f15844bfa06eb9a375ca80c8e78b6dd6ee5be55ef2f",
+    "HarmonyOS/PlatformApi.ets": "9cc4b15e40b763f11d6d160349440705d9c9aa7b3c2cbf55568547aaf2013670"
+  }
+}

@@ -1,3 +1,4 @@
+import { parseProductPresentation } from '@/lib/product-presentation';
 import { hasAuth, openCommerceDb, unauthorized } from '../_db';
 
 export const dynamic = 'force-dynamic';
@@ -38,10 +39,13 @@ export async function POST(request: Request) {
   const name = cleanText(body.name);
   if (!name) return Response.json({ success: false, error: '请填写商品名称' }, { status: 400 });
 
+  const presentation = parseProductPresentation(body);
+  if (presentation.error) return Response.json({ error: presentation.error }, { status: 400 });
   const now = new Date().toISOString();
   const id = cleanText(body.id, productId());
   const db = openCommerceDb();
   try {
+    return db.transaction(() => {
     db.prepare(`
       INSERT INTO shop_products (
         id, name, category, spec, size, color, image, cost_price, sale_price,
@@ -64,7 +68,9 @@ export async function POST(request: Request) {
       now,
       now,
     );
+    for (const [field, value] of Object.entries(presentation.values)) db.prepare(`UPDATE shop_products SET ${field}=? WHERE id=?`).run(value, id);
     return Response.json({ success: true, id });
+    })();
   } finally {
     db.close();
   }

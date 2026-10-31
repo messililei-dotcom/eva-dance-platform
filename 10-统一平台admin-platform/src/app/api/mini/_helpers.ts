@@ -110,9 +110,30 @@ export function isLocalAdminRequest(request?: Request) {
   }
 }
 
+
+export function memberAccountAvailable(db: AdminDb, id: number) {
+  const seen = new Set<number>();
+  const table = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='AppDeletionRequest'").get();
+  while (id && !seen.has(id)) {
+    seen.add(id);
+    const member = db.prepare('SELECT * FROM Member WHERE id=?').get<Record<string, any>>(id);
+    if (!member) return false;
+    if (table && db.prepare("SELECT id FROM AppDeletionRequest WHERE member_id=? AND status='pending'").get(id)) return false;
+    const target = Number(member.merged_to_member_id || String(member.remark || '').match(/member_id\s*=\s*(\d+)/i)?.[1] || 0);
+    if (!target) return !member.status || ['active','正常','enabled'].includes(member.status);
+    id = target;
+  }
+  return false;
+}
+
 export function getMemberId(params: URLSearchParams, request?: Request) {
   const token = bearerToken(request);
-  return token ? verifyMemberToken(token) : 0;
+  const id = token ? verifyMemberToken(token) : 0;
+  if (!id) return 0;
+  const db = openAdminDb();
+  try { return memberAccountAvailable(db, id) ? id : 0; }
+  catch { return 0; }
+  finally { db.close(); }
 }
 
 function normalizeMemberPhoneForLink(value: unknown, countryCode: unknown = '+86') {

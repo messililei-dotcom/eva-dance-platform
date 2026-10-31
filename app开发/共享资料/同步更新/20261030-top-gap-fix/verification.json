@@ -1,0 +1,91 @@
+{
+  "updatedAt": "2026-10-30T16:17:39+08:00",
+  "status": "source-fixes-and-local-verification-complete",
+  "issues": [
+    "iOS release-only full-height empty safe-area inset",
+    "HarmonyOS short/loading content vertically centered in Scroll",
+    "iOS course audio follows silent switch without media category"
+  ],
+  "ios": {
+    "topInsetFix": "Do not install an empty safeAreaInset. Test banner exists only when debug fixtures are used.",
+    "releaseBeforeYpt": {
+      "online": 799,
+      "account": 816
+    },
+    "iPhone14ProReleaseAfterYpt": {
+      "online": 71,
+      "offline": 74,
+      "events": 65,
+      "shop": 74,
+      "account": 84
+    },
+    "releaseRootAndNavigationTestsPassed": true,
+    "debugCourseDetailAndRootTestsPassed": true,
+    "audioFix": "Explicit play asynchronously configures and activates playback/moviePlayback; unmute player without changing system volume; pause releases audio and cancels pending start; interruption/headphone disconnect pauses.",
+    "audioTests": {
+      "debugPassed": 3,
+      "releasePassed": 3,
+      "actualLocalAudioTrackProgressed": true,
+      "silentSwitchCompatibleCategoryVerified": true,
+      "latePlaybackAfterLeavingPrevented": true
+    },
+    "archive": "iOS/SWOD-fixed-compile.xcarchive",
+    "archiveBuild": "1.0.1(11)",
+    "archiveCompiledForPhysicalDevice": true,
+    "archiveSigned": false,
+    "ipaExported": false,
+    "uploaded": false,
+    "submitted": false,
+    "physicalSpeakerAndHeadphoneAcceptance": false,
+    "realProtectedCourseAudioE2E": "not verified on physical device; local test media used, no reviewer login or course credentials touched"
+  },
+  "android": {
+    "sourceChanged": false,
+    "fiveGuestRootTopChecksPassed": true,
+    "unitTestsPassed": 29,
+    "lintAndDebugBuildPassed": true,
+    "releaseCandidateBuild12Unchanged": true,
+    "audioCodeAudit": "Existing native VideoView uses platform media/movie attributes and audio focus; no local volume=0/mute assignment found.",
+    "realCourseAudibilityVerified": false
+  },
+  "harmony": {
+    "fix": "Scroll content explicitly aligned to Alignment.Top.",
+    "signedOriginalIdentityQACompiled": true,
+    "simulatorInstalled": true,
+    "fiveGuestRootTopChecksPassed": true,
+    "topGapVpAfter": {
+      "online": 4,
+      "offline": 4,
+      "events": 4,
+      "shop": 4,
+      "account": 10
+    },
+    "unitTestsPassed": 41,
+    "screenshots": "System privacy protection produced black captures; not used as visual acceptance and protection was not disabled. Bounds verified via official UI-test layout output.",
+    "audioCodeAudit": "Native Video; no muted(true) or zero-volume override found.",
+    "realCourseAudibilityVerified": false,
+    "qaBuild": "1.0.1(9) local QA only; requires a new build number before future upload",
+    "qaArtifacts": "HarmonyOS-fixed-qa/verification.json",
+    "uploaded": false
+  },
+  "physicalDeviceTests": "skipped-at-user-request",
+  "reviewerAccountUsed": false,
+  "originalCandidatesUnchanged": true,
+  "filingChanged": false,
+  "signingIdentityChanged": false,
+  "existingReviewsWithdrawn": false,
+  "productionFeatureFlagsChanged": false,
+  "sourceHashes": {
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/BrandViews.swift": "ec203db98b882165598a413d3eb45e388f292e5157d0f04a9869b2e58741e254",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift": "b4984a1714912b05e16c807fa36de3b2f71642201a9c274140fda8b7766b33e3",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/OfflineCoursePlayerView.swift": "170e419d98b5b5365444fe9e2e85a6212d1fafa8100ff38bd6590b3f63143e43",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseAudioSession.swift": "29622a10611cb100ed9f06d20db09451cefb5d8f489f2f22e65165ee6b8a2d1b",
+    "app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj": "723cd9f283d799248cb2708032bca31412a5bcf1fc5362964360751ded19da37",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "cb1215e8bc0ff4bee99ed84e9584a159f924a6cb98e3824c44bebbc1569f8275"
+  },
+  "nextReleasePreparation": {
+    "ios": "Sign and export the fixed build11 with original certificate before upload; current submitted10 does not contain these fixes.",
+    "harmony": "Create a new unique build number from fixed source before upload; current submitted9 preserved.",
+    "android": "Existing build12 unchanged, continue existing channel materials."
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "automationId": "swod",
+  "triggerUTC": "2026-10-30T18:37:42.908Z",
+  "checkedAt": "2026-10-31T02:41:09+08:00",
+  "ios": {
+    "appId": "6826038106",
+    "version": "1.0.2",
+    "build": 11,
+    "submissionId": "e6ac9f82-67e9-4eb0-b68d-ca9970019383",
+    "access": "Apple account sign-in page; session expired; authResult=FAILED",
+    "currentReviewStatusVerified": false,
+    "currentPublicStatusVerified": false,
+    "lastKnownReviewStatus": "waiting-for-review",
+    "lastKnownVerifiedAt": "2026-10-30T22:37:46+08:00",
+    "normalSignInRecovery": "Authorized existing account identifier filled; Continue control became unavailable twice despite a fresh AX read; no password entered, no CAPTCHA/passkey/security prompt bypassed.",
+    "loginPagePreserved": true,
+    "evidence": "evidence/heartbeat-20261031-0237/apple-login-required.png"
+  },
+  "otherPlatforms": {
+    "access": "Mac remains locked; automatic unlock failed; no further native UI actions",
+    "currentReviewStatusVerified": false,
+    "historicalStatusPreserved": true
+  },
+  "newUploadOrSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "originalSignaturesChanged": false,
+  "productionFeatureFlagsChanged": false,
+  "notificationDecision": "NOTIFY",
+  "notificationReason": "New Apple authentication expiry prevents monitoring; prior Mac-lock and material blockers are not re-notified as new results."
+}

@@ -1,0 +1,22 @@
+{
+  "appName": "SWOD",
+  "operator": "伊娃文化艺术发展（湖南）有限公司",
+  "packageName": "cn.com.swod.app",
+  "versionName": "1.0.1",
+  "versionCode": 12,
+  "shortDescription": "东方舞课程学习与赛事服务",
+  "description": "SWOD 伊娃东方舞为学员提供东方舞线上课程学习、视频目录、学习进度、线下课程与赛事信息服务。登录后可查看我的课程和本人已解锁课程，继续学习并使用笔记、书签等学习工具。应用提供官方商城、订单查询、客服、消息中心、通知设置和登录设备管理。课程权益由服务端验证；账号注销申请在7个工作日内处理并提供完成回执。",
+  "whatsNew": "完善隐私政策，补充儿童个人信息保护规则、监护人授权说明及查询、撤回、删除方式。",
+  "privacyURL": "https://www.swod.com.cn/app/privacy.html",
+  "childrenPrivacyURL": "https://www.swod.com.cn/app/children-privacy.html",
+  "supportURL": "https://www.swod.com.cn/contact",
+  "filingNumber": "湘ICP备2026005683号-5A",
+  "reviewAccount": "13548955558",
+  "reviewPasswordLocation": "仅从本机受限配置读取，不放入材料包或日志",
+  "guardianWorkflow": "李雷负责，客服先核验监护人授权并记录后再办理注册、课程开通或儿童报名；尚无自动年龄或监护关系校验",
+  "releaseWhenApproved": true,
+  "existingReviewVersionsDoNotWithdraw": ["iOS 1.0.1(10)", "Huawei Android 1.0.1(11)", "HarmonyOS 1.0.1(9)"],
+  "apkSHA256": "1ea2ac9bab6017279ee93a7fb7e5b2260179eabe8d2fe7b87532820838f9ec73",
+  "screenshots": "须使用当前客户端实际截图；旧截图或网页模拟界面不能作为新包截图",
+  "requiredHumanMaterials": ["已签发软件著作权或电子版权证书", "需签章的应用发布承诺函及ICP备案证明", "各渠道适用行业资质与联系人验证"]
+}

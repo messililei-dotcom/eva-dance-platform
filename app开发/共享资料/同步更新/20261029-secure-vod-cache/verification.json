@@ -1,0 +1,63 @@
+{
+  "verifiedAt": "2026-10-29T10:10:21.043482+08:00",
+  "stage": "sdk_and_authorization_foundation_only",
+  "cacheEnabled": false,
+  "completeOfflineWorkflow": false,
+  "licenseConfigured": false,
+  "downloadKeysConfigured": false,
+  "productionVodSettingsVerified": false,
+  "protectedInventoryConnected": false,
+  "offlinePlayerConnected": false,
+  "automaticRenewalModuleImplemented": true,
+  "automaticRenewalLiveIntegrationAccepted": false,
+  "backendTests": 34,
+  "backendSourceTypecheckPassed": true,
+  "ios": {
+    "deviceReleaseCompile": true,
+    "deviceSigned": false,
+    "simulatorBuild": true,
+    "fixtureUI": true,
+    "coreChecks": 21,
+    "additionalLeaseRecoveryChecks": true
+  },
+  "android": {
+    "tests": 26,
+    "failures": 0,
+    "errors": 0,
+    "releaseSigned": true,
+    "certificateMD5": "460ddea3a2119d0c4f11c43c24889b11"
+  },
+  "harmony": {
+    "tests": 37,
+    "releaseSigned": true,
+    "runtimeAccepted": false
+  },
+  "realDeviceAccepted": false,
+  "productionDeployed": false,
+  "uploaded": false,
+  "submitted": false,
+  "published": false,
+  "filingChanged": false,
+  "artifacts": [
+    {
+      "file": "Android/installers/app-release.apk",
+      "sha256": "b6cdeb61f03f24c9618700bdd75dd1b5b4c90d0613f7da892555e8bed5023376",
+      "bytes": 25778755
+    },
+    {
+      "file": "Android/installers/app-release.aab",
+      "sha256": "a0717f2bbc34e9ebd41bfacf406b4a5da1afd33dea4d49bc65e3ce0ac576a4c2",
+      "bytes": 13057106
+    },
+    {
+      "file": "HarmonyOS/installers/SWOD-1.0.0-8-release.hap",
+      "sha256": "4bcc0583457738c536746d637a33804c90ac5d4d03db2eb7f9c856c4a2532e29",
+      "bytes": 12381135
+    },
+    {
+      "file": "HarmonyOS/installers/SWOD-1.0.0-8-release.app",
+      "sha256": "c2faea0614cec76aa640e006458d7bb6ec5868ad91b86361ab546e35dc5545a9",
+      "bytes": 5638967
+    }
+  ]
+}

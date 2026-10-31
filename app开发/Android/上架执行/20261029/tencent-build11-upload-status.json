@@ -1,0 +1,69 @@
+{
+  "appId": "1112541998",
+  "packageName": "cn.com.swod.app",
+  "versionName": "1.0.1",
+  "versionCode": 11,
+  "apkSHA256": "8c6a5e144cb5c14370ccd474a01e72305b8a5c7c3a9f9e8d4b5c83ff0befc9e4",
+  "cloudSignatureMD5": "460ddea3a2119d0c4f11c43c24889b11",
+  "loginVerified": true,
+  "company": "伊娃文化艺术发展（湖南）有限公司",
+  "cloudReopenedAndParsed": true,
+  "uploaded": true,
+  "apkParsed": true,
+  "reviewSubmitted": false,
+  "published": false,
+  "draftSaved": false,
+  "baseInfoSaved": false,
+  "iconUploaded": true,
+  "baseFieldsBackedUp": true,
+  "reviewAccountEnteredButNotSaved": true,
+  "filingStatus": "已备案",
+  "filingNumber": "湘ICP备2026005683号-5A",
+  "filingChanged": false,
+  "releaseSettingEntered": "审核通过后立即发布",
+  "distributionTerminalsEdited": [
+    "移动端"
+  ],
+  "privacyChecks": {
+    "independentPolicy": true,
+    "operator": true,
+    "deletionFlow": true,
+    "loginNotice": true,
+    "personalization": true,
+    "children": false,
+    "childrenBusinessFactPending": true
+  },
+  "riskSDKSelfCheck": {
+    "checked": false,
+    "status": "部分核对，尚未勾选完成",
+    "runtimeDependencyList": "evidence/android-runtime-dependencies.txt",
+    "source": "https://sdk.caict.ac.cn/official/#/public/sdklist/risk/all",
+    "observations": {
+      "阿里": "无匹配数据",
+      "华为": "存在其他产品及较旧分析SDK记录，需继续比对精确依赖",
+      "小米": "统计SDK1.9.11，应用接入为推送SDK6.0.1",
+      "OPPO": "无匹配数据",
+      "vivo": "无匹配数据"
+    }
+  },
+  "assessmentSelected": [
+    "电商平台服务",
+    "在线视频课程、教职工/学生/家长为主要用户"
+  ],
+  "assessmentScopeNeedsVerification": "平台问卷列出EDI/商家入驻协议以及办学许可证/教育App备案；须核实对自营商城、成人舞蹈培训的适用范围，不当作法律结论或伪造资质。",
+  "blockers": [
+    "已签发软件著作权登记证书或电子版权证书",
+    "当前版本4-5张截图",
+    "盖章ICP备案截图、签章应用发布承诺函及适用行业资质",
+    "儿童信息处理范围与相应隐私说明待确认",
+    "风险SDK自查尚未完成",
+    "基础信息保存校验未通过"
+  ],
+  "url": "https://app.open.qq.com/p/basic/distribution/update/edit?appId=1112541998",
+  "checkedAt": "2026-10-29T23:53:19+08:00",
+  "userReportsSignedIn": true,
+  "loginRequired": false,
+  "deferredByUser": false,
+  "loginState": "Verified company account",
+  "latestCandidateUploaded": true
+}

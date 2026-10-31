@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-10-29T10:09:27.781Z",
+  "appKey": "335759307",
+  "targetIsUnregisteredTestSentinel": true,
+  "httpStatus": 200,
+  "vendorCode": "",
+  "taskAccepted": true,
+  "permissionDenied": false,
+  "signatureRejected": false,
+  "realDeliveryAccepted": false
+}

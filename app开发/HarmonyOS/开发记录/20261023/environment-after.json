@@ -1,0 +1,20 @@
+{
+  "status": "TOOLCHAIN_DETECTED_UNVERIFIED",
+  "requiredSdk": "HarmonyOS 6.0.2 (API 22)",
+  "studio": null,
+  "clt": "/Users/lilei/Library/Huawei/CommandLineTools/6.1.1.418/command-line-tools",
+  "tools": {
+    "node": "/Users/lilei/Library/Huawei/CommandLineTools/6.1.1.418/command-line-tools/tool/node/bin/node",
+    "java": "/Users/lilei/Library/Developer/EvaToolchains/jdk-17.0.20.1+1/Contents/Home/bin/java",
+    "ohpm": "/Users/lilei/Library/Huawei/CommandLineTools/6.1.1.418/command-line-tools/bin/ohpm",
+    "hvigor": "/Users/lilei/Library/Huawei/CommandLineTools/6.1.1.418/command-line-tools/bin/hvigorw"
+  },
+  "sdkDirectories": [
+    "/Users/lilei/Library/Huawei/CommandLineTools/6.1.1.418/command-line-tools/sdk",
+    "/Users/lilei/Library/Huawei/CommandLineTools/6.1.1.418/command-line-tools/sdk"
+  ],
+  "missing": [],
+  "sdkCompatibilityVerified": false,
+  "compiled": false,
+  "note": "仅探测文件路径；Java/SDK版本、依赖安装、ArkTS编译、签名及真机运行须另行验证。"
+}

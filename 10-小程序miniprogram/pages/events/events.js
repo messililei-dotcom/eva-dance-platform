@@ -29,6 +29,7 @@ Page(share.withShare("events", {
     playerCount: 0,
     recordCount: 0
   },
+  onShow() { if (typeof getApp === 'function') { getApp().globalData.lastPublicTab = 'events'; getApp().globalData.profileLoginCancelled = false; } },
   onLoad() {
     this.loadEvents();
   },
@@ -51,6 +52,8 @@ Page(share.withShare("events", {
       this.setData({ loading: false, error: err.message || "赛事加载失败，请重试" });
     }
   },
+  onClearSearch() { this.setData({ keyword: "" }); this.applySearch("", this.data.events); },
+  onSearchConfirm() { if (wx.hideKeyboard) wx.hideKeyboard(); },
   onSearchInput(event) {
     const keyword = String(event.detail.value || "");
     this.setData({ keyword });

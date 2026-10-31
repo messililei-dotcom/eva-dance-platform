@@ -1,7 +1,18 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),ts=require('typescript'),{DatabaseSync}=require('node:sqlite');
 function load(file,req=require){const m={exports:{}};const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;new Function('require','module','exports',code)(req,m,m.exports);return m.exports;}
 const music=load('src/lib/server/event-music-upload.ts');
-const audio=Buffer.from('RIFF0000WAVEfixture-audio');
+// A real 100 ms PCM WAV exercises the production decoder instead of only its signature check.
+// Set EVENT_FFMPEG_PATH to a real ffmpeg installation on non-Linux development hosts.
+const audio=Buffer.alloc(44+1600);
+audio.write('RIFF',0);audio.writeUInt32LE(audio.length-8,4);audio.write('WAVEfmt ',8);
+audio.writeUInt32LE(16,16);audio.writeUInt16LE(1,20);audio.writeUInt16LE(1,22);
+audio.writeUInt32LE(8000,24);audio.writeUInt32LE(16000,28);audio.writeUInt16LE(2,32);audio.writeUInt16LE(16,34);
+audio.write('data',36);audio.writeUInt32LE(1600,40);
+for(let i=0;i<800;i++)audio.writeInt16LE(Math.round(Math.sin(2*Math.PI*440*i/8000)*4000),44+i*2);
+test('actual audio decoder accepts playable PCM and rejects a spoofed WAV header',async()=>{
+ await music.validatePlayableMusic('valid.wav',audio);
+ await assert.rejects(music.validatePlayableMusic('spoofed.wav',Buffer.from('RIFF0000WAVEfixture-audio')),e=>e instanceof music.MusicUploadError&&e.status===400);
+});
 function request(extra={}){const f=new FormData();Object.entries({groupId:'3',name:'学员',phone:'13800000000',performanceTitle:'参赛曲目',...extra}).forEach(([k,v])=>f.set(k,v));f.set('musicFile',new File([audio],'音乐.wav'));return new Request('https://admin.test/api/mini/events/7/register',{method:'POST',body:f});}
 test('upload drops client identity and accepts one bounded audio file',async()=>{const f=await music.normalizedMusicForm(request({member_id:'999',musicSource:'admin'}));assert.equal(f.has('member_id'),false);assert.equal(f.has('musicSource'),false);assert.equal(f.get('musicFile').size,audio.length);assert.equal(music.validateMusicBytes('音乐.wav',audio),'.wav');});
 test('upload rejects missing, duplicate, oversized files and duplicate fields',async()=>{for(const mode of ['missing','duplicate','oversize','field']){const f=new FormData();if(mode!=='missing')f.append('musicFile',new File([mode==='oversize'?new Uint8Array(music.MAX_EVENT_MUSIC+1):audio],'test.wav'));if(mode==='duplicate')f.append('musicFile',new File([audio],'two.wav'));if(mode==='field'){f.append('name','a');f.append('name','b');}await assert.rejects(music.normalizedMusicForm(new Request('https://admin.test',{method:'POST',body:f})),e=>e instanceof music.MusicUploadError);}assert.throws(()=>music.validateMusicBytes('test.mp3',Buffer.from('<html>unsafe</html>')));});

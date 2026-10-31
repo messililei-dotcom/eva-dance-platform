@@ -1,6 +1,12 @@
 import { http } from '@kit.NetworkKit';
+import { rcp } from '@kit.RemoteCommunicationKit';
+
 import { util } from '@kit.ArkTS';
 import { Credentials, StaffCredentials, Envelope, WriteBody } from './Models';
+import { common } from '@kit.AbilityKit';
+import { HuksVault } from './HuksVault';
+
+export type ApiMethod = http.RequestMethod | 'PATCH';
 
 const API: string = 'https://admin.swod.com.cn/api/app/v1';
 const PUBLIC_API: string = 'https://admin.swod.com.cn/api/mini';
@@ -14,7 +20,7 @@ export class PlatformFailure extends Error {
   status: number;
   constructor(message: string, status: number) { super(message); this.status = status; }
 }
-export function publicRead(path: string, method: http.RequestMethod): boolean {
+export function publicRead(path: string, method: ApiMethod): boolean {
   return method === http.RequestMethod.GET && /^\/(public\/(series(\/[1-9][0-9]*(\/(courses|detail))?)?|offline-courses|calendar|home-stats)|events(\/[1-9][0-9]*)?)$/.test(path.split('?')[0]);
 }
 export function safePath(path: string): boolean {
@@ -23,17 +29,69 @@ export function safePath(path: string): boolean {
 export function secureMedia(url: string): boolean {
   return /^https:\/\/[^\s\/@:?#]+(:443)?(\/|\?|#|$)/.test(url);
 }
-/** Memory-only sessions until the HUKS credential vault has passed device acceptance. */
+export function coverImageURL(value: string): string {
+  if (secureMedia(value)) return value;
+  if (!safePath(value)) return '';
+  const url = 'https://admin.swod.com.cn' + value;
+  return secureMedia(url) ? url : '';
+}
+export function externalURLAllowed(url: string): boolean {
+  return secureMedia(url) && (/^https:\/\/(www\.)?swod\.com\.cn\//.test(url) ||
+    url.startsWith('https://admin.swod.com.cn/api/certificates/') || url === 'https://beian.miit.gov.cn/');
+}
+/** Sessions and offline inventory use separate HUKS protected vaults. */
 export class PlatformApi {
+  private vault?: HuksVault;
+  private credentialWrites: Promise<void> = Promise.resolve();
+  cacheInvalidation?: () => void;
+  notificationInvalidation?: (sessionId: string) => void;
+  screenProtected: boolean = false;
+  applicationActive: boolean = true;
+  async initialize(context: common.UIAbilityContext): Promise<void> {
+    this.vault = new HuksVault(context.filesDir, 'member-session');
+    try {
+      const saved = await this.vault.read();
+      if (saved) { const value = JSON.parse(saved) as Credentials; if (value.memberId > 0 && value.sessionId && value.token && value.refreshToken) this.credentials = value; }
+    } catch { this.credentials = undefined; }
+  }
+  private commit(value: Credentials, generation: number, isCurrent: () => boolean, rotation: boolean = false): Promise<void> {
+    const operation = this.credentialWrites.catch(() => {}).then(async () => {
+      if (!value.token || !value.refreshToken || !value.memberId || !value.sessionId || generation !== this.generation || !isCurrent() || !this.vault) throw new PlatformFailure('登录状态无效，请重试', 401);
+      if (rotation && (value.memberId !== this.credentials?.memberId || value.sessionId !== this.credentials?.sessionId)) throw new PlatformFailure('登录会话已变化', 401);
+      await this.vault.save(JSON.stringify(value));
+      if (generation !== this.generation || !isCurrent()) {
+        await this.vault.save(this.credentials ? JSON.stringify(this.credentials) : '');
+        throw new PlatformFailure('登录已取消或账号已切换', 401);
+      }
+      if (!rotation) { this.notificationInvalidation?.(this.credentials?.sessionId || ''); this.cacheInvalidation?.(); this.generation++; }
+      this.credentials = value;
+    });
+    this.credentialWrites = operation.catch(() => {}); return operation;
+  }
   credentials?: Credentials;
   staff?: StaffCredentials;
   private generation: number = 0;
   private refreshing?: Promise<Credentials>;
-  async login(phone: string, code: string): Promise<void> {
+  async login(phone: string, code: string, isCurrent: () => boolean = () => true): Promise<void> {
+    const generation = this.generation;
     const value = await this.request<Credentials>('/auth/login', http.RequestMethod.POST, { phone: phone, code: code, deviceName: '伊娃东方舞 HarmonyOS' });
-    this.generation++; this.credentials = value;
+    if (generation !== this.generation || !isCurrent()) throw new PlatformFailure('登录已取消或账号已切换，请重试', 401);
+    await this.commit(value, generation, isCurrent);
   }
-  clear(): void { this.generation++; this.credentials = undefined; }
+  async loginWithPassword(phone: string, password: string, isCurrent: () => boolean = () => true): Promise<void> {
+    const generation = this.generation;
+    const value = await this.request<Credentials>('/auth/password-login', http.RequestMethod.POST, { phone: phone, password: password, deviceName: '伊娃东方舞 HarmonyOS' });
+    if (generation !== this.generation || !isCurrent()) throw new PlatformFailure('登录已取消或账号已切换，请重试', 401);
+    await this.commit(value, generation, isCurrent);
+  }
+  clear(): void { this.notificationInvalidation?.(this.credentials?.sessionId || ''); this.generation++; this.credentials = undefined; this.cacheInvalidation?.(); this.vault?.save('').catch(() => {}); }
+  async loginWithCarrier(accessToken: string, isCurrent: () => boolean = () => true): Promise<void> {
+    const generation = this.generation;
+    const value = await this.request<Credentials>('/auth/one-tap', http.RequestMethod.POST, { accessToken: accessToken, deviceName: 'SWOD HarmonyOS' });
+    if (generation !== this.generation || !isCurrent()) throw new PlatformFailure('登录已取消或账号已切换，请重试', 401);
+    if (!value.token || !value.refreshToken || !value.memberId) throw new PlatformFailure('登录响应无效，请重试', 502);
+    await this.commit(value, generation, isCurrent);
+  }
   async logout(): Promise<void> {
     const token = this.credentials?.token; this.clear();
     if (token) await this.exchange<Object>(API, '/auth/logout', http.RequestMethod.POST, {}, token);
@@ -43,27 +101,27 @@ export class PlatformApi {
     if (!value.token || !['admin', 'event_admin'].includes(value.user.role)) throw new PlatformFailure('当前账号没有赛事管理权限', 403);
     this.staff = value;
   }
-  async staffRequest<T>(path: string, method: http.RequestMethod = http.RequestMethod.GET, body?: WriteBody): Promise<T> {
+  async staffRequest<T>(path: string, method: ApiMethod = http.RequestMethod.GET, body?: WriteBody): Promise<T> {
     if (!this.staff || !path.startsWith('/event/')) throw new PlatformFailure('请使用工作人员账号登录', 401);
     const token = this.staff.token;
     try { return await this.exchange<T>(MANAGEMENT_API, path, method, body, token); }
-    catch (error) { if (error instanceof PlatformFailure && error.status === 401 && this.staff?.token === token) this.staff = undefined; throw error; }
+    catch (error) { if (error instanceof PlatformFailure && error.status === 401 && this.staff?.token === token) this.staff = undefined; throw error instanceof Error ? error : new PlatformFailure('请求失败，请重试', 500); }
   }
-  async request<T>(path: string, method: http.RequestMethod = http.RequestMethod.GET, body?: WriteBody, authenticated: boolean = false): Promise<T> {
+  async request<T>(path: string, method: ApiMethod = http.RequestMethod.GET, body?: WriteBody, authenticated: boolean = false): Promise<T> {
     const token = authenticated ? this.credentials?.token : undefined;
     const generation = this.generation;
     if (authenticated && !token) throw new PlatformFailure('请先登录', 401);
     try { return await this.exchange<T>(!authenticated && publicRead(path, method) ? PUBLIC_API : API, path, method, body, token); }
     catch (error) {
-      if (!(error instanceof PlatformFailure) || error.status !== 401 || !token) throw error;
+      if (!(error instanceof PlatformFailure) || error.status !== 401 || !token) throw error instanceof Error ? error : new PlatformFailure('请求失败，请重试', 500);
       if (!this.credentials || generation !== this.generation) throw new PlatformFailure('账号已切换，请重新打开页面', 401);
       if (this.credentials.token === token) {
         if (!this.refreshing) this.refreshing = this.exchange<Credentials>(API, '/auth/refresh', http.RequestMethod.POST, { refreshToken: this.credentials.refreshToken });
         try {
           const renewed = await this.refreshing;
           if (generation !== this.generation) throw new PlatformFailure('账号已退出', 401);
-          this.credentials = renewed;
-        } catch (failure) { if (failure instanceof PlatformFailure && failure.status === 401) this.clear(); throw failure; }
+          await this.commit(renewed, generation, () => true, true);
+        } catch (failure) { if (failure instanceof PlatformFailure && failure.status === 401) this.clear(); throw failure instanceof Error ? failure : new PlatformFailure('请求失败，请重试', 500); }
         finally { this.refreshing = undefined; }
       }
       return this.exchange<T>(API, path, method, body, this.credentials.token);
@@ -86,22 +144,39 @@ export class PlatformApi {
     const data = new Uint8Array(total); let at: number = 0;
     pieces.forEach((piece: Uint8Array) => { data.set(piece, at); at += piece.byteLength; });
     const version = this.generation; const path = '/events/' + eventID + '/register';
-    try { await this.exchange<Object>(API, path, http.RequestMethod.POST, data.buffer, this.credentials.token, 'multipart/form-data; boundary=' + boundary); }
+    try { await this.exchange<Object>(API, path, http.RequestMethod.POST, data.buffer as ArrayBuffer, this.credentials.token, 'multipart/form-data; boundary=' + boundary); }
     catch (failure) {
-      if (!(failure instanceof PlatformFailure) || failure.status !== 401) throw failure;
+      if (!(failure instanceof PlatformFailure) || failure.status !== 401) throw failure instanceof Error ? failure : new PlatformFailure('请求失败，请重试', 500);
       await this.request<Object>('/member/profile', http.RequestMethod.GET, undefined, true);
       if (!this.credentials || version !== this.generation) throw new PlatformFailure('账号已切换，请重新打开报名页面', 401);
-      await this.exchange<Object>(API, path, http.RequestMethod.POST, data.buffer, this.credentials.token, 'multipart/form-data; boundary=' + boundary);
+      await this.exchange<Object>(API, path, http.RequestMethod.POST, data.buffer as ArrayBuffer, this.credentials.token, 'multipart/form-data; boundary=' + boundary);
     }
   }
 
-  private async exchange<T>(base: string, path: string, method: http.RequestMethod, body?: WriteBody | ArrayBuffer, token?: string, contentType: string = 'application/json'): Promise<T> {
+  private async exchange<T>(base: string, path: string, method: ApiMethod, body?: WriteBody | ArrayBuffer, token?: string, contentType: string = 'application/json'): Promise<T> {
     const response = await this.raw<Envelope<T>>(base, path, method, body, token, contentType);
     if (!response.success) throw new PlatformFailure(response.message || response.error || '请求未完成', 400);
     return response.data as T;
   }
-  private async raw<T>(base: string, path: string, method: http.RequestMethod, body?: WriteBody | ArrayBuffer, token?: string, contentType: string = 'application/json'): Promise<T> {
+  private async patch<T>(base: string, path: string, body?: WriteBody | ArrayBuffer, token?: string, contentType: string = 'application/json'): Promise<T> {
+    // NetworkKit's RequestMethod has no PATCH. Use native RCP without redirects or a response cache.
+    const session = rcp.createSession({ requestConfiguration: { transfer: { autoRedirect: false, timeout: { connectMs: 20000, transferMs: 20000 } } } });
+    try {
+      const headers: rcp.RequestHeaders = { 'Content-Type': contentType, 'x-client-platform': 'harmony', 'Cache-Control': 'no-store' };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      const content = body instanceof ArrayBuffer ? body : JSON.stringify(body || {});
+      const result = await session.fetch(new rcp.Request(base + path, 'PATCH', headers, content));
+      if (result.statusCode >= 300 && result.statusCode < 400) throw new PlatformFailure('接口重定向已拦截，请重试', result.statusCode);
+      if (result.body && result.body.byteLength > 2000000) throw new PlatformFailure('响应内容过大，请重试', 502);
+      const payload = JSON.parse(result.toString() || '{}') as Envelope<Object>;
+      if (result.statusCode < 200 || result.statusCode >= 300) throw new PlatformFailure(payload.message || payload.error || '服务暂不可用，请重试', result.statusCode);
+      return payload as T;
+    } finally { session.close(); }
+  }
+
+  private async raw<T>(base: string, path: string, method: ApiMethod, body?: WriteBody | ArrayBuffer, token?: string, contentType: string = 'application/json'): Promise<T> {
     if (!safePath(path)) throw new PlatformFailure('接口地址无效', 400);
+    if (method === 'PATCH') return this.patch<T>(base, path, body, token, contentType);
     const request = http.createHttp();
     try {
       // API 22 intercepts before another URL is requested; never forward a login token on redirect.

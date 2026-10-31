@@ -1,0 +1,33 @@
+{
+  "recordedAt": "2026-10-29T23:00:11+08:00",
+  "tencentLogin": "官方QQ登录页，等待手机确认；同一标签页，未新建重复页",
+  "closedDuplicates": {
+    "vivo": 2,
+    "oppoLogin": 1
+  },
+  "candidateVersionCode": 11,
+  "uploadedParsedPlatforms": [
+    "xiaomi",
+    "honor",
+    "vivo",
+    "oppo"
+  ],
+  "submittedPlatforms": [
+    "iOS 1.0.1(10)",
+    "Huawei Android 1.0.1(11)",
+    "HarmonyOS 1.0.1(9)"
+  ],
+  "notSubmittedPlatforms": [
+    "xiaomi",
+    "honor",
+    "vivo",
+    "oppo",
+    "tencent"
+  ],
+  "draftWarnings": {
+    "honor": "版本草稿已保存，基础信息最新编辑尚未保存核验",
+    "vivo": "年龄分级已提交到主表，主表尚未保存核验",
+    "oppo": "构建11解析完成，主表尚未保存核验"
+  },
+  "monitor": "swod ACTIVE hourly"
+}

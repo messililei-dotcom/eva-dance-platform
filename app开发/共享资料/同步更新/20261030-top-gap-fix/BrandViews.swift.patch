@@ -1,0 +1,27 @@
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/BrandViews.swift
++++ app开发/iOS/EvaDance/Sources/EvaDanceApp/BrandViews.swift
+@@ -130,14 +130,18 @@
+ struct EvaHomeLayout: ViewModifier {
+     func body(content: Content) -> some View {
+         #if os(iOS)
+-        content.navigationBarTitleDisplayMode(.inline).background(EvaBrand.canvas)
+-            .safeAreaInset(edge: .top, spacing: 0) {
+-                #if DEBUG
+-                if ProcessInfo.processInfo.environment["EVA_API_BASE"] != nil {
++        let page = content.navigationBarTitleDisplayMode(.inline).background(EvaBrand.canvas)
++        // An empty inset can reserve the full viewport in an optimized build.
++        // Install this diagnostic bar only when it actually has content.
++        #if DEBUG
++        if ProcessInfo.processInfo.environment["EVA_API_BASE"] != nil {
++            page.safeAreaInset(edge: .top, spacing: 0) {
+                     Text("本地测试数据，非真实课程").font(.caption2).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+-                }
+-                #endif
+             }
++        } else { page }
++        #else
++        page
++        #endif
+         #else
+         content.background(EvaBrand.canvas)
+         #endif

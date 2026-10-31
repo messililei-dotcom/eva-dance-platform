@@ -1,0 +1,8 @@
+{
+  "xiaomiDraft": "https://dev.mi.com/xiaomihyperos/console/apps/distribute/app-create?action=create&isOffStore=false&appId=2882303761520603185&packageName=cn.com.swod.app&appType=0",
+  "vivoDraft": "https://dev.vivo.com.cn/appPerfect/858399",
+  "tencentLogin": "https://app.open.qq.com/p/login?redirect=https%3A%2F%2Fapp.open.qq.com%2Fp%2Fbasic%2Fdistribution%2Fupdate%2Fedit%3FappId%3D1112541998",
+  "honorDistribution": "https://developer.honor.com/cn/manageCenter/app/E00006?~id=11",
+  "tencentVersionInfo": "https://app.open.qq.com/p/basic/distribution/update/info?appId=1112541998",
+  "oppoDraft": "https://open.oppomobile.com/frontendframe/appService/generalApp?app_id=37977416&pkg_symbol=0&type=add"
+}

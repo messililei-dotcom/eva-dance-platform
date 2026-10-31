@@ -1,0 +1,39 @@
+
+jar verified.
+
+Warning: 
+This jar contains entries whose certificate chain is invalid. Reason: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+This jar contains entries whose signer certificate is self-signed.
+This jar contains signatures that do not include a timestamp. Without a timestamp, users may not be able to validate this jar after any of the signer certificates expire (as early as 2056-09-24).
+POSIX file permission and/or symlink attributes detected. These attributes are ignored when signing and are not protected by the signature.
+
+This JAR file contains internal inconsistencies that may result in different contents when reading via JarFile and JarInputStream:
+- Manifest is missing when reading via JarInputStream
+- Entry BUNDLE-METADATA/com.android.tools.build.gradle/app-metadata.properties is signed in JarFile but is not signed in JarInputStream
+- Entry BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb is signed in JarFile but is not signed in JarInputStream
+- Entry BUNDLE-METADATA/com.android.tools/d8.json is signed in JarFile but is not signed in JarInputStream
+- Entry BundleConfig.pb is signed in JarFile but is not signed in JarInputStream
+- Entry base/assets.pb is signed in JarFile but is not signed in JarInputStream
+- Entry base/assets/app-privacy.txt is signed in JarFile but is not signed in JarInputStream
+- Entry base/assets/app-processors.txt is signed in JarFile but is not signed in JarInputStream
+- Entry base/assets/app-terms.txt is signed in JarFile but is not signed in JarInputStream
+- Entry base/assets/official-offline-content.json is signed in JarFile but is not signed in JarInputStream
+- Entry base/assets/release-info.json is signed in JarFile but is not signed in JarInputStream
+- Entry base/dex/classes.dex is signed in JarFile but is not signed in JarInputStream
+- Entry base/manifest/AndroidManifest.xml is signed in JarFile but is not signed in JarInputStream
+- Entry base/res/drawable-nodpi-v4/ic_launcher_foreground.png is signed in JarFile but is not signed in JarInputStream
+- Entry base/res/drawable/brand_logo.png is signed in JarFile but is not signed in JarInputStream
+- Entry base/res/mipmap-anydpi-v26/ic_launcher.xml is signed in JarFile but is not signed in JarInputStream
+- Entry base/res/mipmap-anydpi-v26/ic_launcher_round.xml is signed in JarFile but is not signed in JarInputStream
+- Entry base/res/mipmap-hdpi-v4/ic_launcher.png is signed in JarFile but is not signed in JarInputStream
+- Entry base/res/mipmap-mdpi-v4/ic_launcher.png is signed in JarFile but is not signed in JarInputStream
+- Entry base/res/mipmap-xhdpi-v4/ic_launcher.png is signed in JarFile but is not signed in JarInputStream
+- Entry base/res/mipmap-xxhdpi-v4/ic_launcher.png is signed in JarFile but is not signed in JarInputStream
+- Entry base/res/mipmap-xxxhdpi-v4/ic_launcher.png is signed in JarFile but is not signed in JarInputStream
+- Entry base/res/xml/data_extraction_rules.xml is signed in JarFile but is not signed in JarInputStream
+- Entry base/resources.pb is signed in JarFile but is not signed in JarInputStream
+- Entry base/root/META-INF/com/android/build/gradle/app-metadata.properties is signed in JarFile but is not signed in JarInputStream
+- Entry base/root/META-INF/version-control-info.textproto is signed in JarFile but is not signed in JarInputStream
+- Entry META-INF/MANIFEST.MF is signed in JarFile but is not signed in JarInputStream
+
+Re-run with the -verbose and -certs options for more details.

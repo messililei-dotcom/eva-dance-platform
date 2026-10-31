@@ -1,0 +1,419 @@
+- link "全国SDK管理服务平台":
+  - /url: "#/home"
+  - generic: 全国SDK管理服务平台
+- link "首页":
+  - /url: "#/home"
+  - generic: 首页
+- link "新闻通知":
+  - /url: "#/public/news/1"
+  - generic: 新闻通知
+- link "政策标准":
+  - /url: "#/public/policy/1"
+  - generic: 政策标准
+- link "开发者控制台":
+  - /url: "#/developer"
+  - generic: 开发者控制台
+- button "登 录":
+  - generic: 登 录
+- button "注 册":
+  - generic: 注 册
+- generic: 风险 SDK 信息
+- generic: RISK SDK INFORMATION
+- generic: "SDK搜索:"
+- textbox "请输入名称/开发者/类型的关键词"
+- button "search":
+  - img "search":
+- checkbox "全部" [checked]
+- generic: 全部
+- checkbox "只看存在违规行为SDK"
+- generic: 只看存在违规行为SDK
+- checkbox "只看建议版本更新SDK"
+- generic: 只看建议版本更新SDK
+- checkbox "只看产品不再运营SDK"
+- generic: 只看产品不再运营SDK
+- alert:
+  - img "info-circle":
+  - generic: 存在违规行为SDK：在工信部“侵害用户权益行为的APP（SDK）通报”名单中的SDK，建议APP开发者及时更新更换。
+  - generic: 建议版本更新SDK：在工信部抽检过程中发现违规行为，并已在期限内完成整改更新的SDK，建议APP开发者及时更新至SDK最新版本。
+  - generic: 产品不再运营SDK：停止对外提供服务、后续不再运营维护的SDK，建议APP开发者不再使用。
+- img "left":
+- tablist:
+  - tab "全部" [selected]
+  - tab "特定工具类"
+  - tab "游戏联运类"
+  - tab "广告类"
+  - tab "安全风控类"
+  - tab "地图类"
+  - tab "第三方登录类"
+  - tab "支付类"
+  - tab "认证类"
+  - tab "社交类"
+  - tab "客服类"
+  - tab "框架类"
+  - tab "实时音视频类"
+  - tab "统计类"
+  - tab "推送类"
+  - tab "性能监控类"
+  - tab "人工智能类"
+  - tab "平台服务类"
+- tabpanel "全部"
+- img "right":
+- generic: 综合评分：
+- generic: 暂无
+- generic: 目睹直播评论SDK-IOS
+- generic: 版本
+- generic: 1.1.168370505
+- generic: 类型
+- generic: 实时音视频类
+- generic: 杭州雅顾科技有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 云屋音视频SDK
+- generic: 版本
+- generic: V4.7.1
+- generic: 类型
+- generic: 实时音视频类
+- generic: 深圳市云屋科技有限公司
+- generic: 提供音视频功能的SDK
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 激活鸟 Android SDK
+- generic: 版本
+- generic: 1.1.6.12
+- generic: 类型
+- generic: 广告类
+- generic: 青岛激活鸟数字传媒有限公司
+- generic: 激活鸟流量变现工具
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 数字人
+- generic: 版本
+- generic: 1.0.0
+- generic: 类型
+- generic: 特定工具类
+- generic: 北京爱语吧科技有限公司
+- generic: 数字人SDK是帮助开发者增加AI视频合成功能的产品，以简单的集成方式和强大的功能为特点，结合AI人工智能科技方式，用于丰富产品的功能，优化用户体验
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 海纳嗨数 SDK
+- generic: 版本
+- generic: 4.1.6
+- generic: 类型
+- generic: 统计类
+- generic: 海纳致远数字科技（上海）有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: AgoraMediaPlayer Kit - Android
+- generic: 版本
+- generic: 1.3.0
+- generic: 类型
+- generic: 框架类
+- generic: 上海声网科技有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 积分SDK
+- generic: 版本
+- generic: V3.8.0.1
+- generic: 类型
+- generic: 特定工具类
+- generic: 北京巨量引擎网络技术有限公司
+- generic: 提供“做任务-得金币-金币提现”的各种玩法，帮助开发者提高收入和APP留存
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 华为3D建模SDK（Android版）
+- generic: 版本
+- generic: 1.9.0.301;1.7.0.302;1.9.0.301
+- generic: 类型
+- generic: 人工智能类
+- generic: 华为软件技术有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 广告SDK-Android
+- generic: 版本
+- generic: 2.4.3
+- generic: 类型
+- generic: 广告类
+- generic: 上海掌之淘信息技术有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 懒人广告SDK
+- generic: 版本
+- generic: "3.464"
+- generic: 类型
+- generic: 广告类
+- generic: 北京懒人信息科技有限公司
+- generic: 全场景变现能力，并持续构筑安全、高效、健康的生态环境，为开发者的商业成长提供坚实基础
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 猫广告
+- generic: 版本
+- generic: 2.4.11
+- generic: 类型
+- generic: 广告类
+- generic: 杭州三脚猫网络科技有限公司
+- generic: 提供广告的拉取和展示功能，汇聚优质广告全面兼容
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 西域传媒AD SDK
+- generic: 版本
+- generic: 2.7.30
+- generic: 类型
+- generic: 广告类
+- generic: 四川才谦广告传媒有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 黑鲨游戏sdk
+- generic: 版本
+- generic: 5.9.4
+- generic: 类型
+- generic: 游戏联运类
+- generic: 南昌黑鲨科技有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 接触卫士（Android版)
+- generic: 版本
+- generic: 6.7.0.300
+- generic: 类型
+- generic: 框架类
+- generic: 华为软件技术有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: ContactShieldFullSDK
+- generic: 版本
+- generic: 6.2.0.300
+- generic: 类型
+- generic: 框架类
+- generic: 华为软件技术有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: AgoraFpaService_for_Android
+- generic: 版本
+- generic: 1.2.1
+- generic: 类型
+- generic: 平台服务类
+- generic: 上海声网科技有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: Image Kit
+- generic: 版本
+- generic: 1.0.3.305; 1.0.3.306
+- generic: 类型
+- generic: 框架类
+- generic: 华为软件技术有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: MLKitQuickAppSDK
+- generic: 版本
+- generic: 3.4.0.300
+- generic: 类型
+- generic: 框架类
+- generic: 华为软件技术有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 近距离数据通信（JS 版）
+- generic: 版本
+- generic: 5.2.0.300
+- generic: 类型
+- generic: 框架类
+- generic: 华为软件技术有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 七牛云号码认证
+- generic: 版本
+- generic: 1.0.3
+- generic: 类型
+- generic: 认证类
+- generic: 上海七牛信息技术有限公司
+- generic: 七牛一键登录号码认证sdk
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 当乐网单机SDK
+- generic: 版本
+- generic: V1.4.3
+- generic: 类型
+- generic: 游戏联运类
+- generic: 北京当乐信息技术有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: GCloudCore（安卓）
+- generic: 版本
+- generic: 1.3.01.2648
+- generic: 类型
+- generic: 框架类
+- generic: 深圳市腾讯计算机系统有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 虎牙游戏联运聚合SDK
+- generic: 版本
+- generic: 0.0.1
+- generic: 类型
+- generic: 平台服务类
+- generic: 广州虎牙信息科技有限公司
+- generic: 屏蔽渠道之间差异，一次接入，批量出各个渠道包。
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 华为3D建模SDK（动作捕捉）（Android版）
+- generic: 版本
+- generic: 1.7.0.301
+- generic: 类型
+- generic: 框架类
+- generic: 华为软件技术有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 华为3D建模SDK（材质生成）（Android版）
+- generic: 版本
+- generic: 1.7.0.301
+- generic: 类型
+- generic: 框架类
+- generic: 华为软件技术有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 华为3D建模SDK（物体重建）（Android版）
+- generic: 版本
+- generic: 1.7.0.301
+- generic: 类型
+- generic: 框架类
+- generic: 华为软件技术有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 离线合成Android
+- generic: 版本
+- generic: "1.4"
+- generic: 类型
+- generic: 人工智能类
+- generic: 浙江同花顺智能科技有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: AppicAd SDK
+- generic: 版本
+- generic: 5.1.0.33
+- generic: 类型
+- generic: 广告类
+- generic: 北京金域互动科技有限公司
+- generic: 互联网+新场景下领先的程序化互动广告平台
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 美图游戏联运
+- generic: 版本
+- generic: 1.0.11
+- generic: 类型
+- generic: 游戏联运类
+- generic: 厦门美图网科技有限公司
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 七牛云实时音视频
+- generic: 版本
+- generic: 6.2.0
+- generic: 类型
+- generic: 实时音视频类
+- generic: 上海七牛信息技术有限公司
+- generic: 对接七牛云安卓实时音视频服务
+- button "查看详情":
+  - generic: 查看详情
+- list:
+  - listitem "上一页":
+    - button "left":
+      - img "left":
+  - listitem "1":
+    - generic: "1"
+  - listitem "2":
+    - generic: "2"
+  - listitem "3":
+    - generic: "3"
+  - listitem "4":
+    - generic: "4"
+  - listitem "5":
+    - generic: "5"
+  - listitem "下一页":
+    - button "right" [active]:
+      - img "right":
+- paragraph: 版权所有©：中国信息通信研究院
+- paragraph: 中国信息通信研究院技术与标准研究所
+- paragraph: 联系方式：010-62300568
+- generic: 反馈通道

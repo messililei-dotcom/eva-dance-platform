@@ -1,0 +1,8 @@
+package cn.com.swod.app;
+import org.junit.Test;
+import static org.junit.Assert.*;
+public class AutomaticVideoCacheRenewalTest {
+    private AutomaticVideoCacheRenewal.Lease lease(long now){return new AutomaticVideoCacheRenewal.Lease(1,"s","a".repeat(64),10,30,"b".repeat(32),"c".repeat(64),now,now+86400000,"aliyun-secure");}
+    @Test public void transientFailureNeverExtendsAndReconnectRenewsWithoutManualAction(){long[] now={1001},retry={0};boolean[] online={true};int[] mode={0},calls={0},saves={0},discard={0};AutomaticVideoCacheRenewal keeper=new AutomaticVideoCacheRenewal(lease(1000),()->now[0],()->retry[0],()->online[0],()->true,old->{calls[0]++;if(mode[0]==1)throw new Exception("network");if(mode[0]==2)throw new Api.Failure(403,"revoked");return lease(now[0]);},fresh->saves[0]++,()->discard[0]++);keeper.refresh();assertEquals(1,saves[0]);mode[0]=1;now[0]+=301000;retry[0]+=301000;keeper.refresh();assertTrue(keeper.canPlay());now[0]=86401002;retry[0]+=86400000;online[0]=false;keeper.refresh();assertFalse(keeper.canPlay());assertEquals(2,calls[0]);online[0]=true;mode[0]=0;retry[0]+=301000;keeper.refresh();assertTrue(keeper.canPlay());assertEquals(2,saves[0]);mode[0]=2;now[0]+=301000;retry[0]+=301000;keeper.refresh();assertFalse(keeper.canPlay());assertEquals(1,discard[0]);keeper.close();}
+    @Test public void accountSwitchDuringRenewalCannotSaveStaleResponse(){boolean[] current={true};int[] saved={0},discard={0};AutomaticVideoCacheRenewal keeper=new AutomaticVideoCacheRenewal(lease(1000),()->1001L,()->0L,()->true,()->current[0],old->{current[0]=false;return lease(1001);},fresh->saved[0]++,()->discard[0]++);keeper.refresh();assertFalse(keeper.canPlay());assertEquals(0,saved[0]);assertEquals(1,discard[0]);keeper.close();}
+}

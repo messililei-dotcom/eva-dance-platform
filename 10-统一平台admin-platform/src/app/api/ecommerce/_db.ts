@@ -51,6 +51,7 @@ export function ensureCommerceTables(db: any) {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+  for (const field of ['group_name', 'storefront_category', 'detail_text', 'detail_images']) ensureColumn(db, 'shop_products', field, "TEXT NOT NULL DEFAULT ''");
   ensureColumn(db, 'shop_sales', 'sale_type', "TEXT DEFAULT '线下'");
   ensureColumn(db, 'shop_sales', 'channel', "TEXT DEFAULT '线下'");
   ensureColumn(db, 'shop_sales', 'customer_phone', "TEXT DEFAULT ''");

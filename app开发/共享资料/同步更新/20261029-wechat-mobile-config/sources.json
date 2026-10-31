@@ -1,0 +1,42 @@
+[
+  {
+    "path": ".gitignore",
+    "sha256": "c4efe34b74a29832f2c17a83f0325711403c5cd90f32b63bbe040ae571dd746c"
+  },
+  {
+    "path": "app开发/共享资料/配置/wechat-mobile.public.json",
+    "sha256": "cd2242283836fb5f5f8bd776f6b4b4410d760ff576c6c024f807dd3a89bc7f79"
+  },
+  {
+    "path": "app开发/共享资料/scripts/sync_wechat_mobile.py",
+    "sha256": "9dc7bcc9ddb1d02470ca7fd7fbafd7452645933373556f6c6986c30cca2fb7d9"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/scripts/generate_project.py",
+    "sha256": "94da5b7c0a03f9681640858dc0cd8801721c2628a619c7d6eebe84c625287209"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Resources/Info.plist",
+    "sha256": "f50b962d02c713d59fdc1e432617c31944363e335dd67e7db4ae89c86ba42eef"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Resources/wechat-mobile.public.json",
+    "sha256": "cd2242283836fb5f5f8bd776f6b4b4410d760ff576c6c024f807dd3a89bc7f79"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/assets/wechat-mobile.public.json",
+    "sha256": "cd2242283836fb5f5f8bd776f6b4b4410d760ff576c6c024f807dd3a89bc7f79"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/resources/rawfile/wechat-mobile.public.json",
+    "sha256": "cd2242283836fb5f5f8bd776f6b4b4410d760ff576c6c024f807dd3a89bc7f79"
+  },
+  {
+    "path": "10-统一平台admin-platform/src/lib/server/app-wechat-config.ts",
+    "sha256": "92b637ea2ac44f450b6657daa411e898641bc47f8c5e3ecb1235de77ad39bb9d"
+  },
+  {
+    "path": "10-统一平台admin-platform/scripts/app-wechat-config.test.cjs",
+    "sha256": "23fe688e9a6c560b6783f28173d75c0d752a8142aac37c2b5a59e0b9f30ea61e"
+  }
+]

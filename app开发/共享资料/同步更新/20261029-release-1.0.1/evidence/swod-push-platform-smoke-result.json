@@ -1,0 +1,11 @@
+[
+  {
+    "platform": "harmony",
+    "appKey": "335759346",
+    "httpStatus": 200,
+    "vendorCode": "",
+    "taskAccepted": true,
+    "targetIsUnregisteredTestSentinel": true,
+    "realDeliveryAccepted": false
+  }
+]

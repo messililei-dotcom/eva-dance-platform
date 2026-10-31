@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-26",
+  "requestedAction": "上传审核",
+  "apk": "app开发/Android/发布准备包/20261024/installers/SWOD-1.0.0-7-release.apk",
+  "apkSha256": "797bf23afca7e27781099ab7653d383be2677ffe7d01939bf16567e0aa282267",
+  "apkHashVerified": true,
+  "signatureVerified": true,
+  "certificateSha256": "58ecee1c1cd0adc08f797ab9bb75dcb45e6a3b747c535939020d8ae8f0d548fe",
+  "adbConnectedDevices": 0,
+  "browserTabClaimBlockedByOtherChat": "继续腾讯企业开发者认证",
+  "otherThreadId": "01a1775f-4d7f-72c4-b873-e330ea0af03b",
+  "otherThreadLatestReadback": "小米公司认证已通过，手机应用列表暂无数据；其他平台会话未完整恢复",
+  "liveStatusDirectlyReverifiedThisTurn": false,
+  "uploadPerformed": false,
+  "submittedForReview": false,
+  "pending": [
+    "版权资质原件及真实声明问题解决",
+    "真机验收",
+    "实际渠道问卷和审核字段核对"
+  ],
+  "crossThreadMessageAuthorizedByUser": true,
+  "crossThreadMessageSent": true,
+  "uploadHandlingThreadId": "01a1775f-4d7f-72c4-b873-e330ea0af03b",
+  "uploadHandlingThreadTitle": "继续腾讯企业开发者认证"
+}

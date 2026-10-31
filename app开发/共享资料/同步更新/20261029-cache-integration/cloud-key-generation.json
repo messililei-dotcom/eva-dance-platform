@@ -1,0 +1,32 @@
+[
+  {
+    "platform": "ios",
+    "status": "key_generated",
+    "bytes": 1369,
+    "sdkValidated": false,
+    "requestId": "01A18585-E42A-5A7F-966D-6DDB0960292A",
+    "apiEncodedCharacters": 1366,
+    "encoding": "Vendor API encoded text in UTF-8 with BOM; do not Base64-decode",
+    "consoleFileMatchesAPIWithBOM": false
+  },
+  {
+    "platform": "android",
+    "status": "key_generated",
+    "bytes": 1369,
+    "sdkValidated": true,
+    "requestId": "01A18585-E512-58B1-97C4-FFF1DC5EE087",
+    "apiEncodedCharacters": 1366,
+    "encoding": "Vendor API encoded text in UTF-8 with BOM; do not Base64-decode",
+    "consoleFileMatchesAPIWithBOM": true
+  },
+  {
+    "platform": "harmony",
+    "status": "key_generated",
+    "bytes": 1369,
+    "sdkValidated": false,
+    "requestId": "01A18585-E601-596E-A8C4-B37A15EC243A",
+    "apiEncodedCharacters": 1366,
+    "encoding": "Vendor API encoded text in UTF-8 with BOM; do not Base64-decode",
+    "consoleFileMatchesAPIWithBOM": false
+  }
+]

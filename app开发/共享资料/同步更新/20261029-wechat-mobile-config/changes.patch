@@ -1,0 +1,233 @@
+--- before/.gitignore
++++ after/.gitignore
+@@ -131,3 +131,6 @@
+ **/*.orig
+ **/*.rej
+ **/number-auth.local.json
++
++# User-supplied WeChat credentials; never commit or bundle.
++/微信开发配置.rtf
+--- before/app开发/共享资料/配置/wechat-mobile.public.json
++++ after/app开发/共享资料/配置/wechat-mobile.public.json
+@@ -0,0 +1,14 @@
++{
++  "schemaVersion": 1,
++  "applicationType": "mobile",
++  "applicationName": "SWOD伊娃东方舞",
++  "appId": "wxc1e3dafe3d3b70c6",
++  "universalLink": "https://www.swod.com.cn/app/wechat/",
++  "loginEnabled": false,
++  "permissionStatus": "user_confirmed_enabled",
++  "iosBundleId": "cn.com.swod.app",
++  "androidPackageName": "cn.com.swod.app",
++  "androidSignatureMD5": "460ddea3a2119d0c4f11c43c24889b11",
++  "harmonyBundleName": "cn.com.swod.evadance",
++  "harmonyIdentifier": "6917617955633704973"
++}
+--- before/app开发/共享资料/scripts/sync_wechat_mobile.py
++++ after/app开发/共享资料/scripts/sync_wechat_mobile.py
+@@ -0,0 +1,29 @@
++#!/usr/bin/env python3
++"""Sync only public mobile registration fields. Never read a private credential file."""
++import argparse
++import json
++from pathlib import Path
++
++shared = Path(__file__).resolve().parents[1]
++apps = shared.parent
++config = json.loads((shared / '配置/wechat-mobile.public.json').read_text())
++allowed = {'schemaVersion', 'applicationType', 'applicationName', 'appId', 'universalLink',
++           'loginEnabled', 'permissionStatus', 'iosBundleId', 'androidPackageName',
++           'androidSignatureMD5', 'harmonyBundleName', 'harmonyIdentifier'}
++if set(config) != allowed or config['applicationType'] != 'mobile' or config['loginEnabled'] is not False:
++    raise SystemExit('Invalid public mobile configuration or unapproved login enablement.')
++payload = json.dumps(config, ensure_ascii=False, indent=2) + '\n'
++targets = [apps / 'iOS/EvaDance/Resources/wechat-mobile.public.json',
++           apps / 'Android/EvaDance/app/src/main/assets/wechat-mobile.public.json',
++           apps / 'HarmonyOS/EvaDance/entry/src/main/resources/rawfile/wechat-mobile.public.json']
++check = argparse.ArgumentParser()
++check.add_argument('--check', action='store_true')
++args = check.parse_args()
++for target in targets:
++    if args.check:
++        if not target.is_file() or target.read_text() != payload:
++            raise SystemExit(f'Public configuration out of sync: {target}')
++    else:
++        target.parent.mkdir(parents=True, exist_ok=True)
++        target.write_text(payload)
++print('Public mobile configuration synchronized; login remains disabled.')
+--- before/app开发/iOS/EvaDance/scripts/generate_project.py
++++ after/app开发/iOS/EvaDance/scripts/generate_project.py
+@@ -104,6 +104,14 @@
+ # User supplied the issued App filing number on 2026-10-23. Keep it in the
+ # generated bundle so the About screen and release evidence share one value.
+ info['SWODAppFilingNumber'] = '湘ICP备2026005683号-5A'
++# Public registration only. No SDK, callback handler or login availability is
++# implied by these fields. Never copy the server's mobile AppSecret here.
++wechat = json.loads((root/'Resources/wechat-mobile.public.json').read_text())
++if wechat['applicationType'] != 'mobile' or wechat['iosBundleId'] != 'cn.com.swod.app' or wechat['loginEnabled'] is not False:
++    raise SystemExit('Invalid WeChat registration or unapproved login enablement')
++info['SWODWeChatAppID'] = wechat['appId']
++info['SWODWeChatUniversalLink'] = wechat['universalLink']
++info['SWODWeChatLoginEnabled'] = False
+ (root/'Resources/Info.plist').write_bytes(plistlib.dumps(info,sort_keys=False))
+ # Static SDK frameworks do not copy their privacy manifests into the app.
+ # Merge the shipped device manifests; do not silently omit required API reasons.
+--- before/app开发/iOS/EvaDance/Resources/Info.plist
++++ after/app开发/iOS/EvaDance/Resources/Info.plist
+@@ -42,5 +42,11 @@
+ 	<false/>
+ 	<key>SWODAppFilingNumber</key>
+ 	<string>湘ICP备2026005683号-5A</string>
++	<key>SWODWeChatAppID</key>
++	<string>wxc1e3dafe3d3b70c6</string>
++	<key>SWODWeChatUniversalLink</key>
++	<string>https://www.swod.com.cn/app/wechat/</string>
++	<key>SWODWeChatLoginEnabled</key>
++	<false/>
+ </dict>
+ </plist>
+--- before/app开发/iOS/EvaDance/Resources/wechat-mobile.public.json
++++ after/app开发/iOS/EvaDance/Resources/wechat-mobile.public.json
+@@ -0,0 +1,14 @@
++{
++  "schemaVersion": 1,
++  "applicationType": "mobile",
++  "applicationName": "SWOD伊娃东方舞",
++  "appId": "wxc1e3dafe3d3b70c6",
++  "universalLink": "https://www.swod.com.cn/app/wechat/",
++  "loginEnabled": false,
++  "permissionStatus": "user_confirmed_enabled",
++  "iosBundleId": "cn.com.swod.app",
++  "androidPackageName": "cn.com.swod.app",
++  "androidSignatureMD5": "460ddea3a2119d0c4f11c43c24889b11",
++  "harmonyBundleName": "cn.com.swod.evadance",
++  "harmonyIdentifier": "6917617955633704973"
++}
+--- before/app开发/Android/EvaDance/app/src/main/assets/wechat-mobile.public.json
++++ after/app开发/Android/EvaDance/app/src/main/assets/wechat-mobile.public.json
+@@ -0,0 +1,14 @@
++{
++  "schemaVersion": 1,
++  "applicationType": "mobile",
++  "applicationName": "SWOD伊娃东方舞",
++  "appId": "wxc1e3dafe3d3b70c6",
++  "universalLink": "https://www.swod.com.cn/app/wechat/",
++  "loginEnabled": false,
++  "permissionStatus": "user_confirmed_enabled",
++  "iosBundleId": "cn.com.swod.app",
++  "androidPackageName": "cn.com.swod.app",
++  "androidSignatureMD5": "460ddea3a2119d0c4f11c43c24889b11",
++  "harmonyBundleName": "cn.com.swod.evadance",
++  "harmonyIdentifier": "6917617955633704973"
++}
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/rawfile/wechat-mobile.public.json
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/rawfile/wechat-mobile.public.json
+@@ -0,0 +1,14 @@
++{
++  "schemaVersion": 1,
++  "applicationType": "mobile",
++  "applicationName": "SWOD伊娃东方舞",
++  "appId": "wxc1e3dafe3d3b70c6",
++  "universalLink": "https://www.swod.com.cn/app/wechat/",
++  "loginEnabled": false,
++  "permissionStatus": "user_confirmed_enabled",
++  "iosBundleId": "cn.com.swod.app",
++  "androidPackageName": "cn.com.swod.app",
++  "androidSignatureMD5": "460ddea3a2119d0c4f11c43c24889b11",
++  "harmonyBundleName": "cn.com.swod.evadance",
++  "harmonyIdentifier": "6917617955633704973"
++}
+--- before/10-统一平台admin-platform/src/lib/server/app-wechat-config.ts
++++ after/10-统一平台admin-platform/src/lib/server/app-wechat-config.ts
+@@ -0,0 +1,39 @@
++import 'server-only';
++import { readFileSync, lstatSync } from 'node:fs';
++import { isAbsolute, join } from 'node:path';
++import { homedir } from 'node:os';
++
++export type MobileWechatCredentials = Readonly<{ appId: string; appSecret: string }>;
++
++/** Credentials only, not a login-readiness flag. Never fall back to website or mini-program keys. */
++export function loadMobileWechatCredentials(
++  env: NodeJS.ProcessEnv = process.env,
++): MobileWechatCredentials | null {
++  let appId: unknown;
++  let appSecret: unknown;
++  // If either variable is supplied, require the complete pair from that source.
++  // Mixing an old file secret with a new AppID can bind identities to the wrong app.
++  if (env.WECHAT_MOBILE_APP_ID !== undefined || env.WECHAT_MOBILE_APP_SECRET !== undefined) {
++    appId = env.WECHAT_MOBILE_APP_ID;
++    appSecret = env.WECHAT_MOBILE_APP_SECRET;
++  } else {
++    // Production must explicitly select its own private file; never use a developer home fallback.
++    const file = env.WECHAT_MOBILE_CONFIG_FILE ||
++      (env.NODE_ENV !== 'production' ? join(homedir(), '.config/eva-app/wechat-mobile.json') : '');
++    if (!file || !isAbsolute(file)) return null;
++    try {
++      const stat = lstatSync(file);
++      if (!stat.isFile() || (stat.mode & 0o077) !== 0) return null;
++      const config = JSON.parse(readFileSync(file, 'utf8'));
++      if (config.applicationType !== 'mobile') return null;
++      appId = config.appId;
++      appSecret = config.appSecret;
++    } catch {
++      // Do not log file content, parse errors, paths or the secret.
++      return null;
++    }
++  }
++  if (typeof appId !== 'string' || !/^wx[0-9a-f]{16}$/.test(appId) ||
++      typeof appSecret !== 'string' || !/^[0-9a-f]{32}$/.test(appSecret)) return null;
++  return Object.freeze({ appId, appSecret });
++}
+--- before/10-统一平台admin-platform/scripts/app-wechat-config.test.cjs
++++ after/10-统一平台admin-platform/scripts/app-wechat-config.test.cjs
+@@ -0,0 +1,48 @@
++const {test} = require('node:test');
++const assert = require('node:assert/strict');
++const fs = require('node:fs');
++const os = require('node:os');
++const path = require('node:path');
++const ts = require('typescript');
++const moduleObject = {exports: {}};
++new Function('require', 'module', 'exports', ts.transpileModule(
++  fs.readFileSync('src/lib/server/app-wechat-config.ts', 'utf8'),
++  {compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022}}
++).outputText)(name => name === 'server-only' ? {} : require(name), moduleObject, moduleObject.exports);
++const {loadMobileWechatCredentials: load} = moduleObject.exports;
++const appId = 'wx0123456789abcdef';
++const appSecret = 'a'.repeat(32); // Fake credential; never load the developer's real secret in tests.
++
++test('mobile credentials never fall back to website or mini-program variables', () => {
++  assert.equal(load({NODE_ENV: 'production', WECHAT_QR_APP_ID: appId, WECHAT_QR_APP_SECRET: appSecret,
++    WECHAT_APP_ID: appId, WECHAT_APP_SECRET: appSecret}), null);
++  assert.deepEqual(load({WECHAT_MOBILE_APP_ID: appId, WECHAT_MOBILE_APP_SECRET: appSecret}), {appId, appSecret});
++});
++test('incomplete or malformed environment pairs fail closed rather than reading local credentials', () => {
++  for (const pair of [
++    {WECHAT_MOBILE_APP_ID: appId}, {WECHAT_MOBILE_APP_SECRET: appSecret},
++    {WECHAT_MOBILE_APP_ID: '', WECHAT_MOBILE_APP_SECRET: appSecret},
++    {WECHAT_MOBILE_APP_ID: appId, WECHAT_MOBILE_APP_SECRET: 'bad'},
++  ]) assert.equal(load(pair), null);
++});
++test('explicit private file requires a mobile record, absolute path and private permissions', () => {
++  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'swod-wechat-config-'));
++  const file = path.join(dir, 'mobile.json');
++  const env = {NODE_ENV: 'production', WECHAT_MOBILE_CONFIG_FILE: file};
++  try {
++    fs.writeFileSync(file, JSON.stringify({applicationType: 'mobile', appId, appSecret}), {mode: 0o600});
++    assert.deepEqual(load(env), {appId, appSecret});
++    // Environment pairs are atomic, even when a valid file is available.
++    assert.equal(load({...env, WECHAT_MOBILE_APP_ID: appId}), null);
++    fs.chmodSync(file, 0o644); assert.equal(load(env), null);
++    fs.chmodSync(file, 0o600);
++    fs.writeFileSync(file, JSON.stringify({applicationType: 'website', appId, appSecret}));
++    assert.equal(load(env), null);
++    fs.writeFileSync(file, 'invalid json'); assert.equal(load(env), null);
++    assert.equal(load({...env, WECHAT_MOBILE_CONFIG_FILE: 'relative.json'}), null);
++    fs.unlinkSync(file); assert.equal(load(env), null);
++    const other = path.join(dir, 'other.json');
++    fs.writeFileSync(other, JSON.stringify({applicationType: 'mobile', appId, appSecret}), {mode: 0o600});
++    fs.symlinkSync(other, file); assert.equal(load(env), null);
++  } finally {fs.rmSync(dir, {recursive: true, force: true});}
++});

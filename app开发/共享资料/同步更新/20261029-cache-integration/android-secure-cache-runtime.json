@@ -1,0 +1,19 @@
+{
+  "environment": "Android arm64 emulator; not physical acceptance",
+  "checkedAt": "2026-10-29T06:54:12.186853+00:00",
+  "secureDownloadCompleted": true,
+  "systemDecoderRejected": true,
+  "entryFileBytes": 311,
+  "priorWifiState": "1",
+  "priorMobileDataState": "1",
+  "networkUnavailable": true,
+  "offlineFrameRendered": true,
+  "sdkErrorCode": 0,
+  "durationMS": 10000,
+  "cacheDirectoryBytes": 141648,
+  "instrumentationCode": [
+    "-1"
+  ],
+  "failures": [],
+  "networkSettingsRestored": true
+}

@@ -1,0 +1,84 @@
+{
+  "checkedAt": "2026-10-29T03:24:16.675814+00:00",
+  "region": "cn-shenzhen",
+  "source": "current production review account active authorized published course lessons; readonly SQLite query",
+  "noSignedURLsSaved": true,
+  "productionWrites": false,
+  "samples": [
+    {
+      "lessonID": 64,
+      "seriesID": 4,
+      "vodSuffix": "d1d70102",
+      "status": "Normal",
+      "streams": [
+        {
+          "format": "m3u8",
+          "encrypt": 0,
+          "definition": "SD"
+        },
+        {
+          "format": "m3u8",
+          "encrypt": 0,
+          "definition": "HD"
+        },
+        {
+          "format": "mp4",
+          "encrypt": 0,
+          "definition": "OD"
+        }
+      ],
+      "safeForOffline": false,
+      "requestID": "01A185AF-D796-5F0B-8EB6-3C480EDB90FA"
+    },
+    {
+      "lessonID": 98,
+      "seriesID": 4,
+      "vodSuffix": "c0c60102",
+      "status": "Normal",
+      "streams": [
+        {
+          "format": "m3u8",
+          "encrypt": 0,
+          "definition": "SD"
+        },
+        {
+          "format": "m3u8",
+          "encrypt": 0,
+          "definition": "HD"
+        },
+        {
+          "format": "mp4",
+          "encrypt": 0,
+          "definition": "OD"
+        }
+      ],
+      "safeForOffline": false,
+      "requestID": "01A185AF-D870-56F8-938F-1A08993A091B"
+    },
+    {
+      "lessonID": 99,
+      "seriesID": 4,
+      "vodSuffix": "c0d60102",
+      "status": "Normal",
+      "streams": [
+        {
+          "format": "m3u8",
+          "encrypt": 0,
+          "definition": "SD"
+        },
+        {
+          "format": "m3u8",
+          "encrypt": 0,
+          "definition": "HD"
+        },
+        {
+          "format": "mp4",
+          "encrypt": 0,
+          "definition": "OD"
+        }
+      ],
+      "safeForOffline": false,
+      "requestID": "01A185AF-D930-58CC-AD40-62F0DAF32B3D"
+    }
+  ]
+}

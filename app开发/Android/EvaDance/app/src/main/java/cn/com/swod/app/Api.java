@@ -17,17 +17,21 @@ public final class Api {
     private static Api instance;
     public static synchronized Api get(Context context) { if (instance == null) instance = new Api(context); return instance; }
     private final TokenVault vault;
+    private final Context context;
     private JSONObject session;
     private long generation;
-    private Api(Context context) { vault = new TokenVault(context); try { String saved = vault.read(); if (saved != null) { JSONObject parsed = new JSONObject(saved); if (!Policy.sessionTokens(parsed.optString("token"), parsed.optString("refreshToken"))) throw new Exception(); session = parsed; } } catch (Exception e) { vault.clear(); } }
+    private Api(Context context) { this.context=context.getApplicationContext(); vault = new TokenVault(context); try { String saved = vault.read(); if (saved != null) { JSONObject parsed = new JSONObject(saved); if (!Policy.sessionTokens(parsed.optString("token"), parsed.optString("refreshToken"))) throw new Exception(); session = parsed; } } catch (Exception e) { vault.clear(); } }
     public synchronized long accountGeneration(){return generation;}
+    public synchronized String learningCode(){String id=session==null?"":session.optString("sessionId");return "SWOD · 学习码 "+(id.length()>=8?id.substring(id.length()-8).toUpperCase(java.util.Locale.ROOT):"未登录");}
     public synchronized boolean loggedIn() { return session != null; }
-    public synchronized void accept(JSONObject credentials) throws Exception { if (!Policy.sessionTokens(credentials.optString("token"), credentials.optString("refreshToken"))) throw new Failure(502, "登录响应无效，请重试"); JSONObject copy = new JSONObject(credentials.toString()); vault.save(copy.toString()); session = copy; generation++; }
+    public synchronized long memberID(){return session==null?0:session.optLong("memberId");}
+    public synchronized String sessionID(){return session==null?"":session.optString("sessionId");}
+    public synchronized void accept(JSONObject credentials) throws Exception { if (!Policy.sessionTokens(credentials.optString("token"), credentials.optString("refreshToken"))) throw new Failure(502, "登录响应无效，请重试"); JSONObject copy = new JSONObject(credentials.toString()); vault.save(copy.toString()); if(!copy.optString("sessionId").equals(sessionID())){AppPush.revoke(context,sessionID());AppPush.clear(context);} session = copy; generation++; CourseCacheManager.clearExisting(); }
     private synchronized Object currentResult(Object result, long version, boolean auth) throws Failure {
         if (auth && (version != generation || session == null)) throw new Failure(401, "账号已切换，请重新打开此页面");
         return result;
     }
-    public synchronized void clear() { generation++; session = null; vault.clear(); }
+    public synchronized void clear() { generation++; AppPush.revoke(context,sessionID()); AppPush.clear(context); session = null; vault.clear(); CourseCacheManager.clearExisting(); }
     public void logout() throws Exception { String old; synchronized(this) { old = session == null ? null : session.optString("token"); clear(); } if (old != null) exchange("/auth/logout", "POST", new JSONObject(), old, false); }
     public Object request(String path, String method, JSONObject body, boolean auth) throws Exception {
         if (!Policy.safePath(path)) throw new Failure(400, "接口地址无效");

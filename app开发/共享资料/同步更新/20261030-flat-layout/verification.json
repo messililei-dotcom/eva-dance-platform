@@ -1,0 +1,116 @@
+{
+  "updatedAt": "2026-10-30T17:53:44+08:00",
+  "status": "three-platform-layout-and-interactions-implemented-local-builds-complete",
+  "mode": "Operate",
+  "skills": [
+    "Impeccable layout",
+    "SwiftUI Pro"
+  ],
+  "layout": "Continuous content rows, flat semantic surfaces and thin separators. Removed nested course/product/event/playback panels. Tightened vertical padding while preserving full touch targets, native navigation, wine palette and fixed cover image frames.",
+  "interactions": [
+    "course scope (all/unlocked) and category filters",
+    "guest unlocked-filter choice opens existing login; no client-side grant",
+    "search clear and IME completion/interactive keyboard dismissal",
+    "read-only main-page pull refresh",
+    "quiet row press feedback with Reduce Motion support on iOS"
+  ],
+  "dependency": "Android official AndroidX SwipeRefreshLayout1.2.0, Google Maven; UI only, no service SDK or credentials. iOS/Harmony use system frameworks.",
+  "ios": {
+    "deviceTargetReleaseCompiled": true,
+    "deviceBuild": 11,
+    "archive": "iOS/SWOD-flat-build11-unsigned.xcarchive",
+    "signed": false,
+    "ipaExported": false,
+    "completedUICasesPassed": 4,
+    "failedUICases": 0,
+    "caseEvidence": "Raw XCTest log records all four cases and All tests passed. Xcode then hung during SDK/build diagnostics with invalidDigitCount; diagnostic wrapper stopped after completed tests. Final xcresult Info.plist unavailable, so aggregate runner completion is not claimed.",
+    "uiCases": [
+      "search-clear + guest unlocked filter login",
+      "guest profile direct login/cancel/reopen",
+      "detail return top layout",
+      "four public roots safe-area layout"
+    ],
+    "rootFirstYpt": {
+      "online": 67,
+      "offline": 74,
+      "events": 65,
+      "shop": 74
+    },
+    "nativeVisuals": [
+      "evidence/iphone-light.png",
+      "evidence/ipad-light.png",
+      "evidence/ipad-dark-large.png"
+    ],
+    "ipadQA": "iPad Pro11 M5, native simulator; dark and accessibility-extra-large checked after stable relaunch. Original light/large preferences restored; QA iPad shut down.",
+    "fullPrivateAccountAcceptance": false
+  },
+  "android": {
+    "build": 17,
+    "unitTestsPassed": 32,
+    "lintPassed": true,
+    "originalSignedApkAabReady": true,
+    "certificateSHA256": "58ecee1c1cd0adc08f797ab9bb75dcb45e6a3b747c535939020d8ae8f0d548fe",
+    "nativeRefreshGestureRuntimeAccepted": false,
+    "runtimeLimit": "First-run privacy consent from prior check not accepted in this run; no gate bypassed."
+  },
+  "harmony": {
+    "build": 14,
+    "unitTestsPassed": 44,
+    "originalSignedHapAppReady": true,
+    "buildRecord": "HarmonyOS-build14-ready/verification.json",
+    "nativeRefreshGestureRuntimeAccepted": false,
+    "refreshIsolation": "Refresh indicator callback bound to page generation; navigation resets indicator. Existing data/account guards preserved."
+  },
+  "mechanicalDetector": "Empty findings; lacks dedicated native UI coverage, not visual clearance. Separate source reviews and native captures retained.",
+  "physicalDeviceTests": "skipped-at-user-request",
+  "sourceAssetsModified": false,
+  "entitlementPricingAndPlaybackAuthorizationChanged": false,
+  "filingChanged": false,
+  "signingIdentityChanged": false,
+  "productionFeatureFlagsChanged": false,
+  "existingReviewsWithdrawn": false,
+  "uploaded": false,
+  "submitted": false,
+  "published": false,
+  "oldCandidateHashesVerifiedUnchanged": true,
+  "artifacts": [
+    {
+      "path": "Android-build17/installers/SWOD-1.0.1-17-release.aab",
+      "size": 15441249,
+      "sha256": "5f0c61db1647209f65755269e7fcc609fa3d21324293ebe3fc78339248bdfc38"
+    },
+    {
+      "path": "Android-build17/installers/SWOD-1.0.1-17-release.apk",
+      "size": 28940246,
+      "sha256": "4767069ac760ca97198511ebdbb949dfa5126fd713d8dfa2fb11369d66ace305"
+    },
+    {
+      "path": "HarmonyOS-build14-ready/installers/SWOD-1.0.1-14-release.app",
+      "size": 7599913,
+      "sha256": "a3f52148bbb934d11e40b5585d58ec9737a3fd36f1fea9cbb5947f7104aac83b"
+    },
+    {
+      "path": "HarmonyOS-build14-ready/installers/SWOD-1.0.1-14-release.hap",
+      "size": 16120279,
+      "sha256": "1c19737cddd748ef19fb06317e45dae072cc72650963cf0ced06e8672d70a982"
+    }
+  ],
+  "sourceHashes": {
+    "iOS/EvaDance/Sources/EvaDanceApp/BrandViews.swift": "a2b1b49fa64287b9cd228e9319aad0f75b51fa5c76946f481aca585ebfe70499",
+    "iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift": "0585f2634399031d3db8e098410396c5ca9be901a4dac567bb03250ce4fda5c4",
+    "iOS/EvaDance/Sources/EvaDanceApp/ShopViews.swift": "11bbda9cdf863ee62a68718ac76e6062eb05667a44cf7099ab8b2a28e08afb9a",
+    "iOS/EvaDance/Sources/EvaDanceApp/EventsView.swift": "294b72b55823f4461fdc7887c195bc9d4cf16f7dd51cab08d4447364fa6b3af3",
+    "iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift": "4540089ecd31f812170fe6e4697eefcb2a36b64f69222c90b885135cd6075067",
+    "iOS/EvaDance/Sources/EvaDanceApp/LoginView.swift": "ee458ce179c5bcd126286e4a1f051fd0bb09f7885df4c11467235cf7e859a23f",
+    "iOS/EvaDance/Sources/EvaDanceApp/EvaPressStyle.swift": "7501b864ef3e5cc355f511a278c61e7392f17f483d3f298f7c11a0ddb7f2e5ed",
+    "iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj": "d4d04981dcda643153e2b04d77109a2c00074d4a1911804ed7df0e4f42102c80",
+    "iOS/EvaDance/Tests/EvaLayoutUITests/RootLayoutTests.swift": "e92108725b2e13daeae317fba1601bcbbfa2c4630f0bb47a533cbfd45320b2a2",
+    "Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "621b4e6dd42ab95d645b7cd4d8cbe5cb71ec6bfdb3b41e77474fcb9f90ab462c",
+    "Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java": "a0809cfe10b73c9999c9ace34825f7db9be90c6bdd97859f6a9603471e6f30dd",
+    "Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodUi.java": "fbcdd79e4c6e1ce51d31e25951e7a8ba4e8bb1b4f2c9e7f7b9f1dae8bd7027d8",
+    "Android/EvaDance/app/build.gradle": "e4a6579d1cfebed59777398073665320256c529d3b2d629f187804aedeb6778a",
+    "HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "d08dbac39deb82e5410174845526cc3a512c6544f9feb96f6922e7965927d691",
+    "HarmonyOS/EvaDance/entry/src/main/ets/services/SwodTheme.ets": "f35bcc0db8cc042892c66711b664cdc0aafa0493cc56165d753cb1f37e8b2310",
+    "HarmonyOS/EvaDance/AppScope/app.json5": "da48da4d174c2bb08bcc892c9c85a6541140457f76b5bbac44b0099601fc8254"
+  }
+}

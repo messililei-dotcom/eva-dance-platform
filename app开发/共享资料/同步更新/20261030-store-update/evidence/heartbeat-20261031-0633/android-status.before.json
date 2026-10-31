@@ -1,0 +1,140 @@
+{
+  "version": "1.0.2",
+  "checkedAt": "2026-10-30T21:48:50+08:00",
+  "package": "cn.com.swod.app",
+  "versionCode": 18,
+  "apkSHA256": "406d23571c79b2466ad60ca653b987e5b3c3ba8df76f039c61d6379aaa2ae399",
+  "originalSigningIdentityPreserved": true,
+  "filingChanged": false,
+  "existingReviewsWithdrawn": false,
+  "anyLatestAndroidCandidateReviewSubmitted": false,
+  "candidateRegistry": "../../../共享资料/同步更新/20261030-store-update/candidate-artifacts.json",
+  "screenshotReceipt": "../../../共享资料/同步更新/20261030-store-update/screenshots-android18/receipt.json",
+  "platforms": {
+    "xiaomi": {
+      "appId": "2882303761520603185",
+      "versionName": "1.0.2",
+      "versionCode": 18,
+      "apkParsed": true,
+      "uploaded": true,
+      "draftSaved": true,
+      "reviewSubmitted": false,
+      "automaticReleaseAfterApprovalSelected": true,
+      "screenshotsBuild": 18,
+      "screenshotsCount": 4,
+      "screenshotsCloudUploadVerified": true,
+      "latestScreenshotDraftReopenVerified": false,
+      "blockers": [
+        "正式版权证书尚未取得",
+        "特殊行业资质评估及匹配材料待完成",
+        "联系人手机验证",
+        "官方表单仍标记基础信息缺项，须补齐后终检"
+      ],
+      "assessmentNote": "评估菜单仅显示学习教育/中小学教育等特殊类；未把成人舞蹈课程虚报为中小学教育，也未勾选不含特殊功能的未知声明。"
+    },
+    "vivo": {
+      "appId": "106168720",
+      "versionName": "1.0.2",
+      "versionCode": 18,
+      "apkParsed": true,
+      "uploaded": true,
+      "draftSaved": true,
+      "packageReopenedAndVerified": true,
+      "reviewSubmitted": false,
+      "automaticReleaseAfterApprovalSelected": true,
+      "categorySelected": "教育学习/成人学习",
+      "screenshotsBuild": 18,
+      "screenshotsCount": 4,
+      "screenshotsCloudUploadVerified": true,
+      "latestScreenshotDraftReopenVerified": false,
+      "blockers": [
+        "正式版权证明必填，当前未提供"
+      ],
+      "categoryAndPublishChoiceDraftPersistence": "按官方确认的设计不保存；最终提审前重新选择"
+    },
+    "honor": {
+      "appId": "104599763",
+      "versionName": "1.0.2",
+      "versionCode": 18,
+      "apkParsed": true,
+      "uploaded": true,
+      "draftSaved": true,
+      "newPackageSelected": true,
+      "reviewSubmitted": false,
+      "automaticReleaseAfterApprovalSelected": true,
+      "screenshotsBuild": 18,
+      "screenshotsCount": 4,
+      "screenshotsCloudUploadVerified": true,
+      "appInfoSaveButtonDisabledAfterSave": true,
+      "updatedReleaseNotesVerifiedInUI": true,
+      "screenOrientation": "portrait",
+      "publicContactDetailsFilled": true,
+      "contactVerificationStatusNotIndependentlyAccepted": true,
+      "blockers": [
+        "正式版权证书",
+        "资质评估与对应材料",
+        "年龄分级及应用信息终检",
+        "未完成Google Android开发者身份认证，印度尼西亚/泰国/新加坡/巴西当前不可分发；未擅自缩减全球范围"
+      ],
+      "AIServiceDeclaration": "不含面向用户的AI生成功能；未据此声明所有展示内容均非AI制作"
+    },
+    "huaweiAndroid": {
+      "appId": "119475083",
+      "versionName": "1.0.1",
+      "versionCode": 11,
+      "reviewSubmitted": true,
+      "status": "in-review",
+      "reviewVersionId": "2067391391952053568",
+      "nextCandidateVersionName": "1.0.2",
+      "nextCandidateVersionCode": 18,
+      "latestCandidateUploaded": false,
+      "latestCandidateReviewSubmitted": false,
+      "newDraftId": "2072784978143374849",
+      "newDraftType": "open-testing",
+      "newDraftSubmitted": false,
+      "blockers": [
+        "正式1.0.1(11)仍在审核并保留；新版正式提交未完成",
+        "安卓新草稿正文在新旧两个官方入口均持续加载，无法上传；该草稿标注开放式测试，未当作正式发布提交"
+      ]
+    },
+    "oppo": {
+      "appId": "37977416",
+      "lastVerifiedPortalVersionCode": 12,
+      "latestCandidateVersionCode": 18,
+      "latestCandidateUploaded": false,
+      "reviewSubmitted": false,
+      "loginRequired": true,
+      "loginComponentError": "网速不稳定,sdk加载失败,请刷新页面重试",
+      "loginReloadAttemptedOnce": true,
+      "blockers": [
+        "登录组件失败，刷新一次仍未恢复",
+        "此前记录的版权证书、签章承诺函及验证仍未补齐；本轮未进入后台重新核验"
+      ],
+      "support": "既有客服升级等待官方邮件；未重复外联"
+    },
+    "tencent": {
+      "appId": "1112541998",
+      "lastVerifiedPortalVersionCode": 12,
+      "latestCandidateVersionCode": 18,
+      "latestCandidateUploaded": false,
+      "reviewSubmitted": false,
+      "loginRequired": true,
+      "currentLoginTermsRequireHumanDecision": true,
+      "loginQuestion": "request_user_input_async: 应用宝当前服务协议与隐私政策及原企业QQ登录",
+      "blockers": [
+        "当前登录页须用户确认协议并登录",
+        "此前正式版权证书、签章承诺/备案截图、适用行业资质待补；本轮未进入后台重新核验"
+      ]
+    }
+  },
+  "computerStateAtStop": "Mac relocked; automatic unlock failed. Further browser operations stopped.",
+  "productionRemotePushEnabled": false,
+  "offlineCacheEnabled": false,
+  "carrierOneTapProductionEnabled": false,
+  "wechatMobileLoginProductionEnabled": false,
+  "physicalDeviceTests": "skipped-at-user-request",
+  "lastMonitorAt": "2026-10-31T02:41:09+08:00",
+  "lastMonitorRecord": "../../../共享资料/同步更新/20261030-store-update/heartbeat-20261031-0237.json",
+  "lastMonitorAccess": "mac-locked; official Android states not reverified; no new materials or login confirmation",
+  "newSubmissionThisMonitor": false
+}

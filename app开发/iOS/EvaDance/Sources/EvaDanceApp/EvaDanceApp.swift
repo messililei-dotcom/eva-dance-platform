@@ -3,17 +3,25 @@ import EvaCore
 
 @main struct EvaDanceApp: App {
     @StateObject private var session = Session()
+    #if os(iOS)
+    @UIApplicationDelegateAdaptor(AppPushDelegate.self) private var pushDelegate
+    #endif
     @Environment(\.scenePhase) private var scenePhase
     var body: some Scene {
         WindowGroup {
-            MainTabs().id(session.accountID ?? 0)
+            MainTabs()
             .sheet(isPresented: $session.showLogin) { LoginView().environmentObject(session) }
             .environmentObject(session)
+            .environmentObject(session.notifications)
             .tint(EvaBrand.red)
             .task(id: "\(session.accountID ?? 0)-\(scenePhase)") {
                 guard scenePhase == .active else { return }
+                #if os(iOS)
+                AppPushDelegate.attach(session.notifications)
+                #endif
                 while !Task.isCancelled {
                     await session.refreshCourseAccess()
+                    await session.notifications.refresh()
                     do { try await Task.sleep(nanoseconds: 30_000_000_000) } catch { return }
                 }
             }
@@ -23,86 +31,54 @@ import EvaCore
         }
     }
 }
-struct LoginView: View {
-    @EnvironmentObject var session: Session
-    @State private var phone = ""
-    @State private var code = ""
-    @State private var agreed = false
-    @State private var busy = false
-    @State private var sentAt: Date?
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Image("BrandLogo").resizable().scaledToFit().frame(width: 88, height: 88)
-                        .accessibilityLabel("伊娃东方舞 SWOD 标志")
-                    Text("伊娃东方舞").font(.largeTitle.bold())
-                    Text("让每一次练习都有收获").foregroundStyle(.secondary)
-                }
-                #if os(iOS)
-                Section {
-                    Button(busy ? "处理中…" : "本机号码一键登录") {
-                        perform {
-                            let availability: CarrierAvailability = try await session.transport.request("/config")
-                            guard availability.oneTapLogin == true else { throw APIError.service("本机号码登录暂未开放，请使用短信验证码。") }
-                            let token = try await CarrierLogin.shared.token()
-                            try await session.loginWithCarrier(token: token)
-                        }
-                    }.disabled(busy || !agreed)
-                    Text("请先勾选下方协议；不支持时可使用短信验证码登录。").font(.caption).foregroundStyle(.secondary)
-                }
-                #endif
-                Section("手机号登录") {
-                    TextField("请输入手机号", text: $phone).textContentType(.telephoneNumber)
-                    TextField("短信验证码", text: $code).textContentType(.oneTimeCode)
-                    TimelineView(.periodic(from: .now, by: 1)) { context in
-                        let remaining = max(0, 60 - Int(context.date.timeIntervalSince(sentAt ?? .distantPast)))
-                        Button(remaining > 0 ? "\(remaining) 秒后重发" : "获取验证码") {
-                            perform {
-                                let body = try JSONSerialization.data(withJSONObject: ["phone": phone])
-                                let _: Empty = try await session.api.request("/send-code", method: "POST", body: body)
-                                sentAt = .now
-                            }
-                        }.disabled(busy || !validPhone || !agreed || remaining > 0)
-                    }
-                    Toggle("我已阅读并同意服务条款和隐私政策", isOn: $agreed)
-                    Link("隐私政策", destination: URL(string: "https://www.swod.com.cn/privacy")!)
-                    Link("服务条款", destination: URL(string: "https://www.swod.com.cn/terms")!)
-                    Button(busy ? "处理中…" : "登录并开始学习") {
-                        perform { try await session.login(phone: phone, code: code) }
-                    }.disabled(busy || !agreed || !validPhone || code.isEmpty)
-                }
-            }.evaCompactLayout().navigationTitle("欢迎回来")
-        }
-    }
-    private var validPhone: Bool { phone.range(of: "^1[0-9]{10}$", options: .regularExpression) != nil }
-    private func perform(_ operation: @escaping () async throws -> Void) {
-        busy = true
-        Task { defer { busy = false }; do { try await operation() } catch is CancellationError {} catch { session.handle(error) } }
-    }
-}
 struct MainTabs: View {
+    @EnvironmentObject var session: Session
+    @EnvironmentObject var notifications: AppNotifications
     @StateObject private var cart = ShoppingCart()
     @State private var selected = 0
+    @State private var lastPublicTab = 0
+    @State private var awaitingAccountLogin = false
+    private var tabSelection: Binding<Int> { Binding(get: { selected }, set: selectTab) }
     var body: some View {
         Group {
         #if os(macOS)
         VStack(spacing: 0) {
-            Picker("导航", selection: $selected) {
+            Picker("导航", selection: tabSelection) {
                 Text("线上学院").tag(0); Text("线下课").tag(1); Text("赛事").tag(2); Text("商城").tag(3); Text("个人中心").tag(4)
             }.pickerStyle(.segmented).padding()
             NavigationStack { selectedContent }.id(selected)
         }
         #else
-        TabView {
-            NavigationStack { DiscoverView() }.tabItem { Label("线上学院", systemImage: "play.rectangle") }
-            NavigationStack { OfflineView() }.tabItem { Label("线下课", systemImage: "calendar") }
-            NavigationStack { EventsView() }.tabItem { Label("赛事", systemImage: "trophy") }
-            NavigationStack { ShopView() }.tabItem { Label("商城", systemImage: "bag") }
-            NavigationStack { AccountView() }.tabItem { Label("个人中心", systemImage: "person.crop.circle") }
+        TabView(selection: tabSelection) {
+            NavigationStack { DiscoverView() }.tabItem { Label("线上学院", systemImage: "play.rectangle") }.tag(0)
+            NavigationStack { OfflineView() }.tabItem { Label("线下课", systemImage: "calendar") }.tag(1)
+            NavigationStack { EventsView() }.tabItem { Label("赛事", systemImage: "trophy") }.tag(2)
+            NavigationStack { ShopView() }.tabItem { Label("商城", systemImage: "bag") }.tag(3)
+            NavigationStack { AccountView() }.tabItem { Label("个人中心", systemImage: "person.crop.circle") }.badge(notifications.unread).tag(4)
         }
         #endif
-        }.environmentObject(cart)
+        }.id(session.accountID ?? 0).environmentObject(cart)
+        .onChange(of: session.accountID) { account in
+            cart.quantities.removeAll()
+            if account != nil && awaitingAccountLogin { selected = 4; awaitingAccountLogin = false }
+            else if account == nil && selected == 4 { selected = lastPublicTab }
+        }
+        .onChange(of: session.showLogin) { shown in
+            if !shown && session.token == nil { awaitingAccountLogin = false }
+        }
+        .sheet(item: $notifications.destination) { target in
+            NavigationStack { MessageDetailView(recipientID: target.id).toolbar { Button("关闭") { session.notifications.destination = nil } } }.environmentObject(session)
+        }
+        .overlay(alignment: .top) { MessageNoticeView(notifications: session.notifications) }
+    }
+    private func selectTab(_ tab: Int) {
+        if tab == 4 && session.token == nil {
+            awaitingAccountLogin = true
+            session.showLogin = true
+            return
+        }
+        selected = tab
+        if tab != 4 { lastPublicTab = tab; awaitingAccountLogin = false }
     }
     @ViewBuilder private var selectedContent: some View {
         switch selected {
@@ -142,7 +118,7 @@ struct CoursesView: View {
                 }
                 if !loading && series.isEmpty { Text("暂无已解锁课程，下拉刷新查看最新内容。").foregroundStyle(.secondary) }
             }
-        }.evaCompactLayout().navigationTitle("我的课程")
+        }.evaCompactLayout().evaPageChrome()
         .toolbar { Button("刷新") { Task { await load() } }.disabled(loading) }
         .task { await load() }.refreshable { await load() }
     }
@@ -157,44 +133,51 @@ struct CoursesView: View {
 }
 struct CatalogView: View {
     let series: Series
-    var body: some View { LessonCatalogView(id: series.id, title: series.series_name) }
+    var body: some View { CourseStudyEntryView(id: series.id, title: series.series_name) }
 }
 struct MessagesView: View {
     @EnvironmentObject var session: Session
+    @EnvironmentObject var notifications: AppNotifications
     @State private var items: [InboxMessage] = []
     @State private var cursor = 0
     @State private var more = false
     @State private var busy = false
+    @State private var failure: String?
     var body: some View {
         List {
-            ForEach(items) { item in
-                NavigationLink {
-                    ScrollView { VStack(alignment: .leading, spacing: 16) {
-                        Text(item.title).font(.title2.bold())
-                        Text(item.createdAt).font(.caption).foregroundStyle(.secondary)
-                        Text(item.content).textSelection(.enabled)
-                    }.padding() }
-                    .task {
-                        do {
-                            let _: Empty = try await session.api.request("/member/messages/\(item.recipientId)/read", token: session.token, method: "PATCH", body: Data("{}".utf8))
-                        } catch { session.handle(error) }
-                    }
-                } label: { VStack(alignment: .leading) { Text(item.title).font(.headline); Text(item.content).lineLimit(2).foregroundStyle(.secondary) } }
+            Section {
+                Button("系统通知设置") { Task { await session.notifications.enable() } }
+                Text(notifications.permission).font(.caption).foregroundStyle(.secondary)
             }
+            ForEach(items) { item in
+                NavigationLink { MessageDetailView(recipientID: item.recipientId) } label: {
+                    HStack(alignment: .top, spacing: 10) {
+                        if item.status == "unread" { Circle().fill(EvaBrand.red).frame(width: 8, height: 8).padding(.top, 7).accessibilityLabel("未读") }
+                        VStack(alignment: .leading, spacing: 5) { Text(item.title).font(.headline); Text(item.content).lineLimit(2).foregroundStyle(.secondary); Text(item.createdAt).font(.caption).foregroundStyle(.secondary) }
+                    }
+                }
+            }
+            if let failure { Text(failure); Button("重试") { Task { await load(reset: true) } } }
             if more { Button("加载更多") { Task { await load(reset: false) } }.disabled(busy) }
             if busy { ProgressView() }
-            if !busy && items.isEmpty { Text("暂无消息") }
-        }.evaCompactLayout().navigationTitle("学习消息").task { await load(reset: true) }.refreshable { await load(reset: true) }
+            if !busy && items.isEmpty && failure == nil { Text("暂无学习消息") }
+        }.evaCompactLayout().evaPageChrome()
+        .toolbar { Button("全部已读") { Task { await session.notifications.clearAll(); await load(reset: true) } }.disabled(busy || items.isEmpty) }
+        .task { await load(reset: true) }.refreshable { await load(reset: true) }
+        .onChange(of: notifications.unread) { _ in Task { await load(reset: true) } }
+        .onChange(of: notifications.destination?.id) { next in
+            if next == nil { Task { await load(reset: true) } }
+        }
     }
     private func load(reset: Bool) async {
-        guard !busy else { return }; busy = true; defer { busy = false }
+        guard !busy, let member = session.accountID else { return }; busy = true; failure = nil; defer { busy = false }
         do {
             let result: InboxPage = try await session.api.request("/member/messages?limit=20&cursor=\(reset ? 0 : cursor)", token: session.token)
-            if reset { items = result.items } else {
-                let existing = Set(items.map(\.id)); items += result.items.filter { !existing.contains($0.id) }
-            }
+            guard session.accountID == member, !Task.isCancelled else { return }
+            if reset { items = result.items } else { let existing = Set(items.map(\.id)); items += result.items.filter { !existing.contains($0.id) } }
             cursor = result.nextCursor; more = result.hasMore
-        } catch { session.handle(error) }
+            await session.notifications.refresh()
+        } catch { if session.accountID == member { failure = error.localizedDescription } }
     }
 }
 struct ProfileView: View {
@@ -206,10 +189,10 @@ struct ProfileView: View {
             Section("关于") {
                 Link("隐私政策", destination: URL(string: "https://www.swod.com.cn/privacy")!)
                 Link("服务条款", destination: URL(string: "https://www.swod.com.cn/terms")!)
-                Text("伊娃东方舞 1.0.0")
+                Text("伊娃东方舞 \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.1")")
             }
             Button("退出登录", role: .destructive) { confirmLogout = true }
-        }.evaCompactLayout().navigationTitle("个人中心")
+        }.evaCompactLayout().evaPageChrome()
         .confirmationDialog("退出当前账号？", isPresented: $confirmLogout) {
             Button("退出登录", role: .destructive) { session.logout() }
         }
@@ -233,7 +216,7 @@ struct CertificatesView: View {
                 }.padding(.vertical, 6)
             }
             if !loading && items.isEmpty { Text("暂无已颁发证书") }
-        }.evaCompactLayout().navigationTitle("我的证书").task { await load() }.refreshable { await load() }
+        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
     }
     private func load() async {
         loading = true; defer { loading = false }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.com.swod.app.EventPresentationTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-28T14:32:51.073Z" hostname="Eva-Mac-mini.local" time="0.002">
+  <properties/>
+  <testcase name="eventEndIncludesTheWholeShanghaiDay" classname="cn.com.swod.app.EventPresentationTest" time="0.001"/>
+  <testcase name="cancellationAndRegistrationWindowsOverrideOpenSwitch" classname="cn.com.swod.app.EventPresentationTest" time="0.0"/>
+  <testcase name="unavailableCountsNeverBecomeZero" classname="cn.com.swod.app.EventPresentationTest" time="0.0"/>
+  <testcase name="databaseLocalTimesUseShanghaiInsteadOfTheDeviceZone" classname="cn.com.swod.app.EventPresentationTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
