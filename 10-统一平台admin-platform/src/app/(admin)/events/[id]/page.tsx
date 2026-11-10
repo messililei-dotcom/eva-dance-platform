@@ -201,6 +201,7 @@ export default function EventDetailPage() {
   const [playerMemberMatches, setPlayerMemberMatches] = useState<any[]>([]);
   const [memberSearching, setMemberSearching] = useState(false);
   const [paymentPlayer, setPaymentPlayer] = useState<any>(null);
+  const paymentRequestVersion = useRef(0);
   const [paymentRecords, setPaymentRecords] = useState<any[]>([]);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [paymentForm] = Form.useForm();
@@ -607,9 +608,11 @@ export default function EventDetailPage() {
     setAssignBusy(true);
     try {
       const result = await eventApi.assignJudge({ groupIds: assignGroupIds, judgeIds: assignJudgeIds, competitionId });
-      message.success(result.skipped
-        ? `新增 ${result.assigned} 条评委分配，已有 ${result.skipped} 条保持不变`
-        : `已新增 ${result.assigned} 条评委分配`);
+      if (result.assigned === 0 && result.skipped) {
+        message.warning(`所选评委已分配，已跳过 ${result.skipped} 条重复分配`);
+      } else {
+        message.success(`新增 ${result.assigned} 条评委分配，跳过 ${result.skipped || 0} 条重复分配`);
+      }
       setAssignModal(false);
       setAssignGroupIds([]); setAssignJudgeIds([]);
       setAssignGroupSearch(''); setAssignJudgeSearch('');
@@ -635,11 +638,12 @@ export default function EventDetailPage() {
   const paymentMethods: Record<string,string> = {wechat:'微信',alipay:'支付宝',bank:'银行转账',cash:'现金',other:'其他'};
   const showDate = (value: string) => value ? new Date(value).toLocaleString('zh-CN', {hour12:false}) : '未记录';
   const openPayment = async (row: any) => {
+    const version = ++paymentRequestVersion.current;
     setPaymentPlayer(row); setPaymentRecords([]);
     const now = new Date();
     paymentForm.resetFields();
     paymentForm.setFieldsValue({kind:'charge',amount:row.registrationFee,method:'wechat',paidAt:new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16),requestKey:crypto.randomUUID()});
-    try { setPaymentRecords(await eventApi.listRegistrationPayments(row.id)); } catch { message.error('缴费记录加载失败'); }
+    try { const records = await eventApi.listRegistrationPayments(row.id); if (version === paymentRequestVersion.current) setPaymentRecords(records); } catch { if (version === paymentRequestVersion.current) message.error('缴费记录加载失败'); }
   };
   const savePayment = async () => {
     const values = await paymentForm.validateFields();
@@ -1050,7 +1054,8 @@ export default function EventDetailPage() {
     onMove: (id, position) => { const row = groups.find(item => Number(item.id) === id); if (row) void saveGroupPosition(row, position); },
   });
   const groupColumns = sortableColumns<any>([
-    { title: '序号', dataIndex: 'groupPosition', width: 120, fixed: 'left', render: (_: unknown, row: any) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+    { title: '组别名称', dataIndex: 'name', width: 165, fixed: 'left' },
+    { title: '序号', dataIndex: 'groupPosition', width: 120, render: (_: unknown, row: any) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
       <button type="button" className={groupDrag.handleClassName} disabled={groupDragDisabled}
         aria-label={`拖动排序：${row.name}`}
         title={sectionKeyword.trim() || selectedGroupId || groupColumnSorted ? '清空筛选并取消列排序后可拖动' : '按住拖动排序，靠近上下边缘可持续滚动；Esc取消；上下方向键移动'}
@@ -1069,7 +1074,6 @@ export default function EventDetailPage() {
         onBlur={() => { if (Object.prototype.hasOwnProperty.call(groupSortDrafts, row.id)) void saveGroupPosition(row, groupSortDrafts[row.id]); }}
         onKeyDown={event => { if (event.key === 'Enter') event.currentTarget.blur(); }} />
     </span> },
-    { title: '组别名称', dataIndex: 'name', width: 270 },
     { title: '报名费', dataIndex: 'registrationFee', width: 100, render: (value: number) => `¥${Number(value || 0).toFixed(2)}` },
     { title: '评分状态', dataIndex: 'scoringStatus', width: 100, render: lockTag },
     { title: '选手', dataIndex: 'playerCount', width: 80 },
@@ -1107,11 +1111,11 @@ export default function EventDetailPage() {
   ]);
 
   const playerColumns = sortableColumns<any>([
-    { title: '编号', dataIndex: 'programNumber', width: 115, fixed: 'left' },
-    { title: '选手', dataIndex: 'name', width: 130, render: (v: string, row: any) => <Link href={`/events/players/${row.id}`}>{v}</Link> },
+    { title: '选手', dataIndex: 'name', width: 130, fixed: 'left', render: (v: string, row: any) => <Link href={`/events/players/${row.id}`}>{v}</Link> },
+    { title: '编号', dataIndex: 'programNumber', width: 115 },
     { title: '组别', dataIndex: 'groupName', width: 150, render: (v: string) => v || '-' },
-    { title: '节目名称', dataIndex: 'performanceTitle', width: 180, render: (v: string) => v || '-' },
-    { title: '音乐', dataIndex: 'musicName', width: 310, render: (_: any, row: any) => <EventMusicPlayer player={row} /> },
+    { title: '节目（音乐）名字', dataIndex: 'performanceTitle', width: 180, render: (v: string) => v || '-' },
+    { title: '音乐', dataIndex: 'musicName', width: 310, render: (_: any, row: any) => <EventMusicPlayer player={row} onUploaded={load} /> },
     { title: '报名费', dataIndex: 'registrationFee', width: 100, render: (v: number) => `¥${Number(v || 0).toFixed(2)}` },
     { title: '缴费状态', dataIndex: 'paidStatus', width: 100, render: (v: string) => statusTag(v) },
     { title: '缴费时间', dataIndex: 'paidAt', width: 170, render: showDate },
@@ -1132,12 +1136,12 @@ export default function EventDetailPage() {
   ]);
 
   const managedPlayerColumns = sortableColumns<any>([
-    { title: '编号', dataIndex: 'programNumber', width: 115, fixed: 'left' },
-    { title: '选手', dataIndex: 'name', width: 130, render: (v: string, row: any) => <Link title="查看选手详情" href={`/events/players/${row.id}`}>{v}</Link> },
+    { title: '选手', dataIndex: 'name', width: 130, fixed: 'left', render: (v: string, row: any) => <Link title="查看选手详情" href={`/events/players/${row.id}`}>{v}</Link> },
+    { title: '编号', dataIndex: 'programNumber', width: 115 },
     { title: '出场顺序', dataIndex: 'sequenceNo', width: 100, render: (v: number) => Number(v) > 0 ? v : <Tag>未安排</Tag> },
     { title: '手机号', dataIndex: 'phone', width: 120, render: (v: string) => v || '-' },
     { title: '机构', dataIndex: 'organization', width: 140, render: (v: string) => v || '-' },
-    { title: '音乐', dataIndex: 'musicName', width: 310, render: (_: any, row: any) => <EventMusicPlayer player={row} /> },
+    { title: '音乐', dataIndex: 'musicName', width: 310, render: (_: any, row: any) => <EventMusicPlayer player={row} onUploaded={load} /> },
     { title: '缴费', dataIndex: 'paidStatus', width: 90, render: (v: string) => statusTag(v) },
     {
       title: '评分',
@@ -1169,6 +1173,7 @@ export default function EventDetailPage() {
         <Space>
           <Button size="small" icon={<EyeOutlined />} onClick={() => router.push(`/events/players/${row.id}`)}>详情</Button>
           <Button size="small" icon={<EditOutlined />} onClick={() => openPlayer(row)}>修改</Button>
+          <Button size="small" icon={<DollarOutlined />} onClick={() => void openPayment(row)}>登记缴费</Button>
           <Button size="small" type="primary" onClick={() => openPlayerScoreManager(row)}>评分</Button>
           <Button size="small" danger icon={<DeleteOutlined />} onClick={() => deletePlayersInBatch([row.id])} aria-label="删除" title="删除"></Button>
         </Space>
@@ -1177,27 +1182,30 @@ export default function EventDetailPage() {
   ]);
 
   const groupJudgeColumns = sortableColumns<any>([
-    { title: '评委', width: 260, render: (_: any, row: any) => judgeDisplayName(row) },
+    { title: '评委', width: 150, fixed: 'left', render: (_: any, row: any) => judgeDisplayName(row) },
     { title: '角色', dataIndex: 'role', width: 100, render: (v: string) => v === 'leader' ? '主评委' : '评委' },
     {
       title: '操作',
-      width: 100,
       render: (_: any, row: any) => <Button size="small" danger icon={<DeleteOutlined />} aria-label={`移除${judgeDisplayName(row)}`} title="移除本组评委安排" onClick={() => deleteJudgesInBatch([row.judgeId])} />,
     },
   ]);
 
   const contestantColumns = sortableColumns<any>([
-    { title: '编号', dataIndex: 'contestantNumber', width: 115, fixed: 'left' },
-    { title: '选手', dataIndex: 'name', width: 140, render: (value: string, row: any) => <Link href={`/events/players/${row.id}`}>{value}</Link> },
+    { title: '选手', dataIndex: 'name', width: 140, fixed: 'left', render: (value: string, row: any) => <Link href={`/events/players/${row.id}`}>{value}</Link> },
+    { title: '编号', dataIndex: 'contestantNumber', width: 115 },
     { title: '手机号', dataIndex: 'phone', width: 140, render: (value: string) => value || '-' },
     { title: '机构', dataIndex: 'organization', width: 170, render: (value: string) => value || '-' },
     { title: '报名数', width: 90, render: (_: any, row: any) => row.entries.length },
     { title: '报名费', dataIndex: 'totalRegistrationFee', width: 110, render: (value: number) => `¥${Number(value || 0).toFixed(2)}` },
-    { title: '参赛组别', width: 360, render: (_: any, row: any) => <Space wrap>{row.entries.map((entry: any) => <Tag key={entry.id}>{entry.groupName || '-'}</Tag>)}</Space> },
+    { title: '参赛组别 / 逐组缴费', width: 440, render: (_: any, row: any) => <Space direction="vertical" style={{ width: '100%' }}>{row.entries.map((entry: any) => <Space key={entry.id} wrap>
+      <span>{entry.groupName || '未分组'} · ¥{Number(entry.registrationFee || 0).toFixed(2)}</span>
+      {statusTag(entry.paidStatus)}
+      <Button size="small" icon={<DollarOutlined />} onClick={() => void openPayment(entry)}>登记缴费 / 退款</Button>
+    </Space>)}</Space> },
     { title: '操作', width: 120, render: (_: any, row: any) => <Button size="small" icon={<EyeOutlined />} onClick={() => { switchInformation('players'); setSectionKeyword(row.phone || row.name); }}>查看报名</Button> },
   ]);
   const playerJudgeScoreColumns = sortableColumns<any>([
-    { title: '评委', dataIndex: 'name', width: 140 },
+    { title: '评委', dataIndex: 'name', width: 140, fixed: 'left' },
     { title: '角色', dataIndex: 'role', width: 100, render: (v: string) => v || '评委' },
     { title: '评分状态', width: 100, render: (_: any, row: any) => row.score ? statusTag(row.score.scoreStatus) : <Tag>未评分</Tag> },
     { title: '分值', width: 100, render: (_: any, row: any) => row.score ? Number(row.score.calculatedScore).toFixed(2) : '-' },
@@ -1215,7 +1223,7 @@ export default function EventDetailPage() {
   ]);
 
   const scoreColumns = sortableColumns<any>([
-    { title: '组别', dataIndex: 'groupName', width: 210, render: (v: string) => v || '-' },
+    { title: '组别', dataIndex: 'groupName', width: 165, fixed: 'left', render: (v: string) => v || '-' },
     { title: '选手', dataIndex: 'playerName', width: 130 },
     { title: '编号', dataIndex: 'playerNo', width: 90, render: (v: string) => v || '-' },
     { title: '评委', dataIndex: 'judgeName', width: 120 },
@@ -1330,7 +1338,7 @@ export default function EventDetailPage() {
           { key: 'players', label: informationLabel('报名和音乐', players.length, <AuditOutlined />), children: (
             <>{sectionToolbar('players')}<Table loading={loading} columns={playerColumns} rowKey="id" dataSource={visiblePlayers} size="small" pagination={{ pageSize: adaptivePageSize, showSizeChanger: true, pageSizeOptions: [10, 20, 30, 50, 100] }} scroll={{ x: 1725 }} /></>
           ) },
-          { key: 'contestants', label: informationLabel('选手', contestantRows.length, <TeamOutlined />), children: <>{sectionToolbar('contestants')}<Table loading={loading} columns={contestantColumns} dataSource={visibleContestants} rowKey="key" size="small" pagination={{ pageSize: adaptivePageSize, showSizeChanger: true }} scroll={{ x: 1245 }} /></> },
+          { key: 'contestants', label: informationLabel('选手', contestantRows.length, <TeamOutlined />), children: <>{sectionToolbar('contestants')}<Table loading={loading} columns={contestantColumns} dataSource={visibleContestants} rowKey="key" size="small" pagination={{ pageSize: adaptivePageSize, showSizeChanger: true }} scroll={{ x: 1325 }} /></> },
           { key: 'judges', label: informationLabel('评委', eventJudgeRows.length, <UserSwitchOutlined />), children: <>{sectionToolbar('judges')}
             {judgeView === 'groups' ? <Table key="by-group" adaptiveFillRows adaptiveBottomGap={20} className={styles.judgeArrangementTable} loading={loading} rowKey="id" bordered size="small" dataSource={judgeGroupRows}
               pagination={{ pageSize: adaptivePageSize, showSizeChanger: true, pageSizeOptions: [10, 20, 30, 50, 100], showTotal: total => `共 ${total} 个组别` }}
@@ -1679,7 +1687,7 @@ export default function EventDetailPage() {
         </Form>
       </Modal>
 
-      <Modal title={`报名收费登记：${paymentPlayer?.name || ''}`} open={!!paymentPlayer} onCancel={() => !paymentBusy && setPaymentPlayer(null)} onOk={savePayment} confirmLoading={paymentBusy} width={820} okText="保存登记">
+      <Modal title={`报名收费登记：${paymentPlayer?.name || ''} · ${paymentPlayer?.groupName || ''}（报名${paymentPlayer?.id || ''}）`} open={!!paymentPlayer} onCancel={() => !paymentBusy && setPaymentPlayer(null)} onOk={savePayment} confirmLoading={paymentBusy} width={820} okText="保存登记">
         <Alert type="info" showIcon message="每条报名对应一个组别，一次缴清报名费；登记实际已完成的收款或全额退款。" style={{marginBottom:16}} />
         <div style={{marginBottom:16}}>报名费 ¥{Number(paymentPlayer?.registrationFee || 0).toFixed(2)}　实收 ¥{Number(paymentPlayer?.paidAmount || 0).toFixed(2)}　未缴 ¥{Number(paymentPlayer?.unpaidAmount || 0).toFixed(2)}</div>
         <Form form={paymentForm} layout="vertical">
@@ -1736,7 +1744,7 @@ export default function EventDetailPage() {
             <Col span={8}><Form.Item name="scoreStatus" label="评分状态"><Select options={[{ value: 'not_started', label: '未评分' }, { value: 'in_progress', label: '评分中' }, { value: 'scored', label: '已评分' }]} /></Form.Item></Col>
           </Row>
           <div style={{marginBottom:16}}>报名费：¥{Number(editingPlayer?.registrationFee ?? groups.find(item => item.id === selectedFeeGroup)?.registrationFee ?? 0).toFixed(2)}（按报名时组别费用）</div>
-          <Form.Item name="performanceTitle" label="节目名称" rules={[{ required: true, whitespace: true, message: '请填写节目名称' }]}><Input maxLength={120} /></Form.Item>
+          <Form.Item name="performanceTitle" label="节目（音乐）名字" rules={[{ required: true, whitespace: true, message: '请填写节目名称' }]}><Input maxLength={120} /></Form.Item>
           <Form.Item name="remark" label="备注"><Input.TextArea rows={2} /></Form.Item>
         </Form>
       </Modal>

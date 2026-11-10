@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-11-08T02:24:29+08:00",
+  "adbTargets": 0,
+  "hdcTargets": 0,
+  "latestCandidates": {
+    "ios": 13,
+    "android": 20,
+    "harmony": 18
+  },
+  "knownGatesUnchanged": [
+    "android visitor terms confirmation and runtime/screenshots",
+    "harmony native login failure verification",
+    "issued copyright and applicable store materials"
+  ],
+  "currentOfficialStatusVerifiedThisRun": false,
+  "officialReadSkippedReason": "Latest candidates remain unsubmitted; no newly actionable runtime or material evidence. No redundant console navigation.",
+  "newUpload": false,
+  "newStoreSubmission": false,
+  "newReviewOrPublicResultVerified": false,
+  "newNotificationNeeded": false,
+  "existingReviewsWithdrawn": false
+}

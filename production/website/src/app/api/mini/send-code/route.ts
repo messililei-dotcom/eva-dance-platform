@@ -42,8 +42,9 @@ async function sendSms(phone: string, code: string): Promise<SmsDeliveryResult> 
   const accessKeyId = process.env.ALIYUN_ACCESS_KEY_ID;
   const accessKeySecret = process.env.ALIYUN_ACCESS_KEY_SECRET;
   const signName = process.env.ALIYUN_SMS_SIGN_NAME || '湖南雷震子咨询';
+  const international = phone.startsWith('+');
   const templateCode = process.env.ALIYUN_SMS_TEMPLATE_CODE || 'SMS_505940264';
-  if (!accessKeyId || !accessKeySecret || !signName || !templateCode) {
+  if (!accessKeyId || !accessKeySecret || (!international && (!signName || !templateCode))) {
     return { ok: false, providerCode: 'SMS_CONFIG_MISSING', providerMessage: '短信服务配置不完整' };
   }
 
@@ -53,13 +54,15 @@ async function sendSms(phone: string, code: string): Promise<SmsDeliveryResult> 
     
     // 构造请求参数
     const params: Record<string, string> = {
-      Action: 'SendSms',
-      Version: '2017-05-25',
-      PhoneNumbers: phone,
-      SignName: signName,
-      TemplateCode: templateCode,
-      TemplateParam: JSON.stringify({ code }),
-      RegionId: 'cn-hangzhou',
+      Action: international ? 'SendMessageToGlobe' : 'SendSms',
+      Version: international ? '2018-05-01' : '2017-05-25',
+      ...(international ? {
+        To: phone.replace(/^\+/, ''),
+        Message: `[SWOD] Your verification code is ${code}. Valid for 5 minutes. Do not share this code.`,
+        Type: 'OTP',
+        ...(process.env.ALIYUN_SMS_INTL_FROM ? { From: process.env.ALIYUN_SMS_INTL_FROM } : {}),
+      } : { PhoneNumbers: phone, SignName: signName, TemplateCode: templateCode, TemplateParam: JSON.stringify({ code }) }),
+      RegionId: international ? 'ap-southeast-1' : 'cn-hangzhou',
       Format: 'JSON',
       SignatureMethod: 'HMAC-SHA1',
       SignatureVersion: '1.0',
@@ -95,7 +98,7 @@ async function sendSms(phone: string, code: string): Promise<SmsDeliveryResult> 
     
     const providerResult = await new Promise<SmsDeliveryResult>((resolve) => {
       const req = https.request({
-        hostname: 'dysmsapi.aliyuncs.com',
+        hostname: international ? 'dysmsapi.ap-southeast-1.aliyuncs.com' : 'dysmsapi.aliyuncs.com',
         path: '/',
         method: 'POST',
         headers: {
@@ -108,13 +111,13 @@ async function sendSms(phone: string, code: string): Promise<SmsDeliveryResult> 
         res.on('end', () => {
           try {
             const result = JSON.parse(data);
-            if (result.Code === 'OK') {
+            if ((international ? result.ResponseCode : result.Code) === 'OK') {
               resolve({ ok: true });
             } else {
               resolve({
                 ok: false,
-                providerCode: String(result.Code || 'SMS_PROVIDER_ERROR'),
-                providerMessage: String(result.Message || '短信平台返回异常'),
+                providerCode: String(result.ResponseCode || result.Code || 'SMS_PROVIDER_ERROR'),
+                providerMessage: String(result.ResponseDescription || result.Message || '短信平台返回异常'),
               });
             }
           } catch {

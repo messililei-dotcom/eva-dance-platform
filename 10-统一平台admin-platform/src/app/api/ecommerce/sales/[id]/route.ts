@@ -18,6 +18,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       db.prepare('UPDATE shop_products SET stock=stock WHERE id=?').run('');
     const sale = db.prepare('SELECT * FROM shop_sales WHERE id = ?').get(routeParams.id);
     if (!sale) return Response.json({ success: false, error: '销售记录不存在' }, { status: 404 });
+    if (sale.bonus_entry_id != null) return Response.json({ error: '请在奖金提成的商品销售登记中修改或删除这笔订单' }, { status: 409 });
     if (/^官网(?:订单|退款) EV[a-f0-9]{30}$/.test(sale.remark || '')) return Response.json({ error: '官网订单流水不能手工修改，请在官网商城订单中办理退款' }, { status: 409 });
 
     const totalAmount = toNumber(body.amount ?? body.total_amount ?? body.total_price, toNumber(sale.total_amount));
@@ -55,6 +56,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         WHERE product_id = ?
           AND quantity = ?
           AND (change_type LIKE '%出%' OR change_type LIKE '%销%')
+          AND COALESCE(remark, '') NOT LIKE '商品销售登记 #%'
         ORDER BY id DESC
         LIMIT 1
       )
@@ -83,6 +85,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       db.prepare('UPDATE shop_products SET stock=stock WHERE id=?').run('');
     const sale = db.prepare('SELECT * FROM shop_sales WHERE id = ?').get(routeParams.id);
     if (!sale) return Response.json({ success: false, error: '销售记录不存在' }, { status: 404 });
+    if (sale.bonus_entry_id != null) return Response.json({ error: '请在奖金提成的商品销售登记中修改或删除这笔订单' }, { status: 409 });
     if (/^官网(?:订单|退款) EV[a-f0-9]{30}$/.test(sale.remark || '')) return Response.json({ error: '官网订单流水不能手工修改，请在官网商城订单中办理退款' }, { status: 409 });
 
     const product = db.prepare('SELECT * FROM shop_products WHERE id = ?').get(sale.product_id);
@@ -95,6 +98,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       WHERE product_id = ?
         AND quantity = ?
         AND (change_type LIKE '%出%' OR change_type LIKE '%销%')
+        AND COALESCE(remark, '') NOT LIKE '商品销售登记 #%'
       ORDER BY id DESC
       LIMIT 1
     `).run(sale.product_id, sale.quantity);

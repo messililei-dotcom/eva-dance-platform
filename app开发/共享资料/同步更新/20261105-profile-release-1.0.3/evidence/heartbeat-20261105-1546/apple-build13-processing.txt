@@ -1,0 +1,215 @@
+- log
+- log
+- banner "App Store Connect":
+  - heading "App Store Connect" [level=1]:
+    - link "App Store Connect":
+      - /url: /
+  - navigation "全球":
+    - list:
+      - link "App":
+        - /url: /apps
+      - link "Xcode Cloud":
+        - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/xcode-cloud
+      - link "趋势":
+        - /url: /trends
+      - link "报告":
+        - /url: /itc/payments_and_financial_reports
+      - link "商务":
+        - /url: /business
+  - button "娃 伊 Eva Culture And Art Development (hunan) Co., Ltd Account name menu":
+    - generic: 娃 伊
+    - generic: Eva Culture And Art Development (hunan) Co., Ltd
+- button "App 菜单，已选择SWOD":
+  - generic "SWOD":
+    - img "SWOD"
+  - generic: SWOD
+- navigation "App":
+  - list:
+    - link "分发":
+      - /url: /apps/6826038106/distribution
+    - link "分析":
+      - /url: /apps/6826038106/analytics
+    - link "TestFlight":
+      - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight
+- main:
+  - navigation "TestFlight":
+    - list:
+      - heading "构建版本" [level=2]
+      - list:
+        - link "iOS":
+          - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/ios
+          - generic: iOS
+      - separator
+      - heading "反馈" [level=2]
+      - list:
+        - link "崩溃":
+          - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/crashes
+          - generic: 崩溃
+        - link "截屏":
+          - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/screenshots
+          - generic: 截屏
+      - separator
+      - heading "测试员" [level=2]
+      - list:
+        - link "全部":
+          - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/testers
+          - generic: 全部
+      - heading "内部测试" [level=3]
+      - button "新群组":
+      - list
+      - separator
+      - heading "其他" [level=2]
+      - list:
+        - link "测试信息":
+          - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/test-info
+          - generic: 测试信息
+        - generic: 关于 TestFlight 数据
+        - button: "?"
+  - heading "iOS 构建版本" [level=2]
+  - paragraph:
+    - text: 以下构建版本可供测试。
+    - link "进一步了解构建版本状态和指标":
+      - /url: https://developer.apple.com/help/app-store-connect/test-a-beta-version/view-build-status-and-metrics
+  - separator
+  - paragraph:
+    - text: 要开始测试 App 并收集相关反馈，请创建群组并使用测试员的电子邮件来进行邀请。
+    - link "创建群组":
+      - /url: javascript:void(0)
+  - button "构建版本上传" [expanded]:
+    - heading "构建版本上传" [level=3]
+  - region "构建版本上传":
+    - paragraph:
+      - text: 查看构建版本上传进度，包括警告、错误和上传日志。
+      - link "进一步了解":
+        - /url: https://developer.apple.com/help/app-store-connect/manage-builds/view-builds-and-metadata#view-build-upload-status
+    - button "所有状态":
+      - generic: 所有状态
+    - grid "构建版本上传":
+      - rowgroup:
+        - row "版本和构建 状态 创建日期":
+          - columnheader "版本和构建":
+            - generic: 版本和构建
+          - columnheader "状态":
+            - generic: 状态
+          - columnheader "创建日期":
+            - button "创建日期":
+              - generic: 创建日期
+      - rowgroup:
+        - row "版本 1.0.3 , 构建版本 (13)":
+          - rowheader "版本 1.0.3 , 构建版本 (13)":
+            - generic: 版本
+            - text: 1.0.3
+            - generic: ", 构建版本"
+            - text: (13)
+          - gridcell "正在处理":
+            - generic: 正在处理
+          - gridcell "Nov 5, 2026 3:52 PM":
+            - generic: Nov 5, 2026 3:52 PM
+        - row "版本 1.0.2 , 构建版本 (11)":
+          - rowheader "版本 1.0.2 , 构建版本 (11)":
+            - link "版本 1.0.2 , 构建版本 (11)":
+              - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/ios/8f62fa45-d3c4-4d5c-b9b1-e4d390d9a6ea
+              - generic: 版本
+              - text: 1.0.2
+              - generic: ", 构建版本"
+              - text: (11)
+          - gridcell "完成":
+            - generic: 完成
+          - gridcell "Oct 30, 2026 9:02 PM":
+            - generic: Oct 30, 2026 9:02 PM
+        - row "版本 1.0.1 , 构建版本 (10)":
+          - rowheader "版本 1.0.1 , 构建版本 (10)":
+            - link "版本 1.0.1 , 构建版本 (10)":
+              - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/ios/65b3c574-bef7-44b9-bfc4-589ccc6f39aa
+              - generic: 版本
+              - text: 1.0.1
+              - generic: ", 构建版本"
+              - text: (10)
+          - gridcell "完成":
+            - generic: 完成
+          - gridcell "Oct 29, 2026 9:49 PM":
+            - generic: Oct 29, 2026 9:49 PM
+        - row "版本 1.0.1 , 构建版本 (9)":
+          - rowheader "版本 1.0.1 , 构建版本 (9)":
+            - link "版本 1.0.1 , 构建版本 (9)":
+              - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/ios/2b2409ea-c0d8-4ffe-ad4c-55da8397699e
+              - generic: 版本
+              - text: 1.0.1
+              - generic: ", 构建版本"
+              - text: (9)
+          - gridcell "完成":
+            - generic: 完成
+          - gridcell "Oct 29, 2026 5:21 PM":
+            - generic: Oct 29, 2026 5:21 PM
+        - row "版本 1.0.0 , 构建版本 (6)":
+          - rowheader "版本 1.0.0 , 构建版本 (6)":
+            - link "版本 1.0.0 , 构建版本 (6)":
+              - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/ios/ab1c8e19-da78-4a8e-a994-7a5757fda783
+              - generic: 版本
+              - text: 1.0.0
+              - generic: ", 构建版本"
+              - text: (6)
+          - gridcell "完成":
+            - generic: 完成
+          - gridcell "Oct 23, 2026 10:09 PM":
+            - generic: Oct 23, 2026 10:09 PM
+    - button "查看更多"
+  - button "版本 1.0.2" [expanded]:
+    - heading "版本 1.0.2" [level=3]
+  - region "版本 1.0.2":
+    - grid "构建版本":
+      - rowgroup:
+        - row "构建版本 状态 邀请 安装 App 使用次数 崩溃 反馈":
+          - columnheader "构建版本":
+            - button "构建版本":
+              - generic: 构建版本
+          - columnheader "状态":
+            - generic: 状态
+          - columnheader "邀请":
+            - generic: 邀请
+          - columnheader "安装":
+            - generic: 安装
+          - columnheader "App 使用次数":
+            - generic: App 使用次数
+          - columnheader "崩溃":
+            - generic: 崩溃
+          - columnheader "反馈":
+            - generic: 反馈
+      - rowgroup:
+        - row "构建版本 11":
+          - rowheader "构建版本 11":
+            - link "构建版本 11":
+              - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/ios/8f62fa45-d3c4-4d5c-b9b1-e4d390d9a6ea
+              - generic: 构建版本
+              - text: "11"
+          - gridcell "准备提交 85 天后过期":
+            - text: 准备提交
+            - generic: 85 天后过期
+          - gridcell "–":
+            - paragraph: –
+          - gridcell "–":
+            - paragraph: –
+          - gridcell "–":
+            - paragraph: –
+          - gridcell "–":
+            - paragraph: –
+          - gridcell "–":
+            - paragraph: –
+  - button "版本 1.0.1":
+    - heading "版本 1.0.1" [level=3]
+  - button "版本 1.0.0":
+    - heading "版本 1.0.0" [level=3]
+- contentinfo:
+  - list:
+    - link "App Store Connect":
+      - /url: /apps
+  - list:
+    - listitem: Copyright © 2026 Apple Inc. 保留所有权利。 |
+    - link "服务条款":
+      - /url: /WebObjects/iTunesConnect.woa/wa/termsOfService
+    - text: "|"
+    - link "隐私政策":
+      - /url: https://www.apple.com/legal/privacy
+    - text: "|"
+    - link "联系我们":
+      - /url: /contact-us

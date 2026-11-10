@@ -1,0 +1,141 @@
+Browser tab: 15, Title: "‎SWOD App - App Store", URL: "https://apps.apple.com/cn/app/swod/id6826038106".
+0 AXWebArea ‎SWOD App - App Store, URL: apps.apple.com/cn/app/swod/id6826038106
+	1 container
+		2 container Description: App Store, ID: app-store-icon-container
+		3 button (collapsed) App Store, ID: popover-1-target, Secondary Actions: Expand
+			4 text iPhone 专区
+			5 image
+		6 container search-input-form
+			7 text 搜索
+			8 search text field (settable) 搜索, ID: search-input__text-field
+		9 container navigation
+			10 content list
+				11 checkbox Today, Value: 0
+				12 checkbox 游戏, Value: 0
+				13 checkbox App, Value: 0
+			119 content list 类别
+				120 checkbox 类别, Value: 0
+				121 checkbox 摄影与录像, Value: 0
+				122 checkbox 健康健美, Value: 0
+				123 checkbox 效率, Value: 0
+				124 checkbox 娱乐, Value: 0
+				125 checkbox 动作, Value: 0
+				126 checkbox 冒险, Value: 0
+				127 checkbox 益智解谜, Value: 0
+				128 checkbox 独立, Value: 0
+	14 container
+		15 container
+			16 heading SWOD, Value: 1
+				17 text SWOD
+			18 text 伊娃东方舞学习与赛事服务
+			19 text 免费 · 专为 iPad 设计。未针对 macOS 验证。
+			20 button 在 Mac App Store 中查看
+				21 container
+					22 text 在这里查看： Mac App Store
+			23 button 分享
+		24 content list
+			25 link Description: 年龄分级 13+ 岁, Value: apps.apple.com/cn/app/swod/id6826038106#information
+			26 link Description: 类别 教育, Value: apps.apple.com/cn/app/swod/id6826038106#information
+			27 link Description: 开发者 Eva Culture And Art Development (hunan) Co., Ltd, Value: apps.apple.com/cn/developer/eva-culture-and-art-development-hunan-co-ltd/id6826038108?platform=iphone
+			28 link Description: 大小 28.9 MB, Value: apps.apple.com/cn/app/swod/id6826038106#information
+		29 container Description: iPhone App 预览和截屏, ID: product_media_phone_
+			30 content list
+				31 container 截屏
+		32 button iPhone、iPad
+			33 text iPhone、iPad
+		34 container
+			35 text SWOD 是伊娃东方舞的移动学习与服务应用。
+
+【课程学习】浏览线上课程目录，登录后查看已授权课程，按课节学习并查看学习记录。
+【线下课程】查看线下课程介绍、期次安排，以及个人课时与核销记录。
+【赛事服务】了解赛事信息，查看个人报名与成绩记录。
+【个人中心】集中查看我的课程、学习笔记、收藏、证书与个人资料。
+
+部分功能需登录并具备相应课程或服务权限。当前版本不提供录播课程内购及离线下载。
+
+App 备案号：湘ICP备2026005683号-5A
+			36 button 更多
+		37 container Description: 评分及评论, ID: productRatings
+			38 heading 评分及评论, Value: 2
+				39 text 评分及评论
+			40 content list
+				41 text 此 App 尚未收到足够的评分或评论，无法显示整体评分。
+		42 container Description: 新功能, ID: mostRecentVersion
+			43 button 新功能
+				44 heading 新功能, Value: 2
+					45 text 新功能
+			46 container 新功能
+				47 text 优化整体页面布局，减少多余边框与间距；改进课程及商品图片展示；已授权课程可直接进入播放页；优化播放器声音及控制按钮自动隐藏；完善未登录时的登录引导、课程筛选与搜索体验。
+				48 text 版本 1.0.2
+				49 text 15小时前
+		50 container Description: App 隐私, ID: privacyHeader
+			51 button App 隐私
+				52 link Description: App 隐私, Value: apps.apple.com/cn/app/swod/id6826038106#
+			53 container
+				54 text 开发者“ Eva Culture And Art Development (hunan) Co., Ltd ”已表明该 App 的隐私规范可能包括下述数据处理方式。更多相关信息，请参阅
+				55 link Description: 开发者隐私政策, Value: swod.com.cn/privacy
+				56 text 。
+		57 content list
+			58 container 与你关联的数据
+				59 heading 与你关联的数据, Value: 3
+					60 text 与你关联的数据
+				61 text 开发者可能会收集以下数据，且数据与你的身份关联：
+				62 content list
+					63 text 健康与健身
+					64 text 购买项目
+					65 text 联系信息
+					66 text 用户内容
+					67 text 标识符
+					68 text 使用数据
+					69 text 其他数据
+		70 container
+			71 text 隐私规范可能因你使用的功能或你的年龄等因素而异。
+			72 link Description: 进一步了解, Value: apps.apple.com/cn/iphone/story/id1538632801
+		73 container Description: 辅助功能, ID: accessibilityHeader
+			74 heading 辅助功能, Value: 2
+				75 text 辅助功能
+			76 container
+				77 text 开发者尚未表明此 App 支持哪些辅助功能。
+				78 link Description: 进一步了解, Value: apps.apple.com/story/id1814164299
+		79 container Description: 信息, ID: information
+			80 heading 信息, Value: 2
+				81 text 信息
+			82 definition list
+				83 container 大小
+					84 text 大小
+				85 text 28.9 MB
+				86 container 类别
+					87 text 类别
+				88 text 教育
+				89 container 兼容性
+					90 text 兼容性
+				91 button (collapsed) 设备需装有 iOS 16.0 或更高版本。, Secondary Actions: Expand
+					92 text 设备需装有 iOS 16.0 或更高版本。
+					93 image
+				94 container 年龄分级
+					95 text 年龄分级
+				96 button (collapsed) 13+, Secondary Actions: Expand
+					97 text 13+
+					98 image
+				99 container 提供者
+					100 text 提供者
+				101 button (collapsed) 伊娃文化艺术发展（湖南）有限公司, Secondary Actions: Expand
+					102 text 伊娃文化艺术发展（湖南）有限公司
+					103 image
+				104 container 版权
+					105 text 版权
+				106 text © 2026 Eva Culture And Art Development (hunan) Co., Ltd
+		107 container notPurchasedLinks
+			108 link Description: 开发者网站 ↗, Value: swod.com.cn/
+			109 link Description: 隐私政策 ↗, Value: swod.com.cn/privacy
+		110 container
+			111 text Copyright © 2026
+			112 link Description: Apple Inc., Value: apple.com.cn/
+			113 text 保留所有权利。
+			114 content list
+				115 link Description: 互联网服务条款, Value: apple.com.cn/legal/internet-services/
+				116 link Description: App Store 与隐私, Value: apple.com/legal/privacy/data/zh-cn/app-store/
+				117 link Description: Cookie 警告, Value: apple.com/legal/privacy/szh/cookies/
+				118 link Description: 支持, Value: support.apple.com/zh-cn/billing
+
+The focused UI element is 0 AXWebArea ‎SWOD App - App Store, URL: apps.apple.com/cn/app/swod/id6826038106

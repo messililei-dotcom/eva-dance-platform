@@ -3,9 +3,6 @@
 <block wx:else>
 <view class="offline-page">
   <view class="offline-hero">
-
-    <view class="hero-title">线下课</view>
-    <view class="hero-desc">购买课程期次的课时，到课后核销扣减，无需预约。</view>
     <view class="hero-stats">
       <view><text>{{availableSessions}}</text><span>剩余课时</span></view>
       <view><text>{{pendingCount}}</text><span>已购期次</span></view>

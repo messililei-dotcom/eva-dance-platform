@@ -1,0 +1,37 @@
+{
+  "checkedAt": "2026-11-09T16:55:16+08:00",
+  "version": "1.0.4",
+  "build": 22,
+  "phoneEmulator": "SWOD_Phone916",
+  "dimensions": [
+    1080,
+    1920
+  ],
+  "publicGuestScreenshots": [
+    {
+      "path": "evidence/screenshots-harmony22/01-academy.png",
+      "size": 399656,
+      "sha256": "e1f6d639b6db3e23513218f584bed12dd3367c384ca3774b059bd4a95d993ae0"
+    },
+    {
+      "path": "evidence/screenshots-harmony22/02-offline.png",
+      "size": 702233,
+      "sha256": "f3c947a8a4ee5bd2c6af515272fa53f0c6d4ae66354ae71afbbf821cddf2234c"
+    },
+    {
+      "path": "evidence/screenshots-harmony22/03-events.png",
+      "size": 174215,
+      "sha256": "6c54786daa8755e0ea4fd4870d9f09d08982c5bf18004d82795487a1ddb3cd42"
+    },
+    {
+      "path": "evidence/screenshots-harmony22/04-shop.png",
+      "size": 180891,
+      "sha256": "3619725e151ed3a5c76393eccdf1d202b238aadd378c893a512e93a20fccf3c0"
+    }
+  ],
+  "sensitiveLoginScreenExcludedFromStoreAssets": true,
+  "sensitiveLoginProof": "login-protection-proof.png",
+  "uploadedToConsole": true,
+  "savedInDraft": true,
+  "consoleCheckedAt": "2026-11-09T17:00:23+08:00"
+}

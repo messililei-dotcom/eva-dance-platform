@@ -1,0 +1,957 @@
+Browser tab: 14, Title: "App Store Connect", URL: "https://appstoreconnect.apple.com/apps/6826038106/distribution/pricing/availability".
+0 AXWebArea App Store Connect, URL: appstoreconnect.apple.com/apps/6826038106/distribution/pricing/availability
+	1 container
+		2 container App Store Connect
+			3 container
+				4 heading App Store Connect, Value: 1
+					12 link Description: App Store Connect, Value: appstoreconnect.apple.com/, ID: logo
+				5 container 全球
+					68 content list
+						69 link Description: App, Value: appstoreconnect.apple.com/apps
+						70 link Description: Xcode Cloud, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/xcode-cloud
+						71 link Description: 趋势, Value: appstoreconnect.apple.com/trends
+						72 link Description: 报告, Value: appstoreconnect.apple.com/itc/payments_and_financial_reports
+						73 link Description: 商务, Value: appstoreconnect.apple.com/business
+				19 button 娃 伊 Eva Culture And Art Development (hunan) Co., Ltd Account name menu
+					20 text 娃 伊
+					21 text Eva Culture And Art Development (hunan) Co., Ltd
+					22 image
+		23 container
+			24 pop up button (collapsed) Description: App 菜单，已选择SWOD, Secondary Actions: Expand
+				25 container
+					26 image SWOD
+					27 text SWOD
+				28 image
+			29 container App
+				30 content list
+					31 link Description: 分发, Value: appstoreconnect.apple.com/apps/6826038106/distribution
+					32 link Description: 分析, Value: appstoreconnect.apple.com/apps/6826038106/analytics
+					33 link Description: TestFlight, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight
+		75 container
+			76 container
+				409 link Description: 价格与销售范围, Value: appstoreconnect.apple.com/apps/6826038106/distribution/pricing
+				410 heading App 供应情况, Value: 2
+					411 text App 供应情况
+				412 heading 预购, Value: 3
+					413 text 预购
+				414 text App 发布后，客户将收到通知，并且 App 将自动下载到客户的设备上。App 发布前，我们不会向付费客户收取费用。
+				415 link Description: 了解更多, Value: developer.apple.com/app-store/pre-orders/
+				416 button 设置预购
+				417 heading 供应情况（173 个国家或地区）, Value: 3
+					418 text 供应情况（173 个国家或地区）
+				419 pop up button 已按国家或地区筛选，显示 所有国家或地区
+					420 text 所有国家或地区 
+					421 image
+				422 text 你可以决定 App 可供购买或下载的国家或地区。如果不想在特定国家或地区销售 App，你可以随时取消选择，也可以重新选择。更改将于 24 小时内在 App Store 上生效。
+				423 button 管理供应情况
+				424 table
+					425 row
+						426 cell
+							427 text 国家或地区
+						428 cell
+							429 text 状态
+							430 image
+					431 row AFG
+						432 cell
+							433 text 阿富汗
+						434 cell
+							435 container
+								436 text 无法销售 App
+								437 button (collapsed) 查看, Secondary Actions: Expand
+					438 row MAR
+						439 cell
+							440 text 摩洛哥
+						441 cell
+							442 container
+								443 text 无法销售 App
+								444 button (expanded) 查看, Secondary Actions: Collapse
+					445 row ALB
+						446 cell
+							447 text 阿尔巴尼亚
+						448 cell
+							449 text 可供应
+					450 row DZA
+						451 cell
+							452 text 阿尔及利亚
+						453 cell
+							454 text 可供应
+					455 row ARG
+						456 cell
+							457 text 阿根廷
+						458 cell
+							459 text 可供应
+					460 row ARE
+						461 cell
+							462 text 阿拉伯联合酋长国
+						463 cell
+							464 text 可供应
+					465 row OMN
+						466 cell
+							467 text 阿曼
+						468 cell
+							469 text 可供应
+					470 row AZE
+						471 cell
+							472 text 阿塞拜疆
+						473 cell
+							474 text 可供应
+					475 row EGY
+						476 cell
+							477 text 埃及
+						478 cell
+							479 text 可供应
+					480 row IRL
+						481 cell
+							482 text 爱尔兰
+						483 cell
+							484 text 可供应
+					485 row EST
+						486 cell
+							487 text 爱沙尼亚
+						488 cell
+							489 text 可供应
+					490 row AGO
+						491 cell
+							492 text 安哥拉
+						493 cell
+							494 text 可供应
+					495 row AIA
+						496 cell
+							497 text 安圭拉
+						498 cell
+							499 text 可供应
+					500 row ATG
+						501 cell
+							502 text 安提瓜和巴布达
+						503 cell
+							504 text 可供应
+					505 row AUT
+						506 cell
+							507 text 奥地利
+						508 cell
+							509 text 可供应
+					510 row AUS
+						511 cell
+							512 text 澳大利亚
+						513 cell
+							514 text 可供应
+					515 row MAC
+						516 cell
+							517 text 澳门
+						518 cell
+							519 text 可供应
+					520 row BRB
+						521 cell
+							522 text 巴巴多斯
+						523 cell
+							524 text 可供应
+					525 row PNG
+						526 cell
+							527 text 巴布亚新几内亚
+						528 cell
+							529 text 可供应
+					530 row BHS
+						531 cell
+							532 text 巴哈马
+						533 cell
+							534 text 可供应
+					535 row PAK
+						536 cell
+							537 text 巴基斯坦
+						538 cell
+							539 text 可供应
+					540 row PRY
+						541 cell
+							542 text 巴拉圭
+						543 cell
+							544 text 可供应
+					545 row BHR
+						546 cell
+							547 text 巴林
+						548 cell
+							549 text 可供应
+					550 row PAN
+						551 cell
+							552 text 巴拿马
+						553 cell
+							554 text 可供应
+					555 row BRA
+						556 cell
+							557 text 巴西
+						558 cell
+							559 text 可供应
+					560 row BLR
+						561 cell
+							562 text 白俄罗斯
+						563 cell
+							564 text 可供应
+					565 row BMU
+						566 cell
+							567 text 百慕大
+						568 cell
+							569 text 可供应
+					570 row BGR
+						571 cell
+							572 text 保加利亚
+						573 cell
+							574 text 可供应
+					575 row MKD
+						576 cell
+							577 text 北马其顿
+						578 cell
+							579 text 可供应
+					580 row BEN
+						581 cell
+							582 text 贝宁
+						583 cell
+							584 text 可供应
+					585 row BEL
+						586 cell
+							587 text 比利时
+						588 cell
+							589 text 可供应
+					590 row ISL
+						591 cell
+							592 text 冰岛
+						593 cell
+							594 text 可供应
+					595 row POL
+						596 cell
+							597 text 波兰
+						598 cell
+							599 text 可供应
+					600 row BIH
+						601 cell
+							602 text 波斯尼亚和黑塞哥维那
+						603 cell
+							604 text 可供应
+					605 row BOL
+						606 cell
+							607 text 玻利维亚
+						608 cell
+							609 text 可供应
+					610 row BLZ
+						611 cell
+							612 text 伯利兹
+						613 cell
+							614 text 可供应
+					615 row BWA
+						616 cell
+							617 text 博茨瓦纳
+						618 cell
+							619 text 可供应
+					620 row BTN
+						621 cell
+							622 text 不丹
+						623 cell
+							624 text 可供应
+					625 row BFA
+						626 cell
+							627 text 布基纳法索
+						628 cell
+							629 text 可供应
+					630 row DNK
+						631 cell
+							632 text 丹麦
+						633 cell
+							634 text 可供应
+					635 row DEU
+						636 cell
+							637 text 德国
+						638 cell
+							639 text 可供应
+					640 row DOM
+						641 cell
+							642 text 多米尼加共和国
+						643 cell
+							644 text 可供应
+					645 row DMA
+						646 cell
+							647 text 多米尼克
+						648 cell
+							649 text 可供应
+					650 row RUS
+						651 cell
+							652 text 俄罗斯
+						653 cell
+							654 text 可供应
+					655 row ECU
+						656 cell
+							657 text 厄瓜多尔
+						658 cell
+							659 text 可供应
+					660 row FRA
+						661 cell
+							662 text 法国
+						663 cell
+							664 text 可供应
+					665 row PHL
+						666 cell
+							667 text 菲律宾
+						668 cell
+							669 text 可供应
+					670 row FJI
+						671 cell
+							672 text 斐济
+						673 cell
+							674 text 可供应
+					675 row FIN
+						676 cell
+							677 text 芬兰
+						678 cell
+							679 text 可供应
+					680 row CPV
+						681 cell
+							682 text 佛得角
+						683 cell
+							684 text 可供应
+					685 row GMB
+						686 cell
+							687 text 冈比亚
+						688 cell
+							689 text 可供应
+					690 row COG
+						691 cell
+							692 text 刚果共和国
+						693 cell
+							694 text 可供应
+					695 row COD
+						696 cell
+							697 text 刚果民主共和国
+						698 cell
+							699 text 可供应
+					700 row COL
+						701 cell
+							702 text 哥伦比亚
+						703 cell
+							704 text 可供应
+					705 row CRI
+						706 cell
+							707 text 哥斯达黎加
+						708 cell
+							709 text 可供应
+					710 row GRD
+						711 cell
+							712 text 格林纳达
+						713 cell
+							714 text 可供应
+					715 row GEO
+						716 cell
+							717 text 格鲁吉亚
+						718 cell
+							719 text 可供应
+					720 row GUY
+						721 cell
+							722 text 圭亚那
+						723 cell
+							724 text 可供应
+					725 row KAZ
+						726 cell
+							727 text 哈萨克斯坦
+						728 cell
+							729 text 可供应
+					730 row KOR
+						731 cell
+							732 text 韩国
+						733 cell
+							734 text 可供应
+					735 row NLD
+						736 cell
+							737 text 荷兰
+						738 cell
+							739 text 可供应
+					740 row MNE
+						741 cell
+							742 text 黑山
+						743 cell
+							744 text 可供应
+					745 row HND
+						746 cell
+							747 text 洪都拉斯
+						748 cell
+							749 text 可供应
+					750 row KGZ
+						751 cell
+							752 text 吉尔吉斯斯坦
+						753 cell
+							754 text 可供应
+					755 row GNB
+						756 cell
+							757 text 几内亚比绍
+						758 cell
+							759 text 可供应
+					760 row CAN
+						761 cell
+							762 text 加拿大
+						763 cell
+							764 text 可供应
+					765 row GHA
+						766 cell
+							767 text 加纳
+						768 cell
+							769 text 可供应
+					770 row GAB
+						771 cell
+							772 text 加蓬
+						773 cell
+							774 text 可供应
+					775 row KHM
+						776 cell
+							777 text 柬埔寨
+						778 cell
+							779 text 可供应
+					780 row CZE
+						781 cell
+							782 text 捷克共和国
+						783 cell
+							784 text 可供应
+					785 row ZWE
+						786 cell
+							787 text 津巴布韦
+						788 cell
+							789 text 可供应
+					790 row CMR
+						791 cell
+							792 text 喀麦隆
+						793 cell
+							794 text 可供应
+					795 row QAT
+						796 cell
+							797 text 卡塔尔
+						798 cell
+							799 text 可供应
+					800 row CYM
+						801 cell
+							802 text 开曼群岛
+						803 cell
+							804 text 可供应
+					805 row XKS
+						806 cell
+							807 text 科索沃
+						808 cell
+							809 text 可供应
+					810 row CIV
+						811 cell
+							812 text 科特迪瓦
+						813 cell
+							814 text 可供应
+					815 row KWT
+						816 cell
+							817 text 科威特
+						818 cell
+							819 text 可供应
+					820 row HRV
+						821 cell
+							822 text 克罗地亚
+						823 cell
+							824 text 可供应
+					825 row KEN
+						826 cell
+							827 text 肯尼亚
+						828 cell
+							829 text 可供应
+					830 row LVA
+						831 cell
+							832 text 拉脱维亚
+						833 cell
+							834 text 可供应
+					835 row LAO
+						836 cell
+							837 text 老挝
+						838 cell
+							839 text 可供应
+					840 row LBN
+						841 cell
+							842 text 黎巴嫩
+						843 cell
+							844 text 可供应
+					845 row LTU
+						846 cell
+							847 text 立陶宛
+						848 cell
+							849 text 可供应
+					850 row LBR
+						851 cell
+							852 text 利比里亚
+						853 cell
+							854 text 可供应
+					855 row LBY
+						856 cell
+							857 text 利比亚
+						858 cell
+							859 text 可供应
+					860 row LUX
+						861 cell
+							862 text 卢森堡
+						863 cell
+							864 text 可供应
+					865 row RWA
+						866 cell
+							867 text 卢旺达
+						868 cell
+							869 text 可供应
+					870 row ROU
+						871 cell
+							872 text 罗马尼亚
+						873 cell
+							874 text 可供应
+					875 row MDG
+						876 cell
+							877 text 马达加斯加
+						878 cell
+							879 text 可供应
+					880 row MDV
+						881 cell
+							882 text 马尔代夫
+						883 cell
+							884 text 可供应
+					885 row MLT
+						886 cell
+							887 text 马耳他
+						888 cell
+							889 text 可供应
+					890 row MWI
+						891 cell
+							892 text 马拉维
+						893 cell
+							894 text 可供应
+					895 row MYS
+						896 cell
+							897 text 马来西亚
+						898 cell
+							899 text 可供应
+					900 row MLI
+						901 cell
+							902 text 马里
+						903 cell
+							904 text 可供应
+					905 row MUS
+						906 cell
+							907 text 毛里求斯
+						908 cell
+							909 text 可供应
+					910 row MRT
+						911 cell
+							912 text 毛里塔尼亚
+						913 cell
+							914 text 可供应
+					915 row USA
+						916 cell
+							917 text 美国
+						918 cell
+							919 text 可供应
+					920 row MNG
+						921 cell
+							922 text 蒙古
+						923 cell
+							924 text 可供应
+					925 row MSR
+						926 cell
+							927 text 蒙特塞拉特
+						928 cell
+							929 text 可供应
+					930 row PER
+						931 cell
+							932 text 秘鲁
+						933 cell
+							934 text 可供应
+					935 row FSM
+						936 cell
+							937 text 密克罗尼西亚
+						938 cell
+							939 text 可供应
+					940 row MMR
+						941 cell
+							942 text 缅甸
+						943 cell
+							944 text 可供应
+					945 row MDA
+						946 cell
+							947 text 摩尔多瓦
+						948 cell
+							949 text 可供应
+					950 row MOZ
+						951 cell
+							952 text 莫桑比克
+						953 cell
+							954 text 可供应
+					955 row MEX
+						956 cell
+							957 text 墨西哥
+						958 cell
+							959 text 可供应
+					960 row NAM
+						961 cell
+							962 text 纳米比亚
+						963 cell
+							964 text 可供应
+					965 row ZAF
+						966 cell
+							967 text 南非
+						968 cell
+							969 text 可供应
+					970 row NRU
+						971 cell
+							972 text 瑙鲁
+						973 cell
+							974 text 可供应
+					975 row NIC
+						976 cell
+							977 text 尼加拉瓜
+						978 cell
+							979 text 可供应
+					980 row NPL
+						981 cell
+							982 text 尼泊尔
+						983 cell
+							984 text 可供应
+					985 row NER
+						986 cell
+							987 text 尼日尔
+						988 cell
+							989 text 可供应
+					990 row NGA
+						991 cell
+							992 text 尼日利亚
+						993 cell
+							994 text 可供应
+					995 row NOR
+						996 cell
+							997 text 挪威
+						998 cell
+							999 text 可供应
+					1000 row PLW
+						1001 cell
+							1002 text 帕劳
+						1003 cell
+							1004 text 可供应
+					1005 row PRT
+						1006 cell
+							1007 text 葡萄牙
+						1008 cell
+							1009 text 可供应
+					1010 row JPN
+						1011 cell
+							1012 text 日本
+						1013 cell
+							1014 text 可供应
+					1015 row SWE
+						1016 cell
+							1017 text 瑞典
+						1018 cell
+							1019 text 可供应
+					1020 row CHE
+						1021 cell
+							1022 text 瑞士
+						1023 cell
+							1024 text 可供应
+					1025 row SLV
+						1026 cell
+							1027 text 萨尔瓦多
+						1028 cell
+							1029 text 可供应
+					1030 row SRB
+						1031 cell
+							1032 text 塞尔维亚
+						1033 cell
+							1034 text 可供应
+					1035 row SLE
+						1036 cell
+							1037 text 塞拉利昂
+						1038 cell
+							1039 text 可供应
+					1040 row SEN
+						1041 cell
+							1042 text 塞内加尔
+						1043 cell
+							1044 text 可供应
+					1045 row CYP
+						1046 cell
+							1047 text 塞浦路斯
+						1048 cell
+							1049 text 可供应
+					1050 row SYC
+						1051 cell
+							1052 text 塞舌尔
+						1053 cell
+							1054 text 可供应
+					1055 row SAU
+						1056 cell
+							1057 text 沙特阿拉伯
+						1058 cell
+							1059 text 可供应
+					1060 row STP
+						1061 cell
+							1062 text 圣多美和普林西比
+						1063 cell
+							1064 text 可供应
+					1065 row KNA
+						1066 cell
+							1067 text 圣基茨和尼维斯
+						1068 cell
+							1069 text 可供应
+					1070 row LCA
+						1071 cell
+							1072 text 圣卢西亚
+						1073 cell
+							1074 text 可供应
+					1075 row VCT
+						1076 cell
+							1077 text 圣文森特和格林纳丁斯
+						1078 cell
+							1079 text 可供应
+					1080 row LKA
+						1081 cell
+							1082 text 斯里兰卡
+						1083 cell
+							1084 text 可供应
+					1085 row SVK
+						1086 cell
+							1087 text 斯洛伐克
+						1088 cell
+							1089 text 可供应
+					1090 row SVN
+						1091 cell
+							1092 text 斯洛文尼亚
+						1093 cell
+							1094 text 可供应
+					1095 row SWZ
+						1096 cell
+							1097 text 斯威士兰
+						1098 cell
+							1099 text 可供应
+					1100 row SUR
+						1101 cell
+							1102 text 苏里南
+						1103 cell
+							1104 text 可供应
+					1105 row SLB
+						1106 cell
+							1107 text 所罗门群岛
+						1108 cell
+							1109 text 可供应
+					1110 row TJK
+						1111 cell
+							1112 text 塔吉克斯坦
+						1113 cell
+							1114 text 可供应
+					1115 row TWN
+						1116 cell
+							1117 text 台湾
+						1118 cell
+							1119 text 可供应
+					1120 row THA
+						1121 cell
+							1122 text 泰国
+						1123 cell
+							1124 text 可供应
+					1125 row TZA
+						1126 cell
+							1127 text 坦桑尼亚
+						1128 cell
+							1129 text 可供应
+					1130 row TON
+						1131 cell
+							1132 text 汤加
+						1133 cell
+							1134 text 可供应
+					1135 row TCA
+						1136 cell
+							1137 text 特克斯和凯科斯群岛
+						1138 cell
+							1139 text 可供应
+					1140 row TTO
+						1141 cell
+							1142 text 特立尼达和多巴哥
+						1143 cell
+							1144 text 可供应
+					1145 row TUN
+						1146 cell
+							1147 text 突尼斯
+						1148 cell
+							1149 text 可供应
+					1150 row TUR
+						1151 cell
+							1152 text 土耳其
+						1153 cell
+							1154 text 可供应
+					1155 row TKM
+						1156 cell
+							1157 text 土库曼斯坦
+						1158 cell
+							1159 text 可供应
+					1160 row VUT
+						1161 cell
+							1162 text 瓦努阿图
+						1163 cell
+							1164 text 可供应
+					1165 row GTM
+						1166 cell
+							1167 text 危地马拉
+						1168 cell
+							1169 text 可供应
+					1170 row VEN
+						1171 cell
+							1172 text 委内瑞拉
+						1173 cell
+							1174 text 可供应
+					1175 row BRN
+						1176 cell
+							1177 text 文莱
+						1178 cell
+							1179 text 可供应
+					1180 row UGA
+						1181 cell
+							1182 text 乌干达
+						1183 cell
+							1184 text 可供应
+					1185 row UKR
+						1186 cell
+							1187 text 乌克兰
+						1188 cell
+							1189 text 可供应
+					1190 row URY
+						1191 cell
+							1192 text 乌拉圭
+						1193 cell
+							1194 text 可供应
+					1195 row UZB
+						1196 cell
+							1197 text 乌兹别克斯坦
+						1198 cell
+							1199 text 可供应
+					1200 row ESP
+						1201 cell
+							1202 text 西班牙
+						1203 cell
+							1204 text 可供应
+					1205 row GRC
+						1206 cell
+							1207 text 希腊
+						1208 cell
+							1209 text 可供应
+					1210 row HKG
+						1211 cell
+							1212 text 香港
+						1213 cell
+							1214 text 可供应
+					1215 row SGP
+						1216 cell
+							1217 text 新加坡
+						1218 cell
+							1219 text 可供应
+					1220 row NZL
+						1221 cell
+							1222 text 新西兰
+						1223 cell
+							1224 text 可供应
+					1225 row HUN
+						1226 cell
+							1227 text 匈牙利
+						1228 cell
+							1229 text 可供应
+					1230 row JAM
+						1231 cell
+							1232 text 牙买加
+						1233 cell
+							1234 text 可供应
+					1235 row ARM
+						1236 cell
+							1237 text 亚美尼亚
+						1238 cell
+							1239 text 可供应
+					1240 row YEM
+						1241 cell
+							1242 text 也门
+						1243 cell
+							1244 text 可供应
+					1245 row IRQ
+						1246 cell
+							1247 text 伊拉克
+						1248 cell
+							1249 text 可供应
+					1250 row ISR
+						1251 cell
+							1252 text 以色列
+						1253 cell
+							1254 text 可供应
+					1255 row ITA
+						1256 cell
+							1257 text 意大利
+						1258 cell
+							1259 text 可供应
+					1260 row IND
+						1261 cell
+							1262 text 印度
+						1263 cell
+							1264 text 可供应
+					1265 row IDN
+						1266 cell
+							1267 text 印度尼西亚
+						1268 cell
+							1269 text 可供应
+					1270 row GBR
+						1271 cell
+							1272 text 英国
+						1273 cell
+							1274 text 可供应
+					1275 row VGB
+						1276 cell
+							1277 text 英属维尔京群岛
+						1278 cell
+							1279 text 可供应
+					1280 row JOR
+						1281 cell
+							1282 text 约旦
+						1283 cell
+							1284 text 可供应
+					1285 row VNM
+						1286 cell
+							1287 text 越南
+						1288 cell
+							1289 text 可供应
+					1290 row ZMB
+						1291 cell
+							1292 text 赞比亚
+						1293 cell
+							1294 text 可供应
+					1295 row TCD
+						1296 cell
+							1297 text 乍得
+						1298 cell
+							1299 text 可供应
+					1300 row CHL
+						1301 cell
+							1302 text 智利
+						1303 cell
+							1304 text 可供应
+					1305 row CHN
+						1306 cell
+							1307 text 中国大陆
+						1308 cell
+							1309 text 可供应
+		62 content list
+			74 link Description: App Store Connect, Value: appstoreconnect.apple.com/apps
+		6 content list
+			64 container
+				65 text Copyright © 2026 Apple Inc. 保留所有权利。 |
+			7 container
+				8 link Description: 服务条款, Value: appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/wa/termsOfService
+				407 text |
+			9 container
+				10 link Description: 隐私政策, Value: apple.com/legal/privacy
+				408 text |
+			11 link Description: 联系我们, Value: appstoreconnect.apple.com/contact-us
+		1310 container 如需更多信息，请联系 Apple 开发者支持。 禁止在摩洛哥销售包含比赛内容的 App。
+			1311 container 如需更多信息，请联系 Apple 开发者支持。 禁止在摩洛哥销售包含比赛内容的 App。, ID: MAR-status-popover
+				1312 content list
+					1313 container
+						1314 AXListMarker • 
+						1315 text 如需更多信息，请联系 
+						1316 link Description: Apple 开发者支持, Value: developer.apple.com/contact
+						1317 text 。
+					1318 container
+						1319 AXListMarker • 
+						1320 text 禁止在摩洛哥销售包含比赛内容的 App。
+
+The focused UI element is 444 button (expanded) 查看, Secondary Actions: Collapse

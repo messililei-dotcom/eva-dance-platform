@@ -41,7 +41,7 @@ test('navigation and landing pages distinguish the permanent super administrator
     for (const path of policy.SUPER_ADMIN_PAGES) assert.equal(policy.canAccessAdminPage(user,path),false,path);
     assert.equal(policy.canAccessAdminPage(user,'/events/1'),false);
     assert.equal(policy.adminLandingPage(user),'/online-course/auth');
-    for (const path of ['/online-course','/online-course/auth','/online-course/66','/training','/orders','/members','/bonus-commission','/finance']) assert.equal(policy.canAccessAdminPage(user,path),true,path);
+    for (const path of ['/online-course','/online-course/auth','/online-course/66','/training','/members','/bonus-commission','/ecommerce']) assert.equal(policy.canAccessAdminPage(user,path),true,path);
   }
   assert.equal(policy.canAccessAdminPage(null,'/dashboard'),false);
   assert.equal(policy.canAccessAdminPage({username:'lilei',role:'admin',status:'inactive'},'/dashboard'),false);
@@ -88,10 +88,37 @@ test('restricted APIs deny reads and writes for teachers/ordinary admins across 
   } finally {f.sqlite.close();}
 });
 
+test('only lilei can open order and finance pages or use their administrative APIs', async () => {
+  const f = fixture();
+  try {
+    const denied = ['yilin', 'qiqi', 'future_super', 'feifei_guyi'];
+    for (const path of ['/orders', '/order-center', '/finance', '/commission']) {
+      assert.equal(policy.canAccessAdminPage({username:'lilei',role:'admin'}, path), true);
+      assert.equal((await f.request(path,'lilei','GET',true)).headers.get('x-middleware-next'),'1',path);
+      for (const username of denied) {
+        const user = f.sqlite.prepare('SELECT * FROM User WHERE username=?').get(username);
+        assert.equal(policy.canAccessAdminPage(user,path),false,path);
+        assert.equal((await f.request(path,username,'GET',true)).status,307,path);
+      }
+      assert.equal(new URL((await f.request(path,null)).headers.get('location')).pathname,'/login');
+    }
+    for (const endpoint of ['orders/unified','orders/1/status','exclusive-orders','finance/summary','finance/expenses','finance/income-details','finance/commissions/1','course/orders']) {
+      for (const prefix of ['/api/','/local-api/','/legacy-student-api/']) {
+        const path = prefix + endpoint;
+        for (const method of ['GET','POST','PATCH']) {
+          assert.equal((await f.request(path,'lilei',method)).headers.get('x-middleware-next'),'1',path);
+          for (const username of denied) assert.equal((await f.request(path,username,method)).status,403,path);
+          assert.equal((await f.request(path,null,method)).status,401,path);
+        }
+      }
+    }
+  } finally { f.sqlite.close(); }
+});
+
 test('ordinary staff keep audits, course-bound previews, read-only material pickers and public/member routes', async () => {
   const f=fixture();
   try {
-    for(const path of ['/api/course/material-picker','/api/course/material-picker/folders','/api/course/materials/1/file','/api/course/materials/1/thumbnail','/api/course/courses/1/materials','/api/course/authorizations','/api/orders/unified']) assert.equal((await f.request(path,'qiqi')).headers.get('x-middleware-next'),'1',path);
+    for(const path of ['/api/course/material-picker','/api/course/material-picker/folders','/api/course/materials/1/file','/api/course/materials/1/thumbnail','/api/course/courses/1/materials','/api/course/authorizations','/api/ecommerce/overview','/api/bonus-management']) assert.equal((await f.request(path,'qiqi')).headers.get('x-middleware-next'),'1',path);
     assert.equal((await f.request('/api/access-records','qiqi','POST')).headers.get('x-middleware-next'),'1');
     assert.equal((await f.request('/api/access-records','feifei_guyi','POST')).headers.get('x-middleware-next'),'1');
     for(const path of ['/api/certificates/verify?q=test','/api/mini/public/home-stats','/api/mini/events']) assert.equal((await f.request(path,null)).headers.get('x-middleware-next'),'1',path);

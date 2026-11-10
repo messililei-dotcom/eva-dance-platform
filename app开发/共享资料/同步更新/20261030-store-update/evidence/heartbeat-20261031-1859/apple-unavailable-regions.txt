@@ -1,0 +1,241 @@
+Browser tab: 14, Title: "App Store Connect", URL: "https://appstoreconnect.apple.com/apps/6826038106/distribution/pricing".
+0 AXWebArea App Store Connect, URL: appstoreconnect.apple.com/apps/6826038106/distribution/pricing
+	1 container
+		2 container App Store Connect
+			3 container
+				4 heading App Store Connect, Value: 1
+					12 link Description: App Store Connect, Value: appstoreconnect.apple.com/, ID: logo
+				5 container 全球
+					68 content list
+						69 link Description: App, Value: appstoreconnect.apple.com/apps
+						70 link Description: Xcode Cloud, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/xcode-cloud
+						71 link Description: 趋势, Value: appstoreconnect.apple.com/trends
+						72 link Description: 报告, Value: appstoreconnect.apple.com/itc/payments_and_financial_reports
+						73 link Description: 商务, Value: appstoreconnect.apple.com/business
+				19 button 娃 伊 Eva Culture And Art Development (hunan) Co., Ltd Account name menu
+					20 text 娃 伊
+					21 text Eva Culture And Art Development (hunan) Co., Ltd
+					22 image
+		23 container
+			24 pop up button (collapsed) Description: App 菜单，已选择SWOD, Secondary Actions: Expand
+				25 container
+					26 image SWOD
+					27 text SWOD
+				28 image
+			29 container App
+				30 content list
+					31 link Description: 分发, Value: appstoreconnect.apple.com/apps/6826038106/distribution
+					32 link Description: 分析, Value: appstoreconnect.apple.com/apps/6826038106/analytics
+					33 link Description: TestFlight, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight
+		75 container
+			76 container
+				77 container 分发
+					78 content list
+						79 container
+							80 heading iOS App, Value: 2
+								81 text iOS App
+							82 button 添加 iOS App
+							83 content list
+								84 link Description: 1.0.2 可分发, Help: 可分发, Value: appstoreconnect.apple.com/apps/6826038106/distribution/ios/version/deliverable
+							85 button 添加平台
+						86 container
+							87 heading 综合, Value: 2
+								88 text 综合
+							89 content list
+								90 link Description: App 信息, Value: appstoreconnect.apple.com/apps/6826038106/distribution/info
+								91 link Description: App 审核, Value: appstoreconnect.apple.com/apps/6826038106/distribution/reviewsubmissions
+								92 link Description: 历史记录, Value: appstoreconnect.apple.com/apps/6826038106/distribution/activity/ios/versions
+						93 container
+							94 heading App Store, Value: 2
+								95 text App Store
+							96 heading 信任和安全性, Value: 3
+								97 text 信任和安全性
+							98 content list
+								99 link Description: App 隐私, Value: appstoreconnect.apple.com/apps/6826038106/distribution/privacy
+								100 link Description: App 辅助功能, Value: appstoreconnect.apple.com/apps/6826038106/distribution/accessibility
+								101 link Description: 评分与评论, Value: appstoreconnect.apple.com/apps/6826038106/distribution/ratings/ios
+							102 heading 增长和营销, Value: 3
+								103 text 增长和营销
+							104 content list
+								105 link Description: App 内活动, Value: appstoreconnect.apple.com/apps/6826038106/distribution/events
+								106 link Description: 自定产品页面 新功能, Value: appstoreconnect.apple.com/apps/6826038106/distribution/productpages
+								107 link Description: 素材库 新功能, Value: appstoreconnect.apple.com/apps/6826038106/distribution/asset-library
+								108 link Description: 产品页面优化 新功能, Value: appstoreconnect.apple.com/apps/6826038106/distribution/optimization
+								109 link Description: 促销代码, Value: appstoreconnect.apple.com/apps/6826038106/distribution/promo_codes/generate
+								110 link Description: Game Center, Value: appstoreconnect.apple.com/apps/6826038106/distribution/gamecenter
+							111 heading 营利, Value: 3
+								112 text 营利
+							113 content list
+								114 link Description: 价格与销售范围, Value: appstoreconnect.apple.com/apps/6826038106/distribution/pricing
+								115 link Description: App 内购买项目, Value: appstoreconnect.apple.com/apps/6826038106/distribution/iaps
+								116 link Description: 订阅, Value: appstoreconnect.apple.com/apps/6826038106/distribution/subscriptions
+							117 heading 精选, Value: 3
+								118 text 精选
+							119 content list
+								120 link Description: 提名, Value: appstoreconnect.apple.com/apps/6826038106/distribution/nominations
+				261 container
+					262 heading 价格与销售范围, Value: 2
+						263 text 价格与销售范围
+					264 button 保存
+				265 heading 价格时间表, Value: 3
+					266 text 价格时间表
+				301 button 预定价格调整日期
+					302 image
+				267 link Description: 所有价格和货币, Value: appstoreconnect.apple.com/apps/6826038106/distribution/pricing-matrix
+				303 text 以下是当前定价和所有即将进行的调整一览。
+				304 heading 所在国家或地区, Value: 4
+					305 text 所在国家或地区
+				306 text Apple 可能根据税率或外汇汇率的变化，不时自动调整除所在的国家或地区外所有国家或地区的价格。
+				307 text 中国大陆 (CNY)
+				308 button 编辑
+				309 heading 价格, Value: 4
+					310 text 价格
+				311 button 下载
+				312 table Description: 价格, ID: react-aria1506812219-1
+					313 row 日期 国家或地区 价格调整 操作
+						314 cell react-aria1506812219-1-dateRange
+							315 text 日期
+						316 cell react-aria1506812219-1-territories
+							317 text 国家或地区
+						318 cell react-aria1506812219-1-priceChangeType
+							319 text 价格调整
+						320 cell Description: 操作, ID: react-aria1506812219-1-column-key-delete
+					321 row 当前价格, ID: react-aria1506812219-7
+						322 cell react-aria1506812219-1-null|null|AUTO_FREE|0-dateRange
+							323 button 当前价格
+						324 cell react-aria1506812219-9
+							325 pop up button (collapsed) Description: 175 个国家或地区中的价格, Secondary Actions: Expand
+						326 cell react-aria1506812219-10
+						327 cell react-aria1506812219-11
+				268 heading App 供应情况, Value: 3
+					269 text App 供应情况
+				328 text 在下方查看 App 在各个国家或地区的供应状态摘要。
+				329 button (collapsed) 173 个可供应, Secondary Actions: Expand
+				330 button (expanded) 2 个国家或地区无法销售, Secondary Actions: Collapse
+				331 button 管理
+				270 container
+					271 heading 税务类别, Value: 3
+						272 text 税务类别
+					404 text 
+					274 button 编辑
+				332 container
+					333 text 类别： App Store 软件
+				276 container
+					277 heading 搭载 Apple 芯片的 Mac 上的 iPhone App 和 iPad App, Value: 3
+						278 text 搭载 Apple 芯片的 Mac 上的 iPhone App 和 iPad App
+					279 text 从 macOS Big Sur 开始，兼容的 iPhone App 和 iPad App 可以在搭载 Apple 芯片的 Mac 上提供。App 将以原生方式运行，并使用与 iOS 和 iPadOS 中相同的框架、资源和运行环境。
+					280 link Description: 了解更多, Value: developer.apple.com/cn/?id=app-store-connect-ios-mac
+					281 text 搭载 Apple 芯片的 Mac 上的可用性 如果你希望将此 App 在 Mac App Store 中提供，请选中下方的复选框。Apple 会自动选择兼容所需的最低 macOS 版本，但你可以选取其他版本。
+					282 link Description: 了解更多, Value: developer.apple.com/help/app-store-connect/manage-your-apps-availability/manage-availability-of-iphone-and-ipad-apps-on-macs-with-apple-silicon
+					283 container
+						284 checkbox (settable, integer) Description: 提供此 App, Value: 1
+						285 text 提供此 App
+					334 pop up button (collapsed, settable) Value: 自动 (macOS 13.0), Secondary Actions: Expand
+						335 menu
+							336 (selected) 自动 (macOS 13.0)
+							337 macOS 27.0
+							338 macOS 26.7
+							339 macOS 26.6
+							340 macOS 26.5
+							341 macOS 26.4
+							342 macOS 26.3
+							343 macOS 26.2
+							344 macOS 26.1
+							345 macOS 26.0
+							346 macOS 15.7
+							347 macOS 15.6
+							348 macOS 15.5
+							349 macOS 15.4
+							350 macOS 15.3
+							351 macOS 15.2
+							352 macOS 15.1
+							353 macOS 15.0
+							354 macOS 14.7
+							355 macOS 14.6
+							356 macOS 14.5
+							357 macOS 14.4
+							358 macOS 14.3
+							359 macOS 14.2
+							360 macOS 14.1
+							361 macOS 14.0
+							362 macOS 13.6
+							363 macOS 13.5
+							364 macOS 13.4
+							365 macOS 13.3
+							366 macOS 13.2
+							367 macOS 13.1
+							368 macOS 13.0
+							369 macOS 12.5
+							370 macOS 12.4
+							371 macOS 12.3
+							372 macOS 12.2
+							373 macOS 12.1
+							374 macOS 12.0
+							375 macOS 11.5
+							376 macOS 11.4
+							377 macOS 11.3
+							378 macOS 11.0
+				286 text 与搭载 Apple 芯片的 Mac 的兼容性
+				379 text 此 App 与搭载 Apple 芯片的 Mac 的兼容性尚未验证。如果你已在搭载 Apple 芯片的 Mac 上对 App 进行测试且 App 功能符合预期，请对其兼容性进行验证，让用户知道他们在 macOS 上可获得精彩体验。
+				380 button 验证兼容性
+				287 content list
+					288 container
+						289 AXListMarker • 
+						290 text 版本 1.0.2 兼容。
+				291 heading Apple Vision Pro 上的 iPhone 和 iPad App, Value: 3
+					292 text Apple Vision Pro 上的 iPhone 和 iPad App
+				293 text 可在 Apple Vision Pro 上提供兼容的 iPhone App 和 iPad App。App 将在本地运行，并使用与 iOS 相同的框架、资源和运行环境。
+				294 link Description: 了解更多, Value: developer.apple.com/help/app-store-connect/manage-your-apps-availability/manage-availability-of-iphone-and-ipad-apps-on-apple-vision-pro
+				295 text Apple Vision Pro 提供情况
+				296 checkbox (settable, integer) Description: 在 Apple Vision Pro 上提供此 App, Value: 1, ID: isOptedInToDistributeIosAppOnAppStore_VISION_OS
+				297 text 在 Apple Vision Pro 上提供此 App 兼容性
+				381 content list
+					382 container
+						383 AXListMarker • 
+						384 text 版本 1.0.2 兼容
+				298 heading App 分发方式, Value: 3
+					299 text App 分发方式
+				385 text 请选择你希望以何种方式向用户分发 App。App 批准后，分发方式将无法更改。
+				386 link Description: 了解更多, Value: developer.apple.com/help/app-store-connect/manage-your-apps-availability/set-distribution-methods
+				387 radio button (disabled, settable, integer) 公开 — 在 App Store 上对所有人可见（默认） 更多信息 在 Apple 校园教务管理中提供批量购买优惠价格 更多信息, Value: 1, ID: APP_STORE
+				388 container
+					389 text 公开  — 在 App Store 上对所有人可见（默认）
+					390 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				391 checkbox (settable, integer) 在 Apple 校园教务管理中提供批量购买优惠价格 更多信息, Value: 1, ID: true
+				392 container
+					393 text 在 Apple 校园教务管理中提供批量购买优惠价格
+					394 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				395 radio button (disabled, settable, integer) 专属 — 在 Apple 商务管理或 Apple 校园教务管理上作为自定义 App 提供 更多信息, Value: 0, ID: CUSTOM
+				396 container
+					397 text 专属  — 在 Apple 商务管理或 Apple 校园教务管理上作为自定义 App 提供
+				398 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				399 button (collapsed)  上个兼容版本的设置, ID: accordion-toggle-1, Secondary Actions: Expand
+					405 container
+						406 text  
+					402 heading 上个兼容版本的设置, Value: 3
+						403 text 上个兼容版本的设置
+				300 button 停止销售 App
+		62 content list
+			74 link Description: App Store Connect, Value: appstoreconnect.apple.com/apps
+		6 content list
+			64 container
+				65 text Copyright © 2026 Apple Inc. 保留所有权利。 |
+			7 container
+				8 link Description: 服务条款, Value: appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/wa/termsOfService
+				407 text |
+			9 container
+				10 link Description: 隐私政策, Value: apple.com/legal/privacy
+				408 text |
+			11 link Description: 联系我们, Value: appstoreconnect.apple.com/contact-us
+		409 container 2 个国家或地区
+			410 container 2 个国家或地区, ID: FAILED_TO_SELL-popover
+				411 text 2 个国家或地区
+				412 table
+					413 row
+						414 cell
+							415 text 阿富汗
+					416 row
+						417 cell
+							418 text 摩洛哥
+
+The focused UI element is 329 button (collapsed) 173 个可供应, Secondary Actions: Expand

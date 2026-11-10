@@ -1,0 +1,98 @@
+.page {
+  min-width: 0;
+}
+
+.summary {
+  margin-bottom: 16px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summaryItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.summaryItem + .summaryItem {
+  border-left: 1px solid #f0f0f0;
+}
+
+.summaryLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #595959;
+  font-size: 14px;
+}
+
+.summaryValue {
+  color: #17233d;
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.search {
+  flex: 1 1 240px;
+  max-width: 400px;
+}
+
+.error {
+  margin-bottom: 16px;
+}
+
+.list :global(.ant-tabs-nav) {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 767px) {
+  .summaryItem {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .summaryLabel {
+    gap: 4px;
+    font-size: 12px;
+  }
+
+  .summaryValue {
+    font-size: 22px;
+  }
+
+  .list > :global(.ant-card-body) {
+    padding: 12px;
+  }
+
+  .list :global(.ant-tabs-tab) {
+    padding-block: 8px;
+    font-size: 13px;
+  }
+
+  .list :global(.ant-tabs-tab + .ant-tabs-tab) {
+    margin-left: 16px;
+  }
+
+  .search {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .toolbar > button {
+    min-height: 40px;
+  }
+}

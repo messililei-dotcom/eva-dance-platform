@@ -1,3 +1,4 @@
+import { findPhoneMembers } from '@/lib/server/event-phone-member';
 import type { AdminDb } from '@/lib/server/admin-db';
 import { cleanText, memberToken } from './_helpers';
 import { moveWechatIdentities } from '@/lib/server/wechat-identity';
@@ -290,7 +291,7 @@ export function loginData(member: MemberRow) {
 
 export function upsertPhoneMember(db: AdminDb, phone: string, options: { sourceMemberId?: unknown; source?: string } = {}) {
   const sourceMember = getMember(db, options.sourceMemberId);
-  let phoneMember = db.prepare('SELECT * FROM Member WHERE phone=?').get<MemberRow>(phone) || null;
+  let phoneMember = (findPhoneMembers(db, phone)[0] as MemberRow | undefined) || null;
 
   if (phoneMember) {
     if (sourceMember && Number(phoneMember.id) !== Number(sourceMember.id)) {

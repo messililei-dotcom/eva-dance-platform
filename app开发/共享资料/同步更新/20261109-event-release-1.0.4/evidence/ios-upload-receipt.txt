@@ -1,0 +1,7 @@
+2026-11-09 11:01:26.119 xcodebuild[45253:299532] Progress 100%: Uploaded package is processing.
+2026-11-09 11:01:26.126 xcodebuild[45253:299532] Progress 100%: Upload succeeded.
+warning: exportArchive Upload Symbols Failed. The archive did not include a dSYM for the AliyunMediaDownloader.framework with the UUIDs [6C5B4A9C-F344-3F78-AA79-E34C28E1DECC]. Ensure that the archive's dSYM folder includes a DWARF file for AliyunMediaDownloader.framework with the expected UUIDs.
+warning: exportArchive Upload Symbols Failed. The archive did not include a dSYM for the AliyunPlayer.framework with the UUIDs [7CD40560-DC7C-3ECF-9950-F068A03F344B]. Ensure that the archive's dSYM folder includes a DWARF file for AliyunPlayer.framework with the expected UUIDs.
+warning: exportArchive Upload Symbols Failed. The archive did not include a dSYM for the alivcffmpeg.framework with the UUIDs [183A1102-3E05-35C2-9A80-0F7600AF75F4]. Ensure that the archive's dSYM folder includes a DWARF file for alivcffmpeg.framework with the expected UUIDs.
+Uploaded EvaDance
+** EXPORT SUCCEEDED **

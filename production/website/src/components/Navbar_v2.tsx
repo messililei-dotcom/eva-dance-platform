@@ -5,7 +5,7 @@ import type { MouseEvent, TouchEvent } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Search, ChevronDown, Bell, User, Sparkles, LogOut, Headphones } from 'lucide-react';
+import { Menu, X, Search, ChevronDown, Bell, User, Sparkles, LogOut, Headphones, ArrowLeft } from 'lucide-react';
 import { navItems } from '@/config/navigation';
 import { cn } from '@/lib/utils';
 import { clearStudentSession, getStudentSession, preferredStudentName, STUDENT_AUTH_CHANGED_EVENT } from '@/lib/student-auth';
@@ -13,6 +13,7 @@ import StudentLoginModal from '@/components/StudentLoginModal';
 import SiteSearch from '@/components/SiteSearch';
 import { CLOSE_CUSTOMER_SERVICE_EVENT, OPEN_CUSTOMER_SERVICE_EVENT, OPEN_STUDENT_LOGIN_EVENT } from '@/lib/ui-events';
 import { studentApi } from '@/lib/student-api';
+import { judgeBackLink } from '@/lib/event-judge-navigation';
 import { pwaLoginSuccessPath } from '@/lib/pwa-auth-flow';
 
 type MobileStudent = {
@@ -100,6 +101,7 @@ export default function Navbar() {
   const mobileMenuTouchAtRef = useRef(0);
   const pendingLoginNextRef = useRef<string | null>(null);
   const pathname = usePathname();
+  const judgeBack = judgeBackLink(pathname);
   const desktopNavbarTone = getDesktopNavbarTone(pathname);
   const usesLightDesktopText = desktopNavbarTone === 'light';
 
@@ -296,6 +298,12 @@ export default function Navbar() {
     <>
       <header className="mobile-site-header fixed inset-x-0 top-0 z-[10060] px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)] md:hidden">
         <div className="mobile-site-header-inner flex h-12 items-center justify-between rounded-2xl border border-white/55 bg-white/68 px-2.5 shadow-[0_10px_30px_rgba(44,24,16,0.12)] backdrop-blur-xl">
+          {judgeBack ? (
+            <Link href={judgeBack.href} prefetch={false} className="flex min-h-11 min-w-0 items-center gap-2 font-semibold text-[#3A2A1E]" aria-label={judgeBack.label}>
+              <ArrowLeft className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span className="truncate text-sm">{judgeBack.label}</span>
+            </Link>
+          ) : (
           <Link
             href="/"
             onClick={(event: MouseEvent<HTMLAnchorElement>) => navigateFromMobileMenu(event, '/')}
@@ -312,6 +320,7 @@ export default function Navbar() {
             />
             <span className="truncate font-serif text-[17px] font-bold text-[#3A2A1E]">伊娃东方舞</span>
           </Link>
+          )}
 
           <div className="flex shrink-0 items-center gap-1.5">
             <button

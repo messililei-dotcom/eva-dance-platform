@@ -2,6 +2,21 @@ import { Bot, Check, Ellipsis, Laptop, Monitor, MoreVertical, Share, Smartphone 
 
 const platforms = [
   {
+    id: 'huawei',
+    eyebrow: '华为 / 鸿蒙 · 华为浏览器',
+    title: '添加至桌面',
+    icon: Smartphone,
+    iconLabel: '华为',
+    iconClassName: 'bg-[#9F1D20] text-white ring-[#F3E5FF]',
+    steps: [
+      '请使用华为浏览器打开 www.swod.com.cn/install；如果在微信中，请先从右上角菜单选择在浏览器中打开。',
+      '点击华为浏览器底部的四点菜单，找到“添加至桌面”。菜单位置和名称以当前浏览器实际显示为准。',
+      '按手机提示确认添加，再回到桌面找到伊娃东方舞图标。',
+      '如果没有该选项，请检查浏览器是否有可用更新，或继续在浏览器中使用本站。网页无法代替系统完成添加。',
+    ],
+    note: '华为浏览器可能仅创建网页快捷方式，不保证独立全屏窗口。若点击一键安装没有弹窗，请使用以上菜单操作。',
+  },
+  {
     id: 'iphone',
     eyebrow: 'iPhone / iPad · Safari',
     title: '添加到主屏幕',
@@ -82,7 +97,7 @@ export default function InstallPage() {
           <img className="mx-auto h-24 w-24 rounded-[1.4rem] shadow-[0_18px_55px_rgba(0,0,0,.45)]" src="/icons/pwa/icon-192-20261006.png" alt="伊娃东方舞应用图标" />
           <p className="mt-7 text-sm font-semibold tracking-[.28em] text-[#DCBD7D]">网课系统App安装教程</p>
           <h1 className="mt-3 text-3xl font-bold md:text-5xl">把网课系统App装进手机和电脑</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-[#E8D9CC] md:text-base">不需要应用商店。安装后可从桌面直接打开，使用独立全屏窗口，原有账号、课程和学习记录保持不变。</p>
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-[#E8D9CC] md:text-base">添加后可从桌面直接打开；是否使用独立窗口取决于浏览器支持。原有账号、课程和学习记录保持不变。</p>
         </div>
 
         <div className="mt-10 grid gap-6 md:grid-cols-2">

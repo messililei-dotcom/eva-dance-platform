@@ -48,14 +48,16 @@ public final class MainActivity extends Activity {
     private String musicFilename = "";
     private TextView musicLabel;
     private int musicPickerGeneration;
+    private boolean musicReading;
     private boolean registrationBusy;
     private int red;
+    private Button accountNotice;
     private int unreadMessages;
     private boolean unreadLoaded;
     private final android.os.Handler messageHandler=new android.os.Handler(android.os.Looper.getMainLooper());
     private final Runnable messagePoll=new Runnable(){public void run(){refreshUnread();messageHandler.postDelayed(this,30000);}};
     private void refreshUnread(){if(api==null)return;AppPush.flushRevocations(this);if(!api.loggedIn()){unreadMessages=0;unreadLoaded=false;updateMessageBadge();return;}long account=api.accountGeneration();io.execute(()->{try{JSONObject value=(JSONObject)api.request("/member/messages/unread-count","GET",null,true);int count=Math.max(0,value.optInt("count"));runOnUiThread(()->{if(api.accountGeneration()!=account||isFinishing())return;if(unreadLoaded&&count>unreadMessages)Toast.makeText(this,"你有新的学习消息",Toast.LENGTH_SHORT).show();unreadMessages=count;unreadLoaded=true;updateMessageBadge();});}catch(Exception ignored){}});AppPush.register(getApplication(),null);}
-    private void updateMessageBadge(){if(tabButtons[4]!=null){tabButtons[4].setText("个人中心"+(unreadMessages>0?" · "+(unreadMessages>99?"99+":unreadMessages):""));tabButtons[4].setContentDescription("个人中心"+(unreadMessages>0?"，"+unreadMessages+" 条未读消息":""));}}
+    private void updateMessageBadge(){if(tabButtons[4]!=null){tabButtons[4].setText("个人中心"+(unreadMessages>0?" · "+(unreadMessages>99?"99+":unreadMessages):""));tabButtons[4].setContentDescription("个人中心"+(unreadMessages>0?"，"+unreadMessages+" 条未读消息":""));}if(accountNotice!=null){accountNotice.setText(unreadMessages>0?(unreadMessages>99?"99+":String.valueOf(unreadMessages))+" 未读":"通知");accountNotice.setContentDescription("通知，"+unreadMessages+"条未读");}}
     private void notificationIntent(Intent intent){String id=intent.getStringExtra("pushRecipientId");intent.removeExtra("pushRecipientId");if(id!=null&&id.matches("[1-9][0-9]{0,15}")&&api!=null&&api.loggedIn())open(()->messageDetail(id));}
     @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);notificationIntent(intent);}
     @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] grants){super.onRequestPermissionsResult(request,permissions,grants);if(request==701&&grants.length>0&&grants[0]==android.content.pm.PackageManager.PERMISSION_GRANTED)AppPush.enable(this,this::refreshUnread);}
@@ -79,15 +81,19 @@ public final class MainActivity extends Activity {
         title = text("线上学院",20);title.setTypeface(null,android.graphics.Typeface.BOLD); title.setGravity(Gravity.CENTER_VERTICAL); bar.addView(title,new LinearLayout.LayoutParams(0,dp(48),1));
         pageActions=row();bar.addView(pageActions);
         Button refresh = button("", () -> { if (page != null) page.run(); });refresh.setPadding(dp(12),dp(12),dp(12),dp(12));refresh.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"refresh",red),null,null,null);refresh.setContentDescription("刷新当前页面");bar.addView(refresh,new LinearLayout.LayoutParams(dp(48),dp(48))); root.addView(bar);
-        pageScroll = new ScrollView(this);pageScroll.setFillViewport(true); content = column();int inset=Math.max(16,(getResources().getConfiguration().screenWidthDp-760)/2);content.setPadding(dp(inset),dp(4),dp(inset),dp(16));pageScroll.addView(content);
+        int windowWidth = getResources().getConfiguration().screenWidthDp;
+        boolean expanded = windowWidth >= 600;
+        int railWidth = 104;
+        int inset = Math.max(16, (windowWidth - (expanded ? railWidth : 0) - 880) / 2);
+        pageScroll = new ScrollView(this);pageScroll.setFillViewport(true); content = column();content.setPadding(dp(inset),dp(4),dp(inset),dp(16));pageScroll.addView(content);
         refreshLayout=new androidx.swiperefreshlayout.widget.SwipeRefreshLayout(this);refreshLayout.addView(pageScroll);refreshLayout.setColorSchemeColors(red);refreshLayout.setOnChildScrollUpCallback((parent,child)->pageScroll.getScrollY()>0);refreshLayout.setOnRefreshListener(()->{dismissKeyboard();if(page!=null){refreshRequested=true;page.run();if(pendingLoads==0)refreshLayout.setRefreshing(false);}else refreshLayout.setRefreshing(false);});
         LinearLayout tabs = row(); String[] names={"线上学院","线下课","赛事","商城","个人中心"};
-        boolean expanded=getResources().getConfiguration().screenWidthDp>=600;if(expanded){tabs.setOrientation(LinearLayout.VERTICAL);tabs.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL);}
+        if(expanded){tabs.setOrientation(LinearLayout.VERTICAL);tabs.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL);}
         String[] icons={"learn","calendar","trophy","bag","person"};
         Runnable[] pages={this::courses,this::offline,this::events,this::shop,this::account};
         for(int i=0;i<names.length;i++) { final Runnable p=pages[i]; final int index=i; Button b=button(names[i],()->{if(index==4&&!api.loggedIn()){if(!loginPageVisible)open(this::login);return;}history.clear();selectTab(index);page=p;p.run();}); b.setTextSize(12);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);b.setCompoundDrawablePadding(dp(6));b.setGravity(Gravity.CENTER);b.setPadding(dp(2),dp(expanded?6:10),dp(2),dp(expanded?6:8));tabButtons[i]=b; tabs.addView(b,expanded?new LinearLayout.LayoutParams(-1,dp(64)):new LinearLayout.LayoutParams(0,dp(68),1)); }
         tabs.setPadding(dp(6),dp(4),dp(6),dp(4));tabs.setBackgroundColor(SwodUi.surface(this));
-        if(expanded){LinearLayout body=row();body.setGravity(Gravity.TOP);ScrollView rail=new ScrollView(this);rail.setVerticalScrollBarEnabled(false);rail.addView(tabs,new ScrollView.LayoutParams(-1,-2));body.addView(rail,new LinearLayout.LayoutParams(dp(104),-1));body.addView(refreshLayout,new LinearLayout.LayoutParams(0,-1,1));root.addView(body,new LinearLayout.LayoutParams(-1,0,1));}
+        if(expanded){LinearLayout body=row();body.setGravity(Gravity.TOP);ScrollView rail=new ScrollView(this);rail.setVerticalScrollBarEnabled(false);rail.addView(tabs,new ScrollView.LayoutParams(-1,-2));body.addView(rail,new LinearLayout.LayoutParams(dp(railWidth),-1));body.addView(refreshLayout,new LinearLayout.LayoutParams(0,-1,1));root.addView(body,new LinearLayout.LayoutParams(-1,0,1));}
         else{root.addView(refreshLayout,new LinearLayout.LayoutParams(-1,0,1));root.addView(tabs);}
         selectTab(0); setContentView(root);if(android.os.Build.VERSION.SDK_INT>=33)getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,()->{if(history.isEmpty())finish();else back();}); page=this::courses; courses();notificationIntent(getIntent());messageHandler.removeCallbacks(messagePoll);messageHandler.post(messagePoll);
     }
@@ -99,7 +105,7 @@ public final class MainActivity extends Activity {
     private void selectTab(int selected){String[] icons={"learn","calendar","trophy","bag","person"};for(int i=0;i<tabButtons.length;i++){Button b=tabButtons[i];if(b!=null){boolean active=i==selected;b.setSelected(active);b.setTextColor(active?red:SwodUi.muted(this));b.setTypeface(null,active?android.graphics.Typeface.BOLD:android.graphics.Typeface.NORMAL);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],active?red:SwodUi.muted(this)),null,null);b.setBackground(SwodUi.touch(this,active?SwodUi.tonal(this):SwodUi.surface(this),14));}}}
     private void hero(String name,String description){LinearLayout box=column();box.setPadding(0,dp(4),0,dp(8));TextView heading=text(name,22);heading.setTypeface(null,android.graphics.Typeface.BOLD);box.addView(heading);TextView summary=text(description,14);summary.setTextColor(SwodUi.muted(this));box.addView(summary);content.addView(box);}
     private void section(String name){TextView label=text(name,18);label.setTypeface(null,android.graphics.Typeface.BOLD);label.setPadding(0,dp(12),0,dp(4));content.addView(label);}
-    private void begin(String name) {if(refreshLayout!=null){refreshLayout.setEnabled(history.isEmpty());refreshLayout.setRefreshing(refreshRequested);}refreshRequested=false;pendingLoads=0;loginPageVisible=false;courseEntryRequest++;courseEntryBusy=false; if(pageActions!=null)pageActions.removeAllViews();loginFeedback=null;courseAccessVisible=false; generation++; content.removeAllViews(); title.setText("");title.setContentDescription(name);chromeBar.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
+    private void begin(String name) {accountNotice=null;if(refreshLayout!=null){refreshLayout.setEnabled(history.isEmpty());refreshLayout.setRefreshing(refreshRequested);}refreshRequested=false;pendingLoads=0;loginPageVisible=false;courseEntryRequest++;courseEntryBusy=false; if(pageActions!=null)pageActions.removeAllViews();loginFeedback=null;courseAccessVisible=false; generation++; content.removeAllViews(); title.setText("");title.setContentDescription(name);chromeBar.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
     private int dp(int x) {return Math.round(x*getResources().getDisplayMetrics().density);}
     private LinearLayout column(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.VERTICAL);return v;}
     private LinearLayout row(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.HORIZONTAL);v.setGravity(Gravity.CENTER_VERTICAL);return v;}
@@ -158,6 +164,8 @@ public final class MainActivity extends Activity {
     private interface RowTap{void tap(JSONObject row);}
     private void searchable(JSONArray rows,String[] fields,RowTap tap){
         boolean online=java.util.Arrays.asList(fields).contains("category");
+        android.content.res.Configuration configuration = getResources().getConfiguration();
+        boolean twoColumns = online && configuration.screenWidthDp >= 840 && configuration.fontScale <= 1.2f;
         SearchView search=new SearchView(this);search.setIconifiedByDefault(false);search.setQueryHint(online?"搜索课程、老师或分类":"搜索名称、老师或组别");search.setMaxWidth(Integer.MAX_VALUE);search.setMinimumHeight(dp(48));search.setBackground(SwodUi.shape(this,SwodUi.field(this),8));content.addView(search);
         if(online)search.setQuery(courseKeyword,false);
         java.util.ArrayList<String> categories=new java.util.ArrayList<>();categories.add("全部分类");
@@ -166,10 +174,31 @@ public final class MainActivity extends Activity {
         if(online){LinearLayout filters=row();scope.setContentDescription("课程范围");category.setContentDescription("课程分类");scope.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"全部课程","已解锁"}));category.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,categories));scope.setSelection(onlyUnlocked&&api.loggedIn()?1:0);category.setSelection(Math.max(0,categories.indexOf(courseCategory)));filters.addView(scope,new LinearLayout.LayoutParams(0,dp(48),1));if(categories.size()>1)filters.addView(category,new LinearLayout.LayoutParams(0,dp(48),1));content.addView(filters);}
         TextView countLabel=text("",12);countLabel.setTextColor(SwodUi.muted(this));content.addView(countLabel);LinearLayout results=column();content.addView(results);int pageVersion=generation;long account=api.accountGeneration();
         Runnable render=()->{if(pageVersion!=generation||account!=api.accountGeneration())return;results.removeAllViews();String query=search.getQuery().toString().trim().toLowerCase(Locale.ROOT);int count=0;boolean rightsUnknown=false;
+            LinearLayout gridRow = null;
             for(int i=0;i<rows.length();i++){JSONObject r=rows.optJSONObject(i);if(r==null)continue;String all="";for(String f:fields)all+=r.optString(f)+" ";boolean match=true;for(String part:query.split("\\s+"))if(!all.toLowerCase(Locale.ROOT).contains(part))match=false;
                 if(online&&!courseCategory.isEmpty()&&!r.optString("category").equals(courseCategory))match=false;
                 if(online&&onlyUnlocked){if(!r.optBoolean("course_access_known",true))rightsUnknown=true;if(!api.loggedIn()||!r.optBoolean("course_access_known",true)||!r.optBoolean("learning_unlocked"))match=false;}
-                if(match){count++;int before=results.getChildCount();card(results,first(r,"name","series_name","course_name","competitionName"),publicSummary(r),()->tap.tap(r));if("online".equals(r.optString("course_access_scope"))&&r.optBoolean("learning_unlocked"))unlockedBadge((LinearLayout)results.getChildAt(before),14);String cover=first(r,"cover_image","image");if(!cover.isEmpty())cover((LinearLayout)results.getChildAt(before),cover,false);}}
+                if (!match) continue;
+                LinearLayout parent = results;
+                if (twoColumns) {
+                    if (count % 2 == 0) {
+                        gridRow = row();
+                        gridRow.setWeightSum(2);
+                        results.addView(gridRow, new LinearLayout.LayoutParams(-1, -2));
+                    }
+                    parent = column();
+                    LinearLayout.LayoutParams cell = new LinearLayout.LayoutParams(0, -2, 1);
+                    if (count % 2 == 0) cell.setMarginEnd(dp(16));
+                    gridRow.addView(parent, cell);
+                }
+                int before = parent.getChildCount();
+                card(parent, first(r, "name", "series_name", "course_name", "competitionName"), publicSummary(r), () -> tap.tap(r));
+                LinearLayout item = (LinearLayout) parent.getChildAt(before);
+                if ("online".equals(r.optString("course_access_scope")) && r.optBoolean("learning_unlocked")) unlockedBadge(item, 14);
+                String artwork = first(r, "cover_image", "image");
+                if (!artwork.isEmpty()) cover(item, artwork, false);
+                count++;
+            }
             countLabel.setText(count+" 条结果");
             if(count==0){results.addView(text(rightsUnknown?"学习权益暂无法确认，请重试":"暂无匹配记录",14));if(rightsUnknown)results.addView(button("重新查询学习权益",()->{if(page!=null)page.run();}));else results.addView(button("清除搜索与筛选",()->{courseCategory="";onlyUnlocked=false;search.setQuery("",false);category.setSelection(0);scope.setSelection(0);}));}
         };
@@ -312,23 +341,96 @@ public final class MainActivity extends Activity {
     }
     private void event(int id){begin("赛事详情");load("/events/"+id,"GET",null,false,v->{JSONObject o=object(v),c=o.optJSONObject("competition");if(c!=null){info(c.optString("name"));info(first(c,"startDate","start_date")+" · "+first(c,"venue"));info(strip(first(c,"description","introduction")));}info("完整组别名称");searchable(array(o.opt("groups")),new String[]{"name"},r->open(()->register(id,r)));info("赛程");displayRows(array(o.opt("sessions")),new String[]{"name","startsAt","venue"},null);info("已发布成绩");displayRows(array(o.opt("rankings")),new String[]{"rankNo","playerName","groupName","publishedTotal"},null);});}
 
-    private void register(int id,JSONObject group){
-        begin("报名与参赛音乐");musicBytes=null;musicFilename="";
-        if(!api.loggedIn()){action("登录后报名",()->open(this::login));return;}
-        info(group.optString("name"));info("报名费 ¥"+group.optDouble("registrationFee"));
-        EditText name=field(content,"参赛姓名",false),phone=field(content,"手机号",true),org=field(content,"机构（选填）",false),teacher=field(content,"指导老师（选填）",false),performance=field(content,"节目名称",false),remark=field(content,"备注（选填）",false);
-        musicLabel=text("支持MP3、WAV、M4A、AAC、FLAC，单个文件不超过10MB",12);content.addView(musicLabel);
-        action("选择参赛音乐",()->{musicPickerGeneration=generation;Intent picker=new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(picker,460);});
-        action("提交报名与音乐",()->{
-            if(registrationBusy)return;
-            if(name.getText().toString().trim().isEmpty()||!phone.getText().toString().matches("1[3-9][0-9]{9}")||performance.getText().toString().trim().isEmpty()||musicBytes==null){info("请填写姓名、手机号、节目名称并选择音乐");return;}
-            confirm("确认提交本组报名、节目名称及音乐？",()->{
-                if(registrationBusy)return;registrationBusy=true;int version=generation;
-                JSONObject fields=body("groupId",group.optInt("id"),"name",name.getText().toString().trim(),"phone",phone.getText().toString(),"organization",org.getText().toString(),"teacher",teacher.getText().toString(),"performanceTitle",performance.getText().toString().trim(),"remark",remark.getText().toString());
-                byte[] bytes=musicBytes;String filename=musicFilename;
-                io.execute(()->{Exception failure=null;try{api.registerWithMusic(id,fields,filename,bytes);}catch(Exception e){failure=e;}
-                    final Exception error=failure;runOnUiThread(()->{registrationBusy=false;if(version!=generation||isFinishing())return;
-                        if(error!=null){info(error.getMessage());return;}musicBytes=null;begin("报名与音乐已提交");info("付款及处理进度请在赛事记录中查看。");action("查看报名记录",()->open(this::myEvents));});
+    private void register(int id, JSONObject group) {
+        begin("赛事报名");
+        if (!api.loggedIn()) { action("登录后报名", () -> open(this::login)); return; }
+        info(group.optString("name"));
+        info("报名费 ¥" + group.optDouble("registrationFee"));
+        registrationForm(id, group.optInt("id"), 0, new JSONObject(), "");
+    }
+
+    private void editRegistration(long player) {
+        begin("修改报名 / 补交音乐");
+        String path = "/member/event-registrations/" + player;
+        load(path, "GET", null, true, value -> {
+            JSONObject details = object(value);
+            if (!details.optBoolean("canEdit")) { info("此报名当前不可修改"); return; }
+            load(path + "/music", "GET", null, true, audio ->
+                    registrationForm(0, 0, player, details, object(audio).optString("fileName")));
+        });
+    }
+
+    private void registrationForm(int event, int group, long player, JSONObject existing, String currentMusic) {
+        musicBytes = null; musicFilename = ""; musicReading = false;
+        EditText name = field(content, "参赛姓名", false);
+        EditText country = field(content, "国家/地区区号", false);
+        EditText phone = field(content, "联系电话", false);
+        EditText org = field(content, "机构（选填）", false);
+        EditText teacher = field(content, "指导老师（选填）", false);
+        EditText title = field(content, "节目（音乐）名字", false);
+        EditText remark = field(content, "备注（选填）", false);
+        name.setText(existing.optString("name"));
+        country.setText(existing.optString("countryCode", "+86"));
+        phone.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
+        country.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
+        phone.setText(existing.optString("phone"));
+        org.setText(existing.optString("organization"));
+        teacher.setText(existing.optString("teacher"));
+        title.setText(existing.optString("performanceTitle"));
+        remark.setText(existing.optString("remark"));
+        if (!currentMusic.isEmpty()) info("当前音乐：" + currentMusic);
+        String musicHint = "音乐选填，支持 MP3、WAV、M4A、AAC、FLAC，单个不超过 10 MB";
+        musicLabel = text(musicHint, 12); content.addView(musicLabel);
+        action("选择参赛音乐", () -> {
+            if (registrationBusy || musicReading) return;
+            musicPickerGeneration = generation;
+            Intent picker = new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(picker, 460);
+        });
+        action("移除所选音乐", () -> {
+            if (registrationBusy || musicReading) return;
+            musicBytes = null; musicFilename = ""; musicLabel.setText(musicHint);
+        });
+        java.util.function.Supplier<JSONObject> fields = () -> body("name", name.getText().toString().trim(),
+                "phone", phone.getText().toString().trim(), "countryCode", country.getText().toString().trim(),
+                "organization", org.getText().toString(), "teacher", teacher.getText().toString(),
+                "performanceTitle", title.getText().toString().trim(), "remark", remark.getText().toString());
+        if (player > 0) action("保存报名资料", () -> {
+            if (registrationBusy || musicReading) return;
+            memberWrite("/member/event-registrations/" + player, "PUT", fields.get(), () -> editRegistration(player));
+        });
+        action(player > 0 ? "上传音乐" : "提交报名", () -> {
+            if (registrationBusy || memberWriteBusy || musicReading) return;
+            JSONObject values = fields.get();
+            if (values.optString("performanceTitle").isEmpty()
+                    || (player == 0 && (values.optString("name").isEmpty() || values.optString("phone").isEmpty()))
+                    || (player > 0 && musicBytes == null)) {
+                info(player > 0 ? "请填写节目名称并选择音乐" : "请填写姓名、联系电话和节目名称");
+                return;
+            }
+            confirm(player > 0 ? "确认上传参赛音乐？" : "确认提交本组报名？", () -> {
+                if (registrationBusy || memberWriteBusy || musicReading) return;
+                registrationBusy = true;
+                int version = generation;
+                byte[] bytes = musicBytes;
+                String filename = musicFilename;
+                io.execute(() -> {
+                    Exception failure = null;
+                    try {
+                        if (player > 0) api.replaceEventMusic(player, values.optString("performanceTitle"), filename, bytes);
+                        else api.registerWithMusic(event, values.put("groupId", group), filename, bytes);
+                    } catch (Exception e) { failure = e; }
+                    Exception error = failure;
+                    runOnUiThread(() -> {
+                        registrationBusy = false;
+                        if (version != generation || isFinishing()) return;
+                        if (error != null) { info(error.getMessage()); return; }
+                        musicBytes = null;
+                        if (player > 0) { editRegistration(player); return; }
+                        begin("报名已提交");
+                        info("可在「我的比赛」查看进度、补交或更换音乐。");
+                        action("查看报名记录", () -> open(this::myEvents));
+                    });
                 });
             });
         });
@@ -336,13 +438,15 @@ public final class MainActivity extends Activity {
     @Override protected void onActivityResult(int request,int result,Intent data){
         super.onActivityResult(request,result,data);if(request!=460||result!=RESULT_OK||data==null||data.getData()==null)return;
         Uri uri=data.getData();int version=musicPickerGeneration;
+        if(version!=generation||isFinishing())return;
+        musicReading=true;
         io.execute(()->{try{
             String filename="";try(android.database.Cursor c=getContentResolver().query(uri,new String[]{android.provider.OpenableColumns.DISPLAY_NAME},null,null,null)){if(c!=null&&c.moveToFirst())filename=c.getString(0);}
             if(!filename.toLowerCase(Locale.ROOT).matches(".*\\.(mp3|wav|m4a|aac|flac)$"))throw new Exception("请选择MP3、WAV、M4A、AAC或FLAC音乐");
             java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();try(java.io.InputStream stream=getContentResolver().openInputStream(uri)){if(stream==null)throw new Exception("无法读取所选文件");byte[] chunk=new byte[8192];int n;while((n=stream.read(chunk))!=-1){bytes.write(chunk,0,n);if(bytes.size()>10*1024*1024)throw new Exception("音乐文件不能超过10MB");}}
             if(bytes.size()==0)throw new Exception("音乐文件为空");String selected=filename;byte[] payload=bytes.toByteArray();
-            runOnUiThread(()->{if(version!=generation||isFinishing())return;musicBytes=payload;musicFilename=selected;musicLabel.setText("已选择："+selected);});
-        }catch(Exception e){runOnUiThread(()->{if(version==generation&&!isFinishing())info(e.getMessage());});}});
+            runOnUiThread(()->{if(version!=generation||isFinishing())return;musicReading=false;musicBytes=payload;musicFilename=selected;musicLabel.setText("已选择："+selected);});
+        }catch(Exception e){runOnUiThread(()->{if(version==generation&&!isFinishing()){musicReading=false;info(e.getMessage());}});}});
     }
 
     private void shop(){begin("伊娃甄选");hero("伊娃甄选","东方舞生活 · 官方商城");action("我的商城订单",()->open(this::orders));action("收货地址",()->open(this::shipping));section("精选商品");load("/shop/products","GET",null,false,v->{JSONArray products=array(object(v).opt("products"));EditText query=field(content,"搜索商品、颜色或尺码",false);content.removeView(query);content.addView(query,0);Spinner category=new Spinner(this);java.util.ArrayList<String> categories=new java.util.ArrayList<>();categories.add("全部商品");for(int i=0;i<products.length();i++){String c=products.optJSONObject(i).optString("category");if(!c.isEmpty()&&!categories.contains(c))categories.add(c);}category.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,categories));content.addView(category);LinearLayout list=column();content.addView(list);Runnable render=()->{list.removeAllViews();String keyword=query.getText().toString().trim().toLowerCase(Locale.ROOT),selected=categories.get(category.getSelectedItemPosition());for(int i=0;i<products.length();i++){JSONObject r=products.optJSONObject(i);if(r==null||(!selected.equals("全部商品")&&!selected.equals(r.optString("category"))))continue;String search=(r.optString("name")+" "+r.optString("color")+" "+r.optString("size")+" "+r.optString("spec")).toLowerCase(Locale.ROOT);if(!search.contains(keyword))continue;int index=list.getChildCount();card(list,r.optString("name"),productSpec(r)+" · "+ProductPresentation.price(r.opt("priceFen"))+" · "+ProductPresentation.stock(r.opt("stock")),()->open(()->product(r)));cover((LinearLayout)list.getChildAt(index),first(r,"image"),true);}if(list.getChildCount()==0)list.addView(text("暂无符合条件的商品",14));};query.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence s,int a,int c,int f){}public void onTextChanged(CharSequence s,int a,int b,int c){render.run();}public void afterTextChanged(Editable e){}});category.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){public void onNothingSelected(AdapterView<?> p){}public void onItemSelected(AdapterView<?> p,View v,int at,long id){render.run();}});render.run();});}
@@ -353,7 +457,99 @@ public final class MainActivity extends Activity {
     private void order(String id){begin("订单详情");String path="/shop/orders/"+Uri.encode(id);load(path,"GET",null,true,v->{JSONObject r=object(v).optJSONObject("order");if(r==null)throw new Exception("订单不存在");hero("订单 "+r.optString("id"),Commerce.status(r.optString("status"),r.optString("kind")));info("合计 ¥"+Commerce.money(r.optLong("totalFen")));JSONArray items=array(r.opt("items"));for(int i=0;i<items.length();i++){JSONObject item=items.getJSONObject(i);card(content,item.optString("name"),"¥"+Commerce.money(item.optLong("unit_fen"))+" × "+item.optInt("quantity"),null);}info(first(r,"createdAt"));info(first(r,"carrier")+" "+first(r,"trackingNo"));info(first(r,"recipient")+" · "+mask(r.optString("phone"))+" · "+first(r,"address"));JSONObject shipping=r.optJSONObject("shipping");if(shipping!=null)info(first(shipping,"recipient")+" · "+mask(shipping.optString("phone"))+" · "+shipping.optString("address"));action("同步最新订单状态",()->memberWrite(path+"/refresh","POST",body(),()->order(id)));String state=r.optString("status");if(state.equals("pending"))action("取消订单",()->confirm("确认取消此订单？",()->memberWrite(path+"/cancel","POST",body(),()->order(id))));if(state.equals("shipped")&&r.optString("kind").equals("goods"))action("确认收货",()->confirm("请确认已经收到商品",()->memberWrite(path+"/received","POST",body(),()->order(id))));if(Commerce.refundable(state)){EditText reason=field(content,"退款原因",false);action("申请退款",()->{String message=reason.getText().toString().trim();if(message.isEmpty()||message.length()>300){info("请填写300字以内退款原因");return;}confirm("确认提交退款申请？结果以平台审核为准",()->memberWrite(path+"/refund","POST",body("reason",message),()->order(id)));});}});}
     private void memberWrite(String path,String method,JSONObject body,Runnable next){if(memberWriteBusy)return;memberWriteBusy=true;int version=generation;io.execute(()->{try{api.request(path,method,body,true);runOnUiThread(()->{memberWriteBusy=false;if(version==generation&&!isFinishing()){page=next;next.run();}});}catch(Exception e){runOnUiThread(()->{memberWriteBusy=false;if(version==generation&&!isFinishing())info(e.getMessage());});}});}
     private void profileEditor(){begin("个人资料");load("/member/profile","GET",null,true,v->{JSONObject r=object(v);info("手机号 "+mask(r.optString("phone"))+" · 资料与官网同步");String[] keys={"name","gender","birthday","country","province","city","address"},labels={"姓名","性别（男/女/其他，选填）","生日（YYYY-MM-DD，选填）","国家/地区","省份/地区","城市","详细地址"};EditText[] inputs=new EditText[keys.length];for(int i=0;i<keys.length;i++){inputs[i]=field(content,labels[i],false);inputs[i].setText(first(r,keys[i]));}action("保存个人资料",()->{JSONObject draft=body();for(int i=0;i<keys.length;i++){String value=inputs[i].getText().toString().trim();if(value.length()>300||(i==0&&(value.isEmpty()||value.length()>60))){info("请填写姓名，单项资料不能超过300字");return;}try{draft.put(keys[i],value);}catch(Exception ignored){}}String birthday=inputs[2].getText().toString().trim();if(!birthday.isEmpty()){try{java.time.LocalDate date=java.time.LocalDate.parse(birthday);if(date.isAfter(java.time.LocalDate.now()))throw new Exception();}catch(Exception e){info("请填写有效生日 YYYY-MM-DD");return;}}memberWrite("/member/profile","PUT",draft,this::account);});});}
-    private void account(){begin("个人中心");if(!api.loggedIn()){hero("欢迎来到伊娃东方舞","登录后同步课程、比赛、证书与订单");action("手机号登录",()->open(this::login));}else{LinearLayout summary=column();content.addView(summary);load("/member/profile","GET",null,true,v->{JSONObject r=object(v);card(summary,first(r,"name"),mask(r.optString("phone"))+" · "+first(r,"level"),()->open(this::profileEditor));JSONObject stats=r.optJSONObject("stats");if(stats!=null)card(summary,"我的学习","线上课 "+stats.optInt("authorized_count")+" · 已学完 "+stats.optInt("completed_count")+" · 线下剩余 "+stats.optInt("offline_remaining_sessions")+" 课时",null);});section("个人资料");action("个人资料",()->open(this::profileEditor));action("我的比赛",()->open(this::myEvents));action("我的订单",()->open(this::orders));section("我的课程");if(Policy.SUPPORTS_OFFLINE_DOWNLOAD)action("课程缓存 · 离线观看",()->startActivity(new Intent(this,CourseCacheActivity.class)));LinearLayout courseRows=column();content.addView(courseRows);load("/member/authorized-series","GET",null,true,v->{if(!(v instanceof JSONArray))throw new Exception();JSONArray owned=(JSONArray)v;for(int n=0;n<owned.length();n++){JSONObject r=owned.getJSONObject(n);int id=CourseAccessPolicy.canonicalId(r.opt("series_id"));if(id<=0)continue;int at=courseRows.getChildCount();card(courseRows,first(r,"series_name","name"),"继续学习",()->studyCourse(id,first(r,"series_name","name")));unlockedBadge((LinearLayout)courseRows.getChildAt(at),14);}if(owned.length()==0)courseRows.addView(text("暂无已解锁课程",14));});action("查看全部课程与学习记录",()->open(this::myCourses));section("线下课与证书");action("我的线下课 · 课时与核销",()->open(this::schedule));action("我的证书",()->open(this::certificates));section("更多学习服务");action("学习消息",()->open(()->messages(0)));action("学习笔记",()->open(()->learningRecords(false)));action("学习书签",()->open(()->learningRecords(true)));action("成长档案",()->open(()->records("成长档案","/member/growth","",null)));section("账号与安全");action("登录设备",()->open(this::devices));action("注销账号",()->open(this::deletion));action("退出登录",()->confirm("退出当前账号？",()->{generation++;io.execute(()->{try{api.logout();}catch(Exception ignored){}runOnUiThread(()->{history.clear();page=this::account;account();});});}));}section("更多服务");action("客服与售后",()->open(this::support));action("东方舞圈与品牌服务",()->open(this::website));action("工作人员 · 赛事管理",()->open(this::staffHome));action("关于 SWOD",()->open(this::about));action("隐私政策",()->open(()->legalDocument("隐私政策","app-privacy.txt")));action("服务条款",()->open(()->legalDocument("服务条款","app-terms.txt")));info("SWOD "+ReleaseInfo.version(this));}
+    private void account(){
+        begin("个人中心");
+        if(!api.loggedIn()){
+            accountHeader(content,new JSONObject(),false);
+            action("手机号登录",()->open(this::login));
+        }else{
+            LinearLayout summary=column();content.addView(summary);
+            accountHeader(summary,new JSONObject(),false);accountShortcuts(summary,null);
+            load("/member/profile","GET",null,true,v->{JSONObject profile=object(v);summary.removeAllViews();accountHeader(summary,profile,true);accountShortcuts(summary,profile.optJSONObject("stats"));});
+            accountService("person","个人资料","姓名、手机号、生日和地址",()->open(this::profileEditor));
+            accountService("trophy","我的比赛","报名、缴费与比赛结果",()->open(this::myEvents));
+            accountService("bag","我的订单","订单、到账与退款记录",()->open(this::orders));
+            section("我的课程");
+            if(Policy.SUPPORTS_OFFLINE_DOWNLOAD)accountService("download","课程缓存","查看离线课程",()->startActivity(new Intent(this,CourseCacheActivity.class)));
+            LinearLayout courseRows=column();content.addView(courseRows);
+            load("/member/authorized-series","GET",null,true,v->{
+                if(!(v instanceof JSONArray))throw new Exception();JSONArray owned=(JSONArray)v;
+                renderAccountCourses(courseRows,owned,new JSONArray());
+                int pageVersion=generation;long account=api.accountGeneration();
+                io.execute(()->{try{JSONArray catalogue=array(api.request("/public/series","GET",null,false));runOnUiThread(()->{if(pageVersion==generation&&account==api.accountGeneration()&&!isFinishing())renderAccountCourses(courseRows,owned,catalogue);});}catch(Exception ignored){/* Artwork is optional; never block authorized learning. */}});
+            });
+            accountService("learn","查看全部课程与学习记录","已解锁课程与学习进度",()->open(this::myCourses));
+            section("线下课与证书");
+            accountService("calendar","我的线下课程","课时余额、期次与核销记录",()->open(this::schedule));
+            accountService("certificate","我的证书","查看已颁发的学习证书",()->open(this::certificates));
+            section("学习服务");
+            accountService("bell","学习消息",unreadMessages>0?unreadMessages+" 条未读消息":"课程与服务通知",()->open(()->messages(0)));
+            accountService("notes","学习笔记","回顾课程中的学习心得",()->open(()->learningRecords(false)));
+            accountService("bookmark","学习书签","快速找到标记过的课节",()->open(()->learningRecords(true)));
+            accountService("growth","成长档案","记录学习与练习成长",()->open(this::growth));
+            section("账号与隐私");
+            accountService("device","登录设备","查看与管理账号登录设备",()->open(this::devices));
+            accountService("shield","注销账号","申请注销与查看处理说明",()->open(this::deletion));
+            action("退出登录",()->confirm("退出当前账号？",()->{generation++;io.execute(()->{try{api.logout();}catch(Exception ignored){}runOnUiThread(()->{history.clear();page=this::account;account();});});}));
+        }
+        section("客服与帮助");
+        accountService("help","客服与售后","学习权限、课程与订单问题",()->open(this::support));
+        accountService("person","东方舞圈与品牌服务","品牌资讯与官方服务",()->open(this::website));
+        accountService("trophy","赛事管理工作台","工作人员入口",()->open(this::staffHome));
+        accountService("info","关于 SWOD","版本信息、品牌与服务商说明",()->open(this::about));
+        accountService("shield","隐私政策","个人信息与隐私保护说明",()->open(()->legalDocument("隐私政策","app-privacy.txt")));
+        accountService("notes","服务条款","查看平台服务规则",()->open(()->legalDocument("服务条款","app-terms.txt")));
+        TextView version=text("SWOD "+ReleaseInfo.version(this),12);version.setGravity(Gravity.CENTER);version.setTextColor(SwodUi.muted(this));version.setPadding(0,dp(16),0,dp(16));content.addView(version);
+    }
+    private void renderAccountCourses(LinearLayout box,JSONArray owned,JSONArray catalogue){
+        box.removeAllViews();
+        for(int n=0;n<owned.length();n++){
+            JSONObject course=owned.optJSONObject(n);if(course==null)continue;int id=CourseAccessPolicy.canonicalId(course.opt("series_id"));if(id<=0)continue;
+            String picture=first(course,"cover_image");if(picture.isEmpty())for(int k=0;k<catalogue.length();k++){JSONObject entry=catalogue.optJSONObject(k);if(entry!=null&&entry.optInt("id")==id){picture=first(entry,"cover_image");break;}}
+            Runnable learn=()->studyCourse(id,first(course,"series_name","name"));int at=box.getChildCount();card(box,first(course,"series_name","name"),"",learn);LinearLayout item=(LinearLayout)box.getChildAt(at);unlockedBadge(item,14);
+            TextView label=text("继续学习  ›",14);label.setTextColor(red);item.addView(label);cover(item,picture,false);item.setContentDescription(first(course,"series_name","name")+"，已解锁，继续学习");
+        }
+        if(owned.length()==0){TextView empty=text("暂无已解锁课程",14);empty.setTextColor(SwodUi.muted(this));empty.setPadding(0,dp(16),0,dp(16));box.addView(empty);}
+    }
+    private void accountHeader(LinearLayout box,JSONObject profile,boolean ready){
+        LinearLayout header=row();header.setPadding(0,dp(16),0,dp(16));
+        ImageView avatar=new ImageView(this);avatar.setImageDrawable(SwodUi.icon(this,"person",red));avatar.setScaleType(ImageView.ScaleType.CENTER);avatar.setBackground(SwodUi.shape(this,SwodUi.tonal(this),32));avatar.setClipToOutline(true);avatar.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        LinearLayout.LayoutParams avatarParams=new LinearLayout.LayoutParams(dp(64),dp(64));avatarParams.rightMargin=dp(14);header.addView(avatar,avatarParams);
+        LinearLayout identity=column();String name=first(profile,"wx_nickname","wx_name","name");TextView heading=text(!api.loggedIn()?"欢迎来到伊娃东方舞":name.isEmpty()?"我的学习空间":name,20);heading.setTypeface(null,android.graphics.Typeface.BOLD);identity.addView(heading);
+        String phone=mask(profile.optString("phone"));String level=first(profile,"level");TextView caption=text(!api.loggedIn()?"登录后同步课程与个人资料":!ready?"资料与学习账号同步":(level.isEmpty()?"":level+" · ")+phone,14);caption.setTextColor(SwodUi.muted(this));identity.addView(caption);header.addView(identity,new LinearLayout.LayoutParams(0,-2,1));
+        if(api.loggedIn()){Button notice=button(unreadMessages>0?(unreadMessages>99?"99+":String.valueOf(unreadMessages))+" 未读":"通知",()->open(()->messages(0)));notice.setTextSize(12);notice.setPadding(dp(6),dp(4),dp(6),dp(4));notice.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,"bell",red),null,null);notice.setCompoundDrawablePadding(dp(4));header.addView(notice);accountNotice=notice;}
+        box.addView(header,new LinearLayout.LayoutParams(-1,-2));
+        String url=first(profile,"avatar_url","wx_avatar_url");if(Policy.secureURL(url)){int version=generation;long account=api.accountGeneration();imageIO.execute(()->{try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(version==generation&&account==api.accountGeneration()&&!isFinishing()&&bitmap!=null){avatar.setScaleType(ImageView.ScaleType.CENTER_CROP);avatar.setImageBitmap(bitmap);}});}catch(Exception ignored){}});}
+    }
+    private void accountShortcuts(LinearLayout box,JSONObject stats){
+        String[] labels={"线上课","线下课","我的比赛","我的证书"};String[] values={stats!=null&&stats.has("authorized_count")?stats.optString("authorized_count"):"—",stats!=null&&stats.has("offline_course_count")?stats.optString("offline_course_count"):"—","报名与成绩","查看证书"};String[] icons={"learn","calendar","trophy","certificate"};Runnable[] targets={()->open(this::myCourses),()->open(this::schedule),()->open(this::myEvents),()->open(this::certificates)};
+        boolean large=getResources().getConfiguration().fontScale>1.3f||getResources().getConfiguration().screenWidthDp<360;LinearLayout line=null;
+        for(int i=0;i<labels.length;i++){if(i%(large?2:4)==0){line=row();box.addView(line,new LinearLayout.LayoutParams(-1,-2));}Button item=button(values[i]+"\n"+labels[i],targets[i]);item.setTextSize(14);item.setGravity(Gravity.CENTER);item.setPadding(dp(2),dp(12),dp(2),dp(12));item.setMinimumHeight(dp(96));item.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);item.setCompoundDrawablePadding(dp(6));item.setContentDescription(labels[i]+"，"+values[i]);line.addView(item,new LinearLayout.LayoutParams(0,-2,1));}
+    }
+    private void accountService(String icon,String name,String summary,Runnable tap){
+        LinearLayout item=row();item.setPadding(0,dp(12),0,dp(12));item.setMinimumHeight(dp(64));item.setBackground(SwodUi.row(this));
+        ImageView image=new ImageView(this);image.setImageDrawable(SwodUi.icon(this,icon,red));image.setPadding(dp(6),dp(6),dp(6),dp(6));image.setBackground(SwodUi.shape(this,SwodUi.tonal(this),8));image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);LinearLayout.LayoutParams ip=new LinearLayout.LayoutParams(dp(36),dp(36));ip.rightMargin=dp(12);item.addView(image,ip);
+        LinearLayout copy=column();TextView heading=text(name,16);heading.setTypeface(null,android.graphics.Typeface.BOLD);copy.addView(heading);TextView detail=text(summary,14);detail.setTextColor(SwodUi.muted(this));copy.addView(detail);item.addView(copy,new LinearLayout.LayoutParams(0,-2,1));
+        ImageView arrow=new ImageView(this);arrow.setImageDrawable(SwodUi.icon(this,"next",SwodUi.muted(this)));arrow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);item.addView(arrow,new LinearLayout.LayoutParams(dp(20),dp(20)));item.setFocusable(true);item.setContentDescription(name+"，"+summary);item.setOnClickListener(v->tap.run());content.addView(item,new LinearLayout.LayoutParams(-1,-2));
+    }
+    private void growth() {
+        begin("成长档案");
+        load("/member/growth", "GET", null, true, value -> {
+            JSONObject data = object(value), growth = data.optJSONObject("growth");
+            if (growth == null) throw new Exception("成长档案暂时无法加载，请重试");
+            hero(growth.optString("level_display", "学员"), "成长经验 " + growth.optLong("experience_total"));
+            String next = growth.optString("next_level_name");
+            if (!next.isEmpty()) info("距离" + next + "还需 " + growth.optLong("points_to_next_level") + " 经验");
+            JSONArray ledger = array(data.opt("ledger"));
+            for (int i = 0; i < ledger.length(); i++) {
+                JSONObject entry = ledger.getJSONObject(i);
+                long points = entry.optLong("points_delta");
+                card(content, entry.optString("description", "经验变动"),
+                        entry.optString("occurred_at").split("T", 2)[0] + " · " + (points > 0 ? "+" : "") + points, null);
+            }
+            if (ledger.length() == 0) info("暂无成长记录");
+        });
+    }
     private void learningRecords(boolean bookmarks){begin(bookmarks?"学习书签":"学习笔记");String path=bookmarks?"/bookmarks":"/notes";load(path+"/all","GET",null,true,v->{JSONArray rows=array(v);for(int i=0;i<rows.length();i++){JSONObject r=rows.getJSONObject(i);card(content,first(r,"course_name","video_name","series_name"),first(r,"content","label")+" · "+r.optInt("timestamp_seconds")+"秒",()->playAt(r.optInt("video_id"),first(r,"course_name","video_name"),r.optInt("timestamp_seconds")));action("删除此"+(bookmarks?"书签":"笔记"),()->confirm("确认删除此记录？",()->memberWrite(path+"/"+r.optInt("id"),"DELETE",body(),()->learningRecords(bookmarks))));}if(rows.length()==0)info("暂无记录");});}
     private void legalDocument(String name,String asset){begin(name);try{TextView body=text(ReleaseInfo.read(this,asset),16);body.setTextIsSelectable(true);content.addView(body);}catch(Exception error){info("文件读取失败，请返回重试");}}
     private void about(){begin("关于 SWOD");JSONObject info=ReleaseInfo.data(this);hero("SWOD",ReleaseInfo.version(this));info(info.optString("operator"));action(info.optString("filingNumber"),()->link("https://beian.miit.gov.cn/"));action("隐私政策",()->open(()->legalDocument("隐私政策","app-privacy.txt")));action("服务条款",()->open(()->legalDocument("服务条款","app-terms.txt")));action("服务商与数据清单",()->open(()->legalDocument("服务商与数据清单","app-processors.txt")));action("官方客服",()->link(info.optString("supportURL")));action("撤回隐私授权",()->confirm("撤回将清除本地登录并停止使用 App。服务器账号不会因此自动注销，注销请使用个人中心的独立入口。",()->{generation++;io.execute(()->{try{api.logout();}catch(Exception ignored){}runOnUiThread(()->{if(!PrivacyConsent.revoke(this)){Toast.makeText(this,"保存失败，请重试撤回",Toast.LENGTH_LONG).show();return;}history.clear();recreate();});});}));}
@@ -469,7 +665,7 @@ public final class MainActivity extends Activity {
         io.execute(()->{try{JSONObject config=object(api.request("/config","GET",null,false));runOnUiThread(()->{if(pageVersion!=generation||isFinishing())return;carrierAvailable[0]=config.optBoolean("oneTapLogin");carrierStatus.setText(carrierAvailable[0]?"由运营商验证本机号码，登录前请先同意下方协议":"本机号码登录暂未开放，请使用短信验证或账号密码登录");update.run();});}catch(Exception e){runOnUiThread(()->{if(pageVersion==generation)carrierStatus.setText("暂时无法检查本机号码登录，请使用短信验证");});}});
     }
     private void assistant(){begin("学习助手");info("根据已有课程制定练习安排");action("20 分钟：热身 4 · 技巧 12 · 复习 4",()->open(()->records("最近学习","/member/recent-courses","",r->play(r.optInt("video_id"),first(r,"course_name")))));action("30 分钟：热身 6 · 技巧 18 · 复习 6",()->open(()->records("最近学习","/member/recent-courses","",r->play(r.optInt("video_id"),first(r,"course_name")))));}
-    private void myEvents(){begin("我的比赛");load("/member/events","GET",null,true,v->{JSONArray entries=array(object(v).opt("entries"));if(entries.length()==0){info("暂无比赛报名和结果记录");return;}for(int i=0;i<entries.length();i++){JSONObject r=entries.getJSONObject(i);String detail=first(r,"groupName")+(first(r,"playerNo").isEmpty()?"":" · 选手号 "+first(r,"playerNo"));if(!first(r,"entrantName").isEmpty())detail+="\n参赛人："+first(r,"entrantName");if(!first(r,"performanceTitle").isEmpty())detail+="\n节目："+first(r,"performanceTitle");detail+="\n"+CompetitionRecord.audit(r.optString("auditStatus"))+" · "+CompetitionRecord.paid(r.optString("paidStatus"))+" · "+first(r,"startDate");detail+="\n"+CompetitionRecord.result(r.opt("resultPublished"),first(r,"totalScore"),r.optInt("rankNo"),first(r,"awardName"));card(content,first(r,"competitionName"),detail,null);int id=r.optInt("competitionId");if(id>0)action("赛事详情",()->open(()->event(id)));}});}
+    private void myEvents(){begin("我的比赛");load("/member/events","GET",null,true,v->{JSONArray entries=array(object(v).opt("entries"));if(entries.length()==0){info("暂无比赛报名和结果记录");return;}for(int i=0;i<entries.length();i++){JSONObject r=entries.getJSONObject(i);String detail=first(r,"groupName")+(first(r,"playerNo").isEmpty()?"":" · 选手号 "+first(r,"playerNo"));if(!first(r,"entrantName").isEmpty())detail+="\n参赛人："+first(r,"entrantName");if(!first(r,"performanceTitle").isEmpty())detail+="\n节目："+first(r,"performanceTitle");detail+="\n"+CompetitionRecord.audit(r.optString("auditStatus"))+" · "+CompetitionRecord.paid(r.optString("paidStatus"))+" · "+first(r,"startDate");detail+="\n"+CompetitionRecord.result(r.opt("resultPublished"),first(r,"totalScore"),r.optInt("rankNo"),first(r,"awardName"));card(content,first(r,"competitionName"),detail,null);long player=r.optLong("playerId");if(player>0)action("修改报名 / 补交音乐",()->open(()->editRegistration(player)));int id=r.optInt("competitionId");if(id>0)action("赛事详情",()->open(()->event(id)));}});}
     private void records(String name,String path,String key,RowTap tap){begin(name);load(path,"GET",null,true,v->{Object items=key.isEmpty()?v:object(v).opt(key);JSONArray rs=array(items);if(rs.length()==0&&items instanceof JSONObject)rs=new JSONArray().put(items);displayRows(rs,new String[]{"series_name","course_name","competitionName","name","groupName","auditStatus","totalScore","content","label","status"},tap);if(rs.length()==0)info("暂无记录");});}
     private void displayRows(JSONArray rs,String[] fields,RowTap tap)throws Exception{for(int i=0;i<rs.length();i++){JSONObject r=rs.getJSONObject(i);String summary="";for(String f:fields){String s=first(r,f);if(!s.isEmpty())summary+=s+" · ";}card(content,first(r,"name","title","courseName","series_name","course_name","playerName"),summary,tap==null?null:()->tap.tap(r));}}
     private void mutate(String path,String method,JSONObject body,Runnable next){load(path,method,body,true,v->{history.clear();page=next;next.run();});}

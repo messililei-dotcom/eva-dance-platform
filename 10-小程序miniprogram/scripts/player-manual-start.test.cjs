@@ -4,7 +4,16 @@ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../pages/player/player.j
 p.setData=v=>Object.assign(p.data,v);p.videoContext={seek:t=>calls.push(['seek',t]),play:()=>calls.push(['play']),stop(){}};return {p,calls};}
 test('opening catalog with a previously watched lesson never requests a stream or starts playback',async()=>{const {p,calls}=setup({progress:42,duration:100,completed:0});await p.loadCourse(6,11);assert.deepEqual(calls,[]);assert.equal(p.data.hasStartedPlayback,false);assert.equal(p.data.playUrl,'');assert.equal(p.data.resumeSeconds,42);assert.equal(p.data.currentSeconds,0);});
 test('user starting a lesson resumes its saved position, including records under three seconds',async()=>{for(const seconds of [2,42]){const {p,calls}=setup({progress:seconds,duration:100,completed:0});await p.loadCourse(6,11);await p.loadVideo(11);assert.equal(p.data.resumeSeconds,seconds);assert.equal(p.data.hasStartedPlayback,true);assert.deepEqual(calls,[['play-api',11]]);}});
-test('100 percent, completed flag, and unplayed lessons start at zero',async()=>{for(const progress of [{progress:100,duration:100,completed:0},{progress:99,duration:100,completed:1},null]){const{p}=setup(progress);await p.loadCourse(6,11);await p.loadVideo(11);assert.equal(p.data.resumeSeconds,0);assert.equal(p.data.currentSeconds,0);}});
+test('100 percent and unplayed lessons start at zero',async()=>{for(const progress of [{progress:100,duration:100,completed:0},null]){const{p}=setup(progress);await p.loadCourse(6,11);await p.loadVideo(11);assert.equal(p.data.resumeSeconds,0);assert.equal(p.data.currentSeconds,0);}});
 test('completion stored as string zero is not mistaken for completed',()=>{const{p}=setup();assert.equal(p.getResumeSeconds({progress:37,duration:100,completed:'0'}),37);});
 test('clicking resume after completion explicitly rewinds the existing video',()=>{const{p,calls}=setup();p.data.playUrl='existing';p.data.percent=100;p.data.currentSeconds=100;p.resumePlayback();assert.deepEqual(calls,[['seek',0],['play']]);});
 test('clicking the selected paused lesson resumes rather than doing nothing',()=>{const{p,calls}=setup();p.data.playUrl='existing';p.data.videoId=11;p.data.currentSeconds=42;p.switchVideo({currentTarget:{dataset:{id:11}}});assert.deepEqual(calls,[['seek',42],['play']]);});
+
+test('a lesson marked as learning complete still resumes until the video actually ends', async () => {
+  const { p } = setup({ progress: 81, duration: 100, completed: 1 });
+  await p.loadCourse(6, 11);
+  await p.loadVideo(11);
+  assert.equal(p.data.percent, 81);
+  assert.equal(p.data.resumeSeconds, 81);
+  assert.equal(p.getProgressPercent({ progress: 399, duration: 400, completed: 1 }), 99);
+});

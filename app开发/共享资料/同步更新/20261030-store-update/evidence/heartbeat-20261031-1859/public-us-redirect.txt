@@ -1,0 +1,8 @@
+Browser tab: 16, Title: "‎iPhone 版“Today” - App Store", URL: "https://apps.apple.com/cn/iphone/today".
+0 AXWebArea ‎iPhone 版“Today” - App Store, URL: apps.apple.com/cn/iphone/today
+	1 container
+		2 container Description: App Store, ID: app-store-icon-container
+		3 button (collapsed) App Store, ID: popover-1-target, Secondary Actions: Expand
+			4 text iPhone 专区
+			5 image
+		6 container search-input-form

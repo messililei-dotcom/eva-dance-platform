@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-31T23:04:10+08:00",
+  "ios": {
+    "version": "1.0.2",
+    "build": 11,
+    "submissionID": "e6ac9f82-67e9-4eb0-b68d-ca9970019383",
+    "status": "approved",
+    "currentReviewStatusVerified": true,
+    "publicCNVersion": "1.0.2",
+    "publicCNVerified": true,
+    "publicURL": "https://apps.apple.com/cn/app/swod/id6826038106",
+    "storeEntryVisible": true,
+    "automaticReleaseSettingRechecked": false,
+    "lastAutomaticReleaseSettingVerifiedAt": "2026-10-31T19:08:44+08:00",
+    "evidenceDirectory": "evidence/heartbeat-20261031-2301"
+  },
+  "overseas": {
+    "publicVerified": false,
+    "previousUSAndHKRedirectUnresolved": true,
+    "publicUSLookupAttempt": "Official itunes.apple.com lookup URL in same IAB blocked by client (ERR_BLOCKED_BY_CLIENT); stopped without alternate API/network/browser bypass."
+  },
+  "huaweiAndroid": {
+    "currentReviewStatusVerified": false,
+    "lastKnownStatus": "in-review",
+    "lastConfirmedAt": "2026-10-31T19:08:44+08:00",
+    "lastKnownVersion": "1.0.1(11)"
+  },
+  "harmony": {
+    "currentReviewStatusVerified": false,
+    "lastKnownStatus": "waiting-for-review",
+    "lastConfirmedAt": "2026-10-31T19:08:44+08:00",
+    "lastKnownVersion": "1.0.2(15)"
+  },
+  "nativeComputerAccess": "Mac locked; automatic unlock failed; no native/Chrome UI action attempted.",
+  "otherChannels": {
+    "freshManagerStatesVerified": false,
+    "noNewCopyrightMaterialsRecorded": true,
+    "noRepeatUpload": true,
+    "knownMaterialBlockersRetainedAsHistorical": true
+  },
+  "newUpload": false,
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "signingChanged": false,
+  "notificationDecision": "DONT_NOTIFY",
+  "reason": "Apple approval and mainland public release unchanged; repeated authentication, device lock and overseas access blockers are not new actionable results."
+}

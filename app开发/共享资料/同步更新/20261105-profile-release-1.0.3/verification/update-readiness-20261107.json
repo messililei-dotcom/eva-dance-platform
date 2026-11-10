@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-11-07T16:10:28+08:00",
+  "request": "更新鸿蒙和安卓app程序",
+  "android": {
+    "version": "1.0.3",
+    "build": 20,
+    "preflight": "verification/android-preflight-20261107.json",
+    "technicalChecksPassed": true,
+    "remaining": [
+      "native runtime acceptance",
+      "current store materials"
+    ],
+    "adbTargets": 0,
+    "uploaded": false,
+    "submitted": false
+  },
+  "harmony": {
+    "version": "1.0.3",
+    "build": 18,
+    "displayNameArtifactCheckPassed": true,
+    "sourceMatchesBuild18Staging": true,
+    "hdcTargets": 0,
+    "nativeLoginResolved": false,
+    "uploaded": false,
+    "submitted": false
+  },
+  "filingChanged": false,
+  "signingChanged": false,
+  "productionFlagsChanged": false,
+  "newCodeOrBuildCreated": false
+}

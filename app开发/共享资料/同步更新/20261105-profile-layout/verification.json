@@ -1,0 +1,99 @@
+{
+  "checkedAt": "2026-11-05T12:46:28+08:00",
+  "feature": "个人中心参照当前小程序源码重排图文布局",
+  "reference": "10-小程序miniprogram/pages/profile/profile.wxml",
+  "platformsSynced": [
+    "iOS",
+    "Android",
+    "HarmonyOS"
+  ],
+  "layout": [
+    "Avatar/name/masked phone and notifications",
+    "Four icon-and-text learning shortcuts",
+    "Profile, competitions and orders with icon, subtitle and chevron",
+    "Course artwork with unlocked state and continue-learning action",
+    "Offline courses, certificates, learning services, account privacy and support groups"
+  ],
+  "artworkSource": "Existing authenticated /member/authorized-series contains IDs and names only; optional /public/series provides cover art matched by backend series ID. Public metadata never grants or infers learning rights. Artwork failure keeps authorized learning entries.",
+  "stateHandling": [
+    "Unknown counts shown as dash rather than zero",
+    "No invented competition/certificate totals",
+    "Guard asynchronous metadata by page generation and authenticated account/session",
+    "Only authenticated server rights render unlocked course rows",
+    "Guest account tab continues to open login",
+    "Existing gated SDK features stay disabled"
+  ],
+  "checks": {
+    "iosSimulatorCompile": "passed",
+    "iosCoreContractChecks": 21,
+    "iosCoreContractFailures": 0,
+    "androidDebugCompile": "passed",
+    "androidLintDebug": "passed",
+    "androidUnit": {
+      "tests": 32,
+      "failures": 0,
+      "errors": 0
+    },
+    "harmonyDebugCompile": "passed",
+    "harmonyPolicyTests": 44,
+    "harmonyPolicyFailures": 0,
+    "gitDiffWhitespaceCheck": "passed",
+    "iOSSigningAndVersionSettingsMatchBefore": true
+  },
+  "visual": {
+    "method": "SwiftUI ImageRenderer using actual profile components in an isolated macOS harness with synthetic in-memory credentials",
+    "samples": [
+      "light393",
+      "dark393",
+      "compact320",
+      "accessibility-layout393"
+    ],
+    "sampleDataIsSynthetic": true,
+    "courseAndAvatarFallbacksVisible": true,
+    "nativeComponentImagesInspected": [
+      "light",
+      "compact",
+      "accessibility-layout"
+    ],
+    "simulatorRuntimeAccepted": false,
+    "physicalDeviceAccepted": false,
+    "simulatorBlocker": "CUA could not open Simulator: Invalid app",
+    "iPhoneDarkModeOrDynamicFontRuntimeAccepted": false,
+    "notStoreScreenshots": true,
+    "harnessOnlyAdapters": [
+      "Synthetic Session init without keychain read/write",
+      "Existing unrelated macOS-unavailable player navigation modifier removed only in temporary renderer copy"
+    ]
+  },
+  "storeOperations": {
+    "uploaded": false,
+    "submitted": false,
+    "published": false,
+    "existingReviewsWithdrawn": false,
+    "releaseCandidateRegistriesModified": false,
+    "filingChanged": false,
+    "originalSigningChanged": false,
+    "releaseVersionBumped": false
+  },
+  "noBackendDeploymentOrProductionMutation": true,
+  "sourceHashes": {
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift": "ca269e5754a8938b4ad1ecc59c80d6f56637e6d3ef68a5f03bf35e06c6f10c1c",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountHeaderView.swift": "e1b630683e37754c78ac5120d232e9182bb17d4a87e76a3df5035c9d5ded1b9b",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountShortcutView.swift": "fb064902da4ae82ad4c36c72e72124905e75d680b4b90b48edc7417a506acd33",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountSummaryView.swift": "0bb2055c0b0fd5d6dd1f5a6fe0dc38ffcded37cadc753a79475f601d07917437",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountServiceRow.swift": "91a69a697a3f68aaf9c70606eb0c1bc20f74904adf67524bbd436706ccb8414c",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountCourseRow.swift": "7e55d1faa40e00ab4b049125855ec433bcd70f4941dc7c8e511bb8346171487a",
+    "app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj": "08423dbfde67cadc5deef0c4de690354ceb20a57ef900b76893c0ccd63969bb3",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "797f9ceeba611999e1f54ec096a90f335414ee36756f123f554bf4d5dd659d3e",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodUi.java": "e186a5c5a1bbeeff40efcfaa28f12220325b0cebadb0580710f2728d65610586",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "e33020f14c02ab564c4ef49ee921454a7f2c09226b94bea632ece5570b4343c2",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets": "12d531480cdc0b85078ea5df3562f7fb6b1df540a671079f4f45bff1158435d5",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/profile_bell.svg": "691143ab2c8775539b47ec6b12073711bdd9e692a4354a8b1b72aa02537a5d80",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/profile_certificate.svg": "22106d58553e1a4a27088cd0ffc55dea1d5c36a2b7678fb3f90c442d2c6b60ba",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/profile_notes.svg": "9f5434b754cbeaaa08e0e091124704bed37b30616fbb3d315142e9880f026047",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/profile_bookmark.svg": "3503ce8ea614759aa7bbeeda0adc42e8581f2a254c96ffe8bb127da278a3c71c",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/profile_device.svg": "d8b6a284f6bf04c4a610bda1fa697754f74bdcd66f82f4c0f4f00878e53a1e56",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/profile_help.svg": "8781de9bd0aad29cfc33fb8f539f48378bd48746cb6cb88e741a387fe5a0f33e",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/profile_shield.svg": "53334a46c9db591ac1ed8dd97fdb4be0374bcdc9f16b209867863a016e934d9b"
+  }
+}

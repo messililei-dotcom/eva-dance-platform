@@ -1,0 +1,32 @@
+- link "Apple.com":
+  - /url: http://www.apple.com
+- iframe [active] [id="aid-auth-widget-iFrame"] [name="aid-auth-widget"]:
+  - main "App Store Connect":
+    - img "App Store Connect Logo"
+    - heading "App Store Connect" [level=1]
+    - group "App Store Connect":
+      - textbox "电子邮件或电话号码" [active]
+      - generic: 电子邮件或电话号码
+      - textbox
+      - generic: 密码
+      - paragraph:
+        - text: 您的 Apple 账户信息用于让您安全登录和访问您的数据。Apple 会出于安全、支持和报告目的记录某些数据。如果您同意，Apple 还可能使用您的 Apple 账户信息向您发送营销电子邮件和通信，包括基于您对 Apple 服务的使用情况。
+        - link "了解数据的管理方式… 在新窗口中打开。":
+          - /url: https://www.apple.com.cn/legal/privacy/data/zh-cn/apple-id/
+          - text: 了解数据的管理方式…
+          - generic: 在新窗口中打开。
+      - button "继续" [disabled]:
+        - generic: 继续
+      - button "通过通行密钥登录":
+        - generic: 通过通行密钥登录
+      - paragraph: 需要安装 iOS 17 或更高版本的设备。
+  - status
+- contentinfo:
+  - navigation "footer":
+    - text: Copyright ©
+    - generic: "2026"
+    - text: Apple Inc. 保留所有权利。
+    - link "服务条款":
+      - /url: /olympus/v1/terms/ASC
+    - link "隐私政策":
+      - /url: https://www.apple.com/legal/privacy/

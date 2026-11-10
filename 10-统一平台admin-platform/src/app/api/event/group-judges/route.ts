@@ -40,7 +40,7 @@ export async function GET(request: Request) {
       FROM event_group_judges gj
       INNER JOIN event_judges j ON j.id = gj.judge_id
       INNER JOIN event_groups g ON g.id = gj.group_id
-      WHERE 1=1 ${competitionWhere}
+      WHERE COALESCE(j.status,'active')!='deleted' ${competitionWhere}
       ORDER BY gj.role ASC, j.name ASC, j.id ASC
     `).all(...params);
     return Response.json({

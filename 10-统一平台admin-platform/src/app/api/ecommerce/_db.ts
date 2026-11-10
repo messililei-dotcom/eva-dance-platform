@@ -58,11 +58,14 @@ export function ensureCommerceTables(db: any) {
   ensureColumn(db, 'shop_sales', 'sales_advisor', "TEXT NOT NULL DEFAULT ''");
   ensureColumn(db, 'shop_sales', 'commission_rate', 'REAL NOT NULL DEFAULT 0');
   ensureColumn(db, 'shop_sales', 'commission_amount', 'REAL NOT NULL DEFAULT 0');
+  ensureColumn(db, 'shop_sales', 'bonus_entry_id', 'INTEGER');
+  ensureColumn(db, 'shop_sales', 'bonus_order_no', "TEXT NOT NULL DEFAULT ''");
   ensureColumn(db, 'shop_sales', 'operator', "TEXT DEFAULT ''");
   ensureColumn(db, 'shop_stock_logs', 'channel', "TEXT DEFAULT ''");
   ensureColumn(db, 'shop_stock_logs', 'cost_price', 'REAL DEFAULT 0');
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_shop_products_status_updated ON shop_products(status, updated_at DESC);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_shop_sales_bonus_product ON shop_sales(bonus_entry_id, product_id);
     CREATE INDEX IF NOT EXISTS idx_shop_sales_date ON shop_sales(sale_date DESC, id DESC);
     CREATE INDEX IF NOT EXISTS idx_shop_stock_logs_date ON shop_stock_logs(created_at DESC, id DESC);
     CREATE INDEX IF NOT EXISTS idx_shop_stock_logs_product ON shop_stock_logs(product_id, created_at DESC);

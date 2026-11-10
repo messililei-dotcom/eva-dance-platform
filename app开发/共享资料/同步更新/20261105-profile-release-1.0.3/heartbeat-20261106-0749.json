@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-11-06T07:50:31+08:00",
+  "version": "1.0.3",
+  "builds": {
+    "ios": 13,
+    "android": 20,
+    "harmony": 18
+  },
+  "iosOfficialStatusVerified": false,
+  "iosPortalAccess": "Fresh exact draft URL returned Apple sign-in; no current draft/review status read. Existing account gate is not a build processing or submission result.",
+  "lastVerifiedAppleDraftRecord": "heartbeat-20261106-0354.json",
+  "appleLoginEvidence": "evidence/heartbeat-20261106-0749/apple-access.txt",
+  "harmonyNativeTargetDetected": false,
+  "harmonyNativeLoginVerified": false,
+  "androidConsentResponseReceived": false,
+  "newIssuedCopyrightEvidenceFound": false,
+  "newReviewOrPublicResultVerified": false,
+  "newNotificationNeeded": false,
+  "newUpload": false,
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "originalSignatureChanged": false
+}

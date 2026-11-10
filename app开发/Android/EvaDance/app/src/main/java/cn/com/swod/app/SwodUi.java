@@ -53,6 +53,16 @@ final class SwodUi {
                 case "trophy": path(c,7,3,17,3,17,9);c.drawArc(7,4,17,14,0,180,false,paint);path(c,7,4,3,4,3,8,7,11);path(c,17,4,21,4,21,8,17,11);path(c,12,14,12,20);path(c,7,21,17,21);break;
                 case "bag": c.drawRoundRect(4,7,20,21,2,2,paint);c.drawArc(8,2,16,12,180,180,false,paint);break;
                 case "person": c.drawCircle(12,7,4,paint);c.drawArc(4,13,20,27,180,180,false,paint);break;
+                case "bell": c.drawArc(6,3,18,16,180,180,false,paint);path(c,6,9,6,16,3,18,21,18,18,16,18,9);c.drawArc(10,18,14,22,0,180,false,paint);break;
+                case "certificate": c.drawCircle(12,8,5,paint);path(c,8,12,7,21,12,18,17,21,16,12);break;
+                case "notes": c.drawRoundRect(4,3,20,21,2,2,paint);path(c,8,8,16,8);path(c,8,12,16,12);path(c,8,16,13,16);break;
+                case "bookmark": path(c,6,3,18,3,18,21,12,17,6,21,6,3);break;
+                case "device": c.drawRoundRect(6,2,18,22,2,2,paint);path(c,10,18,14,18);break;
+                case "shield": path(c,12,2,20,5,19,14,16,18,12,22,8,18,5,14,4,5,12,2);path(c,8,11,11,14,16,8);break;
+                case "help": c.drawRoundRect(3,4,21,18,3,3,paint);path(c,7,18,7,22,12,18);path(c,7,10,17,10);break;
+                case "info": c.drawCircle(12,12,9,paint);path(c,12,7,12,7.2f);path(c,12,11,12,17);break;
+                case "growth": path(c,4,3,4,21,21,21);path(c,7,16,12,11,16,14,21,6);break;
+                case "download": path(c,12,3,12,16,7,11);path(c,12,16,17,11);path(c,4,16,4,21,20,21,20,16);break;
                 case "back": path(c,15,5,8,12,15,19);break;
                 case "next": path(c,9,6,15,12,9,18);break;
                 case "refresh": c.drawArc(4,4,20,20,45,285,false,paint);path(c,20,4,20,10,14,10);break;

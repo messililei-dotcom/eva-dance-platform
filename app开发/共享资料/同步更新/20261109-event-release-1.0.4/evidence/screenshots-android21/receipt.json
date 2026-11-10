@@ -1,0 +1,76 @@
+{
+  "checkedAt": "2026-11-09T16:40:20+08:00",
+  "version": "1.0.4",
+  "build": 21,
+  "packageName": "cn.com.swod.app",
+  "emulator": "EvaRelease36",
+  "guestChecks": [
+    "online course catalog and guest prices",
+    "course detail",
+    "offline catalog",
+    "event list and event detail",
+    "shop catalog",
+    "guest profile opened login"
+  ],
+  "huaweiStoreScreenshots": {
+    "dimensions": [
+      1080,
+      1920
+    ],
+    "files": [
+      {
+        "path": "huawei-9x16/01-academy.png",
+        "size": 207320,
+        "sha256": "297e5ef6bfa0669a9353280154539b37af79bade9015625e7563965542796ee1"
+      },
+      {
+        "path": "huawei-9x16/02-offline.png",
+        "size": 202442,
+        "sha256": "20235a218492b64c5d60ed4c65c3ae63e4ddda6a2156902e12c1e2e55d3eb5fa"
+      },
+      {
+        "path": "huawei-9x16/03-events.png",
+        "size": 740963,
+        "sha256": "f869dcc13a4078ec7be8f1043cf031cd01d58a67a7e5ce3218ef855ced0b9b28"
+      },
+      {
+        "path": "huawei-9x16/04-shop.png",
+        "size": 123357,
+        "sha256": "880f18dc25c1c6bef86c99d9e4b1c75b6fc2db5ae1ff5666d04eeba57854049d"
+      },
+      {
+        "path": "huawei-9x16/05-course-detail.png",
+        "size": 1219641,
+        "sha256": "de6d6b21040fa4688141a0bdb38e030a81ec000b4a234ce9897b7eb628273ca9"
+      }
+    ],
+    "savedToConsole": true
+  },
+  "tabletViewportQa": {
+    "screenPixels": [
+      [
+        1600,
+        2560
+      ],
+      [
+        2560,
+        1600
+      ]
+    ],
+    "densityDpi": 420,
+    "homeAndFiveNavigationEntriesVisible": true,
+    "files": [
+      {
+        "path": "tablet-qa/1600x2560.png",
+        "size": 312214,
+        "sha256": "3c365a8a8ad6b761f56fc985c5b031c3d30a14d0b4be12a3db6430d539371c93"
+      },
+      {
+        "path": "tablet-qa/2560x1600.png",
+        "size": 213059,
+        "sha256": "3683242029505a8910e1b7e357fed0c2943c1c806c8d415f970b650dab309809"
+      }
+    ]
+  },
+  "physicalDeviceVerified": false
+}

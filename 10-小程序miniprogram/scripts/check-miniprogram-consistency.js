@@ -113,7 +113,7 @@ const checks = [
     message: "线上课程对外学员数必须使用后台真实数据加500至1000的不重复稳定基数"
   },
   {
-    ok: apiJs.includes("_sessionRetried") && apiJs.includes("ensureSilentLogin(true)") && apiJs.includes("statusCode"),
+    ok: apiJs.includes("rawRequest(path, options, nextToken)") && apiJs.includes("ensureSilentLogin(true)") && apiJs.includes("statusCode"),
     message: "登录失效后需要静默续期并且只重试一次"
   },
   {

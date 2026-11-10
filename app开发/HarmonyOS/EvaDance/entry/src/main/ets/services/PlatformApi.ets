@@ -46,6 +46,7 @@ export class PlatformApi {
   cacheInvalidation?: () => void;
   notificationInvalidation?: (sessionId: string) => void;
   screenProtected: boolean = false;
+  protectScreen?: () => Promise<void>;
   applicationActive: boolean = true;
   async initialize(context: common.UIAbilityContext): Promise<void> {
     this.vault = new HuksVault(context.filesDir, 'member-session');
@@ -127,12 +128,22 @@ export class PlatformApi {
       return this.exchange<T>(API, path, method, body, this.credentials.token);
     }
   }
-  async registerWithMusic(eventID: number, fields: Record<string, string>, name: string, music: ArrayBuffer): Promise<void> {
+  async registerWithMusic(eventID: number, fields: Record<string, string>, name: string, music?: ArrayBuffer): Promise<void> {
+    const path = '/events/' + eventID + '/register';
+    if (!music) { await this.request<Object>(path, http.RequestMethod.POST, fields, true); return; }
+    await this.sendEventMusic(path, fields, name, music);
+  }
+  async replaceEventMusic(path: string, title: string, name: string, music: ArrayBuffer): Promise<void> {
+    const fields: Record<string, string> = {};
+    fields['performanceTitle'] = title;
+    await this.sendEventMusic(path + '/music', fields, name, music);
+  }
+  private async sendEventMusic(path: string, fields: Record<string, string>, name: string, music: ArrayBuffer): Promise<void> {
     if (!this.credentials || music.byteLength === 0 || music.byteLength > 10 * 1024 * 1024) throw new PlatformFailure('请登录并选择10MB以内的音乐文件', 400);
     const boundary = 'EvaMusic-' + util.generateRandomUUID();
     const encoder = new util.TextEncoder();
     const pieces: Uint8Array[] = [];
-    const allowed: string[] = ['groupId', 'name', 'phone', 'organization', 'teacher', 'performanceTitle', 'remark'];
+    const allowed: string[] = ['groupId', 'name', 'phone', 'countryCode', 'organization', 'teacher', 'performanceTitle', 'remark'];
     for (const key of allowed) {
       const value = fields[key] || ''; if (value.length > 1000) throw new PlatformFailure('报名内容过长', 400);
       pieces.push(encoder.encodeInto('--' + boundary + '\r\nContent-Disposition: form-data; name="' + key + '"\r\n\r\n' + value + '\r\n'));
@@ -143,7 +154,7 @@ export class PlatformApi {
     const total = pieces.reduce((sum: number, piece: Uint8Array) => sum + piece.byteLength, 0);
     const data = new Uint8Array(total); let at: number = 0;
     pieces.forEach((piece: Uint8Array) => { data.set(piece, at); at += piece.byteLength; });
-    const version = this.generation; const path = '/events/' + eventID + '/register';
+    const version = this.generation;
     try { await this.exchange<Object>(API, path, http.RequestMethod.POST, data.buffer as ArrayBuffer, this.credentials.token, 'multipart/form-data; boundary=' + boundary); }
     catch (failure) {
       if (!(failure instanceof PlatformFailure) || failure.status !== 401) throw failure instanceof Error ? failure : new PlatformFailure('请求失败，请重试', 500);

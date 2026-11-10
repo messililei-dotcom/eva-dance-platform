@@ -25,6 +25,10 @@ function load(file, mocks = {}) {
   return module.exports;
 }
 const registration = load("../src/lib/server/bonus-registration.ts");
+const commerce = load("../src/app/api/ecommerce/_db.ts", {
+  "@/lib/server/admin-db": {},
+  "../_local-auth": {},
+});
 const permissions = load("../src/lib/server/bonus-permissions.ts");
 const service = load("../src/lib/server/bonus-management.ts", {
   "./bonus-registration": registration,
@@ -54,19 +58,20 @@ CREATE TABLE CommissionSettlement(periodType TEXT,period TEXT,advisor TEXT,statu
     prepare: (sql) => sqlite.prepare(sql),
     exec: (sql) => sqlite.exec(sql),
     close() {},
-    transaction:
-      (fn) =>
-      (...args) => {
+    transaction(fn) {
+      const run = (...args) => {
         sqlite.exec("BEGIN IMMEDIATE");
         try {
-          const r = fn(...args);
+          const result = fn(...args);
           sqlite.exec("COMMIT");
-          return r;
-        } catch (e) {
+          return result;
+        } catch (error) {
           sqlite.exec("ROLLBACK");
-          throw e;
+          throw error;
         }
-      },
+      };
+      return Object.assign(run, { immediate: run });
+    },
   };
   service.ensureBonusTables(db);
   return { db, sqlite };
@@ -400,8 +405,7 @@ test("正负调整需要管理员与原因；历史已结清月份不重复记�
     sqlite.close();
   }
 });
-function routeFixture() {
-  const f = fixture();
+function routeFixture(f = fixture()) {
   const helpers = {
     hasAuth: (r) => r.headers.get("auth") === "yes",
     hasPermission: () => true,
@@ -416,6 +420,7 @@ function routeFixture() {
     "@/lib/server/bonus-management": service,
     "@/lib/server/bonus-permissions": permissions,
     "@/lib/server/bonus-registration": registration,
+    "../ecommerce/_db": commerce,
   });
   return { ...f, route };
 }
@@ -552,6 +557,7 @@ test("旧结清接口对历史流程保持幂等，对新版确认快照禁止�
     },
     "@/lib/server/bonus-permissions": permissions,
     "@/lib/server/bonus-registration": registration,
+    "../ecommerce/_db": commerce,
     "@/lib/server/authorization-commission": {
       onlineAuthorizationCommissions: () => [],
     },
@@ -805,6 +811,7 @@ test("后端审核发放按已验证账号校验，伊琳审核成功但不能�
     "@/lib/server/bonus-management": service,
     "@/lib/server/bonus-permissions": permissions,
     "@/lib/server/bonus-registration": registration,
+    "../ecommerce/_db": commerce,
   });
   try {
     const expectedSnapshot = JSON.stringify(
@@ -876,6 +883,7 @@ test("伊琳及其他管理员不能通过旧结清API绕过发放限制", async
     "../_local-auth": { findLocalUser: () => ({ username, status: "active" }) },
     "@/lib/server/bonus-permissions": permissions,
     "@/lib/server/bonus-registration": registration,
+    "../ecommerce/_db": commerce,
     "@/lib/server/authorization-commission": {
       onlineAuthorizationCommissions: () => [],
     },
@@ -1012,10 +1020,9 @@ test("普通账号工资登记强制本人归属，不能修改他人工资或�
 
 function catalogFixture() {
   const f = fixture();
-  f.sqlite
-    .exec(`CREATE TABLE shop_products(id TEXT PRIMARY KEY,name TEXT,spec TEXT,size TEXT,color TEXT,stock INTEGER,status TEXT,is_hidden INTEGER,sale_price REAL,updated_at TEXT);
- INSERT INTO shop_products VALUES('p1','舞服','基础','M','黑',10,'在售',0,100,''),('p2','裙子','基础','L','红',2,'在售',0,200,'');
- CREATE TABLE shop_stock_logs(product_id TEXT,product_name TEXT,change_type TEXT,quantity INTEGER,before_stock INTEGER,after_stock INTEGER,operator TEXT,remark TEXT,channel TEXT);
+  commerce.ensureCommerceTables(f.db);
+  f.sqlite.exec(`INSERT INTO shop_products(id,name,spec,size,color,stock,status,is_hidden,sale_price)
+    VALUES('p1','舞服','基础','M','黑',10,'在售',0,100),('p2','裙子','基础','L','红',2,'在售',0,200);
  CREATE TABLE Course(id INTEGER PRIMARY KEY,name TEXT,subType TEXT,startDate TEXT,endDate TEXT,series_id INTEGER,templateId INTEGER);
  INSERT INTO Course VALUES(1,'集训','一期','2026-10-01','2026-10-05',0,1),(2,'集训','二期','2026-11-01','2026-11-05',0,1),(3,'线上课','','','',1,0);`);
   return f;
@@ -1028,6 +1035,77 @@ const skuProduct = (extras = {}) =>
     salesperson: "海艳",
     ...extras,
   });
+test("手工新增同编号必须明确报错，不能悄悄覆盖旧销售", () => {
+  const { db, sqlite } = catalogFixture();
+  try {
+    const save = (input) =>
+      db.transaction(() => service.saveBonusEntry(db, input, actor, true))();
+    save(skuProduct({ requestKey: "new-a" }));
+    assert.throws(
+      () => save(skuProduct({ requestKey: "new-b", received: 90 })),
+      /订单号已存在/,
+    );
+    assert.equal(sqlite.prepare("SELECT count(*) n FROM BonusEntry").get().n, 1);
+    assert.equal(JSON.parse(sqlite.prepare("SELECT data FROM BonusEntry").get().data).received, 1000);
+    save(skuProduct({ requestKey: "new-c", orderNo: "002" }));
+    save(skuProduct({ requestKey: "new-d", orderNo: "003" }));
+    assert.equal(sqlite.prepare("SELECT count(*) n FROM BonusEntry").get().n, 3);
+  } finally {
+    sqlite.close();
+  }
+});
+test("商品登记与电商销售同步，重复提交不写入，编辑和删除同步调整", async () => {
+  const { route, db, sqlite } = routeFixture(catalogFixture());
+  const ecommerceDb = { hasAuth: () => true, openCommerceDb: () => db };
+  const overview = load("../src/app/api/ecommerce/overview/route.ts", { "../_db": ecommerceDb });
+  const saleRoute = load("../src/app/api/ecommerce/sales/[id]/route.ts", {
+    "../../_db": ecommerceDb,
+    "@/lib/sale-commission": load("../src/lib/sale-commission.ts"),
+  });
+  try {
+    const input = skuProduct({
+      channel: "线下",
+      orderNo: "",
+      requestKey: "retry-sync",
+      received: 69.01,
+      rate: 30,
+      productLines: [{ productId: "p1", quantity: 1 }, { productId: "p2", quantity: 1 }],
+    });
+    const request = req(input);
+    const first = await route.POST(request);
+    assert.equal(first.status, 200);
+    const { result } = await first.json();
+    assert.equal(result.period, period);
+    const readSales = async () => (await (await overview.GET(request)).json()).sales;
+    let sales = await readSales();
+    assert.equal(sales.length, 2);
+    assert.equal(new Set(sales.map((sale) => sale.bonus_order_no)).size, 1);
+    assert.match(sales[0].bonus_order_no, /^OFF-/);
+    assert.ok(sales.every((sale) => sale.bonus_entry_id === result.id && sale.sales_advisor === "海艳"));
+    assert.equal(sales.reduce((sum, sale) => sum + Math.round(sale.total_amount * 100), 0), 6901);
+    assert.equal(sales.reduce((sum, sale) => sum + Math.round(sale.commission_amount * 100), 0), 2070);
+    assert.equal((await saleRoute.PUT(req({ quantity: 2 }), { params: { id: sales[0].id } })).status, 409);
+    assert.equal((await saleRoute.DELETE(req({}), { params: { id: sales[0].id } })).status, 409);
+    assert.equal((await route.POST(req(input))).status, 200);
+    assert.deepEqual(await readSales(), sales);
+    assert.equal((await route.POST(req({
+      ...input,
+      id: result.id,
+      productLines: [{ productId: "p1", quantity: 3 }],
+    }))).status, 200);
+    const failed = await route.POST(req({ ...input, id: result.id, productLines: [{ productId: "p2", quantity: 9 }] }));
+    assert.equal(failed.status, 400);
+    sales = await readSales();
+    assert.equal(sales.length, 1);
+    assert.equal(sales[0].quantity, 3);
+    assert.deepEqual(db.prepare("SELECT stock FROM shop_products ORDER BY id").all().map((p) => p.stock), [7, 2]);
+    assert.equal((await route.POST(req({ action: "delete", id: result.id }))).status, 200);
+    assert.equal((await readSales()).length, 0);
+    assert.deepEqual(db.prepare("SELECT stock FROM shop_products ORDER BY id").all().map((p) => p.stock), [10, 2]);
+  } finally {
+    sqlite.close();
+  }
+});
 test("商城规格扣库存、重复登记及重试不重复扣、修改差额与删除回补", () => {
   const { db, sqlite } = catalogFixture();
   try {
@@ -1145,7 +1223,7 @@ test("多规格库存不足整笔回滚，金额、人员、规格和锁定失�
     service.confirmBonus(db, period, "伊琳", "伊琳", JSON.stringify(row));
     assert.throws(
       () =>
-        save(skuProduct({ productLines: [{ productId: "p1", quantity: 4 }] })),
+        save(skuProduct({ orderNo: "002", productLines: [{ productId: "p1", quantity: 4 }] })),
       /已确认/,
     );
     assert.equal(

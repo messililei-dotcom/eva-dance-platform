@@ -1,0 +1,12 @@
+.records-page{min-height:100vh;padding:24rpx 28rpx 40rpx;background:#fff;color:#202124}
+.records-state{padding:40rpx 0;color:#616773;font-size:28rpx;line-height:1.5}
+.records-state button{width:auto;min-height:88rpx;margin:24rpx 0 0;padding:16rpx 24rpx;border-radius:14rpx;color:#fff;background:#9f1d20;font-size:28rpx;line-height:1.4}
+.records-state button::after{border:0}
+.growth-summary{display:flex;flex-direction:column;gap:10rpx;padding:24rpx;background:#faf3eb;border-radius:18rpx}
+.history-title{margin-top:28rpx;font-size:32rpx;font-weight:600}
+.record-row{display:flex;align-items:flex-start;gap:20rpx;padding:20rpx 0;border-bottom:1rpx solid #e2e5e9}
+.record-copy{flex:1;min-width:0}
+.record-title{font-size:30rpx;font-weight:600;overflow-wrap:break-word}
+.record-meta{margin-top:6rpx;color:#616773;font-size:24rpx;font-variant-numeric:tabular-nums}
+.record-text{margin-top:10rpx;font-size:28rpx;line-height:1.5;white-space:pre-wrap;overflow-wrap:break-word}
+.growth-points{color:#9f1d20;font-size:28rpx;font-weight:600;font-variant-numeric:tabular-nums}

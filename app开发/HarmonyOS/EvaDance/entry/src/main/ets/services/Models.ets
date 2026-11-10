@@ -6,6 +6,8 @@ export interface CourseOffer { id?: number; name?: string; period?: string; pric
 export interface PaymentFlags { alipay?: boolean; wechat?: boolean; }
 export interface MediaQuality { value: string; label: string; url: string; }
 export interface Row {
+  birthday?: string; stats?: Row; authorized_count?: number; offline_course_count?: number;
+  avatar_url?: string; wx_avatar_url?: string; wx_nickname?: string; wx_name?: string; level?: string;
   unreadCount?: number;
   city?: string; coverUrl?: string; cover_url?: string;
   registrationStart?: string; registrationEnd?: string;
@@ -28,6 +30,9 @@ export interface Row {
   organization?: string; contestantNumber?: string; programNumber?: string; sequenceNo?: number; playerNo?: string;
   registrationFee?: number; paidAmount?: number; paidStatus?: string; totalRegistrationFee?: number;
   musicName?: string; musicFileId?: number; musicDuration?: number; playerCount?: number | null; groupCount?: number;
+  countryCode?: string; canEdit?: boolean; fileName?: string;
+  growth?: Row; ledger?: Row[]; level_display?: string; experience_total?: number;
+  next_level_name?: string; points_to_next_level?: number; points_delta?: number; occurred_at?: string;
   playerId?: string; competitionId?: string; entrantName?: string; resultPublished?: boolean; awardName?: string;
   auditStatus?: string; totalScore?: number; rankNo?: number; playerName?: string; publishedTotal?: number;
   startsAt?: string; registrationStatus?: string; status?: string; remark?: string; content?: string; label?: string;
@@ -46,7 +51,7 @@ export interface WriteBody {
   items?: ShopItem[]; recipient?: string; address?: string; deliveryMethod?: string;
   targetId?: number; provider?: string; expectedTotalFen?: number;
   phone?: string; code?: string; deviceName?: string; refreshToken?: string; username?: string; password?: string;
-  name?: string; organization?: string; teacher?: string; performanceTitle?: string; remark?: string;
+  name?: string; organization?: string; teacher?: string; performanceTitle?: string; remark?: string; countryCode?: string;
   groupId?: number; competitionId?: number; sessionId?: number; bookingId?: number; checkinCode?: string;
   reason?: string; action?: string; confirmation?: string; video_id?: number; timestamp_seconds?: number;
   content?: string; progress?: number; duration?: number; revision?: number;

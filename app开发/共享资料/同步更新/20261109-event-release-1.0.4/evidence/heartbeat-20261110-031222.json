@@ -1,0 +1,41 @@
+{
+  "checkedAt": "2026-11-10T03:12:22+08:00",
+  "version": "1.0.4",
+  "ios": {
+    "build": 14,
+    "freshReviewStatusVerified": false,
+    "managementResult": "Exact review submission URL redirected to sign-in",
+    "chinaPublicRelease": {
+      "checkedAt": "2026-11-10T03:12:22+08:00",
+      "version": "1.0.4",
+      "region": "CN",
+      "url": "https://apps.apple.com/cn/app/swod/id6826038106",
+      "storeEntryVisible": true,
+      "updateNotesMatchSubmission": true,
+      "buildLinkedBySubmissionReceipt": 14,
+      "buildNumberDisplayedPublicly": false,
+      "evidence": "evidence/ios-1.0.4-china-public-20261110.jpg"
+    },
+    "otherStorefronts": {
+      "US": "redirected to CN Today; unverified",
+      "HK": "redirected to CN Today; unverified"
+    },
+    "automaticReleaseInference": "The saved submission selected immediate automatic release and no manual release was performed in this workflow. The live review completion timestamp was unavailable."
+  },
+  "huaweiAndroid": {
+    "build": 21,
+    "freshReviewStatusVerified": false,
+    "managementResult": "Exact review URL redirected to Huawei sign-in",
+    "chinaPublicVersion": "1.0.1",
+    "installEntryVisible": true
+  },
+  "harmony": {
+    "build": 22,
+    "existingOfficialDraftStatus": "准备提交",
+    "automaticReleaseAfterApproval": true,
+    "nativeLoginVerified": false
+  },
+  "newReviewOrPublicResultVerified": true,
+  "newStoreSubmission": false,
+  "newNotificationNeeded": true
+}

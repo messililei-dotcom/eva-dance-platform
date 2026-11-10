@@ -16,6 +16,9 @@ struct MyCompetitionsView: View {
                     if !entry.value["performanceTitle"].text.isEmpty { Text("节目：" + entry.value["performanceTitle"].text) }
                     Text([CompetitionRecord.audit(entry.value["auditStatus"].text), CompetitionRecord.paid(entry.value["paidStatus"].text), String(entry.value["startDate"].text.prefix(10))].filter { !$0.isEmpty }.joined(separator: " · ")).font(.subheadline).foregroundStyle(.secondary)
                     Text(CompetitionRecord.result(entry.value)).font(.body.weight(.semibold)).foregroundStyle(EvaBrand.red)
+                    if let id = Int(entry.value["playerId"].text), id > 0 {
+                        NavigationLink("修改报名 / 补交音乐") { EventRegistrationView(eventID: "", group: nil, playerID: String(id)) }.frame(minHeight: 44)
+                    }
                     if !entry.value["competitionId"].text.isEmpty {
                         NavigationLink("赛事详情") { EventDetailView(id: entry.value["competitionId"].text) }.frame(minHeight: 44)
                     }

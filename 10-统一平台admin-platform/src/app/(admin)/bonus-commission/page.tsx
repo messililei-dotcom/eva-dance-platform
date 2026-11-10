@@ -245,9 +245,19 @@ export default function BonusCommissionPage() {
           period,
           paidDate: v.paidDate.format("YYYY-MM-DD"),
         });
-      await request(body);
-      message.success("已保存");
+      const response = await request(body);
+      message.success(modal === "product" ? "已保存并同步到电商销售记录" : "已保存");
       setModal("");
+      if (modal === "product") {
+        setTab("product");
+        setPerson(undefined);
+        setSearch("");
+        const savedPeriod = response.result.period;
+        if (savedPeriod !== period) {
+          setPeriod(savedPeriod);
+          return;
+        }
+      }
       await load();
     } catch (e: any) {
       message.error(e.response?.data?.error || e.message);
@@ -1398,7 +1408,8 @@ export default function BonusCommissionPage() {
                         </Form.Item>
                       </Space>
                       <Form.Item
-                        label="订单号／线下编号（线下留空自动生成）"
+                        label="订单号／线下编号"
+                        extra="没有独立编号的线下销售可留空，由系统生成唯一编号。"
                         name="orderNo"
                       >
                         <Input maxLength={1000} />

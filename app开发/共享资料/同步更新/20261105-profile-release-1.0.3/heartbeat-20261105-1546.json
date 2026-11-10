@@ -1,0 +1,74 @@
+{
+  "checkedAt": "2026-11-05T15:54:38+08:00",
+  "version": "1.0.3",
+  "builds": {
+    "ios": 13,
+    "android": 20,
+    "harmony": 17
+  },
+  "newReviewOrPublicResultVerified": true,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "originalSignatureChanged": false,
+  "ios": {
+    "version": "1.0.3",
+    "build": 13,
+    "xcodeOriginalAccountRestored": true,
+    "uploadSucceeded": true,
+    "uploadedAt": "2026-11-05T15:52:29+08:00",
+    "officialProcessingStatus": "processing",
+    "submitted": false,
+    "automaticReleaseDraftSelected": true,
+    "evidence": "evidence/heartbeat-20261105-1546/apple-build13-processing.txt",
+    "warning": "Three Aliyun SDK frameworks missing vendor dSYM; upload succeeded. No claim symbols or runtime complete."
+  },
+  "huaweiAndroid": {
+    "appId": "119475083",
+    "packageName": "cn.com.swod.app",
+    "version": "1.0.1",
+    "build": 11,
+    "versionRecord": "2067391391952053568",
+    "reviewStatus": "approved",
+    "status": "listed",
+    "listedAt": "2026-11-02T12:06:33+08:00",
+    "automaticReleaseAfterApproval": true,
+    "publicRegionsVerified": [
+      "CN"
+    ],
+    "publicVersion": "1.0.1",
+    "publicURL": "https://appgallery.huawei.com/app/C119475083",
+    "publicDownloadEntryVisible": true,
+    "otherRegionPublicVerificationPending": true,
+    "latest103Build20Uploaded": false,
+    "formalUpgradeButtonNowAvailable": true,
+    "evidence": "evidence/heartbeat-20261105-1546/huawei-android.txt",
+    "publicEvidence": "evidence/heartbeat-20261105-1546/public-cn.txt"
+  },
+  "harmonyHuawei": {
+    "appId": "6917617955633704973",
+    "bundleName": "cn.com.swod.evadance",
+    "version": "1.0.2",
+    "build": 15,
+    "versionRecord": "2071129556072323840",
+    "status": "rejected-awaiting-modification",
+    "reportGeneratedAt": "2026-11-03T20:48:35+08:00",
+    "issues": [
+      "Installed launcher name mismatches submitted SWOD name; official attachment shows label",
+      "Test account password and reviewer SMS login both fail, preventing review"
+    ],
+    "testEnvironment": "HarmonyOS7.0.0 HUAWEI Mate80Pro API26.0.0 Chinese WIFI",
+    "latest103Build17Uploaded": false,
+    "currentSourceLabelSWOD": true,
+    "nativeRuntimeAcceptanceComplete": false,
+    "doNotClaim103AlreadyResolvesRejection": true,
+    "evidence": "evidence/heartbeat-20261105-1546/harmony-report-function.txt",
+    "attachment": "evidence/heartbeat-20261105-1546/harmony-review-attachments.zip"
+  },
+  "pending": [
+    "iOS13 official processing and appropriate final runtime checks before submit",
+    "Android20 first-run privacy/terms action-time confirmation still pending; no approval inferred",
+    "Harmony launcher-name and login runtime failures must be resolved and verified before re-submit",
+    "Other Android formal copyright/qualification materials remain unavailable; no fake replacements"
+  ],
+  "newNotificationNeeded": true
+}

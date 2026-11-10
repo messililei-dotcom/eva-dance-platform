@@ -1,0 +1,26 @@
+{
+  "createdAt": "2026-11-05T13:50:02+08:00",
+  "userAuthorizedUploadSubmitAutomaticRelease": true,
+  "version": "1.0.3",
+  "builds": {
+    "ios": 13,
+    "android": 20,
+    "harmony": 18
+  },
+  "scope": "Current profile layout plus latest existing source, including previously unsubmitted offline calendar",
+  "priorStoreRelease": "1.0.2 iOS11 Android18 Harmony15, historical HuaweiAndroid review1.0.1(11) retained",
+  "originalSigningRequired": true,
+  "filingChanged": false,
+  "existingReviewsWithdrawn": false,
+  "physicalDeviceTests": "skipped-at-user-request",
+  "offlineCacheEnabled": false,
+  "pushProductionEnabled": false,
+  "carrierOneTapProductionEnabled": false,
+  "wechatMobileLoginProductionEnabled": false,
+  "stages": {
+    "ios": "uploaded13; processing complete; not associated or submitted; runtime acceptance incomplete",
+    "android": "signed20 ready; visitor consent and current screenshots pending; old Huawei formal11 publicly listed",
+    "harmony": "signed18 with verified launcher-label fix; old17 retired locally; native login unresolved; not uploaded/submitted"
+  },
+  "updatedAt": "2026-11-05T19:58:42+08:00"
+}

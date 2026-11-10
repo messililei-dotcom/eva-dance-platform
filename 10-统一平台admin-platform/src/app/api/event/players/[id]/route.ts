@@ -1,3 +1,4 @@
+import { eventPaymentOrder } from '@/lib/server/event-online';
 import { cleanText, readEventBody, hasAuth, jsonError, mapPlayer, nowIso, toNumber, unauthorized, withRequestEventDb, recalculateGroupRankings } from '../../_db';
 import { normalizeEventMemberPhone, syncEventPlayerToMember } from '@/lib/server/event-member-sync';
 
@@ -64,7 +65,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const updated = db.transaction(() => {
       const current = db.prepare('SELECT * FROM event_players WHERE id=?').get(routeParams.id) as Record<string, any> | undefined;
       if (!current) return null;
-      if (body.paidStatus && body.paidStatus !== current.paid_status) return { paymentError: true };
+      const nextGroupId = body.groupId ?? body.group_id;
+      if ((['cancelled', 'withdrawn'].includes(body.status) || (nextGroupId != null && toNumber(nextGroupId) !== current.group_id)) &&
+        eventPaymentOrder(db, Number(current.id), ['pending', 'refund_requested', 'refunding'])) return { onlinePaymentError: true };
+      if ((body.paidStatus ?? body.paid_status) && (body.paidStatus ?? body.paid_status) !== current.paid_status) return { paymentError: true };
       const member = { memberId: ensurePhoneMember(db, name, contact, 'event_competition'), created: false, paymentError: false };
       db.prepare(`
         UPDATE event_players
@@ -105,8 +109,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       }
       if (current.group_id && body.status != null && body.status !== current.status) recalculateGroupRankings(db, Number(current.group_id));
       return member;
-    })();
+    }).immediate();
     if (!updated) return jsonError('选手不存在', 404);
+    if ('onlinePaymentError' in updated) return jsonError('该报名有待处理在线订单，请先处理订单', 409);
     if (updated.paymentError) return jsonError('请使用登记缴费功能修改缴费状态');
     return Response.json({ success: true, data: { memberId: updated.memberId, memberCreated: updated.created } });
   });

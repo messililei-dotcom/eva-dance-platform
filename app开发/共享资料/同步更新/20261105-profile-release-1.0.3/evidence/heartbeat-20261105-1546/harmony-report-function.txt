@@ -1,0 +1,57 @@
+- banner:
+  - link:
+    - /url: /consumer/cn/service/josp/agc/index.html
+  - generic "互动中心":
+    - generic: "6"
+  - button:
+  - button "135******58 伊娃文化艺术发展（湖南）有限公司":
+    - generic "135******58"
+    - generic "伊娃文化艺术发展（湖南）有限公司"
+- iframe [active] [id="mainIframeView"]:
+  - generic: 上架审核报告
+  - generic: 下载所有日志
+  - button "联系我们":
+    - generic: 联系我们
+  - text: 审核未通过，共检测出
+  - text: 错误问题2个。
+  - generic: 应用信息
+  - group "应用名称：":
+    - generic: 应用名称：
+    - generic "SWOD"
+  - group "提交审核时间：":
+    - generic: 提交审核时间：
+    - generic: 2026-10-30 21:23:17
+  - group "包名：":
+    - generic: 包名：
+    - generic "cn.com.swod.evadance"
+  - group "报告生成时间：":
+    - generic: 报告生成时间：
+    - generic: 2026-11-03 20:48:35
+  - group "版本号：":
+    - generic: 版本号：
+    - generic: 1.0.2
+  - group "测试环境（人工测试）：":
+    - generic: 测试环境（人工测试）：
+    - generic "WIFI联网、HarmonyOS7.0.0（HUAWEI Mate 80 Pro）、API26.0.0(26)、简体中文环境。"
+  - tablist:
+    - tab "应用信息 1":
+      - generic: 应用信息
+      - generic: "1"
+    - tab "应用功能 1" [active] [selected]:
+      - generic: 应用功能
+      - generic: "1"
+  - tabpanel "应用功能 1":
+    - generic: 问题1：
+    - generic: 应用输入测试账密，提示登录失败；个人手机号验证码登录也提示登录失败，我们无法审核应用内相关功能与内容。
+    - generic: 修改建议：
+    - text: 提交应用时，若需要账号才能使用，请在“应用审核信息”选项中提交有效可用的账号和登录信息，以便我们完成对您应用的审核。
+    - generic: 测试信息：
+    - text: 测试步骤：输入测试账密，提示登录失败；个人手机号验证码登录也提示登录失败 测试环境：WIFI联网、HarmonyOS 7.0.0(HUAWEI Mate 80 Pro)、API26.0.0(26)、中文环境
+    - generic: 举证信息：
+    - generic: 截图/录屏
+- generic: 版权所有 © 2019 华为。 保留一切权利。 苏ICP备17040376号
+- generic: 服务协议
+- generic: 关于华为AppGallery Connect与隐私的声明
+- generic: 隐私政策
+- generic: 联系我们
+- generic: cookies

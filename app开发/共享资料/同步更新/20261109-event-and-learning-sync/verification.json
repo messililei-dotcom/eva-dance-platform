@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-11-09T10:50:58+08:00",
+  "scope": [
+    "International event contact numbers",
+    "Registration with optional music",
+    "Authenticated editing of registration details and music",
+    "Growth records and study bookmark terminology"
+  ],
+  "sourceReferences": [
+    "10-小程序miniprogram/pages/event-register",
+    "10-小程序miniprogram/pages/event-music",
+    "10-小程序miniprogram/pages/learning-records",
+    "production/website/src/app/events-news/[slug]/register/page.tsx"
+  ],
+  "ios": {
+    "simulatorBuildPassed": true,
+    "contractChecks": 21
+  },
+  "android": {
+    "debugBuildPassed": true,
+    "unitTestsPassed": 32
+  },
+  "harmony": {
+    "debugBuildPassed": true,
+    "checksPassed": 44
+  },
+  "backend": {
+    "bridgeAndSummaryTestsPassed": 5,
+    "existingAudioIntegrationNotRun": "Local Node 18 lacks node:sqlite",
+    "requiresDeploymentBeforeNativeRollout": true
+  },
+  "runtimeEndToEndVerified": false,
+  "physicalDeviceTests": "skipped-at-user-request",
+  "newSignedCandidatesGenerated": false,
+  "previousCandidateHashesVerified": 5,
+  "deployed": false,
+  "uploaded": false,
+  "submitted": false
+}

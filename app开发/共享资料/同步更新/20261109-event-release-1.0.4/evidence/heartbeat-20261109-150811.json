@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-11-09T15:08:11+08:00",
+  "version": "1.0.4",
+  "ios": {
+    "submissionId": "fe22d9ea-4890-4035-9e13-8d92757b9e7e",
+    "detailPage": "body unavailable after reload",
+    "officialDistributionPage": "1.0.4 正在等待审核",
+    "automaticReleaseAfterApproval": true,
+    "releaseImmediatelyToAll": true
+  },
+  "android": {
+    "build": 21,
+    "emulator": "EvaRelease36",
+    "firstRunAgreementVisible": true
+  },
+  "harmony": {
+    "build": 19,
+    "newRuntimeEvidence": false
+  },
+  "newStoreSubmission": false,
+  "newReviewOrPublicResultVerified": false,
+  "newNotificationNeeded": false,
+  "existingReviewsWithdrawn": false
+}

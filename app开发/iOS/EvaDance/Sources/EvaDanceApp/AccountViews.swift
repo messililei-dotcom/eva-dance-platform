@@ -5,92 +5,82 @@ struct AccountView: View {
     @EnvironmentObject var session: Session
     @StateObject private var store = SiteStore()
     @StateObject private var courses = SiteStore()
+    @StateObject private var artwork = SiteStore()
     @State private var logout = false
     var body: some View {
-        List {
-            if session.token == nil {
-                Section {
-                    BrandHeader(title: "欢迎来到伊娃东方舞", subtitle: "登录后同步课程、比赛、证书与订单", icon: "person.crop.circle")
-                    Button("登录 / 注册") { session.showLogin = true }.buttonStyle(.borderedProminent).foregroundStyle(EvaBrand.onAccent).controlSize(.large).frame(maxWidth: .infinity, minHeight: 48)
-                }
-            } else {
-                Section {
-                    BrandHeader(title: store.data["name"].text.isEmpty ? "我的学习空间" : store.data["name"].text, subtitle: "个人中心 · 与小程序共用学习账号", icon: "person.crop.circle")
-                    Text("已授权 \(store.data["stats"]["authorized_count"].text) 门 · 已完成 \(store.data["stats"]["completed_count"].text) 节").foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                AccountHeaderView(notifications: session.notifications, profile: session.token == nil ? .null : store.data, ready: !store.busy && store.error == nil && store.data != .null)
+                if session.token == nil {
+                    Button("登录 / 注册") { session.showLogin = true }.buttonStyle(.borderedProminent)
+                        .foregroundStyle(EvaBrand.onAccent).controlSize(.large).frame(maxWidth: .infinity, minHeight: 48)
+                } else {
+                    AccountSummaryView(profile: store.data, ready: !store.busy && store.error == nil)
+                    Divider()
                     LoadState(store: store) { Task { await load() } }
-                    NavigationLink("编辑个人资料") { ProfileEditor() }
-                }
-                Section("我的比赛与订单") {
-                    NavigationLink("我的比赛 · 报名与成绩") { MyCompetitionsView() }
-                    NavigationLink("我的订单") { ShopOrdersView() }
-                }
-                Section("我的课程") {
-                    if AppPolicy.supportsOfflineDownload {
-                        NavigationLink("课程缓存 · 离线观看") { CourseCacheView(cache: session.videoCache) }
-                    }
+                    NavigationLink { ProfileEditor() } label: { AccountServiceRow(title: "个人资料", subtitle: "姓名、手机号、生日和地址", icon: "person.crop.circle") }
+                    Divider()
+                    NavigationLink { MyCompetitionsView() } label: { AccountServiceRow(title: "我的比赛", subtitle: "报名、缴费与比赛结果", icon: "trophy") }
+                    Divider()
+                    NavigationLink { ShopOrdersView() } label: { AccountServiceRow(title: "我的订单", subtitle: "订单、到账与退款记录", icon: "bag") }
+                    Divider()
+                    Text("我的课程").font(.title3.bold()).padding(.top, 20).padding(.bottom, 4)
                     LoadState(store: courses) { Task { await load() } }
                     ForEach(courses.data.rows) { item in
                         if let id = Int(item.value["series_id"].text), id > 0 {
-                            NavigationLink { CatalogByIDView(id: id, title: item.value["series_name"].text) } label: {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(item.value["series_name"].text).font(.headline)
-                                    Text("✓ 已解锁").font(.caption).foregroundStyle(.green)
-                                    Text("继续学习").font(.subheadline).foregroundStyle(.green)
-                                }.padding(.vertical, 6)
-                            }
+                            NavigationLink { CatalogByIDView(id: id, title: item.value["series_name"].text) } label: { AccountCourseRow(course: item.value, cover: artwork.data.list.first { Int($0["id"].text) == id }?["cover_image"].text ?? "") }
+                            Divider()
                         }
                     }
-                    if !courses.busy && courses.error == nil && courses.data.list.isEmpty { Text("暂无已解锁课程").foregroundStyle(.secondary) }
-                    NavigationLink("查看全部课程与学习记录") { CoursesView() }
+                    if !courses.busy && courses.error == nil && courses.data.list.isEmpty {
+                        Text("暂无已解锁课程").font(.subheadline).foregroundStyle(.secondary).padding(.vertical, 16)
+                    }
+                    NavigationLink { CoursesView() } label: { AccountServiceRow(title: "查看全部课程与学习记录", subtitle: "已解锁课程与学习进度", icon: "book") }
+                    if AppPolicy.supportsOfflineDownload {
+                        NavigationLink { CourseCacheView(cache: session.videoCache) } label: { AccountServiceRow(title: "课程缓存", subtitle: "查看离线课程", icon: "arrow.down.circle") }
+                    }
+                    Text("线下课与证书").font(.title3.bold()).padding(.top, 20)
+                    NavigationLink { OfflineScheduleView() } label: { AccountServiceRow(title: "我的线下课程", subtitle: "课时余额、期次与核销记录", icon: "calendar") }
+                    Divider()
+                    NavigationLink { CertificatesView() } label: { AccountServiceRow(title: "我的证书", subtitle: "查看已颁发的学习证书", icon: "rosette") }
+                    Text("学习服务").font(.title3.bold()).padding(.top, 20)
+                    NavigationLink { StudyAssistantView() } label: { AccountServiceRow(title: "今日练习", subtitle: "学习计划与练习建议", icon: "figure.dance") }
+                    NavigationLink { GrowthView() } label: { AccountServiceRow(title: "成长与每日打卡", subtitle: "记录每一次练习", icon: "chart.line.uptrend.xyaxis") }
+                    NavigationLink { StudyItemsView(kind: "notes") } label: { AccountServiceRow(title: "学习笔记", subtitle: "回顾课程中的学习心得", icon: "square.and.pencil") }
+                    NavigationLink { StudyItemsView(kind: "bookmarks") } label: { AccountServiceRow(title: "学习书签", subtitle: "快速找到标记过的课节", icon: "bookmark") }
+                    Text("我的服务").font(.title3.bold()).padding(.top, 20)
+                    NavigationLink { ShippingView() } label: { AccountServiceRow(title: "收货地址", subtitle: "管理商城收货信息", icon: "shippingbox") }
+                    NavigationLink { RecordListView(title: "课程缴费记录", path: "/member/payments", fields: [("课程","courseName"),("金额","amount"),("剩余课次","remainingSessions"),("日期","date")]) } label: { AccountServiceRow(title: "课程缴费记录", subtitle: "查看已登记的缴费流水", icon: "doc.text") }
+                    NavigationLink { RecordListView(title: "课次消耗记录", path: "/member/consume-records", fields: [("课程","courseName"),("课次","count"),("时间","consumeDate")]) } label: { AccountServiceRow(title: "课次消耗记录", subtitle: "查看上课与核销明细", icon: "checkmark.circle") }
+                    Text("账号与隐私").font(.title3.bold()).padding(.top, 20)
+                    NavigationLink { DevicesView() } label: { AccountServiceRow(title: "登录设备", subtitle: "查看与管理账号登录设备", icon: "iphone") }
+                    NavigationLink { DeletionView() } label: { AccountServiceRow(title: "注销账号", subtitle: "申请注销与查看处理说明", icon: "person.crop.circle.badge.minus") }
+                    Button("退出登录", role: .destructive) { logout = true }.frame(maxWidth: .infinity, minHeight: 48)
                 }
-                Section("线下课与证书") {
-                    NavigationLink("我的线下课 · 课时与核销") { OfflineScheduleView() }
-                    NavigationLink("我的证书") { CertificatesView() }
-                }
-                Section("更多学习服务") {
-                    NavigationLink("今日练习 · 智能学习助手") { StudyAssistantView() }
-                    NavigationLink("学习消息") { MessagesView() }
-                    NavigationLink("成长与每日打卡") { GrowthView() }
-                    NavigationLink("学习笔记") { StudyItemsView(kind: "notes") }
-                    NavigationLink("视频收藏") { StudyItemsView(kind: "bookmarks") }
-                }
-                Section("我的服务") {
-                    NavigationLink("收货地址") { ShippingView() }
-                    NavigationLink("课程缴费记录") { RecordListView(title:"课程缴费记录",path:"/member/payments",fields:[("课程","courseName"),("金额","amount"),("剩余课次","remainingSessions"),("日期","date")]) }
-                    NavigationLink("课次消耗记录") { RecordListView(title:"课次消耗记录",path:"/member/consume-records",fields:[("课程","courseName"),("课次","count"),("时间","consumeDate")]) }
-                }
-                Section("账号与隐私") {
-                    NavigationLink("登录设备") { DevicesView() }
-                    NavigationLink("注销账号") { DeletionView() }
-                    Button("退出登录",role:.destructive) { logout = true }
-                }
-            }
-            if !session.deletionReceipts.isEmpty {
-                Section("注销进度与结果") {
+                if !session.deletionReceipts.isEmpty {
+                    Text("注销进度与结果").font(.title3.bold()).padding(.top, 20)
                     ForEach(session.deletionReceipts) { receipt in
-                        NavigationLink { DeletionReceiptView(receipt: receipt) } label: {
-                            VStack(alignment: .leading) {
-                                Text("查看注销回执")
-                                Text(receipt.createdAt, format: .dateTime).font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
+                        NavigationLink { DeletionReceiptView(receipt: receipt) } label: { AccountServiceRow(title: "查看注销回执", subtitle: receipt.createdAt.formatted(date: .abbreviated, time: .shortened), icon: "doc.text.magnifyingglass") }
                     }
                 }
-            }
-            Section("工作人员") { NavigationLink("赛事管理工作台") { StaffEventRootView() } }
-            Section("关于") {
-                NavigationLink("客服与售后") { CourseSupportView() }
-                NavigationLink("帮助、品牌与隐私") { InformationView() }
+                Text("客服与帮助").font(.title3.bold()).padding(.top, 20)
+                NavigationLink { CourseSupportView() } label: { AccountServiceRow(title: "客服与售后", subtitle: "学习权限、课程与订单问题", icon: "bubble.left.and.bubble.right") }
+                NavigationLink { StaffEventRootView() } label: { AccountServiceRow(title: "赛事管理工作台", subtitle: "工作人员入口", icon: "person.2") }
+                NavigationLink { InformationView() } label: { AccountServiceRow(title: "关于 SWOD", subtitle: "帮助、品牌与隐私政策", icon: "info.circle") }
                 Text("SWOD \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""))")
-            }
-        }.evaCompactLayout().evaHomeLayout().evaPageChrome(root: true).task(id:session.accountID) { await load() }.refreshable { await load() }
-        .confirmationDialog("确认退出当前账号？",isPresented:$logout) { Button("退出登录",role:.destructive) { session.logout() } }
+                    .font(.footnote).foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.vertical, 20)
+            }.buttonStyle(EvaPressStyle()).padding(.horizontal, 16).frame(maxWidth: 760)
+                .frame(maxWidth: .infinity)
+        }.evaHomeLayout().evaPageChrome(root: true).task(id: session.accountID) { await load() }.refreshable { await load() }
+        .confirmationDialog("确认退出当前账号？", isPresented: $logout) { Button("退出登录", role: .destructive) { session.logout() } }
     }
     private func load() async {
-        guard session.token != nil else { courses.data = .null; return }
         courses.data = .null
-        await store.load("/member/profile",session:session)
-        await courses.load("/member/authorized-series",session:session)
+        store.data = .null
+        guard session.token != nil else { return }
+        await store.load("/member/profile", session: session)
+        await courses.load("/member/authorized-series", session: session)
+        await artwork.load("/public/series", session: session, publicRead: true)
     }
 }
 struct ProfileEditor: View {

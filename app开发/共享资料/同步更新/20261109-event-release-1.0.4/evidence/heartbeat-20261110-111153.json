@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-11-10T11:11:53+08:00",
+  "version": "1.0.4",
+  "ios": {
+    "build": 14,
+    "freshReviewStatusVerified": false,
+    "managementResult": "Sign-in required",
+    "previousChinaPublicReleaseEvidence": "evidence/ios-1.0.4-china-public-20261110.jpg"
+  },
+  "huaweiAndroid": {
+    "build": 21,
+    "officialReviewStatus": "正在审核",
+    "automaticReleaseAfterApproval": true,
+    "chinaPublicVersion": "1.0.1"
+  },
+  "harmony": {
+    "build": 23,
+    "officialReviewStatus": "正在等待审核",
+    "automaticReleaseAfterApproval": true,
+    "observedExistingSubmission": true,
+    "passwordLoginVerifiedInEmulator": true,
+    "smsDeliveryAndRealCodeLoginVerified": false,
+    "executionEvidence": "../20261110-harmony-window/review-candidate/verification.json",
+    "reviewScreenshot": "evidence/huawei-harmony23-review-20261110.jpg"
+  },
+  "newNotificationNeeded": true
+}

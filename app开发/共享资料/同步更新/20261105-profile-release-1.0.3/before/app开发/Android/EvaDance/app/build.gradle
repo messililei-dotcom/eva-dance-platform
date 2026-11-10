@@ -1,0 +1,70 @@
+plugins { id 'com.android.application' }
+def signingFile = rootProject.file('signing.local.properties')
+if (!signingFile.exists()) signingFile = new File(System.getProperty('user.home'), '.config/eva-app/android-signing.properties')
+def signingValues = new Properties()
+if (signingFile.exists()) signingFile.withInputStream { signingValues.load(it) }
+android {
+    namespace 'cn.com.swod.app'
+    compileSdk 36
+    defaultConfig { applicationId 'cn.com.swod.app'; minSdk 26; targetSdk 36; versionCode 19; versionName '1.0.2' }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    signingConfigs {
+        if (signingFile.exists()) release {
+            storeFile file(signingValues['storeFile']); storePassword signingValues['storePassword']
+            keyAlias signingValues['keyAlias']; keyPassword signingValues['keyPassword']; storeType 'PKCS12'
+        }
+    }
+    buildTypes {
+        release { minifyEnabled false; if (signingFile.exists()) signingConfig signingConfigs.release }
+    }
+}
+dependencies {
+    implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.22')
+    implementation fileTree(dir: 'libs', include: ['*.aar'])
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0'
+    implementation 'com.aliyun.ams:alicloud-android-push:3.10.1'
+implementation 'com.aliyun.ams:alicloud-android-third-push:3.10.1'
+implementation 'com.aliyun.ams:alicloud-android-third-push-huawei:3.10.1'
+implementation 'com.aliyun.ams:alicloud-android-third-push-xiaomi:3.10.1'
+implementation 'com.aliyun.ams:alicloud-android-third-push-oppo:3.10.1'
+implementation 'com.aliyun.ams:alicloud-android-third-push-vivo:3.10.1'
+    testImplementation 'junit:junit:4.13.2'
+}
+// Client SDK scheme configuration is generated from the existing private file.
+// Server AccessKeys and WeChat AppSecrets never belong in this asset.
+def carrierAssets = layout.buildDirectory.dir('generated/carrierAssets')
+android.sourceSets.main.assets.srcDir(carrierAssets)
+def carrierConfig = new File(System.getProperty('user.home'), '.config/eva-app/android-number-auth.json')
+tasks.register('generateCarrierConfig') {
+    if (carrierConfig.exists()) inputs.file(carrierConfig)
+    outputs.dir(carrierAssets)
+    doLast {
+        def target = new File(carrierAssets.get().asFile, 'number-auth.json')
+        target.parentFile.mkdirs()
+        def config = carrierConfig.exists() ? new groovy.json.JsonSlurper().parse(carrierConfig) : [:]
+        target.text = groovy.json.JsonOutput.toJson([packageName: config.packageName ?: '', sdkSecret: config.sdkSecret ?: ''])
+    }
+}
+tasks.named('preBuild').configure { dependsOn('generateCarrierConfig') }
+tasks.matching { it.name == 'preReleaseBuild' }.configureEach {
+    doFirst {
+        if (!signingFile.exists() || ['storeFile','storePassword','keyAlias','keyPassword'].any { !signingValues[it] }) {
+            throw new GradleException('正式构建缺少完整发布签名配置，已停止生成未签名发布包。')
+        }
+        if (!file(signingValues['storeFile']).isFile()) throw new GradleException('发布签名文件不存在。')
+    }
+}
+
+def pushConfig = new File(System.getProperty('user.home'), '.config/eva-app/push/android.json')
+tasks.register('generatePushConfig') {
+    if (pushConfig.exists()) inputs.file(pushConfig)
+    outputs.dir(carrierAssets)
+    doLast {
+        def target = new File(carrierAssets.get().asFile, 'push.local.json')
+        target.parentFile.mkdirs()
+        def config = pushConfig.exists() ? new groovy.json.JsonSlurper().parse(pushConfig) : [:]
+        target.text = groovy.json.JsonOutput.toJson([appKey: config.appKey ?: '', appSecret: config.appSecret ?: '', xiaomiAppId: config.xiaomiAppId ?: '', xiaomiAppKey: config.xiaomiAppKey ?: '', oppoAppKey: config.oppoAppKey ?: '', oppoAppSecret: config.oppoAppSecret ?: '', huaweiEnabled: config.huaweiEnabled ?: false, vivoEnabled: config.vivoEnabled ?: false])
+    }
+}
+tasks.named('preBuild').configure { dependsOn('generatePushConfig') }

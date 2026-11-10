@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-11-06T03:56:26+08:00",
+  "version": "1.0.3",
+  "builds": {
+    "ios": 13,
+    "android": 20,
+    "harmony": 18
+  },
+  "iosDraftStatusVerified": true,
+  "iosDraftStatus": "prepare-for-submission",
+  "iosDraftVersion": "1.0.3",
+  "iosBuildAssociated": false,
+  "iosSubmitted": false,
+  "appleSessionReadable": true,
+  "evidence": "evidence/heartbeat-20261106-0354/apple-access.txt",
+  "huaweiReviewRechecked": false,
+  "otherAndroidMaterialsChanged": false,
+  "existingBlockersUnchanged": [
+    "Android20 guest privacy/terms confirmation pending",
+    "Harmony18 native password/SMS login failure not yet reproduced or resolved",
+    "Copyright and applicable qualifications not supplied"
+  ],
+  "newReviewOrPublicResultVerified": false,
+  "newNotificationNeeded": false,
+  "newUpload": false,
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "originalSignatureChanged": false
+}

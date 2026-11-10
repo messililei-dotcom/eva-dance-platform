@@ -1,3 +1,4 @@
+import { normalizeEventPhone } from '@/lib/event-phone';
 import { loginData, upsertPhoneMember } from '../_auth';
 import { cleanText, getMemberId, jsonError, withDb } from '../_helpers';
 
@@ -6,9 +7,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const currentMemberId = getMemberId(new URL(request.url).searchParams, request);
     return withDb((db) => {
-      const phone = cleanText(body.phone);
+      const normalized = normalizeEventPhone(body.phone, body.countryCode);
+      const phone = normalized.phone;
       const code = cleanText(body.code);
-      if (!/^1\d{10}$/.test(phone)) return jsonError('请输入正确的手机号', 400);
       if (!code) return jsonError('请输入验证码', 400);
       const record = db.prepare(
         `SELECT id FROM MiniSmsCode
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
         sourceMemberId: currentMemberId,
         source: 'mini_program',
       });
+      db.prepare('UPDATE Member SET phone_country_code=?,phone_national_number=? WHERE id=?').run(normalized.countryCode, normalized.nationalNumber, member.id);
       return Response.json({
         success: true,
         data: loginData(member),

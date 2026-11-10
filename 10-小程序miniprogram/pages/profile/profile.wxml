@@ -11,7 +11,7 @@
       <view wx:else class="avatar">伊</view>
       <view class="profile-main">
         <view class="name">{{wechatName || memberName}}</view>
-        <view wx:if="{{isLoggedIn}}" class="phone"><text class="level-text">{{memberLevelText}}</text><text class="phone-dot">·</text><text class="phone-number">{{memberPhone || '未绑定手机号'}}</text></view>
+        <view wx:if="{{isLoggedIn}}" class="phone"><text class="level-text">{{memberLevelText}}</text><text class="phone-dot">·</text><text class="phone-number">{{maskedPhone || '未绑定手机号'}}</text></view>
         <view wx:else class="phone">登录后同步个人资料</view>
         <view class="profile-caption">个人中心</view>
       </view>
@@ -21,11 +21,11 @@
       </view>
       <button size="mini" wx:else class="head-action" bindtap="goLogin">登录</button>
     </view>
-    <view class="stats">
-      <view class="stat-item"><image src="/images/profile/book.svg"/><text class="num">{{authorizedCourses.length}}</text><text class="label">线上课</text></view>
-      <view class="stat-item"><image src="/images/profile/calendar.svg"/><text class="num">{{offlineCourses.length}}</text><text class="label">线下课</text></view>
-      <view class="stat-item"><image src="/images/profile/award.svg"/><text class="num">{{eventRegistrations.length}}</text><text class="label">比赛</text></view>
-      <view class="stat-item"><image src="/images/profile/award.svg"/><text class="num">{{certificates.length}}</text><text class="label">证书</text></view>
+    <view class="stats" wx:if="{{isLoggedIn}}">
+      <button class="stat-item" data-section="courses" bindtap="scrollToProfileSection"><image src="/images/profile/book.svg"/><text class="num">{{counts.courses === undefined ? '—' : counts.courses}}</text><text class="label">线上课</text></button>
+      <button class="stat-item" bindtap="openOfflineSchedule"><image src="/images/profile/calendar.svg"/><text class="num">{{counts.offline === undefined ? '—' : counts.offline}}</text><text class="label">线下课</text></button>
+      <button class="stat-item" data-section="events" bindtap="scrollToProfileSection"><image src="/images/profile/award.svg"/><text class="num">{{profileLoading || profileError || eventsLoading || eventsError || counts.courses === undefined ? '—' : eventRegistrations.length}}</text><text class="label">比赛</text></button>
+      <button class="stat-item" data-section="certificates" bindtap="scrollToProfileSection"><image src="/images/profile/award.svg"/><text class="num">{{counts.certificates === undefined ? '—' : counts.certificates}}</text><text class="label">证书</text></button>
     </view>
     <view class="profile-summary">
       <button size="mini" class="profile-summary-main" bindtap="toggleProfile" aria-expanded="{{profileOpen}}"><image class="profile-user-icon" src="/images/profile/user.svg"/><view><view class="row-title">个人资料</view><view class="row-desc">微信名、头像、手机号、生日和地址</view></view></button>
@@ -78,8 +78,9 @@
       <button size="mini" class="sync-btn" bindtap="syncWechatProfile">同步微信资料</button>
     </view>
 
-    <button class="link-row my-events-toggle" bindtap="openEventRegistrations" aria-expanded="{{myEventsOpen}}" aria-label="我的比赛，报名与结果记录">
-      <view><view class="row-title">我的比赛</view><view class="row-desc">{{eventRegistrations.length}} 个报名组别 · 报名、缴费与比赛结果</view></view>
+    <button wx:if="{{isLoggedIn}}" id="profile-events" class="link-row service-row my-events-toggle" bindtap="openEventRegistrations" aria-expanded="{{myEventsOpen}}" aria-label="我的比赛，报名与结果记录">
+      <image class="service-icon" src="/images/profile/award.svg"/>
+      <view class="service-copy"><view class="row-title">我的比赛</view><view class="row-desc">报名、缴费与比赛结果</view></view>
       <image class="chevron {{myEventsOpen ? 'expanded' : ''}}" src="/images/profile/chevron.svg" />
     </button>
     <view class="my-events-panel" wx:if="{{myEventsOpen}}">
@@ -90,6 +91,7 @@
         <view class="record-card" wx:for="{{eventRegistrations}}" wx:key="id">
           <view class="record-title">{{item.competitionName}}</view>
           <view class="record-meta">{{item.groupName}}{{item.playerNo ? ' · 选手号 ' + item.playerNo : ''}}</view>
+          <button class="events-refresh" data-id="{{item.id}}" bindtap="editEventMusic">修改报名 / 补交音乐</button>
           <view wx:if="{{item.entrantName || item.performanceTitle}}" class="record-meta">{{item.entrantName}}{{item.performanceTitle ? ' · 节目：' + item.performanceTitle : ''}}</view>
           <view class="record-meta">{{item.statusText}}{{item.paidStatusText ? ' · ' + item.paidStatusText : ''}}{{item.displayStartDate ? ' · ' + item.displayStartDate : ''}}</view>
           <view class="event-result">{{item.resultText}}</view>
@@ -102,30 +104,34 @@
       </block>
     </view>
 
-    <view class="link-row" bindtap="goCommerceOrders">
-      <view>
+    <button wx:if="{{isLoggedIn}}" class="link-row service-row" bindtap="goCommerceOrders">
+      <image class="service-icon" src="/images/profile/book.svg"/>
+      <view class="service-copy">
         <view class="row-title">我的订单</view>
         <view class="row-desc">查看订单、到账与退款记录</view>
       </view>
       <text class="row-arrow">›</text>
-    </view>
+    </button>
 
-    <view class="content-section">
+    <view wx:if="{{isLoggedIn}}" class="content-section" id="profile-courses">
       <view class="content-title">我的课程</view>
-      <view wx:if="{{authorizedCourses.length}}">
-        <view class="online-course" wx:for="{{authorizedCourses}}" wx:key="id" data-id="{{item.id}}" bindtap="openProfileCourse">
+      <view wx:if="{{profileLoading}}" class="empty-row">课程权益加载中…</view>
+      <view wx:elif="{{coursesError}}" class="events-feedback"><text>{{coursesError}}</text><button bindtap="reconnectProfile">重新加载</button></view>
+      <view wx:elif="{{counts.courses > 0}}">
+        <view class="online-course" wx:for="{{previewCourses}}" wx:key="id" data-id="{{item.id}}" bindtap="openProfileCourse">
           <image wx:if="{{item.cover_image}}" class="course-cover" src="{{item.cover_image}}" mode="aspectFill"></image>
           <view wx:else class="course-cover course-fallback">课</view>
           <view class="course-main">
             <view class="course-name">{{item.name}}</view>
             <view class="course-meta">{{item.total_courses || 0}} 节 · 已学 {{item.progressPercent || 0}}%</view><view class="course-unlocked">✓ 已解锁</view>
-          </view><text class="course-learn-action">继续学习</text>
+          </view><text class="course-learn-action">{{videoPlaybackEnabled ? '继续学习' : '查看课程'}}</text>
         </view>
+        <button wx:if="{{counts.courses > 4}}" class="link-row service-row course-list-toggle" bindtap="toggleCourseList" aria-expanded="{{showAllCourses}}">{{showAllCourses ? '收起课程' : '查看全部 ' + counts.courses + ' 门课程'}}</button>
       </view>
-      <view wx:else class="empty-row">暂无已解锁课程</view>
+      <view wx:elif="{{!profileError}}" class="empty-row">暂无已解锁课程</view>
     </view>
 
-    <view class="content-section">
+    <view wx:if="{{isLoggedIn}}" class="content-section">
       <view class="section-heading">
         <view class="content-title">我的线下课程</view>
         <button size="mini" class="schedule-link" bindtap="openOfflineSchedule">查看课时</button>
@@ -140,7 +146,7 @@
       <view wx:else class="empty-row">暂无线下课程记录</view>
     </view>
 
-    <view class="content-section">
+    <view wx:if="{{isLoggedIn}}" class="content-section" id="profile-certificates">
       <view class="content-title">我的证书</view>
       <view wx:if="{{certificates.length}}">
         <view class="certificate-row" wx:for="{{certificates}}" wx:key="id" bindtap="viewCertificate" data-url="{{item.openUrl}}" data-id="{{item.id}}">
@@ -152,6 +158,20 @@
         </view>
       </view>
       <view wx:else class="empty-row">暂无证书</view>
+    </view>
+
+    <view wx:if="{{isLoggedIn}}" class="content-section">
+      <view class="content-title">学习服务</view>
+      <button class="link-row service-row" bindtap="goMessages">
+        <image class="service-icon" src="/images/profile/bell.svg"/>
+        <view class="service-copy"><view class="row-title">通知</view><view class="row-desc">{{unreadMessageCount ? unreadMessageCount + ' 条未读通知' : '课程与服务通知'}}</view></view>
+        <text class="row-arrow">›</text>
+      </button>
+      <button wx:for="{{learningServices}}" wx:key="key" data-kind="{{item.key}}" class="link-row service-row" bindtap="openLearningService">
+        <image class="service-icon" src="/images/profile/{{item.icon}}.svg"/>
+        <view class="service-copy"><view class="row-title">{{item.title}}</view><view class="row-desc">{{item.description}}</view></view>
+        <text class="row-arrow">›</text>
+      </button>
     </view>
 
     <view class="content-section">

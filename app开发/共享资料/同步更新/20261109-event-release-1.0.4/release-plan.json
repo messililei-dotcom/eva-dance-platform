@@ -1,0 +1,14 @@
+{
+  "createdAt": "2026-11-09T10:59:57+08:00",
+  "version": "1.0.4",
+  "builds": {
+    "ios": 14,
+    "android": 21,
+    "harmony": 23
+  },
+  "scope": "Events and learning records synchronized across iOS, Android and HarmonyOS",
+  "candidateRegistry": "candidate-artifacts.json",
+  "previousReleaseRecord": "../20261105-profile-release-1.0.3/submission-status.json",
+  "appStoreReleaseAfterApproval": true,
+  "backendBuildId": "U9qvTQl1P6De3j4RvbF6g"
+}

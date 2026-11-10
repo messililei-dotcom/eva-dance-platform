@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-11-01T07:00:18+08:00",
+  "ios": {
+    "version": "1.0.2",
+    "build": 11,
+    "currentReviewStatusVerified": false,
+    "lastKnownReviewStatus": "approved",
+    "lastReviewStatusConfirmedAt": "2026-10-31T23:04:10+08:00",
+    "freshExactReviewURLAccess": "Not retried this round; prior fresh review URL required authentication and no new sign-in was reported.",
+    "loginRequired": true,
+    "publicCNVerified": true,
+    "publicCNVersion": "1.0.2",
+    "publicURL": "https://apps.apple.com/cn/app/swod/id6826038106",
+    "storeEntryVisible": true,
+    "approvalAndCNPublicAlreadyNotified": true,
+    "evidenceDirectory": "evidence/heartbeat-20261101-0659",
+    "reviewAccessReattempted": false,
+    "lastReviewAccessAttemptAt": "2026-11-01T03:00:01+08:00"
+  },
+  "huaweiAndroid": {
+    "currentReviewStatusVerified": false,
+    "lastKnownStatus": "in-review",
+    "lastKnownVersion": "1.0.1(11)",
+    "lastConfirmedAt": "2026-10-31T19:08:44+08:00"
+  },
+  "harmony": {
+    "currentReviewStatusVerified": false,
+    "lastKnownStatus": "waiting-for-review",
+    "lastKnownVersion": "1.0.2(15)",
+    "lastConfirmedAt": "2026-10-31T19:08:44+08:00"
+  },
+  "nativeComputerAccess": "Mac locked; automatic unlock failed again. No native/Chrome action attempted.",
+  "overseas": {
+    "currentPublicVerified": false,
+    "knownPublicRedirectAndClientBlockNotRetried": true,
+    "noBypassAttempted": true
+  },
+  "otherAndroidChannels": {
+    "currentStatesVerified": false,
+    "latestMaterialBlockersRetainedAsHistorical": true,
+    "noNewCopyrightMaterialRecorded": true,
+    "noRepeatedUploadOrLoginPrompts": true
+  },
+  "newUpload": false,
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "originalSigningChanged": false,
+  "notificationDecision": "DONT_NOTIFY",
+  "reason": "Mainland public1.0.2 unchanged; same known computer/authentication/material blockers. No repeated login request or blocked overseas lookup."
+}

@@ -1,0 +1,68 @@
+{
+  "checkedAt": "2026-11-10T09:54:52+08:00",
+  "packageName": "cn.com.swod.app",
+  "versionName": "1.0.4",
+  "versionCode": 22,
+  "buildSource": "Current Android checkout, copied into an isolated Gradle build",
+  "artifacts": [
+    {
+      "path": "installers/._SWOD-1.0.4-22-release.aab",
+      "sha256": "d2e613b8fd3421be5f3116df43e1266e4e5ecb23536437d537b8824d1c518966",
+      "size": 4096
+    },
+    {
+      "path": "installers/._SWOD-1.0.4-22-release.apk",
+      "sha256": "d2e613b8fd3421be5f3116df43e1266e4e5ecb23536437d537b8824d1c518966",
+      "size": 4096
+    },
+    {
+      "path": "installers/SWOD-1.0.4-22-release.aab",
+      "sha256": "deb7ffd90acfba10256de666a4d8722b7988c5c91e1b54d82c8faa0119412d76",
+      "size": 15456605
+    },
+    {
+      "path": "installers/SWOD-1.0.4-22-release.apk",
+      "sha256": "477ffedc6769d8a86970242e3b50fe752b552d24f6d0a2f99d3909ee9482cdfe",
+      "size": 28959436
+    }
+  ],
+  "verification": {
+    "apkSignatureMatchesBuild21": true,
+    "aabSignatureVerified": true,
+    "unitTestsPassed": 32,
+    "lintErrors": 0,
+    "lintWarnings": 27,
+    "emulator": "EvaRelease36",
+    "upgradeFromBuild21Passed": true,
+    "coldLaunchPassed": true,
+    "physicalDeviceTested": false
+  },
+  "newStoreSubmissions": 0,
+  "storeChecks": {
+    "huaweiAndroid": {
+      "observedReviewBuild": 21,
+      "version": "1.0.4",
+      "status": "正在审核",
+      "publicVersion": "1.0.1"
+    },
+    "xiaomi": {
+      "access": "开发者站要求确认签署《隐私政策协议》"
+    },
+    "vivo": {
+      "access": "需登录"
+    },
+    "oppo": {
+      "access": "需登录"
+    },
+    "honor": {
+      "access": "需登录"
+    },
+    "tencent": {
+      "access": "跳转到需登录的应用宝开放平台首页"
+    }
+  },
+  "copyright": {
+    "lastVerifiedDate": "2026-11-09",
+    "status": "待受理"
+  }
+}

@@ -1,0 +1,508 @@
+- link "全国SDK管理服务平台":
+  - /url: "#/home"
+  - generic: 全国SDK管理服务平台
+- link "首页":
+  - /url: "#/home"
+  - generic: 首页
+- link "新闻通知":
+  - /url: "#/public/news/1"
+  - generic: 新闻通知
+- link "政策标准":
+  - /url: "#/public/policy/1"
+  - generic: 政策标准
+- link "开发者控制台":
+  - /url: "#/developer"
+  - generic: 开发者控制台
+- button "登 录":
+  - generic: 登 录
+- button "注 册":
+  - generic: 注 册
+- generic: 风险 SDK 信息
+- generic: RISK SDK INFORMATION
+- generic: "SDK搜索:"
+- textbox "请输入名称/开发者/类型的关键词"
+- button "search":
+  - img "search":
+- checkbox "全部" [checked]
+- generic: 全部
+- checkbox "只看存在违规行为SDK"
+- generic: 只看存在违规行为SDK
+- checkbox "只看建议版本更新SDK"
+- generic: 只看建议版本更新SDK
+- checkbox "只看产品不再运营SDK"
+- generic: 只看产品不再运营SDK
+- alert:
+  - img "info-circle":
+  - generic: 存在违规行为SDK：在工信部“侵害用户权益行为的APP（SDK）通报”名单中的SDK，建议APP开发者及时更新更换。
+  - generic: 建议版本更新SDK：在工信部抽检过程中发现违规行为，并已在期限内完成整改更新的SDK，建议APP开发者及时更新至SDK最新版本。
+  - generic: 产品不再运营SDK：停止对外提供服务、后续不再运营维护的SDK，建议APP开发者不再使用。
+- img "left":
+- tablist:
+  - tab "全部" [selected]
+  - tab "特定工具类"
+  - tab "游戏联运类"
+  - tab "广告类"
+  - tab "安全风控类"
+  - tab "地图类"
+  - tab "第三方登录类"
+  - tab "支付类"
+  - tab "认证类"
+  - tab "社交类"
+  - tab "客服类"
+  - tab "框架类"
+  - tab "实时音视频类"
+  - tab "统计类"
+  - tab "推送类"
+  - tab "性能监控类"
+  - tab "人工智能类"
+  - tab "平台服务类"
+- tabpanel "全部"
+- img "right":
+- generic: 综合评分：
+- generic: 暂无
+- generic: 引力引擎SDK Android
+- generic: 版本
+- generic: 5.0.36
+- generic: 类型
+- generic: 统计类
+- generic: 深圳引力引擎科技有限公司
+- generic: 用于用户行为分析和广告效果归因的一站式SDK
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 0.1折手游SDK
+- generic: 版本
+- generic: 1.3.0
+- generic: 类型
+- generic: 游戏联运类
+- generic: 昆山爱趣网络科技有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 元气SDK-Android
+- generic: 版本
+- generic: 7.6.0
+- generic: 类型
+- generic: 广告类
+- generic: 武汉元气智广科技有限公司
+- generic: 我们以帮助开发者解决和提高广告发布与广告运营为核心目标，助力开发者及广告主解决广告变现效率、流量扩展、广告管理等问题。
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 萤火虫广告SDK
+- generic: 版本
+- generic: 1.8.21
+- generic: 类型
+- generic: 广告类
+- generic: 北京燎原之火科技有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: TapADN SDK
+- generic: 版本
+- generic: 5.3.0.4
+- generic: 类型
+- generic: 广告类
+- generic: 上海艾得蒽数字科技有限公司
+- generic: TapADN SDK 为开发者提供高效的流量变现解决方案。
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: Bugly iOS
+- generic: 版本
+- generic: 2.7.1.1
+- generic: 类型
+- generic: 性能监控类
+- generic: 深圳市腾讯计算机系统有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 快手联运基础版SDK
+- generic: 版本
+- generic: v1.5.0.554
+- generic: 类型
+- generic: 游戏联运类
+- generic: 北京慕远科技有限公司
+- generic: 快手官方游戏渠道 SDK，为游戏 CP 提供快手账号登录、支付、社交分享、直播、广告变现及游戏自更新等全套接入能力。
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: GMNSDK
+- generic: 版本
+- generic: v.1.0.1
+- generic: 类型
+- generic: 特定工具类
+- generic: 上海谷莫宁科技有限公司
+- generic: 核心具备登录和支付功能，供游戏发行接入使用。
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: Octopus SDK iOS
+- generic: 版本
+- generic: 2.6.9.15
+- generic: 类型
+- generic: 广告类
+- generic: 北京圣盈科技有限公司
+- generic: 高效智能的广告变现工具
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 百家云实时音视频 SDK
+- generic: 版本
+- generic: 1.5.8
+- generic: 类型
+- generic: 实时音视频类
+- generic: 武汉朗宸云智科技有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: Mediatom SDK Android
+- generic: 版本
+- generic: 2.9.0
+- generic: 类型
+- generic: 广告类
+- generic: 北京前呈无限科技有限公司
+- generic: 安全透明可靠的SDK，这是行业对Mediatom安全性及专业性的高度认可。
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: Taku iOS SDK
+- generic: 版本
+- generic: 6.5.82
+- generic: 类型
+- generic: 广告类
+- generic: 广州塔酷信息科技有限公司
+- generic: Taku是中国领先的移动广告聚合工具平台，专注于为中国移动开发者提供广告变现运营管理及优化服务，基于大数据打造的智能化聚合管理工具，助力开发者实现广告收益最大化。
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 旺脉SDK
+- generic: 版本
+- generic: 7.9.19.31
+- generic: 类型
+- generic: 广告类
+- generic: 上海旺脉信息科技集团有限公司
+- generic: 提供广告变现服务
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 美洽SDK（Android）
+- generic: 版本
+- generic: 4.1.9
+- generic: 类型
+- generic: 客服类
+- generic: 成都美洽网络科技有限公司
+- generic: 为接入方 App 提供在线客服对话、机器人客服、留言表单、图片 / 语音 / 视频消息等客服能力
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: GM数据上报SDK（Android）
+- generic: 版本
+- generic: 1.1.2
+- generic: 类型
+- generic: 统计类
+- generic: 广州星辉娱乐有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: CJ早范广告SDK
+- generic: 版本
+- generic: 2.5.12
+- generic: 类型
+- generic: 广告类
+- generic: 杭州早范传媒有限公司
+- generic: CJ早范广告SDK提供广告的拉取和展示功能，支持非标位广告、开屏广告、插屏广告和信息流广告，使用灵活的变现策略组合，为开发者提供流量变现服务。
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 早范广告SDK
+- generic: 版本
+- generic: 2.5.12
+- generic: 类型
+- generic: 广告类
+- generic: 杭州早范传媒有限公司
+- generic: 早范广告SDK提供广告的拉取和展示功能，支持非标位广告、开屏广告、插屏广告和信息流广告，使用灵活的变现策略组合，为开发者提供流量变现服务
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 神策分析 Android SDK
+- generic: 版本
+- generic: 6.9.5
+- generic: 类型
+- generic: 统计类
+- generic: 神策网络科技（北京）有限公司
+- generic: 一款轻量级用于 Android 端的数据采集埋点 SDK，包含代码埋点、全埋点、点击图和可视化全埋点功能。
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: Miracle Games Android SDK
+- generic: 版本
+- generic: 1.4.2
+- generic: 类型
+- generic: 游戏联运类
+- generic: 北京奇游灵动科技有限公司
+- generic: Miracle Games平台SDK为全球开发者提供一站式服务，包括登录，支付，分享，好评等众多功能。
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 移动端应用订阅SDK
+- generic: 版本
+- generic: 1.1.2
+- generic: 类型
+- generic: 第三方登录类
+- generic: 北京神奇工场科技有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: MagicAdSDK
+- generic: 版本
+- generic: 0.0.69
+- generic: 类型
+- generic: 广告类
+- generic: 上海咩叽科网络科技有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 多盟SDK- Android
+- generic: 版本
+- generic: 3.8.3
+- generic: 类型
+- generic: 广告类
+- generic: 多盟智胜网络技术（北京）有限公司
+- generic: 多盟SDK，一站式集成多广告位，精准投放高填充，轻松提升变现。
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: Open-App移动统计-HarmonyOS
+- generic: 版本
+- generic: 3.0.0
+- generic: 类型
+- generic: 统计类
+- generic: 福建分和秒网络科技有限公司
+- generic: Open-App移动统计HarmonyOS SDK，为鸿蒙应用开发者带来安全合规、高效精准的渠道统计和深度链接服务，助力千万App更好地简化安装流程，获得App渠道数据统计能力，驱动业务持续增长。
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 乐玩聚合SDK
+- generic: 版本
+- generic: 1.2.0
+- generic: 类型
+- generic: 游戏联运类
+- generic: 海南星炫时空网络科技有限公司
+- generic: 为接入的游戏提供账户登录、充值、防沉迷、更新、游戏内容展示等功能
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 秒验SDK-Android
+- generic: 版本
+- generic: 13.9.0
+- generic: 类型
+- generic: 认证类
+- generic: 上海掌之淘信息技术有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 众简广告SDK-Android
+- generic: 版本
+- generic: 2.5.90.0
+- generic: 类型
+- generic: 广告类
+- generic: 杭州众简信息技术有限公司
+- generic: 让应用变现高效简单 专注于流量价值可持续增长
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: XInstall Android SDK
+- generic: 版本
+- generic: 1.8.1
+- generic: 类型
+- generic: 统计类
+- generic: 杭州数爆科技有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 小7手游SDK
+- generic: 版本
+- generic: 8.74.0
+- generic: 类型
+- generic: 游戏联运类
+- generic: 深圳尚米网络技术有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 昆磐游戏聚合SDK
+- generic: 版本
+- generic: 1.1.5
+- generic: 类型
+- generic: 游戏联运类
+- generic: 海南昆磐网络技术有限公司
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- generic: 综合评分：
+- generic: 暂无
+- generic: 启明广告sdk
+- generic: 版本
+- generic: 2.2.9.5
+- generic: 类型
+- generic: 广告类
+- generic: 广州有容数据网络有限公司
+- generic: 依托大数据精准的人群分析和大量的优质广告主，启明广告通过丰富的广告样式为广大开发者提供最优质的商业化解决方案
+- button "接入文档":
+  - generic: 接入文档
+- generic: 隐私政策
+- generic: 合规说明
+- button "查看详情":
+  - generic: 查看详情
+- list:
+  - listitem "上一页":
+    - button "left" [disabled]:
+      - img "left":
+  - listitem "1":
+    - generic: "1"
+  - listitem "2" [active]:
+    - generic: "2"
+  - listitem "3":
+    - generic: "3"
+  - listitem "4":
+    - generic: "4"
+  - listitem "5":
+    - generic: "5"
+  - listitem "下一页":
+    - button "right":
+      - img "right":
+- paragraph: 版权所有©：中国信息通信研究院
+- paragraph: 中国信息通信研究院技术与标准研究所
+- paragraph: 联系方式：010-62300568
+- generic: 反馈通道

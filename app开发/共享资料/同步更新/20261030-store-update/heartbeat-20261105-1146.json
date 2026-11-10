@@ -1,0 +1,56 @@
+{
+  "checkedAt": "2026-11-05T11:46:41+08:00",
+  "huaweiAndroid": {
+    "appId": "119475083",
+    "reviewVersionId": "2067391391952053568",
+    "currentReviewStatusVerified": false,
+    "currentPublicStatusVerified": false,
+    "lastKnownVersion": "1.0.1(11)",
+    "lastKnownStatus": "in-review",
+    "lastConfirmedAt": "2026-10-31T19:08:44+08:00",
+    "freshOfficialReviewURLRedirectedToLogin": true,
+    "loginRequired": true
+  },
+  "harmony": {
+    "appId": "6917617955633704973",
+    "versionRecordId": "2071129556072323840",
+    "currentReviewStatusVerified": false,
+    "currentPublicStatusVerified": false,
+    "lastKnownVersion": "1.0.2(15)",
+    "lastKnownStatus": "waiting-for-review",
+    "lastConfirmedAt": "2026-10-31T19:08:44+08:00",
+    "sameHuaweiAccountAuthenticationGate": true
+  },
+  "ios": {
+    "recheckedThisRun": false,
+    "currentReviewStatusVerified": false,
+    "currentPublicStatusVerified": false,
+    "knownOverseasClientRestrictionNotRetried": true
+  },
+  "access": {
+    "inventoryReadable": true,
+    "lockErrorReported": false,
+    "freshHuaweiLoginPageVerified": true,
+    "temporaryVerifierClosed": true,
+    "noRepeatedLoginPrompt": true
+  },
+  "otherChannels": {
+    "freshManagerStateVerified": false,
+    "newMaterialFilesSincePreviousCheck": [
+      "版权登记/查询结果/SWOD版权监控-20261105.json"
+    ],
+    "knownBlockersRetainedAsHistorical": true,
+    "materialReadinessReceipt": "app开发/Android/上架执行/20261104/materials-readiness.json",
+    "newFileClassification": {
+      "版权登记/查询结果/SWOD版权监控-20261105.json": "Read: copyright monitor access timeout only; no status change or issued certificate verified"
+    },
+    "newIssuedCopyrightOrQualificationMaterial": false
+  },
+  "newUpload": false,
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "originalSigningChanged": false,
+  "notificationDecision": "DONT_NOTIFY",
+  "reason": "Fresh official access confirms the same notified Huawei login gate; no new result or material."
+}

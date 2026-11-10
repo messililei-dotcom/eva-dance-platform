@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-11-09T16:40:20+08:00",
+  "version": "1.0.4",
+  "build": 20,
+  "bundleName": "cn.com.swod.evadance",
+  "phoneEmulator": "SWOD_API24",
+  "installPassed": true,
+  "launchPassed": true,
+  "academyAndNavigationVisible": true,
+  "signedHapAndEmbeddedHapDeviceTypes": [
+    "phone",
+    "tablet"
+  ],
+  "regressionTestsPassed": 44,
+  "tabletRuntimeVerified": false,
+  "nativeLoginVerified": false,
+  "storeScreenshotsReady": false,
+  "privacyProtectionPreserved": true,
+  "previousBuild19Evidence": "evidence/harmony-19-runtime.json"
+}

@@ -1,0 +1,364 @@
+Browser tab: 895629006, Title: "基础信息", URL: "https://app.open.qq.com/p/basic/basic-info/edit?appId=1112541998".
+0 AXWebArea 基础信息, URL: app.open.qq.com/p/basic/basic-info/edit?appId=1112541998
+	1 container
+		2 text 安卓应用管理
+		3 link 全国SDK管理服务平台
+			4 text 全国SDK管理服务平台
+		5 link 帮助文档
+			6 text 帮助文档
+		7 link 联系客服
+			8 text 联系客服
+		9 container
+			10 image
+			11 text 站内信 75
+		12 text 伊娃文化艺术发展（湖南）有限公司
+		13 text 软件
+		14 link 首页
+			15 text 首页
+		16 link 基础服务
+			17 text 基础服务
+		18 link 运营服务
+			19 text 运营服务
+		20 link 数据服务
+			21 text 数据服务
+		22 link 腾讯生态服务
+			23 text 腾讯生态服务
+		24 link 基础信息
+			25 text 基础信息
+		26 link 申请上架
+			27 text 申请上架
+		28 link 工单系统
+			29 text 工单系统
+		140 container
+			141 container
+				142 text 基础信息 为了更好的在应用宝客户端展示您的应用信息，请您务必完善基础信息
+				143 button 取消
+				144 button 保存
+			145 text 基本信息
+			146 container
+				147 text 应用名称
+				148 text field (settable) SWOD
+			149 text 请填写与应用备案名称、软著一致的名字
+			150 container
+				151 container
+					152 text 应用类型
+				153 text 软件
+			154 container
+				155 container
+					156 text 应用子分类
+				157 container
+					158 radio button (settable, integer) Description: 生活, Value: 0
+					159 text 生活
+					160 radio button (settable, integer) Description: 购物, Value: 0
+					161 text 购物
+					162 radio button (settable, integer) Description: 视频, Value: 0
+					163 text 视频
+					164 radio button (settable, integer) Description: 音乐, Value: 0
+					165 text 音乐
+					166 radio button (settable, integer) Description: 阅读, Value: 0
+					167 text 阅读
+					168 radio button (settable, integer) Description: 摄影, Value: 0
+					169 text 摄影
+					170 radio button (settable, integer) Description: 系统, Value: 0
+					171 text 系统
+					172 radio button (settable, integer) Description: 工具, Value: 0
+					173 text 工具
+					174 radio button (settable, integer) Description: 社交, Value: 0
+					175 text 社交
+					176 radio button (settable, integer) Description: 办公, Value: 0
+					177 text 办公
+					447 radio button (settable, integer) Description: 教育, Value: 1
+					179 text 教育
+					180 radio button (settable, integer) Description: 理财, Value: 0
+					181 text 理财
+					182 radio button (settable, integer) Description: 交通出行, Value: 0
+					183 text 交通出行
+					184 radio button (settable, integer) Description: 旅游出行, Value: 0
+					185 text 旅游出行
+					186 radio button (settable, integer) Description: 健康, Value: 0
+					187 text 健康
+					188 radio button (settable, integer) Description: 美食, Value: 0
+					189 text 美食
+					190 radio button (settable, integer) Description: 母婴, Value: 0
+					191 text 母婴
+					192 radio button (settable, integer) Description: 汽车, Value: 0
+					193 text 汽车
+					194 radio button (settable, integer) Description: 游戏辅助, Value: 0
+					195 text 游戏辅助
+			196 container
+				197 text 应用运营方
+				198 text field (disabled) 伊娃文化艺术发展（湖南）有限公司
+			199 container
+				200 text 应用研发方
+				201 text field (settable) 伊娃文化艺术发展（湖南）有限公司
+			202 text 请您填写与APP内隐私协议主体一致的研发方名称
+			203 container
+				204 container
+					205 text 应用简介
+				206 container
+					207 text entry area (settable) SWOD 伊娃东方舞为学员提供东方舞线上课程学习、视频目录、学习进度、线下课程与赛事信息服务。登录后可查看我的课程和本人已解锁课程，继续学习并使用笔记、书签等学习工具。应用提供官方商城、订单查询、客服、消息中心、通知设置和登录设备管理。课程权益由服务端验证；账号注销申请在7个工作日内处理并提供完成回执。未满14周岁学员注册或报名，须先由客服核验监护人授权。
+					208 text 179/500
+			209 container
+				210 text 一句话简介
+				211 container
+					212 text field (settable) 东方舞课程学习与赛事服务
+					213 text 12/15
+			214 container
+				215 text 年龄分级
+				448 combo box
+					449 text 3周岁+
+			218 text 图标素材
+			219 container
+				220 container
+					221 text 应用图标
+				450 container
+					451 button
+					456 text 1793414886726519988_25737.png
+			226 text ①请您上传1张512*512像素200KB以内的PNG格式直角图标
+			227 text ②上传成功后平台将对图片进行统一规范化处理
+			228 container
+				229 container
+					230 text 应用截图
+				457 container
+					460 button
+					458 button +
+						459 text +
+			235 text ①请上传4-5张，建议尺寸1080*1920px，最小不低于320*480px；JPG/PNG格式，单张图片不超过1M
+			236 text ②此图片用于应用宝终端、pc应用宝、手机管家等应用市场里应用详情页展示拉取
+			237 text 适配信息
+			238 container
+				239 container
+					240 text 支持屏幕大小
+				241 container
+					242 radio button (settable, integer) Description: 全部, Value: 1
+					243 text 全部
+					244 radio button (settable, integer) Description: 480*320以上, Value: 0
+					245 text 480*320以上
+					246 radio button (settable, integer) Description: 640*480以上, Value: 0
+					247 text 640*480以上
+					248 radio button (settable, integer) Description: 960*720以上, Value: 0
+					249 text 960*720以上
+			250 container
+				251 container
+					252 text 支持语言
+				253 container
+					254 radio button (settable, integer) Description: 中文, Value: 1
+					255 text 中文
+					256 radio button (settable, integer) Description: 英文, Value: 0
+					257 text 英文
+					258 radio button (settable, integer) Description: 多语言, Value: 0
+					259 text 多语言
+			260 container
+				261 container
+					262 text 支持IPv6
+				263 container
+					264 radio button (settable, integer) Description: 支持, Value: 1
+					265 text 支持
+					266 radio button (settable, integer) Description: 不支持, Value: 0
+					267 text 不支持
+			268 container
+				269 container
+					270 text 设备信息
+				271 container
+					272 radio button (settable, integer) Description: Phone, Value: 1
+					273 text Phone
+					274 radio button (settable, integer) Description: Pad, Value: 0
+					275 text Pad
+					276 radio button (settable, integer) Description: 同时支持Phone和Pad, Value: 0
+					277 text 同时支持Phone和Pad
+			278 text 发布终端
+			279 container
+				280 container
+					281 text 发布终端
+				282 container
+					283 checkbox (disabled, settable, integer) Description: 移动端, Value: 1
+					284 text 移动端
+					285 checkbox (settable, integer) Description: 车载端, Value: 1
+					286 text 车载端
+					287 checkbox (settable, integer) Description: PC电脑(含腾讯应用宝电脑版、腾讯手游助手等）, Value: 1
+					288 text PC电脑(含腾讯应用宝电脑版、腾讯手游助手等）
+					289 checkbox (settable, integer) Description: 平板电脑, Value: 1
+					290 text 平板电脑
+					291 checkbox (settable, integer) Description: 其它智能设备(如智能手表、智能眼镜、相机、掌机等), Value: 1
+					292 text 其它智能设备(如智能手表、智能眼镜、相机、掌机等)
+			293 container
+				294 text APP备案信息（APP备案号和备案情况在审核后将自动更新）
+				295 text 当您完成APP备案并提交审核后，我们会使用您的主体备案证件号和APP包名等信息自动获取APP备案结果，此处您无需填写任何信息。请确保您已经完成APP备案，且您提交审核的主体信息、APP信息与您备案时提交的信息一致。
+			296 container
+				297 container
+					298 text 应用主体备案证件号
+				299 text [企业备案证件号]
+			300 container
+				301 text ①备案证件号为应用在工信部进行备案时使用的统一社会信用代码或身份证号，需要和当前账号主体的统一社会信用代码或身份证号保持一致
+			302 container
+				303 link ②请查看应用备案指引
+					304 text ②请查看应用备案指引
+			305 container
+				306 container
+					307 text APP备案号
+				308 text 湘ICP备2026005683号-5A
+			309 container
+				310 container
+					311 text 备案情况
+				312 text 已备案
+			313 text 资质证明
+			314 text 电子版权证书或计算机软件著作权证书两者可任选一项进行上传
+			315 container
+				316 container
+					317 text 电子版权证书
+				605 container
+					606 button 点击上传 或拖拽文件到这里
+						607 image
+						608 text 点击上传
+						609 text 或拖拽文件到这里
+					610 text 请您上传最少1张最多3张10M以内JPG/PNG格式的软著版权证明图片或者一张电子版权证书
+			322 link 查看样例
+				323 text 查看样例
+			324 container
+				325 text 请您上传1份5M以内PDF格式的电子版权认证证书。
+				326 link 电子版权认证证书官方申请通道
+					327 text 电子版权认证证书官方申请通道
+				328 link 电子版权认证证书补领通道
+					329 text 电子版权认证证书补领通道
+			330 container
+				331 container
+					332 text 计算机软件著作权证书
+				611 container
+					612 button 点击上传 或拖拽文件到这里
+						613 image
+						614 text 点击上传
+						615 text 或拖拽文件到这里
+					616 text 请您上传最少1张最多3张10M以内JPG/PNG格式的软著版权证明图片或者一张电子版权证书
+			337 container
+				338 text 请参考
+				339 link 版权证明指引
+					340 text 版权证明指引
+			341 container
+				342 text ①请上传《计算机软件著作权登记证书》
+				343 link 查看样例
+					344 text 查看样例
+			345 container
+				346 text ②如您的应用软著为电子软著，请上传《软件著作权认证证书》和《电子版权认证证书》，并以拼图形式拼接成一张图上传，
+				347 link 查看样例
+					348 text 查看样例
+			349 container
+				350 container
+					351 text 软著资质是否包含转授权
+				352 container
+					353 radio button (settable, integer) Description: 是, Value: 0
+					354 text 是
+					355 radio button (settable, integer) Description: 否, Value: 1
+					356 text 否
+			357 container
+				358 container
+					359 text 特殊行业资质评估
+				360 container
+					361 text 已评估
+					362 button 重新评估
+					363 text 根据您应用的具体业务，可能会涉及特殊资质，请点击上方按钮评估
+					596 content list
+						597 container
+							598 text 在线视频课程、教职工/学生/家长为主要用户 
+							599 text 下载资质示例
+							600 text 提交条件: 3项条件需要都满足
+							601 content list
+								602 text ①.《办学许可证》
+								603 text ②. 教育移动互联网应用程序备案管理平台网址：http://app.eduyun.cn“备案截图证明
+								604 text ③. 营业执照范围包含教育
+			364 container
+				365 container
+					366 text 其他版权证明
+				617 container
+					618 button 点击上传 或拖拽文件到这里
+						619 image
+						620 text 点击上传
+						621 text 或拖拽文件到这里
+					622 text 请填写特殊行业资质
+			371 link 查看样例
+				372 text 查看样例
+			373 text ①ICP证（增值电信业务经营许可证）或ICP备案截图加盖公章（备案上的官网内容需要与应用内容存在关联）
+			374 container
+				375 text ② 普通类型应用请上传
+				376 link 应用发布承诺函
+					377 text 应用发布承诺函
+				378 text ；以下特殊类型应用请上传专用发布承诺函
+			379 container
+				380 link 【金融理财】类应用发布承诺函
+					381 text 【金融理财】类应用发布承诺函
+				382 link 【网络购物】类应用发布承诺函
+					383 text 【网络购物】类应用发布承诺函
+				384 link 【医疗健康】类应用发布承诺函
+					385 text 【医疗健康】类应用发布承诺函
+				386 link 【网赚】类应用发布承诺函
+					387 text 【网赚】类应用发布承诺函
+			388 text ③特殊行业资质（请根据特殊行业资质评估结果上传资质材料）
+			389 text 注：如特殊行业资质属于授权性质的，请您上传【授权书】和【授权方营业执照】
+			390 container
+				391 text 请参考
+				392 link 资质要求指引
+					393 text 资质要求指引
+			394 container
+				395 container
+					396 text 安全评估报告
+				397 button 点击上传 或拖拽文件到这里
+					398 image
+					399 text 点击上传
+					400 text 或拖拽文件到这里
+			401 link 查看样例
+				402 text 查看样例
+			403 text APP含有社交、弹幕、私信、即时通信等具备舆论属性或社会动员能力的功能或服务的，请您务必上传安全评估报告，否则会被拒绝上架。
+			404 container
+				405 text 请您上传【安全评估报告图片】 请参考
+				406 link 如何进行安全评估
+					407 text 如何进行安全评估
+			408 text 隐私限制
+			409 container
+				410 container
+					411 text 隐私政策
+				412 container
+					413 radio button (settable, integer) Description: 输入URL, Value: 1
+					414 text 输入URL
+					415 radio button (settable, integer) Description: 输入文本内容, Value: 0
+					416 text 输入文本内容
+			417 container
+				418 link 隐私政策提交内容及审核规范
+					419 text 隐私政策提交内容及审核规范
+			420 container
+				421 text field (settable) https://www.swod.com.cn/app/privacy.html
+			422 text ①应用宝会解析url内容用于App隐私合规自动化检测，确保可正常解析。
+			423 text ②请使用标准的url格式，静态html页面。不支持博客、微博、Github、云笔记、word、图片等格式，请不要将站点嵌套在iframe标签内。
+			424 text 注：URL检测失败会导致无法正常进行App隐私合规检测，请您修改url格式或者使用“输入文本内容”。
+			425 container
+				426 container
+					427 text 隐私自查
+				428 container
+					429 checkbox (settable, integer) Description: 隐私政策独立一致性 查看样例, Value: 1
+					430 text 隐私政策独立一致性
+					431 button 查看样例
+					432 checkbox (settable, integer) Description: 隐私政策声明主体 查看样例, Value: 1
+					433 text 隐私政策声明主体
+					434 button 查看样例
+					435 checkbox (settable, integer) Description: 隐私政策注销流程 查看样例, Value: 1
+					436 text 隐私政策注销流程
+					437 button 查看样例
+					438 checkbox (settable, integer) Description: 注册/登录界面提醒用户阅读隐私政策 查看样例, Value: 1
+					439 text 注册/登录界面提醒用户阅读隐私政策
+					440 button 查看样例
+					441 checkbox (settable, integer) Description: 隐私政策个性化 查看样例, Value: 1
+					442 text 隐私政策个性化
+					443 button 查看样例
+					444 checkbox (settable, integer) Description: 儿童隐私政策 查看样例, Value: 1
+					445 text 儿童隐私政策
+					446 button 查看样例
+		130 link 联系我们
+			131 text 联系我们
+		132 text |
+		133 link 投诉举报
+			134 text 投诉举报
+		135 text |
+		136 link Complaint Guidelines
+			137 text Complaint Guidelines
+		138 text Copyright © 1998 - 2026 Tencent. All Rights Reserved. 腾讯公司 版权所有
+	139 text entry area (settable)
+
+The focused UI element is 0 AXWebArea 基础信息, URL: app.open.qq.com/p/basic/basic-info/edit?appId=1112541998

@@ -1,0 +1,255 @@
+Browser tab: 1, Title: "App Store Connect", URL: "https://appstoreconnect.apple.com/apps/6826038106/distribution/ios/version/inflight".
+1 AXWebArea App Store Connect, URL: appstoreconnect.apple.com/apps/6826038106/distribution/ios/version/inflight
+	2 container
+		3 container App Store Connect
+			4 container
+				5 heading App Store Connect, Value: 1
+					6 link Description: App Store Connect, Value: appstoreconnect.apple.com/, ID: logo
+				7 container 全球
+					8 content list
+						9 link Description: App, Value: appstoreconnect.apple.com/apps
+						10 link Description: Xcode Cloud, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/xcode-cloud
+						11 link Description: 趋势, Value: appstoreconnect.apple.com/trends
+						12 link Description: 报告, Value: appstoreconnect.apple.com/itc/payments_and_financial_reports
+				13 button 娃 伊 Eva Culture And Art Development (hunan) Co., Ltd Account name menu
+					14 text 娃 伊
+					15 text Eva Culture And Art Development (hunan) Co., Ltd
+					16 image
+		17 container
+			18 pop up button (collapsed) Description: App 菜单，已选择SWOD, Secondary Actions: Expand
+				19 container
+					20 image SWOD
+					21 text SWOD
+				22 image
+			23 container App
+				24 content list
+					25 link Description: 分发, Value: appstoreconnect.apple.com/apps/6826038106/distribution
+					26 link Description: 分析, Value: appstoreconnect.apple.com/apps/6826038106/analytics
+					27 link Description: TestFlight, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight
+		40 container
+			41 container
+				42 container 分发
+					43 content list
+						44 container
+							45 heading iOS App, Value: 2
+								46 text iOS App
+							47 content list
+								48 link Description: 1.0.3 准备提交, Help: 准备提交, Value: appstoreconnect.apple.com/apps/6826038106/distribution/ios/version/inflight
+								49 link Description: 1.0.2 可分发, Help: 可分发, Value: appstoreconnect.apple.com/apps/6826038106/distribution/ios/version/deliverable
+							50 button 添加平台
+						51 container
+							52 heading 综合, Value: 2
+								53 text 综合
+							54 content list
+								55 link Description: App 信息, Value: appstoreconnect.apple.com/apps/6826038106/distribution/info
+								56 link Description: App 审核, Value: appstoreconnect.apple.com/apps/6826038106/distribution/reviewsubmissions
+								57 link Description: 历史记录, Value: appstoreconnect.apple.com/apps/6826038106/distribution/activity/ios/versions
+						58 container
+							59 heading App Store, Value: 2
+								60 text App Store
+							61 heading 信任和安全性, Value: 3
+								62 text 信任和安全性
+							63 content list
+								64 link Description: App 隐私, Value: appstoreconnect.apple.com/apps/6826038106/distribution/privacy
+								65 link Description: App 辅助功能, Value: appstoreconnect.apple.com/apps/6826038106/distribution/accessibility
+								66 link Description: 评分与评论, Value: appstoreconnect.apple.com/apps/6826038106/distribution/ratings/ios
+							67 heading 增长和营销, Value: 3
+								68 text 增长和营销
+							69 content list
+								70 link Description: App 内活动, Value: appstoreconnect.apple.com/apps/6826038106/distribution/events
+								71 link Description: 自定产品页面 新功能, Value: appstoreconnect.apple.com/apps/6826038106/distribution/productpages
+								72 link Description: 素材库 新功能, Value: appstoreconnect.apple.com/apps/6826038106/distribution/asset-library
+								73 link Description: 产品页面优化 新功能, Value: appstoreconnect.apple.com/apps/6826038106/distribution/optimization
+								74 link Description: 促销代码, Value: appstoreconnect.apple.com/apps/6826038106/distribution/promo_codes/generate
+								75 link Description: Game Center, Value: appstoreconnect.apple.com/apps/6826038106/distribution/gamecenter
+							76 heading 营利, Value: 3
+								77 text 营利
+							78 content list
+								79 link Description: 价格与销售范围, Value: appstoreconnect.apple.com/apps/6826038106/distribution/pricing
+								80 link Description: App 内购买项目, Value: appstoreconnect.apple.com/apps/6826038106/distribution/iaps
+								81 link Description: 订阅 新功能, Value: appstoreconnect.apple.com/apps/6826038106/distribution/subscriptions
+							82 heading 精选, Value: 3
+								83 text 精选
+							84 content list
+								85 link Description: 提名, Value: appstoreconnect.apple.com/apps/6826038106/distribution/nominations
+				86 heading iOS App 版本 1.0.3, Value: 2
+					87 text iOS App 版本 1.0.3
+				88 button (disabled) 保存
+				89 button 添加以供审核
+				90 heading 产品页面信息, Value: 3
+					91 text 产品页面信息
+				92 container
+					93 pop up button (collapsed) 简体中文, Secondary Actions: Expand
+						94 text 简体中文
+						95 image
+					96 button ?
+				97 text 下方的素材和元数据有助于顾客在你的产品页面和搜索结果中发现你的 App 并与之互动。
+				98 link Description: 进一步了解…, Value: developer.apple.com/app-store/asset-best-practices/
+				99 image
+				100 text App 营销新方式
+				101 text 通过自定义标题提升 App 产品页面吸引力，并优化 App 在 App Store 搜索结果中的呈现方式。
+现在还可以为 iPhone Duo 上传 App 预览和截屏，从而为这款最新设备添加支持。
+				102 button
+					103 image
+				104 tab group
+					105 tab (selected, settable, boolean) 标题和搜索结果, Value: 1, ID: header-and-search-tab
+					106 tab (selectable, settable, boolean) App 预览和截屏, Value: 0, ID: previews-and-screenshots-tab
+				107 container Description: 标题和搜索结果, ID: header-and-search-tabpanel
+					108 container
+						109 text 使用创意素材自定义 App 的产品页面及其在 App Store 搜索结果中的呈现方式。
+						110 link Description: 查看最佳实践, Value: developer.apple.com/app-store/asset-best-practices/
+					111 container
+						112 button 放置区域, ID: react-aria9067900063-2
+						113 tab group
+							114 tab (selected, settable, boolean) 标题, ID: product-page-header-panel-tab, Value: 1
+标题
+							115 tab (selectable, settable, boolean) 搜索结果, ID: search-results-panel-tab, Value: 0
+搜索结果
+						116 button 预览
+							117 image
+							118 text 预览
+						119 container Description: 标题, ID: product-page-header-panel
+							120 image
+							121 text 拖放以添加素材。
+						122 text 0/1 个标题素材
+						123 pop up button (collapsed) 浏览素材, Secondary Actions: Expand
+						124 button 上传
+						125 pop up button (disabled, collapsed) 移除, Secondary Actions: Expand
+						126 text 拖放以添加素材，或从资料库选取素材。支持的尺寸包括 5244 × 2950px 和 3840 × 1646px。
+						127 link Description: 探索模板, Value: developer.apple.com/go/?id=creative-assets
+				128 text 推广文本
+				129 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				130 text entry area (settable) 推广文本, ID: promotionalText
+				131 container 剩余字符
+					132 text 170
+				133 text 描述
+				134 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				135 text entry area (settable) 描述, ID: description, Value: SWOD 是伊娃东方舞的移动学习与服务应用。
+
+【课程学习】浏览线上课程目录，登录后查看已授权课程，按课节学习并查看学习记录。
+【线下课程】查看线下课程介绍、期次安排，以及个人课时与核销记录。
+【赛事服务】了解赛事信息，查看个人报名与成绩记录。
+【个人中心】集中查看我的课程、学习笔记、收藏、证书与个人资料。
+
+部分功能需登录并具备相应课程或服务权限。当前版本不提供录播课程内购及离线下载。
+
+App 备案号：湘ICP备2026005683号-5A
+				136 container 剩余字符
+					137 text 3,776
+				138 text 此版本的新增内容
+				139 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				140 text entry area (settable) 此版本的新增内容, Value: 优化个人中心图文布局，集中展示头像资料、课程、比赛、证书与订单入口；我的课程新增主图展示，继续学习更便捷。完善线下课程月历与切月浏览体验，并改进页面排版和可读性。, ID: whatsNew
+				141 container 剩余字符
+					142 text 3,919
+				143 text 关键词
+				144 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				145 text field (settable) 关键词, Value: 东方舞,舞蹈,课程,学习,伊娃,赛事,课时,证书, ID: keywords
+				146 container 剩余字符
+					147 text 76
+				148 container
+					149 text 技术支持网址 (URL)
+					150 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				151 text field (settable) 技术支持网址 (URL), Value: https://www.swod.com.cn/contact, ID: supportUrl
+				152 container
+					153 text 营销网址 (URL)
+					154 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				155 text field (settable) 营销网址 (URL), Value: https://www.swod.com.cn, ID: marketingUrl
+				156 container
+					157 text 版本
+					158 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				159 text field (settable) 版本, Value: 1.0.3, ID: versionString
+				160 text 版权
+				161 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				162 text field (settable) 版权, Value: 2026 Eva Culture And Art Development (hunan) Co., Ltd, ID: copyright
+				163 container 剩余字符
+					164 text 147
+				165 text 路由 App 覆盖地区文件
+				166 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				167 button 选取文件, ID: routingAppCoverages_undefined
+				168 text 选取文件
+				169 button (collapsed) 轻 App, ID: accordion-toggle-0.3107388039537966-116, Secondary Actions: Expand
+				170 heading iMessage App, Value: 3
+					171 button (collapsed) iMessage App, ID: accordion-toggle-0.684649781354916-1, Secondary Actions: Expand
+				172 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				173 heading 构建版本, Value: 3
+					174 text 构建版本
+				175 button 添加构建版本
+					176 image
+				177 text 从多种工具中选取一种来上传你的构建版本。
+				178 link Description: 查看上传工具, Value: developer.apple.com/help/app-store-connect/manage-builds/upload-builds
+				179 button 添加构建版本
+				180 checkbox (settable, integer) Description: Game Center, Value: 0
+				181 text Game Center
+				182 heading App 审核信息, Value: 3
+					183 text App 审核信息
+				184 text 登录信息
+				185 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				186 text 请提供用户名和密码，以便我们登录你的 App。我们需要使用此登录信息才能完成对你 App 的审核。
+				187 checkbox (settable, integer) Description: 需要登录, Value: 1, ID: appStoreReviewDetails_demoAccountRequired
+				188 text field (settable) Description: 用户名, Value: 13548955558, ID: demoAccountName
+				189 text field (settable) Description: 密码, Value: <redacted>
+				190 text 联系信息
+				191 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				192 text field (settable) Description: 名字, Value: 雷, ID: contactFirstName
+				193 text field (settable) Description: 姓氏, Value: 李, ID: contactLastName
+				194 text field (settable) Description: 电话号码, Value: <redacted>
+				195 text field (settable) Description: 电子邮件, Value: <redacted>
+				196 text 备注
+				197 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				198 text 根据中国法律，包含新闻、宗教、图书和杂志内容的 App 需获得相关许可才能在中国大陆 App Store 中供应。如果适用，请在下方输入与你的许可相关的信息。
+				199 link Description: 了解更多, Value: developer.apple.com/help/app-store-connect/reference/app-information
+				200 text entry area (settable) 备注, ID: notes, Value: Login: Tap 个人中心 (Profile). If signed out, the login window opens directly. Select 账号密码 (Account password). Use the username and password supplied above, agree to the privacy policy and terms, then tap 登录并开始学习. No SMS code is required for password login.
+
+Learning: Open 个人中心 → 我的课程 → 继续学习. An authorized course opens its player directly, selecting the most recently studied lesson or the first lesson when no history exists. The lesson directory remains in the player. The account has existing course authorizations, including 东方舞零基础入门课程·全阶段. The server independently validates the current signed-in member and entitlement for playback. This account has no administrative role.
+
+This version provides access to previously authorized digital course videos. It does not sell digital courses or link to external digital course payment. Physical goods, in-person classes and in-person dance events are separate services; checkout in the App is currently disabled.
+
+Account deletion: 个人中心 → 账号与隐私 → 注销账号. The shared platform account is deleted after identity confirmation within 7 working days. After acceptance the account is signed out; 个人中心 → 注销进度与结果 provides a persistent receipt without login, including completion time, result and any legally required minimum retention details. Required vouchers are individually reviewed by finance and isolated with limited fields and retention periods. The demonstration account has not been deleted.
+
+Aliyun carrier authentication, Player 7.18.0 and mobile push SDKs are integrated. Carrier login, offline course downloads, WeChat mobile login and remote notifications remain disabled. SMS/password login and the in-App inbox remain available. Information is used for learning services, operational analytics and support, not marketing contact. Children under 14 require customer service to verify guardian authorization before registration or enrollment; the published children privacy rules describe this manual process.
+
+App filing: 湘ICP备2026005683号-5A. Automatic release after App Review approval.
+				201 container 剩余字符
+					202 text 1,960
+				203 text 附件
+				204 button (collapsed) Description: 更多信息, Secondary Actions: Expand
+				205 button 选取文件（可不填）, ID: appStoreReviewAttachments_undefined
+				206 container appStoreReviewAttachments_undefined-placeholder
+					207 text 选取文件 （可不填）
+				208 heading App Store 版本发布, Value: 3
+					209 text App Store 版本发布
+				210 text 要在 App Store 提供你的 App，你可以在通过 App 审核后自动发布，也可以之后在 App Store 手动发布。
+				211 radio button (settable, integer) Description: 手动发布此版本, Value: 0, ID: MANUAL
+				212 radio button (settable, integer) Description: 自动发布此版本, Value: 1, ID: AFTER_APPROVAL
+				213 radio button (settable, integer) Description: 在 App 审核后自动发布此版本，时间不早于, Value: 0, ID: SCHEDULED
+				214 text 你的本地日期和时间。
+				215 container
+					216 text field (disabled) Description: 在 App 审核后自动发布此版本，时间不早于, Value: 2026年11月6日 上午 4:00
+					217 text GMT+8 GMT+8
+				218 heading App Store 自动更新的分阶段发布, Value: 3
+					219 text App Store 自动更新的分阶段发布
+				220 text 通过自动更新的分阶段发布，你可以在 7 天内分阶段向已在 App Store 中打开自动更新的用户发布此更新。请注意，所有用户仍可通过 App Store 手动更新至此版本。你可以暂停分阶段发布（最多 30 天），也可以随时向所有用户发布此更新。
+				221 link Description: 了解更多, Value: developer.apple.com/help/app-store-connect/update-your-app/release-a-version-update-in-phases
+				222 radio button (settable, integer) Description: 立即向所有用户发布更新, Value: 1, ID: UNAVAILABLE
+				223 radio button (settable, integer) Description: 使用分阶段发布，在 7 天内发布更新, Value: 0, ID: INACTIVE
+				224 heading 重设 iOS App Store 平均评分 编辑, Value: 3
+					225 text 重设 iOS App Store 平均评分
+					226 button 编辑
+				227 text 发布此版本时，你可以为所有国家或地区重设 App 的 App Store 平均评分。请注意，此版本发布后，你将无法恢复评分。App 现有的用户评论仍然会在 App Store 中显示。
+				228 link Description: 查看评分与评论, Value: appstoreconnect.apple.com/apps/6826038106/distribution/ratings/ios
+				229 radio button (disabled, settable, integer) Description: 保留现有评分, Value: 1, ID: KEEP
+				230 radio button (disabled, settable, integer) Description: 在此版本发布时重设评分, Value: 0, ID: RESET
+		28 content list
+			29 link Description: App Store Connect, Value: appstoreconnect.apple.com/apps
+		30 content list
+			31 container
+				32 text Copyright © 2026 Apple Inc. 保留所有权利。 |
+			33 container
+				34 link Description: 服务条款, Value: appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/wa/termsOfService
+				231 text |
+			36 container
+				37 link Description: 隐私政策, Value: apple.com/legal/privacy
+				232 text |
+			39 link Description: 联系我们, Value: appstoreconnect.apple.com/contact-us
+
+The focused UI element is 1 AXWebArea App Store Connect, URL: appstoreconnect.apple.com/apps/6826038106/distribution/ios/version/inflight

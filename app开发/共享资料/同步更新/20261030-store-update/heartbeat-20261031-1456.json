@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-10-31T14:58:20+08:00",
+  "ios": {
+    "version": "1.0.2",
+    "build": 11,
+    "currentReviewStatusVerified": false,
+    "loginRequired": true,
+    "lastKnownStatus": "waiting-for-review",
+    "lastKnownConfirmedAt": "2026-10-31T10:54:20+08:00",
+    "access": "Existing App Store Connect tab is at login; no current review/public conclusion inferred.",
+    "samePreviouslyNotifiedAuthenticationGate": true
+  },
+  "huaweiAndroid": {
+    "appId": "119475083",
+    "reviewVersionId": "2067391391952053568",
+    "version": "1.0.1",
+    "lastSubmittedBuild": 11,
+    "currentReviewStatusVerified": true,
+    "status": "in-review",
+    "evidence": "evidence/heartbeat-20261031-1456/huawei-android-review-menu.txt",
+    "loginRequired": false,
+    "next18Uploaded": false
+  },
+  "harmony": {
+    "appId": "6917617955633704973",
+    "reviewVersionId": "2071129556072323840",
+    "version": "1.0.2",
+    "lastSubmittedBuild": 15,
+    "currentReviewStatusVerified": true,
+    "status": "waiting-for-review",
+    "evidence": "evidence/heartbeat-20261031-1456/harmony-waiting-review.txt",
+    "loginRequired": false,
+    "older100PublicDoesNotProve102Public": true
+  },
+  "otherAndroidChannels": {
+    "currentOfficialManagerStatesVerified": false,
+    "reason": "Previously retained vendor editors no longer present in current Chrome inventory. Formal copyright and material blockers remain unresolved in the latest records; no repeat upload, legal acceptance or submission attempted.",
+    "tencentLatestRecordedBuild": 18,
+    "tencentVersionDraftSavedPreviously": true,
+    "tencentBaseInfoSaved": false,
+    "tencentLiveEditorCurrentlyOpen": false,
+    "publicFieldBackupAvailable": true
+  },
+  "publicReleaseVerified": false,
+  "newUpload": false,
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "originalSignaturesChanged": false,
+  "newActionableStatus": false,
+  "notificationDecision": "DONT_NOTIFY",
+  "evidenceDirectory": "evidence/heartbeat-20261031-1456"
+}

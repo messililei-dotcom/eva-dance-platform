@@ -2,7 +2,6 @@
 <block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
 <block wx:else>
 <view class="page">
-  <view class="academy-intro"><view class="academy-title">伊娃东方舞</view><view class="academy-desc">线上学院 · 从基础到进阶，找到适合你的课程</view></view>
   <view class="learning-links">
     <button bindtap="goMyCourses"><image src="/images/profile/book.svg"/><text>我的课程</text></button>
     <button bindtap="goOffline"><image src="/images/profile/calendar.svg"/><text>课时与核销</text></button>
@@ -49,7 +48,7 @@
           <text>{{item.lessonText}}</text>
           <text>{{item.popularityText}}</text>
         </view>
-        <view wx:if="{{item.unlocked}}" class="course-unlocked">✓ 已解锁 <text class="course-learn-action">继续学习</text></view><view wx:else class="course-pricing"><text class="course-sale-price">{{item.hasDiscount ? '优惠价 ' : ''}}{{item.priceText}}</text><text wx:if="{{item.hasDiscount}}" class="course-original-price">原价 {{item.originalPriceText}}</text></view>
+        <view wx:if="{{item.unlocked}}" class="course-unlocked">✓ 已解锁 <text class="course-learn-action">{{videoPlaybackEnabled ? '继续学习' : '查看课程'}}</text></view><view wx:else class="course-pricing"><text class="course-sale-price">{{item.hasDiscount ? '优惠价 ' : ''}}{{item.priceText}}</text><text wx:if="{{item.hasDiscount}}" class="course-original-price">原价 {{item.originalPriceText}}</text></view>
       </view>
     </view>
   </view>

@@ -1,0 +1,27 @@
+{
+  "hap": "/Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/entry/build/default/outputs/default/entry-default-unsigned.hap",
+  "expected": "SWOD",
+  "passed": true,
+  "labels": [
+    {
+      "owner": "application",
+      "reference": "$string:app_name",
+      "variants": [
+        {
+          "configuration": 0,
+          "value": "SWOD"
+        }
+      ]
+    },
+    {
+      "owner": "launcher:EntryAbility",
+      "reference": "$string:swod_launcher_label",
+      "variants": [
+        {
+          "configuration": 0,
+          "value": "SWOD"
+        }
+      ]
+    }
+  ]
+}

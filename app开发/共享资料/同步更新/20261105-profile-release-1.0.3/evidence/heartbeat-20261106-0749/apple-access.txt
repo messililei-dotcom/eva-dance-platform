@@ -1,0 +1,5 @@
+Browser tab: 1, Title: "App Store Connect", URL: "https://appstoreconnect.apple.com/login?targetUrl=%2Fapps%2F6826038106%2Fdistribution%2Fios%2Fversion%2Finflight&authResult=FAILED".
+				6 container Description: 登录你的 Apple 账户, ID: aid-auth-widget-iFrame
+											16 text field (settable) 电子邮件或电话号码
+												22 button 通过通行密钥登录, ID: swp
+The focused UI element is 16 text field (settable) 电子邮件或电话号码

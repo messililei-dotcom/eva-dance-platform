@@ -1,0 +1,89 @@
+- banner "App Store Connect":
+  - heading "App Store Connect" [level=1]:
+    - link "App Store Connect":
+      - /url: /
+  - navigation "全球":
+    - list:
+      - link "App":
+        - /url: /apps
+      - link "Xcode Cloud":
+        - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/xcode-cloud
+      - link "趋势":
+        - /url: /trends
+      - link "报告":
+        - /url: /itc/payments_and_financial_reports
+      - link "商务":
+        - /url: /business
+      - link "用户和访问":
+        - /url: /access/users
+  - button "娃 伊 Eva Culture And Art Development (hunan) Co., Ltd Account name menu":
+    - generic: 娃 伊
+    - generic: Eva Culture And Art Development (hunan) Co., Ltd
+- button "App 菜单，已选择SWOD":
+  - generic "SWOD":
+    - img "SWOD"
+  - generic: SWOD
+- navigation "App":
+  - list:
+    - link "分发":
+      - /url: /apps/6826038106/distribution
+    - link "分析":
+      - /url: /apps/6826038106/analytics
+    - link "TestFlight":
+      - /url: /teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight
+- main:
+  - link "App 审核":
+    - /url: /apps/6826038106/distribution/reviewsubmissions
+    - text: App 审核
+  - heading "iOS 提交" [level=2]
+  - paragraph:
+    - text: 等待审核
+  - heading "已提交项目 (1)" [level=3]
+  - table:
+    - rowgroup:
+      - row "项目 类型 审核状态":
+        - columnheader "项目":
+          - generic: 项目
+        - columnheader "类型":
+          - generic: 类型
+        - columnheader "审核状态":
+          - generic: 审核状态
+        - columnheader
+        - columnheader
+    - rowgroup:
+      - row "App 图标 iOS App 1.0.2 1.0.2 (11) App 版本 等待审核":
+        - cell "App 图标 iOS App 1.0.2 1.0.2 (11)":
+          - generic "App 图标":
+            - img "App 图标"
+          - paragraph: iOS App 1.0.2
+          - paragraph:
+            - link "1.0.2 (11)":
+              - /url: /apps/6826038106/testflight/ios/8f62fa45-d3c4-4d5c-b9b1-e4d390d9a6ea/metadata
+          - paragraph
+        - cell "App 版本":
+          - generic: App 版本
+        - cell "等待审核":
+          - text: 等待审核
+        - cell
+        - cell
+  - generic: 提交日期
+  - generic: 2026年10月30日下午9:19
+  - generic: 提交 ID
+  - generic: e6ac9f82-67e9-4eb0-b68d-ca9970019383
+  - generic: 提交者
+  - generic: 伊娃
+  - button "取消提交"
+- contentinfo:
+  - list:
+    - link "App Store Connect":
+      - /url: /apps
+  - list:
+    - listitem: Copyright © 2026 Apple Inc. 保留所有权利。 |
+    - link "服务条款":
+      - /url: /WebObjects/iTunesConnect.woa/wa/termsOfService
+    - text: "|"
+    - link "隐私政策":
+      - /url: https://www.apple.com/legal/privacy
+    - text: "|"
+    - link "联系我们":
+      - /url: /contact-us

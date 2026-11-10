@@ -1,0 +1,250 @@
+{
+  "checkedAt": "2026-11-10T10:06:02+08:00",
+  "packageName": "cn.com.swod.app",
+  "versionName": "1.0.4",
+  "versionCode": 22,
+  "apk": {
+    "path": "installers/._SWOD-1.0.4-22-release.apk",
+    "sha256": "d2e613b8fd3421be5f3116df43e1266e4e5ecb23536437d537b8824d1c518966",
+    "size": 4096
+  },
+  "newSubmissions": 0,
+  "channels": {
+    "huawei": {
+      "reviewBuild": 21,
+      "reviewStatus": "正在审核"
+    },
+    "xiaomi": {
+      "draftBuild": 22,
+      "draftReopened": true,
+      "missing": [
+        "版权证明",
+        "ICP资质材料"
+      ],
+      "contactPhoneVerified": true,
+      "contactVerificationReopenedAt": "2026-11-10T10:12:26+08:00"
+    },
+    "tencent": {
+      "draftBuild": 22,
+      "savedVersionDetailsVerified": true,
+      "missing": [
+        "版权证明",
+        "基础信息及资质"
+      ]
+    },
+    "honor": {
+      "draftBuild": 22,
+      "saveSuccessVerified": true,
+      "draftStatus": "准备提交",
+      "missing": [
+        "版权证明",
+        "ICP资质材料"
+      ]
+    },
+    "vivo": {
+      "parsedBuild": 22,
+      "draftSaveVerified": true,
+      "reopenedBuild": 22,
+      "missing": [
+        "版权证明"
+      ],
+      "draftBuild": 22
+    },
+    "oppo": {
+      "parsedBuild": 22,
+      "draftSaveVerified": false,
+      "reopenedPackageField": "empty",
+      "missing": [
+        "版权证明",
+        "资质评估"
+      ]
+    }
+  },
+  "qualificationFollowup": {
+    "checkedAt": "2026-11-10T10:10:11+08:00",
+    "newSubmissions": 0,
+    "vivo": {
+      "draftBuild": 22,
+      "saveSuccess": true,
+      "independentReopenVerified": true,
+      "assessment": "自营电商平台",
+      "businessLicenseShown": true,
+      "missing": [
+        "版权证明"
+      ]
+    },
+    "oppo": {
+      "parsedBuild": 22,
+      "saveToast": "草稿保存成功",
+      "independentReopenPackage": "empty",
+      "existingAssessment": "自营电商平台",
+      "missing": [
+        "版权证明",
+        "加盖公章的通用承诺函"
+      ]
+    },
+    "xiaomi": {
+      "draftBuild": 22,
+      "assessment": "其他类 - 其他",
+      "independentReopenVerified": true,
+      "iconUploaded": true,
+      "keywordsSaved": true,
+      "missing": [
+        "正式版权证明",
+        "ICP资质材料"
+      ],
+      "contactPhoneVerified": true,
+      "contactVerificationReopenedAt": "2026-11-10T10:12:26+08:00"
+    },
+    "honor": {
+      "draftBuild": 22,
+      "assessment": "电商平台服务",
+      "missing": [
+        "ICP备案或增值电信业务经营许可证材料",
+        "正式版权证明"
+      ]
+    },
+    "tencent": {
+      "versionDraftBuild": 22,
+      "workingAssessment": "在线视频课程",
+      "iconUploadedToWorkingForm": true,
+      "basicInfoSaveVerified": false,
+      "missing": [
+        "正式版权证明",
+        "办学许可证",
+        "教育移动应用备案截图",
+        "教育经营范围证明",
+        "盖章ICP备案截图",
+        "盖章发布承诺函"
+      ]
+    }
+  },
+  "reviewAccountFollowup": {
+    "checkedAt": "2026-11-10T10:15:36+08:00",
+    "existingDedicatedMemberReused": true,
+    "productionPasswordLoginVerified": true,
+    "channels": {
+      "xiaomi": "保存审核账号与登录说明，独立重开验证账号与密码一致",
+      "vivo": "已存账号及密码一致",
+      "tencent": "已存统一审核账号",
+      "honor": "已存账号及密码一致",
+      "huawei": "在审版本的测试账号号码一致",
+      "oppo": "测试账号、密码及构建22同次保存提示成功，独立重开后均为空"
+    }
+  },
+  "icpFilingEvidence": {
+    "appName": "SWOD",
+    "packageName": "cn.com.swod.app",
+    "operator": "伊娃文化艺术发展（湖南）有限公司",
+    "appFilingNumber": "湘ICP备2026005683号-5A",
+    "filingCompleted": true,
+    "historicalEvidence": [
+      "app开发/Android/EvaDance/app/src/main/assets/release-info.json",
+      "app开发/Android/上架执行/20261030-update-1.0.2/tencent-base-info-validation.txt",
+      "app开发/Android/上架执行/20261023/evidence/huawei-filing-entity-verified.jpg"
+    ],
+    "tencentHistoricalPortalStatus": "已备案",
+    "tencentStampedSupportingScreenshotLocated": false
+  },
+  "materialsRetry": {
+    "checkedAt": "2026-11-10T10:22:58+08:00",
+    "newSubmissions": 0,
+    "vivo": {
+      "draftBuild": 22,
+      "independentReopenVerified": true,
+      "releaseNotesAndReviewInstructionsPersisted": true,
+      "existingAssessment": "自营电商平台"
+    },
+    "oppo": {
+      "workingBuild": 22,
+      "workingPortraitScreenshots": 3,
+      "workingIcon": true,
+      "saveToast": "草稿保存成功",
+      "independentReopen": {
+        "build22": false,
+        "releaseNotes": false,
+        "portraitScreenshots": 0
+      }
+    },
+    "xiaomi": {
+      "draftBuild": 22,
+      "existingAssessment": "其他类 - 其他",
+      "contactVerificationDisplayed": "验证成功",
+      "screenshotsPersisted": false
+    },
+    "honor": {
+      "draftBuild": 22,
+      "assessmentRetained": true,
+      "icpPortalStatus": "已备案"
+    },
+    "tencent": {
+      "workingAssessment": "在线视频课程",
+      "baseInfoSaveVerified": false,
+      "blockedByRequiredFields": true
+    },
+    "storeScreenshotSource": "既有 1.0.4 安卓构建 21 手机端实拍（模拟器）"
+  },
+  "stampedMaterialsAttempt": {
+    "checkedAt": "2026-11-10T10:37:27+08:00",
+    "icpScreenshotReplacedWithUserSuppliedCapture": true,
+    "newSubmissions": 0,
+    "oppo": {
+      "commitmentUploadedToWorkingForm": true,
+      "saveToast": "草稿保存成功",
+      "independentReopenCommitmentPreviewCount": 0,
+      "missingCopyrightCertificate": true
+    },
+    "tencent": {
+      "updatedIcpAndCommitmentUploadedToWorkingForm": true,
+      "baseInfoSaveVerified": false,
+      "missing": [
+        "正式版权证明",
+        "年龄分级",
+        "在线教育资质"
+      ]
+    }
+  },
+  "tencentAgeAndOppoCommitmentRetry": {
+    "checkedAt": "2026-11-10T10:43:50+08:00",
+    "tencentWorkingAgeRating": "3周岁+",
+    "tencentRatingBasis": "沿用历史应用宝草稿，核对当前 App 功能与儿童隐私政策",
+    "tencentWorkingScreenshots": 4,
+    "tencentAppPrivacySubstantiveParagraphsMatchingPublic": 35,
+    "tencentAgeRatingPersisted": false,
+    "tencentEducationMaterials": [
+      "办学许可证",
+      "教育移动互联网应用程序备案管理平台的备案截图",
+      "经营范围包含教育的营业执照"
+    ],
+    "oppoCommitmentPersisted": false,
+    "newSubmissions": 0
+  },
+  "otherAndroidSubmissionRecheck": {
+    "checkedAt": "2026-11-10T11:08:49+08:00",
+    "newSubmissions": 0,
+    "copyrightStatus": "待受理",
+    "copyrightReference": "2026R11L3720301",
+    "huawei": {
+      "reviewBuild": 21,
+      "status": "正在审核"
+    },
+    "xiaomi": {
+      "draftBuild": 22,
+      "submissionValidation": "请上传资质文件"
+    },
+    "vivo": {
+      "draftBuild": 22,
+      "submissionValidation": "请选择版权证明"
+    },
+    "honor": {
+      "draftBuild": 22,
+      "submitButtonDisabled": true,
+      "copyrightMaterialRequired": true
+    },
+    "oppo": {
+      "build22Persisted": false,
+      "commitmentPersisted": false,
+      "copyrightMaterialRequired": true
+    }
+  }
+}

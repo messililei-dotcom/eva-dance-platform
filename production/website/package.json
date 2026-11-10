@@ -27,7 +27,7 @@
     "test:mobile-navigation": "node --experimental-strip-types --test scripts/mobile-navigation.test.mjs scripts/mobile-history-swipe.test.mjs",
     "test:mobile-course-navigation": "node --experimental-strip-types --test scripts/mobile-course-navigation.test.mjs",
     "test:mobile-home": "node --test scripts/mobile-home-complete.test.mjs",
-    "test:pwa": "node --experimental-strip-types --test scripts/pwa.test.mjs scripts/pwa-auth-flow.test.mjs",
+    "test:pwa": "node --experimental-strip-types --test scripts/pwa.test.mjs scripts/pwa-auth-flow.test.mjs scripts/pwa-update.test.cjs scripts/pwa-install.test.mjs scripts/pwa-fullscreen.test.cjs",
     "test:shop": "node --test scripts/shop-commerce.test.cjs",
     "postbuild": "node scripts/check-style-build.mjs"
   },

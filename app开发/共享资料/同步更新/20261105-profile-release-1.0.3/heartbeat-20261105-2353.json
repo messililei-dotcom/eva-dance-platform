@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-11-05T23:55:36+08:00",
+  "version": "1.0.3",
+  "builds": {
+    "ios": 13,
+    "android": 20,
+    "harmony": 18
+  },
+  "lastVerifiedResultRecord": "heartbeat-20261105-1950.json",
+  "currentOfficialReviewStatusVerified": false,
+  "currentOfficialPublicStatusVerified": false,
+  "newReviewOrPublicResultVerified": false,
+  "uiInventory": "Chrome not running; no native device emulator running; existing Apple tabs still present. Inventory URL alone does not establish login or processing state.",
+  "runtimeAttempt": "Tried opening existing official HarmonyOS Emulator through CUA for native login diagnosis; app interaction timed out and runtime reset. No native repro or diagnosis claimed.",
+  "existingBlockersUnchanged": [
+    "Android20 first-run guest privacy/terms confirmation remains unanswered",
+    "Harmony18 launcher-label packaging fix verified previously; original native password/SMS login failure still unverified",
+    "Other Android issued copyright/qualification materials not provided"
+  ],
+  "newUpload": false,
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "originalSignatureChanged": false,
+  "filingChanged": false,
+  "newNotificationNeeded": false
+}

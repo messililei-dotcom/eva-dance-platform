@@ -205,7 +205,7 @@ export function ensureEventTables(db: any) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       competition_id INTEGER,
       name TEXT NOT NULL,
-      total_score REAL NOT NULL DEFAULT 100,
+      total_score REAL NOT NULL DEFAULT 10,
       criteria_json TEXT NOT NULL DEFAULT '[]',
       drop_high_low INTEGER NOT NULL DEFAULT 0,
       judge_anonymous INTEGER NOT NULL DEFAULT 0,
@@ -618,7 +618,7 @@ export function mapScoreRule(row: any) {
     key: String(row.id),
     competitionId: row.competition_id || null,
     name: row.name,
-    totalScore: row.total_score || 100,
+    totalScore: row.total_score || 10,
     criteriaJson: row.criteria_json || '[]',
     dropHighLow: Boolean(row.drop_high_low),
     judgeAnonymous: Boolean(row.judge_anonymous),
@@ -719,7 +719,7 @@ export function getRuleForGroup(db: any, groupId: number, ruleId?: number | null
   }
   return row || {
     id: null,
-    total_score: 100,
+    total_score: 10,
     criteria_json: '[]',
     drop_high_low: 0,
     abnormal_threshold: 15,
@@ -743,7 +743,7 @@ export function calculateScore(rule: any, criteriaScores: Record<string, unknown
     .filter((value) => Number.isFinite(value));
   const criteriaSum = values.length ? values.reduce((sum, value) => sum + value, 0) : 0;
   const score = values.length ? criteriaSum : rawScore;
-  const totalScore = Number(rule.total_score || criteriaTotal || 100);
+  const totalScore = Number(rule.total_score || criteriaTotal || 10);
   const decimalPlaces = Math.max(0, Math.min(4, Number(rule.decimal_places ?? 2)));
   if (score < 0) throw new Error('评分不能小于 0');
   if (score > totalScore) throw new Error(`评分不能超过总分 ${totalScore}`);

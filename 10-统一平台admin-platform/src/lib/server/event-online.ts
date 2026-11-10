@@ -1,3 +1,4 @@
+import { findPhoneMembers, samePhoneIdentity } from './event-phone-member';
 import type { AdminDb } from "./admin-db";
 export function ensurePhoneMember(db: any, name: string, contact: string, source: string) {
   const columns = new Set(db.prepare('PRAGMA main.table_info(Member)').all().map((r: any) => r.name));
@@ -5,16 +6,15 @@ export function ensurePhoneMember(db: any, name: string, contact: string, source
     const digits = `REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(${column}, ''), '+', ''), ' ', ''), '-', ''), '(', ''), ')', '')`;
     return `(CASE WHEN length(${digits})=13 AND substr(${digits},1,2)='86' THEN substr(${digits},3) ELSE ${digits} END)`;
   };
-  const extra = columns.has('phone_national_number') ? ` OR ${normalizeSql('phone_national_number')}=?` : '';
-  const matches = db.prepare(`SELECT id FROM main.Member WHERE (${normalizeSql('phone')}=?${extra}) AND COALESCE(status,'active')!='deleted'`)
-    .all(...(extra ? [contact, contact] : [contact]));
+  const lookupContact = contact.replace(/\D/g, '');
+  const matches = findPhoneMembers(db, contact);
   // Older event imports kept the contact phone only on registrations/judges.
   // Reuse their linked profile when no unified profile has that phone yet.
   if (!matches.length) {
-    matches.push(...db.prepare(`SELECT DISTINCT m.id FROM main.Member m JOIN (
-      SELECT member_id FROM main.event_players WHERE ${normalizeSql('phone')}=? AND member_id>0
-      UNION SELECT member_id FROM main.event_judges WHERE ${normalizeSql('phone')}=? AND member_id>0
-    ) e ON e.member_id=m.id WHERE COALESCE(m.status,'active')!='deleted'`).all(contact, contact));
+    matches.push(...db.prepare(`SELECT DISTINCT m.id,e.phone FROM main.Member m JOIN (
+      SELECT member_id,phone FROM main.event_players WHERE ${normalizeSql('phone')}=? AND member_id>0
+      UNION SELECT member_id,phone FROM main.event_judges WHERE ${normalizeSql('phone')}=? AND member_id>0
+    ) e ON e.member_id=m.id WHERE COALESCE(m.status,'active')!='deleted'`).all(lookupContact, lookupContact).filter((row: any) => samePhoneIdentity(row.phone, contact)));
   }
   const ids = new Set<number>();
   for (const match of matches) {
@@ -41,7 +41,7 @@ export function ensurePhoneMember(db: any, name: string, contact: string, source
   return memberId;
 }
 
-export function recordRegistrationPayment(db: any, playerId: number, body: any) {
+export function recordRegistrationPayment(db: any, playerId: number, body: any, onlineOrderId?: string) {
   const player = db.prepare('SELECT * FROM event_players WHERE id=?').get(playerId);
   if (!player) throw new Error('报名不存在');
   const kind = body.kind;
@@ -59,14 +59,11 @@ export function recordRegistrationPayment(db: any, playerId: number, body: any) 
     if (prior.player_id !== playerId || prior.kind !== kind || Math.round(prior.amount*100) !== cents || prior.paid_at !== paidAt || prior.method !== method || prior.remark !== remark) throw new Error('登记编号已使用，请重新打开窗口');
     return { id: prior.id, repeated: true };
   }
-  const hasOrders=db.prepare("SELECT name FROM main.sqlite_master WHERE type='table' AND name='shop_course_orders'").get();
-  if(hasOrders && kind==='charge') {
-    const active=db.prepare("SELECT o.id FROM main.shop_online_orders o JOIN main.shop_course_orders c ON c.order_id=o.id WHERE c.kind='event' AND c.target_id=? AND o.status='pending'").get(playerId);
-    if(active && active.id!==body.onlineOrderId) throw new Error('该报名正在在线缴费，请先处理在线订单');
-  }
+  const activeOrder = eventPaymentOrder(db, playerId, kind === 'charge' ? ['pending'] : ['completed', 'refund_requested', 'refunding']);
+  if (activeOrder && activeOrder.id !== onlineOrderId) throw new Error('请在原在线订单中处理缴费或退款');
   const collected = Math.round(Number(player.paid_amount || 0)*100), fee = Math.round(Number(player.registration_fee || 0)*100);
   if (kind === 'charge' && ['cancelled','withdrawn'].includes(player.status)) throw new Error('已取消报名不能登记缴费');
-  if (kind === 'charge' && (collected !== 0 || cents !== fee)) throw new Error('单条报名须一次缴清该组别报名费，不支持分次或合并缴费');
+  if (kind === 'charge' && (collected !== 0 || cents !== fee)) throw new Error('单条报名须一次缴清该组别报名费，不支持分次缴费');
   if (kind === 'refund' && (collected <= 0 || cents !== collected)) throw new Error('单条报名退款须退还全部已收金额');
   const balance = collected + (kind === 'charge' ? cents : -cents);
   const status = balance === 0 ? (kind === 'refund' ? 'refunded' : 'unpaid') : 'paid';
@@ -79,18 +76,54 @@ export function recordRegistrationPayment(db: any, playerId: number, body: any) 
 export function ensureEventOnline(db: AdminDb) {
  const cols=db.prepare('PRAGMA table_info(event_players)').all<{name:string}>();
  if(!cols.some(c=>c.name==='submitted_by_member_id')) db.exec('ALTER TABLE event_players ADD COLUMN submitted_by_member_id INTEGER NOT NULL DEFAULT 0');
+ if (!cols.some(c => c.name === 'registration_batch_id')) db.exec('ALTER TABLE event_players ADD COLUMN registration_batch_id INTEGER NOT NULL DEFAULT 0');
+ db.exec(`CREATE TABLE IF NOT EXISTS event_registration_batches (
+   id INTEGER PRIMARY KEY AUTOINCREMENT, member_id INTEGER NOT NULL, competition_id INTEGER NOT NULL,
+   request_key TEXT NOT NULL, request_hash TEXT NOT NULL, response TEXT NOT NULL DEFAULT '',
+   UNIQUE(member_id, competition_id, request_key)
+ );
+ CREATE INDEX IF NOT EXISTS idx_event_players_registration_batch ON event_players(registration_batch_id) WHERE registration_batch_id > 0;`);
+}
+export function eventPaymentOrder(db: AdminDb, playerId: number, statuses: string[]) {
+ if (!db.prepare("SELECT 1 FROM main.sqlite_master WHERE name='shop_course_orders'").get()) return undefined;
+ return db.prepare(`SELECT o.id, o.member_id, o.status, o.total_fen, o.provider
+   FROM main.shop_online_items i JOIN main.shop_online_orders o ON o.id=i.order_id
+   JOIN main.shop_course_orders c ON c.order_id=o.id AND c.kind='event'
+   WHERE i.product_id=? AND o.status IN (${statuses.map(() => '?').join(',')})
+   ORDER BY o.created_at DESC LIMIT 1`).get<{ id: string; member_id: number; status: string; total_fen: number; provider: string }>('event:' + playerId, ...statuses);
 }
 export function eventPaymentOffer(db: AdminDb, id:number, actor:number) {
  const p=db.prepare(`SELECT p.*,g.name group_name,c.name competition_name FROM event_players p JOIN event_groups g ON g.id=p.group_id JOIN event_competitions c ON c.id=p.competition_id WHERE p.id=?`).get<any>(id);
- if(!p || !actor || (p.submitted_by_member_id!==actor && p.member_id!==actor)) throw new Error('报名不存在');
+ if (!p || !actor || (p.submitted_by_member_id !== actor && (p.registration_batch_id || p.member_id !== actor))) throw new Error('报名不存在');
  if(['cancelled','withdrawn'].includes(p.status) || p.audit_status==='rejected') throw new Error('该报名不能缴费');
  if(p.paid_amount>0 || ['paid','completed'].includes(p.paid_status)) throw new Error('该报名已经缴费');
  const priceFen=Math.round(Number(p.registration_fee)*100);
  if(!Number.isSafeInteger(priceFen)||priceFen<=0)throw new Error('该组别无需缴费');
- return {kind:'event',id,name:p.competition_name+' · '+p.group_name,period:p.name+' · 单组别一次缴费',priceFen,image:'',description:'',sessions:0,expires:'',capacity:0,remaining:0};
+ const rows = p.registration_batch_id ? db.prepare(`SELECT p.id,p.name,g.name AS group_name,p.registration_fee
+   FROM event_players p JOIN event_groups g ON g.id=p.group_id
+   WHERE p.registration_batch_id>0 AND p.registration_batch_id=? AND p.submitted_by_member_id=? AND p.competition_id=?
+     AND p.registration_fee>0 AND COALESCE(p.paid_amount,0)=0 AND p.paid_status NOT IN ('paid','completed')
+     AND p.status NOT IN ('cancelled','withdrawn') AND p.audit_status!='rejected' ORDER BY p.id`).all<any>(p.registration_batch_id, actor, p.competition_id) : [p];
+ const eventItems = rows.map(row => ({ id: Number(row.id), name: row.group_name, participant: row.name, priceFen: Math.round(Number(row.registration_fee) * 100) }));
+ const total = eventItems.reduce((sum, item) => sum + item.priceFen, 0);
+ if (!eventItems.some(item => item.id === id) || !Number.isSafeInteger(total) || eventItems.some(item => item.priceFen <= 0)) throw new Error('报名费用无效');
+ return {
+   kind: 'event', id: eventItems[0].id, name: p.competition_name, period: '', priceFen: total, eventItems,
+   image: '', description: '', sessions: 0, expires: '', capacity: 0, remaining: 0,
+ };
 }
-export function settleEventPayment(db:AdminDb, playerId:number, order:any, refund=false) {
- const p=db.prepare('SELECT * FROM event_players WHERE id=?').get<any>(playerId);
- if(!p || (p.submitted_by_member_id!==order.member_id && p.member_id!==order.member_id)) throw new Error('报名付款人不匹配');
- recordRegistrationPayment(db,playerId,{kind:refund?'refund':'charge',amount:order.total_fen/100,method:order.provider,paidAt:new Date().toISOString(),remark:'在线支付订单 '+order.id,onlineOrderId:order.id,requestKey:order.id+(refund?'-refund':'-charge')});
+export function settleEventPayment(db: AdminDb, order: any, refund = false) {
+ const items = db.prepare('SELECT product_id, quantity, unit_fen FROM shop_online_items WHERE order_id=?').all<{ product_id: string; quantity: number; unit_fen: number }>(order.id);
+ if (!items.length || items.some(item => !/^event:[1-9]\d*$/.test(item.product_id) || item.quantity !== 1 || !Number.isSafeInteger(item.unit_fen) || item.unit_fen <= 0) ||
+   items.reduce((total, item) => total + item.unit_fen, 0) !== order.total_fen) throw new Error('报名订单金额明细不匹配');
+ const paidAt = new Date().toISOString();
+ for (const item of items) {
+   const playerId = Number(item.product_id.slice(6));
+   const player = db.prepare('SELECT * FROM event_players WHERE id=?').get<any>(playerId);
+   if (!player || (player.submitted_by_member_id !== order.member_id && (player.registration_batch_id || player.member_id !== order.member_id))) throw new Error('报名付款人不匹配');
+   recordRegistrationPayment(db, playerId, {
+     kind: refund ? 'refund' : 'charge', amount: item.unit_fen / 100, method: order.provider, paidAt,
+     remark: '在线支付订单 ' + order.id, requestKey: order.id + '-' + playerId + (refund ? '-refund' : '-charge'),
+   }, order.id);
+ }
 }

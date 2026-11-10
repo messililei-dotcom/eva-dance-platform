@@ -5,12 +5,21 @@ const { cleanText } = require("../../shared/review-text");
 const { formatPaymentAmount } = require("../../shared/money-format");
 const app = getApp();
 
+function maskPhone(value) {
+  return String(value || "").replace(/(\d{3})\d{4,}(\d{4})$/, "$1****$2");
+}
+
+function displayCount(value, fallback) {
+  if (value !== null && value !== undefined && value !== "" && Number.isSafeInteger(Number(value)) && Number(value) >= 0) return Number(value);
+  return fallback;
+}
+
 Page(share.withShare("profile", videoFeature.withVideoFeature({
   data: {
     profileOpen: false, profileDraft: {}, profileSaving: false, profileDirty: false, profileSaveMessage: "", avatarSaving: false,
     genderOptions: ["未填写", "女", "男"], genderIndex: 0,
     memberName: "伊娃学员",
-    memberPhone: "",
+    memberPhone: "", maskedPhone: "",
     memberLevel: "",
     memberLevelText: "普通学员",
     avatarUrl: "",
@@ -21,7 +30,13 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     showWechatBinder: false,
     needsPhoneBinding: false,
     wechatIdentityText: "",
-    authorizedCourses: [],
+    authorizedCourses: [], coursesError: "",
+    counts: {}, showAllCourses: false, previewCourses: [],
+    learningServices: [
+      { key: "notes", title: "学习笔记", description: "回顾课节中的学习心得", icon: "book" },
+      { key: "bookmarks", title: "学习书签", description: "查看标记过的课节与时间", icon: "award" },
+      { key: "growth", title: "成长档案", description: "查看学员等级、经验与成长记录", icon: "calendar" }
+    ],
     offlineCourses: [],
     eventRegistrations: [], myEventsOpen: false, eventsLoading: false, eventsError: "",
     certificates: [],
@@ -58,7 +73,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
   stopUnreadPolling() { if (this.unreadTimer) clearInterval(this.unreadTimer); this.unreadTimer = null; },
   applyLocalLoginState(loadRemote) {
     // 检查登录状态
-    const memberId = wx.getStorageSync("memberId");
+    const memberId = wx.getStorageSync("token") ? wx.getStorageSync("memberId") : null;
     const memberName = wx.getStorageSync("memberName") || "伊娃学员";
     const app = getApp();
     
@@ -74,7 +89,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
       this.eventsMemberId = memberId;
       this.profileRequestId = (this.profileRequestId || 0) + 1;
       this.profileMember = null;
-      this.setData({ authorizedCourses: [], offlineCourses: [], certificates: [], unreadMessageCount: 0, isAdmin: false, adminRole: '', profileOpen: false, profileDraft: {}, profileDirty: false, profileError: '' });
+      this.setData({ authorizedCourses: [], previewCourses: [], showAllCourses: false, coursesError: "", counts: {}, profileLoading: false, offlineCourses: [], certificates: [], unreadMessageCount: 0, isAdmin: false, adminRole: '', profileOpen: false, profileDraft: {}, profileDirty: false, profileError: '' });
       this.eventsRequestId = (this.eventsRequestId || 0) + 1;
       this.setData({ myEventsOpen: false, eventsLoading: false, eventsError: "", eventRegistrations: [] });
     }
@@ -83,7 +98,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     this.setData(Object.assign({
       memberName: initialMemberName,
       displayInitial: (storedWechatProfile.wechatName || initialMemberName || '伊')[0] || '伊',
-      memberPhone: "",
+      memberPhone: "", maskedPhone: "",
       memberLevel: "",
       memberLevelText: "普通学员",
       isLoggedIn: !!memberId,
@@ -136,23 +151,32 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
   async loadProfile() {
     const requestId = this.profileRequestId = (this.profileRequestId || 0) + 1;
     const requestedMember = wx.getStorageSync("memberId");
+    const requestedToken = wx.getStorageSync("token");
     this.setData({ profileLoading: true, profileError: "" });
     let profileFailure = null;
     let eventsFailure = null;
+    let coursesFailure = null;
     const eventsVersion = this.eventsRequestId || 0;
     const [profile, authorized, recent, catalog, payments, certificates, eventRegistrations] = await Promise.all([
       api.getMemberProfile().catch(err => { profileFailure = err; return null; }),
-      api.getAuthorizedSeries().catch(() => []),
+      api.getAuthorizedSeries().then(rows => {
+        if (!Array.isArray(rows)) throw new Error("课程权益暂时无法加载");
+        return rows;
+      }).catch(err => { coursesFailure = err; return []; }),
       api.getRecentCourses().catch(() => []),
       api.getSeriesList().catch(() => []),
-      api.getPayments().catch(() => []),
-      api.getCertificates().catch(() => []),
+      api.getPayments().catch(() => null),
+      api.getCertificates().catch(() => null),
       api.getEventRegistrations().catch(err => { eventsFailure = err; return []; })
     ]);
     if (requestId !== this.profileRequestId || requestedMember !== wx.getStorageSync("memberId")) return;
+    if (requestedToken && !wx.getStorageSync("token")) {
+      this.applyLocalLoginState(false);
+      return;
+    }
     if (profileFailure) {
       this.setData({
-        profileLoading: false,
+        profileLoading: false, authorizedCourses: [], previewCourses: [], coursesError: "", counts: {},
         profileError: profileFailure.code === "NETWORK_TIMEOUT"
           ? "连接超时，请检查网络后重新连接。"
           : (profileFailure.message || "个人中心暂时无法连接，请稍后重试。")
@@ -162,19 +186,21 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     const member = profile && profile.member || profile || {};
     const memberId = member.id || wx.getStorageSync("memberId");
     const catalogMap = (catalog || []).reduce((map, item) => {
-      map[String(item.id || item.series_id)] = item;
+      map[String(item.series_id ?? item.id)] = item;
       return map;
     }, {});
-    let authorizedCourses = (authorized || []).filter(item => catalogMap[String(item.id || item.series_id)]).map(item => {
-      const id = item.id || item.series_id;
+    const seenSeries = new Set();
+    let authorizedCourses = authorized.flatMap(item => {
+      const id = Number(item.series_id ?? item.id);
+      if (!Number.isSafeInteger(id) || id <= 0 || item.unlocked === false || seenSeries.has(id)) return [];
+      seenSeries.add(id);
       const source = catalogMap[String(id)] || {};
-      return {
-        ...source, ...item, id,
-        name: cleanText(item.name || item.series_name || source.name, "未命名课程"),
+      return [{
+        id,
+        name: cleanText(item.series_name || item.name || source.name, "未命名课程"),
         cover_image: item.cover_image || source.cover_image || "",
-        subtitle: item.subtitle || source.subtitle || source.teacher || "",
-        total_courses: Number(item.total_courses || item.course_count || source.total_courses || 0)
-      };
+        total_courses: Number(item.total_courses || source.total_courses || 0)
+      }];
     });
     const normalizedRecent = (recent || []).map(item => {
       const duration = Number(item.duration || 0), progress = Number(item.progress || 0);
@@ -221,10 +247,17 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     if (member.wx_openid) wx.setStorageSync("wxOpenid", member.wx_openid);
     if (member.wx_unionid) wx.setStorageSync("wxUnionid", member.wx_unionid);
     const loadedName = member.name || app.globalData.memberName;
+    const stats = profile.stats || {};
+    const counts = {
+      courses: coursesFailure ? "—" : authorizedCourses.length,
+      offline: displayCount(stats.offline_course_count, payments ? offlineCourses.length : "—"),
+      certificates: certificates ? certificates.length : "—"
+    };
     this.setData({
       memberName: loadedName,
       displayInitial: (wechatName || loadedName || '伊')[0] || '伊',
       memberPhone: member.phone || "",
+      maskedPhone: maskPhone(member.phone),
       memberLevel: member.level || "",
       memberLevelText: this.formatLevel(member.level),
       wechatName,
@@ -235,6 +268,9 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
       isWechatBound: !!(member.wx_openid || member.wx_unionid),
       wechatIdentityText: (member.wx_unionid || member.wx_openid) ? "微信身份已同步" : "",
       authorizedCourses,
+      previewCourses: this.data.showAllCourses ? authorizedCourses : authorizedCourses.slice(0, 4),
+      coursesError: coursesFailure ? "课程权益暂时无法加载，请重试" : "",
+      counts,
       offlineCourses,
       ...((this.eventsRequestId || 0) === eventsVersion ? {
         eventRegistrations: this.normalizeEventRegistrations(eventRegistrations),
@@ -347,8 +383,31 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     wx.navigateTo({ url: "/pages/shop-orders/shop-orders" });
   },
 
+  scrollToProfileSection(event) {
+    const section = event.currentTarget.dataset.section;
+    if (section === "events" && !this.data.myEventsOpen) this.openEventRegistrations();
+    if (["courses", "events", "certificates"].includes(section)) {
+      wx.pageScrollTo({ selector: "#profile-" + section, duration: 0 });
+    }
+  },
+
+  toggleCourseList() {
+    const showAllCourses = !this.data.showAllCourses;
+    this.setData({ showAllCourses, previewCourses: showAllCourses ? this.data.authorizedCourses : this.data.authorizedCourses.slice(0, 4) });
+    if (!showAllCourses) this.scrollToProfileSection({ currentTarget: { dataset: { section: "courses" } } });
+  },
+
+  openLearningService(event) {
+    const kind = event.currentTarget.dataset.kind;
+    if (["notes", "bookmarks", "growth"].includes(kind)) {
+      wx.navigateTo({ url: "/pages/learning-records/learning-records?kind=" + kind });
+    }
+  },
+
   openProfileCourse(event) {
-    videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}` });
+    const id = Number(event.currentTarget.dataset.id);
+    if (!this.data.authorizedCourses.some(course => course.id === id)) return;
+    videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${id}` });
   },
 
   openOfflineSchedule() {
@@ -396,6 +455,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     }
   },
 
+  editEventMusic(event) { wx.navigateTo({ url: '/pages/event-music/event-music?id=' + encodeURIComponent(event.currentTarget.dataset.id) }); },
   payEventRegistration(event) {wx.navigateTo({url:'/pages/course-checkout/course-checkout?kind=event&id='+encodeURIComponent(event.currentTarget.dataset.id)});},
   openEventRegistration(event) {
     const id = event.currentTarget.dataset.id;
@@ -517,7 +577,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
           app.globalData.memberName = null;
           this.setData({
             memberName: "未登录",
-            memberPhone: "",
+            memberPhone: "", maskedPhone: "",
             memberLevel: "",
             memberLevelText: "普通学员",
             avatarUrl: "",
@@ -538,7 +598,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
             },
             recentProgress: [],
             unreadMessageCount: 0,
-        authorizedCourses: [],
+            authorizedCourses: [], previewCourses: [], showAllCourses: false, counts: {}, coursesError: "", profileError: "", profileLoading: false,
             offlineCourses: [],
                             eventRegistrations: [], myEventsOpen: false, eventsLoading: false, eventsError: "",
                     certificates: [],

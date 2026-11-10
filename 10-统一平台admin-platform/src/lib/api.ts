@@ -462,6 +462,7 @@ export const eventApi = {
     const res = await api.get('/event/judges', { params });
     return res.data?.data || [];
   },
+  deleteJudge: async (id: number | string) => (await api.delete(`/event/judges/${id}`)).data,
   getJudge: async (id: number | string): Promise<any> => {
     const res = await api.get(`/event/judges/${id}`);
     return res.data?.data;

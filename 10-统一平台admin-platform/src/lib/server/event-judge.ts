@@ -107,7 +107,7 @@ export function loadJudgeCriteria(db: AdminDb, competitionId: number, group: Rec
     ? db.prepare(`SELECT * FROM event_score_rules WHERE id=? AND status='active'`).all<Record<string, any>>(group.score_rule_id)
     : db.prepare(`SELECT * FROM event_score_rules WHERE competition_id=? AND status='active' ORDER BY id ASC`).all<Record<string, any>>(competitionId);
   const criteria = rules.flatMap((rule) => parseCriteria(rule.criteria_json, Number(rule.id), String(rule.name || ''), Number(rule.total_score || 0)));
-  return criteria.length ? criteria : [{ key: 'total', name: '评分总分', maxScore: 100, ruleId: null }];
+  return criteria.length ? criteria : [{ key: 'total', name: '评分总分', maxScore: 10, ruleId: null }];
 }
 
 export function loadCurrentJudgeScore(db: AdminDb, groupId: number, playerId: number, judgeId: number, criteria: JudgeCriterion[]) {
@@ -123,7 +123,8 @@ export function loadCurrentJudgeScore(db: AdminDb, groupId: number, playerId: nu
     if (value && typeof value === 'object') parsed = value;
   } catch {}
   if (!Object.keys(parsed).length && criteria.length === 1) parsed[criteria[0].key] = Number(latest.calculated_score || 0);
-  return { values: parsed, total: Number(latest.calculated_score || 0), status: String(latest.score_status || '') };
+  const needsRescore = criteria.some(item => Number(parsed[item.key] || 0) > item.maxScore);
+  return { values: needsRescore ? {} : parsed, total: Number(latest.calculated_score || 0), status: String(latest.score_status || ''), needsRescore };
 }
 
 export function saveJudgeScore(db: AdminDb, options: {

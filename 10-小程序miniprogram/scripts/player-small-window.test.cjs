@@ -8,10 +8,10 @@ function setup() {
  const api={saveVideoProgress:(...args)=>{calls.push(['save',...args]);return Promise.resolve();}};
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../pages/player/player.js'),'utf8'),{
  require: name=>name==='../../utils/api'?api:name==='../../shared/video-feature'?require('../shared/video-feature'):name==='../../shared/share'?require('../shared/share'):{}, Page: value=>{page=value;},
- wx:{showModal:value=>calls.push(['modal',value]),showToast:value=>calls.push(['toast',value])},console,setTimeout,clearTimeout
+ wx:{showModal:value=>calls.push(['modal',value]),showToast:value=>calls.push(['toast',value]),showActionSheet:value=>calls.push(['sheet',value])},console,setTimeout,clearTimeout
  });
- page.data={videoId:101,playUrl:'test',currentSeconds:20,currentDuration:40,video:{},resumeSeconds:8};
- page.setData=value=>Object.assign(page.data,value);
+ page.data={isPlayerFullscreen:false,nativeFullscreenControls:false,videoId:101,playUrl:'test',currentSeconds:20,currentDuration:40,video:{},resumeSeconds:8};
+ page.setData=(value,done)=>{Object.assign(page.data,value);done?.();};
  return {page,calls};
 }
 test('saves current progress and requests native background playback',()=>{
@@ -37,4 +37,29 @@ test('switching lesson saves the previous lesson first',()=>{
  const {page,calls}=setup();page.loadVideo=id=>calls.push(['load',id]);page.switchVideo({currentTarget:{dataset:{id:102}}});assert.deepEqual(calls,[['save',101,20,40],['load',102]]);
 });
 
-test('enlarging keeps the existing video and toggles back',()=>{ const {page}=setup();page.schedulePlayerControlsHide=()=>{};page.videoContext={requestFullScreen:()=>{throw new Error('native fullscreen must not be used')}};page.requestPlayerFullScreen();assert.equal(page.data.isPlayerFullscreen,true);page.requestPlayerFullScreen();assert.equal(page.data.isPlayerFullscreen,false); });
+test('landscape and portrait use native fullscreen without replacing playback',()=>{
+ for(const [tapIndex, direction] of [[0,90],[1,0]]){
+  const {page,calls}=setup();
+  page.data.isPlaying=true;
+  page.schedulePlayerControlsHide=()=>{};
+  page.videoContext={
+   requestFullScreen:options=>calls.push(['open',options.direction]),
+   exitFullScreen:()=>calls.push(['exit']),
+  };
+  page.requestPlayerFullScreen();
+  assert.equal(calls[0][0],'sheet');
+  calls[0][1].success({tapIndex});
+  assert.deepEqual(calls[1],['open',direction]);
+  assert.equal(page.data.isPlayerFullscreen,false);
+  page.onFullscreenChange({detail:{fullScreen:true,direction:direction===90?'horizontal':'vertical'}});
+  assert.equal(page.data.isPlayerFullscreen,true);
+  page.requestPlayerFullScreen();
+  assert.deepEqual(calls[2],['exit']);
+  page.onFullscreenChange({detail:{fullScreen:false}});
+  assert.equal(page.data.isPlayerFullscreen,false);
+  assert.equal(page.data.nativeFullscreenControls,false);
+  assert.equal(page.data.currentSeconds,20);
+  assert.equal(page.data.playUrl,'test');
+  assert.equal(page.data.isPlaying,true);
+ }
+});

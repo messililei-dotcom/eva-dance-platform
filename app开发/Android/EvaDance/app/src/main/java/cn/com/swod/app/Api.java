@@ -94,10 +94,23 @@ public final class Api {
         } finally { c.disconnect(); }
     }
     public Object registerWithMusic(int event, JSONObject fields, String filename, byte[] music) throws Exception {
-        if (event <= 0 || music == null || music.length == 0 || music.length > 10 * 1024 * 1024) throw new Failure(400, "请选择10MB以内的音乐文件");
+        if (event <= 0) throw new Failure(400, "赛事不存在");
+        String path = "/events/" + event + "/register";
+        if (music == null) return request(path, "POST", fields, true);
+        return sendEventMusic(path, fields, filename, music);
+    }
+
+    public Object replaceEventMusic(long player, String title, String filename, byte[] music) throws Exception {
+        if (player <= 0) throw new Failure(400, "报名记录不存在");
+        return sendEventMusic("/member/event-registrations/" + player + "/music",
+                new JSONObject().put("performanceTitle", title), filename, music);
+    }
+
+    private Object sendEventMusic(String path, JSONObject fields, String filename, byte[] music) throws Exception {
+        if (music == null || music.length == 0 || music.length > 10 * 1024 * 1024) throw new Failure(400, "请选择10MB以内的音乐文件");
         String boundary = "EvaMusic-" + UUID.randomUUID();
         ByteArrayOutputStream data = new ByteArrayOutputStream();
-        for (String key : new String[]{"groupId","name","phone","organization","teacher","performanceTitle","remark"}) {
+        for (String key : new String[]{"groupId","name","phone","countryCode","organization","teacher","performanceTitle","remark"}) {
             String value = fields.optString(key, ""); if (value.length() > 1000) throw new Failure(400, "报名内容过长");
             data.write(("--" + boundary + "\r\nContent-Disposition: form-data; name=\"" + key + "\"\r\n\r\n" + value + "\r\n").getBytes(StandardCharsets.UTF_8));
         }
@@ -105,7 +118,6 @@ public final class Api {
         data.write(("--" + boundary + "\r\nContent-Disposition: form-data; name=\"musicFile\"; filename=\"" + safeName + "\"\r\nContent-Type: application/octet-stream\r\n\r\n").getBytes(StandardCharsets.UTF_8));
         data.write(music); data.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
         String token; long version; synchronized(this) { if(session == null) throw new Failure(401, "请先登录"); token = session.getString("token"); version = generation; }
-        String path = "/events/" + event + "/register";
         try { return currentResult(transportBytes(Policy.API, path, "POST", data.toByteArray(), "multipart/form-data; boundary="+boundary, token, false).opt("data"), version, true); }
         catch(Failure error) {
             if(error.status != 401) throw error;

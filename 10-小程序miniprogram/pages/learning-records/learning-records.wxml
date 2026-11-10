@@ -1,0 +1,30 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}"/></block>
+<view wx:else class="records-page">
+  <view wx:if="{{loading}}" class="records-state">正在加载{{title}}…</view>
+  <view wx:elif="{{error}}" class="records-state">
+    <view>{{error}}</view>
+    <button wx:if="{{loginRequired}}" bindtap="goLogin">去登录</button>
+    <button wx:else bindtap="reload">重新加载</button>
+  </view>
+  <block wx:else>
+    <view wx:if="{{growth}}" class="growth-summary">
+      <view class="record-title">{{growth.level}}</view>
+      <view class="growth-points">{{growth.points}} 经验值</view>
+      <progress percent="{{growth.progress}}" activeColor="#9f1d20" stroke-width="5" aria-label="等级进度"/>
+      <view class="record-meta">{{growth.nextLevel ? '距离' + growth.nextLevel + '还需 ' + growth.remaining + ' 经验值' : '已达到最高等级'}}</view>
+      <view wx:if="{{growth.academyAge}}" class="record-meta">学龄 · {{growth.academyAge}}</view>
+    </view>
+    <view wx:if="{{growth}}" class="history-title">经验记录</view>
+    <view wx:if="{{!rows.length}}" class="records-state">{{growth ? '暂无经验记录' : '暂无' + title}}</view>
+    <view class="record-row" wx:for="{{rows}}" wx:key="id">
+      <view class="record-copy">
+        <view class="record-title">{{item.title}}</view>
+        <view wx:if="{{item.context}}" class="record-meta">{{item.context}}</view>
+        <view wx:if="{{item.text}}" class="record-text">{{item.text}}</view>
+        <view class="record-meta">{{item.time}}{{item.time && item.date ? ' · ' : ''}}{{item.date}}</view>
+      </view>
+      <text wx:if="{{growth}}" class="growth-points">{{item.points}}</text>
+    </view>
+  </block>
+</view>

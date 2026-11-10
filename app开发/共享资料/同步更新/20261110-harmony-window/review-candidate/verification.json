@@ -1,0 +1,50 @@
+{
+  "builtAt": "2026-11-10T09:39:02.134441+08:00",
+  "bundleName": "cn.com.swod.evadance",
+  "version": "1.0.4-23",
+  "filingNumber": "湘ICP备2026005683号-5A",
+  "releaseBuild": true,
+  "signatureVerified": true,
+  "appSigned": true,
+  "deviceAccepted": false,
+  "uploaded": true,
+  "published": false,
+  "artifacts": [
+    {
+      "file": "installers/SWOD-1.0.4-23-release.hap",
+      "bytes": 16193437,
+      "sha256": "45ee7b969da202996bdf5359187d8877825f81df88d613c60153893148abfe0d"
+    },
+    {
+      "file": "installers/SWOD-1.0.4-23-release.app",
+      "bytes": 7628748,
+      "sha256": "b208bbc18733bb6239f6d4e8a4aec86186e2bec25e69df737e1144bfbf92321e"
+    }
+  ],
+  "checkedAt": "2026-11-10T09:45:47+08:00",
+  "supersedes": "../verification.json",
+  "regressionTestsPassed": 47,
+  "harmonyNativeFix": "HUKS 密钥存在检查改用 hasKeyItem，修复首次登录无法初始化会话密钥。",
+  "emulatorApi": 22,
+  "emulatorInstallPassed": true,
+  "emulatorColdLaunchPassed": true,
+  "emulatorReviewerPasswordLoginPassed": true,
+  "emulatorMemberSessionRestoredAfterRestart": true,
+  "emulatorSmsModeVisible": true,
+  "smsDeliveryAndRealCodeLoginVerified": false,
+  "physicalDeviceVerified": false,
+  "physicalDeviceCheck": "skipped-at-user-request",
+  "huaweiLegality": "已达标",
+  "tabletScreenshotsUploaded": 3,
+  "tabletViewport": "1920×1280，API 22 宽屏模拟器",
+  "uploadedAt": "2026-11-10T09:40:05+08:00",
+  "submitted": true,
+  "reviewStatus": "正在等待审核",
+  "releaseAfterApproval": "审核通过立即上架",
+  "consoleUrl": "https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2071129556072323840?appId=6917617955633704973&projectId=101653523865196397",
+  "receipt": "evidence/huawei-pre-review.jpg",
+  "preReviewPassed": true,
+  "reviewCheckedAt": "2026-11-10T09:50:23+08:00",
+  "reviewEvidence": "evidence/huawei-awaiting-review.jpg",
+  "previousPublicVersion": "1.0.0"
+}

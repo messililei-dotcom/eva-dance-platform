@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-11-09T23:13:05+08:00",
+  "version": "1.0.4",
+  "ios": {
+    "build": 14,
+    "managementResult": "Exact submission URL redirects to sign-in",
+    "freshReviewStatusVerified": false,
+    "chinaPublicVersion": "1.0.2"
+  },
+  "huaweiAndroid": {
+    "build": 21,
+    "managementResult": "Exact review URL redirects to sign-in",
+    "freshReviewStatusVerified": false,
+    "chinaPublicVersion": "1.0.1",
+    "installEntryVisible": true
+  },
+  "harmony": {
+    "build": 22,
+    "existingOfficialDraftStatus": "准备提交",
+    "automaticReleaseAfterApproval": true,
+    "nativeLoginVerified": false
+  },
+  "newReviewOrPublicResultVerified": false,
+  "newStoreSubmission": false,
+  "newNotificationNeeded": false
+}

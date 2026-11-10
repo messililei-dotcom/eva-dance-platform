@@ -3,7 +3,7 @@
 <block wx:else>
 <block wx:if="{{videoPlaybackEnabled}}">
 <view class="player-page">
-  <view class="video-container {{isPlayerFullscreen ? 'player-fullscreen' : ''}}">
+  <view class="video-container">
     <cover-view wx:if="{{holdingSpeed}}" class="hold-speed-hint">2 倍播放 · 松手恢复</cover-view>
     <video
       wx:if="{{playUrl}}"
@@ -12,13 +12,14 @@
       src="{{playUrl}}"
       poster="{{course.cover_image}}"
       title="{{video.name}}"
-      controls="{{false}}"
+      controls="{{nativeFullscreenControls}}"
+      direction="{{fullscreenDirection}}"
       muted="{{isMuted}}"
       autoplay="{{hasStartedPlayback}}"
       initial-time="{{resumeSeconds}}"
       object-fit="contain"
-      show-center-play-btn="{{false}}"
-      show-fullscreen-btn="{{false}}"
+      show-center-play-btn="{{nativeFullscreenControls}}"
+      show-fullscreen-btn="{{nativeFullscreenControls}}"
       enable-progress-gesture
       vslide-gesture="{{isPlayerFullscreen}}"
       vslide-gesture-in-fullscreen="{{true}}"
@@ -28,6 +29,7 @@
       bindtouchend="endHoldSpeed"
       bindtouchcancel="endHoldSpeed"
       bindtap="onPlayerTap"
+      bindfullscreenchange="onFullscreenChange"
       bindplay="onVideoPlay"
       bindtimeupdate="onTimeUpdate"
       bindpause="onPause"
@@ -45,7 +47,7 @@
         <button class="video-quality-trigger" data-menu="speed" catchtap="togglePlayerMenu">{{playbackRate}}x⌄</button>
         <button class="video-mirror-trigger {{isMirrored ? 'active' : ''}}" catchtap="toggleMirror">{{isMirrored ? '镜面' : '正面'}}</button>
         <button class="video-pip-trigger" catchtap="requestSmallWindow" aria-label="画中画播放"><view class="pip-icon"><view></view></view></button>
-        <button class="video-fullscreen-trigger" catchtap="requestPlayerFullScreen" aria-label="{{isPlayerFullscreen ? '退出全屏播放' : '全屏播放'}}">{{isPlayerFullscreen ? '×' : '⛶'}}</button>
+        <button class="video-fullscreen-trigger" catchtap="requestPlayerFullScreen" aria-label="{{isPlayerFullscreen ? '退出全屏播放' : '选择横屏或竖屏全屏'}}">{{isPlayerFullscreen ? '×' : '⛶'}}</button>
       </view>
       <view class="video-section-controls {{showVideoControls ? 'visible' : ''}}">
         <view class="lesson-controls"><button disabled="{{!hasPrevious}}" data-offset="-1" catchtap="adjacentVideo">‹ 上一节</button><button disabled="{{!hasNext}}" data-offset="1" catchtap="adjacentVideo">下一节 ›</button></view>

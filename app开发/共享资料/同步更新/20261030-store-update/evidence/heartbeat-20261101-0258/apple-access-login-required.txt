@@ -1,0 +1,30 @@
+Browser tab: 19, Title: "App Store Connect", URL: "https://appstoreconnect.apple.com/login?targetUrl=%2Fapps%2F6826038106%2Fdistribution%2Freviewsubmissions%2Fdetails%2Fe6ac9f82-67e9-4eb0-b68d-ca9970019383&authResult=FAILED".
+0 AXWebArea App Store Connect, URL: appstoreconnect.apple.com/login?targetUrl=%2Fapps%2F6826038106%2Fdistribution%2Freviewsubmissions%2Fdetails%2Fe6ac9f82-67e9-4eb0-b68d-ca9970019383&authResult=FAILED
+	1 container
+		2 container page-wrapper
+			3 link Description: Apple.com, Value: apple.com/
+			4 container
+				5 container Description: 登录你的 Apple 账户, ID: aid-auth-widget-iFrame
+					6 AXWebArea idmsa.apple.com/appleauth/auth/signin?widgetKey=e0b80c3bf78523bfe80974d320935bfa30add02e1bff88ec2166c6bd5a706c42&language=zh_CN&iframeId=auth-uautie9g-cfha-djls-trg3-0by0mrc8&authVersion=latest
+						7 container
+							8 container App Store Connect, ID: content
+								9 container step
+									10 image App Store Connect Logo
+									11 container signin
+										12 heading App Store Connect, Value: 1, ID: contentheader
+											13 text App Store Connect
+										14 container Description: App Store Connect, ID: sign_in_form
+											15 text field (settable) 电子邮件或电话号码
+											16 container
+												17 text 您的 Apple 账户信息用于让您安全登录和访问您的数据。Apple 会出于安全、支持和报告目的记录某些数据。如果您同意，Apple 还可能使用您的 Apple 账户信息向您发送营销电子邮件和通信，包括基于您对 Apple 服务的使用情况。
+												18 link Description: 了解数据的管理方式… 在新窗口中打开。, Value: apple.com.cn/legal/privacy/data/zh-cn/apple-id/
+											19 container
+												20 button (disabled) 继续, ID: sign-in
+												21 button 通过通行密钥登录, ID: swp
+												22 text 需要安装 iOS 17 或更高版本的设备。
+			23 container footer
+				24 text Copyright © 2026  Apple Inc. 保留所有权利。
+				25 link Description: 服务条款, Value: appstoreconnect.apple.com/olympus/v1/terms/ASC
+				26 link Description: 隐私政策, Value: apple.com/legal/privacy/
+
+The focused UI element is 15 text field (settable) 电子邮件或电话号码

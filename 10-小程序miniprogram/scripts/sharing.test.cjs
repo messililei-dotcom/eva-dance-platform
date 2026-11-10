@@ -4,7 +4,7 @@ const root=path.resolve(__dirname,'..');
 test('all registered pages install friend and timeline sharing while preserving load arguments',()=>{
  for(const route of JSON.parse(fs.readFileSync(root+'/app.json')).pages){
   let page;const source=fs.readFileSync(root+'/'+route+'.js','utf8');
-  vm.runInNewContext(source,{Page:p=>page=p,require:name=>name.includes('shared/share')?require('../shared/share'):name.includes('video-feature')?{withVideoFeature:v=>v}:{},getApp:()=>({}),wx:{},console});
+  vm.runInNewContext(source,{Page:p=>page=p,require:name=>name.includes('shared/share')?require('../shared/share'):name.includes('video-feature')?{withVideoFeature:v=>v}:name.endsWith('/event-phone')?require('../shared/event-phone'):{},getApp:()=>({}),wx:{},console});
   assert.equal(typeof page.onShareAppMessage,'function',route);assert.equal(typeof page.onShareTimeline,'function',route);assert.equal(typeof page.onReady,'function',route);
  }
 });
@@ -17,7 +17,7 @@ test('offline period sharing preserves selected period ID and normalized cover',
  assert.equal(result.path,'/pages/offline-detail/offline-detail?id=900123');assert.match(result.imageUrl,/^https:\/\/admin\.swod\.com\.cn\/api\/courses\/cover-image/);
 });
 test('account entries never include private account fields or login handoffs',()=>{
- for(const route of ['profile','profile-edit','commerce-orders','admin','login']){
+ for(const route of ['profile','profile-edit','commerce-orders','admin','login','learning-records','event-music']){
   const result=resolveShare({data:{memberName:'PRIVATE_NAME',phone:'PRIVATE_PHONE',orders:[{id:'SECRET_ORDER'}]},shareOptions:{token:'SECRET_TOKEN',pwa_handoff:'SECRET_HANDOFF',memberId:9}},route);
   assert.doesNotMatch(JSON.stringify(result),/PRIVATE|SECRET|memberId/);assert.match(result.imageUrl,/^\/images\/logo(?:-\d{8})?\.png$/);
  }

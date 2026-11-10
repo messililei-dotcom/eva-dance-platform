@@ -17,7 +17,7 @@ export class HuksVault {
       { tag: huks.HuksTag.HUKS_TAG_PADDING, value: huks.HuksKeyPadding.HUKS_PADDING_NONE }];
   }
   private async key(): Promise<void> {
-    if (await huks.isKeyItemExist(this.alias, { properties: [] })) return;
+    if (await huks.hasKeyItem(this.alias, { properties: [] })) return;
     if (fileIo.accessSync(this.path)) throw new Error('安全存储密钥不可用，请重新登录');
     await huks.generateKeyItem(this.alias, { properties: this.props(huks.HuksKeyPurpose.HUKS_KEY_PURPOSE_ENCRYPT | huks.HuksKeyPurpose.HUKS_KEY_PURPOSE_DECRYPT) });
   }

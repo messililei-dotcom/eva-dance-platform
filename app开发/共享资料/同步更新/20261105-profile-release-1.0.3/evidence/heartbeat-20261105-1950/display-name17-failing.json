@@ -1,0 +1,35 @@
+{
+  "hap": "app开发/共享资料/同步更新/20261105-profile-release-1.0.3/HarmonyOS/installers/SWOD-1.0.3-17-release.hap",
+  "expected": "SWOD",
+  "passed": false,
+  "labels": [
+    {
+      "owner": "application",
+      "reference": "$string:app_name",
+      "variants": [
+        {
+          "configuration": 0,
+          "value": "SWOD"
+        }
+      ]
+    },
+    {
+      "owner": "launcher:EntryAbility",
+      "reference": "$string:EntryAbility_label",
+      "variants": [
+        {
+          "configuration": 0,
+          "value": "SWOD"
+        },
+        {
+          "configuration": 2,
+          "value": "label"
+        },
+        {
+          "configuration": 3,
+          "value": "label"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "path": "Android/SWOD-1.0.4-21-release.aab",
+    "size": 15456415,
+    "sha256": "e17970b3de385ebf87afa182f6a25ac1aafaf3af7c9c1a5b152ba8fdfe489a3d"
+  },
+  {
+    "path": "Android/SWOD-1.0.4-21-release.apk",
+    "size": 28959432,
+    "sha256": "a5022ec219ccf14bf402657a39d44ac3fe699f52c22eabd29948fa1c64d18cd4"
+  },
+  {
+    "path": "iOS/SWOD-1.0.4-14.ipa",
+    "size": 12213914,
+    "sha256": "d95c724a6aac6a5f3c791f987304489199573e5147aeb028c7e884bf29488167"
+  },
+  {
+    "path": "../20261110-harmony-window/review-candidate/installers/SWOD-1.0.4-23-release.hap",
+    "size": 16193437,
+    "sha256": "45ee7b969da202996bdf5359187d8877825f81df88d613c60153893148abfe0d"
+  },
+  {
+    "path": "../20261110-harmony-window/review-candidate/installers/SWOD-1.0.4-23-release.app",
+    "size": 7628748,
+    "sha256": "b208bbc18733bb6239f6d4e8a4aec86186e2bec25e69df737e1144bfbf92321e"
+  }
+]

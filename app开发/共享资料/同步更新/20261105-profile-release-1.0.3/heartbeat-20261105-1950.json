@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-11-05T19:58:42+08:00",
+  "version": "1.0.3",
+  "builds": {
+    "ios": 13,
+    "android": 20,
+    "harmony": 18
+  },
+  "ios": {
+    "processingStatus": "complete-ready-to-submit",
+    "build": 13,
+    "version": "1.0.3",
+    "officialBuildID": "46351c82-af74-45e7-bdc4-00f5eb5c4604",
+    "draftAssociated": false,
+    "submitted": false,
+    "evidence": "evidence/heartbeat-20261105-1950/apple-build13-ready.txt"
+  },
+  "harmony": {
+    "supersededCandidate": 17,
+    "candidateBuild": 18,
+    "old17MustNotUpload": true,
+    "rootCause": "Aliyun premierlibrary en_US/zh_CN EntryAbility_label=label overrides application base EntryAbility_label=SWOD. Confirmed in signed17 and original15 resources.index, consistent with official launcher screenshot.",
+    "fix": "Launcher label references application-specific swod_launcher_label; package label resolver now enforced by release builder.",
+    "original17RegressionFailed": true,
+    "signed18DisplayNamePassed": true,
+    "appInner18DisplayNamePassed": true,
+    "originalSigningVerified": true,
+    "policyTestsPassed": 44,
+    "loginFailureStillUnresolved": true,
+    "nativeRuntimeAccepted": false,
+    "uploaded": false,
+    "submitted": false,
+    "originalFilingChanged": false
+  },
+  "huaweiAccess": "Current cn.com.swod.evadance menu still1.0.2待修改; body iframe blank this attempt, cannot retrieve additional native logs. No status change inferred.",
+  "otherAndroid": "No new issued copyright proof in latest local monitoring record; no blocked-market reuploads.",
+  "pendingUserActionsUnchanged": [
+    "Android20 first-run privacy/terms confirmation for visitor testing/screenshots"
+  ],
+  "newNotificationNeeded": true,
+  "existingReviewsWithdrawn": false
+}

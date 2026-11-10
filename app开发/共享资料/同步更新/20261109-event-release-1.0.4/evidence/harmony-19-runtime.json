@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-11-09T11:11:47+08:00",
+  "emulator": "SWOD_API24",
+  "build": 19,
+  "version": "1.0.4",
+  "installPassed": true,
+  "launchPassed": true,
+  "guestNavigation": [
+    "academy",
+    "offline",
+    "events",
+    "shop"
+  ],
+  "smsModeVisible": true,
+  "passwordModeVisible": true,
+  "submitDisabledBeforeConsentAndInput": true,
+  "successfulNativeLoginVerified": false,
+  "storeScreenshotsReady": false,
+  "captureResult": "Protected window produced black images. Saved only as evidence of the screenshot restriction."
+}

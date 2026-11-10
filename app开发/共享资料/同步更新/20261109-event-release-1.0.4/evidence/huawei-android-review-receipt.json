@@ -1,0 +1,16 @@
+{
+  "verifiedAt": "2026-11-09T16:40:20+08:00",
+  "appId": "119475083",
+  "packageName": "cn.com.swod.app",
+  "version": "1.0.4",
+  "build": 21,
+  "recordId": "2079881269264579968",
+  "reviewUrl": "https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2079881269264579968?appId=119475083&projectId=101653523865417801",
+  "status": "正在审核",
+  "officialRelease": true,
+  "openTesting": false,
+  "automaticReleaseAfterApproval": true,
+  "regions": "existing selection retained",
+  "screenshotsSaved": 5,
+  "publiclyVerified": false
+}

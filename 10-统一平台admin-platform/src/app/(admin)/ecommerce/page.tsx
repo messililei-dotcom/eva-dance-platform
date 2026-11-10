@@ -153,6 +153,7 @@ function normalizeSale(raw: any, productMap: Map<string, ProductRow>) {
     productName: textValue(raw.product_name ?? raw.productName ?? raw.name ?? product?.name, '-'),
     color: textValue(raw.color ?? product?.color, '-'),
     size: textValue(raw.size ?? product?.size, '-'),
+    orderNo: textValue(raw.bonus_order_no),
     saleType: textValue(raw.saleType ?? raw.sale_type, '线下'),
     channel: textValue(raw.channel, '线下'),
     quantity: numberValue(raw.quantity),
@@ -294,6 +295,7 @@ export default function EcommercePage() {
     });
   }, [products, keyword, category]);
   const groups = useMemo(() => groupProducts(filteredProducts), [filteredProducts]);
+  const salesOrderCount = new Set(sales.map((sale) => sale.raw.bonus_entry_id == null ? `sale-${sale.id}` : `bonus-${sale.raw.bonus_entry_id}`)).size;
   const salesAmount = sales.reduce((sum, item) => sum + item.amount, 0);
   const stockInCount = stockLogs.filter(item => item.direction === '入').reduce((sum, item) => sum + item.quantity, 0);
   const stockOutCount = stockLogs.filter(item => item.direction !== '入').reduce((sum, item) => sum + item.quantity, 0);
@@ -882,11 +884,11 @@ export default function EcommercePage() {
           },
           {
             key: 'sales',
-            label: `销售记录 ${sales.length}`,
+            label: `销售记录 ${salesOrderCount}`,
             children: (
               <>
                 <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                  <Col xs={24} md={8}><Card><Statistic title="销售单数" value={sales.length} prefix={<ShoppingCartOutlined />} /></Card></Col>
+                  <Col xs={24} md={8}><Card><Statistic title="销售单数" value={salesOrderCount} prefix={<ShoppingCartOutlined />} /></Card></Col>
                   <Col xs={24} md={8}><Card><Statistic title="销售总额" value={formatCompactMoney(salesAmount)} valueStyle={{ color: '#F72A8A' }} /></Card></Col>
                   <Col xs={24} md={8}><Card><Statistic title="销售件数" value={sales.reduce((sum, item) => sum + item.quantity, 0)} suffix="件" /></Card></Col>
                 </Row>
@@ -904,13 +906,14 @@ export default function EcommercePage() {
                       { title: '尺码', dataIndex: 'size', width: 100, sorter: (a: any, b: any) => compareTableValues(a.size, b.size) },
                       { title: '类型', dataIndex: 'saleType', width: 100, sorter: (a: any, b: any) => compareTableValues(a.saleType, b.saleType) },
                       { title: '渠道', dataIndex: 'channel', width: 120, sorter: (a: any, b: any) => compareTableValues(a.channel, b.channel) },
+                      { title: '订单号', dataIndex: 'orderNo', width: 180, ellipsis: true, render: value => value || '—' },
                       { title: '数量', dataIndex: 'quantity', align: 'right' as const, width: 90, sorter: (a: any, b: any) => a.quantity - b.quantity },
                       { title: '实收金额', dataIndex: 'amount', align: 'right' as const, width: 120, sorter: (a: any, b: any) => a.amount - b.amount, render: (value: number) => <Text strong style={{ color: '#F72A8A' }}>{money(value)}</Text> },
                       { title: '销售顾问', dataIndex: 'salesAdvisor', width: 120, render: value => value || '未填写' },
                       { title: '提成比例', dataIndex: 'commissionRate', width: 110, render: value => `${value}%` },
                       { title: '提成金额', dataIndex: 'commissionAmount', width: 120, align: 'right' as const, render: money },
                       { title: '备注', dataIndex: 'note', ellipsis: true, sorter: (a: any, b: any) => compareTableValues(a.note, b.note) },
-                      { title: '操作', fixed: 'right' as const, width: 120, render: (_: any, record: any) => <Space><Tooltip title="编辑"><Button icon={<EditOutlined />} onClick={() => openSaleRecordModal(record)} /></Tooltip><Tooltip title="删除"><Button danger icon={<DeleteOutlined />} onClick={() => deleteSale(record)} /></Tooltip></Space> },
+                      { title: '操作', fixed: 'right' as const, width: 120, render: (_: any, record: any) => record.raw.bonus_entry_id != null ? <a href="/bonus-commission">前往奖金提成</a> : <Space><Tooltip title="编辑"><Button icon={<EditOutlined />} onClick={() => openSaleRecordModal(record)} /></Tooltip><Tooltip title="删除"><Button danger icon={<DeleteOutlined />} onClick={() => deleteSale(record)} /></Tooltip></Space> },
                     ])}
                   />
                 </Card>

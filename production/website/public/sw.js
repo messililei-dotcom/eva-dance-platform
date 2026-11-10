@@ -1,16 +1,16 @@
 /* 伊娃东方舞 PWA Service Worker
  * 原则：只缓存公开页面与静态资源；登录、学习进度、视频和 API 始终走网络。
  */
-const VERSION = 'swod-pwa-v12-content-ui-20261016';
+const VERSION = 'swod-pwa-v14-icons-install-20261105';
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [
   OFFLINE_URL,
   '/manifest.json',
-  '/icons/pwa/icon-192-20261006.png',
-  '/icons/pwa/icon-512-20261006.png',
-  '/icons/pwa/apple-touch-icon-20261006.png',
+  '/icons/pwa/icon-192-20261105.png',
+  '/icons/pwa/icon-512-20261105.png',
+  '/icons/pwa/apple-touch-icon-20261105.png',
   '/install'
 ];
 const PRIVATE_PATHS = [
@@ -26,14 +26,10 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then((keys) => Promise.all(
         keys
-          .filter((key) => key !== STATIC_CACHE && key !== PAGE_CACHE)
+          .filter((key) => key.startsWith('swod-pwa-') && key !== STATIC_CACHE && key !== PAGE_CACHE)
           .map((key) => caches.delete(key))
       ))
-      .then(async () => {
-        await self.clients.claim();
-        const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-        await Promise.all(windows.map((client) => client.navigate(client.url).catch(() => undefined)));
-      })
+      .then(() => self.clients.claim())
   );
 });
 
@@ -102,8 +98,8 @@ self.addEventListener('push', (event) => {
   const payload = event.data?.json?.() || {};
   event.waitUntil(self.registration.showNotification(payload.title || '伊娃东方舞', {
     body: payload.body || '您有新的学习消息',
-    icon: '/icons/pwa/icon-192-20261006.png',
-    badge: '/icons/pwa/icon-192-20261006.png',
+    icon: '/icons/pwa/icon-192-20261105.png',
+    badge: '/icons/pwa/icon-192-20261105.png',
     data: { url: payload.url || '/my-courses' },
     tag: payload.tag || 'swod-learning',
   }));

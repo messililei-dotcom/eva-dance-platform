@@ -1,3 +1,4 @@
+import { findPhoneMembers, samePhoneIdentity } from '@/lib/server/event-phone-member';
 import type { AdminDb } from '@/lib/server/admin-db';
 import { cleanText, memberToken } from './_helpers';
 import { normalizePhoneIdentity } from '../course/series/[id]/_authorization';
@@ -233,7 +234,7 @@ function cancelMergedPhoneMember(db: AdminDb, sourceId: number, targetId: number
 }
 
 function mergeIdentity(targetMember: MemberRow, sourceMember: MemberRow, phone: string): MergeIdentity {
-  const normalizedPhone = normalizePhoneIdentity(phone)
+  const normalizedPhone = (phone.startsWith('+') ? phone : normalizePhoneIdentity(phone))
     || normalizePhoneIdentity(targetMember.phone)
     || normalizePhoneIdentity(targetMember.phone_national_number)
     || normalizePhoneIdentity(sourceMember.phone)
@@ -426,14 +427,9 @@ export function loginData(member: MemberRow) {
 }
 
 export function upsertPhoneMember(db: AdminDb, phone: string, options: { sourceMemberId?: unknown; source?: string } = {}) {
-  const normalizedPhone = normalizePhoneIdentity(phone);
+  const normalizedPhone = phone.startsWith('+') ? phone : normalizePhoneIdentity(phone);
   const sourceMember = canonicalMember(db, getMember(db, options.sourceMemberId));
-  let phoneMember = db.prepare(
-    `SELECT * FROM Member
-     WHERE phone=? OR phone_national_number=?
-     ORDER BY CASE WHEN phone=? THEN 0 ELSE 1 END, id DESC
-     LIMIT 1`
-  ).get<MemberRow>(normalizedPhone, normalizedPhone, normalizedPhone) || null;
+  let phoneMember = (findPhoneMembers(db, phone)[0] as MemberRow | undefined) || null;
   phoneMember = canonicalMember(db, phoneMember);
 
   if (sourceMember && phoneMember && Number(phoneMember.id) !== Number(sourceMember.id)) {
@@ -474,7 +470,7 @@ export function upsertPhoneMember(db: AdminDb, phone: string, options: { sourceM
     return getMember(db, sourceMember.id) || sourceMember;
   }
 
-  if (sourceMember && normalizePhoneIdentity(sourceMember.phone) === normalizedPhone) {
+  if (sourceMember && samePhoneIdentity(sourceMember.phone, phone, sourceMember.phone_country_code)) {
     return getMember(db, sourceMember.id) || sourceMember;
   }
 

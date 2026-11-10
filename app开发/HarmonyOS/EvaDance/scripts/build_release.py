@@ -67,6 +67,9 @@ def main():
     run([clt / 'tool/node/bin/node', project / 'scripts/assemble_signed_app.cjs', work, certificate],
         'build-release.log', 'BUILD SUCCESSFUL')
     built = work / 'entry/build/default/outputs/default'
+    run([sys.executable, project / 'scripts/verify_display_name.py',
+         built / 'entry-default-unsigned.hap', '--output', evidence / 'display-name.json'],
+        'verify-display-name.log')
     with zipfile.ZipFile(built / 'entry-default-unsigned.hap') as archive:
         manifest = json.loads(archive.read('module.json'))
         assert manifest['app']['bundleName'] == 'cn.com.swod.evadance'

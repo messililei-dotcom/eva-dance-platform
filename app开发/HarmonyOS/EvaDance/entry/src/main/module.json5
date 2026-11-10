@@ -5,7 +5,8 @@
     "description": "$string:module_desc",
     "mainElement": "EntryAbility",
     "deviceTypes": [
-      "phone"
+      "phone",
+      "tablet"
     ],
     "deliveryWithInstall": true,
     "installationFree": false,
@@ -17,7 +18,7 @@
         "srcEntry": "./ets/entryability/EntryAbility.ets",
         "description": "$string:EntryAbility_desc",
         "icon": "$media:brand_logo",
-        "label": "$string:EntryAbility_label",
+        "label": "$string:swod_launcher_label",
         "startWindowIcon": "$media:brand_logo",
         "startWindowBackground": "$color:start_window_background",
         "exported": true,

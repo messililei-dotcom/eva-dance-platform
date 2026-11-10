@@ -20,6 +20,12 @@ export default function PWAProvider() {
 
     let disposed = false;
     let refreshing = false;
+    let currentRegistration: ServiceWorkerRegistration | undefined;
+    const checkForUpdate = () => {
+      if (!disposed && document.visibilityState === 'visible') {
+        currentRegistration?.update().catch(() => undefined);
+      }
+    };
     const hadController = Boolean(navigator.serviceWorker.controller);
     const handleControllerChange = () => {
       if (disposed || refreshing || !hadController) return;
@@ -28,10 +34,13 @@ export default function PWAProvider() {
     };
 
     navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+    window.addEventListener('online', checkForUpdate);
+    document.addEventListener('visibilitychange', checkForUpdate);
     navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
       .then((registration) => {
         if (disposed) return;
-        registration.update().catch(() => undefined);
+        currentRegistration = registration;
+        checkForUpdate();
         if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
         registration.addEventListener('updatefound', () => {
           const worker = registration.installing;
@@ -47,6 +56,8 @@ export default function PWAProvider() {
     return () => {
       disposed = true;
       navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+      window.removeEventListener('online', checkForUpdate);
+      document.removeEventListener('visibilitychange', checkForUpdate);
     };
   }, []);
 

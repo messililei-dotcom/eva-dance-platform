@@ -1,0 +1,71 @@
+{
+  "checkedAt": "2026-10-31T19:08:44+08:00",
+  "ios": {
+    "appId": "6826038106",
+    "package": "cn.com.swod.app",
+    "version": "1.0.2",
+    "build": 11,
+    "submissionID": "e6ac9f82-67e9-4eb0-b68d-ca9970019383",
+    "reviewStatus": "approved",
+    "reviewCompleted": true,
+    "distributionStatus": "distributable",
+    "automaticReleaseAfterApproval": true,
+    "manualReleaseClicked": false,
+    "currentReviewStatusVerified": true,
+    "publicCN": {
+      "verified": true,
+      "version": "1.0.2",
+      "url": "https://apps.apple.com/cn/app/swod/id6826038106",
+      "storeDownloadEntryVisible": true,
+      "physicalInstallTest": "skipped-at-user-request"
+    },
+    "availableTerritoryCount": 173,
+    "unavailableTerritories": {
+      "Afghanistan": "Apple says apps containing contest content cannot be sold here.",
+      "Morocco": "Apple says apps containing contest content cannot be sold here."
+    },
+    "countrySelectionChanged": false,
+    "US": {
+      "backendAvailable": true,
+      "publicVerified": false,
+      "reason": "Generic and canonical public URL redirected to China Today page; web tool also could not retrieve."
+    },
+    "HK": {
+      "backendAvailable": true,
+      "publicVerified": false,
+      "reason": "Public URL redirected to China Today page."
+    },
+    "authObservation": "Old IAB login tab was stale; a fresh exact review URL read succeeded with existing session.",
+    "evidenceDirectory": "evidence/heartbeat-20261031-1859"
+  },
+  "huaweiAndroid": {
+    "appId": "119475083",
+    "recordId": "2067391391952053568",
+    "version": "1.0.1",
+    "lastSubmittedBuild": 11,
+    "currentReviewStatusVerified": true,
+    "status": "in-review",
+    "next18Uploaded": false
+  },
+  "harmony": {
+    "appId": "6917617955633704973",
+    "recordId": "2071129556072323840",
+    "version": "1.0.2",
+    "lastSubmittedBuild": 15,
+    "currentReviewStatusVerified": true,
+    "status": "waiting-for-review"
+  },
+  "otherChannels": {
+    "freshManagerCheck": false,
+    "knownCopyrightMaterialBlockersUnresolved": true,
+    "noRepeatUpload": true
+  },
+  "newUpload": false,
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "signingChanged": false,
+  "productionFeatureFlagsChanged": false,
+  "notificationDecision": "NOTIFY",
+  "notificationReason": "iOS1.0.2(11) newly verified approved and publicly released in mainland China."
+}

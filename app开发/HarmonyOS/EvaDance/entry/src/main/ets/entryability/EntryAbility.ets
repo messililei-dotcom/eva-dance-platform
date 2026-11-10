@@ -22,6 +22,8 @@ import { appPush } from '../services/AppPush';
 const DOMAIN = 0x0000;
 
 export default class EntryAbility extends UIAbility {
+  private activeStage?: window.WindowStage;
+
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     appPush.configure(this.context, want);
     try {
@@ -39,22 +41,46 @@ export default class EntryAbility extends UIAbility {
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
-    // Main window is created, set main page for this ability
-    hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
+    this.activeStage = windowStage;
+    platform.protectScreen = undefined;
+    platform.screenProtected = false;
+    this.loadStage(windowStage);
+  }
 
-    platform.initialize(this.context).then(async () => {
-      try { const main = await windowStage.getMainWindow(); await main.setWindowPrivacyMode(true); platform.screenProtected = true; } catch { platform.screenProtected = false; }
-      windowStage.loadContent('pages/Index', (err) => {
+  private async loadStage(windowStage: window.WindowStage): Promise<void> {
+    try {
+      await platform.initialize(this.context);
+      if (this.activeStage !== windowStage) return;
+
+      const main = await windowStage.getMainWindow();
+      if (this.activeStage !== windowStage) return;
+      platform.protectScreen = async () => {
+        if (this.activeStage !== windowStage) throw new Error('Window stage is no longer active');
+        await main.setWindowPrivacyMode(true);
+        if (this.activeStage !== windowStage) throw new Error('Window stage is no longer active');
+        platform.screenProtected = true;
+      };
+      if (platform.credentials || platform.staff) {
+        await platform.protectScreen();
+      }
+    } catch {
+      hilog.warn(DOMAIN, 'testTag', 'Could not initialize window privacy mode.');
+    }
+    if (this.activeStage !== windowStage) return;
+
+    windowStage.loadContent('pages/Index', (err) => {
       if (err.code) {
         hilog.error(DOMAIN, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err));
         return;
       }
-      hilog.info(DOMAIN, 'testTag', 'Succeeded in loading the content.');
-      });
+      hilog.info(DOMAIN, 'testTag', '%{public}s', 'Succeeded in loading the content.');
     });
   }
 
   onWindowStageDestroy(): void {
+    this.activeStage = undefined;
+    platform.protectScreen = undefined;
+    platform.screenProtected = false;
     // Main window is destroyed, release UI related resources
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageDestroy');
   }

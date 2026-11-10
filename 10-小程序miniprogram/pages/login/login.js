@@ -1,3 +1,4 @@
+const { normalizeEventPhone } = require('../../shared/event-phone');
 const share = require("../../shared/share");
 const api = require("../../utils/api");
 
@@ -23,6 +24,7 @@ function requestErrorMessage(err, fallback) {
 Page(share.withShare("login", {
   data: {
     phone: "",
+    countryCode: "+86",
     code: "",
     countdown: 0,
     sending: false,
@@ -33,23 +35,22 @@ Page(share.withShare("login", {
   onLoad(options = {}) { this.returnProfile = options.returnTab === 'profile'; this.loginCompleted = false; },
 
   onPhoneInput(e) {
-    this.setData({ phone: e.detail.value.replace(/\D/g, '').slice(0, 11) });
+    this.setData({ phone: e.detail.value.replace(/[^\d+]/g, '').slice(0, 20) });
   },
 
+  onCountryInput(e) { this.setData({ countryCode: e.detail.value }); },
   onCodeInput(e) {
     this.setData({ code: e.detail.value.replace(/\D/g, '').slice(0, 6) });
   },
 
   async sendCode() {
     const { phone } = this.data;
-    if (!/^1[3-9]\d{9}$/.test(phone)) {
-      wx.showToast({ title: "请输入正确手机号", icon: "none" });
-      return;
-    }
+    try { normalizeEventPhone(phone, this.data.countryCode); }
+    catch (error) { wx.showToast({ title: error.message, icon: 'none' }); return; }
 
     this.setData({ sending: true });
     try {
-      const result = await api.sendCode(phone);
+      const result = await api.sendCode(phone, this.data.countryCode);
       if (result.success) {
         wx.showToast({ title: "验证码已发送", icon: "success" });
         // 开发模式会返回 code/devCode，直接填充
@@ -130,10 +131,8 @@ Page(share.withShare("login", {
 
   async login() {
     const { phone, code } = this.data;
-    if (!/^1[3-9]\d{9}$/.test(phone)) {
-      wx.showToast({ title: "请输入正确手机号", icon: "none" });
-      return;
-    }
+    try { normalizeEventPhone(phone, this.data.countryCode); }
+    catch (error) { wx.showToast({ title: error.message, icon: 'none' }); return; }
     if (!code || code.length < 4) {
       wx.showToast({ title: "请输入验证码", icon: "none" });
       return;
@@ -145,7 +144,7 @@ Page(share.withShare("login", {
       if (!wx.getStorageSync("token") && app && typeof app.ensureSilentLogin === "function") {
         await app.ensureSilentLogin(true).catch(() => null);
       }
-      const result = await api.studentLogin(phone, code);
+      const result = await api.studentLogin(phone, code, this.data.countryCode);
       if (result.success) {
         this.finishLogin(result);
       } else {

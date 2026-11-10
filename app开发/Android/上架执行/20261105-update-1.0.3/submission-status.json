@@ -1,0 +1,145 @@
+{
+  "checkedAt": "2026-11-05T14:06:08+08:00",
+  "version": "1.0.3",
+  "versionCode": 20,
+  "packageName": "cn.com.swod.app",
+  "candidateRegistry": "../../../共享资料/同步更新/20261105-profile-release-1.0.3/candidate-artifacts.json",
+  "previousChannelRecord": "../20261030-update-1.0.2/submission-status.json",
+  "originalSigningPreserved": true,
+  "filingChanged": false,
+  "existingReviewsWithdrawn": false,
+  "latestScreenshotsReady": false,
+  "platforms": {
+    "xiaomi": {
+      "appId": "2882303761520603185",
+      "latestCandidateVersionName": "1.0.3",
+      "latestCandidateVersionCode": 20,
+      "latestCandidateUploaded": false,
+      "latestCandidateSubmitted": false,
+      "priorVersionRecordPreserved": true,
+      "lastKnownPriorVersion": "1.0.2",
+      "lastKnownPriorBuild": 18,
+      "priorMaterialBlockers": [
+        "正式版权证书尚未取得",
+        "特殊行业资质评估及匹配材料待完成",
+        "联系人手机验证",
+        "官方表单仍标记基础信息缺项，须补齐后终检"
+      ],
+      "currentManagerVerified": false,
+      "currentAccess": "Not reopened this run; no issued copyright or new qualification material",
+      "doNotUseOldScreenshotAsNewBuildProof": true
+    },
+    "vivo": {
+      "appId": "106168720",
+      "latestCandidateVersionName": "1.0.3",
+      "latestCandidateVersionCode": 20,
+      "latestCandidateUploaded": false,
+      "latestCandidateSubmitted": false,
+      "priorVersionRecordPreserved": true,
+      "lastKnownPriorVersion": "1.0.2",
+      "lastKnownPriorBuild": 18,
+      "priorMaterialBlockers": [
+        "正式版权证明必填，当前未提供"
+      ],
+      "currentManagerVerified": false,
+      "currentAccess": "Not reopened this run; no issued copyright or new qualification material",
+      "doNotUseOldScreenshotAsNewBuildProof": true
+    },
+    "honor": {
+      "appId": "104599763",
+      "latestCandidateVersionName": "1.0.3",
+      "latestCandidateVersionCode": 20,
+      "latestCandidateUploaded": false,
+      "latestCandidateSubmitted": false,
+      "priorVersionRecordPreserved": true,
+      "lastKnownPriorVersion": "1.0.2",
+      "lastKnownPriorBuild": 18,
+      "priorMaterialBlockers": [
+        "正式版权证书",
+        "资质评估与对应材料",
+        "年龄分级及应用信息终检",
+        "未完成Google Android开发者身份认证，印度尼西亚/泰国/新加坡/巴西当前不可分发；未擅自缩减全球范围"
+      ],
+      "currentManagerVerified": false,
+      "currentAccess": "Not reopened this run; no issued copyright or new qualification material",
+      "doNotUseOldScreenshotAsNewBuildProof": true
+    },
+    "huaweiAndroid": {
+      "appId": "119475083",
+      "latestCandidateVersionName": "1.0.3",
+      "latestCandidateVersionCode": 20,
+      "latestCandidateUploaded": false,
+      "latestCandidateSubmitted": false,
+      "priorVersionRecordPreserved": true,
+      "lastKnownPriorVersion": "1.0.1",
+      "lastKnownPriorBuild": 11,
+      "priorMaterialBlockers": [
+        "正式1.0.1(11)仍在审核并保留；新版正式提交未完成",
+        "安卓新草稿正文在新旧两个官方入口均持续加载，无法上传；该草稿标注开放式测试，未当作正式发布提交"
+      ],
+      "currentManagerVerified": true,
+      "currentAccess": "Huawei login required",
+      "doNotUseOldScreenshotAsNewBuildProof": true
+    },
+    "oppo": {
+      "appId": "37977416",
+      "latestCandidateVersionName": "1.0.3",
+      "latestCandidateVersionCode": 20,
+      "latestCandidateUploaded": false,
+      "latestCandidateSubmitted": false,
+      "priorVersionRecordPreserved": true,
+      "lastKnownPriorVersion": "1.0.1",
+      "lastKnownPriorBuild": 12,
+      "priorMaterialBlockers": [
+        "登录组件失败，刷新一次仍未恢复",
+        "此前记录的版权证书、签章承诺函及验证仍未补齐；本轮未进入后台重新核验"
+      ],
+      "currentManagerVerified": false,
+      "currentAccess": "Not reopened this run; no issued copyright or new qualification material",
+      "doNotUseOldScreenshotAsNewBuildProof": true
+    },
+    "tencent": {
+      "appId": "1112541998",
+      "latestCandidateVersionName": "1.0.3",
+      "latestCandidateVersionCode": 20,
+      "latestCandidateUploaded": false,
+      "latestCandidateSubmitted": false,
+      "priorVersionRecordPreserved": true,
+      "lastKnownPriorVersion": "1.0.2",
+      "lastKnownPriorBuild": 18,
+      "priorMaterialBlockers": [
+        "正式软著或电子版权证书缺失，基础信息保存被拦截",
+        "本轮教育评估要求办学许可证、教育移动应用备案截图及营业执照含教育经营范围；适用性和匹配材料待核实",
+        "还需盖章ICP备案截图及应用发布承诺函"
+      ],
+      "currentManagerVerified": false,
+      "currentAccess": "Not reopened this run; no issued copyright or new qualification material",
+      "doNotUseOldScreenshotAsNewBuildProof": true
+    }
+  },
+  "lastMonitorAt": "2026-11-07T18:23:06+08:00",
+  "lastMonitorRecord": "../../../共享资料/同步更新/20261105-profile-release-1.0.3/heartbeat-20261107-1819.json",
+  "previousHuaweiFormalResult": {
+    "appId": "119475083",
+    "packageName": "cn.com.swod.app",
+    "version": "1.0.1",
+    "build": 11,
+    "versionRecord": "2067391391952053568",
+    "reviewStatus": "approved",
+    "status": "listed",
+    "listedAt": "2026-11-02T12:06:33+08:00",
+    "automaticReleaseAfterApproval": true,
+    "publicRegionsVerified": [
+      "CN"
+    ],
+    "publicVersion": "1.0.1",
+    "publicURL": "https://appgallery.huawei.com/app/C119475083",
+    "publicDownloadEntryVisible": true,
+    "otherRegionPublicVerificationPending": true,
+    "latest103Build20Uploaded": false,
+    "formalUpgradeButtonNowAvailable": true,
+    "evidence": "evidence/heartbeat-20261105-1546/huawei-android.txt",
+    "publicEvidence": "evidence/heartbeat-20261105-1546/public-cn.txt"
+  },
+  "huaweiLoginRequired": false
+}

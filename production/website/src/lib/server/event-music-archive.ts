@@ -3,7 +3,6 @@ import path from 'path';
 import crypto from 'crypto';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
-import { archiveEventAudio, deleteEventAudio } from './aliyun-vod';
 const run = promisify(execFile);
 const root = process.env.EVENT_MUSIC_UPLOAD_ROOT || '/www/wwwroot/dongfangwuquan/admin-platform/public/uploads/event-music';
 function safe(value: string, limit = 110) {
@@ -21,15 +20,11 @@ export async function persistEventMusic(file: File, eventId: number, eventName: 
     const { stdout } = await run(process.env.FFPROBE_PATH || 'ffprobe', ['-v', 'error', '-show_entries', 'format=duration:stream=codec_type', '-of', 'json', filePath], { timeout: 15000, maxBuffer: 256 * 1024 });
     const media = JSON.parse(stdout), duration = Number(media.format?.duration);
     if (!media.streams?.some((stream: any) => stream.codec_type === 'audio') || !Number.isFinite(duration) || duration <= 0) throw new Error('音乐内容无效');
-    let archive = { vodId: '', categoryId: 0, status: 'local' };
-    if (process.env.EVENT_MUSIC_VOD_ENABLED !== 'false' && process.env.ALIYUN_ACCESS_KEY_ID && process.env.ALIYUN_ACCESS_KEY_SECRET) {
-      try { archive = await archiveEventAudio(filePath, fileName, eventId, eventName); }
-      catch (error) { console.error('赛事音乐VOD归档失败，已保留本地原件', error instanceof Error ? error.message : 'VOD上传失败'); }
-    }
+    // Event originals stay on the server; the event OSS worker verifies private copies.
+    const archive = { vodId: '', categoryId: 0, status: 'local' };
     return { fileName, filePath, fileUrl: path.posix.join('/uploads/event-music', ...parts, fileName), fileSize: file.size, duration, ...archive };
   } catch (error) { await fs.unlink(filePath).catch(() => undefined); throw new Error('音乐文件无法读取，请上传有效的 MP3、WAV、M4A、AAC 或 FLAC 音频'); }
 }
 export async function discardEventMusic(music: { filePath: string; vodId: string }) {
   await fs.unlink(music.filePath).catch(() => undefined);
-  if (music.vodId) await deleteEventAudio(music.vodId).catch(() => undefined);
 }

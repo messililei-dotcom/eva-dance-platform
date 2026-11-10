@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-11-01T11:07:55+08:00",
+  "ios": {
+    "version": "1.0.2",
+    "build": 11,
+    "publicCNVerified": true,
+    "publicCNVersion": "1.0.2",
+    "publicURL": "https://apps.apple.com/cn/app/swod/id6826038106",
+    "storeEntryVisible": true,
+    "currentReviewStatusVerified": false,
+    "reviewAccessReattempted": false,
+    "lastKnownApprovedAndAutomaticReleaseConfirmedAt": "2026-10-31T23:04:10+08:00",
+    "evidenceDirectory": "evidence/heartbeat-20261101-1105"
+  },
+  "huaweiAndroid": {
+    "appId": "119475083",
+    "reviewVersionId": "2067391391952053568",
+    "currentReviewStatusVerified": false,
+    "lastKnownStatus": "in-review",
+    "lastKnownVersion": "1.0.1(11)",
+    "lastConfirmedAt": "2026-10-31T19:08:44+08:00",
+    "freshOfficialURLAccess": "Redirected to Huawei account login; native UI confirmed login page",
+    "loginRequired": true,
+    "evidence": "evidence/heartbeat-20261101-1105/huawei-login-required.txt"
+  },
+  "harmony": {
+    "appId": "6917617955633704973",
+    "currentReviewStatusVerified": false,
+    "lastKnownStatus": "waiting-for-review",
+    "lastKnownVersion": "1.0.2(15)",
+    "lastConfirmedAt": "2026-10-31T19:08:44+08:00",
+    "sameHuaweiAccountAuthenticationGate": true
+  },
+  "nativeComputerAccess": "Mac unlocked this round; only owned Huawei verifier selected; verifier closed after authentication gate confirmed.",
+  "otherChannels": {
+    "freshManagerStateVerified": false,
+    "noNewCopyrightMaterialsRecorded": true,
+    "knownMaterialBlockersRetainedAsHistorical": true,
+    "noRepeatedUploadOrLoginRequest": true
+  },
+  "overseas": {
+    "currentPublicVerified": false,
+    "knownRedirectAndClientBlockNotRetried": true,
+    "noBypassAttempted": true
+  },
+  "newUpload": false,
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "originalSigningChanged": false,
+  "notificationDecision": "DONT_NOTIFY",
+  "reason": "Mainland public1.0.2 unchanged; Huawei shows the known authentication gate, no current review outcome obtained; existing material blockers unchanged."
+}

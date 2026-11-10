@@ -1,0 +1,24 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}"/></block>
+<block wx:else>
+<view class="page"><view class="card">
+  <view class="title">报名信息与参赛音乐</view>
+  <view wx:if="{{loading}}">正在读取报名信息…</view>
+  <block wx:else>
+    <block wx:if="{{canEdit}}"><view class="title">修改报名信息</view>
+    <label class="field" wx:for="{{detailFields}}" wx:key="key">{{item.label}}<input value="{{details[item.key]}}" maxlength="{{item.limit}}" data-field="{{item.key}}" bindinput="onDetailsInput" disabled="{{saving}}" /></label>
+    <label class="field">备注<textarea value="{{details.remark}}" maxlength="500" data-field="remark" bindinput="onDetailsInput" disabled="{{saving}}" /></label>
+    <button class="save" bindtap="saveDetails" loading="{{saving}}" disabled="{{saving}}">保存报名信息</button></block>
+    <view class="file-name">当前音乐　{{currentFileName || '未上传'}}</view>
+    <block wx:if="{{canEdit}}">
+      <view class="title">上传 / 更换参赛音乐</view>
+      <button bindtap="chooseMusic" disabled="{{saving}}">选择音乐文件</button>
+      <view class="note">从微信聊天或文件传输助手中选择 MP3、WAV、M4A、AAC、FLAC 文件，最大10MB。</view>
+      <view class="file-name">{{fileName}}</view>
+      <button class="save" bindtap="save" disabled="{{saving || !filePath}}" loading="{{saving}}">{{saving ? '正在上传…' : '保存新音乐'}}</button>
+    </block>
+    <button bindtap="load" disabled="{{saving}}">刷新音乐信息</button>
+  </block>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+</view></view>
+</block>

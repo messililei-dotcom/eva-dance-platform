@@ -1,0 +1,1087 @@
+- banner:
+  - link:
+    - /url: /consumer/cn/hdc-console
+  - link "开发者管理":
+    - /url: "#/home/9249519184596305951"
+    - generic "开发者管理"
+  - link "应用管理":
+    - /url: "#/app/101653523124950145?appId=6917617955633704973&projectId=101653523865196397"
+    - generic "应用管理"
+  - link "智能体管理":
+    - /url: /consumer/cn/hag/hagindex.html?isInFrame=true&lang=zh_CN#/agentHome/createProject/createAgent
+    - generic "智能体管理"
+  - img "notice"
+  - generic: HarmonyOS 开发者中心将于北京时间2026年11月5日23:00-11月6日1:00升级，届时开发/分发/运营/分析等服务将可能中断，升级结束后恢复使用。给您带来的不便，敬请谅解。
+  - generic: HarmonyOS 开发者中心将于北京时间2026年11月5日23:00-11月6日1:00升级，届时开发/分发/运营/分析等服务将可能中断，升级结束后恢复使用。给您带来的不便，敬请谅解。
+  - img "prev"
+  - generic: 1/2
+  - img "next"
+  - img "close"
+  - generic "互动中心":
+    - generic: "6"
+  - button:
+  - button "135******58 伊娃文化艺术发展（湖南）有限公司":
+    - generic "135******58"
+    - generic "伊娃文化艺术发展（湖南）有限公司"
+- button "SWOD cn.com.swod.evadance":
+  - generic "SWOD"
+  - generic "cn.com.swod.evadance"
+- generic: 全部折叠
+- menubar:
+  - link "基础信息":
+    - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124950145?appId=6917617955633704973&projectId=101653523865196397
+    - menuitem "基础信息":
+      - generic: 基础信息
+  - menuitem "分发" [expanded]:
+    - generic: 分发
+    - menu:
+      - menuitem "应用上架" [expanded]:
+        - generic: 应用上架
+        - menu:
+          - link "应用信息":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596237673?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "应用信息":
+              - generic: 应用信息
+          - link "软件包管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065903274627?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "软件包管理":
+              - generic: 软件包管理
+          - menuitem "版本信息" [expanded]:
+            - generic: 版本信息
+            - menu:
+              - link "1.0.2 新版本 - 待修改":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2071129556072323840?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "1.0.2 新版本 - 待修改":
+                  - generic: 1.0.2 新版本 - 待修改
+              - link "1.0.0 已上架":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2052180194646561792?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "1.0.0 已上架":
+                  - generic: 1.0.0 已上架
+          - menuitem "版本/升级":
+            - generic: 版本/升级
+          - link "版本历史记录":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124694771?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "版本历史记录":
+              - generic: 版本历史记录
+          - link "价格与销售范围":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728281964?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "价格与销售范围":
+              - generic: 价格与销售范围
+      - menuitem "应用测试" [expanded]:
+        - generic: 应用测试
+        - menu:
+          - link "测试版本列表":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065903122945?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "测试版本列表":
+              - generic: 测试版本列表
+          - link "测试用户":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065903122947?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "测试用户":
+              - generic: 测试用户
+          - link "测试反馈":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124818576?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "测试反馈":
+              - generic: 测试反馈
+      - menuitem "更多服务" [expanded]:
+        - generic: 更多服务
+        - menu:
+          - link "协议服务":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065902862722?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "协议服务":
+              - generic: 协议服务
+          - link "应用系列管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065902997222?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "应用系列管理":
+              - generic: 应用系列管理
+          - link "用户列表":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596032042?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "用户列表":
+              - generic: 用户列表
+  - menuitem "开放能力配置" [expanded]:
+    - generic: 开放能力配置
+    - menu:
+      - link "华为账号服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184595940124?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "华为账号服务":
+          - generic: 华为账号服务
+      - link "钱包服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596014478?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "钱包服务":
+          - generic: 钱包服务
+      - link "机器学习服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596014476?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "机器学习服务":
+          - generic: 机器学习服务
+      - link "云空间服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184595940131?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "云空间服务":
+          - generic: 云空间服务
+      - link "数字版权管理服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596014541?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "数字版权管理服务":
+          - generic: 数字版权管理服务
+      - link "地图服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596016362?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "地图服务":
+          - generic: 地图服务
+      - link "定位服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596201067?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "定位服务":
+          - generic: 定位服务
+      - link "AirTouch":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596365193?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "AirTouch":
+          - generic: AirTouch
+      - link "星盾机密风控引擎":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124964276?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "星盾机密风控引擎":
+          - generic: 星盾机密风控引擎
+  - menuitem "质量和运维" [expanded]:
+    - generic: 质量和运维
+    - menu:
+      - link "云测试":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596047462?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "云测试":
+          - generic: 云测试
+      - link "云调试":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596051206?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "云调试":
+          - generic: 云调试
+      - menuitem "APMS" [expanded]:
+        - generic: APMS
+        - menu:
+          - link "数据总览":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124770996?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "数据总览":
+              - generic: 数据总览
+          - link "故障告警":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124763674?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "故障告警":
+              - generic: 故障告警
+          - link "故障指标":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124771008?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "故障指标":
+              - generic: 故障指标
+          - link "故障分析":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124771010?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "故障分析":
+              - generic: 故障分析
+          - link "质量报告":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124771018?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "质量报告":
+              - generic: 质量报告
+          - link "配置管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124771020?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "配置管理":
+              - generic: 配置管理
+      - menuitem "云监控" [expanded]:
+        - generic: 云监控
+        - menu:
+          - link "监控大盘":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/243650030996357424?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "监控大盘":
+              - generic: 监控大盘
+          - link "日志服务":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/243650030996357459?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "日志服务":
+              - generic: 日志服务
+          - link "告警管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/243650030996357430?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "告警管理":
+              - generic: 告警管理
+  - menuitem "推广运营" [expanded]:
+    - generic: 推广运营
+    - menu:
+      - menuitem "增长运营" [expanded]:
+        - generic: 增长运营
+        - menu:
+          - link "推送服务":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184595935885?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "推送服务":
+              - generic: 推送服务
+          - link "Push用户增长":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322385623854178794?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "Push用户增长":
+              - generic: Push用户增长
+          - link "直达应用快服务":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596689416?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "直达应用快服务":
+              - generic: 直达应用快服务
+          - link "远程配置":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184595958872?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "远程配置":
+              - generic: 远程配置
+          - link "应用内消息":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596112422?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "应用内消息":
+              - generic: 应用内消息
+          - menuitem "视频编辑服务" [expanded]:
+            - generic: 视频编辑服务
+            - menu:
+              - link "我的素材":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611179157231?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "我的素材":
+                  - generic: 我的素材
+              - link "应用内容运营":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611179157329?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "应用内容运营":
+                  - generic: 应用内容运营
+              - link "参数配置":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611179157403?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "参数配置":
+                  - generic: 参数配置
+          - link "素材上传":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728085106?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "素材上传":
+              - generic: 素材上传
+          - link "服务直达":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728160630?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "服务直达":
+              - generic: 服务直达
+          - link "推广任务管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728984795?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "推广任务管理":
+              - generic: 推广任务管理
+          - link "探索流服务":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124600506?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "探索流服务":
+              - generic: 探索流服务
+          - menuitem "App Linking" [expanded]:
+            - generic: App Linking
+            - menu:
+              - link "应用链接":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124542427?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "应用链接":
+                  - generic: 应用链接
+              - link "聚合链接":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124542443?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "聚合链接":
+                  - generic: 聚合链接
+      - menuitem "产品运营" [expanded]:
+        - generic: 产品运营
+        - menu:
+          - link "商品管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/97458334310914209?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "商品管理":
+              - generic: 商品管理
+          - link "退款管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415727943528?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "退款管理":
+              - generic: 退款管理
+      - menuitem "活动运营" [expanded]:
+        - generic: 活动运营
+        - menu:
+          - link "奖品流水":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/97458334310914216?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "奖品流水":
+              - generic: 奖品流水
+      - menuitem "用户运营" [expanded]:
+        - generic: 用户运营
+        - menu:
+          - link "互动评论":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/97458334310914217?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "互动评论":
+              - generic: 互动评论
+  - menuitem "盈利" [expanded]:
+    - generic: 盈利
+    - menu:
+      - menuitem "AGD Pro应用变现服务" [expanded]:
+        - generic: AGD Pro应用变现服务
+        - menu:
+          - link "概览":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/243650030995611952?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "概览":
+              - generic: 概览
+          - link "媒体管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611178965381?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "媒体管理":
+              - generic: 媒体管理
+          - link "展示位管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611178965427?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "展示位管理":
+              - generic: 展示位管理
+          - link "屏蔽管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611178965478?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "屏蔽管理":
+              - generic: 屏蔽管理
+          - link "接入测试":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611178965554?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "接入测试":
+              - generic: 接入测试
+          - link "数据报表":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/243650030995611985?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "数据报表":
+              - generic: 数据报表
+      - link "应用内购买服务 （HarmonyOS NEXT）":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065903364488?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "应用内购买服务 （HarmonyOS NEXT）":
+          - generic: 应用内购买服务 （HarmonyOS NEXT）
+      - menuitem "鸿蒙支付服务" [expanded]:
+        - generic: 鸿蒙支付服务
+        - menu:
+          - link "支付服务（非虚拟类）":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065902816452?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "支付服务（非虚拟类）":
+              - generic: 支付服务（非虚拟类）
+  - menuitem "分析" [expanded]:
+    - generic: 分析
+    - menu:
+      - menuitem "概览" [expanded]:
+        - generic: 概览
+        - menu:
+          - link "本应用概览":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322385623856482366?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "本应用概览":
+              - generic: 本应用概览
+          - link "所有应用概览":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124950180?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "所有应用概览":
+              - generic: 所有应用概览
+      - menuitem "分发分析" [expanded]:
+        - generic: 分发分析
+        - menu:
+          - link "下载安装":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611175303332?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "下载安装":
+              - generic: 下载安装
+          - link "用户分析":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065903408682?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "用户分析":
+              - generic: 用户分析
+          - link "行为分析":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728225180?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "行为分析":
+              - generic: 行为分析
+      - menuitem "运营分析" [expanded]:
+        - generic: 运营分析
+        - menu:
+          - link "应用内付费":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/97458334310914225?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "应用内付费":
+              - generic: 应用内付费
+          - menuitem "数字商品服务分析" [expanded]:
+            - generic: 数字商品服务分析
+            - menu:
+              - link "概览":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415727891880?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "概览":
+                  - generic: 概览
+              - link "销售 - 产品销量":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728035804?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "销售 - 产品销量":
+                  - generic: 销售 - 产品销量
+              - link "销售 - 销售额":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728035810?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "销售 - 销售额":
+                  - generic: 销售 - 销售额
+              - link "订阅摘要":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415727891888?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "订阅摘要":
+                  - generic: 订阅摘要
+              - link "订阅 - 持续使用情况":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728035828?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "订阅 - 持续使用情况":
+                  - generic: 订阅 - 持续使用情况
+              - link "订阅 - 状态":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728035830?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "订阅 - 状态":
+                  - generic: 订阅 - 状态
+              - link "订阅 - 事件":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728035840?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "订阅 - 事件":
+                  - generic: 订阅 - 事件
+      - menuitem "质量分析" [expanded]:
+        - generic: 质量分析
+        - menu:
+          - link "安装失败":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184595918081?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "安装失败":
+              - generic: 安装失败
+- iframe [active] [id="mainIframeView"]:
+  - generic: 1.0.2新版本 - 待修改
+  - text: 知会：华为致力于构建透明、公开的商业合作环境，帮助开发者了解和知悉华为政策和要求，以尊重并保护开发者和华为共同利益。为此，请确保您上传物项的行为符合所有应适用的法律法规，包括中国、联合国安理会、美国（含美国商务部相关实体清单要求）、欧盟等。
+  - button "保存草稿" [disabled]:
+    - generic: 保存草稿
+  - button "提交审核":
+    - generic: 提交审核
+  - generic: 填写应用信息
+  - button "选择版本信息 (1.0.2)":
+    - generic: 选择版本信息 (1.0.2)
+  - generic: 未提交
+  - group "状态：":
+    - generic: 状态：
+    - generic: 待修改
+  - group "审核附件：":
+    - generic: 审核附件：
+    - generic: 审核附件.zip
+  - group "审核意见：":
+    - generic: 审核意见：
+    - generic: 您的应用“SWOD”（包名：cn.com.swod.evadance）未通过审核。
+    - generic: 您可以参考审核报告修改您的应用，并重新提交审核，我们非常愿意为您再次进行审核。
+  - generic: 软件版本
+  - group "包名：":
+    - generic: 包名：
+    - generic: cn.com.swod.evadance
+  - group "发布版本：":
+    - generic: 发布版本：
+    - button "去选择":
+      - generic: 去选择
+    - text: 为保障用户体验，建议您可以在“云测试”提前完成自检，也可以通过
+    - link "DevEco Studio":
+      - /url: https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/ide-app-analyzer
+    - text: 、
+    - link "DevEco Testing":
+      - /url: https://developer.huawei.com/consumer/cn/deveco-testing
+    - text: 等本地测试工具自检，及早发现应用质量体验等问题。
+    - table:
+      - rowgroup:
+        - row "文件名 版本（版本号） 构建版本 上传时间 大小 操作":
+          - columnheader "文件名":
+            - generic: 文件名
+          - columnheader "版本（版本号）":
+            - generic: 版本（版本号）
+          - columnheader "构建版本":
+            - generic: 构建版本
+          - columnheader "上传时间":
+            - generic: 上传时间
+          - columnheader "大小":
+            - generic: 大小
+          - columnheader "操作":
+            - generic: 操作
+    - table:
+      - rowgroup:
+        - row "SWOD-1.0.2-15-release.app 1.0.2（15） -- 2026-10-30 21:14:50 7.25 MB 下载":
+          - cell "SWOD-1.0.2-15-release.app":
+            - generic: SWOD-1.0.2-15-release.app
+          - cell "1.0.2（15）":
+            - generic: 1.0.2（15）
+          - cell "--":
+            - generic: "--"
+          - cell "2026-10-30 21:14:50":
+            - generic: 2026-10-30 21:14:50
+          - cell "7.25 MB":
+            - generic: 7.25 MB
+          - cell "下载":
+            - generic: 下载
+  - text: "*"
+  - generic: 软件包加密
+  - generic: ：
+  - radiogroup "* 软件包加密 ：":
+    - radio "加密（推荐）" [checked]
+    - generic: 加密（推荐）
+    - radio "不加密"
+    - generic: 不加密
+  - text: 软件包中只有abc格式文件支持加密。so格式文件不支持加密，会被明文打包进应用包，可评估是否需要有额外的安全加固措施。注意：加密后的应用在程序启动和运行过程中可能会小幅度增加性能开销。
+  - link "查看详情":
+    - /url: https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/code-protect-V5
+  - generic: 发布国家或地区
+  - group "* AppGallery华为应用市场：":
+    - generic: "* AppGallery华为应用市场："
+    - radio "所有国家或地区"
+    - generic: 所有国家或地区
+    - generic: App将在所有200个国家或地区发布，如果将来开通了新的国家或地区，App也将自动发布到这些国家或地区。
+    - radio "上一次选择的国家或地区" [checked]
+    - generic: 上一次选择的国家或地区
+    - generic: 选择最近一次选择的国家或地区发布App。
+    - text: 已选择 200 个国家或（地区）以及新国家或区域
+    - checkbox "全球" [checked]
+    - generic: 全球
+    - button "反选":
+      - generic: 反选
+    - checkbox [checked]
+    - generic: 中国大陆
+    - checkbox [checked]
+    - generic: 欧洲
+    - checkbox [checked]
+    - generic: 非洲
+    - checkbox [checked]
+    - generic: 中东
+    - checkbox [checked]
+    - generic: 北美
+    - checkbox [checked]
+    - generic: 亚太
+    - checkbox [checked]
+    - generic: 拉丁美洲和加勒比
+    - checkbox "中国大陆" [checked]
+    - generic: 中国大陆
+    - checkbox "新国家或区域" [checked]
+    - generic: 新国家或区域
+    - generic: 签约主体：
+    - list:
+      - listitem: 香港服务
+      - listitem: Aspiegel SE
+      - listitem: 华为软件技术有限公司
+      - listitem: 深圳市华为思义技术有限公司
+    - text: 您所选的部分国家未匹配到本地化语言，当前仅能显示默认语言。为提升应用下载量，推荐您使用“
+    - button "翻译服务":
+      - generic: 翻译服务
+    - text: ”获取本地化语言内容。
+  - checkbox [checked]
+  - text: 我同意应用分发到境外的国家或地区，并将开发或分发的数据出境到境外的华为关联公司进行应用运营，详情请参考《
+  - link "个人信息出境授权声明":
+    - /url: https://developer.huawei.com/consumer/cn/doc/app/20250303
+  - text: 》
+  - text: 注意：由于欧洲《数字服务法》（DSA）要求华为验证并显示开发者联系信息。验证完成后，此信息将在欧洲相关国家的AppGallery中显示，且仅用于展示。因此发布欧洲相关国家必须补充邓白氏号/营业执照、电话号码、地址，否则无法发布。
+  - link "去补充":
+    - /url: https://developer.huawei.com/consumer/cn/console/setting/profile
+  - generic: 可本地化基础信息
+  - generic: 正确填写应用多语言信息，有助于增加应用在应用市场曝光，输入的文字会以文本方式展示，不支持html标签。
+  - generic: "* 语言："
+  - combobox "* 语言："
+  - generic: 简体中文 - 默认
+  - generic: "* 应用介绍："
+  - textbox "* 应用介绍：":
+    - /placeholder: 应用介绍字数应限制为8000字以内
+  - generic: 268 / 8000
+  - text: 请仔细检查应用介绍是否符合审核要求。
+  - link "了解详情":
+    - /url: https://developer.huawei.com/consumer/cn/doc/app/50104-01
+  - generic: "* 应用一句话简介（小编推荐）："
+  - textbox "* 应用一句话简介（小编推荐）：":
+    - /placeholder: 应用一句话简介应限制为17字以内
+  - generic: 13 / 17
+  - text: 请仔细检查简介是否符合审核要求。
+  - link "了解详情":
+    - /url: https://developer.huawei.com/consumer/cn/doc/app/50104-01
+  - generic: "* 新版本特性："
+  - textbox "* 新版本特性：":
+    - /placeholder: "建议尽可能地详细描述此App版本所更新的内容，让用户了解此版本的具体更新情况。例如：\n1.新增功能：发布了某新功能\n2.优化用户界面：优化了某页面的展示效果\n3.修复已知问题：修复了某条件下会发生的某问题"
+  - generic: 96 / 1000
+  - paragraph: 您可以使用以下场景化模板，点击后即可拼接在左侧输入框的底部
+  - button "新增功能":
+    - generic: 新增功能
+  - button "新增内容":
+    - generic: 新增内容
+  - button "界面优化":
+    - generic: 界面优化
+  - button "bug修复":
+    - generic: bug修复
+  - button "功能预告":
+    - generic: 功能预告
+  - button "历史特性介绍":
+    - generic: 历史特性介绍
+  - button "通用模板":
+    - generic: 通用模板
+  - paragraph: 如果新版本的功能与上个版本差异不大，您也可以直接复制上个版本的“新版本特性”描述内容，并做适当修改
+  - button "从上个版本复制":
+    - generic: 从上个版本复制
+  - paragraph: 请您参考模板补充完整的更新描述，可以有效提升更新及时率。
+  - text: 请仔细检查特性介绍是否符合审核要求。
+  - link "了解详情":
+    - /url: https://developer.huawei.com/consumer/cn/doc/app/50104-01
+  - group "* 应用截图和视频：":
+    - generic: "* 应用截图和视频："
+    - generic: 您可以在这里上传应用详情页展示的素材。介绍截图是必填素材，其他素材可选填，如果您提交了其他素材可能会让该应用在华为应用市场客户端有更好的展示效果。
+    - tablist:
+      - tab "*应用介绍截图" [selected]:
+        - generic: "*应用介绍截图"
+      - tab "应用介绍视频":
+        - generic: 应用介绍视频
+      - tab "推荐视频":
+        - generic: 推荐视频
+      - tab "更新截图/视频":
+        - generic: 更新截图/视频
+    - tabpanel "*应用介绍截图":
+      - radiogroup "radio-group":
+        - radio "横向截图"
+        - generic: 横向截图
+        - radio "竖向截图" [checked]
+        - generic: 竖向截图
+      - button:
+      - button:
+      - button:
+      - button:
+      - button:
+      - button:
+      - button:
+      - button:
+      - button:
+      - button:
+      - generic: 需上传 3~10 张。最低尺寸（请确保宽高比9:16）：1080*1920px；格式：PNG、 JPG、 JPEG (均在 5 MB 以内)，以及 WEBP (200 KB 以内)。
+  - generic: 应用内资费
+  - generic: 应用内资费类型：
+  - group "应用内资费类型：":
+    - checkbox "激活收费"
+    - generic: 激活收费
+    - checkbox "道具收费"
+    - generic: 道具收费
+    - checkbox "关卡收费"
+    - generic: 关卡收费
+    - checkbox "购买虚拟币"
+    - generic: 购买虚拟币
+    - checkbox "部分章节收费（图书阅读类）"
+    - generic: 部分章节收费（图书阅读类）
+    - checkbox "课程收费" [checked]
+    - generic: 课程收费
+    - checkbox "会员收费"
+    - generic: 会员收费
+    - checkbox "其它"
+    - generic: 其它
+  - generic: 内容分级
+  - generic: 内容分级将用于标识您的应用适宜用户的年龄段，请按应用内容如实填写
+  - group "* 年龄分级：":
+    - generic: "* 年龄分级："
+    - button "设置":
+      - generic: 设置
+    - button "收起":
+      - generic: 收起
+    - text: 内容分级用途：
+    - list:
+      - listitem: 告知消费者，您的应用适宜用户的年龄段；
+      - listitem: 依法在特定区域或特定用户屏蔽或过滤您的内容。
+    - text: 开发者责任：
+    - list:
+      - listitem: 为您的应用或更新版本完成内容分级，当您的应用提供的内容发生变化时，应立即重新进行内容分级；
+      - listitem: 开发者应当保证其提交的与年龄分级相关的信息的真实性、准确性和合法性，并承担相应责任。对内容的不如实描述可能导致应用审核不通过、下架或封停。
+    - text: 华为权限：
+    - list:
+      - listitem: 华为有权对开发者的自检分级结果和相关材料进行审核，并根据审核情况对应用分级结果进行调整。
+      - listitem: 如果华为发现或者接到用户投诉认为开发者的应用存在任何不符合法律法规规定或华为相关标准的内容的，华为有权根据判断结果采取下架、屏蔽、断开链接等措施。
+      - listitem: 为实施该制度并对开发者提交的应用进行相应审核、分级和调整，不意味着华为对开发者的应用的合法、合规性承担任何明示或默示的担保、承诺，开发者仍需就其应用内容承担完全的担保责任。
+      - listitem: 华为有权对应用分级制度、年龄分级标准进行调整并通知开发者。
+    - table:
+      - rowgroup:
+        - row "分级系统 适用区域 分级类别 分级描述":
+          - columnheader "分级系统":
+            - generic: 分级系统
+          - columnheader "适用区域":
+            - generic: 适用区域
+          - columnheader "分级类别":
+            - generic: 分级类别
+          - columnheader "分级描述":
+            - generic: 分级描述
+    - table:
+      - rowgroup:
+        - row "年龄分级标准 中国区 16+ 年满 16 周岁":
+          - cell "年龄分级标准":
+            - generic: 年龄分级标准
+          - cell "中国区":
+            - generic: 中国区
+          - cell "16+":
+            - generic: 16+
+          - cell "年满 16 周岁":
+            - generic: 年满 16 周岁
+        - row "年龄分级标准 巴西 年满 18 周岁":
+          - cell "年龄分级标准":
+            - generic: 年龄分级标准
+          - cell "巴西":
+            - generic: 巴西
+          - cell:
+          - cell "年满 18 周岁":
+            - generic: 年满 18 周岁
+        - row "年龄分级标准 其他区域 16+ 年满 16 周岁":
+          - cell "年龄分级标准":
+            - generic: 年龄分级标准
+          - cell "其他区域":
+            - generic: 其他区域
+          - cell "16+":
+            - generic: 16+
+          - cell "年满 16 周岁":
+            - generic: 年满 16 周岁
+  - generic: 隐私声明
+  - text: 请选择隐私政策和用户协议，供上架审核和客户端展示。为规范化、标准化您的隐私声明内容，提升应用审核通过率，建议您使用协议服务，基于标准化模板生成自己的隐私声明，使用
+  - link "“隐私托管”":
+    - /url: https://developer.huawei.com/consumer/cn/doc/app/agc-help-privacy-policy-overview-0000002316881805
+  - text: 的方式提交隐私政策，并删除软件包中预置的隐私弹窗代码和隐私声明页面。您可以查看
+  - link "华为应用市场审核指南":
+    - /url: https://developer.huawei.com/consumer/cn/doc/app/50104-07
+  - text: 和
+  - link "APP常见个人信息保护问题FAQs":
+    - /url: https://developer.huawei.com/consumer/cn/doc/app/FAQ-faq-overview
+  - text: ，了解隐私政策规范。
+  - generic: 管理方式：
+  - radiogroup "管理方式：":
+    - radio "隐私托管"
+    - generic: 隐私托管
+    - radio "自定义隐私政策" [checked]
+    - generic: 自定义隐私政策
+  - generic: "* 隐私政策网址："
+  - textbox "* 隐私政策网址：":
+    - /placeholder: 请输入URL，以http://或者https://开头
+  - generic: 隐私权利：
+  - textbox "隐私权利：":
+    - /placeholder: 请输入URL，以http://或者https://开头
+  - generic: 隐私标签信息录入
+  - text: 将在您应用的详情界面展示，告知用户您的应用如何使用个人数据。
+  - link "查看隐私标签如何展示。":
+    - /url: https://developer.huawei.com/consumer/cn/doc/distribution/app/privacy-label
+  - generic: 若检测到您的包体中存在PAC文件，我们将提取并在此录入PAC文件中声明的个人数据，您也可以选择修改此处已录入的个人数据。
+  - group "* 是否涉及个人信息收集：":
+    - generic: "* 是否涉及个人信息收集："
+    - radio "是" [checked]
+    - generic: 是
+    - radio "否"
+    - generic: 否
+  - generic: 选择业务场景：
+  - group "选择业务场景：":
+    - checkbox "应用功能" [checked]
+    - generic: 应用功能
+    - checkbox "产品个性化"
+    - generic: 产品个性化
+    - checkbox "分析" [checked]
+    - generic: 分析
+    - checkbox "广告与营销"
+    - generic: 广告与营销
+    - checkbox "向第三方披露"
+    - generic: 向第三方披露
+    - checkbox "跨境传输"
+    - generic: 跨境传输
+    - checkbox "其他用途"
+    - generic: 其他用途
+  - tablist:
+    - tab "关联到用户数据汇总" [selected]:
+      - generic: 关联到用户数据汇总
+    - tab "应用功能":
+      - generic: 应用功能
+    - tab "分析":
+      - generic: 分析
+  - tabpanel "关联到用户数据汇总":
+    - table:
+      - rowgroup:
+        - row "数据类别 数据项 数据说明":
+          - columnheader
+          - columnheader "数据类别":
+            - generic: 数据类别
+          - columnheader "数据项":
+            - generic: 数据项
+          - columnheader "数据说明":
+            - generic: 数据说明
+    - table:
+      - rowgroup:
+        - row "1 基本资料 电话号码 手机号、座机号等":
+          - cell "1":
+            - generic: "1"
+          - cell "基本资料":
+            - textbox [disabled]
+          - cell "电话号码":
+            - textbox [disabled]
+          - cell "手机号、座机号等":
+            - textbox "手机号、座机号等" [disabled]
+        - row "2 基本资料 地址 家庭住址、邮寄地址、收件地址等":
+          - cell "2":
+            - generic: "2"
+          - cell "基本资料":
+            - textbox [disabled]
+          - cell "地址":
+            - textbox [disabled]
+          - cell "家庭住址、邮寄地址、收件地址等":
+            - textbox "家庭住址、邮寄地址、收件地址等" [disabled]
+        - row "3 交易信息 交易记录 付款账号、收款账号、支付方式、付费信息等":
+          - cell "3":
+            - generic: "3"
+          - cell "交易信息":
+            - textbox [disabled]
+          - cell "交易记录":
+            - textbox [disabled]
+          - cell "付款账号、收款账号、支付方式、付费信息等":
+            - textbox "付款账号、收款账号、支付方式、付费信息等" [disabled]
+        - row "4 交易信息 订单信息 订单号、商品信息、订阅信息等":
+          - cell "4":
+            - generic: "4"
+          - cell "交易信息":
+            - textbox [disabled]
+          - cell "订单信息":
+            - textbox [disabled]
+          - cell "订单号、商品信息、订阅信息等":
+            - textbox "订单号、商品信息、订阅信息等" [disabled]
+        - row "5 交易信息 快递信息 快递编号、收件人、寄件人信息、邮寄物品信息等":
+          - cell "5":
+            - generic: "5"
+          - cell "交易信息":
+            - textbox [disabled]
+          - cell "快递信息":
+            - textbox [disabled]
+          - cell "快递编号、收件人、寄件人信息、邮寄物品信息等":
+            - textbox "快递编号、收件人、寄件人信息、邮寄物品信息等" [disabled]
+        - row "6 标识符 用户标识符 UID、账户 ID、分配的用户 ID、客户编号、或其他可用于识别特定用户或账户的用户级或账户级 ID（如samba账号、ppp账号、ftp账号）等":
+          - cell "6":
+            - generic: "6"
+          - cell "标识符":
+            - textbox [disabled]
+          - cell "用户标识符":
+            - textbox [disabled]
+          - cell "UID、账户 ID、分配的用户 ID、客户编号、或其他可用于识别特定用户或账户的用户级或账户级 ID（如samba账号、ppp账号、ftp账号）等":
+            - textbox "UID、账户 ID、分配的用户 ID、客户编号、或其他可用于识别特定用户或账户的用户级或账户级 ID（如samba账号、ppp账号、ftp账号）等" [disabled]
+        - row "7 基本资料 姓名 名字或姓氏等":
+          - cell "7":
+            - generic: "7"
+          - cell "基本资料":
+            - textbox [disabled]
+          - cell "姓名":
+            - textbox [disabled]
+          - cell "名字或姓氏等":
+            - textbox "名字或姓氏等" [disabled]
+        - row "8 基本资料 性别":
+          - cell "8":
+            - generic: "8"
+          - cell "基本资料":
+            - textbox [disabled]
+          - cell "性别":
+            - textbox [disabled]
+          - cell
+        - row "9 基本资料 出生日期":
+          - cell "9":
+            - generic: "9"
+          - cell "基本资料":
+            - textbox [disabled]
+          - cell "出生日期":
+            - textbox [disabled]
+          - cell
+        - row "10 基本资料 账号信息 头像、昵称、口令等":
+          - cell "10":
+            - generic: "10"
+          - cell "基本资料":
+            - textbox [disabled]
+          - cell "账号信息":
+            - textbox [disabled]
+          - cell "头像、昵称、口令等":
+            - textbox "头像、昵称、口令等" [disabled]
+        - row "11 基本资料 其他个人资料 国籍、出生地、身高、体重等":
+          - cell "11":
+            - generic: "11"
+          - cell "基本资料":
+            - textbox [disabled]
+          - cell "其他个人资料":
+            - textbox [disabled]
+          - cell "国籍、出生地、身高、体重等":
+            - textbox "国籍、出生地、身高、体重等" [disabled]
+        - row "12 用户内容 音频 用户交互语音、视频音轨等":
+          - cell "12":
+            - generic: "12"
+          - cell "用户内容":
+            - textbox [disabled]
+          - cell "音频":
+            - textbox [disabled]
+          - cell "用户交互语音、视频音轨等":
+            - textbox "用户交互语音、视频音轨等" [disabled]
+        - row "13 用户内容 文字信息 问题反馈与建议等":
+          - cell "13":
+            - generic: "13"
+          - cell "用户内容":
+            - textbox [disabled]
+          - cell "文字信息":
+            - textbox [disabled]
+          - cell "问题反馈与建议等":
+            - textbox "问题反馈与建议等" [disabled]
+        - row "14 应用信息 浏览记录 页面点击、内容曝光记录等":
+          - cell "14":
+            - generic: "14"
+          - cell "应用信息":
+            - textbox [disabled]
+          - cell "浏览记录":
+            - textbox [disabled]
+          - cell "页面点击、内容曝光记录等":
+            - textbox "页面点击、内容曝光记录等" [disabled]
+        - row "15 应用信息 收藏记录 喜爱的内容":
+          - cell "15":
+            - generic: "15"
+          - cell "应用信息":
+            - textbox [disabled]
+          - cell "收藏记录":
+            - textbox [disabled]
+          - cell "喜爱的内容":
+            - textbox "喜爱的内容" [disabled]
+        - row "16 应用信息 应用基本信息 包名、版本号、开发者信息等":
+          - cell "16":
+            - generic: "16"
+          - cell "应用信息":
+            - textbox [disabled]
+          - cell "应用基本信息":
+            - textbox [disabled]
+          - cell "包名、版本号、开发者信息等":
+            - textbox "包名、版本号、开发者信息等" [disabled]
+        - row "17 应用信息 其他使用应用的信息 用户点击播放开始、停止应用进入/退出记录等交互信息":
+          - cell "17":
+            - generic: "17"
+          - cell "应用信息":
+            - textbox [disabled]
+          - cell "其他使用应用的信息":
+            - textbox [disabled]
+          - cell "用户点击播放开始、停止应用进入/退出记录等交互信息":
+            - textbox "用户点击播放开始、停止应用进入/退出记录等交互信息" [disabled]
+        - row "18 应用信息 应用设置信息 应用功能设置等":
+          - cell "18":
+            - generic: "18"
+          - cell "应用信息":
+            - textbox [disabled]
+          - cell "应用设置信息":
+            - textbox [disabled]
+          - cell "应用功能设置等":
+            - textbox "应用功能设置等" [disabled]
+        - row "19 标识符 其他设备标识符 车架号、发动机号、车牌号、设备认证凭据等":
+          - cell "19":
+            - generic: "19"
+          - cell "标识符":
+            - textbox [disabled]
+          - cell "其他设备标识符":
+            - textbox [disabled]
+          - cell "车架号、发动机号、车牌号、设备认证凭据等":
+            - textbox "车架号、发动机号、车牌号、设备认证凭据等" [disabled]
+        - row "20 设备信息 其他软硬件参数/系统设置 设备型号、分辨率、语言、国家/地区、软件版本信息等":
+          - cell "20":
+            - generic: "20"
+          - cell "设备信息":
+            - textbox [disabled]
+          - cell "其他软硬件参数/系统设置":
+            - textbox [disabled]
+          - cell "设备型号、分辨率、语言、国家/地区、软件版本信息等":
+            - textbox "设备型号、分辨率、语言、国家/地区、软件版本信息等" [disabled]
+        - row "21 设备信息 操作系统信息":
+          - cell "21":
+            - generic: "21"
+          - cell "设备信息":
+            - textbox [disabled]
+          - cell "操作系统信息":
+            - textbox [disabled]
+          - cell
+        - row "22 设备信息 网络类型":
+          - cell "22":
+            - generic: "22"
+          - cell "设备信息":
+            - textbox [disabled]
+          - cell "网络类型":
+            - textbox [disabled]
+          - cell
+        - row "23 设备信息 IP 地址":
+          - cell "23":
+            - generic: "23"
+          - cell "设备信息":
+            - textbox [disabled]
+          - cell "IP 地址":
+            - textbox [disabled]
+          - cell
+  - generic: AI功能声明
+  - generic: "* AI生成合成服务："
+  - radiogroup "* AI生成合成服务：":
+    - radio "不涉及" [checked]
+    - generic: 不涉及
+    - radio "涉及"
+    - generic: 涉及
+  - text: 版权信息
+  - text: 【官方合作渠道】
+  - button "办理版权资质":
+    - generic: 办理版权资质
+  - generic: 电子版权证书：
+  - textbox "电子版权证书：":
+    - /placeholder: 请上传电子版权证书
+  - button "浏览":
+    - button "浏览":
+      - generic: 浏览
+  - generic: 请上传PDF格式文件，不能超过5MB。
+  - generic: 《电子版权认证证书》可作为应用版权证书在此上传并可在线验证。申请通道可办理《电子版权认证证书》，已获得纸质《软件著作权登记证书》的App也可免费补领《电子版权认证证书》。
+  - generic: 【易版权】电子版权认证证书申请通道
+  - generic: 【易版权】电子版权认证证书补领通道
+  - text: 【官方合作渠道】
+  - button "办理版权资质":
+    - generic: 办理版权资质
+  - group "应用版权证书或代理证书：":
+    - generic: 应用版权证书或代理证书：
+    - button:
+    - button:
+    - generic: 版权授权书（软著方授权发行方），如自研可不提供（选填）
+    - link "版权授权书模板":
+      - /url: https://alliance-communityfile-drcn.dbankcdn.com/FileServer/getFile/cmtyManage/011/111/111/0000000000011111111.20251024181949.81228916011090136165326999348678:50001231000000:2800:9C771B72E483542EA8238D6459422B675BD2AF5726D08FBADF5F124D2C8E310C.zip?needInitFileName=true
+      - generic: 版权授权书模板
+    - button:
+    - button:
+    - button:
+    - generic: 应用版权证书或代理证书详细说明请参考版权资质说明
+    - generic: 应用资质FAQ
+  - group "授权书及其他材料：":
+    - generic: 授权书及其他材料：
+    - button "上传":
+      - generic: 上传
+    - generic: 请上传zip格式文件，不能超过200M。压缩包内支持包含JPG、JPEG、BMP格式图片和PDF格式的文件，文件夹层级最多三层，累计不超过200个文件。
+  - generic: 应用内商品
+  - generic: 如果要向您的应用中添加新类型的数字商品（例如，您之前的应用版本只提供消耗型商品，计划从这个版本开始提供自动续费订阅商品），则必须把该商品随应用版本一起提交审核。
+  - button "添加商品":
+    - generic: 添加商品
+  - generic: 备案信息
+  - text: 请提供在工信部认证的备案信息。建议您在提交版本前校验证件号，有助于快速审核通过。
+  - link "查看详情。":
+    - /url: https://developer.huawei.com/consumer/cn/doc/app/50130-FAQ
+  - generic: "* APP类型信息："
+  - radiogroup "* APP类型信息：":
+    - radio "您的APP服务器在中国大陆" [checked]
+    - generic: 您的APP服务器在中国大陆
+    - radio "您的APP服务器不在中国大陆"
+    - generic: 您的APP服务器不在中国大陆
+    - radio "您的APP为单机APP"
+    - generic: 您的APP为单机APP
+  - generic: "* 主办单位类型："
+  - radiogroup "* 主办单位类型：":
+    - radio "企业" [checked]
+    - generic: 企业
+    - radio "个人"
+    - generic: 个人
+    - radio "机构"
+    - generic: 机构
+  - generic: "* 主办单位："
+  - radiogroup "* 主办单位：":
+    - radio "与开发者账号主体一致" [checked]
+    - generic: 与开发者账号主体一致
+    - radio "与开发者账号主体不一致"
+    - generic: 与开发者账号主体不一致
+  - generic: "* 主办单位名称："
+  - textbox "* 主办单位名称：" [disabled]:
+    - /placeholder: 请输入主办单位名称
+  - generic: 主办单位名称需要与工信部备案信息保持一致，该名称将会在应用详情页展示给用户。
+  - generic: "* 统一社会信用代码："
+  - textbox "* 统一社会信用代码：" [disabled]
+  - button "校验证件号":
+    - generic: 校验证件号
+  - text: 验证上限为5次/日，达到上限后不影响版本提交发布。
+  - generic: 应用审核信息
+  - generic: 如果您的App部分功能需要用户进行身份验证（例如，提供登录权限、查看应用内容、在线购买等）后才能使用，请提供测试帐号信息，该测试帐号会被审核员使用，以便完成登录、查看、购买等功能的审核。
+  - checkbox "需要登录进行审核" [checked]
+  - generic: 需要登录进行审核
+  - generic: 测试帐号
+  - textbox "用户名"
+  - generic: 备注：
+  - textbox "备注："
+  - generic: 165 / 300
+  - group "自测文件：":
+    - generic: 自测文件：
+    - button "选择文件":
+      - text: 选择文件
+    - generic: 请上传docx（不超过15MB）或mp4文件，最多可上传5个，总大小不超过500MB。提交自测文件可有效提高审核通过率，若APP内的功能需要连接设备或需要特殊的运行环境等场景才能使用，请您提供自测文件。
+  - generic: 联系方式
+  - generic: 我们将通过电话、邮箱、企业微信等渠道，为您解答应用审核问题、告知上架审核结果、通知应用整改或下架事宜。
+  - generic: "* 应用负责人手机号码："
+  - generic: "+86"
+  - textbox "* 应用负责人手机号码：":
+    - /placeholder: 请输入应用负责人手机号码，用于沟通应用审核问题
+  - generic: 11 / 11
+  - generic: "* 应用负责人邮箱："
+  - textbox "* 应用负责人邮箱：":
+    - /placeholder: 请输入应用负责人邮箱，用于接收审核结果通知
+  - generic: 18 / 500
+  - generic: "* 应用负责人姓名："
+  - textbox "* 应用负责人姓名：":
+    - /placeholder: 请输入应用负责人姓名，用于沟通时核实负责人身份
+  - generic: 2 / 256
+  - generic: 发布类型
+  - generic: "* 发布类型："
+  - radiogroup "* 发布类型：":
+    - radio "全网发布" [checked]
+    - generic: 全网发布
+    - radio "分阶段发布（7天内自动更新）"
+    - text: 分阶段发布（7天内自动更新）
+  - generic: 上架
+  - group "* 上架时间：":
+    - generic: "* 上架时间："
+    - radiogroup "radio-group":
+      - radio "审核通过立即上架" [checked]
+      - generic: 审核通过立即上架
+      - radio "指定时间"
+      - generic: 指定时间
+    - combobox [disabled]
+- generic: 华为开发者联盟 版权所有 ©2018-2026
+- list:
+  - listitem: 问题反馈
+  - listitem: 使用条款
+  - listitem: 关于华为开发者联盟与隐私的声明
+  - listitem: 关于华为 HarmonyOS 开发者中心应用管理与隐私的声明
+  - listitem: 隐私政策
+  - listitem: Cookies
+  - listitem: 开源软件声明

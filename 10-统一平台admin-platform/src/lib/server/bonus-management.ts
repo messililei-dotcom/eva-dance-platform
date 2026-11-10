@@ -1,6 +1,7 @@
 import {
   bonusProductLines,
   syncBonusStock,
+  syncBonusCommerceSales,
   resolveBonusCourse,
   registeredBonusOrder,
   bonusVoucherFiles,
@@ -171,10 +172,11 @@ export function saveBonusEntry(
     data.salesperson = input.requireCatalog
       ? text(input.salesperson, "销售人员")
       : String(input.salesperson || actor.name);
-    data.orderNo = input.orderNo
-      ? text(input.orderNo, "订单号")
+    const orderNo = String(input.orderNo ?? "").trim();
+    data.orderNo = orderNo
+      ? text(orderNo, "订单号")
       : data.channel === "线下"
-        ? `OFF-${crypto.randomUUID()}`
+        ? (old && JSON.parse(old.data).orderNo) || `OFF-${crypto.randomUUID()}`
         : text(input.orderNo, "订单号");
     if (input.requireCatalog || input.productLines?.length) {
       data.productLines = bonusProductLines(
@@ -235,8 +237,10 @@ export function saveBonusEntry(
         .get<any>(data.requestKey);
       if (retried && duplicate && retried.id !== duplicate.id)
         throw new Error("登记编号与订单号冲突，请刷新重试");
+      if (retried && input.requireCatalog && retried.creatorId === actor.id)
+        return { id: retried.id, updated: false, period: retried.period };
       duplicate = duplicate || retried;
-      if (retried && !input.orderNo)
+      if (retried && !orderNo)
         data.orderNo = JSON.parse(retried.data).orderNo;
     }
     if (
@@ -245,8 +249,12 @@ export function saveBonusEntry(
       !data.productLines?.length
     )
       throw new Error("该订单已关联库存，请通过商品销售登记修改");
-    if (duplicate && old && duplicate.id !== old.id)
-      throw new Error("订单号已存在");
+    if (duplicate && ((old && duplicate.id !== old.id) || (!old && input.requireCatalog)))
+      throw new Error(
+        data.channel === "线下"
+          ? "订单号已存在。请编辑原登记，或将新销售的线下编号留空，由系统生成"
+          : "订单号已存在，请编辑原登记或核对订单号",
+      );
     if (duplicate && !admin && duplicate.creatorId !== actor.id)
       throw new Error("重复订单属于其他登记人，请管理员核对");
   } else if (kind === "lesson") {
@@ -361,6 +369,8 @@ export function saveBonusEntry(
       data.channel,
       Number(id),
     );
+    if (data.productLines?.length)
+      syncBonusCommerceSales(db, Number(id), entryDate, data, amount, actor.name);
     if (data.requestKey)
       db.prepare(
         "INSERT OR IGNORE INTO BonusRegistrationKey(requestKey,entryId) VALUES(?,?)",
@@ -384,7 +394,7 @@ export function saveBonusEntry(
     before: previous || null,
     after: { kind, period, date: entryDate, data, amount },
   });
-  return { id, updated: Boolean(previous) };
+  return { id, updated: Boolean(previous), period };
 }
 export function bonusSummary(db: AdminDb, period: string): BonusSummary[] {
   validMonth(period);

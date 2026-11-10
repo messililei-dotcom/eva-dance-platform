@@ -1,0 +1,1 @@
+Official Huawei Android review URL for app119475083/version2067391391952053568 redirected to id1.cloud.huawei.com/CAS/portal/loginAuth.html. Native UI showed 华为账号登录. Authentication query parameters and login QR omitted. No current review state could be read.

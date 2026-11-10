@@ -1,0 +1,37 @@
+{
+  "checkedAt": "2026-11-07T14:21:28+08:00",
+  "iosDraftVerified": true,
+  "iosDraftStatus": "prepare-for-submission",
+  "iosDraftBuildAssociated": false,
+  "automaticReleaseSelected": true,
+  "currentCandidatesHashVerification": [
+    {
+      "path": "iOS/export/EvaDance.ipa",
+      "sha256Matches": true
+    },
+    {
+      "path": "Android/installers/SWOD-1.0.3-20-release.apk",
+      "sha256Matches": true
+    },
+    {
+      "path": "Android/installers/SWOD-1.0.3-20-release.aab",
+      "sha256Matches": true
+    },
+    {
+      "path": "HarmonyOS/build18/installers/SWOD-1.0.3-18-release.app",
+      "sha256Matches": true
+    },
+    {
+      "path": "HarmonyOS/build18/installers/SWOD-1.0.3-18-release.hap",
+      "sha256Matches": true
+    }
+  ],
+  "huaweiCurrentStatusVerified": false,
+  "harmonyNativeLoginUnresolved": true,
+  "androidVisitorConsentStillPending": true,
+  "newUpload": false,
+  "newStoreSubmission": false,
+  "newReviewOrPublicResultVerified": false,
+  "newNotificationNeeded": false,
+  "evidence": "evidence/heartbeat-20261107-1419/apple-status.txt"
+}

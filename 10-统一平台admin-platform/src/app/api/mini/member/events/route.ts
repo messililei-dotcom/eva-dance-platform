@@ -1,3 +1,4 @@
+import { ensureEventOnline } from '@/lib/server/event-online';
 import { getMemberId, jsonError, withDb } from '../../_helpers';
 
 export const dynamic = 'force-dynamic';
@@ -27,9 +28,10 @@ export async function GET(request: Request) {
       if (!member) return jsonError('学员不存在', 404);
 
       const phone = String(member.phone || '').trim();
+      ensureEventOnline(db);
       const rows = db.prepare(`
         SELECT
-          p.id AS player_id,p.member_id,p.status AS player_status,p.name AS entrant_name,p.registration_fee,p.paid_amount,p.paid_at,p.submitted_by_member_id,
+          p.id AS player_id,p.member_id,p.status AS player_status,p.name AS entrant_name,p.registration_fee,p.paid_amount,p.paid_at,p.submitted_by_member_id,p.registration_batch_id,
           p.competition_id,
           c.name AS competition_name,
           c.code AS competition_code,
@@ -137,7 +139,7 @@ export async function GET(request: Request) {
           paidStatus: row.paid_status || 'unpaid',
           scoreStatus: row.score_status || 'not_started',
           registeredAt: row.registered_at || '',
-          entrantName:row.entrant_name||'',registrationFee:Number(row.registration_fee||0),paidAmount:Number(row.paid_amount||0),paidAt:row.paid_at||'',canPay:[row.member_id,row.submitted_by_member_id].includes(memberId) && Number(row.registration_fee)>0 && Number(row.paid_amount||0)===0 && row.audit_status!=='rejected' && !['cancelled','withdrawn'].includes(row.player_status),
+          entrantName:row.entrant_name||'',registrationFee:Number(row.registration_fee||0),paidAmount:Number(row.paid_amount||0),paidAt:row.paid_at||'',canPay:(row.submitted_by_member_id === memberId || (!row.registration_batch_id && row.member_id === memberId)) && Number(row.registration_fee)>0 && Number(row.paid_amount||0)===0 && !['paid','completed'].includes(row.paid_status) && row.audit_status!=='rejected' && !['cancelled','withdrawn'].includes(row.player_status),
           resultPublished,
           totalScore: resultPublished && row.published_total != null ? Number(row.published_total) : null,
           rankNo: resultPublished ? Number(row.rank_no || 0) : 0,
@@ -157,7 +159,7 @@ export async function GET(request: Request) {
           summary: { eventCount, groupCount: entries.length, publishedCount, podiumCount },
           entries,
         },
-      });
+      }, { headers: { 'Cache-Control': 'private, no-store' } });
     });
   } catch (error: any) {
     return jsonError(error?.message || '比赛数据加载失败');

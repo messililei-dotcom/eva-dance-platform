@@ -1,4 +1,5 @@
 import { cleanText, readEventBody, hasAuth, jsonError, mapJudge, nowIso, toNumber, unauthorized, withRequestEventDb } from '../_db';
+import { duplicateJudge } from '@/lib/server/event-judge-duplicates';
 import { syncAllEventJudgesToMembers } from '@/lib/server/event-judge-member-sync';
 
 export const dynamic = 'force-dynamic';
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
   const keyword = cleanText(url.searchParams.get('keyword'));
   return withRequestEventDb(request, (db) => {
     syncAllEventJudgesToMembers(db);
-    let where = 'WHERE 1=1';
+    let where = "WHERE COALESCE(j.status, 'active')!='deleted'";
     const params: any[] = [];
     if (keyword) {
       where += ' AND (j.name LIKE ? OR j.phone LIKE ? OR j.organization LIKE ? OR j.title LIKE ?)';
@@ -38,7 +39,8 @@ export async function POST(request: Request) {
   const name = cleanText(body.name);
   if (!name) return jsonError('评委姓名不能为空');
 
-  return withRequestEventDb(request, (db) => {
+  return withRequestEventDb(request, (db) => db.transaction(() => {
+    if (duplicateJudge(db, body)) return jsonError('该手机号或学员已有评委资料，请使用已有评委，避免重复添加', 409);
     const result = db.prepare(`
       INSERT INTO event_judges (
         member_id, name, phone, title, organization, bio, account_user_id,
@@ -59,5 +61,5 @@ export async function POST(request: Request) {
       nowIso(),
     );
     return Response.json({ success: true, data: { id: result.lastInsertRowid } });
-  });
+  }).immediate());
 }

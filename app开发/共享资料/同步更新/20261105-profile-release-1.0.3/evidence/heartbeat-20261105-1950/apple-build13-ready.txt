@@ -1,0 +1,130 @@
+Browser tab: 3, Title: "App Store Connect", URL: "https://appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/ios".
+1 AXWebArea App Store Connect, URL: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/ios
+	2 container
+		3 container App Store Connect
+			4 container
+				5 heading App Store Connect, Value: 1
+					6 link Description: App Store Connect, Value: appstoreconnect.apple.com/, ID: logo
+				7 container 全球
+					24 content list
+						25 link Description: App, Value: appstoreconnect.apple.com/apps
+						26 link Description: Xcode Cloud, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/xcode-cloud
+						27 link Description: 趋势, Value: appstoreconnect.apple.com/trends
+						28 link Description: 报告, Value: appstoreconnect.apple.com/itc/payments_and_financial_reports
+						29 link Description: 商务, Value: appstoreconnect.apple.com/business
+				8 button 娃 伊 Eva Culture And Art Development (hunan) Co., Ltd Account name menu
+					9 text 娃 伊
+					10 text Eva Culture And Art Development (hunan) Co., Ltd
+					11 image
+		30 container
+			31 pop up button (collapsed) Description: App 菜单，已选择SWOD, Secondary Actions: Expand
+				32 container
+					33 image SWOD
+					34 text SWOD
+				35 image
+			36 container App
+				37 content list
+					38 link Description: 分发, Value: appstoreconnect.apple.com/apps/6826038106/distribution
+					39 link Description: 分析, Value: appstoreconnect.apple.com/apps/6826038106/analytics
+					40 link Description: TestFlight, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight
+		41 container
+			42 container
+				43 container TestFlight
+					44 content list
+						45 container
+							46 heading 构建版本, Value: 2
+								47 text 构建版本
+							48 content list
+								49 link Description: iOS, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/ios
+						50 container
+							51 heading 反馈, Value: 2
+								52 text 反馈
+							53 content list
+								54 link Description: 崩溃, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/crashes
+								55 link Description: 截屏, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/screenshots
+						56 container
+							57 heading 测试员, Value: 2
+								58 text 测试员
+							59 content list
+								60 link Description: 全部, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/testers
+							61 heading 内部测试, Value: 3
+								62 text 内部测试
+							63 button 新群组
+								64 image
+						65 container
+							66 heading 其他, Value: 2
+								67 text 其他
+							68 content list
+								69 link Description: 测试信息, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/test-info
+								70 text 关于 TestFlight 数据
+				71 heading iOS 构建版本, Value: 2
+					72 text iOS 构建版本
+				73 container
+					74 text 以下构建版本可供测试。
+					75 link Description: 进一步了解构建版本状态和指标, Value: developer.apple.com/help/app-store-connect/test-a-beta-version/view-build-status-and-metrics
+				76 image
+				77 container
+					78 text 要开始测试 App 并收集相关反馈，请创建群组并使用测试员的电子邮件来进行邀请。
+					79 link Description: 创建群组, Value: javascript:void(0), ID: createGroup
+				80 button (collapsed) 构建版本上传, ID: accordion-toggle-0.8005977817110377-4, Secondary Actions: Expand
+					81 heading 构建版本上传, Value: 3
+						82 text 构建版本上传
+				83 button (expanded) 版本 1.0.3, ID: accordion-toggle-0.8005977817110377-17, Secondary Actions: Collapse
+					84 heading 版本 1.0.3, Value: 3
+						85 text 版本 1.0.3
+				86 container 版本 1.0.3, ID: accordion-section-0.8005977817110377-17
+					87 table Description: 构建版本, ID: react-aria5195388387-1
+						88 row 构建版本 状态 邀请 安装 APP 使用次数 崩溃 反馈
+							89 cell react-aria5195388387-1-version
+								90 button 构建版本
+							91 cell react-aria5195388387-1-externalBuildState
+								92 text 状态
+							93 cell react-aria5195388387-1-betaBuildUsages.inviteCount
+								94 text 邀请
+							95 cell react-aria5195388387-1-betaBuildUsages.installCount
+								96 text 安装
+							97 cell react-aria5195388387-1-betaBuildUsages.sevenDaySessionCount
+								98 text APP 使用次数
+							99 cell react-aria5195388387-1-betaBuildUsages.crashCount
+								100 text 崩溃
+							101 cell react-aria5195388387-1-betaBuildUsages.feedbackCount
+								102 text 反馈
+						103 row 构建版本 13, ID: react-aria5195388387-74
+							104 cell react-aria5195388387-1-46351c82-af74-45e7-bdc4-00f5eb5c4604-version
+								105 link Description: 构建版本 13, Help: 13, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/ios/46351c82-af74-45e7-bdc4-00f5eb5c4604
+							106 cell react-aria5195388387-139
+								107 text 准备提交
+								108 text 90 天后过期
+							109 cell react-aria5195388387-140
+								110 text –
+							111 cell react-aria5195388387-141
+								112 text –
+							113 cell react-aria5195388387-142
+								114 text –
+							115 cell react-aria5195388387-143
+								116 text –
+							117 cell react-aria5195388387-144
+								118 text –
+				119 button (collapsed) 版本 1.0.2, ID: accordion-toggle-0.8005977817110377-18, Secondary Actions: Expand
+					120 heading 版本 1.0.2, Value: 3
+						121 text 版本 1.0.2
+				122 button (collapsed) 版本 1.0.1, ID: accordion-toggle-0.8005977817110377-19, Secondary Actions: Expand
+					123 heading 版本 1.0.1, Value: 3
+						124 text 版本 1.0.1
+				125 button (collapsed) 版本 1.0.0, ID: accordion-toggle-0.8005977817110377-20, Secondary Actions: Expand
+					126 heading 版本 1.0.0, Value: 3
+						127 text 版本 1.0.0
+		12 content list
+			128 link Description: App Store Connect, Value: appstoreconnect.apple.com/apps
+		14 content list
+			15 container
+				16 text Copyright © 2026 Apple Inc. 保留所有权利。 |
+			17 container
+				18 link Description: 服务条款, Value: appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/wa/termsOfService
+				129 text |
+			20 container
+				21 link Description: 隐私政策, Value: apple.com/legal/privacy
+				130 text |
+			23 link Description: 联系我们, Value: appstoreconnect.apple.com/contact-us
+
+The focused UI element is 1 AXWebArea App Store Connect, URL: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight/ios

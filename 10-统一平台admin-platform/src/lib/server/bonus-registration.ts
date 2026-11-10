@@ -125,6 +125,60 @@ export function syncBonusStock(
   }
 }
 
+export function syncBonusCommerceSales(
+  db: AdminDb,
+  entryId: number,
+  date: string,
+  sale: {
+    productLines: { productId: string; name: string; quantity: number }[];
+    received: number;
+    rate: number;
+    channel: string;
+    orderNo: string;
+    salesperson: string;
+    remark: string;
+  },
+  commission: number,
+  actor: string,
+) {
+  const lines = sale.productLines;
+  const productIds = new Set(lines.map((line) => line.productId));
+  for (const row of db.prepare("SELECT id,product_id FROM shop_sales WHERE bonus_entry_id=?").all(entryId)) {
+    if (!productIds.has(row.product_id))
+      db.prepare("DELETE FROM shop_sales WHERE id=?").run(row.id);
+  }
+
+  const upsert = db.prepare(`
+    INSERT INTO shop_sales (
+      bonus_entry_id, bonus_order_no, product_id, product_name, quantity, unit_price,
+      total_amount, sale_date, remark, sale_type, channel, operator,
+      sales_advisor, commission_rate, commission_amount
+    ) VALUES (?,?,?,?,?,?,?,?,?,'提成登记',?,?,?,?,?)
+    ON CONFLICT(bonus_entry_id, product_id) DO UPDATE SET
+      bonus_order_no=excluded.bonus_order_no, product_name=excluded.product_name,
+      quantity=excluded.quantity, unit_price=excluded.unit_price,
+      total_amount=excluded.total_amount, sale_date=excluded.sale_date, remark=excluded.remark,
+      channel=excluded.channel, operator=excluded.operator, sales_advisor=excluded.sales_advisor,
+      commission_rate=excluded.commission_rate, commission_amount=excluded.commission_amount
+  `);
+  // The registration has one order total. Allocate it across SKUs by quantity and preserve cents.
+  const quantity = lines.reduce((total, line) => total + line.quantity, 0);
+  let units = 0, receivedCents = 0, commissionCents = 0;
+  for (const line of lines) {
+    units += line.quantity;
+    const nextReceived = Math.round(sale.received * 100 * (units / quantity));
+    const nextCommission = Math.round(commission * 100 * (units / quantity));
+    const amount = (nextReceived - receivedCents) / 100;
+    upsert.run(
+      entryId, sale.orderNo, line.productId, line.name, line.quantity, amount / line.quantity,
+      amount, date, sale.remark, sale.channel, actor, sale.salesperson, sale.rate,
+      (nextCommission - commissionCents) / 100,
+    );
+    receivedCents = nextReceived;
+    commissionCents = nextCommission;
+  }
+}
+
 export function registeredBonusOrder(db: AdminDb, orderNo: string) {
   if (
     !db

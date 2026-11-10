@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { PHONE_COUNTRIES, normalizeEventPhone } from '@/lib/event-phone';
 import { useParams } from 'next/navigation';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, CalendarDays, CheckCircle2, Loader2, MapPin, Send, Trophy } from 'lucide-react';
@@ -28,6 +29,7 @@ type RegistrationEvent = {
 const initialForm = {
   name: '',
   phone: '',
+  countryCode: '+86',
   organization: '',
   teacher: '',
   groupId: '',
@@ -39,6 +41,15 @@ const initialForm = {
 const MAX_MUSIC_FILE_SIZE = 10 * 1024 * 1024;
 type MusicReceipt = { uploadId: string; fileName: string; fileSize: number; expiresAt: number };
 const DRAFT_TTL = 24 * 60 * 60 * 1000;
+
+function phoneFields(phone: string, countryCode: string = '+86') {
+  try {
+    const normalized = normalizeEventPhone(phone, countryCode);
+    return { phone: normalized.nationalNumber, countryCode: normalized.countryCode };
+  } catch {
+    return { phone, countryCode };
+  }
+}
 
 export default function EventRegistrationPage() {
   const params = useParams<{ slug: string }>();
@@ -117,11 +128,17 @@ export default function EventRegistrationPage() {
     fetch(`/api/events-news/${encodeURIComponent(slug)}/register?music=${encodeURIComponent(musicReceipt.uploadId)}`, {
       headers: { Authorization: `Bearer ${session.token}` }, signal: controller.signal,
     }).then(async response => {
-      if (!response.ok) throw new Error('音乐上传记录已失效，请重新上传');
+      if (!response.ok) {
+        if (response.status === 400 || response.status === 404) {
+          setMusicReceipt(null);
+          throw new Error('音乐上传记录已失效，请重新上传');
+        }
+        throw new Error('音乐试听加载失败，可继续提交报名或稍后重试');
+      }
       url = URL.createObjectURL(await response.blob());
       if (!controller.signal.aborted) setMusicPreview(url); else URL.revokeObjectURL(url);
     }).catch(error => {
-      if (!controller.signal.aborted) { setMusicError(error.message); setMusicReceipt(null); }
+      if (!controller.signal.aborted) { setMusicError(error.message || '音乐试听加载失败，可继续提交报名'); }
     });
     return () => { controller.abort(); if (url) URL.revokeObjectURL(url); };
   }, [session, slug, musicReceipt]);
@@ -150,7 +167,7 @@ export default function EventRegistrationPage() {
           setForm((current) => ({
             ...current,
             name: current.name || data.member?.name || session.name || '',
-            phone: current.phone || data.member?.phone || '',
+            ...phoneFields(current.phone || data.member?.phone || '', current.countryCode),
             groupId: data.groups.some(group => String(group.id) === current.groupId) ? current.groupId : String(data.groups[0]?.id || ''),
           }));
         }
@@ -181,11 +198,12 @@ export default function EventRegistrationPage() {
       window.location.replace(`/events?login=1&next=${encodeURIComponent(`/events/${slug}/register`)}`);
       return;
     }
+    try { normalizeEventPhone(form.phone, form.countryCode); } catch (error) { setError(error instanceof Error ? error.message : '请填写正确的手机号'); return; }
     if(!selectedGroup){setError('请选择报名组别');return;}
     if (musicUploading) { setError('音乐正在上传，请稍候'); return; }
-    if (!musicReceipt || musicReceipt.expiresAt <= Date.now()) {
-      setError('请选择需要上传的音乐文件');
-      return;
+    if (musicReceipt && musicReceipt.expiresAt <= Date.now()) {
+      setMusicReceipt(null);
+      setMusicError('音乐记录已过期，可重新上传或先提交报名后补交。');
     }
     setSubmitting(true);
     setError('');
@@ -194,7 +212,7 @@ export default function EventRegistrationPage() {
       const payload = new FormData();
       Object.entries(form).forEach(([key, value]) => payload.append(key, value));
       payload.append('musicSource', musicSource);
-      payload.append('musicUploadId', musicReceipt.uploadId);
+      if (musicReceipt && musicReceipt.expiresAt > Date.now()) payload.append('musicUploadId', musicReceipt.uploadId);
 
       const response = await fetch(`/api/events-news/${encodeURIComponent(slug)}/register`, {
         method: 'POST',
@@ -209,7 +227,7 @@ export default function EventRegistrationPage() {
       setDraftReady(false);
       setMusicReceipt(null);
       if(result.data?.registrationFee>0){window.location.assign('/checkout/event/'+result.data.registrationId);return;}
-      setSuccess(result.message || '报名信息及音乐已提交成功');
+      setSuccess(result.message || '报名信息已提交成功，可在个人中心补交或更换音乐');
       setForm(initialForm);
       setMusicFile(null);
       setMusicSource('local');
@@ -218,19 +236,6 @@ export default function EventRegistrationPage() {
       setError(submitError instanceof Error ? submitError.message : '报名提交失败');
     } finally {
       setSubmitting(false);
-    }
-  }
-
-  function chooseMusic(source: 'local' | 'wechat') {
-    if (source === 'wechat' && !/MicroMessenger/i.test(navigator.userAgent)) {
-      setError('请在微信内打开本页面后，从聊天记录选择音乐文件');
-      return;
-    }
-    setError('');
-    setMusicSource(source);
-    if (musicFileInputRef.current) {
-      musicFileInputRef.current.value = '';
-      musicFileInputRef.current.click();
     }
   }
 
@@ -247,6 +252,7 @@ export default function EventRegistrationPage() {
     uploadRequestRef.current = controller;
     const timeout = setTimeout(() => controller.abort(), 120000);
     setMusicFile(file);
+    setMusicSource('local');
     setMusicReceipt(null);
     setMusicError('');
     setMusicUploading(true);
@@ -323,7 +329,7 @@ export default function EventRegistrationPage() {
 
                 <button type="button" disabled={musicUploading || submitting} onClick={() => {
                   try { localStorage.removeItem(draftKey); } catch {}
-                  setForm({ ...initialForm, name: event.member?.name || session?.name || '', phone: event.member?.phone || '', groupId: String(event.groups[0]?.id || '') });
+                  setForm({ ...initialForm, name: event.member?.name || session?.name || '', ...phoneFields(event.member?.phone || ''), groupId: String(event.groups[0]?.id || '') });
                   setMusicReceipt(null); setMusicFile(null); setMusicError(''); setError(''); setSearch(''); setMatches([]);
                   if (musicFileInputRef.current) musicFileInputRef.current.value = '';
                   setDraftMessage('已清空未提交的信息，可重新填写。');
@@ -331,15 +337,24 @@ export default function EventRegistrationPage() {
                 <p role="status" className="mb-4 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">{draftMessage || '未提交的信息和已上传音乐保留24小时，可退出后继续填写。'}</p>
                 <p className="mb-4 text-xs text-text-muted">默认填写本人信息，可修改姓名和手机号为他人报名。按手机号匹配已有用户，未匹配时自动新建。</p>
                 {matches.length>0&&<div className="mb-4 rounded-lg border border-sand p-3"><p className="mb-2 text-xs text-text-muted">匹配结果（手机号仍需填写完整）</p>{matches.map((m,i)=><button key={i} type="button" onClick={()=>{setForm({...form,name:m.name});setSearch('');setMatches([]);}} className="block w-full p-2 text-left text-sm hover:bg-warm-white">{m.name} · {m.phoneMasked}</button>)}</div>}
-                <div className="grid grid-cols-2 gap-3 md:gap-5">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   <label className="text-sm font-medium text-text">
                     姓名 <span className="text-crimson">*</span>
                     <input required maxLength={30} value={form.name} onChange={(e)=>{setForm({...form,name:e.target.value});setSearch(e.target.value);}} className="mt-2 w-full min-w-0 rounded-lg border border-sand bg-white px-3 py-3 text-text outline-none md:px-4" />
                   </label>
-                  <label className="text-sm font-medium text-text">
-                    手机号 <span className="text-crimson">*</span>
-                    <input required inputMode="tel" pattern="^1[3-9]\d{9}$" maxLength={11} value={form.phone} onChange={(e) => {setForm({ ...form, phone: e.target.value });setSearch(e.target.value);}} className="mt-2 w-full min-w-0 rounded-lg border border-sand px-3 py-3 outline-none focus:border-gold-dark md:px-4" placeholder="11位手机号" />
-                  </label>
+                  <div className="text-sm font-medium text-text">
+                    <label htmlFor="event-phone">手机号 <span className="text-crimson">*</span></label>
+                    <div className="mt-2 flex items-stretch gap-2">
+                      <div className="flex w-28 shrink-0 items-center gap-1 rounded-lg border border-sand bg-white px-2 focus-within:border-gold-dark">
+                        <span aria-hidden="true" className="text-xl">{PHONE_COUNTRIES.find(item => item.code === form.countryCode)?.flag || '🌐'}</span>
+                        <input aria-label="国家/地区区号" autoComplete="tel-country-code" inputMode="tel" list="event-phone-countries" value={form.countryCode} onChange={event => setForm({ ...form, countryCode: event.target.value })} className="min-h-12 w-full min-w-0 bg-transparent text-base text-text outline-none" />
+                      </div>
+                      <datalist id="event-phone-countries">{PHONE_COUNTRIES.map(item => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}</datalist>
+                      <input id="event-phone" required type="tel" inputMode="tel" autoComplete="tel-national" maxLength={20} value={form.phone} onChange={(e) => {setForm({ ...form, phone: e.target.value });setSearch(e.target.value);}} onBlur={() => {
+                        setForm(current => ({ ...current, ...phoneFields(current.phone, current.countryCode) }));
+                      }} className="min-h-12 w-0 min-w-0 flex-1 rounded-lg border border-sand bg-white px-3 text-base text-text outline-none focus:border-gold-dark" placeholder="手机号码" />
+                    </div>
+                  </div>
                   <label className="text-sm font-medium text-text">
                     机构 / 舞蹈室
                     <input maxLength={100} value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} className="mt-2 w-full min-w-0 rounded-lg border border-sand px-3 py-3 outline-none focus:border-gold-dark md:px-4" placeholder="选填" />
@@ -358,28 +373,18 @@ export default function EventRegistrationPage() {
                     {groupQuery.trim() && <span role="status" className="mt-1 block text-xs text-text-muted">找到 {event.groups.filter(group => group.name.toLocaleLowerCase().includes(groupQuery.trim().toLocaleLowerCase())).length} 个组别，已选组别保持不变</span>}
                   </label>
                   <label className="text-sm font-medium text-text">
-                    节目名称 <span className="text-crimson">*</span>
-                    <input required maxLength={120} value={form.performanceTitle} onChange={(e) => setForm({ ...form, performanceTitle: e.target.value })} className="mt-2 w-full min-w-0 rounded-lg border border-sand px-3 py-3 outline-none focus:border-gold-dark md:px-4" placeholder="请填写节目名称" />
+                    节目（音乐）名字 <span className="text-crimson">*</span>
+                    <input required maxLength={120} value={form.performanceTitle} onChange={(e) => setForm({ ...form, performanceTitle: e.target.value })} className="mt-2 w-full min-w-0 rounded-lg border border-sand px-3 py-3 outline-none focus:border-gold-dark md:px-4" placeholder="请填写节目（音乐）名字" />
                   </label>
-                  <div className="col-span-2 text-sm font-medium text-text">
-                    上传音乐 <span className="text-crimson">*</span>
-                    <input
-                      ref={musicFileInputRef}
-                      type="file"
-                      accept=".mp3,.wav,.m4a,.aac,.flac"
-                      onChange={(e) => updateMusicFile(e.target.files?.[0] || null)}
-                      className="sr-only"
-                    />
-                    <div className="mt-2 grid grid-cols-2 gap-3">
-                      <button type="button" disabled={musicUploading || submitting} onClick={() => chooseMusic('local')} className="rounded-lg border border-crimson bg-crimson px-3 py-3 font-semibold text-white transition hover:bg-crimson-dark">
-                        选取文件
-                      </button>
-                      <button type="button" disabled={musicUploading || submitting} onClick={() => chooseMusic('wechat')} className="rounded-lg border border-sand bg-warm-white px-3 py-3 font-semibold text-text transition hover:border-gold-dark">
-                        从微信聊天记录
-                      </button>
-                    </div>
+                  <div className="sm:col-span-2 text-sm font-medium text-text">
+                    上传音乐 <span className="font-normal text-text-secondary">（选填）</span>
+                    <label className="relative mt-2 flex min-h-12 cursor-pointer items-center justify-center rounded-lg border border-crimson bg-crimson px-3 py-3 font-semibold text-white focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-crimson">
+                      选择音乐文件
+                      <input ref={musicFileInputRef} type="file" aria-label="选择音乐文件" disabled={musicUploading || submitting} onClick={event => { event.currentTarget.value = ''; }} onChange={event => updateMusicFile(event.target.files?.[0] || null)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-wait" />
+                    </label>
+                    <p className="mt-2 text-xs font-normal leading-6 text-text-secondary">苹果微信中的音乐请先存储到“文件”的“我的iPhone”，再返回选择上传。支持 MP3、WAV、M4A、AAC、FLAC，最大10MB。</p>
                     <div aria-live="polite" className="mt-3 break-words text-xs font-normal">
-                      {musicUploading ? <p className="flex items-center gap-2 text-gold-dark"><Loader2 className="h-4 w-4 animate-spin" />正在上传音乐：{musicFile?.name}，请等待上传完成。</p> : musicReceipt ? <p className="flex items-start gap-2 text-emerald-700"><CheckCircle2 className="h-4 w-4 shrink-0" />音乐上传成功：{musicReceipt.fileName}（{(musicReceipt.fileSize / 1024 / 1024).toFixed(2)} MB）。提交报名后关联本组别。</p> : <p className="text-text-muted">尚未上传音乐 · MP3、WAV、M4A、AAC、FLAC · 最大10MB</p>}
+                      {musicUploading ? <p className="flex items-center gap-2 text-gold-dark"><Loader2 className="h-4 w-4 animate-spin" />正在上传音乐：{musicFile?.name}，请等待上传完成。</p> : musicReceipt ? <p className="flex items-start gap-2 text-emerald-700"><CheckCircle2 className="h-4 w-4 shrink-0" />音乐上传成功：{musicReceipt.fileName}（{(musicReceipt.fileSize / 1024 / 1024).toFixed(2)} MB）。提交报名后关联本组别。</p> : <p className="text-text-muted">可先报名，之后在个人中心补交或更换音乐。支持 MP3、WAV、M4A、AAC、FLAC · 最大10MB</p>}
                       {musicError && <p role="alert" className="mt-2 text-red-700">{musicError}</p>}
                       {musicError && musicFile && <button type="button" disabled={musicUploading} onClick={() => updateMusicFile(musicFile)} className="mt-2 text-crimson underline">重试上传</button>}
                       {musicPreview && <audio aria-label="试听已上传音乐" controls preload="metadata" src={musicPreview} className="mt-3 w-full" />}
@@ -395,9 +400,9 @@ export default function EventRegistrationPage() {
 
                 {error && <p role="alert" className="mt-5 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
 
-                <button disabled={submitting || musicUploading || !musicReceipt || !selectedGroup} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-crimson px-5 py-3.5 text-sm font-bold text-white transition hover:bg-crimson-dark disabled:disabled:opacity-60">
+                <button disabled={submitting || musicUploading || !selectedGroup} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-crimson px-5 py-3.5 text-sm font-bold text-white transition hover:bg-crimson-dark disabled:disabled:opacity-60">
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  {submitting ? '正在提交报名...' : musicUploading ? '音乐上传中...' : '提交报名缴费'}
+                  {submitting ? '正在提交报名...' : musicUploading ? '音乐上传中...' : '提交报名'}
                 </button>
                 <p className="mt-3 text-center text-xs leading-5 text-text-muted">提交即表示您同意工作人员使用上述信息联系您确认赛事报名。</p>
               </form>

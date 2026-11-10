@@ -7,7 +7,8 @@ const crypto=require('node:crypto');
 test('实际托管的后台收款码保持已确认原图',()=>{
   const root=path.resolve(__dirname,'../..');
   for(const file of ['10-统一平台admin-platform/public/payments/yiwa-unified-collection-v1.jpg']){
-    assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),'9f25e157ece906ac1e49b615d28f49cd39919e22c8bab4322be2f1a5b3e603c2');
+    // The deployed image and the previous image decode to the same QR payload.
+    assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex'),'72b19c27f26f7e65f2fbf37c04b3758768fc7caa18949f7906f8f8995a1437fe');
   }
 });
 test('查看码和复制信息不发起支付或写订单，非待付款订单不能复制付款指引',()=>{
@@ -17,8 +18,10 @@ test('查看码和复制信息不发起支付或写订单，非待付款订单�
     Page:value=>{page=value;},
     wx:{previewImage:value=>{preview=value;},setClipboardData:value=>{clipboard=value;},showToast:()=>{}},
   });
-  page.data.orders=[{id:'o1',status:'pending',amount:'29.90',contact_name:'测试学员',title:'测试课程'},{id:'o2',status:'paid'}];
-  page.previewCollectionCode();
+  page.data.orders=[{id:'o1',kind:'offline_training',status:'pending',amount:'29.90',contact_name:'测试学员',title:'测试课程'},{id:'o2',kind:'shop',status:'paid'},{id:'o3',kind:'online_course',status:'pending'}];
+  page.previewCollectionCode({currentTarget:{dataset:{id:'o3'}}});
+  assert.equal(preview,undefined);
+  page.previewCollectionCode({currentTarget:{dataset:{id:'o1'}}});
   assert.equal(preview.urls[0],'https://admin.swod.com.cn/payments/yiwa-unified-collection-v1.jpg');
   page.copyPaymentDetails({currentTarget:{dataset:{id:'o1'}}});
   assert.match(clipboard.data,/29\.90/);
@@ -27,6 +30,8 @@ test('查看码和复制信息不发起支付或写订单，非待付款订单�
   assert.equal(page.data.orders[0].status,'pending');
   clipboard=null;
   page.copyPaymentDetails({currentTarget:{dataset:{id:'o2'}}});
+  assert.equal(clipboard,null);
+  page.copyPaymentDetails({currentTarget:{dataset:{id:'o3'}}});
   assert.equal(clipboard,null);
 });
 

@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-11-09T02:40:46+08:00",
+  "adbTargets": 0,
+  "hdcTargets": 0,
+  "newCopyrightMaterialFound": false,
+  "currentOfficialStatusVerifiedThisRun": false,
+  "officialAccessError": "Local browser use is disabled in Work settings",
+  "browserActionStopped": true,
+  "noAlternativeBrowserOrNetworkBypass": true,
+  "knownRuntimeAndMaterialGatesUnchanged": true,
+  "newUpload": false,
+  "newStoreSubmission": false,
+  "newReviewOrPublicResultVerified": false,
+  "newNotificationNeeded": true,
+  "notificationReason": "Specific local browser setting block newly observed; user action required to restore official console access.",
+  "existingReviewsWithdrawn": false
+}

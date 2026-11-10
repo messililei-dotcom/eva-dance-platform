@@ -1,3 +1,4 @@
+import { eventPaymentOrder } from '@/lib/server/event-online';
 import { cleanText, readEventBody, hasAuth, jsonError, nowIso, toNumber, unauthorized, withRequestEventDb } from '../../_db';
 import { syncEventPlayerToMember } from '@/lib/server/event-member-sync';
 
@@ -163,8 +164,13 @@ export async function PATCH(request: Request) {
   });
   if (!sets.length) return jsonError('请选择至少一项需要修改的内容');
 
-  return withRequestEventDb(request, (db) => {
+  return withRequestEventDb(request, (db) => db.transaction(() => {
     const placeholders = ids.map(() => '?').join(', ');
+    if (['cancelled', 'withdrawn'].includes(patch.status) && db.prepare(
+      `SELECT id FROM event_players WHERE competition_id=? AND group_id=? AND id IN (${placeholders})`
+    ).all(competitionId, groupId, ...ids).some((row: { id: number }) => eventPaymentOrder(db, row.id, ['pending', 'refund_requested', 'refunding']))) {
+      return jsonError('部分报名有待处理在线订单，请先处理订单', 409);
+    }
     sets.push('updated_at = ?');
     values.push(nowIso(), competitionId, groupId, ...ids);
     const result = db.prepare(`
@@ -173,7 +179,7 @@ export async function PATCH(request: Request) {
       WHERE competition_id = ? AND group_id = ? AND id IN (${placeholders})
     `).run(...values);
     return Response.json({ success: true, data: { updated: result.changes } });
-  });
+  }).immediate());
 }
 
 export async function DELETE(request: Request) {
@@ -185,13 +191,17 @@ export async function DELETE(request: Request) {
   const ids = normalizeIds(body.ids);
   if (!competitionId || !groupId || !ids.length) return jsonError('缺少赛事、组别或选手ID');
 
-  return withRequestEventDb(request, (db) => {
+  return withRequestEventDb(request, (db) => db.transaction(() => {
     const placeholders = ids.map(() => '?').join(', ');
+    if (db.prepare(`SELECT id FROM event_players WHERE competition_id=? AND group_id=? AND id IN (${placeholders})`)
+      .all(competitionId, groupId, ...ids).some((row: { id: number }) => eventPaymentOrder(db, row.id, ['pending', 'refund_requested', 'refunding']))) {
+      return jsonError('部分报名有待处理在线订单，请先处理订单', 409);
+    }
     if (db.prepare(`SELECT id FROM event_registration_payments WHERE player_id IN (${placeholders}) LIMIT 1`).get(...ids)) return jsonError('报名已有缴费记录，请保留记录并使用取消报名状态');
     const result = db.prepare(`
       DELETE FROM event_players
       WHERE competition_id = ? AND group_id = ? AND id IN (${placeholders})
     `).run(competitionId, groupId, ...ids);
     return Response.json({ success: true, data: { deleted: result.changes } });
-  });
+  }).immediate());
 }

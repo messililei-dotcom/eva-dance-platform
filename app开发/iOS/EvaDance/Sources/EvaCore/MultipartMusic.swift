@@ -4,7 +4,7 @@ public struct MultipartMusic {
     public let body: Data
     public let contentType: String
     public init(fields: [String: String], filename: String, music: Data) throws {
-        let allowed: Set<String> = ["groupId", "name", "phone", "organization", "teacher", "performanceTitle", "remark"]
+        let allowed: Set<String> = ["groupId", "name", "phone", "countryCode", "organization", "teacher", "performanceTitle", "remark"]
         let extensionName = (filename as NSString).pathExtension.lowercased()
         guard !music.isEmpty, music.count <= 10 * 1024 * 1024,
               ["mp3", "wav", "m4a", "aac", "flac"].contains(extensionName),

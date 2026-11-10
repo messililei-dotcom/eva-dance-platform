@@ -1,0 +1,95 @@
+- generic: 温馨提示：本网站使用cookies，继续浏览本网站即表示您同意我们使用cookies。更多信息，请阅读 隐私政策
+- generic: 同意
+- generic: 应用市场
+- generic: 推荐
+- generic: 应用
+- generic: 游戏
+- generic: 排行
+- textbox "搜索应用/游戏": SWOD
+- generic: 下载客户端
+- generic: SWOD
+- generic: 病毒检测
+- generic: 人工复检
+- generic: "0.0"
+- generic: <1 万次安装
+- generic: 年满 16 周岁
+- generic: 安装
+- generic: 扫码下载应用
+- generic: 东方舞课程学习、线下课时与赛事服务。
+- generic: 评论
+- generic: 查看全部
+- generic: "0.0"
+- generic: 0人评分
+- generic: 更新
+- generic: 优化登录、课程学习与赛事页面布局；完善学习消息的未读提示、已读同步和通知设置；提升账号与隐私服务体验。
+- generic: 应用介绍
+- generic: SWOD（伊娃东方舞）提供东方舞线上课程、线下课期次、舞蹈赛事和官方商城服务。 你可以浏览课程介绍与课节目录、搜索相关内容；登录后查看我的课程、学习进度、笔记、书签与证书。已解锁课程可继续学习，未解锁课程可前往官方结算页面了解购买信息。 查看线下课程期次、个人课时与核销记录，以及个人参赛、订单和售后信息。个人中心提供学习消息、通知设置、登录设备及账号注销服务。注销申请在7个工作日内处理，可查看完成回执。 当前版本未开放课程离线下载、本机号码一键登录及远程推送。课程权益和服务状态以实时展示为准。 App备案号：湘ICP备2026005683号-5A
+- generic: 展开
+- generic: 应用信息
+- generic: 资费
+- generic: 提供应用内购买项目
+- generic: 大小
+- generic: 27.58MB
+- generic: 版本
+- generic: 1.0.1
+- generic: 更新时间
+- generic: 2026/11/2
+- generic "https://www.swod.com.cn":
+  - generic: 官网
+  - generic: https://www.swod.com.cn
+- generic: 应用分级
+- generic: 年满 16 周岁
+- generic: 开发者
+- generic: 伊娃文化艺术发展（湖南）有限公司
+- generic: 隐私政策
+- generic: 应用权限
+- generic: 权限
+- generic: 相关推荐
+- text: 查看更多
+- generic: 小鹿AI编程
+- generic: 沙拉俄语
+- generic: 识日
+- generic: 刻记
+- generic: 普通话水平测试甘言
+- generic: 成语趣答答
+- generic: 做题软件
+- generic: 武老师快答
+- generic: 本周热议的教育应用
+- text: 查看更多
+- generic: 作业帮
+- generic: 小猿AI
+- generic: 来音古筝
+- generic: 墨墨背单词
+- generic: 多邻国
+- generic: 学习通
+- generic: 极速翻译器
+- generic: 豆包爱学
+- link "华为应用市场用户协议":
+  - /url: https://privacy.consumer.huawei.com/legal/hiapp/terms.htm?country=CN&branchid=1&language=zh_CN
+- generic: 和
+- link "关于华为应用市场与隐私的声明":
+  - /url: https://privacy.consumer.huawei.com/legal/hiapp/privacy-statement.htm?country=CN&branchid=2&language=zh_CN
+- link "关于 cookie":
+  - /url: https://consumer.huawei.com/cn/legal/cookie-policy/
+- generic: "|"
+- link "设置cookies":
+  - /url: /static/agweb/CookieStatement_cn.html
+- link "苏ICP备17040376号":
+  - /url: http://beian.miit.gov.cn/state/outPortal/loginPortal.action
+- generic: "|"
+- link "苏网文[2021]2829-053号":
+  - /url: /suwangwen
+- link "增值电信业务经营许可证：苏b2-20130048号":
+  - /url: /business
+- generic: "|"
+- link "电子营业执照":
+  - /url: /license
+- link "中国反网络病毒联盟应用商店自律组":
+  - /url: https://www.anva.org.cn/html/alliance/appstore
+- generic: "|"
+- link "不良信息举报中心":
+  - /url: https://www.12377.cn/
+- generic: "|"
+- link "涉企网络侵权举报":
+  - /url: https://developer.huawei.com/consumer/cn/doc/app/50120
+- generic: 华为应用市场 版权所有 © 2010-2026

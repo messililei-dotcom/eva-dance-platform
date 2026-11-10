@@ -1,3 +1,4 @@
+import { duplicateJudge } from '@/lib/server/event-judge-duplicates';
 import { cleanText, readEventBody, hasAuth, jsonError, mapJudge, nowIso, toNumber, unauthorized, withRequestEventDb } from '../../_db';
 
 export const dynamic = 'force-dynamic';
@@ -42,7 +43,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const name = cleanText(body.name);
   if (!name) return jsonError('评委姓名不能为空');
 
-  return withRequestEventDb(request, (db) => {
+  return withRequestEventDb(request, (db) => db.transaction(() => {
+    if (duplicateJudge(db, body, Number(routeParams.id))) return jsonError('该手机号或学员已有其他评委资料，请核对后修改', 409);
     db.prepare(`
       UPDATE event_judges
       SET name = ?, phone = ?, title = ?, organization = ?, bio = ?,
@@ -61,7 +63,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       routeParams.id,
     );
     return Response.json({ success: true });
-  });
+  }).immediate());
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -77,4 +79,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       .run(action === 'enableAuth' ? 1 : 0, nowIso(), routeParams.id);
     return Response.json({ success: true });
   });
+}
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!hasAuth(request)) return unauthorized();
+  const { id } = await params;
+  return withRequestEventDb(request, db => db.transaction(() => {
+    const judge = db.prepare('SELECT * FROM event_judges WHERE id=?').get(id);
+    if (!judge) return jsonError('评委不存在或无权操作', 404);
+    if (db.eventOwnerId) {
+      const outside = db.prepare('SELECT id FROM main.event_group_judges WHERE judge_id=? AND competition_id NOT IN (SELECT id FROM event_owned_competitions) LIMIT 1').get(id);
+      if (outside) return jsonError('该评委同时分配给其他赛事，请移除本组分配或联系平台管理员处理', 409);
+    }
+    const now = nowIso();
+    db.prepare("UPDATE event_group_judges SET status='inactive',auth_enabled=0,updated_at=? WHERE judge_id=?").run(now, id);
+    db.prepare("UPDATE event_judges SET status='deleted',auth_enabled=0,updated_at=? WHERE id=?").run(now, id);
+    return Response.json({ success: true, message: '评委已删除，历史评分保留' });
+  }).immediate());
 }

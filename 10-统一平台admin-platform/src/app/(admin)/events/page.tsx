@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import dayjs from 'dayjs';
+import styles from './events.module.css';
 import {
+  Alert,
   App,
   Button,
   Card,
@@ -26,6 +28,7 @@ import {
   AuditOutlined,
   DatabaseOutlined,
   DownloadOutlined,
+  DeleteOutlined,
   PlusOutlined,
   SearchOutlined,
   SettingOutlined,
@@ -79,7 +82,7 @@ const competitionStageText: Record<string, string> = {
 };
 
 export default function EventsPage() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const { user } = useAuth();
   const canAssignAdmin = isPlatformSuperAdmin(user);
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
@@ -99,6 +102,9 @@ export default function EventsPage() {
   const [tab, setTab] = useState('competitions');
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(false);
+  const loadVersion = useRef(0);
+  const [loaded, setLoaded] = useState({ competitions: false, players: false, judges: false });
+  const [loadErrors, setLoadErrors] = useState<string[]>([]);
   const [competitions, setCompetitions] = useState<any[]>([]);
   const [competitionPageSize, setCompetitionPageSize] = useState(10);
   const [players, setPlayers] = useState<any[]>([]);
@@ -128,24 +134,31 @@ export default function EventsPage() {
   const selectedCompetitionId = competitions[0]?.id;
 
   const load = async (nextPlayerPage = playerPage, nextPlayerPageSize = playerPageSize) => {
+    const version = ++loadVersion.current;
     setLoading(true);
-    try {
-      const [competitionRows, playerResult, judgeRows] = await Promise.all([
-        eventApi.listCompetitions({ keyword }),
-        eventApi.listPlayersPage({ keyword, page: nextPlayerPage, pageSize: nextPlayerPageSize }),
-        eventApi.listJudges({ keyword }),
-      ]);
-      setCompetitions(competitionRows);
-      setPlayers(playerResult.data);
-      setPlayerTotal(playerResult.total);
-      setPlayerPage(playerResult.page);
-      setPlayerPageSize(playerResult.pageSize);
-      setJudges(judgeRows);
-    } catch (err: any) {
-      message.error(err?.response?.data?.error || err?.message || '加载赛事数据失败');
-    } finally {
-      setLoading(false);
+    const results = await Promise.allSettled([
+      eventApi.listCompetitions({ keyword }),
+      eventApi.listPlayersPage({ keyword, page: nextPlayerPage, pageSize: nextPlayerPageSize }),
+      eventApi.listJudges({ keyword }),
+    ]);
+    if (version !== loadVersion.current) return;
+    const [competitionResult, playerResult, judgeResult] = results;
+    if (competitionResult.status === 'fulfilled') setCompetitions(competitionResult.value);
+    if (playerResult.status === 'fulfilled') {
+      setPlayers(playerResult.value.data);
+      setPlayerTotal(playerResult.value.total);
+      setPlayerPage(playerResult.value.page);
+      setPlayerPageSize(playerResult.value.pageSize);
     }
+    if (judgeResult.status === 'fulfilled') setJudges(judgeResult.value);
+    setLoaded({
+      competitions: competitionResult.status === 'fulfilled',
+      players: playerResult.status === 'fulfilled',
+      judges: judgeResult.status === 'fulfilled',
+    });
+    const labels = ['赛事', '报名', '评委'];
+    setLoadErrors(results.flatMap((result, index) => result.status === 'rejected' ? [labels[index]] : []));
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -260,13 +273,18 @@ export default function EventsPage() {
   };
 
   const saveJudge = async () => {
-    const values = await judgeForm.validateFields();
-    if (editingJudge) await eventApi.updateJudge(editingJudge.id, values);
-    else await eventApi.createJudge(values);
-    message.success(editingJudge ? '评委已更新' : '评委已创建');
-    setJudgeModal(false);
-    judgeForm.resetFields();
-    load();
+    try {
+      const values = await judgeForm.validateFields();
+      if (editingJudge) await eventApi.updateJudge(editingJudge.id, values);
+      else await eventApi.createJudge(values);
+      message.success(editingJudge ? '评委已更新' : '评委已创建');
+      setJudgeModal(false);
+      judgeForm.resetFields();
+      load();
+    } catch (error: any) {
+      if (error?.errorFields) return;
+      message.error(error?.response?.data?.error || '保存评委失败，请重试');
+    }
   };
 
   const exportAll = async () => {
@@ -340,7 +358,8 @@ export default function EventsPage() {
     {
       title: '赛事',
       dataIndex: 'name',
-      width: 260,
+      width: 180,
+      fixed: 'left',
       render: (value: string, row: any) => (
         <Space direction="vertical" size={0}>
           <Link href={`/events/${row.id}`}><TrophyOutlined style={{ color: '#d97706', marginRight: 6 }} />{value}</Link>
@@ -420,7 +439,7 @@ export default function EventsPage() {
   ]);
 
   const playerColumns = sortableColumns<any>([
-    { title: '选手', dataIndex: 'name', width: 150, render: (v: string, row: any) => <Link href={`/events/players/${row.id}`}>{v}</Link> },
+    { title: '选手', dataIndex: 'name', width: 150, fixed: 'left', render: (v: string, row: any) => <Link href={`/events/players/${row.id}`}>{v}</Link> },
     { title: '编号', dataIndex: 'playerNo', width: 100, render: (v: string) => v || '-' },
     { title: '赛事', dataIndex: 'competitionName', width: 190 },
     { title: '组别', dataIndex: 'groupName', width: 160, render: (v: string) => v || '-' },
@@ -450,7 +469,7 @@ export default function EventsPage() {
   ]);
 
   const judgeColumns = sortableColumns<any>([
-    { title: '评委', dataIndex: 'name', width: 150, render: (v: string, row: any) => <Link href={`/events/judges/${row.id}`}>{v}</Link> },
+    { title: '评委', dataIndex: 'name', width: 150, fixed: 'left', render: (v: string, row: any) => <Link href={`/events/judges/${row.id}`}>{v}</Link> },
     { title: '头衔', dataIndex: 'title', width: 140, render: (v: string) => v || '-' },
     { title: '机构', dataIndex: 'organization', width: 180, render: (v: string) => v || '-' },
     { title: '授权', dataIndex: 'authEnabled', width: 90, render: (v: boolean) => v ? <Tag color="green">已授权</Tag> : <Tag>未授权</Tag> },
@@ -471,6 +490,12 @@ export default function EventsPage() {
             message.success(row.authEnabled ? '已关闭授权' : '已开启授权');
             load();
           }}>{row.authEnabled ? '停权' : '授权'}</Button>
+          <Button size="small" danger icon={<DeleteOutlined />} onClick={() => modal.confirm({
+            title: `确认删除评委“${row.name}”？`,
+            content: '删除后停止该评委授权并移出评委列表，历史评分保留用于核查。',
+            okText: '确认删除', okButtonProps: { danger: true },
+            onOk: async () => { try { await eventApi.deleteJudge(row.id); message.success('评委已删除'); await load(); } catch (error: any) { message.error(error?.response?.data?.error || '删除失败，请重试'); throw error; } },
+          })}>删除</Button>
           <Link href={`/events/judges/${row.id}`}>详情</Link>
         </Space>
       ),
@@ -484,37 +509,43 @@ export default function EventsPage() {
   ];
 
   return (
-    <div>
+    <div className={styles.page}>
       <h2 style={{ marginBottom: 16, color: '#1f2937' }}>赛事管理</h2>
 
-      <Card size="small" style={{ marginBottom: 16 }} styles={{ body: { padding: '12px 16px' } }}>
-        <Row gutter={[0, 8]}>
+      <Card size="small" className={styles.summary} styles={{ body: { padding: '12px 16px' } }}>
+        <div className={styles.summaryGrid}>
           {[
-            { label: '赛事', value: competitions.length, icon: <TrophyOutlined /> },
-            { label: '报名选手', value: playerTotal, icon: <TeamOutlined /> },
-            { label: '评委', value: judges.length, icon: <UserSwitchOutlined /> },
-          ].map((item, index) => (
-            <Col key={item.label} xs={24} md={8} style={{ borderLeft: index ? '1px solid #f0f0f0' : undefined }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 28 }}>
-                <span style={{ color: '#8c8c8c' }}>{item.label}</span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#17233d', fontSize: 22 }}>
-                  {item.icon}<strong style={{ fontWeight: 500 }}>{item.value.toLocaleString()}</strong>
-                </span>
-              </div>
-            </Col>
+            { label: '赛事', value: loaded.competitions ? competitions.length.toLocaleString() : '—', icon: <TrophyOutlined /> },
+            { label: '报名选手', value: loaded.players ? playerTotal.toLocaleString() : '—', icon: <TeamOutlined /> },
+            { label: '评委', value: loaded.judges ? judges.length.toLocaleString() : '—', icon: <UserSwitchOutlined /> },
+          ].map((item) => (
+            <div key={item.label} className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>{item.icon}{item.label}</span>
+              <strong className={styles.summaryValue}>{item.value}</strong>
+            </div>
           ))}
-        </Row>
+        </div>
       </Card>
+      {loadErrors.length > 0 && <Alert
+        className={styles.error}
+        type="error"
+        showIcon
+        message={`${loadErrors.join('、')}数据加载失败，请重试`}
+        description="已成功加载的内容仍可查看。"
+        action={<Button size="small" loading={loading} onClick={() => load()}>重试</Button>}
+      />}
 
       <Card
         size="small"
-        title={<Tabs activeKey={tab} onChange={setTab} items={[
-          { key: 'competitions', label: `赛事 (${competitions.length})` },
-          { key: 'players', label: `报名 (${playerTotal})` },
-          { key: 'judges', label: `评委 (${judges.length})` },
+        className={styles.list}
+      >
+        <Tabs activeKey={tab} onChange={setTab} items={[
+          { key: 'competitions', label: `赛事 (${loaded.competitions ? competitions.length : '—'})` },
+          { key: 'players', label: `报名 (${loaded.players ? playerTotal : '—'})` },
+          { key: 'judges', label: `评委 (${loaded.judges ? judges.length : '—'})` },
           { key: 'verify', label: `数据核验 (${verify?.total || 0})` },
-        ]} />}
-        extra={<Space wrap>
+        ]} />
+        <div className={styles.toolbar}>
           <Input
             placeholder="搜索赛事、选手、评委"
             prefix={<SearchOutlined />}
@@ -525,9 +556,9 @@ export default function EventsPage() {
               load(1, playerPageSize);
             }}
             allowClear
-            style={{ width: 220 }}
+            className={styles.search}
           />
-          <Button icon={<DatabaseOutlined />} onClick={() => tab === 'verify' ? loadVerify() : load()}>刷新{tab === 'verify' ? '/核验' : ''}</Button>
+          <Button icon={<DatabaseOutlined />} loading={loading} onClick={() => tab === 'verify' ? loadVerify() : load()}>刷新{tab === 'verify' ? '/核验' : ''}</Button>
           <Button icon={<DownloadOutlined />} loading={transferLoading} onClick={exportAll}>导出全部</Button>
           {tab === 'competitions' && canAssignAdmin && <Button type="primary" icon={<PlusOutlined />} onClick={() => openCompetition()}>新建赛事</Button>}
           {tab === 'players' && <Button type="primary" icon={<PlusOutlined />} onClick={() => {
@@ -542,8 +573,7 @@ export default function EventsPage() {
             judgeForm.setFieldsValue({ status: 'active', authEnabled: false });
             setJudgeModal(true);
           }}>新增评委</Button>}
-        </Space>}
-      >
+        </div>
         {tab === 'competitions' && <Table
           loading={loading}
           columns={competitionColumns}

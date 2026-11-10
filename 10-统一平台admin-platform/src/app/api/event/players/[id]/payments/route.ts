@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{id: 
   if (!hasAuth(request)) return unauthorized();
   const {id} = await params, body = await readEventBody(request);
   return withRequestEventDb(request, db => {
-    try { return Response.json({success:true,data:db.transaction(() => recordRegistrationPayment(db,Number(id),body))()}); }
+    try { return Response.json({success:true,data:db.transaction(() => recordRegistrationPayment(db,Number(id),body)).immediate()}); }
     catch (error: any) { if (String(error.message).includes('无权限查看')) throw error; return jsonError(error.message || '登记失败'); }
   });
 }

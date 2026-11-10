@@ -1,0 +1,24 @@
+[
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "matchesVerifiedProfileSource": true
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "matchesVerifiedProfileSource": true
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+    "matchesVerifiedProfileSource": false
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets",
+    "matchesVerifiedProfileSource": true
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+    "matchesBuild18StagingSource": true,
+    "sha256": "8ac0b6c114069c88c8dd191eb90e167633f9349ee915eef2d32c9aa989ab3d88",
+    "note": "Earlier layout preview predates release preparation; compare signed build18 staging source instead."
+  }
+]

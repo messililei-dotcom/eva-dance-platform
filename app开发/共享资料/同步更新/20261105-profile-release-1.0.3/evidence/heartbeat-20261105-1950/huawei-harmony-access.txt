@@ -1,0 +1,408 @@
+- banner:
+  - link:
+    - /url: /consumer/cn/hdc-console
+  - link "开发者管理":
+    - /url: "#/home/9249519184596305951"
+    - generic "开发者管理"
+  - link "应用管理":
+    - /url: "#/app/101653523124950145?appId=6917617955633704973&projectId=101653523865196397"
+    - generic "应用管理"
+  - link "智能体管理":
+    - /url: /consumer/cn/hag/hagindex.html?isInFrame=true&lang=zh_CN#/agentHome/createProject/createAgent
+    - generic "智能体管理"
+  - img "notice"
+  - generic: 自2027年1月1日起，平台将针对应用目标SDK版本进行检测并提示升级，建议您在最近的版本中将应用的targetSdkVersion升级至"26.0.0"。
+  - generic: 自2027年1月1日起，平台将针对应用目标SDK版本进行检测并提示升级，建议您在最近的版本中将应用的targetSdkVersion升级至"26.0.0"。
+  - img "prev"
+  - generic: 2/2
+  - img "next"
+  - generic "互动中心":
+    - generic: "6"
+  - button:
+  - button "135******58 伊娃文化艺术发展（湖南）有限公司":
+    - generic "135******58"
+    - generic "伊娃文化艺术发展（湖南）有限公司"
+- button "SWOD cn.com.swod.evadance":
+  - generic "SWOD"
+  - generic "cn.com.swod.evadance"
+- generic: 全部折叠
+- menubar:
+  - link "基础信息":
+    - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124950145?appId=6917617955633704973&projectId=101653523865196397
+    - menuitem "基础信息":
+      - generic: 基础信息
+  - menuitem "分发" [expanded]:
+    - generic: 分发
+    - menu:
+      - menuitem "应用上架" [expanded]:
+        - generic: 应用上架
+        - menu:
+          - link "应用信息":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596237673?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "应用信息":
+              - generic: 应用信息
+          - link "软件包管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065903274627?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "软件包管理":
+              - generic: 软件包管理
+          - menuitem "版本信息" [expanded]:
+            - generic: 版本信息
+            - menu:
+              - link "1.0.2 新版本 - 待修改":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2071129556072323840?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "1.0.2 新版本 - 待修改":
+                  - generic: 1.0.2 新版本 - 待修改
+              - link "1.0.0 已上架":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2052180194646561792?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "1.0.0 已上架":
+                  - generic: 1.0.0 已上架
+          - menuitem "版本/升级":
+            - generic: 版本/升级
+          - link "版本历史记录":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124694771?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "版本历史记录":
+              - generic: 版本历史记录
+          - link "价格与销售范围":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728281964?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "价格与销售范围":
+              - generic: 价格与销售范围
+      - menuitem "应用测试" [expanded]:
+        - generic: 应用测试
+        - menu:
+          - link "测试版本列表":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065903122945?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "测试版本列表":
+              - generic: 测试版本列表
+          - link "测试用户":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065903122947?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "测试用户":
+              - generic: 测试用户
+          - link "测试反馈":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124818576?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "测试反馈":
+              - generic: 测试反馈
+      - menuitem "更多服务" [expanded]:
+        - generic: 更多服务
+        - menu:
+          - link "协议服务":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065902862722?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "协议服务":
+              - generic: 协议服务
+          - link "应用系列管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065902997222?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "应用系列管理":
+              - generic: 应用系列管理
+          - link "用户列表":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596032042?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "用户列表":
+              - generic: 用户列表
+  - menuitem "开放能力配置" [expanded]:
+    - generic: 开放能力配置
+    - menu:
+      - link "华为账号服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184595940124?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "华为账号服务":
+          - generic: 华为账号服务
+      - link "钱包服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596014478?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "钱包服务":
+          - generic: 钱包服务
+      - link "机器学习服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596014476?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "机器学习服务":
+          - generic: 机器学习服务
+      - link "云空间服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184595940131?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "云空间服务":
+          - generic: 云空间服务
+      - link "数字版权管理服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596014541?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "数字版权管理服务":
+          - generic: 数字版权管理服务
+      - link "地图服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596016362?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "地图服务":
+          - generic: 地图服务
+      - link "定位服务":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596201067?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "定位服务":
+          - generic: 定位服务
+      - link "AirTouch":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596365193?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "AirTouch":
+          - generic: AirTouch
+      - link "星盾机密风控引擎":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124964276?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "星盾机密风控引擎":
+          - generic: 星盾机密风控引擎
+  - menuitem "质量和运维" [expanded]:
+    - generic: 质量和运维
+    - menu:
+      - link "云测试":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596047462?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "云测试":
+          - generic: 云测试
+      - link "云调试":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596051206?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "云调试":
+          - generic: 云调试
+      - menuitem "APMS" [expanded]:
+        - generic: APMS
+        - menu:
+          - link "数据总览":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124770996?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "数据总览":
+              - generic: 数据总览
+          - link "故障告警":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124763674?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "故障告警":
+              - generic: 故障告警
+          - link "故障指标":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124771008?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "故障指标":
+              - generic: 故障指标
+          - link "故障分析":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124771010?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "故障分析":
+              - generic: 故障分析
+          - link "质量报告":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124771018?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "质量报告":
+              - generic: 质量报告
+          - link "配置管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124771020?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "配置管理":
+              - generic: 配置管理
+      - menuitem "云监控" [expanded]:
+        - generic: 云监控
+        - menu:
+          - link "监控大盘":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/243650030996357424?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "监控大盘":
+              - generic: 监控大盘
+          - link "日志服务":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/243650030996357459?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "日志服务":
+              - generic: 日志服务
+          - link "告警管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/243650030996357430?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "告警管理":
+              - generic: 告警管理
+  - menuitem "推广运营" [expanded]:
+    - generic: 推广运营
+    - menu:
+      - menuitem "增长运营" [expanded]:
+        - generic: 增长运营
+        - menu:
+          - link "推送服务":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184595935885?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "推送服务":
+              - generic: 推送服务
+          - link "Push用户增长":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322385623854178794?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "Push用户增长":
+              - generic: Push用户增长
+          - link "直达应用快服务":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596689416?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "直达应用快服务":
+              - generic: 直达应用快服务
+          - link "远程配置":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184595958872?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "远程配置":
+              - generic: 远程配置
+          - link "应用内消息":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184596112422?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "应用内消息":
+              - generic: 应用内消息
+          - menuitem "视频编辑服务" [expanded]:
+            - generic: 视频编辑服务
+            - menu:
+              - link "我的素材":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611179157231?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "我的素材":
+                  - generic: 我的素材
+              - link "应用内容运营":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611179157329?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "应用内容运营":
+                  - generic: 应用内容运营
+              - link "参数配置":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611179157403?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "参数配置":
+                  - generic: 参数配置
+          - link "素材上传":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728085106?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "素材上传":
+              - generic: 素材上传
+          - link "服务直达":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728160630?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "服务直达":
+              - generic: 服务直达
+          - link "推广任务管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728984795?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "推广任务管理":
+              - generic: 推广任务管理
+          - link "探索流服务":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124600506?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "探索流服务":
+              - generic: 探索流服务
+          - menuitem "App Linking" [expanded]:
+            - generic: App Linking
+            - menu:
+              - link "应用链接":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124542427?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "应用链接":
+                  - generic: 应用链接
+              - link "聚合链接":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124542443?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "聚合链接":
+                  - generic: 聚合链接
+      - menuitem "产品运营" [expanded]:
+        - generic: 产品运营
+        - menu:
+          - link "商品管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/97458334310914209?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "商品管理":
+              - generic: 商品管理
+          - link "退款管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415727943528?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "退款管理":
+              - generic: 退款管理
+      - menuitem "活动运营" [expanded]:
+        - generic: 活动运营
+        - menu:
+          - link "奖品流水":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/97458334310914216?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "奖品流水":
+              - generic: 奖品流水
+      - menuitem "用户运营" [expanded]:
+        - generic: 用户运营
+        - menu:
+          - link "互动评论":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/97458334310914217?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "互动评论":
+              - generic: 互动评论
+  - menuitem "盈利" [expanded]:
+    - generic: 盈利
+    - menu:
+      - menuitem "AGD Pro应用变现服务" [expanded]:
+        - generic: AGD Pro应用变现服务
+        - menu:
+          - link "概览":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/243650030995611952?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "概览":
+              - generic: 概览
+          - link "媒体管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611178965381?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "媒体管理":
+              - generic: 媒体管理
+          - link "展示位管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611178965427?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "展示位管理":
+              - generic: 展示位管理
+          - link "屏蔽管理":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611178965478?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "屏蔽管理":
+              - generic: 屏蔽管理
+          - link "接入测试":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611178965554?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "接入测试":
+              - generic: 接入测试
+          - link "数据报表":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/243650030995611985?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "数据报表":
+              - generic: 数据报表
+      - link "应用内购买服务 （HarmonyOS NEXT）":
+        - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065903364488?appId=6917617955633704973&projectId=101653523865196397
+        - menuitem "应用内购买服务 （HarmonyOS NEXT）":
+          - generic: 应用内购买服务 （HarmonyOS NEXT）
+      - menuitem "鸿蒙支付服务" [expanded]:
+        - generic: 鸿蒙支付服务
+        - menu:
+          - link "支付服务（非虚拟类）":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065902816452?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "支付服务（非虚拟类）":
+              - generic: 支付服务（非虚拟类）
+  - menuitem "分析" [expanded]:
+    - generic: 分析
+    - menu:
+      - menuitem "概览" [expanded]:
+        - generic: 概览
+        - menu:
+          - link "本应用概览":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322385623856482366?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "本应用概览":
+              - generic: 本应用概览
+          - link "所有应用概览":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/101653523124950180?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "所有应用概览":
+              - generic: 所有应用概览
+      - menuitem "分发分析" [expanded]:
+        - generic: 分发分析
+        - menu:
+          - link "下载安装":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9322780611175303332?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "下载安装":
+              - generic: 下载安装
+          - link "用户分析":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/172249065903408682?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "用户分析":
+              - generic: 用户分析
+          - link "行为分析":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728225180?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "行为分析":
+              - generic: 行为分析
+      - menuitem "运营分析" [expanded]:
+        - generic: 运营分析
+        - menu:
+          - link "应用内付费":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/97458334310914225?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "应用内付费":
+              - generic: 应用内付费
+          - menuitem "数字商品服务分析" [expanded]:
+            - generic: 数字商品服务分析
+            - menu:
+              - link "概览":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415727891880?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "概览":
+                  - generic: 概览
+              - link "销售 - 产品销量":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728035804?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "销售 - 产品销量":
+                  - generic: 销售 - 产品销量
+              - link "销售 - 销售额":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728035810?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "销售 - 销售额":
+                  - generic: 销售 - 销售额
+              - link "订阅摘要":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415727891888?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "订阅摘要":
+                  - generic: 订阅摘要
+              - link "订阅 - 持续使用情况":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728035828?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "订阅 - 持续使用情况":
+                  - generic: 订阅 - 持续使用情况
+              - link "订阅 - 状态":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728035830?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "订阅 - 状态":
+                  - generic: 订阅 - 状态
+              - link "订阅 - 事件":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/245150415728035840?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "订阅 - 事件":
+                  - generic: 订阅 - 事件
+      - menuitem "质量分析" [expanded]:
+        - generic: 质量分析
+        - menu:
+          - link "安装失败":
+            - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/9249519184595918081?appId=6917617955633704973&projectId=101653523865196397
+            - menuitem "安装失败":
+              - generic: 安装失败
+- iframe [id="mainIframeView"]
+- generic: 华为开发者联盟 版权所有 ©2018-2026
+- list:
+  - listitem: 问题反馈
+  - listitem: 使用条款
+  - listitem: 关于华为开发者联盟与隐私的声明
+  - listitem: 关于华为 HarmonyOS 开发者中心应用管理与隐私的声明
+  - listitem: 隐私政策
+  - listitem: Cookies
+  - listitem: 开源软件声明

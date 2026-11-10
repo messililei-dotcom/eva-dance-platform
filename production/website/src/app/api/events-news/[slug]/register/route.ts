@@ -1,3 +1,5 @@
+import { samePhoneIdentity } from '@/lib/server/event-phone-member';
+import { normalizeEventPhone } from '@/lib/event-phone';
 import { NextResponse } from 'next/server';
 import { persistEventMusic, discardEventMusic } from '@/lib/server/event-music-archive';
 import path from 'path';
@@ -32,6 +34,8 @@ const MUSIC_UPLOAD_ROOT = process.env.EVENT_MUSIC_UPLOAD_ROOT
   || '/www/wwwroot/dongfangwuquan/admin-platform/public/uploads/event-music';
 const MAX_MUSIC_FILE_SIZE = 10 * 1024 * 1024;
 const MUSIC_EXTENSIONS = new Set(['.mp3', '.wav', '.m4a', '.aac', '.flac']);
+const phoneDigitsSql = `REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(phone, ''), '+', ''), ' ', ''), '-', ''), '(', ''), ')', '')`;
+const phoneIdentitySql = `(CASE WHEN length(${phoneDigitsSql})=13 AND substr(${phoneDigitsSql},1,2)='86' THEN substr(${phoneDigitsSql},3) ELSE ${phoneDigitsSql} END)`;
 
 function cleanText(value: unknown, maxLength = 200): string {
   return String(value ?? '').trim().slice(0, maxLength);
@@ -198,7 +202,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     return NextResponse.json({ success: true, message: '报名信息已提交' });
   }
 
-  const phone = cleanText(body.phone, 20).replace(/[\s-]/g, '').replace(/^\+?86/, '');
+  let phone = cleanText(body.phone, 20).replace(/[\s-]/g, '');
   const organization = cleanText(body.organization, 100);
   const teacher = cleanText(body.teacher, 60);
   const remark = cleanText(body.remark, 500);
@@ -206,14 +210,10 @@ export async function POST(request: Request, { params }: RouteContext) {
   const performanceTitle = cleanText(body.performanceTitle, 120);
   const musicSource = cleanText(body.musicSource, 20) === 'wechat' ? 'wechat' : 'local';
 
-  if (!/^1[3-9]\d{9}$/.test(phone)) {
-    return NextResponse.json({ success: false, error: '请填写正确的11位手机号' }, { status: 400 });
-  }
+  try { phone = normalizeEventPhone(phone, body.countryCode).phone; }
+  catch (error) { return NextResponse.json({ success: false, error: error instanceof Error ? error.message : '请填写正确的手机号' }, { status: 400 }); }
   if (!performanceTitle) {
     return NextResponse.json({ success: false, error: '请填写节目名称' }, { status: 400 });
-  }
-  if (!musicFile) {
-    return NextResponse.json({ success: false, error: '请选择需要上传的音乐文件' }, { status: 400 });
   }
   if (musicFile) {
     const extension = path.extname(musicFile.name).toLowerCase();
@@ -261,18 +261,17 @@ export async function POST(request: Request, { params }: RouteContext) {
     }
 
     const duplicate = db.prepare(`
-      SELECT id,member_id,submitted_by_member_id,registration_fee,paid_status FROM event_players
+      SELECT id,member_id,phone,submitted_by_member_id,registration_fee,paid_status FROM event_players
       WHERE competition_id = ?
-        AND REPLACE(REPLACE(REPLACE(COALESCE(phone, ''), ' ', ''), '-', ''), '+86', '') = ?
+        AND ${phoneIdentitySql} = ?
         AND audit_status <> 'rejected' AND status NOT IN ('cancelled','withdrawn') AND COALESCE(group_id,0)=?
-      LIMIT 1
-    `).get(event.competitionId, phone, groupId);
+    `).all<any>(event.competitionId, phone.replace(/\D/g, ''), groupId).find(row => samePhoneIdentity(row.phone, phone));
     if (duplicate && [duplicate.member_id,duplicate.submitted_by_member_id].includes(memberId) && duplicate.paid_status==='unpaid') return NextResponse.json({success:true,data:{registrationId:duplicate.id,registrationFee:Number(duplicate.registration_fee)},message:'报名已存在，请继续缴费'});
     if (duplicate) {
       return NextResponse.json({ success: false, error: '该手机号已报名本组别' }, { status: 409 });
     }
 
-    uploadedMusic = await persistEventMusic(musicFile!, event.competitionId, competition.name, selectedGroup!.name, name, performanceTitle);
+    if (musicFile) uploadedMusic = await persistEventMusic(musicFile, event.competitionId, competition.name, selectedGroup!.name, name, performanceTitle);
     db.exec(`CREATE TABLE IF NOT EXISTS event_music_archives (
   id INTEGER PRIMARY KEY AUTOINCREMENT, competition_id INTEGER NOT NULL, music_file_id INTEGER NOT NULL UNIQUE,
   vod_id TEXT NOT NULL DEFAULT '', category_id INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'local',
@@ -280,7 +279,7 @@ export async function POST(request: Request, { params }: RouteContext) {
 );`);
 
     const musicSourceLabel = musicSource === 'wechat' ? '音乐来源：微信聊天记录' : '音乐来源：选取文件';
-    const notes = [musicSourceLabel, remark].filter(Boolean).join('\n');
+    const notes = [uploadedMusic ? musicSourceLabel : '', remark].filter(Boolean).join('\n');
     const now = new Date().toISOString();
     const created = db.transaction(() => {
       // Recheck limits inside the write transaction, including concurrent registrations.
@@ -291,7 +290,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       const liveGroup = db.prepare("SELECT * FROM event_groups WHERE id=? AND competition_id=? AND status='active'").get<any>(groupId,event.competitionId);
       if (!liveGroup) throw new Error('请选择有效的参赛组别');
       const entrantId=ensurePhoneMember(db,name,phone,'event_competition');
-      if (db.prepare("SELECT id FROM event_players WHERE competition_id=? AND group_id=? AND (member_id=? OR REPLACE(REPLACE(REPLACE(COALESCE(phone,''),' ',''),'-',''),'+86','')=?) AND audit_status<>'rejected' AND status NOT IN ('cancelled','withdrawn')").get(event.competitionId,groupId,entrantId,phone)) throw new Error('您已报名本组别');
+      if (db.prepare(`SELECT id,member_id,phone FROM event_players WHERE competition_id=? AND group_id=? AND (member_id=? OR ${phoneIdentitySql}=?) AND audit_status<>'rejected' AND status NOT IN ('cancelled','withdrawn')`).all<any>(event.competitionId,groupId,entrantId,phone.replace(/\D/g, '')).some(row => Number(row.member_id) === entrantId || samePhoneIdentity(row.phone, phone))) throw new Error('您已报名本组别');
       const groupCount = db.prepare("SELECT COUNT(*) n FROM event_players WHERE group_id=? AND status NOT IN ('cancelled','withdrawn') AND audit_status<>'rejected'").get<any>(groupId).n;
 
       if (liveGroup.max_players > 0 && groupCount >= liveGroup.max_players) throw new Error('该组别报名人数已满');

@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-11-07T18:23:06+08:00",
+  "latestReadinessRecord": "verification/update-readiness-20261107.json",
+  "currentCandidates": {
+    "ios": 13,
+    "android": 20,
+    "harmony": 18
+  },
+  "adbTargets": 0,
+  "hdcTargets": 0,
+  "currentOfficialStatusVerifiedThisRun": false,
+  "officialReadSkippedReason": "Latest candidates not submitted; known runtime/material gates unchanged. Existing draft and credentials left untouched.",
+  "newUpload": false,
+  "newStoreSubmission": false,
+  "newReviewOrPublicResultVerified": false,
+  "newNotificationNeeded": false,
+  "existingReviewsWithdrawn": false
+}

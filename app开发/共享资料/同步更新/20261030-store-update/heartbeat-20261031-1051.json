@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-10-31T10:54:20+08:00",
+  "ios": {
+    "version": "1.0.2",
+    "build": 11,
+    "submissionID": "e6ac9f82-67e9-4eb0-b68d-ca9970019383",
+    "reviewStatus": "waiting-for-review",
+    "currentReviewStatusVerified": true,
+    "loginRequired": false,
+    "publicReleaseChecked": false,
+    "reason": "Review still pending; no approval to reconcile with public release.",
+    "evidence": "evidence/heartbeat-20261031-1051/apple-waiting-review.png"
+  },
+  "huaweiAndroid": {
+    "appId": "119475083",
+    "lastKnownVersion": "1.0.1(11)",
+    "sidebarDisplayed": "in-review",
+    "currentReviewStatusVerified": false,
+    "access": "existing shell visible; switching application type triggered Huawei account authentication",
+    "reviewPreserved": true,
+    "latest18Uploaded": false
+  },
+  "harmony": {
+    "appId": "6917617955633704973",
+    "currentReviewStatusVerified": false,
+    "lastKnownStatus": "waiting-for-review",
+    "access": "classic detail redirected to empty root; HDC application type switch redirected to authentication"
+  },
+  "channels": {
+    "xiaomi": "1.0.2/package visible, draft, copyright still missing",
+    "vivo": "1.0.2/package visible, copyright still missing",
+    "honor": "1.0.2/package visible, copyright still missing",
+    "oppo": "same SDK login component failure",
+    "tencent": "just completed manual turn:18 version saved,4 screenshots and base fields live but mandatory copyright/qualification validation prevents base save and submission"
+  },
+  "newUpload": false,
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "signingChanged": false,
+  "newActionableStatus": false,
+  "notificationDecision": "DONT_NOTIFY",
+  "automationInstructionsUpdated": "Removed stale Tencent login/upload and Mac lock conclusions; current records authoritative"
+}

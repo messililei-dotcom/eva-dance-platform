@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-11-09T10:52:03+08:00",
+  "adbTargets": 0,
+  "hdcTargets": 0,
+  "currentOfficialStatusVerifiedThisRun": false,
+  "officialReadSkippedReason": "No new submission or verified browser recovery for this workspace.",
+  "copyrightLatestVerifiedDate": "2026-11-09",
+  "copyrightLatestVerifiedStatus": "待受理",
+  "copyrightStatusChanged": false,
+  "pendingSourceSyncRecord": "../20261109-event-and-learning-sync/verification.json",
+  "pendingSourceSyncHasSignedCandidates": false,
+  "automationScopeUpdated": true,
+  "newUpload": false,
+  "newStoreSubmission": false,
+  "newReviewOrPublicResultVerified": false,
+  "newNotificationNeeded": false
+}

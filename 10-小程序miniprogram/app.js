@@ -119,6 +119,11 @@ App({
             const result = await api.silentLogin(code);
             const member = result.data?.member || result.member || {};
             const nextToken = result.data?.token || result.token || "";
+            if (token !== wx.getStorageSync("token") || memberId !== wx.getStorageSync("memberId")
+              || (force && memberId && String(member.id) !== String(memberId))) {
+              resolve(null);
+              return;
+            }
             if (member.id && nextToken) {
               wx.setStorageSync("memberId", member.id);
               wx.setStorageSync("memberName", member.wx_nickname || member.name || "");

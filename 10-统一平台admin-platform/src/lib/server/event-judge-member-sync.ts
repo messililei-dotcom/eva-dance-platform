@@ -108,7 +108,10 @@ export function ensureJudgeForMember(db: AdminDb, memberId: number) {
 }
 
 export function syncAllEventJudgesToMembers(db: AdminDb) {
-  const judges = db.prepare('SELECT * FROM event_judges ORDER BY id').all() as Array<Record<string, any>>;
+  const judges = db.prepare("SELECT * FROM event_judges WHERE COALESCE(status,'active')!='deleted' ORDER BY id").all() as Array<Record<string, any>>;
+  // Scoped administrators cannot see every Member. A missing scoped match must
+  // never create a duplicate or claim a student outside their event access.
+  if ((db as any).eventOwnerId) return { total: judges.length, linked: 0, created: 0 };
   let linked = 0;
   let created = 0;
   db.transaction(() => {

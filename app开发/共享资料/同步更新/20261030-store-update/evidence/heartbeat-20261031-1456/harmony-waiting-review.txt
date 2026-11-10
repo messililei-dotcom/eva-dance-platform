@@ -1,0 +1,8 @@
+- button "SWOD cn.com.swod.evadance":
+              - link "1.0.2 新版本 - 正在等待审核":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2071129556072323840?appId=6917617955633704973&projectId=101653523865196397
+                - menuitem "1.0.2 新版本 - 正在等待审核":
+                  - generic: 1.0.2 新版本 - 正在等待审核
+              - link "1.0.0 已上架":
+                - menuitem "1.0.0 已上架":
+                  - generic: 1.0.0 已上架

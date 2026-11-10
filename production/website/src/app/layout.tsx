@@ -8,6 +8,7 @@ import Footer from '@/components/Footer_v2';
 import FloatingToolbar from '@/components/FloatingToolbar';
 import WechatShareBridge from '@/components/WechatShareBridge';
 import StudentSessionBootstrap from '@/components/StudentSessionBootstrap';
+import PWAFullscreen from '@/components/PWAFullscreen';
 import PWAProvider from '@/components/PWAProvider';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import InboxNotificationReminder from '@/components/InboxNotificationReminder';
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
     template: '%s | 伊娃东方舞',
   },
   applicationName: 'SWOD',
-  manifest: '/manifest-20261006.json',
+  manifest: '/manifest-20261105.json',
   appleWebApp: {
     capable: true,
     title: 'SWOD',
@@ -43,9 +44,9 @@ export const metadata: Metadata = {
       { url: '/icons/favicon-48x48-20261005.png', sizes: '48x48', type: 'image/png' },
     ],
     shortcut: '/icons/favicon-32x32-20261005.png',
-    apple: '/icons/pwa/apple-touch-icon-20261006.png',
+    apple: '/icons/pwa/apple-touch-icon-20261105.png',
     other: [
-      { rel: 'apple-touch-icon-precomposed', url: '/icons/pwa/apple-touch-icon-20261006.png', sizes: '180x180' },
+      { rel: 'apple-touch-icon-precomposed', url: '/icons/pwa/apple-touch-icon-20261105.png', sizes: '180x180' },
     ],
   },
 };
@@ -78,6 +79,7 @@ export default function RootLayout({
         <FloatingToolbar />
         <WechatShareBridge />
         <PWAInstallPrompt />
+        <PWAFullscreen />
         <CourseAccessProvider><main className="site-main overflow-x-hidden">{children}</main></CourseAccessProvider>
         <BottomNav />
         <Footer />

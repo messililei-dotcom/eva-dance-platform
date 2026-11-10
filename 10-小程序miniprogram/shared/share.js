@@ -24,6 +24,8 @@ function card(title, route, params, item = {}, detail = '') {
 function intro(item = {}, fallback) { return text(item.descriptionText || item.description || item.summary || item.subtitle || item.introduction) || fallback; }
 function resolveShare(page, route) {
   const d=page.data || {},o=page.shareOptions || {};
+  if (route==='learning-records') return resolveShare({data:{}},'profile');
+  if (route==='event-music') return resolveShare({data:{}},'events');
   if (route==='event-judge') return resolveShare({data:{id:d.id,competition:d.competition}},'event-detail');
   if (route==='course-checkout' && d.kind==='event') return resolveShare({data:{}},'events');
   if (route==='course-checkout') return resolveShare({data:d.kind==='offline'?{courseId:Number(d.id)+900000,course:d.offer}:{id:d.id,series:d.offer}},d.kind==='offline'?'offline-detail':'detail');
@@ -45,7 +47,7 @@ function resolveShare(page, route) {
   const item=route==='mall'?d.visibleProducts?.[0]:route==='home'?d.carouselCourses?.[0]:route==='system'?d.courses?.[0]:route==='offline'?d.visibleCourses?.[0]:route==='events'?d.visibleEvents?.[0]:{};
   return card(titles[route],route==='admin'?HOME:`/pages/${route}/${route}`,{},item || {},descriptions[route]);
 }
-const landingPages = new Set(['home','mall','detail','offline-detail','event-detail']);
+const landingPages = new Set(['home','mall','detail','offline-detail','events','event-detail','profile']);
 async function preview(page, route, options) {
   const target=landingPages.has(options._sharePage) ? options._sharePage : route;
   let data={},id=options.id || options.seriesId;

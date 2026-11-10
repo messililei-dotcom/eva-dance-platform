@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-11-10T07:09:46+08:00",
+  "version": "1.0.4",
+  "ios": {
+    "build": 14,
+    "freshReviewStatusVerified": false,
+    "managementResult": "Sign-in required",
+    "previousChinaPublicReleaseEvidence": "evidence/ios-1.0.4-china-public-20261110.jpg",
+    "singaporePublicStore": "Official detail link redirected to China Today; no verification"
+  },
+  "huaweiAndroid": {
+    "build": 21,
+    "freshReviewStatusVerified": false,
+    "managementResult": "Huawei sign-in required",
+    "chinaPublicVersion": "1.0.1"
+  },
+  "harmony": {
+    "build": 22,
+    "existingOfficialDraftStatus": "准备提交",
+    "automaticReleaseAfterApproval": true,
+    "nativeLoginVerified": false
+  },
+  "newReviewOrPublicResultVerified": false,
+  "newStoreSubmission": false,
+  "newNotificationNeeded": false
+}

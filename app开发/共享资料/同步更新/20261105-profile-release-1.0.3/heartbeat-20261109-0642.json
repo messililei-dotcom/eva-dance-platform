@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-11-09T06:42:32+08:00",
+  "adbTargets": 0,
+  "hdcTargets": 0,
+  "newCopyrightMaterialFound": false,
+  "currentOfficialStatusVerifiedThisRun": false,
+  "browserAccessLastObserved": "Local browser use is disabled in Work settings",
+  "browserAccessRecheckedThisRun": false,
+  "officialReadSkippedReason": "Previously reported settings restriction; no recovery instruction or new actionable runtime/material evidence. No repeated browser attempt or alternate channel.",
+  "knownRuntimeAndMaterialGatesUnchanged": true,
+  "newUpload": false,
+  "newStoreSubmission": false,
+  "newReviewOrPublicResultVerified": false,
+  "newNotificationNeeded": false,
+  "existingReviewsWithdrawn": false
+}

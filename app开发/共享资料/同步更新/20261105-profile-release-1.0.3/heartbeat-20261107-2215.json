@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-11-07T22:17:58+08:00",
+  "latestReadinessRecord": "verification/update-readiness-20261107.json",
+  "adbTargets": 0,
+  "hdcTargets": 0,
+  "newCopyrightMaterialFound": false,
+  "currentOfficialStatusVerifiedThisRun": false,
+  "officialReadSkippedReason": "No latest candidate submitted; runtime consent/native login/material gates unchanged. No redundant console navigation.",
+  "newUpload": false,
+  "newStoreSubmission": false,
+  "newReviewOrPublicResultVerified": false,
+  "newNotificationNeeded": false,
+  "existingReviewsWithdrawn": false
+}

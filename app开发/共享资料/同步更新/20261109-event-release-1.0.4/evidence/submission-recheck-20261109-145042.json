@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-11-09T14:50:42+08:00",
+  "version": "1.0.4",
+  "ios": {
+    "build": 14,
+    "submissionId": "fe22d9ea-4890-4035-9e13-8d92757b9e7e",
+    "observedStatus": "等待审核",
+    "source": "App Store Connect submission details"
+  },
+  "android": {
+    "build": 21,
+    "emulator": "EvaRelease36",
+    "observedScreen": "欢迎使用 SWOD",
+    "observedAction": "同意并继续",
+    "guestTestingBlockedAtFirstRunAgreement": true
+  },
+  "harmony": {
+    "build": 19,
+    "latestRuntimeEvidence": "evidence/harmony-19-runtime.json",
+    "nativeLoginAndStoreScreenshotsVerifiedThisCheck": false
+  },
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false
+}

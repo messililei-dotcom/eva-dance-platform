@@ -1,0 +1,6 @@
+Browser tab: 2, Title: "App Store Connect", URL: "https://appstoreconnect.apple.com/apps/6826038106/distribution/reviewsubmissions/details/fe22d9ea-4890-4035-9e13-8d92757b9e7e".
+				34 text 等待审核
+				35 heading 已提交项目 (1), Value: 3
+					36 text 已提交项目 (1)
+							50 link Description: 1.0.4 (14), Value: appstoreconnect.apple.com/apps/6826038106/testflight/ios/8c795100-f2d5-41c6-9502-5c598c1b3902/metadata
+							54 text 等待审核

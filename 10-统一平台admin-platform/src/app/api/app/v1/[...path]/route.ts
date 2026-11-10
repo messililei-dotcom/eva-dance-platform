@@ -37,7 +37,9 @@ async function handle(request: Request, context: Context) {
     if (parts.some(p => !p || p.includes('/') || p === '..')) throw new AppError('接口不存在', 404);
     const platform = appPlatform(request.headers);
     const path = parts.join('/'), method = request.method;
-    const multipart = method === "POST" && /^events\/[1-9]\d*\/register$/.test(path) && request.headers.get("content-type")?.startsWith("multipart/form-data;");
+    const registration = /^events\/[1-9]\d*\/register$/.test(path);
+    const registrationMusic = /^member\/event-registrations\/[1-9]\d*\/music$/.test(path);
+    const multipart = method === "POST" && (registration || registrationMusic) && request.headers.get("content-type")?.startsWith("multipart/form-data;");
     const body = multipart ? {} : await readBody(request);
     if (path === 'config' && method === 'GET') return json({
       version: 1, push: pushCapability(platform), oneTapLogin: carrierLoginEnabled(), offlineDownload: false, digitalPurchase: false, physicalCheckout: Object.values(appShopPayment()).some(Boolean),
@@ -167,7 +169,7 @@ async function handle(request: Request, context: Context) {
       const merged = mergeAppProfile(old.data.member, body);
       Object.keys(body).forEach(key => delete body[key]); Object.assign(body, merged);
     }
-    const upload = multipart ? await normalizedMusicForm(request) : undefined;
+    const upload = multipart ? await normalizedMusicForm(request, { musicOptional: registration }) : undefined;
     if (upload) headers.delete('Content-Type');
     const module = await route.load();
     const handler = (module as any)[method];

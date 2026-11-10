@@ -49,21 +49,37 @@ function shouldEnsureLogin(path, options) {
 function request(path, options = {}) {
   const app = getMiniApp();
   const needsLogin = shouldEnsureLogin(path, options);
-  const run = () => rawRequest(path, options).catch(async err => {
-    if (options.auth === false || options._sessionRetried || Number(err.statusCode) !== 401
-      || !app || typeof app.ensureSilentLogin !== "function") throw err;
-    wx.removeStorageSync("token");
-    const refreshed = await app.ensureSilentLogin(true).catch(() => null);
-    if (!refreshed || !wx.getStorageSync("token")) throw err;
-    return rawRequest(path, { ...options, _sessionRetried: true });
-  });
+  const run = async () => {
+    const token = wx.getStorageSync("token");
+    const memberId = wx.getStorageSync("memberId");
+    const memberChanged = () => memberId !== wx.getStorageSync("memberId");
+    const sessionChanged = () => memberChanged() || token !== wx.getStorageSync("token");
+    const staleSession = () => createRequestError("登录状态已变化，请刷新后重试", 0, "SESSION_CHANGED");
+    try {
+      const result = await rawRequest(path, options, token);
+      if (options.auth !== false && sessionChanged()) throw staleSession();
+      return result;
+    } catch (err) {
+      if (options.auth === false) throw err;
+      if (sessionChanged()) throw staleSession();
+      if (Number(err.statusCode) !== 401 || !app || typeof app.ensureSilentLogin !== "function") throw err;
+      const refreshed = await app.ensureSilentLogin(true).catch(() => null);
+      if (memberId && memberChanged()) throw staleSession();
+      const nextToken = wx.getStorageSync("token");
+      if (!refreshed || !nextToken) throw err;
+      const nextMember = wx.getStorageSync("memberId");
+      const result = await rawRequest(path, options, nextToken);
+      if (nextToken !== wx.getStorageSync("token") || nextMember !== wx.getStorageSync("memberId")) throw staleSession();
+      return result;
+    }
+  };
   if (needsLogin && app && typeof app.ensureSilentLogin === "function") {
     return app.ensureSilentLogin().catch(() => null).then(run);
   }
   return run();
 }
 
-function rawRequest(path, options = {}) {
+function rawRequest(path, options, token) {
   const bases = getApiBases();
   return new Promise((resolve, reject) => {
     if (!bases.length) {
@@ -73,7 +89,6 @@ function rawRequest(path, options = {}) {
 
     const tryRequest = (index) => {
       const base = bases[index];
-      const token = wx.getStorageSync("token");
       const referral = wx.getStorageSync("referralContext") || {};
       const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
       const currentPage = pages.length ? pages[pages.length - 1] : null;
@@ -99,7 +114,7 @@ function rawRequest(path, options = {}) {
             resolve(normalizeAssets(body.data !== undefined ? body.data : body, base));
             return;
           }
-          if (index + 1 < bases.length) {
+          if (options.retry !== false && index + 1 < bases.length) {
             tryRequest(index + 1);
             return;
           }
@@ -111,7 +126,7 @@ function rawRequest(path, options = {}) {
           ));
         },
         fail(err) {
-          if (index + 1 < bases.length) {
+          if (options.retry !== false && index + 1 < bases.length) {
             tryRequest(index + 1);
             return;
           }
@@ -276,7 +291,7 @@ function getMemberId() {
   return (app && app.globalData && app.globalData.memberId) || wx.getStorageSync("memberId") || 0;
 }
 
-function upload(path, filePath, name, formData = {}) {
+function upload(path, filePath, name, formData = {}, options = {}) {
   const bases = getApiBases();
   return new Promise((resolve, reject) => {
     if (!bases.length) {
@@ -287,11 +302,11 @@ function upload(path, filePath, name, formData = {}) {
     const tryUpload = (index) => {
       const base = bases[index];
       const token = wx.getStorageSync("token");
-      wx.uploadFile({
+      const task = wx.uploadFile({
         url: `${base}${path}`,
         filePath,
         name,
-        timeout: DEFAULT_TIMEOUT,
+        timeout: options.timeout || DEFAULT_TIMEOUT,
         header: token ? { Authorization: `Bearer ${token}` } : {},
         formData,
         success(res) {
@@ -301,24 +316,25 @@ function upload(path, filePath, name, formData = {}) {
           } catch (err) {
             body = {};
           }
-          if (res.statusCode >= 200 && res.statusCode < 300 && body.success !== false) {
+          if (res.statusCode >= 200 && res.statusCode < 300 && (options.requireSuccess ? body.success === true : body.success !== false)) {
             resolve(normalizeAssets(body.data !== undefined ? body.data : body, base));
             return;
           }
-          if (index + 1 < bases.length) {
+          if (options.retry !== false && index + 1 < bases.length) {
             tryUpload(index + 1);
             return;
           }
           reject(new Error(getErrorMessage(body, "上传失败")));
         },
         fail(err) {
-          if (index + 1 < bases.length) {
+          if (options.retry !== false && index + 1 < bases.length) {
             tryUpload(index + 1);
             return;
           }
-          reject(new Error(err.errMsg || "网络连接失败"));
+          reject(new Error(options.networkError || (/time\s*out/i.test(err.errMsg || "") ? "上传超时，请先在个人中心查看报名记录，确认未提交后再重试" : "网络连接中断，请先在个人中心确认报名结果后重试")));
         }
       });
+      if (options.onProgress && task?.onProgressUpdate) task.onProgressUpdate(result => options.onProgress(result.progress));
     };
     tryUpload(0);
   });
@@ -328,12 +344,12 @@ module.exports = {
   getFeatures() { return request("/public/features", { auth: false }); },
   request,
   // 发送验证码
-  sendCode(phone) {
-    return loginRequest("/send-code", { phone });
+  sendCode(phone, countryCode = "+86") {
+    return loginRequest("/send-code", { phone, countryCode });
   },
   // 手机号登录
-  studentLogin(phone, code) {
-    return loginRequest("/student-login", { phone, code });
+  studentLogin(phone, code, countryCode = "+86") {
+    return loginRequest("/student-login", { phone, code, countryCode });
   },
   phoneLogin(code) {
     return loginRequest("/phone-login", { code });
@@ -376,12 +392,23 @@ module.exports = {
       data: { member_id: getMemberId(), ...data }
     });
   },
+  replaceEventMusic(id, filePath, data, onProgress) {
+    return upload(`/member/event-registrations/${encodeURIComponent(id)}/music`, filePath, "musicFile", data, {
+      timeout: 120000, retry: false, requireSuccess: true, onProgress, networkError: "音乐上传未确认，请重试或到个人中心查看音乐状态。报名记录已保留。",
+    });
+  },
+  registerEventBatch(id, entries, requestKey) {
+    return request(`/events/${encodeURIComponent(id)}/register`, {
+      method: "POST", data: { entries, requestKey }, timeout: 30000, retry: false,
+    });
+  },
   registerEventWithMusic(id, filePath, data) {
+    if (!filePath) return request(`/events/${id}/register`, { method: "POST", data, retry: false });
     return upload(`/events/${id}/register`, filePath, "musicFile", {
       member_id: String(getMemberId()),
       musicSource: "wechat",
       ...data
-    });
+    }, { timeout: 120000, retry: false });
   },
   getSeriesDetail(id) {
     return request(`/public/series/${id}`, { auth: false });
@@ -407,6 +434,9 @@ module.exports = {
   getUnreadMessageCount() { return request(`/member/messages/unread-count?member_id=${getMemberId()}`); },
   markMessageRead(id) { return request(`/member/messages/${encodeURIComponent(id)}/read?member_id=${getMemberId()}`, { method: 'PATCH' }); },
   markAllMessagesRead() { return request(`/member/messages/read-all?member_id=${getMemberId()}`, { method: 'POST' }); },
+  getMemberGrowth() {
+    return request("/member/growth", { header: { "Cache-Control": "no-store" } });
+  },
   getMemberProfile() {
     return request(`/member/profile?member_id=${getMemberId()}`);
   },
@@ -513,7 +543,7 @@ module.exports = {
     return request(`/notes?member_id=${getMemberId()}&video_id=${videoId}`);
   },
   getAllNotes() {
-    return request(`/notes/all?member_id=${getMemberId()}`);
+    return request("/notes/all", { header: { "Cache-Control": "no-store" } });
   },
   deleteNote(noteId) {
     return request(`/notes/${noteId}?member_id=${getMemberId()}`, {
@@ -536,7 +566,7 @@ module.exports = {
     return request(`/bookmarks?member_id=${getMemberId()}&video_id=${videoId}`);
   },
   getAllBookmarks() {
-    return request(`/bookmarks/all?member_id=${getMemberId()}`);
+    return request("/bookmarks/all", { header: { "Cache-Control": "no-store" } });
   },
   deleteBookmark(bookmarkId) {
     return request(`/bookmarks/${bookmarkId}?member_id=${getMemberId()}`, {

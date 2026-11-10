@@ -7,6 +7,7 @@ import {
   unauthorized,
 } from "../training-db";
 import { findLocalUser } from "../_local-auth";
+import { ensureCommerceTables } from "../ecommerce/_db";
 import {
   assertBonusUnlocked,
   bonusSummary,
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
   const db = openTrainingDb();
   try {
     ensureBonusTables(db);
-    const result = db.transaction(() => {
+    const write = db.transaction(() => {
       if (input.action === "confirm") {
         if (typeof input.expectedSnapshot !== "string")
           throw new Error("请刷新结算明细后确认");
@@ -127,7 +128,8 @@ export async function POST(request: Request) {
         if (!admin && row.creatorId !== actor.id)
           throw new Error("只能删除本人登记");
         assertBonusUnlocked(db, row.period, row.person);
-        if (row.kind === "product")
+        if (row.kind === "product" && JSON.parse(row.data).productLines?.length) {
+          ensureCommerceTables(db);
           syncBonusStock(
             db,
             JSON.parse(row.data).productLines,
@@ -136,6 +138,8 @@ export async function POST(request: Request) {
             JSON.parse(row.data).channel,
             row.id,
           );
+          db.prepare("DELETE FROM shop_sales WHERE bonus_entry_id=?").run(row.id);
+        }
         db.prepare("DELETE FROM BonusRegistrationKey WHERE entryId=?").run(
           row.id,
         );
@@ -184,6 +188,7 @@ export async function POST(request: Request) {
           updated: results.filter((r: any) => r.updated).length,
         };
       }
+      if (input.kind === "product") ensureCommerceTables(db);
       return saveBonusEntry(
         db,
         {
@@ -195,7 +200,10 @@ export async function POST(request: Request) {
         actor,
         admin,
       );
-    })();
+    });
+    const result = (input.kind === "product" || input.action === "delete")
+      ? write.immediate()
+      : write();
     return Response.json({ success: true, result });
   } catch (e: any) {
     return Response.json({ error: e.message }, { status: 400 });

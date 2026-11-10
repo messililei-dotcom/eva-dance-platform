@@ -13,7 +13,7 @@ export type WechatLoginChoice = {
 
 export function isStandalonePwa() {
   if (typeof window === 'undefined') return false;
-  return window.matchMedia('(display-mode: standalone)').matches
+  return (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches)
     || Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone);
 }
 

@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-11-04T17:13:37+08:00",
+  "trigger": "User requested Huawei Android/Harmony review and automatic release verification; open login if needed; continue available Android materials",
+  "nativeComputerAccess": "unlocked",
+  "huaweiAndroid": {
+    "appId": "119475083",
+    "reviewVersionId": "2067391391952053568",
+    "currentReviewStatusVerified": false,
+    "currentPublicStatusVerified": false,
+    "loginRequired": true,
+    "lastKnownStatus": "in-review",
+    "lastConfirmedAt": "2026-10-31T19:08:44+08:00"
+  },
+  "harmony": {
+    "appId": "6917617955633704973",
+    "versionRecordId": "2071129556072323840",
+    "currentReviewStatusVerified": false,
+    "currentPublicStatusVerified": false,
+    "sameHuaweiAccountAuthenticationGate": true,
+    "lastKnownStatus": "waiting-for-review",
+    "lastConfirmedAt": "2026-10-31T19:08:44+08:00"
+  },
+  "otherChannels": {
+    "oppo": "Login SDK loading failure freshly reconfirmed; no repeat refresh/contact",
+    "honor": "Login required freshly observed",
+    "materialsReceipt": "app开发/Android/上架执行/20261104/materials-readiness.json",
+    "all10ArtifactAndScreenshotHashChecksPassed": true,
+    "newIssuedCertificateNotFoundInLocalMaterials": true,
+    "currentOfficialCopyrightStatusNotVerified": true
+  },
+  "newUpload": false,
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "originalSigningChanged": false,
+  "loginPageOpenAndPreserved": true,
+  "iosNotCheckedThisRun": true
+}

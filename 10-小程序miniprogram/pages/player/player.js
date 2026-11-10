@@ -11,7 +11,7 @@ const { findCourseVideoSelection } = require("../../shared/course-video-selectio
 
 Page(share.withShare("player", videoFeature.withVideoFeature({
   data: {
-    isPlayerFullscreen: false, isMirrored: false, isMuted: false, isPlaying: false,
+    isPlayerFullscreen: false, fullscreenDirection: 90, nativeFullscreenControls: false, isMirrored: false, isMuted: false, isPlaying: false,
     playerMenu: "",
     currentTimeText: "0:00", durationText: "0:00", hasPrevious: false, hasNext: false,
     videoId: null, seriesId: null, courseId: null, course: {}, video: {},
@@ -128,6 +128,23 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
       wx.showToast({ title: err.message || "加载失败", icon: "none" });
     } finally { wx.hideLoading(); }
   },
+  onVideoFeatureDisabled() {
+    this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1;
+    if (this.videoLoadingRequestId) {
+      this.videoLoadingRequestId = null;
+      wx.hideLoading();
+    }
+    this.exitNativeFullscreen();
+    this.endHoldSpeed();
+    this.cancelAutoplay();
+    this.clearPlayerControlsTimer();
+    if (this.videoContext) this.videoContext.stop();
+    this.setData({
+      videoPlaybackEnabled: false, playUrl: '', qualityOptions: [],
+      hasStartedPlayback: false, isPlaying: false, lessonEnded: false,
+      showPlayerMenu: false, showVideoControls: false,
+    });
+  },
   async loadVideo(videoId) { this.endHoldSpeed();
     this.cancelAutoplay();
     this.setData({ lessonEnded: false });
@@ -135,10 +152,10 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     const active = await videoFeature.enabled();
     if (requestId !== this.videoLoadRequestId) return;
     if (!active) {
-      if (this.videoContext) this.videoContext.stop();
-      this.setData({ videoPlaybackEnabled: false, playUrl: "", hasStartedPlayback: false });
+      this.onVideoFeatureDisabled();
       return;
     }
+    this.videoLoadingRequestId = requestId;
     wx.showLoading({ title: "加载中" });
     this.clearPlayerControlsTimer();
     const index = this.data.outline.findIndex(row => String(row.videoId) === String(videoId));
@@ -172,14 +189,18 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
       if (requestId !== this.videoLoadRequestId) return;
       const message = err.message || "视频加载失败";
       if (/视频播放暂未开放/.test(message)) {
-        this.videoContext.stop();
-        this.setData({ videoPlaybackEnabled: false, playUrl: "", hasStartedPlayback: false });
+        this.onVideoFeatureDisabled();
         return;
       }
       const authorizationRequired = Number(err && err.statusCode || 0) === 403 || /授权|权限/.test(message);
       this.setData({ loading: false, playUrl: "", authorizationRequired, playbackError: authorizationRequired ? "" : message });
       if (!authorizationRequired) wx.showToast({ title: message, icon: "none" });
-    } finally { if (requestId === this.videoLoadRequestId) wx.hideLoading(); }
+    } finally {
+      if (requestId === this.videoLoadingRequestId) {
+        this.videoLoadingRequestId = null;
+        wx.hideLoading();
+      }
+    }
   },
   requestCasting() {
     if (!this.data.playUrl) return;
@@ -250,9 +271,8 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
   },
   getProgressPercent(progress, fallbackDuration = 0) {
     if (!progress) return 0;
-    if (progress.completed === true || Number(progress.completed) === 1) return 100;
     const duration = Number(progress.duration || fallbackDuration || 0), current = Number(progress.progress || 0);
-    return duration && current ? Math.min(100, Math.round(current / duration * 100)) : 0;
+    return duration && current ? Math.min(100, Math.floor(current * 100 / duration)) : 0;
   },
   getResumeSeconds(progress, duration = 0) {
     if (!progress || this.getProgressPercent(progress, duration) >= 100) return 0;
@@ -267,7 +287,7 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
   onTimeUpdate(event) {
     const current = Math.floor(event.detail.currentTime || 0);
     const duration = Math.floor(event.detail.duration || this.data.video.duration || 0);
-    const percent = duration ? Math.min(100, Math.round(current / duration * 100)) : 0;
+    const percent = duration ? Math.min(100, Math.floor(current * 100 / duration)) : 0;
     this.setData({ percent, currentSeconds: current, currentDuration: duration, currentTimeText: this.formatTimestamp(current), durationText: this.formatTimestamp(duration) });
     this.updateOutlineProgress(this.data.videoId, percent);
     if (!this.lastSaveAt || Date.now() - this.lastSaveAt > 15000) {
@@ -282,9 +302,10 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
   },
   onPause() { this.endHoldSpeed(); this.clearPlayerControlsTimer(); this.setData({ isPlaying: false, showVideoControls: true }); this.saveCurrentProgress(); },
   onHide() { this.playerHidden = true; this.endHoldSpeed(); this.cancelAutoplay(); this.clearPlayerControlsTimer(); this.setData({ showVideoControls: false, showPlayerMenu: false, isSeeking: false }); this.saveCurrentProgress(); },
-  onUnload() { this.playerHidden = true; this.endHoldSpeed(); this.catalogDisposed = true; this.cancelAutoplay(); this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1; this.clearPlayerControlsTimer(); this.saveCurrentProgress(); this.setData({ catalogQuery: "", catalogResultText: "" }); },
+  onUnload() { this.clearFullscreenTimer(); this.exitNativeFullscreen(); this.playerHidden = true; this.endHoldSpeed(); this.catalogDisposed = true; this.cancelAutoplay(); this.videoLoadRequestId = (this.videoLoadRequestId || 0) + 1; this.clearPlayerControlsTimer(); this.saveCurrentProgress(); this.setData({ catalogQuery: "", catalogResultText: "" }); },
   onVideoError(event) { this.endHoldSpeed(); this.cancelAutoplay(); console.error("课程视频播放失败", event.detail || event); wx.showToast({ title: "课程视频暂时无法播放", icon: "none" }); },
   onEnded() { this.endHoldSpeed();
+    this.exitNativeFullscreen();
     const duration = this.data.currentDuration || this.data.video.duration || 1;
     api.saveVideoProgress(this.data.videoId, duration, duration).catch(() => {});
     this.updateOutlineProgress(this.data.videoId, 100);
@@ -527,9 +548,61 @@ Page(share.withShare("player", videoFeature.withVideoFeature({
     try { context.requestBackgroundPlayback(); } catch (_) {}
   },
   requestPlayerFullScreen() {
-    this.setData({ showPlayerMenu: false, showVideoControls: true });
-    this.setData({ isPlayerFullscreen: !this.data.isPlayerFullscreen });
-    this.schedulePlayerControlsHide();
+    const context = this.videoContext;
+    if (!this.data.playUrl || this.fullscreenTimer) return;
+    if (this.data.isPlayerFullscreen) {
+      this.exitNativeFullscreen();
+      return;
+    }
+    if (typeof context?.requestFullScreen !== 'function') {
+      wx.showToast({ title: '当前微信暂不支持全屏播放', icon: 'none' });
+      return;
+    }
+    wx.showActionSheet({
+      itemList: ['横屏全屏', '竖屏全屏'],
+      success: ({ tapIndex }) => {
+        if (this.playerHidden || !this.data.playUrl || (tapIndex !== 0 && tapIndex !== 1)) return;
+        this.openNativeFullscreen(tapIndex === 0 ? 90 : 0);
+      },
+    });
+  },
+  openNativeFullscreen(direction) {
+    this.endHoldSpeed();
+    this.clearPlayerControlsTimer();
+    this.clearFullscreenTimer();
+    this.fullscreenTimer = setTimeout(() => {
+      this.clearFullscreenTimer();
+      if (!this.data.isPlayerFullscreen) this.setData({ nativeFullscreenControls: false });
+    }, 3000);
+    this.setData({ showPlayerMenu: false, fullscreenDirection: direction, nativeFullscreenControls: true }, () => {
+      if (!this.fullscreenTimer || this.playerHidden || !this.data.playUrl) return;
+      try {
+        this.videoContext.requestFullScreen({ direction });
+      } catch (_) {
+        this.clearFullscreenTimer();
+        this.setData({ nativeFullscreenControls: false });
+        wx.showToast({ title: '暂时无法打开全屏', icon: 'none' });
+      }
+    });
+  },
+  exitNativeFullscreen() {
+    if (!this.data.isPlayerFullscreen || typeof this.videoContext?.exitFullScreen !== 'function') return;
+    try { this.videoContext.exitFullScreen(); } catch (_) {}
+  },
+  clearFullscreenTimer() {
+    if (this.fullscreenTimer) clearTimeout(this.fullscreenTimer);
+    this.fullscreenTimer = null;
+  },
+  onFullscreenChange(event) {
+    this.clearFullscreenTimer();
+    const active = event.detail.fullScreen === true;
+    this.setData({
+      isPlayerFullscreen: active,
+      nativeFullscreenControls: active,
+      showPlayerMenu: false,
+      showVideoControls: !active,
+    });
+    if (!active) this.schedulePlayerControlsHide();
   },
   setQuality(event) {
     const quality = (this.data.qualityOptions || []).find(item => String(item.value) === String(event.currentTarget.dataset.quality || ""));

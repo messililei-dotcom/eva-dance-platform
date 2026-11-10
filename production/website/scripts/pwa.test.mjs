@@ -23,7 +23,7 @@ test('service worker keeps background cache refreshes alive and migrates old cac
   assert.match(worker, /event\.waitUntil\(updateCache\)/);
   assert.match(worker, /await cache\.put\(request, copy\)/);
   assert.match(worker, /key !== STATIC_CACHE && key !== PAGE_CACHE/);
-  assert.match(worker, /client\.navigate\(client\.url\)/);
+  assert.doesNotMatch(worker, /client\.navigate/);
 });
 
 test('all declared local assets exist', () => {

@@ -19,7 +19,7 @@ export function getRuleForGroup(db: any, groupId: number, ruleId?: number | null
   }
   return row || {
     id: null,
-    total_score: 100,
+    total_score: 10,
     criteria_json: '[]',
     drop_high_low: 0,
     abnormal_threshold: 15,

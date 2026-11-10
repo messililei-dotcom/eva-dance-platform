@@ -8,9 +8,25 @@ export const MAX_EVENT_MUSIC = 10 * 1024 * 1024;
 export class MusicUploadError extends Error {
   constructor(message: string, public status = 400) { super(message); }
 }
-const fields = ['groupId', 'name', 'phone', 'organization', 'teacher', 'performanceTitle', 'remark', 'musicFileName'];
-export async function normalizedMusicForm(request: Request): Promise<FormData> {
-  if (!request.headers.get('content-type')?.startsWith('multipart/form-data;')) throw new MusicUploadError('请选择参赛音乐文件');
+const fields = ['groupId', 'name', 'phone', 'countryCode', 'organization', 'teacher', 'performanceTitle', 'remark', 'musicFileName'];
+export function eventRegistrationForm(body: Record<string, unknown> | null): FormData {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) throw new MusicUploadError('报名资料格式无效');
+  if (body.musicFile !== undefined) throw new MusicUploadError('请使用文件上传方式提交音乐');
+  const form = new FormData();
+  for (const field of fields) {
+    const value = body[field];
+    if (value === undefined || value === null) continue;
+    if (!['string', 'number'].includes(typeof value) || String(value).length > 1000) throw new MusicUploadError('报名资料格式无效');
+    form.set(field, String(value));
+  }
+  return form;
+}
+export async function normalizedMusicForm(request: Request, options: { musicOptional?: boolean } = {}): Promise<FormData> {
+  if (options.musicOptional && request.headers.get('content-type')?.includes('application/json')) {
+    const body = await request.json().catch(() => { throw new MusicUploadError('报名资料格式无效'); });
+    return eventRegistrationForm(body);
+  }
+  if (!request.headers.get('content-type')?.startsWith('multipart/form-data;')) throw new MusicUploadError('报名资料格式无效');
   const reader = request.body?.getReader();
   if (!reader) throw new MusicUploadError('请选择参赛音乐文件');
   let size = 0; const chunks: Uint8Array[] = [];
@@ -30,6 +46,7 @@ export async function normalizedMusicForm(request: Request): Promise<FormData> {
     if (values[0] !== undefined) result.set(field, values[0]);
   }
   const files = parsed.getAll('musicFile');
+  if (!files.length && options.musicOptional) return result;
   if (files.length !== 1 || !(files[0] instanceof File) || files[0].size <= 0) throw new MusicUploadError('请选择一个有效的音乐文件');
   if (files[0].size > MAX_EVENT_MUSIC) throw new MusicUploadError('音乐文件不能超过10MB', 413);
   const originalName = String(result.get('musicFileName') || '').trim();

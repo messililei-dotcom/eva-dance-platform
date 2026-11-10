@@ -26,11 +26,14 @@ export default function MobileAcademy(props:Props){
   const courses=props.courses??rows;
   const visible=useMemo(()=>{const q=query.trim().toLocaleLowerCase();return courses.filter(c=>(c.category==='online'||c.category==='dance-collection')&&(!q||[c.title,c.instructor,c.description,c.type].join(' ').toLocaleLowerCase().includes(q)));},[courses,query]);
   return <section className="mobile-academy" data-mobile-surface="academy">
-    <h1>伊娃东方舞</h1><p className="mobile-intro">线上学院 · 从基础到进阶，找到适合你的课程</p>
+    <header className="mobile-academy-intro">
+      <h1>伊娃东方舞</h1>
+      <p>线上学院 · 从基础到进阶，找到适合你的课程</p>
+    </header>
     <div className="mobile-learning-links">
       <Link href="/my-courses"><BookOpen aria-hidden="true"/><span>我的课程</span></Link>
       <Link href="/offline?tab=rights"><CalendarDays aria-hidden="true"/><span>课时与核销</span></Link>
-      <Link href="/dashboard/events"><Trophy aria-hidden="true"/><span>我的比赛</span></Link>
+      <Link href="/dashboard/events"><Trophy aria-hidden="true"/><span>报名与成绩</span></Link>
     </div>
     <div className="mobile-catalog-heading"><h2>课程列表</h2>{!loading&&!problem&&<span>{visible.length} 门课程</span>}</div>
     <label className="mobile-catalog-search"><Search size={20} aria-hidden="true"/><span className="sr-only">搜索课程、老师或分类</span><input type="search" placeholder="搜索课程、老师或分类" value={query} onChange={e=>setQuery(e.target.value)}/></label>

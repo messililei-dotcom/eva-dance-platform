@@ -1,0 +1,60 @@
+{
+  "checkedAt": "2026-11-09T16:55:16+08:00",
+  "android": {
+    "build": 22,
+    "originalSignatureVerified": true,
+    "signedApkLocalOnly": true,
+    "phoneOneColumn": true,
+    "tabletLandscapeTwoColumnsAndSideNavigation": true,
+    "existingStoreReviewBuild": 21
+  },
+  "harmony": {
+    "build": 22,
+    "originalSignatureVerified": true,
+    "deviceTypes": [
+      "phone",
+      "tablet"
+    ],
+    "phoneOneColumnAndBottomNavigation": true,
+    "tabletLandscapeTwoColumnsAndSideNavigation": true,
+    "tabletPortraitVerified": false,
+    "publicGuestCaptureVerified": true,
+    "loginWindowBlackVerified": true,
+    "nativeLoginSuccessVerified": false
+  },
+  "ios": {
+    "simulator": "iPad Pro 13-inch (M5)",
+    "debugBuildPassed": true,
+    "portraitTwoColumns": true,
+    "physicalDeviceVerified": false,
+    "existingStoreReviewBuild": 14
+  },
+  "screenshots": [
+    {
+      "path": "evidence/tablet-layout-qa/android-22-phone.png",
+      "size": 254698,
+      "sha256": "92e3f9d3e06a931de7d998ccee74812259e0d6a77ba0c97b4857b15288006745"
+    },
+    {
+      "path": "evidence/tablet-layout-qa/android-22-tablet-landscape.png",
+      "size": 253233,
+      "sha256": "561e9825c2c8d2ca9f217446a0c8353df4802063a2cd4bd8a34de1baffbd44fe"
+    },
+    {
+      "path": "evidence/tablet-layout-qa/harmony-22-phone.png",
+      "size": 399656,
+      "sha256": "e1f6d639b6db3e23513218f584bed12dd3367c384ca3774b059bd4a95d993ae0"
+    },
+    {
+      "path": "evidence/tablet-layout-qa/harmony-22-tablet-landscape.png",
+      "size": 1126644,
+      "sha256": "c2cfa83d34b5acfb96342ce86746d66a2905f7cdb89f0501666d0281e9caf7a9"
+    },
+    {
+      "path": "evidence/tablet-layout-qa/ipad-pro-13.png",
+      "size": 2752123,
+      "sha256": "9006fb06a4b01fe5ff53ddb221dff07c4aaf858043ad698f30ebca9fe1489517"
+    }
+  ],
+  "physicalDeviceTestsPerformed": false
+}

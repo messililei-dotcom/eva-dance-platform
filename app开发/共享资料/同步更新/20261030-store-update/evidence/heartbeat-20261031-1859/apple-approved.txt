@@ -1,0 +1,71 @@
+Browser tab: 14, Title: "App Store Connect", URL: "https://appstoreconnect.apple.com/apps/6826038106/distribution/reviewsubmissions/details/e6ac9f82-67e9-4eb0-b68d-ca9970019383".
+0 AXWebArea App Store Connect, URL: appstoreconnect.apple.com/apps/6826038106/distribution/reviewsubmissions/details/e6ac9f82-67e9-4eb0-b68d-ca9970019383
+	1 container
+		2 container App Store Connect
+			3 container
+				4 heading App Store Connect, Value: 1
+					12 link Description: App Store Connect, Value: appstoreconnect.apple.com/, ID: logo
+				5 container 全球
+					13 content list
+						14 link Description: App, Value: appstoreconnect.apple.com/apps
+						15 link Description: Xcode Cloud, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/xcode-cloud
+						16 link Description: 趋势, Value: appstoreconnect.apple.com/trends
+						17 link Description: 报告, Value: appstoreconnect.apple.com/itc/payments_and_financial_reports
+						18 link Description: 商务, Value: appstoreconnect.apple.com/business
+				19 button 娃 伊 Eva Culture And Art Development (hunan) Co., Ltd Account name menu
+					20 text 娃 伊
+					21 text Eva Culture And Art Development (hunan) Co., Ltd
+					22 image
+		23 container
+			24 pop up button (collapsed) Description: App 菜单，已选择SWOD, Secondary Actions: Expand
+				25 container
+					26 image SWOD
+					27 text SWOD
+				28 image
+			29 container App
+				30 content list
+					31 link Description: 分发, Value: appstoreconnect.apple.com/apps/6826038106/distribution
+					32 link Description: 分析, Value: appstoreconnect.apple.com/apps/6826038106/analytics
+					33 link Description: TestFlight, Value: appstoreconnect.apple.com/teams/b4ec983a-7179-48f6-a3f1-72d74617acc3/apps/6826038106/testflight
+		34 container
+			35 container
+				36 link Description: App 审核, Value: appstoreconnect.apple.com/apps/6826038106/distribution/reviewsubmissions
+				37 heading iOS 提交, Value: 2
+					38 text iOS 提交
+				39 image
+				40 text 已完成审核
+				41 heading 已提交项目 (1), Value: 3
+					42 text 已提交项目 (1)
+				43 table
+					44 row
+						45 cell
+							46 text 项目
+						47 cell
+							48 text 类型
+						49 cell
+							50 text 审核状态
+						51 cell
+					52 row ZTZhYzlmODItNjdlOS00ZWIwLWI2OGQtY2E5OTcwMDE5MzgzfDZ8ODk0MjI3MzE3
+						53 cell
+							54 image App 图标
+							55 text iOS App 1.0.2
+							56 link Description: 1.0.2 (11), Value: appstoreconnect.apple.com/apps/6826038106/testflight/ios/8f62fa45-d3c4-4d5c-b9b1-e4d390d9a6ea/metadata
+						57 cell
+							58 text App 版本
+						59 cell
+							60 text 已批准
+				61 text 提交日期 2026年10月30日下午9:19 提交 ID e6ac9f82-67e9-4eb0-b68d-ca9970019383 提交者 伊娃 最后更新者 Apple
+		62 content list
+			63 link Description: App Store Connect, Value: appstoreconnect.apple.com/apps
+		6 content list
+			64 container
+				65 text Copyright © 2026 Apple Inc. 保留所有权利。 |
+			7 container
+				8 link Description: 服务条款, Value: appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/wa/termsOfService
+				66 text |
+			9 container
+				10 link Description: 隐私政策, Value: apple.com/legal/privacy
+				67 text |
+			11 link Description: 联系我们, Value: appstoreconnect.apple.com/contact-us
+
+The focused UI element is 0 AXWebArea App Store Connect, URL: appstoreconnect.apple.com/apps/6826038106/distribution/reviewsubmissions/details/e6ac9f82-67e9-4eb0-b68d-ca9970019383

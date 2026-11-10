@@ -1,0 +1,5 @@
+- button "SWOD cn.com.swod.app":
+              - link "1.0.1 正在审核":
+                - /url: https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2067391391952053568?appId=119475083&projectId=101653523865417801
+                - menuitem "1.0.1 正在审核":
+                  - generic: 1.0.1 正在审核

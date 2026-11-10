@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { normalizeEventPhone } from '@/lib/event-phone';
 import { openAdminDb, type AdminDb } from '@/lib/server/admin-db';
 import { isRecord } from '@/lib/data-shape';
 import { ensureWechatIdentityTables } from '@/lib/server/wechat-identity';
@@ -66,33 +67,7 @@ export function normalizePhoneNumber(value: unknown, countryCode: unknown = '+86
 }
 
 export function normalizeInternationalPhone(phoneValue: unknown, countryCodeValue: unknown = '+86') {
-  const rawPhone = cleanText(phoneValue).replace(/[()\-\s]/g, '');
-  const rawCountryCode = cleanText(countryCodeValue, '+86').replace(/[^\d+]/g, '');
-  const countryCode = rawCountryCode.startsWith('+') ? rawCountryCode : `+${rawCountryCode || '86'}`;
-  const countryDigits = countryCode.replace(/\D/g, '');
-  const phoneDigits = rawPhone.replace(/\D/g, '');
-
-  if (!countryDigits || countryDigits.length > 4) throw new Error('请选择正确的国家区号');
-  if (!phoneDigits) throw new Error('请输入手机号');
-
-  let nationalNumber = phoneDigits;
-  if (rawPhone.startsWith('+')) {
-    if (!phoneDigits.startsWith(countryDigits)) throw new Error('手机号与所选国家区号不一致');
-    nationalNumber = phoneDigits.slice(countryDigits.length);
-  }
-
-  if (countryDigits === '86') {
-    if (!/^1[3-9]\d{9}$/.test(nationalNumber)) throw new Error('请输入正确的中国大陆手机号');
-  } else if (nationalNumber.length < 4 || nationalNumber.length > 14) {
-    throw new Error('请输入正确的国际手机号');
-  }
-
-  const phone = countryDigits === '86' ? nationalNumber : `+${countryDigits}${nationalNumber}`;
-  return {
-    phone,
-    countryCode: `+${countryDigits}`,
-    nationalNumber,
-  };
+  return normalizeEventPhone(phoneValue, countryCodeValue);
 }
 
 export function phoneForSmsGateway(phone: string) {

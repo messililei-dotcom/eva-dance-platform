@@ -1,0 +1,134 @@
+{
+  "checkedAt": "2026-11-04T17:13:37+08:00",
+  "scope": "Current store execution registry remains iOS11 Android18 Harmony15; newer calendar candidates12/19/16 found in a separate registry and not silently substituted.",
+  "artifactAndScreenshotHashChecks": [
+    {
+      "path": "app开发/共享资料/同步更新/20261030-store-update/iOS/export-11/EvaDance.ipa",
+      "sha256": "678ad05d3e5041ebe35a2e198af766ca67c79f3483fcf9b3b97225ad376eb78c",
+      "matchesRegistry": true,
+      "bytes": 12078009
+    },
+    {
+      "path": "app开发/共享资料/同步更新/20261030-store-update/Android-build18/installers/SWOD-1.0.2-18-release.aab",
+      "sha256": "ad3a399599564bec4523c9e544e9da01f02ab197654157dbc66321ee7371ca9b",
+      "matchesRegistry": true,
+      "bytes": 15444253
+    },
+    {
+      "path": "app开发/共享资料/同步更新/20261030-store-update/Android-build18/installers/SWOD-1.0.2-18-release.apk",
+      "sha256": "406d23571c79b2466ad60ca653b987e5b3c3ba8df76f039c61d6379aaa2ae399",
+      "matchesRegistry": true,
+      "bytes": 28943052
+    },
+    {
+      "path": "app开发/共享资料/同步更新/20261030-store-update/HarmonyOS-build15/installers/SWOD-1.0.2-15-release.app",
+      "sha256": "86091378e8500578d81b72de044044c09a3d7f508bdb41fe5e79a3e9d4d68688",
+      "matchesRegistry": true,
+      "bytes": 7599911
+    },
+    {
+      "path": "app开发/共享资料/同步更新/20261030-store-update/HarmonyOS-build15/installers/SWOD-1.0.2-15-release.hap",
+      "sha256": "cc6b774a496ca8dc07073a6d4f8b158cb29a1120c79d1028e70977710bd5e6dc",
+      "matchesRegistry": true,
+      "bytes": 16120283
+    },
+    {
+      "path": "app开发/共享资料/同步更新/20261030-store-update/screenshots-android18/01-online.png",
+      "sha256": "c625a64af73a8301fc2c1c74da128bd97b27183eb8df5bf9dfed4c3a47231788",
+      "matchesRegistry": true,
+      "bytes": 617608
+    },
+    {
+      "path": "app开发/共享资料/同步更新/20261030-store-update/screenshots-android18/02-offline.png",
+      "sha256": "b217e549aed26119101f713f43e66a41d6f46255b366d0a2fa91573e5f5241d3",
+      "matchesRegistry": true,
+      "bytes": 702860
+    },
+    {
+      "path": "app开发/共享资料/同步更新/20261030-store-update/screenshots-android18/03-events.png",
+      "sha256": "735cb04e7a7fde2ef2e4937289cf05fd72fb32b22152ad6f6854358f16f83559",
+      "matchesRegistry": true,
+      "bytes": 1119554
+    },
+    {
+      "path": "app开发/共享资料/同步更新/20261030-store-update/screenshots-android18/04-login.png",
+      "sha256": "d0dbc826072faf7124fcf8e1a9608376545d95c98a6f0199ce18abd7824296b6",
+      "matchesRegistry": true,
+      "bytes": 169743
+    },
+    {
+      "path": "app开发/共享资料/同步更新/20261030-store-update/screenshots-android18/tencent-format/03-events.jpg",
+      "sha256": "06154dea95227aeb3d46564bc4cb2e0892e8f77bdeb8c8c610bded9042038609",
+      "matchesRegistry": true,
+      "bytes": 587864
+    }
+  ],
+  "readyAssets": {
+    "androidStoreScreenshots": 4,
+    "actualEmulatorBuild": 18,
+    "physicalDeviceTested": false,
+    "tencentEventImage": "JPEG95 at original1080x1920, no crop/resize",
+    "icon": "app开发/Android/上架执行/20261030/materials/icon-512.png",
+    "tencentPublicFieldsBackup": "app开发/Android/上架执行/20261030-update-1.0.2/tencent-public-base-fields-unsaved.json"
+  },
+  "channels": {
+    "xiaomi": {
+      "appId": "2882303761520603185",
+      "lastRecordedBlockers": [
+        "正式版权证书尚未取得",
+        "特殊行业资质评估及匹配材料待完成",
+        "联系人手机验证",
+        "官方表单仍标记基础信息缺项，须补齐后终检"
+      ],
+      "freshManagerVerified": false
+    },
+    "vivo": {
+      "appId": "106168720",
+      "lastRecordedBlockers": [
+        "正式版权证明必填，当前未提供"
+      ],
+      "freshManagerVerified": false
+    },
+    "honor": {
+      "appId": "104599763",
+      "lastRecordedBlockers": [
+        "正式版权证书",
+        "资质评估与对应材料",
+        "年龄分级及应用信息终检",
+        "未完成Google Android开发者身份认证，印度尼西亚/泰国/新加坡/巴西当前不可分发；未擅自缩减全球范围"
+      ],
+      "freshManagerVerified": false
+    },
+    "huaweiAndroid": {
+      "appId": "119475083",
+      "lastRecordedBlockers": [
+        "正式1.0.1(11)仍在审核并保留；新版正式提交未完成",
+        "安卓新草稿正文在新旧两个官方入口均持续加载，无法上传；该草稿标注开放式测试，未当作正式发布提交"
+      ],
+      "freshManagerVerified": false
+    },
+    "oppo": {
+      "appId": "37977416",
+      "lastRecordedBlockers": [
+        "登录组件失败，刷新一次仍未恢复",
+        "此前记录的版权证书、签章承诺函及验证仍未补齐；本轮未进入后台重新核验"
+      ],
+      "freshManagerVerified": false
+    },
+    "tencent": {
+      "appId": "1112541998",
+      "lastRecordedBlockers": [
+        "正式软著或电子版权证书缺失，基础信息保存被拦截",
+        "本轮教育评估要求办学许可证、教育移动应用备案截图及营业执照含教育经营范围；适用性和匹配材料待核实",
+        "还需盖章ICP备案截图及应用发布承诺函"
+      ],
+      "freshManagerVerified": false
+    }
+  },
+  "noNewIssuedCopyrightCertificateFoundInProjectMaterialDirectories": true,
+  "copyrightOfficialCurrentStatusNotVerified": true,
+  "originalSignatureChanged": false,
+  "filingChanged": false,
+  "newUpload": false,
+  "newSubmission": false
+}

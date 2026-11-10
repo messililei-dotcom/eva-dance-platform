@@ -13,6 +13,8 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { studentApi, type StudentCompetitionEntry } from '@/lib/student-api';
+import RegistrationDetailsEditor from '@/components/events/RegistrationDetailsEditor';
+import RegistrationMusicEditor from '@/components/events/RegistrationMusicEditor';
 import { getStudentSession } from '@/lib/student-auth';
 
 const auditLabels: Record<string, string> = {
@@ -213,6 +215,8 @@ export default function MyEventsPage() {
                             {entry.teacher ? <span>领队老师：{entry.teacher}</span> : null}
                           </div>
                         ) : null}
+                        <RegistrationDetailsEditor playerId={entry.playerId} onSaved={details => setEntries(current => current.map(item => item.playerId === entry.playerId ? { ...item, entrantName: details.name, organization: details.organization, teacher: details.teacher, performanceTitle: details.performanceTitle } : item))} />
+                        <RegistrationMusicEditor playerId={entry.playerId} initialTitle={entry.performanceTitle} onSaved={title => setEntries(current => current.map(item => item.playerId === entry.playerId ? { ...item, performanceTitle: title } : item))} />
                       </article>
                     ))}
                   </div>

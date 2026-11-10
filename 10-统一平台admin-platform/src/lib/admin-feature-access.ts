@@ -5,6 +5,13 @@ export const SUPER_ADMIN_PAGES = [
   '/certificates', '/permissions', '/settings',
 ] as const;
 
+const OWNER_ONLY_PAGES = ['/orders', '/order-center', '/finance', '/commission'] as const;
+const OWNER_ONLY_APIS = ['/api/orders', '/api/exclusive-orders', '/api/finance'] as const;
+
+function isPlatformOwner(user: AdminIdentity) {
+  return user?.username === 'lilei' && isPlatformSuperAdmin(user);
+}
+
 function canonicalPath(path: string) {
   let value = path.split('?')[0];
   try { value = decodeURIComponent(value); } catch { /* Invalid URLs will not match a route. */ }
@@ -27,7 +34,7 @@ export function adminLandingPage(user: AdminIdentity) {
 }
 export function isRestrictedAdminPage(path: string) {
   const value = canonicalPath(path);
-  return SUPER_ADMIN_PAGES.some(root => within(value, root)) || within(value, '/events');
+  return [...SUPER_ADMIN_PAGES, ...OWNER_ONLY_PAGES, '/events'].some(root => within(value, root));
 }
 export function isRemovedAdminPage(path: string) {
   return within(canonicalPath(path), '/live');
@@ -38,12 +45,14 @@ export function canAccessAdminPage(user: AdminIdentity, path: string) {
   if (isRemovedAdminPage(value)) return false;
   if (within(value, '/events')) return canAccessEvents(user);
   if (user.role === 'event_admin') return false;
+  if (OWNER_ONLY_PAGES.some(root => within(value, root))) return isPlatformOwner(user);
   if (SUPER_ADMIN_PAGES.some(root => within(value, root))) return isPlatformSuperAdmin(user);
   return true;
 }
 
-export function adminApiFeature(path: string, method: string): 'super_admin' | 'events' | null {
+export function adminApiFeature(path: string, method: string): 'owner' | 'super_admin' | 'events' | null {
   const value = canonicalPath(path);
+  if (OWNER_ONLY_APIS.some(root => within(value, root)) || value === '/api/course/orders') return 'owner';
   if (within(value, '/api/event')) return 'events';
   if (['/api/dashboard', '/api/student-growth', '/api/users'].some(root => within(value, root))) return 'super_admin';
   // All staff continue recording their own navigation/operation audits.
@@ -57,5 +66,6 @@ export function adminApiFeature(path: string, method: string): 'super_admin' | '
 export function canAccessAdminApi(user: AdminIdentity, path: string, method: string) {
   if (!user || (user.status && user.status !== 'active')) return false;
   const feature = adminApiFeature(path, method);
+  if (feature === 'owner') return isPlatformOwner(user);
   return feature === 'super_admin' ? isPlatformSuperAdmin(user) : feature === 'events' ? canAccessEvents(user) : true;
 }

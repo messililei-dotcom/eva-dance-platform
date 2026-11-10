@@ -1,0 +1,6 @@
+								35 link Description: 1.0.3 准备提交, Help: 准备提交, Value: appstoreconnect.apple.com/apps/6826038106/distribution/ios/version/inflight
+								36 link Description: 1.0.2 可分发, Help: 可分发, Value: appstoreconnect.apple.com/apps/6826038106/distribution/ios/version/deliverable
+				159 button 添加构建版本
+				163 button 添加构建版本
+				196 radio button (settable, integer) Description: 自动发布此版本, Value: 1, ID: AFTER_APPROVAL
+				206 radio button (settable, integer) Description: 立即向所有用户发布更新, Value: 1, ID: UNAVAILABLE

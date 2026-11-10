@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-11-05T07:40:30+08:00",
+  "officialReviewPagesReadThisRun": false,
+  "huaweiAndroid": {
+    "appId": "119475083",
+    "reviewVersionId": "2067391391952053568",
+    "currentReviewStatusVerified": false,
+    "currentPublicStatusVerified": false,
+    "lastKnownVersion": "1.0.1(11)",
+    "lastKnownStatus": "in-review",
+    "lastConfirmedAt": "2026-10-31T19:08:44+08:00",
+    "authenticationRecoveryUnconfirmed": true
+  },
+  "harmony": {
+    "appId": "6917617955633704973",
+    "versionRecordId": "2071129556072323840",
+    "currentReviewStatusVerified": false,
+    "currentPublicStatusVerified": false,
+    "lastKnownVersion": "1.0.2(15)",
+    "lastKnownStatus": "waiting-for-review",
+    "lastConfirmedAt": "2026-10-31T19:08:44+08:00"
+  },
+  "ios": {
+    "recheckedThisRun": false,
+    "currentReviewStatusVerified": false,
+    "currentPublicStatusVerified": false,
+    "knownOverseasClientRestrictionNotRetried": true
+  },
+  "access": {
+    "inventoryReadable": true,
+    "lockErrorReported": false,
+    "storeManagerTabPresent": false,
+    "huaweiLoginPageCurrentlyOpen": false,
+    "noDuplicatePagesOpened": true,
+    "noRepeatedLoginPrompt": true
+  },
+  "otherChannels": {
+    "freshManagerStateVerified": false,
+    "newMaterialFilesSincePreviousCheck": [],
+    "knownBlockersRetainedAsHistorical": true,
+    "materialReadinessReceipt": "app开发/Android/上架执行/20261104/materials-readiness.json"
+  },
+  "newUpload": false,
+  "newSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "filingChanged": false,
+  "originalSigningChanged": false,
+  "notificationDecision": "DONT_NOTIFY",
+  "reason": "No confirmed review/public change, restored login or new local material; same prerequisite remains pending."
+}
