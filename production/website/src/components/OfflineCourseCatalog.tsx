@@ -170,7 +170,7 @@ export default function OfflineCoursesPage() {
   return (
     <div className="mobile-offline-catalog">
       {/* Header */}
-      <section className="relative hidden overflow-hidden bg-gradient-to-br from-crimson via-crimson-dark to-gold-dark md:block md:pb-14 md:pt-10">
+      <section className="relative overflow-hidden bg-gradient-to-br from-crimson via-crimson-dark to-gold-dark pb-10 pt-8 md:pb-14 md:pt-10">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gold rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-white/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
@@ -183,9 +183,10 @@ export default function OfflineCoursesPage() {
                 🏆 SWOD 线下培训系统
               </span>
               <h1 className="font-serif text-3xl md:text-5xl font-bold text-white mb-4">
-                把线上学到的体系，练成身体里的能力
+                <span className="md:hidden">线下课</span><span className="hidden md:inline">把线上学到的体系，练成身体里的能力</span>
               </h1>
 
+              <p className="mb-5 text-sm leading-6 text-[#616773] md:hidden">购买课程期次的课时，到课后核销扣减，无需预约。</p>
               {/* 快捷统计 */}
               <div className="flex justify-center gap-4 md:gap-8">
                 <div className="text-center">

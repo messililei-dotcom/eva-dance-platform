@@ -214,9 +214,6 @@ export async function POST(request: Request, context: Context) {
     const input = await body(request);
     if (path.join("/") === "orders") {
       const availability = paymentAvailability();
-      if (request.headers.get("x-client-platform") === "miniprogram" && input.kind === "online") {
-        throw new ShopError("线上课程须使用小程序虚拟支付", 403);
-      }
       if (request.headers.get("x-client-platform") === "miniprogram" && (input.provider !== "wechat" || !availability.miniprogram)) throw new ShopError("小程序微信支付尚未开通",503);
       if (
         !(input.provider === "wechat"
@@ -243,10 +240,6 @@ export async function POST(request: Request, context: Context) {
       const wechatBrowser = /MicroMessenger/i.test(request.headers.get('user-agent') || '');
       const openid = payerOpenid(request, memberId, config.wxApp);
       const payingOrder = shopDb(db => orderById(db, id, memberId));
-      if (action === "pay" && request.headers.get("x-client-platform") === "miniprogram") {
-        const orderKind = shopDb(db => db.prepare("SELECT kind FROM shop_course_orders WHERE order_id=?").get<{ kind: string }>(id)?.kind);
-        if (orderKind === "online") throw new ShopError("线上课程须使用小程序虚拟支付", 403);
-      }
       if (action === 'pay' && payingOrder.provider === 'wechat' && wechatBrowser && config.wxJsapi && !openid && request.headers.get('x-client-platform') !== 'miniprogram') {
         if (payingOrder.status !== 'pending' || payingOrder.expires_at <= Date.now()) throw new ShopError('订单已结束，请刷新订单');
         return response({kind:'redirect',url:'/api/shop/wechat/authorize?order='+encodeURIComponent(id)});
