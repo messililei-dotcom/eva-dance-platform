@@ -41,9 +41,49 @@ export function ensurePhoneMember(db: any, name: string, contact: string, source
   return memberId;
 }
 
+
+/** Independent financial tombstones: deleting registrations never erases receipts. */
+export function ensureDeletedRegistrationTables(db: any) {
+ db.exec(`CREATE TABLE IF NOT EXISTS event_deleted_registrations (
+   id INTEGER PRIMARY KEY, competition_id INTEGER NOT NULL, group_id INTEGER,
+   member_id INTEGER NOT NULL DEFAULT 0, submitted_by_member_id INTEGER NOT NULL DEFAULT 0,
+   registration_batch_id INTEGER NOT NULL DEFAULT 0,
+   name TEXT NOT NULL, phone TEXT NOT NULL DEFAULT '', group_name TEXT NOT NULL DEFAULT '',
+   performance_title TEXT NOT NULL DEFAULT '', registration_fee REAL NOT NULL DEFAULT 0,
+   paid_amount REAL NOT NULL DEFAULT 0, paid_status TEXT NOT NULL DEFAULT 'unpaid',
+   paid_at TEXT NOT NULL DEFAULT '', payment_method TEXT NOT NULL DEFAULT '',
+   status TEXT NOT NULL DEFAULT '', audit_status TEXT NOT NULL DEFAULT '',
+   deleted_by INTEGER NOT NULL, deleted_at TEXT NOT NULL
+ );
+ CREATE INDEX IF NOT EXISTS idx_event_deleted_competition ON event_deleted_registrations(competition_id);
+ CREATE TABLE IF NOT EXISTS event_deleted_registration_payments (
+   id INTEGER PRIMARY KEY AUTOINCREMENT, original_payment_id INTEGER UNIQUE,
+   competition_id INTEGER NOT NULL, player_id INTEGER NOT NULL,
+   kind TEXT NOT NULL, amount REAL NOT NULL, method TEXT NOT NULL DEFAULT '', paid_at TEXT NOT NULL,
+   remark TEXT NOT NULL DEFAULT '', created_by INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL,
+   request_key TEXT NOT NULL, UNIQUE(competition_id,request_key)
+ );
+ CREATE INDEX IF NOT EXISTS idx_event_deleted_payments_player ON event_deleted_registration_payments(player_id);`);
+
+ const guard = db.prepare("SELECT sql FROM main.sqlite_master WHERE type='trigger' AND name='event_online_pending_delete_guard'").get();
+ // Older deployed databases protected pending orders with a persistent trigger.
+ // Retain that protection unless this exact entry has been financially archived.
+ if (guard && !String(guard.sql).includes('event_deleted_registrations')) db.transaction(() => {
+   db.exec(`DROP TRIGGER event_online_pending_delete_guard;
+     CREATE TRIGGER event_online_pending_delete_guard BEFORE DELETE ON event_players
+     WHEN EXISTS(SELECT 1 FROM shop_course_orders c JOIN shop_online_orders o ON o.id=c.order_id WHERE c.kind='event' AND c.target_id=OLD.id AND o.status='pending')
+       AND NOT EXISTS(SELECT 1 FROM event_deleted_registrations a WHERE a.id=OLD.id AND a.competition_id=OLD.competition_id AND a.member_id=COALESCE(OLD.member_id,0) AND a.paid_amount=COALESCE(OLD.paid_amount,0))
+     BEGIN SELECT RAISE(ABORT,'该报名有待付款在线订单，请先完成财务存档再删除报名'); END`);
+ })();
+}
+
 export function recordRegistrationPayment(db: any, playerId: number, body: any, onlineOrderId?: string) {
-  const player = db.prepare('SELECT * FROM event_players WHERE id=?').get(playerId);
+  const active = db.prepare('SELECT * FROM event_players WHERE id=?').get(playerId);
+  const archived = !active && onlineOrderId ? db.prepare('SELECT * FROM event_deleted_registrations WHERE id=?').get(playerId) : undefined;
+  const player = active || archived;
   if (!player) throw new Error('报名不存在');
+  const ledger = archived ? 'event_deleted_registration_payments' : 'event_registration_payments';
+  const registrations = archived ? 'event_deleted_registrations' : 'event_players';
   const kind = body.kind;
   if (!['charge','refund'].includes(kind)) throw new Error('请选择缴费或退款登记');
   const raw = Number(body.amount), cents = Math.round(raw * 100);
@@ -54,7 +94,7 @@ export function recordRegistrationPayment(db: any, playerId: number, body: any, 
   if (!Number.isFinite(date.getTime()) || date.getTime() > Date.now() + 60000) throw new Error('请填写有效的实际缴费或退款时间');
   const paidAt = date.toISOString(), method = String(body.method || '').trim(), remark = String(body.remark || '').trim();
   if (!['wechat','alipay','bank','cash','other'].includes(method)) throw new Error('请选择缴费方式');
-  const prior = db.prepare('SELECT * FROM event_registration_payments WHERE competition_id=? AND request_key=?').get(player.competition_id,key);
+  const prior = db.prepare('SELECT id,player_id,kind,amount,paid_at,method,remark FROM event_registration_payments WHERE competition_id=? AND request_key=? UNION ALL SELECT id,player_id,kind,amount,paid_at,method,remark FROM event_deleted_registration_payments WHERE competition_id=? AND request_key=? LIMIT 1').get(player.competition_id,key,player.competition_id,key);
   if (prior) {
     if (prior.player_id !== playerId || prior.kind !== kind || Math.round(prior.amount*100) !== cents || prior.paid_at !== paidAt || prior.method !== method || prior.remark !== remark) throw new Error('登记编号已使用，请重新打开窗口');
     return { id: prior.id, repeated: true };
@@ -68,12 +108,14 @@ export function recordRegistrationPayment(db: any, playerId: number, body: any, 
   const balance = collected + (kind === 'charge' ? cents : -cents);
   const status = balance === 0 ? (kind === 'refund' ? 'refunded' : 'unpaid') : 'paid';
   const now = new Date().toISOString();
-  const result = db.prepare(`INSERT INTO event_registration_payments(competition_id,player_id,kind,amount,method,paid_at,remark,created_by,created_at,request_key) VALUES(?,?,?,?,?,?,?,?,?,?)`).run(player.competition_id,playerId,kind,cents/100,method,paidAt,remark,db.eventActorId || 0,now,key);
-  db.prepare('UPDATE event_players SET paid_amount=?,paid_status=?,paid_at=?,payment_method=?,updated_at=? WHERE id=?').run(balance/100,status,kind === 'charge' ? paidAt : player.paid_at,kind === 'charge' ? method : player.payment_method,now,playerId);
+  const result = db.prepare(`INSERT INTO ${ledger}(competition_id,player_id,kind,amount,method,paid_at,remark,created_by,created_at,request_key) VALUES(?,?,?,?,?,?,?,?,?,?)`).run(player.competition_id,playerId,kind,cents/100,method,paidAt,remark,db.eventActorId || 0,now,key);
+  db.prepare(`UPDATE ${registrations} SET paid_amount=?,paid_status=?,paid_at=?,payment_method=?${archived ? '' : ',updated_at=?'} WHERE id=?`).run(
+    balance/100,status,kind === 'charge' ? paidAt : player.paid_at,kind === 'charge' ? method : player.payment_method,...(archived ? [] : [now]),playerId);
   return { id: Number(result.lastInsertRowid), repeated: false };
 }
 
 export function ensureEventOnline(db: AdminDb) {
+ ensureDeletedRegistrationTables(db);
  const cols=db.prepare('PRAGMA table_info(event_players)').all<{name:string}>();
  if(!cols.some(c=>c.name==='submitted_by_member_id')) db.exec('ALTER TABLE event_players ADD COLUMN submitted_by_member_id INTEGER NOT NULL DEFAULT 0');
  if (!cols.some(c => c.name === 'registration_batch_id')) db.exec('ALTER TABLE event_players ADD COLUMN registration_batch_id INTEGER NOT NULL DEFAULT 0');
@@ -119,7 +161,7 @@ export function settleEventPayment(db: AdminDb, order: any, refund = false) {
  const paidAt = new Date().toISOString();
  for (const item of items) {
    const playerId = Number(item.product_id.slice(6));
-   const player = db.prepare('SELECT * FROM event_players WHERE id=?').get<any>(playerId);
+   const player = db.prepare('SELECT * FROM event_players WHERE id=?').get<any>(playerId) || db.prepare('SELECT * FROM event_deleted_registrations WHERE id=?').get<any>(playerId);
    if (!player || (player.submitted_by_member_id !== order.member_id && (player.registration_batch_id || player.member_id !== order.member_id))) throw new Error('报名付款人不匹配');
    recordRegistrationPayment(db, playerId, {
      kind: refund ? 'refund' : 'charge', amount: item.unit_fen / 100, method: order.provider, paidAt,

@@ -1,0 +1,39 @@
+struct EventDetailView: View {
+    @EnvironmentObject var session: Session
+    @StateObject private var store = SiteStore()
+    let id: String
+    @State private var groupSearch = ""
+    var body: some View {
+        List {
+            LoadState(store: store) { Task { await load() } }
+            let event = store.data["competition"]
+            Section(event["name"].text) {
+                Text("\(event.firstText("startDate","start_date")) · \(event["venue"].text)")
+                Text(plain(event.firstText("description","introduction")))
+            }
+            Section {
+                if EventPresentation.state(event) == "报名中" { NavigationLink("赛事报名") { AuthGate { EventRegistrationView(eventID: id, group: nil) } } }
+                NavigationLink("评委入口") { JudgeWorkspaceView(eventID: id) }
+            }
+            Section("参赛组别") {
+                TextField("搜索完整组别名称", text: $groupSearch)
+                ForEach(store.data["groups"].scopedRows("groups").filter { PracticePlan.matches($0.value, query: groupSearch, fields: ["name"]) }, id: \.listID) { group in
+                    NavigationLink { AuthGate { EventRegistrationView(eventID: id, group: group) } } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(group.value["name"].text).fixedSize(horizontal: false, vertical: true)
+                            if group.value["registrationFee"].number > 0 {
+                                Text("报名费 ¥" + String(format: "%.2f", group.value["registrationFee"].number)).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+                Text("能否报名及名额以提交时服务端核验为准。").font(.caption).foregroundStyle(.secondary)
+            }
+            Section("比赛日程") { ForEach(store.data["sessions"].scopedRows("sessions"), id: \.listID) { row in Text("\(row.value["name"].text) · \(row.value["startsAt"].text) · \(row.value["venue"].text)") } }
+            Section("已发布成绩") { ForEach(store.data["rankings"].scopedRows("rankings"), id: \.listID) { row in
+                Text("\(row.value["rankNo"].text)  \(row.value["playerName"].text)  \(row.value["groupName"].text)  \(row.value["publishedTotal"].text)")
+            } }
+        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
+    }
+    private func load() async { await store.load("/events/\(id)", session: session, publicRead: true) }
+}

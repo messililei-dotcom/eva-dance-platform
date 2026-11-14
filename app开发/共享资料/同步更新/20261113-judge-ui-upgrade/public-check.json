@@ -1,0 +1,28 @@
+[
+  {
+    "path": "/events",
+    "status": 200,
+    "cacheControl": null
+  },
+  {
+    "path": "/events/event-2026-100061",
+    "status": 200,
+    "cacheControl": null
+  },
+  {
+    "path": "/sw.js",
+    "status": 200,
+    "cacheControl": "public, max-age=0, must-revalidate",
+    "versionUpdated": true
+  },
+  {
+    "path": "/api/events-news/event-2026-100061/judge",
+    "status": 401,
+    "cacheControl": null
+  },
+  {
+    "path": "/api/events-news/event-2026-100061/judge?member_id=1",
+    "status": 401,
+    "cacheControl": null
+  }
+]

@@ -118,7 +118,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           } catch (error) {
             throw new MusicUploadError(error instanceof Error ? error.message : '手机号格式错误', 400);
           }
-          if (!name || name.length > 120) throw new MusicUploadError('请填写参赛姓名和手机号');
+          if (!name || name.length > 120) throw new MusicUploadError('请填写1至120个字符的选手姓名');
 
           const participantId=ensurePhoneMember(db,name,phone,'event_registration');
           const duplicate = db.prepare(`

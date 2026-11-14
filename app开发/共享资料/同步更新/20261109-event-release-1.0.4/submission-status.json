@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-10T11:11:53+08:00",
+  "checkedAt": "2026-11-12T11:43:51+08:00",
   "version": "1.0.4",
   "platforms": {
     "ios": {
@@ -15,7 +15,7 @@
       "appStoreDraftAssociation": "verified",
       "appStoreConsole": "Official distribution page verified: 1.0.4 waiting for review and automatic release selected",
       "submittedAt": "2026-11-09T11:07:56+08:00",
-      "reviewStatus": "waiting-for-review",
+      "reviewStatus": "approved",
       "automaticReleaseAfterApproval": true,
       "releaseImmediatelyToAll": true,
       "buildId": "8c795100-f2d5-41c6-9502-5c598c1b3902",
@@ -24,7 +24,7 @@
       "reviewScreenshot": "evidence/ios-review-receipt.png",
       "reviewCheckedAt": "2026-11-09T15:08:11+08:00",
       "chinaPublicRelease": {
-        "checkedAt": "2026-11-10T03:12:22+08:00",
+        "checkedAt": "2026-11-12T11:06:32+08:00",
         "version": "1.0.4",
         "region": "CN",
         "url": "https://apps.apple.com/cn/app/swod/id6826038106",
@@ -36,17 +36,20 @@
       },
       "otherStorefronts": {
         "US": "redirected to CN Today; unverified",
-        "HK": "redirected to CN Today; unverified"
+        "HK": "Normal detail URL redirected to CN Today; rechecked 2026-11-12T19:44:56.084841+08:00"
       },
-      "lastManagementCheckAt": "2026-11-10T03:12:22+08:00",
-      "lastManagementCheck": "sign-in required"
+      "lastManagementCheckAt": "2026-11-12T19:44:56.084841+08:00",
+      "lastManagementCheck": "Official app list: SWOD iOS1.0.4 distributable; no release action performed",
+      "managementStatus": "distributable",
+      "releaseRecheckEvidence": "evidence/ios-release-recheck-20261112-110632.json",
+      "latestManagementEvidence": "evidence/heartbeat-20261112-1943.json"
     },
     "android": {
       "build": 21,
       "packageName": "cn.com.swod.app",
       "upload": "succeeded",
       "submitted": true,
-      "public": false,
+      "public": true,
       "uploaded": true,
       "emulator": "EvaRelease36",
       "installPassed": true,
@@ -63,7 +66,24 @@
       "screenshotReceipt": "evidence/screenshots-android21/receipt.json",
       "reviewReceipt": "evidence/huawei-android-review-receipt.json",
       "reviewScreenshot": "evidence/huawei-android-review-receipt.jpg",
-      "tabletViewportQaPassed": true
+      "tabletViewportQaPassed": true,
+      "chinaPublicRelease": {
+        "checkedAt": "2026-11-13T03:44:32.528969+08:00",
+        "version": "1.0.4",
+        "region": "CN",
+        "url": "https://appgallery.huawei.com/app/C119475083",
+        "installEntryVisible": true,
+        "updateNotesMatchSubmission": true,
+        "buildLinkedBySubmissionReceipt": 21,
+        "buildNumberDisplayedPublicly": false,
+        "evidence": "evidence/huawei-android21-china-public-20261110.jpg",
+        "latestEvidence": "evidence/heartbeat-20261113-0343.json"
+      },
+      "lastManagementCheckAt": "2026-11-10T19:08:08+08:00",
+      "lastManagementCheck": "sign-in required",
+      "lastPublicCheckAt": "2026-11-13T03:44:32.528969+08:00",
+      "lastPublicCheck": "CN official store shows1.0.4, 2026/11/10 update date, matching notes and install entry",
+      "lastPublicCheckEvidence": "evidence/heartbeat-20261113-0343.json"
     },
     "harmony": {
       "build": 23,
@@ -136,20 +156,33 @@
         "tabletStoreIconSaved": true,
         "appInfoRequiredFieldsBannerCleared": true
       },
-      "reviewStatus": "waiting-for-review",
-      "reviewCheckedAt": "2026-11-10T11:11:53+08:00",
+      "reviewStatus": "approved",
+      "reviewCheckedAt": "2026-11-11T19:28:44+08:00",
       "reviewRecordId": "2071129556072323840",
       "reviewUrl": "https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2071129556072323840?appId=6917617955633704973&projectId=101653523865196397",
       "passwordLoginVerified": true,
       "smsDeliveryAndRealCodeLoginVerified": false,
       "tabletScreenshotsUploaded": 3,
       "submissionExecutionRecord": "../20261110-harmony-window/review-candidate/verification.json",
-      "reviewScreenshot": "evidence/huawei-harmony23-review-20261110.jpg"
+      "reviewScreenshot": "evidence/huawei-harmony23-review-20261110.jpg",
+      "managementStatus": "listed",
+      "listedAt": "2026-11-10T15:00:30+08:00",
+      "lastManagementCheckAt": "2026-11-11T19:28:44+08:00",
+      "lastManagementCheck": "Official exact version page and version history verified approved/listed build23",
+      "approvalEvidence": "evidence/harmony23-approved-20261111/official-verification.json",
+      "approvalAdvisoryPresent": true,
+      "publicRegionalVerificationPending": true,
+      "lastPublicCheckAt": "2026-11-12T23:44:55.804106+08:00",
+      "lastPublicCheck": "Exact official AppGallery page still lacks SWOD detail, version and download entry; not evidence of approval reversal or delisting",
+      "lastPublicCheckEvidence": "evidence/heartbeat-20261112-2343.json",
+      "lastManagementCheckAttemptAt": "2026-11-13T07:39:33.923583+08:00",
+      "lastManagementAccess": "Fresh exact official version URL redirected to Huawei sign-in; prior approved/listed observation remains historical",
+      "lastManagementAttemptEvidence": "evidence/heartbeat-20261113-0738.json"
     }
   },
   "existingReviewsWithdrawn": false,
   "monitoringAutomationStatus": "ACTIVE",
-  "latestSubmissionRecheck": "evidence/heartbeat-20261110-111153.json",
+  "latestSubmissionRecheck": "evidence/heartbeat-20261113-0738.json",
   "androidHarmonySubmissionAuthorization": {
     "confirmedAt": "2026-11-09T16:28:21+08:00",
     "submitWhenRequiredTestsScreenshotsAndChannelMaterialsAreReady": true,
@@ -202,5 +235,6 @@
       "size": 16193589,
       "sha256": "201be17e60ded700adbd81b576a709556f101a6bdabfb68e6191a3d2683eea64"
     }
-  ]
+  ],
+  "lastMonitorAt": "2026-11-13T07:39:33.923583+08:00"
 }

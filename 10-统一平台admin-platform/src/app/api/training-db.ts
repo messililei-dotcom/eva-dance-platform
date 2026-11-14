@@ -605,6 +605,11 @@ export function mergeCourseInto(db: any, sourceCourseId: number | string, target
 export function syncMemberDenormalizedFields(db: any, memberId: number | string) {
   const member = db.prepare('SELECT id, name, phone FROM Member WHERE id = ?').get(memberId);
   if (!member) return;
+  for (const table of ['event_players','event_judges']) {
+    if (db.prepare("SELECT 1 FROM main.sqlite_master WHERE type='table' AND name=?").get(table)) {
+      db.prepare('UPDATE '+table+' SET name=?,phone=? WHERE member_id=?').run(member.name,member.phone || '',member.id);
+    }
+  }
   db.prepare('UPDATE Payment SET memberName = ?, memberPhone = ? WHERE memberId = ?').run(member.name, member.phone || '', member.id);
   db.prepare('UPDATE ConsumeRecord SET memberName = ?, memberPhone = ? WHERE memberId = ?').run(member.name, member.phone || '', member.id);
   db.prepare("UPDATE orders SET member_name = ?, member_phone = ?, updated_at = ? WHERE source_type = 'offline-training' AND member_id = ?").run(member.name, member.phone || '', nowIso(), member.id);

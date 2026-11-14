@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-11-11T11:22:38+08:00",
+  "version": "1.0.4",
+  "harmony": {
+    "build": 23,
+    "reviewRecordId": "2071129556072323840",
+    "managementResult": "Exact review link redirected to Huawei account sign-in",
+    "observedPath": "https://id1.cloud.huawei.com/CAS/portal/loginAuth.html",
+    "freshReviewStatusVerified": false,
+    "freshPublicReleaseVerified": false
+  },
+  "otherAndroidChannels": {
+    "executionRecord": "Android/build22/submission-status-20261110.json",
+    "action": "Existing material blockers retained as historical evidence; no new store actions"
+  },
+  "newReviewOrPublicResultVerified": false,
+  "newStoreSubmission": false,
+  "newNotificationNeeded": false,
+  "existingReviewsWithdrawn": false
+}

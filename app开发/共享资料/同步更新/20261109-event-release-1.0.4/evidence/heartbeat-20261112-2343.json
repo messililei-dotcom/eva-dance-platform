@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-11-12T23:44:55.804106+08:00",
+  "version": "1.0.4",
+  "harmony": {
+    "build": 23,
+    "attemptedPublicURL": "https://appgallery.huawei.com/app/C6917617955633704973",
+    "observedPublicURL": "https://appgallery.huawei.com/app/C6917617955633704973",
+    "observedPage": "AppGallery header, search, unrelated recommendations and footer only; SWOD name/version/download entry absent",
+    "freshPublicReleaseVerified": false,
+    "freshManagementStateVerified": false,
+    "priorApprovalEvidence": "evidence/harmony23-approved-20261111/official-verification.json"
+  },
+  "ios": {
+    "build": 14,
+    "freshStatusVerified": false,
+    "latestManagementRecheck": "evidence/heartbeat-20261112-1943.json",
+    "overseasPublicVerificationStillPending": true
+  },
+  "android": {
+    "build": 21,
+    "freshStatusVerified": false,
+    "newChannelMaterialsVerified": false,
+    "knownMaterialBlockedChannelsReopened": false
+  },
+  "newReviewOrPublicResultVerified": false,
+  "newStoreSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "newNotificationNeeded": false,
+  "automaticReleaseSettingsChanged": false,
+  "restrictionsBypassed": false,
+  "localDevelopmentChangesSubmitted": false
+}

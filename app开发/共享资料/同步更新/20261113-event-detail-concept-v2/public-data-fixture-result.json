@@ -1,0 +1,8 @@
+{
+  "publicationPrivacy": true,
+  "zeroScorePreserved": true,
+  "groupAndCompetitionIsolation": true,
+  "draftScoresHidden": true,
+  "withdrawnRejectedInactiveHidden": true,
+  "ageBoundaries": true
+}

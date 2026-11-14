@@ -8,7 +8,7 @@ export const SUPER_ADMIN_PAGES = [
 const OWNER_ONLY_PAGES = ['/orders', '/order-center', '/finance', '/commission'] as const;
 const OWNER_ONLY_APIS = ['/api/orders', '/api/exclusive-orders', '/api/finance'] as const;
 
-function isPlatformOwner(user: AdminIdentity) {
+export function isPlatformOwner(user: AdminIdentity) {
   return user?.username === 'lilei' && isPlatformSuperAdmin(user);
 }
 

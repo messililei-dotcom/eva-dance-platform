@@ -1,0 +1,26 @@
+✔ native route is private and exposes only GET/POST for positive event ID (16.160709ms)
+✔ judge and group grants reject other users, events and disabled judges (1.458833ms)
+✔ missing, nonfinite, negative or excessive scores cannot write (0.797417ms)
+✔ locked groups and withdrawn players reject submission (0.402833ms)
+✔ corrections preserve old version, audit and own score isolation (4.720458ms)
+✔ owner sees every judge score including zero when public scores and names are off; no identity leaks (99.515333ms)
+✔ combined public switch exposes names; own scores are visible in either state (23.405875ms)
+✔ anonymous caller is rejected; changing requested member ID cannot select another person (25.58225ms)
+✔ unpublished entry never exposes judge details (16.8325ms)
+✔ public detail masks names, IDs, titles and avatars server-side (17.030625ms)
+✔ website own endpoint preserves the same anonymous score access and no-store contract (15.6675ms)
+✔ public group marks ranking complete only after every eligible programme has a published rank (22.850292ms)
+✔ score details exclude a removed judge while keeping the historical record (17.500125ms)
+✔ all official native platforms cannot login to or operate management APIs (0.8105ms)
+✔ native member, carrier, course, judge and public endpoints remain independently authenticated (0.094708ms)
+✔ web management access keeps existing authorization and boundary matching does not admit near-prefix routes (0.060875ms)
+✔ anonymous readers can open the public event list and event details (18.247625ms)
+✔ event write, registration and member records still require login (1.912792ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 427.578625

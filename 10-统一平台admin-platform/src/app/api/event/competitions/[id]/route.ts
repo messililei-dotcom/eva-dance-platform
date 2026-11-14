@@ -1,3 +1,5 @@
+import { isPlatformOwner } from '@/lib/admin-feature-access';
+import { eventActor } from '../../_access';
 import { competitionOwner, saveCompetitionAdmins } from '../../_competition-owner';
 import {
   cleanText,
@@ -26,7 +28,29 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       GROUP BY c.id
     `).get(routeParams.id);
     if (!row) return jsonError('赛事不存在', 404);
-    return Response.json({ success: true, data: mapCompetition(row) });
+    if (!isPlatformOwner(eventActor(request))) return Response.json({ success: true, data: mapCompetition(row) });
+    const { totalFen } = db.prepare(`
+      SELECT COALESCE(SUM(ROUND(paid_amount * 100)), 0) AS totalFen
+      FROM (SELECT competition_id,paid_amount FROM event_players UNION ALL SELECT competition_id,paid_amount FROM event_deleted_registrations) WHERE competition_id = ?
+    `).get(row.id);
+    const shopTables = db.prepare(`
+      SELECT COUNT(*) AS count FROM main.sqlite_master
+      WHERE type='table' AND name IN ('shop_online_orders','shop_online_items','shop_course_orders')
+    `).get();
+    const { platformFen } = shopTables.count === 3 ? db.prepare(`
+      SELECT COALESCE(SUM(i.unit_fen * i.quantity), 0) AS platformFen
+      FROM (SELECT id,competition_id FROM event_players UNION SELECT id,competition_id FROM event_deleted_registrations) p
+      JOIN main.shop_online_items i ON i.product_id = 'event:' || p.id
+      JOIN main.shop_online_orders o ON o.id = i.order_id
+      JOIN main.shop_course_orders c ON c.order_id = o.id AND c.kind = 'event'
+      WHERE p.competition_id = ?
+        AND o.transaction_id <> ''
+        AND o.status IN ('completed', 'refund_requested', 'refunding')
+    `).get(row.id) : { platformFen: 0 };
+    return Response.json({
+      success: true,
+      data: { ...mapCompetition(row), revenue: { totalFen, platformFen } },
+    });
   });
 }
 

@@ -1,0 +1,14 @@
+✔ first audio lesson keeps its source title and media kind instead of masquerading as a video (38.885ms)
+✔ video lessons and resume data remain associated with the real video ID (12.35ms)
+✔ new learner enters first lesson directly (7.36225ms)
+✔ resume chooses latest server history rather than catalog order (7.033458ms)
+✔ foreign and unwatched rows cannot choose a lesson, empty course stays empty (6.366ms)
+✔ offline course summary matches mini-program catalog and ordering fixtures (30.15225ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 258.816667

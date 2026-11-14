@@ -12,8 +12,9 @@ import SwiftUI
 
     func update(playing: Bool, keepVisible: Bool = false) {
         self.playing = playing; self.keepVisible = keepVisible
-        reveal()
+        cancel(); visible = !playing
     }
+    func hide() { cancel(); visible = false }
     func reveal() { visible = true; schedule() }
     func tap() {
         if playing && visible && !keepVisible { cancel(); visible = false }

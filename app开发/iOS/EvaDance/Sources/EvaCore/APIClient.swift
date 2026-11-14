@@ -6,7 +6,7 @@ public enum APIError: LocalizedError {
         switch self {
         case .sessionExpired: return "登录已过期，请重新登录。"
         case .denied: return "当前账号没有此内容的有效权限。"
-        case .cacheInvalid: return "缓存内容或学习状态已变化，请联网重新验证。"
+        case .cacheInvalid: return "离线内容或学习状态已变化，请联网重新验证。"
         case .progressConflict: return "其他设备已更新学习进度，将自动采用较新的记录。"
         case .invalidResponse: return "服务返回异常，请稍后重试。"
         case .service(let text): return text
@@ -64,36 +64,6 @@ public final class APIClient {
         let envelope = try JSONDecoder().decode(APIEnvelope<T>.self, from: data)
         guard envelope.success else { throw APIError.service(envelope.message ?? envelope.error ?? "请求未完成。") }
         return envelope
-    }
-    /// Management login is separate from member sessions and does not save the password.
-    public func staffLogin(username: String, password: String) async throws -> StaffLogin {
-        var request = URLRequest(url: StaffPolicy.apiBase.appendingPathComponent("login"))
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("ios", forHTTPHeaderField: "x-client-platform")
-        request.httpBody = try JSONSerialization.data(withJSONObject: ["username": username, "password": password])
-        let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
-        guard (200..<300).contains(http.statusCode) else {
-            let failure = try? JSONDecoder().decode(JSONValue.self, from: data)
-            throw APIError.service(failure?.firstText("error", "message") ?? "管理账号登录失败")
-        }
-        let result = try JSONDecoder().decode(StaffLogin.self, from: data)
-        guard !result.token.isEmpty, StaffPolicy.allows(result.user.role) else { throw APIError.denied }
-        return result
-    }
-
-    public func staffMusic(id: Int, token: String) async throws -> Data {
-        guard let url = StaffPolicy.musicURL(id) else { throw APIError.invalidResponse }
-        var request = URLRequest(url: url)
-        request.setValue("Bearer " + token, forHTTPHeaderField: "Authorization")
-        let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
-        if http.statusCode == 401 { throw APIError.sessionExpired }
-        if http.statusCode == 403 { throw APIError.denied }
-        guard http.statusCode == 200, data.count <= 64 * 1024 * 1024,
-              http.mimeType?.hasPrefix("audio/") == true else { throw APIError.service("音乐文件暂时无法播放") }
-        return data
     }
 
 }

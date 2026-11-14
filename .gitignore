@@ -154,3 +154,8 @@ backups/
 /app开发/iOS/发布准备包/
 /版权登记/
 /app开发/Android/版权与软著/20261110-上架待盖章/
+
+# Generated design outputs and large store-review attachments stay local.
+/output/
+/app开发/共享资料/同步更新/20261109-event-release-1.0.4/evidence/harmony23-approved-20261111/*.mp4
+/app开发/共享资料/同步更新/20261109-event-release-1.0.4/evidence/harmony23-approved-20261111/*.zip

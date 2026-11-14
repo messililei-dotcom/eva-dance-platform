@@ -62,7 +62,7 @@ Page(share.withShare('learning-records', {
         if (!Array.isArray(result)) throw new Error('学习记录暂时无法加载');
         this.setData({ rows: result.map(row => ({
           id: row.id,
-          title: row.video_name || row.course_name || '课节',
+          title: row.video_name || row.course_name || '分节',
           context: row.series_name || '',
           text: kind === 'notes' ? row.content || '' : row.label || '',
           time: timeLabel(row.timestamp_seconds),

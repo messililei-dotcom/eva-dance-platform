@@ -54,7 +54,7 @@ async function pay(seriesId, priceFen, live = false) {
     failure = error;
   }
   if (Number(failure?.errCode) === -15014) {
-    throw new Error(live ? '课程商品正在同步，请稍后重试' : '沙箱道具正在同步，约十分钟后可测试支付');
+    throw new Error(live ? '内容商品正在同步，请稍后重试' : '沙箱道具正在同步，约十分钟后可测试支付');
   }
   const result = await api.request(path + 'orders/' + encodeURIComponent(order.id), {
     method: live ? 'POST' : 'GET', retry: false, timeout: 20000,

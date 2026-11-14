@@ -1,7 +1,7 @@
 /* 伊娃东方舞 PWA Service Worker
  * 原则：只缓存公开页面与静态资源；登录、学习进度、视频和 API 始终走网络。
  */
-const VERSION = 'swod-pwa-v14-icons-install-20261105';
+const VERSION = 'swod-pwa-v17-event-detail-20261113';
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const OFFLINE_URL = '/offline.html';
@@ -38,6 +38,7 @@ self.addEventListener('message', (event) => {
 });
 
 function isPrivate(url) {
+  if (/\/judge(?:\/|$)/.test(url.pathname)) return true;
   return PRIVATE_PATHS.some((path) => url.pathname === path || url.pathname.startsWith(path));
 }
 

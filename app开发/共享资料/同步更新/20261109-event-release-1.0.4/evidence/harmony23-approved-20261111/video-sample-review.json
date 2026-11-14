@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-11-12T03:34:22+08:00",
+  "source": "SWOD_其他功能异常_手机.mp4",
+  "durationSeconds": 156.404,
+  "method": "AVFoundation extracted frames at 25%, 55%, 85% of video duration",
+  "observations": [
+    "25% frame shows My Learning Space and unlocked course cards",
+    "55% frame shows filming surface without app screen",
+    "85% frame shows account/privacy section and logout entry"
+  ],
+  "fullVideoPlaybackReviewed": false,
+  "additionalFunctionalDefectConfirmed": false,
+  "frames": [
+    "review-video-frame-1.png",
+    "review-video-frame-2.png",
+    "review-video-frame-3.png"
+  ]
+}

@@ -1,0 +1,12 @@
+<import src="../../shared/share-preview.wxml"/>
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}"/></block>
+<view wx:else class="page">
+ <view wx:if="{{loading}}" class="card">正在加载参赛详情…</view>
+ <view wx:elif="{{error}}" class="card"><text>{{error}}</text><button bindtap="reload">重新加载</button></view>
+ <block wx:else>
+  <view class="hero"><view class="avatar"><image wx:if="{{player.avatarUrl}}" src="{{player.avatarUrl}}" mode="aspectFill"/><text wx:else>{{player.displayInitial}}</text></view><view class="title">{{player.name}}</view><view>{{competition.name}}</view><button bindtap="openGroup">{{group.name}} ›</button></view>
+  <view class="card"><view>编号 {{player.displayNo}}</view><view wx:if="{{player.organization}}">{{player.organization}}</view><view wx:if="{{player.teacher}}">指导老师 {{player.teacher}}</view><view class="programme">节目名称：{{player.performanceTitle || '未填写'}}</view></view>
+  <view class="card result"><text>{{player.rankNo ? player.rankLabel : '成绩待公示'}}</text><view class="score">{{player.scoreText}}</view><text>最终得分</text></view>
+  <view class="card"><view class="title">评委评分</view><view wx:if="{{!competition.judgeScoresPublic}}" class="muted">个人评分未公开，评委身份可查看。</view><view class="judge" wx:for="{{judgeScores}}" wx:key="id"><view class="avatar small"><image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"/><text wx:else>{{item.initial}}</text></view><view class="name">{{item.name}}<view class="muted">{{item.title}}</view></view><text>{{item.scoreText}}</text></view><view wx:if="{{!judgeScores.length}}" class="muted">评分发布后在此展示</view></view>
+ </block>
+</view>

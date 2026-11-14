@@ -1,0 +1,85 @@
+{
+  "checkedAt": "2026-11-12T15:09:27.371449+08:00",
+  "request": "Rename course cache entry to offline viewing, display real download percent, retain platform anti-capture protection",
+  "implementation": [
+    "Three native apps use 离线观看 entry; download/pause/retry/delete states use consistent download vocabulary",
+    "iOS player settings observe account-scoped progress; Android and Harmony navigate immediately to the live download list",
+    "Authorization phase has indeterminate status, not a made-up percent; SDK callbacks report 0-99; completed safe save is 100",
+    "Paused, errors and authorization failures are distinct; progress stays outside the video picture"
+  ],
+  "preserved": [
+    "Account/session/device/lesson/material-bound server authorization and max24h lease",
+    "SDK VidAuth safe-download path; no plaintext URL download fallback or media export",
+    "Private encrypted inventory; media path and capacity validation; logout clearing and stale callback guards",
+    "Android FLAG_SECURE; Harmony protected active-window requirement; iOS capture detection, pause and obscuring in capture/background states",
+    "Existing bundle IDs, filing, distribution signing configuration, server and production feature flags"
+  ],
+  "checks": {
+    "iOS": {
+      "deviceDevelopmentTargetCompile": true,
+      "simulatorCompile": true,
+      "coreChecks": 22,
+      "simulatorDevelopmentInstall": true
+    },
+    "Android": {
+      "debugCompile": true,
+      "unitTests": 32,
+      "failures": 0
+    },
+    "HarmonyOS": {
+      "unsignedDebugCompile": true,
+      "existingAPIMediaLeaseClockChecks": 36,
+      "isolatedStoreDownloadCallbackChecks": 5
+    },
+    "downloadHarness": "Mocks SDK/network/vault only in tests, never changes release gate; validates denied auth, live callbacks, durable completion, no persisted PlayAuth, late callbacks and account switch"
+  },
+  "blocked": {
+    "releaseFlagsRemainOff": {
+      "iOS": true,
+      "Android": true,
+      "HarmonyOS": true
+    },
+    "encryptedAppDatAbsentFromProjects": {
+      "iOS": true,
+      "Android": true,
+      "HarmonyOS": true
+    },
+    "actualSecureDownloadAccepted": false,
+    "actualOfflineDecryptionAccepted": false,
+    "deviceAntiCaptureAcceptedThisTurn": false,
+    "reason": "Required App-bound download encryption material is absent. No license purchase, cloud reconfiguration, feature opening or real download attempted."
+  },
+  "limits": [
+    "iOS capture detection cannot promise prevention of every still screenshot; external camera recording cannot be prevented by app code",
+    "Existing protection implementation preserved; physical-device recording/screenshots and cross-device file-copy resistance not re-accepted this turn",
+    "Source/build and isolated callback checks do not prove a licensed real SDK download works"
+  ],
+  "release": {
+    "newStoreUpload": false,
+    "newReviewSubmission": false,
+    "existingReviewChanged": false,
+    "newSignedStoreCandidate": false,
+    "productionDeployment": false
+  },
+  "sourceSHA256": {
+    "app开发/iOS/EvaDance/Sources/EvaCore/APIClient.swift": "75391017eea1afa4155c97dcb2123ba55e65e81ce3f71e8210e9ada7a8d46eab",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift": "5b6db9d99fcf10054e5338261d47d56cd0b4a316c3cd32e3b6ebc23e2793de51",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift": "4a47ccc6313786b76d8ec849ac03af919acced2769031f60534e701dea502cf5",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/AliyunSecureCacheDriver.swift": "79f80e6a6ae139d9307ac48a8153fa6fce2ed3760c5cd5a31dfb6a5abd9f69e1",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheVault.swift": "dffa53d7586d00183c9f96fce44727abd456b8dc6b1fb0526721cd149956eea2",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheStore.swift": "72bb673022b9d1ca12e27182120306cf70614a26f59b4c82e55e5eaa40e4a6df",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheView.swift": "9a5595ba77c9e2e12fde88f1f5ac0c98bdcd4ca1ae5e5333cf4179588c6f3890",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/OfflineCoursePlayerView.swift": "edb818959096381cc53854e35de767502700ff89c992bc777585906a3755ba5a",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "3d746eadfb831ff3da54ce9e05dcb40d0d2984bef82c0094e0d192a1225d3188",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java": "3cfd71067da3470dab8a984b0f0f2e0446fe0a36a7cf6aee0cb6bf61dc20b3a3",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/AliyunSecureCacheDriver.java": "50e077648b66f4581d7e4520b461347a9b81f30950fa41eb112704977a9abb91",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CourseCacheManager.java": "6130d40577aa36d0a6c432c948527625ffc8bbf48ea0e9be72beecbb7cf06f88",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CourseCacheActivity.java": "2a35b23eecbce3a0bfd7724b9ec93339d20006bf9a7d5d2486d9cfecf3bae726",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/OfflineCourseActivity.java": "d601a0280445df7f4c8a1955a9e9cde8fa481f21de0e6198dccad4cd1784e6c9",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "d3fdfa1dbf6d5a7fdfb932b17de40225998dc4717bbbf0f11e297d9568567d54",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/CachedCourses.ets": "2531bd5e2722d468b39038f3816fc94f2457950aef894a7357fedf4ccea4da21",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/AliyunSecureCacheDriver.ets": "4ca269bbc0714d56fd9114b33ed8158dff2c63a45155d22e0f2c62bbb500f0d2",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CourseCacheStore.ets": "de1c3840ac324d93c2ed819cc19944fb51378ca2c4014f9a9e508a398089d063",
+    "app开发/HarmonyOS/EvaDance/scripts/cache-download.test.cjs": "91da12119399c3076a39be88c9f484e6a898047241699e69c084221f523528cb"
+  }
+}

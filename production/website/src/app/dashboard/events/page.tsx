@@ -183,7 +183,7 @@ export default function MyEventsPage() {
                           {entry.resultPublished ? (
                             <div className="shrink-0 text-right">
                               <div className="inline-flex items-center gap-1 rounded-full bg-[#FFF1D8] px-2.5 py-1 text-xs font-bold text-[#8A5B11]">
-                                <Medal className="h-3.5 w-3.5" />{entry.awardName || `第 ${entry.rankNo} 名`}
+                                <Medal className="h-3.5 w-3.5" />{entry.rankNo > 0 ? (entry.awardName || `第 ${entry.rankNo} 名`) : '暂不排名'}
                               </div>
                               <p className="mt-2 text-2xl font-bold text-[#9F1D20]">{formatScore(entry.totalScore)}</p>
                               <p className="text-[11px] text-[#8A7A68]">公示总分</p>
@@ -193,11 +193,12 @@ export default function MyEventsPage() {
                           )}
                         </div>
 
-                        {entry.resultPublished && entry.judgeScores.length ? (
+                        {entry.resultPublished ? (
                           <details className="mt-3 border-t border-[#EEE3D3] pt-3">
                             <summary className="cursor-pointer list-none text-sm font-semibold text-[#8A6A32]">
-                              查看评委评分（{entry.judgeScores.length}）
+                              评分详情（{entry.judgeScores.length}）
                             </summary>
+                            {!entry.judgeScores.length && <p className="mt-2 text-sm text-[#8A7A68]">暂无有效评委评分记录</p>}
                             <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                               {entry.judgeScores.map((score) => (
                                 <div key={`${entry.playerId}-${score.judgeId}`} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm">

@@ -1,11 +1,12 @@
 const share = require("../../shared/share");
 const api = require('../../utils/api');
+const { contentText } = require('../../shared/review-text');
 function acceptsCollectionCode(order) {
   return order?.status === 'pending' && ['offline_training', 'shop'].includes(order.kind);
 }
 const labels = {pending:'待收款',paid:'已收款',partial_refunded:'部分退款',refunded:'已退款',cancelled:'已取消'};
 const fulfillment = {not_started:'未开始',pending:'待开通/交付',completed:'已处理',review_required:'退款后权益处理中'};
-const delivery = {awaiting_payment:'待付款',pending:'正在开通',authorized:'课程已授权，无需发货',booked:'期次课时已开通，无需发货',awaiting_shipment:'实物商品待发货',shipped:'实物商品已发货',needs_support:'请联系客服处理',refund_review:'退款权益处理中'};
+const delivery = {awaiting_payment:'待付款',pending:'正在开通',authorized:'内容已授权，无需发货',booked:'期次次数已开通，无需发货',awaiting_shipment:'实物商品待发货',shipped:'实物商品已发货',needs_support:'请联系客服处理',refund_review:'退款权益处理中'};
 Page(share.withShare("commerce-orders", {
   data:{collectionCodeUrl:'https://admin.swod.com.cn/payments/yiwa-unified-collection-v1.jpg',orders:[],loading:true,error:'',sending:false},
   onShow(){this.reload();},
@@ -23,7 +24,7 @@ Page(share.withShare("commerce-orders", {
     this.setData({loading:true,error:''});
     try {
       const data=await api.request('/commerce');
-      this.setData({orders:(data.orders || []).map(order=>({...order,acceptsCollectionCode:acceptsCollectionCode(order),amount:(order.amount_cent/100).toFixed(2),refund:(order.refunded_cent/100).toFixed(2),statusLabel:labels[order.status] || order.status,fulfillmentLabel:order.delivery_state==='refund_review' && order.fulfillment==='completed'?'退款权益已处理':delivery[order.delivery_state] || fulfillment[order.fulfillment] || order.fulfillment}))});
+      this.setData({orders:(data.orders || []).map(order=>({...order,title:contentText(order.title),acceptsCollectionCode:acceptsCollectionCode(order),amount:(order.amount_cent/100).toFixed(2),refund:(order.refunded_cent/100).toFixed(2),statusLabel:labels[order.status] || order.status,fulfillmentLabel:order.delivery_state==='refund_review' && order.fulfillment==='completed'?'退款权益已处理':delivery[order.delivery_state] || fulfillment[order.fulfillment] || order.fulfillment}))});
     } catch(error){this.setData({error:error.message || '订单加载失败'});}
     finally {this.setData({loading:false});}
   },

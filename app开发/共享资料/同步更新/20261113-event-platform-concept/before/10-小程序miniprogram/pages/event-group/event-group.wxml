@@ -1,0 +1,60 @@
+<import src="../../shared/share-preview.wxml" />
+<block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
+<block wx:else>
+<view class="group-page">
+  <view wx:if="{{loading}}" class="empty-card">组别数据加载中…</view>
+  <block wx:else>
+    <view class="group-hero">
+      <view class="event-name">🏆 {{competition.name}}</view>
+      <view class="group-name">{{group.name}}</view>
+      <view class="group-tags">
+        <text wx:if="{{group.category}}">{{group.category}}</text>
+        <text wx:if="{{group.ageRange}}">{{group.ageRange}}</text>
+        <text wx:if="{{group.danceType}}">{{group.danceType}}</text>
+        <text wx:if="{{group.entryType}}">{{group.entryType}}</text>
+      </view>
+      <view class="group-stats">
+        <view><text>{{competition.registrationPublic ? players.length : '—'}}</text><span>已报名选手</span></view>
+        <view><text>{{group.rankingCount || 0}}</text><span>已公布成绩</span></view>
+      </view>
+    </view>
+
+    <view class="result-heading">
+      <view>
+        <view class="result-title">{{hasPublishedResults ? '公示结果' : '选手列表'}}</view>
+        <view class="result-desc">{{hasPublishedResults ? '成绩由赛事平台审核发布' : players.length + ' 位选手'}}</view>
+      </view>
+      <text>{{players.length}} 位</text>
+    </view>
+
+    <view class="podium" wx:if="{{podium.length}}"><view class="podium-item {{item.rankClass}}" wx:for="{{podium}}" wx:key="id" data-id="{{item.id}}" bindtap="openPlayer"><text>🏆 {{item.rankLabel}}</text><image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"/><b>{{item.name}}</b><text>{{item.scoreText}} 分</text></view></view>
+    <input class="player-search" value="{{playerQuery}}" placeholder="搜索选手、编号或机构" bindinput="onPlayerSearch"/>
+    <view wx:if="{{visiblePlayers.length}}" class="player-list">
+      <view class="player-row {{hasPublishedResults ? 'ranking-row' : ''}}" wx:for="{{visiblePlayers}}" wx:key="id" data-id="{{item.id}}" bindtap="openPlayer">
+        <view wx:if="{{hasPublishedResults}}" class="rank-block {{item.rankClass}}">
+          <view class="trophy" wx:if="{{item.rankNo > 0}}">🏆</view>
+          <view class="rank-number" wx:else>—</view>
+          <text>{{item.rankLabel}}</text>
+        </view>
+        <view wx:else class="player-number">{{item.displayNo}}</view>
+
+        <view class="player-avatar">
+          <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+          <text wx:else>{{item.displayInitial}}</text>
+        </view>
+        <view class="player-main">
+          <view class="player-name">{{item.name}}</view>
+          <view class="player-meta">{{item.identityText}}</view>
+        </view>
+        <view wx:if="{{hasPublishedResults}}" class="score-block">
+          <view>{{item.scoreText}}</view>
+          <text>最终得分</text>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="empty-card">{{playerQuery ? '未找到匹配选手' : competition.registrationPublic ? '该组别暂无报名选手' : '报名信息尚未公开'}}</view>
+<view class="pagination" wx:if="{{playerPageCount > 1}}"><button data-offset="-1" disabled="{{playerPage <= 1}}" bindtap="changePlayerPage">上一页</button><text>{{playerPage}} / {{playerPageCount}}</text><button data-offset="1" disabled="{{playerPage >= playerPageCount}}" bindtap="changePlayerPage">下一页</button></view>
+  </block>
+</view>
+
+</block>

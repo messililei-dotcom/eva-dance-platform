@@ -17,6 +17,10 @@ public class PolicyTest {
     }
     @Test public void neverRouteAccountOrWritesToPublicAPI() {
         assertTrue(Policy.publicRead("/public/series/7/courses", "GET"));
+        assertTrue(Policy.publicRead("/events/7/groups/2", "GET"));
+        assertTrue(Policy.publicRead("/events/7/groups/2/players/9", "GET"));
+        for(String path:new String[]{"/events/7/judge","/events/7/groups/0","/events/7/groups/2/players/9/edit"})assertFalse(Policy.publicRead(path,"GET"));
+        assertFalse(Policy.publicRead("/events/7/groups/2/players/9","POST"));
         assertFalse(Policy.publicRead("/events/7/register", "GET"));
         assertFalse(Policy.publicRead("/events/7", "POST"));
         assertFalse(Policy.publicRead("/public/series/7/progress", "GET"));

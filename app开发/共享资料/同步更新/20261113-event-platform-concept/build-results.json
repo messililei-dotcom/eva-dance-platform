@@ -1,0 +1,81 @@
+[
+  {
+    "name": "ios-core-checks",
+    "returncode": 0,
+    "seconds": 11.3,
+    "command": [
+      "swift",
+      "run",
+      "--scratch-path",
+      "/tmp/swod-event-platform-core",
+      "EvaCoreChecks"
+    ],
+    "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance"
+  },
+  {
+    "name": "harmony-build",
+    "returncode": 0,
+    "seconds": 12.1,
+    "command": [
+      "/Users/lilei/Library/Huawei/CommandLineTools/6.1.1.418/command-line-tools/bin/hvigorw",
+      "assembleHap",
+      "-p",
+      "product=default",
+      "-p",
+      "buildMode=debug",
+      "--no-daemon"
+    ],
+    "cwd": "/Users/lilei/Library/Caches/SWOD/HarmonyOS/event-platform-concept-20261113"
+  },
+  {
+    "name": "harmony-checks",
+    "returncode": 0,
+    "seconds": 0.5,
+    "command": [
+      "node",
+      "--test",
+      "scripts/platform-api.test.cjs",
+      "scripts/course-media.test.cjs",
+      "scripts/event-presentation.test.cjs"
+    ],
+    "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/HarmonyOS/EvaDance"
+  },
+  {
+    "name": "ios-build",
+    "returncode": 0,
+    "seconds": 16.3,
+    "command": [
+      "xcodebuild",
+      "-project",
+      "EvaDance.xcodeproj",
+      "-scheme",
+      "EvaDance",
+      "-configuration",
+      "Debug",
+      "-destination",
+      "generic/platform=iOS Simulator",
+      "-derivedDataPath",
+      "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/共享资料/同步更新/20261113-event-platform-concept/build-cache/ios-derived-data",
+      "CODE_SIGN_IDENTITY=-",
+      "CODE_SIGNING_ALLOWED=YES",
+      "ARCHS=arm64",
+      "ONLY_ACTIVE_ARCH=YES",
+      "COMPILER_INDEX_STORE_ENABLE=NO",
+      "build"
+    ],
+    "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance"
+  },
+  {
+    "name": "android-checks",
+    "returncode": 0,
+    "seconds": 8.2,
+    "command": [
+      "./gradlew",
+      "assembleDebug",
+      "testDebugUnitTest",
+      "lintDebug",
+      "--console=plain"
+    ],
+    "cwd": "/Users/lilei/Library/Caches/SWOD/Android/event-platform-concept-20261113"
+  }
+]

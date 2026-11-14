@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-11-12T13:59:37.832369+08:00",
+  "request": "Align offline course cards with the supplied mini-program screen across iOS, Android and HarmonyOS",
+  "layout": [
+    "Landscape cover left, course name and teacher right",
+    "Latest period and actual course-level registered student count",
+    "Divider above period count and red minimum price; 起 only for multiple periods",
+    "Existing list/calendar switch, course introduction, period-specific purchase and session redemption retained"
+  ],
+  "data": {
+    "source": "Same public server data as mini-program",
+    "publicAppMiniRowsIdentical": true,
+    "periods": 140,
+    "courses": 40,
+    "aggregation": "Normalized course key, latest year/date/id period order, maximum server group_total_students with fallback total_students, minimum positive period price, cover fallback; original period rows and purchase source_id unchanged",
+    "search": "Includes names, teachers, categories and dates from every grouped period",
+    "miniProgramParityFixture": "parity-fixture.json"
+  },
+  "checks": {
+    "ios": "Physical development build passed;22 core check groups zero failures.40 live course groups plus3 edge-case groups match mini-program generated expected summaries",
+    "android": {
+      "debugBuild": "passed",
+      "unitTests": 32,
+      "failures": 0,
+      "groupSummaryRuntimeParity": "Not executed on Android; source and compilation checked"
+    },
+    "harmony": "Unsigned Debug HAP compiled;6 course media tests passed including43 course summary comparisons with mini-program",
+    "iphone": "Latest development package installed successfully, preserving installed app data. Public offline list and detail opened and text/metadata visibly checked before final thumbnail aspect-ratio adjustment",
+    "limitations": [
+      "Final landscape cover aspect ratio is compiled and installed but not visually rechecked after the device received an incoming call",
+      "Calendar interaction and live checkout were not exercised in this change",
+      "Android and HarmonyOS new layout not run on device in this task; phone/tablet runtime acceptance remains pending"
+    ]
+  },
+  "release": {
+    "newStoreUpload": false,
+    "newReviewSubmission": false,
+    "existingSubmissionsChanged": false,
+    "bundleIDsSignaturesFiling": "unchanged",
+    "productionDeployment": "none required; public endpoints read only"
+  },
+  "sourceSHA256": {
+    "app开发/iOS/EvaDance/Sources/EvaCore/OfflineCatalog.swift": "9681df60037420c59972987f1ccfeb12127bb61637aad22875ece223c0a257d1",
+    "app开发/iOS/EvaDance/Sources/EvaCore/CoursePresentation.swift": "5110d36ac149a4ebc3bde962141096e413d95fbb1761988656c9fde4ec115647",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/OfflineCourseCard.swift": "1ac1fd1737c1eb165735b6317c36a3ea1a1613afaf75abbba6d7f1d4418d8a21",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCardSplitLayout.swift": "638120d17132e2671cd852f0893f909cabfb1c64c8d839d64443be7515175126",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift": "48fb36dccee4c54eb3c79e3316c96ec6ea011b1338007fb3e33ea1eaa818f645",
+    "app开发/iOS/EvaDance/Tests/EvaCoreTests/EvaCoreTests.swift": "41c2d5519ad9dccb4d010265ae79ef18f7d85a3b1c5001a648d62952e55b2ed5",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/OfflineCatalog.java": "5ea0e1db91b5eea97a8b0805b68dfaeac55c6290f8357712c395a7cb0d5b231c",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "4f4c86e85090e9ade91365c4f032047e69466e32ffc9190e31d8ac0771d0aebc",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CoursePresentation.ets": "7ad9cf4e552bbaf70f0eb708fecd14d5fe0b134cdca5f004c2c49ba15622f13f",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets": "e814794dc08a2f0b34db0a130bc2ab511eefdd274722c2908a61a48d70e2cce6",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "bc538f5e6badcf446e02ff3d56b2998c3cdd476a41dec239cc3bcf3aade2d84c",
+    "app开发/HarmonyOS/EvaDance/scripts/course-media.test.cjs": "3419db17074beabecb625124fb4a4f60da126dfa815ee0a7290fd174861c8f15"
+  },
+  "buildLogLocations": {
+    "ios": "/tmp/swod-offline-ios-build.log",
+    "android": "/tmp/swod-offline-android-build.log",
+    "harmony": "/tmp/swod-offline-harmony-build.log"
+  }
+}

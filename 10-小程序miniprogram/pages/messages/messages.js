@@ -2,13 +2,14 @@ const api = require('../../utils/api');
 const share = require('../../shared/share');
 const videoFeature = require('../../shared/video-feature');
 const { messageTarget } = require('../../shared/message-target');
-const labels = { welcome: '欢迎', growth: '成长', level_up: '升级', course: '线上课程', offline: '线下课程', consume: '核销', certificate: '证书', event: '赛事', system: '系统' };
+const { contentText } = require('../../shared/review-text');
+const labels = { welcome: '欢迎', growth: '成长', level_up: '升级', course: '视频内容', offline: '线下活动', consume: '核销', certificate: '证书', event: '赛事', system: '系统' };
 function normalize(item) {
-  return { ...item, recipientId: String(item.recipientId), typeLabel: labels[item.type] || '通知', timeText: String(item.createdAt || '').replace('T', ' ').slice(0, 16), target: messageTarget(item) };
+  return { ...item, title: contentText(item.title), content: contentText(item.content), recipientId: String(item.recipientId), typeLabel: labels[item.type] || '通知', timeText: String(item.createdAt || '').replace('T', ' ').slice(0, 16), target: messageTarget(item) };
 }
 Page(share.withShare('messages', {
   data: { items: [], unreadCount: 0, filter: 'all', nextCursor: 0, hasMore: false, loading: false, error: '', selected: null, marking: false,
-    filters: [{key:'all',label:'全部'},{key:'unread',label:'未读'},{key:'course',label:'课程'},{key:'growth',label:'成长'},{key:'system',label:'系统'}] },
+    filters: [{key:'all',label:'全部'},{key:'unread',label:'未读'},{key:'course',label:'内容'},{key:'growth',label:'成长'},{key:'system',label:'系统'}] },
   onShow() { this.visible = true; this.setData({ items: [], selected: null, unreadCount: 0 }); return this.loadMessages(); },
   onHide() { this.visible = false; this.requestId = (this.requestId || 0) + 1; this.setData({ loading: false, selected: null }); },
   onUnload() { this.visible = false; this.requestId = (this.requestId || 0) + 1; },

@@ -7,6 +7,7 @@ export interface EventNews {
   date: string;
   dateRange: string;
   location: string;
+  organizer?: string;
   categoryLabel?: string;
   reportType?: 'event' | 'course';
   registrationPublic?: boolean;

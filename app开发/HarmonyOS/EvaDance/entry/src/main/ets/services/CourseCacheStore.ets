@@ -55,7 +55,7 @@ export class CourseCacheStore {
       await this.persist();
       this.api.cacheInvalidation = () => { this.purge(); };
       this.timer = setInterval(() => { this.refresh(); }, 60000); await this.refresh();
-    } catch { this.inventory.items = []; this.message = '安全缓存索引不可用，请联网后重试'; }
+    } catch { this.inventory.items = []; this.message = '安全离线内容索引不可用，请联网后重试'; }
     this.changed();
   }
   private elapsed(): number { return systemDateTime.getUptime(systemDateTime.TimeType.STARTUP, false); }
@@ -88,7 +88,7 @@ export class CourseCacheStore {
   remove(id: number): void {
     if (this.downloading === id) { this.generation++; this.driver.stop(); this.downloading = 0; }
     this.renewals.get(id)?.stop(); this.renewals.delete(id); this.inventory.items = this.inventory.items.filter((item: CachedCourse) => item.id !== id);
-    this.persist().catch(() => { this.message = '缓存索引保存失败'; }); this.deleteFiles(id); this.changed();
+    this.persist().catch(() => { this.message = '离线索引保存失败'; }); this.deleteFiles(id); this.changed();
   }
   pause(id: number): void {
     if (this.downloading !== id) return; this.generation++; this.driver.stop(); this.downloading = 0;
@@ -127,21 +127,21 @@ export class CourseCacheStore {
     } finally { this.busy = false; this.changed(); }
   }
   async download(id: number, title: string, course: string): Promise<void> {
-    if (!COURSE_CACHE_RELEASE_ENABLED) { this.message = '课程安全缓存尚未开放，请先在线观看'; this.changed(); return; }
-    if (this.downloading) { this.message = '请等待当前课节缓存完成，或先取消任务'; this.changed(); return; }
-    if (!await this.driver.configured()) { this.message = '安全缓存授权尚未配置完成，请先在线观看'; this.changed(); return; }
-    if (this.inventory.items.length >= 12 && !this.get(id)) { this.message = '最多缓存12节，请先删除不需要的缓存'; this.changed(); return; }
-    const version = this.generation; this.downloading = id; this.message = '正在验证缓存权限'; this.changed();
+    if (!COURSE_CACHE_RELEASE_ENABLED) { this.message = '安全离线观看尚未开放，请先在线观看'; this.changed(); return; }
+    if (this.downloading) { this.message = '请等待当前课节下载完成，或先取消任务'; this.changed(); return; }
+    if (!await this.driver.configured()) { this.message = '安全下载授权尚未配置完成，请先在线观看'; this.changed(); return; }
+    if (this.inventory.items.length >= 12 && !this.get(id)) { this.message = '最多下载12节，请先删除不需要的离线内容'; this.changed(); return; }
+    const version = this.generation; this.downloading = id; this.message = '正在验证离线观看权限'; this.changed();
     const stamp = this.elapsed();
     try {
       const grant = await this.authorize(id, 'download');
-      if (version !== this.generation || !this.current(grant) || !grant.credential?.play_auth) throw new Error('账号或缓存权限已变化');
+      if (version !== this.generation || !this.current(grant) || !grant.credential?.play_auth) throw new Error('账号或离线观看权限已变化');
       this.downloading = 0; this.remove(id); this.downloading = id;
       const item: CachedCourse = { id: id, nonce: util.generateRandomUUID(), title: title, course: course, lease: this.lease(grant),
         anchor: { server: grant.issued_at, elapsed: stamp, boot: this.boot() }, file: '', state: 'downloading', percent: 0, bytes: 0, position: 0, duration: 0, revision: 0, pending: false };
       try { const progress = await this.api.request<Row>('/video/' + id + '/progress', http.RequestMethod.GET, undefined, true); item.position = progress.progress || 0; item.revision = progress.revision || 0; } catch {}
       if (version !== this.generation || !this.current(grant)) return;
-      this.inventory.items.push(item); await this.persist();
+      this.inventory.items.push(item); await this.persist(); this.changed();
       const used = AliyunSecureCacheDriver.directoryBytes(this.root);
       const allowed = (): boolean => version === this.generation && this.get(id)?.nonce === item.nonce && this.current(item.lease) && permitsCachedVideo(item.lease, item.lease.member_id, item.lease.session_id, this.inventory.device, id, trustedCacheTime(item.anchor, this.elapsed(), this.boot()));
       await this.driver.start(grant.vod_video_id, grant.credential.play_auth, this.root + '/' + id, Math.min(grant.max_bytes, 2147483648 - used, statfs.getFreeSizeSync(this.context.filesDir) - 104857600), allowed, {
@@ -149,10 +149,10 @@ export class CourseCacheStore {
         complete: (path: string) => {
           if (!allowed()) { this.remove(id); return; }
           item.file = path.slice(this.root.length + 1); item.state = 'ready'; item.percent = 100; item.bytes = AliyunSecureCacheDriver.directoryBytes(this.root + '/' + id); this.downloading = 0;
-          this.persist().then(() => { this.message = '缓存完成'; this.changed(); this.refresh(); }).catch(() => { this.remove(id); this.message = '缓存无法安全保存，请重试'; this.changed(); });
+          this.persist().then(() => { this.message = '下载完成'; this.changed(); this.refresh(); }).catch(() => { this.remove(id); this.message = '下载内容无法安全保存，请重试'; this.changed(); });
         }, failure: (message: string) => { if (version === this.generation) { this.remove(id); this.message = message; this.changed(); } }
       });
-    } catch { if (version === this.generation) { this.downloading = 0; this.remove(id); this.message = '安全缓存失败，请联网重试'; this.changed(); } }
+    } catch { if (version === this.generation) { this.downloading = 0; this.remove(id); this.message = '安全下载失败，请联网重试'; this.changed(); } }
   }
   checkpoint(id: number, position: number, duration: number): void {
     const item = this.get(id); if (!item || !this.usable(item) || !Number.isFinite(position) || !Number.isFinite(duration) || duration <= 0 || position < 0 || position > duration + 1) return;

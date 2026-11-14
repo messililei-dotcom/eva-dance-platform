@@ -1,0 +1,22 @@
+    if (this.route.screen === 'register' || this.route.screen === 'editRegistration') {
+      if (!this.loggedIn) { this.action('登录后报名', () => this.go('login', '手机号登录')) }
+      else if (this.registrationSaved) { this.action('查看我的比赛', () => this.go('myEvents', '我的比赛', '/member/events', true)) }
+      else if (this.route.screen === 'register' || this.detail.canEdit) {
+        if (this.route.screen === 'register') { Text(this.selected.name || '').fontSize(18) }
+        TextInput({ placeholder: '参赛姓名（支持中文、英文和空格）', text: this.name }).maxLength(120).onChange((v: string) => { this.name = v; })
+        TextInput({ placeholder: '国家/地区区号', text: this.eventCountryCode }).type(InputType.PhoneNumber).onChange((v: string) => { this.eventCountryCode = v; })
+        TextInput({ placeholder: '联系电话', text: this.eventPhone }).type(InputType.PhoneNumber).onChange((v: string) => { this.eventPhone = v; })
+        TextInput({ placeholder: '机构（选填）', text: this.organization }).onChange((v: string) => { this.organization = v; })
+        TextInput({ placeholder: '指导老师（选填）', text: this.teacher }).onChange((v: string) => { this.teacher = v; })
+        TextInput({ placeholder: '节目（音乐）名字', text: this.performanceTitle }).onChange((v: string) => { this.performanceTitle = v; })
+        TextInput({ placeholder: '备注（选填）', text: this.remark }).onChange((v: string) => { this.remark = v; })
+        if (this.currentEventMusic) { Text('当前音乐：' + this.currentEventMusic).fontSize(13) }
+        Text('音乐选填，单个文件不超过 10 MB').fontSize(13)
+        this.action(this.musicName ? '更换音乐：' + this.musicName : '选择参赛音乐', () => { if (!this.busy) this.chooseMusic(); })
+        if (this.musicName) { this.action('移除所选音乐', () => { if (!this.busy) { this.music = undefined; this.musicName = ''; } }) }
+        if (this.route.screen === 'editRegistration') {
+          this.action('保存报名资料', () => { this.register(true); })
+          this.action('上传音乐', () => this.confirm('确认上传参赛音乐？', () => { this.register(); }))
+        } else { this.action('提交报名', () => this.confirm('确认提交本组报名？', () => { this.register(); })) }
+      } else if (!this.busy && !this.error) { Text('此报名当前不可修改') }
+    }

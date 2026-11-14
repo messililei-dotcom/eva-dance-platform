@@ -15,9 +15,21 @@ function page(name,api){let p;const file=path.join(__dirname,'../pages',name,nam
 test('academy failure remains retryable and reload refreshes active search counts',async()=>{
  let fails=true;const p=page('home',{getSeriesList:async()=>{if(fails)throw Error('网络中断');return [{id:1,name:'基础课程',total_courses:3},{id:2,name:'进阶课程'}]}});
  await p.loadHomeSections();assert.equal(p.data.error,'网络中断');assert.equal(p.data.loading,false);
- fails=false;p.data.searchKeyword='基础';await p.loadHomeSections();assert.equal(p.data.error,'');assert.equal(p.data.courseRows.length,1);assert.equal(p.data.searchCountText,'找到 1 门课程');
+ fails=false;p.data.searchKeyword='基础';await p.loadHomeSections();assert.equal(p.data.error,'');assert.equal(p.data.courseRows.length,1);assert.equal(p.data.searchCountText,'找到 1 项内容');
  p.data.searchKeyword='  ';await p.loadHomeSections();assert.equal(p.data.courseRows.length,2);assert.equal(p.data.searchCountText,'');
 });
 test('event network error does not impersonate an empty catalog',async()=>{
  const p=page('events',{getEvents:async()=>{throw Error('网络中断')}});await p.loadEvents();assert.equal(p.data.error,'网络中断');assert.equal(p.data.loading,false);
+});
+
+test('mini-program display copy normalizes dynamic text while retaining record fields', () => {
+ const {cleanItem, contentText}=require('../shared/review-text');
+ const original={id:21,source_id:8,name:'线上课程 · 系统课',description:'课程介绍、教育、培训',cover_image:'/api/course/series/cover/21'};
+ const displayed=cleanItem(original,['name','description']);
+ assert.doesNotMatch(displayed.name+displayed.description,/课|教育|培训/);
+ assert.equal(displayed.id,original.id);
+ assert.equal(displayed.source_id,original.source_id);
+ assert.equal(displayed.cover_image,original.cover_image);
+ assert.equal(original.name,'线上课程 · 系统课');
+ assert.equal(contentText('到课后核销课时'),'到场后核销次数');
 });

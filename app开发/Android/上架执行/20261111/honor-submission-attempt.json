@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-11-11T17:37:37+08:00",
+  "appId": "104599763",
+  "version": "1.0.4",
+  "build": 22,
+  "submitAttempted": true,
+  "submitted": false,
+  "portalStatus": "准备提交 / 未提交",
+  "validation": [
+    "请上传软件注册权证书",
+    "印度尼西亚、泰国、新加坡、巴西无法分发，缺Google Android开发者身份认证"
+  ],
+  "rating": {
+    "questionnaireCompleted": true,
+    "generatedResult": "18+",
+    "saved": true,
+    "basis": [
+      "东方舞服装展示，非主要内容，画面频率中度、程度轻微",
+      "含付费，无青少年充值限制"
+    ],
+    "saveButtonDisabledAfterSave": true
+  }
+}

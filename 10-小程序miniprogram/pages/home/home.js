@@ -15,11 +15,12 @@ function normalizeCard(item, rights = new Set()) {
   const lessons = Number(item.total_courses || item.course_count || item.lesson_count || 0);
   return {
     ...item,
-    badge: item.category || "线上课程",
+    category: cleanText(item.category),
+    badge: cleanText(item.category, "视频内容"),
     sourceType: "online",
-    title: cleanText(item.name, "未命名课程"),
-    meta: cleanText(item.subtitle || item.teacher || item.category || "伊娃东方舞线上学院"),
-    lessonText: `${lessons}节课程`,
+    title: cleanText(item.name, "未命名内容"),
+    meta: cleanText(item.subtitle || item.teacher || item.category || "伊娃东方舞视频专区"),
+    lessonText: `${lessons}节视频`,
     popularityText: popularityText(item),
     ...coursePrice(item, rights.has(String(item.id)))
   };
@@ -61,7 +62,7 @@ Page(share.withShare("home", videoFeature.withVideoFeature({
       });
     } catch (err) {
       if (requestId !== this.homeRequestId || account !== courseAccountKey()) return;
-      this.setData({ loading: false, error: err.message || "课程加载失败，请重试" });
+      this.setData({ loading: false, error: err.message || "内容加载失败，请重试" });
     }
   },
   goSystemCourses() { videoFeature.navigateTo({ url: "/pages/system/system" }); },
@@ -71,7 +72,7 @@ Page(share.withShare("home", videoFeature.withVideoFeature({
   courseFilterData(rows) {
     const filtered = filterCatalog(rows, { keyword: this.data.searchKeyword, category: this.data.activeCategory, unlockedOnly: this.data.unlockedOnly });
     const filtering = !!normalizeKeyword(this.data.searchKeyword) || this.data.activeCategory !== '全部' || this.data.unlockedOnly;
-    return { courseRows: filtering ? filtered : filtered.slice(0, 8), searchCountText: filtering ? `找到 ${filtered.length} 门课程` : '' };
+    return { courseRows: filtering ? filtered : filtered.slice(0, 8), searchCountText: filtering ? `找到 ${filtered.length} 项内容` : '' };
   },
   applyCourseFilters() { this.setData(this.courseFilterData(this.data.searchableCourseRows)); },
   switchCategory(event) { this.setData({ activeCategory: event.currentTarget.dataset.category }); this.applyCourseFilters(); },
@@ -87,8 +88,8 @@ Page(share.withShare("home", videoFeature.withVideoFeature({
     if (!keyword) return this.setData({ searchFocused: true });
     this.setData({ searchFocused: false });
     if (wx.hideKeyboard) wx.hideKeyboard();
-    wx.showToast({ title: this.data.searchCountText || "未找到课程", icon: "none" });
+    wx.showToast({ title: this.data.searchCountText || "未找到内容", icon: "none" });
   },
-  goCard(event) { videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}` }); },
+  goCard(event) { return videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}`, videoAvailable: this.data.videoPlaybackEnabled }); },
   onImageError(event) { const path = event.currentTarget.dataset.path; if (path) this.setData({ [path]: "" }); }
 })));

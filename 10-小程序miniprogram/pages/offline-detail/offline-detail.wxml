@@ -2,31 +2,31 @@
 <block wx:if="{{sharePreview}}"><template is="publicSharePreview" data="{{card:sharePreview}}" /></block>
 <block wx:else>
 <view class="detail-page">
-  <view wx:if="{{loading}}" class="empty-card">课程加载中…</view>
+  <view wx:if="{{loading}}" class="empty-card">内容加载中…</view>
   <view wx:elif="{{error}}" class="empty-card">{{error}}<button bindtap="retry">重试</button></view>
   <block wx:else>
     <view class="course-cover">
       <image wx:if="{{course.coverImage}}" src="{{course.coverImage}}" mode="aspectFill" binderror="onImageError"></image>
-      <view wx:else class="cover-fallback">线下课</view>
+      <view wx:else class="cover-fallback">线下活动</view>
       <view class="cover-shade"></view>
       <view class="cover-title">{{course.name}}</view>
     </view>
 
     <view class="course-info">
       <view class="info-grid">
-        <view><text>授课老师</text><span>{{course.teacherText}}</span></view>
+        <view><text>分享老师</text><span>{{course.teacherText}}</span></view>
         <view><text>已报名学员</text><span>{{course.studentCount}} 人</span></view>
         <view><text>开设期次</text><span>{{course.sessionsText}}</span></view>
         <view><text>最新期次</text><span>{{course.dateText}}</span></view>
         <view wx:if="{{course.levelText}}"><text>适合级别</text><span>{{course.levelText}}</span></view>
-        <view><text>课程费用</text><span class="price">{{course.priceText}}</span></view>
+        <view><text>内容费用</text><span class="price">{{course.priceText}}</span></view>
       </view>
-      <view class="info-grid" wx:if="{{course.location}}"><view><text>上课地点</text><text>{{course.location}}</text></view></view>
-      <view class="description-title">课程介绍</view>
+      <view class="info-grid" wx:if="{{course.location}}"><view><text>活动地点</text><text>{{course.location}}</text></view></view>
+      <view class="description-title">内容介绍</view>
       <view class="description">{{course.descriptionText}}</view>
     </view>
 
-    <view class="course-info" wx:if="{{course.outline.length}}"><view class="description-title">课程大纲</view><view class="description" wx:for="{{course.outline}}" wx:key="index">{{index + 1}}. {{item}}</view></view>
+    <view class="course-info" wx:if="{{course.outline.length}}"><view class="description-title">内容大纲</view><view class="description" wx:for="{{course.outline}}" wx:key="index">{{index + 1}}. {{item}}</view></view>
     <view class="course-info" wx:if="{{course.studentCount}}">
       <view class="description-title">已报名学员（匿名） · {{course.studentCount}} 人</view>
       <view class="anonymous-students"><text wx:for="{{course.anonymousStudents}}" wx:key="label">{{item.label}}</text></view>
@@ -34,7 +34,7 @@
     </view>
     <view class="period-section">
       <view class="period-head">
-        <view>课程期次</view>
+        <view>内容期次</view>
         <text>共 {{course.periodCount}} 期</text>
       </view>
       <view class="period-list">
@@ -51,16 +51,16 @@
             <text>{{item.sessionsText}}</text>
             <text>{{item.total_students}} 位学员</text>
           </view>
-<button wx:if="{{item.canPurchase}}" size="mini" data-id="{{item.source_id}}" bindtap="buyCourse">购买本期课时</button>
+<button wx:if="{{item.canPurchase}}" size="mini" data-id="{{item.source_id}}" bindtap="buyCourse">购买本期次数</button>
 <view wx:if="{{!item.canPurchase}}" class="period-desc">{{item.purchaseReason}}</view>
-<button size="mini" class="period-schedule" data-course-id="{{item.source_id}}" bindtap="openSchedule">查看本期课时</button>
+<button size="mini" class="period-schedule" data-course-id="{{item.source_id}}" bindtap="openSchedule">查看本期次数</button>
         </view>
       </view>
     </view>
 
     <view class="action-bar">
-      <button class="schedule-btn" bindtap="openSchedule">查看期次课时</button>
-      <button class="contact-btn" open-type="contact" show-message-card="true" send-message-title="{{course.name}}" send-message-path="/pages/offline-detail/offline-detail?id={{course.id}}">课程咨询</button>
+      <button class="schedule-btn" bindtap="openSchedule">查看期次次数</button>
+      <button class="contact-btn" open-type="contact" show-message-card="true" send-message-title="{{course.name}}" send-message-path="/pages/offline-detail/offline-detail?id={{course.id}}">内容咨询</button>
     </view>
   </block>
 </view>

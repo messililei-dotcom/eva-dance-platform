@@ -33,12 +33,14 @@ function withVideoFeature(definition) {
 }
 
 async function openPage(options, method) {
-  if (!options.url.startsWith('/pages/player/player') || await enabled()) {
-    return wx[method](options);
+  const { videoAvailable, onUnavailable, ...navigation } = options;
+  if (!navigation.url.startsWith('/pages/player/player') || (videoAvailable !== false && await enabled())) {
+    return wx[method](navigation);
   }
-  const match = options.url.match(/[?&]seriesId=([^&]+)/);
+  if (onUnavailable) return onUnavailable();
+  const match = navigation.url.match(/[?&]seriesId=([^&]+)/);
   if (match && match[1]) {
-    return wx[method]({ ...options, url: '/pages/detail/detail?id=' + match[1] });
+    return wx[method]({ ...navigation, url: '/pages/detail/detail?id=' + match[1] });
   }
   wx.showToast({ title: '视频播放暂未开放', icon: 'none' });
 }

@@ -106,11 +106,11 @@ import EvaCore
             body: JSONSerialization.data(withJSONObject: ["action": action, "device_id": try CourseCacheVault.device(), "material_version": version]))
     }
     func download(_ id: Int, title: String, course: String) async {
-        guard AppPolicy.supportsOfflineDownload else { message = "课程安全缓存尚未开放，请先在线观看"; return }
-        guard downloading == nil else { message = "请等待当前课节缓存完成，或先取消任务"; return }
-        guard AliyunSecureCacheDriver.configured else { message = "安全缓存授权尚未配置完成，请先在线观看"; return }
-        guard records.count < 12 || records.contains(where: { $0.id == id }) else { message = "最多缓存 12 节，请先删除不需要的缓存"; return }
-        let version = generation; downloading = id; message = "正在验证缓存权限"
+        guard AppPolicy.supportsOfflineDownload else { message = "安全离线观看尚未开放，请先在线观看"; return }
+        guard downloading == nil else { message = "请等待当前课节下载完成，或先取消任务"; return }
+        guard AliyunSecureCacheDriver.configured else { message = "安全下载授权尚未配置完成，请先在线观看"; return }
+        guard records.count < 12 || records.contains(where: { $0.id == id }) else { message = "最多下载 12 节，请先删除不需要的离线内容"; return }
+        let version = generation; downloading = id; message = "正在验证离线观看权限"
         let stamp = CourseCacheVault.elapsed()
         do {
             let grant = try await authorize(id, action: "download")
@@ -144,8 +144,8 @@ import EvaCore
                         self.records[at].relativeFile = String(url.path.dropFirst(self.root.path.count + 1))
                         self.records[at].bytes = CourseCacheVault.bytes(self.root.appendingPathComponent(String(id)))
                         self.records[at].state = "ready"; self.records[at].percent = 100
-                        do { try self.persist(); self.message = "缓存完成"; Task { await self.refresh() } }
-                        catch { self.remove(id); self.message = "缓存无法安全保存，请重试" }
+                        do { try self.persist(); self.message = "下载完成"; Task { await self.refresh() } }
+                        catch { self.remove(id); self.message = "下载内容无法安全保存，请重试" }
                     case .failure(let error): self.remove(id); self.message = error.localizedDescription
                     }
                 })

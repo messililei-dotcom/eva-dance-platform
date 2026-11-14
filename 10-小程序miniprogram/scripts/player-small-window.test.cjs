@@ -63,3 +63,28 @@ test('landscape and portrait use native fullscreen without replacing playback',(
   assert.equal(page.data.isPlaying,true);
  }
 });
+
+ test('fullscreen failure restores inline controls without changing media or position',()=>{
+  const {page,calls}=setup();
+  page.videoContext={requestFullScreen:options=>options.fail()};
+  page.openNativeFullscreen(90);
+  assert.equal(page.fullscreenTimer,null);
+  assert.equal(page.data.nativeFullscreenControls,false);
+  assert.equal(page.data.playUrl,'test');assert.equal(page.data.currentSeconds,20);
+  assert.equal(calls.at(-1)[0],'toast');
+ });
+ test('backgrounding exits fullscreen and cancels a pending fullscreen request',()=>{
+  const {page,calls}=setup();page.data.isPlayerFullscreen=true;
+  page.videoContext={exitFullScreen:()=>calls.push(['exit'])};
+  page.fullscreenTimer=setTimeout(()=>assert.fail('late fullscreen request'),1000);
+  page.onHide();assert.equal(page.fullscreenTimer,null);assert.equal(calls[0][0],'exit');
+ });
+
+test('a late fullscreen callback after backgrounding exits instead of trapping the hidden page',()=>{
+ const {page,calls}=setup();page.playerHidden=true;
+ page.videoContext={exitFullScreen:()=>calls.push(['exit'])};
+ page.onFullscreenChange({detail:{fullScreen:true}});
+ assert.deepEqual(calls,[['exit']]);
+ page.onFullscreenChange({detail:{fullScreen:false}});
+ assert.equal(page.data.isPlayerFullscreen,false);
+});

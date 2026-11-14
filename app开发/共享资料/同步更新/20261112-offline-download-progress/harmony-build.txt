@@ -1,0 +1,224 @@
+> hvigor [32mUP-TO-DATE :entry:default@PreBuild...  [39m
+> hvigor [32mFinished :entry:default@CreateModuleInfo... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateMetadata...  [39m
+> hvigor [32mFinished :entry:default@ConfigureCmake... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MergeProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CreateBuildProfile...  [39m
+> hvigor [32mFinished :entry:default@PreCheckSyscap... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GeneratePkgContextInfo...  [39m
+> hvigor [32mFinished :entry:default@GeneratePkgSdkInfo... after 2 ms [39m
+> hvigor [32mFinished :entry:default@ProcessIntegratedHsp... after 1 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithCmake... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MakePackInfo...  [39m
+> hvigor [32mFinished :entry:default@SyscapTransform... after 9 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessRouterMap...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessShareConfig...  [39m
+> hvigor [32mFinished :entry:default@ProcessStartupConfig... after 1 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithNinja... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessResource...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateLoaderJson...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessLibs...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CompileResource...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@DoNativeStrip...  [39m
+> hvigor [32mFinished :entry:default@BuildJS... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@CacheNativeLibs...  [39m
+> hvigor [33mWARN: [33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+error@1.0.2/oh_modules/@aliyun/error/src/main/ets/Index.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+error@1.0.2/oh_modules/@aliyun/error/Index.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/ets/g/h.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/ets/g/e.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/ets/i/e.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/ets/push/e.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+logger@1.0.2/oh_modules/@aliyun/logger/src/main/ets/d.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+logger@1.0.2/oh_modules/@aliyun/logger/Index.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/ets/g/j.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/Index.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/h/k/n.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/h/i/f/j.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/h/z1/o2.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/h/k/m.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/h/k/l.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/f/g.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/f/PageOrientation.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/f/AuthUiConfig.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/e/PhoneNumberAuthHelper.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/Index.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN: For details about ArkTS syntax errors, see FAQs[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/HuksVault.ets:20:15
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/HuksVault.ets:21:9
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/HuksVault.ets:22:11
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/HuksVault.ets:34:26
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/HuksVault.ets:43:10
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/HuksVault.ets:45:30
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/PlatformApi.ets:161:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/PlatformApi.ets:166:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/PlatformApi.ets:182:12
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/PlatformApi.ets:182:55
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/PlatformApi.ets:187:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:45:22
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:46:30
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:48:5
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:48:72
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:52:22
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:53:26
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:54:30
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:68:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:70:22
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:71:9
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:71:63
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:83:58
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/components/JudgeWorkspace.ets:51:17
+ 'show' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:9:25
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:11:18
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:12:11
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:12:52
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:12:91
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:16:10
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:42:18
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/CourseCacheStore.ets:163:77
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:193:51
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:201:39
+ 'getMaxVolume' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:202:39
+ 'getVolume' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:216:42
+ 'setVolume' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:216:42
+ To use this API, you need to apply for the permissions: ohos.permission.ACCESS_NOTIFICATION_POLICY
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:294:13
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:591:17
+ 'show' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:1068:23
+ 'show' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in '@aliyun/push'.[39m [33m[39m[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in 'numberauth_standard'.[39m [33m[39m[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in '@aliyun/logger'.[39m [33m[39m[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in '@aliyun/error'.[39m [33m[39m[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in 'cmccssosdk'.[39m [33m[39m[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in 'unicom_login_harmony'.[39m [33m[39m[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in 'ctaccount'.[39m [33m[39m[39m[39m
+[39m
+> hvigor [32mFinished :entry:default@CompileArkTS... after 4 s 754 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GeneratePkgModuleJson...  [39m
+> hvigor [32mFinished :entry:default@ProcessCompiledResources... after 5 ms [39m
+> hvigor [32mFinished :entry:default@PackageHap... after 228 ms [39m
+> hvigor [32mFinished :entry:default@PackingCheck... after 2 ms [39m
+> hvigor [33mWARN: No signingConfig found for product default[39m
+> hvigor [32mFinished :entry:default@SignHap... after 1 ms [39m
+> hvigor [32mFinished :entry:default@CollectDebugSymbol... after 1 ms [39m
+> hvigor [32mFinished :entry:assembleHap... after 1 ms [39m
+> hvigor [32mBUILD SUCCESSFUL in 7 s 127 ms [39m

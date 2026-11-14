@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-11-12T13:46:03.921490+08:00",
+  "request": "Remove all backend/admin management from native apps; administrators use web management",
+  "removed": [
+    "iOS StaffEventViews and StaffModels files, staff login/media transport",
+    "Android full staff management UI/methods, staff credentials and transports",
+    "Harmony full staff management UI/routes/state, credential types and transports",
+    "All event-header/profile management entries across3 platforms"
+  ],
+  "retained": [
+    "Authenticated member features",
+    "Member personal session management",
+    "Authorized judge scoring under member identity",
+    "Public event data and registration",
+    "Web management authentication and roles"
+  ],
+  "server": "Middleware denies official x-client-platform ios/android/harmony requests to management APIs before login/auth. Member App/mini and selected public resources remain on their existing authorization paths. Header detection is a product boundary for official clients, not a replacement for server authorization or proof of identity.",
+  "deployment": {
+    "buildId": "-1_R8xhRti3dyys_DLZJb",
+    "backup": "/www/wwwroot/dongfangwuquan/deploy-backups/remove-app-admin-20261112",
+    "health": "passed",
+    "files": {
+      "src/middleware.ts": "c72b03a48a5886c0497e1077376879ff08a2fb66efcba56ddba62aa4d6ba891f",
+      "src/lib/native-management-access.ts": "3eb79809937d29e57e8673d41335f6421bd633e05c49c8ef6e17970c48244aea"
+    }
+  },
+  "checks": {
+    "nativeSourceScan": "No native staff login/request/workspace references remain; deleted sources preserved under before for rollback",
+    "iOS": "Physical development build passed; core21 check groups zero failures",
+    "Android": "Debug assemble and32 tests passed",
+    "HarmonyOS": "Unsigned Debug HAP compiled; platform API21 tests passed including absence of management login and request methods",
+    "server": "26 unit tests passed, including judge/session regressions and management boundary tests",
+    "production": "18 public checks passed: all3 native headers management login/read/write403; native events200; unauthenticated judge401; web management auth401, malformed web login400. Existing carrier/cache/push flags preserved.",
+    "iPhone": "Development test package updated; no foreground control or admin login used",
+    "runtime": "New native layout not visually rechecked; no live management or score writes performed"
+  },
+  "sources": {
+    "app开发/iOS/EvaDance/Sources/EvaCore/APIClient.swift": "b2fbf64240033c34823ef611cb187541f7db57186e31afc875fddff7aa3e9ac8",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventsView.swift": "36a8d08ffe6cc4e30de5c330d799dfbce9378e56d50b302e08681625668f6448",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift": "ab8d245753a6709a0b2432e30c523986db067e6be869eae0e0d23ee5fcfe96f9",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/Api.java": "ab6104391e9b8dab13a229f8321f7d8d887d6ca392470ac15fbf49b9aea8ec44",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "b82682637f2fea9fa774c036c88eb8691b5405e1519a5d6f050bee8c36db9d62",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/PlatformApi.ets": "f8cdab8f6db15c38b543bf73d5258b83cb5572455ecc8b4ef59b296e9b78b171",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "9921f9e867130d2311c645852992a4323bffd822a546f19fa47249ec5eb397e4",
+    "10-统一平台admin-platform/src/lib/native-management-access.ts": "3eb79809937d29e57e8673d41335f6421bd633e05c49c8ef6e17970c48244aea",
+    "10-统一平台admin-platform/src/middleware.ts": "c72b03a48a5886c0497e1077376879ff08a2fb66efcba56ddba62aa4d6ba891f"
+  },
+  "removedFiles": [
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/StaffEventViews.swift",
+    "app开发/iOS/EvaDance/Sources/EvaCore/StaffModels.swift"
+  ],
+  "store": "No store upload/submission or alteration of already published/signed candidates. Current store binary menus require future app update, while identified native management requests are already denied server-side."
+}

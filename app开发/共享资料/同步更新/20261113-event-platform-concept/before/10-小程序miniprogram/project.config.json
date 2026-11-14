@@ -1,0 +1,82 @@
+{
+  "description": "线下课程按期次购买课时后核销；取消约课与预约签到入口",
+  "packOptions": {
+    "ignore": [
+      {
+        "value": "docs",
+        "type": "folder"
+      },
+      {
+        "value": "preview",
+        "type": "folder"
+      },
+      {
+        "value": "admin-related",
+        "type": "folder"
+      },
+      {
+        "value": "README.md",
+        "type": "file"
+      },
+      {
+        "value": "scripts",
+        "type": "folder"
+      },
+      {
+        "value": "images/payments/yiwa-unified-collection-v1.jpg",
+        "type": "file"
+      },
+      {
+        "type": "glob",
+        "value": "**/._*"
+      },
+      {
+        "type": "glob",
+        "value": "**/.DS_Store"
+      },
+      {
+        "type": "file",
+        "value": "images/logo.png"
+      },
+      {
+        "type": "file",
+        "value": "images/logo-20261004.png"
+      }
+    ],
+    "include": []
+  },
+  "setting": {
+    "urlCheck": true,
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "newFeature": true,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "enhance": false,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.7.0",
+  "appid": "wxc2878927a69379ef",
+  "projectname": "eva-dance-training-miniprogram",
+  "version": "1.0.24",
+  "condition": {},
+  "simulatorPluginLibVersion": {},
+  "editorSetting": {}
+}

@@ -3,21 +3,21 @@
 <block wx:else>
 <view class="page">
   <view class="learning-links">
-    <button bindtap="goMyCourses"><image src="/images/profile/book.svg"/><text>我的课程</text></button>
-    <button bindtap="goOffline"><image src="/images/profile/calendar.svg"/><text>课时与核销</text></button>
+    <button bindtap="goMyCourses"><image src="/images/profile/book.svg"/><text>我的内容</text></button>
+    <button bindtap="goOffline"><image src="/images/profile/calendar.svg"/><text>次数与核销</text></button>
     <button bindtap="goEvents"><image src="/images/profile/award.svg"/><text>报名与成绩</text></button>
   </view>
   <view class="section-head list-head">
     <view>
-      <text class="section-kicker">课程列表</text>
+      <text class="section-kicker">内容列表</text>
     </view>
     <view class="list-actions">
-      <button class="all-btn" bindtap="goSystemCourses">全部课程</button>
+      <button class="all-btn" bindtap="goSystemCourses">全部内容</button>
       <view class="inline-search {{searchKeyword ? 'has-keyword' : ''}}">
         <input
           class="search-input"
           value="{{searchKeyword}}"
-          placeholder="搜索课程、老师或分类"
+          placeholder="搜索内容、老师或分类"
           confirm-type="search"
           focus="{{searchFocused}}"
           bindinput="onSearchInput"
@@ -30,16 +30,16 @@
       </view>
     </view>
   </view>
-  <scroll-view scroll-x class="catalog-filters"><view class="catalog-filter-row"><button class="catalog-chip {{unlockedOnly ? 'selected' : ''}}" aria-label="筛选已解锁课程" aria-pressed="{{unlockedOnly}}" bindtap="toggleUnlocked">✓ 已解锁</button><button wx:for="{{categories}}" wx:key="*this" class="catalog-chip {{activeCategory === item ? 'selected' : ''}}" data-category="{{item}}" bindtap="switchCategory">{{item}}</button></view></scroll-view>
+  <scroll-view scroll-x class="catalog-filters"><view class="catalog-filter-row"><button class="catalog-chip {{unlockedOnly ? 'selected' : ''}}" aria-label="筛选已解锁内容" aria-pressed="{{unlockedOnly}}" bindtap="toggleUnlocked">✓ 已解锁</button><button wx:for="{{categories}}" wx:key="*this" class="catalog-chip {{activeCategory === item ? 'selected' : ''}}" data-category="{{item}}" bindtap="switchCategory">{{item}}</button></view></scroll-view>
   <view class="search-result" wx:if="{{searchCountText}}">{{searchCountText}}</view>
 
-  <view wx:if="{{loading}}" class="empty-card">课程加载中…</view>
+  <view wx:if="{{loading}}" class="empty-card">内容加载中…</view>
   <view wx:elif="{{error}}" class="empty-card"><text>{{error}}</text><button class="all-btn" bindtap="loadHomeSections">重新加载</button></view>
   <view class="course-list" wx:elif="{{courseRows.length}}">
     <view class="course-row" hover-class="row-pressed" hover-stay-time="80" wx:for="{{courseRows}}" wx:key="id" bindtap="goCard" data-id="{{item.id}}" data-source="{{item.sourceType}}">
       <view class="row-cover">
         <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" binderror="onImageError" data-path="courseRows[{{index}}].cover_image"></image>
-        <view wx:else class="cover-fallback">课程</view>
+        <view wx:else class="cover-fallback">内容</view>
       </view>
       <view class="row-body">
         <view class="row-badge">{{item.badge}}</view>
@@ -48,13 +48,13 @@
           <text>{{item.lessonText}}</text>
           <text>{{item.popularityText}}</text>
         </view>
-        <view wx:if="{{item.unlocked}}" class="course-unlocked">✓ 已解锁 <text class="course-learn-action">{{videoPlaybackEnabled ? '继续学习' : '查看课程'}}</text></view><view wx:else class="course-pricing"><text class="course-sale-price">{{item.hasDiscount ? '优惠价 ' : ''}}{{item.priceText}}</text><text wx:if="{{item.hasDiscount}}" class="course-original-price">原价 {{item.originalPriceText}}</text></view>
+        <view wx:if="{{item.unlocked}}" class="course-unlocked">✓ 已解锁 <text class="course-learn-action">{{videoPlaybackEnabled ? '继续学习' : '查看内容'}}</text></view><view wx:else class="course-pricing"><text class="course-sale-price">{{item.hasDiscount ? '优惠价 ' : ''}}{{item.priceText}}</text><text wx:if="{{item.hasDiscount}}" class="course-original-price">原价 {{item.originalPriceText}}</text></view>
       </view>
     </view>
   </view>
-  <view wx:else class="empty-card">{{searchKeyword ? '没有找到相关课程，请换个关键词' : '课程即将更新，稍后再来看看'}}</view>
+  <view wx:else class="empty-card">{{searchKeyword ? '没有找到相关内容，请换个关键词' : '内容即将更新，稍后再来看看'}}</view>
 
-  <button class="bottom-all-btn" bindtap="goSystemCourses">查看全部课程</button>
+  <button class="bottom-all-btn" bindtap="goSystemCourses">查看全部内容</button>
 </view>
 
 </block>

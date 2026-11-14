@@ -1147,7 +1147,7 @@ export default function BonusCommissionPage() {
                   extra={
                     <Space>
                       {tab === "product" && (
-                        <Button onClick={() => open("import")}>导入订单</Button>
+                        <Button className="swod-import-button" onClick={() => open("import")}>导入订单</Button>
                       )}
                       <Button type="primary" onClick={() => open(tab)}>
                         新增登记
@@ -1230,6 +1230,7 @@ export default function BonusCommissionPage() {
           }
           confirmLoading={saving}
           okButtonProps={{
+            className: modal === "import" ? "swod-import-button" : undefined,
             disabled:
               uploading > 0 ||
               saving ||

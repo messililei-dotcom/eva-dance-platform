@@ -11,6 +11,44 @@ import UniformTypeIdentifiers
         do { data = try await session.api.request(path, token: publicRead ? nil : session.token) }
         catch { self.error = error.localizedDescription; if case APIError.sessionExpired = error { session.handle(error) } }
     }
+    private var ownedCourseRequest = UUID()
+    func loadOwnedCourses(session: Session) async {
+        let request = UUID(); ownedCourseRequest = request
+        let account = session.credentials?.sessionId
+        data = .null; busy = true; error = nil
+        defer { if ownedCourseRequest == request { busy = false } }
+        guard let token = session.token else { return }
+        do {
+            let owned: JSONValue = try await session.api.request("/member/authorized-series", token: token)
+            let catalogue: JSONValue = (try? await session.api.request("/public/series")) ?? .null
+            guard !Task.isCancelled, ownedCourseRequest == request, account == session.credentials?.sessionId else { return }
+            var rows = owned.list.filter { $0["series_id"].number > 0 }
+            for index in rows.indices {
+                guard case .object(var course) = rows[index] else { continue }
+                let id = rows[index]["series_id"].text
+                course["cover_image"] = catalogue.list.first { $0["id"].text == id }?["cover_image"] ?? rows[index]["cover_image"]
+                if let publicCourse = catalogue.list.first(where: { $0["id"].text == id }) {
+                    course["student_display_base"] = publicCourse["student_display_base"]
+                    course["total_students"] = publicCourse["total_students"]
+                }
+                rows[index] = .object(course)
+            }
+            data = .array(rows)
+            for index in rows.indices {
+                let id = rows[index]["series_id"].text
+                let records: JSONValue? = try? await session.api.request("/public/series/\(id)/progress", token: token)
+                guard !Task.isCancelled, ownedCourseRequest == request, account == session.credentials?.sessionId else { return }
+                guard let records, case .object(var course) = rows[index] else { continue }
+                course["learning_percent"] = .number(Double(CoursePresentation.learningPercent(records)))
+                rows[index] = .object(course)
+                data = .array(rows)
+            }
+        } catch {
+            guard !Task.isCancelled, ownedCourseRequest == request, account == session.credentials?.sessionId else { return }
+            self.error = error.localizedDescription
+            session.handle(error)
+        }
+    }
     func send(_ path: String, method: String = "POST", body: [String: Any] = [:], session: Session) async -> JSONValue? {
         guard !busy else { return nil }; busy = true; error = nil; defer { busy = false }
         do { return try await session.api.request(path, token: session.token, method: method, body: JSONSerialization.data(withJSONObject: body)) }
@@ -61,7 +99,7 @@ struct CourseCard: View {
                     Text(row.firstText("subtitle", "teacher", "category")).font(.subheadline).foregroundStyle(.secondary).lineLimit(showCover && !typeSize.isAccessibilitySize ? 1 : nil).fixedSize(horizontal: false, vertical: true)
                 }
                 if !row["total_courses"].text.isEmpty {
-                    Text([row["teacher"].text, "\(row["total_courses"].text) 节课"].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
+                    Text([row["teacher"].text, "\(row["total_courses"].text) 节课", online ? CoursePresentation.learnerText(row) ?? "" : ""].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
                 }
                 if !row["location"].text.isEmpty { Label(row["location"].text, systemImage: "mappin").font(.caption) }
                 if row["price"] != .null { CoursePriceLine(online: online, row: row) }
@@ -158,7 +196,7 @@ struct PublicCourseView: View {
             Text("教师：\(row["teacher"].text)")
             Text("课节：\(row["total_courses"].text)")
             if let id = Int(row["id"].text), id > 0 {
-                NavigationLink(session.isCourseUnlocked(row["id"].text) ? "继续学习" : "查看课程目录") {
+                NavigationLink(session.isCourseUnlocked(row["id"].text) ? "立即学习" : "查看课程目录") {
                     if session.isCourseUnlocked(row["id"].text) { CatalogByIDView(id: id, title: row["name"].text) }
                     else { LessonCatalogView(id: id, title: row["name"].text) }
                 }
@@ -187,8 +225,8 @@ struct OfflineView: View {
             if calendarMode && !store.busy && store.error == nil {
                 OfflineMonthCalendar(courses: store.data.list).listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
             } else if !calendarMode {
-            ForEach(JSONValue.array(CoursePresentation.grouped(store.data.list)).rows.filter { search.isEmpty || $0.value["name"].text.localizedCaseInsensitiveContains(search) }) { row in
-                NavigationLink { OfflineCourseDetailView(row: row.value, periods: CoursePresentation.periods(store.data.list, for: row.value)) } label: { CourseCard(row: row.value) }
+            ForEach(JSONValue.array(CoursePresentation.grouped(store.data.list)).rows.filter { search.isEmpty || $0.value["offline_search_text"].text.localizedCaseInsensitiveContains(search) }) { row in
+                NavigationLink { OfflineCourseDetailView(row: row.value, periods: CoursePresentation.periods(store.data.list, for: row.value)) } label: { OfflineCourseCard(row: row.value) }
             }
             }
             if !store.busy && store.error == nil && store.data.list.isEmpty { Text("暂无线下课程") }
@@ -202,7 +240,7 @@ struct OfflineCourseDetailView: View {
     private var availablePeriods: [JSONValue] { periods.isEmpty ? [row] : periods }
     var body: some View {
         List {
-            CourseCard(row: row)
+            OfflineCourseCard(row: row["offline_period_count"] == .null ? OfflineCatalog.grouped(availablePeriods).first ?? row : row)
             Section("课程介绍") { Text(plain(CoursePresentation.description(row))).textSelection(.enabled) }
             let intro = CoursePresentation.introduction(row)
             if !intro["level"].text.isEmpty { Text("适合级别：\(intro["level"].text)") }
@@ -251,169 +289,6 @@ struct OfflineScheduleView: View {
         }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
     }
     private func load() async { await store.load("/offline/overview" + (courseID.isEmpty ? "" : "?course_ids=\(courseID)"), session: session) }
-}
-struct EventDetailView: View {
-    @EnvironmentObject var session: Session
-    @StateObject private var store = SiteStore()
-    let id: String
-    @State private var groupSearch = ""
-    var body: some View {
-        List {
-            LoadState(store: store) { Task { await load() } }
-            let event = store.data["competition"]
-            Section(event["name"].text) {
-                Text("\(event.firstText("startDate","start_date")) · \(event["venue"].text)")
-                Text(plain(event.firstText("description","introduction")))
-            }
-            Section("参赛组别") {
-                TextField("搜索完整组别名称", text: $groupSearch)
-                ForEach(store.data["groups"].scopedRows("groups").filter { PracticePlan.matches($0.value, query: groupSearch, fields: ["name"]) }, id: \.listID) { group in
-                    NavigationLink { AuthGate { EventRegistrationView(eventID: id, group: group) } } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(group.value["name"].text).fixedSize(horizontal: false, vertical: true)
-                            if group.value["registrationFee"].number > 0 {
-                                Text("报名费 ¥" + String(format: "%.2f", group.value["registrationFee"].number)).font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                }
-                Text("能否报名及名额以提交时服务端核验为准。").font(.caption).foregroundStyle(.secondary)
-            }
-            Section("比赛日程") { ForEach(store.data["sessions"].scopedRows("sessions"), id: \.listID) { row in Text("\(row.value["name"].text) · \(row.value["startsAt"].text) · \(row.value["venue"].text)") } }
-            Section("已发布成绩") { ForEach(store.data["rankings"].scopedRows("rankings"), id: \.listID) { row in
-                Text("\(row.value["rankNo"].text)  \(row.value["playerName"].text)  \(row.value["groupName"].text)  \(row.value["publishedTotal"].text)")
-            } }
-        }.evaCompactLayout().evaPageChrome().task { await load() }.refreshable { await load() }
-    }
-    private func load() async { await store.load("/events/\(id)", session: session, publicRead: true) }
-}
-struct EventRegistrationView: View {
-    @EnvironmentObject var session: Session
-    let eventID: String
-    let group: SiteRow?
-    var playerID: String? = nil
-    @State private var countryCode = "+86"
-    @State private var canEdit = false
-    @State private var currentMusic = ""
-    @State private var accountID: Int?
-    @State private var name = ""
-    @State private var phone = ""
-    @State private var organization = ""
-    @State private var teacher = ""
-    @State private var performanceTitle = ""
-    @State private var remark = ""
-    @State private var musicName = ""
-    @State private var music: Data?
-    @State private var picker = false
-    @State private var busy = false
-    @State private var error: String?
-    @State private var result = ""
-    @State private var confirm = false
-    var body: some View {
-        Form {
-            Text(group?.value["name"].text ?? "修改报名 / 补交音乐").font(.headline)
-            if !currentMusic.isEmpty { Text("当前音乐：" + currentMusic) }
-            TextField("参赛姓名", text: $name)
-            TextField("国家/地区区号", text: $countryCode).keyboardType(.phonePad)
-            TextField("联系电话", text: $phone).keyboardType(.phonePad)
-            TextField("机构（选填）", text: $organization); TextField("指导老师（选填）", text: $teacher)
-            TextField("节目（音乐）名字", text: $performanceTitle)
-            TextField("备注（选填）", text: $remark)
-            Button(musicName.isEmpty ? "选择参赛音乐" : "更换音乐：" + musicName) { picker = true }.disabled(busy)
-            if music != nil { Button("移除所选音乐") { music = nil; musicName = "" }.disabled(busy) }
-            Text("音乐选填。支持 MP3、WAV、M4A、AAC、FLAC，单个文件不超过 10 MB。").font(.caption)
-            if playerID == nil {
-                Button("提交报名") { confirm = true }.disabled(!valid || busy || !result.isEmpty)
-            } else {
-                Button("保存报名资料") { Task { await submit(detailsOnly: true) } }.disabled(!valid || busy || !canEdit)
-                Button("上传音乐") { confirm = true }.disabled(music == nil || performanceTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || busy || !canEdit)
-            }
-            if busy { ProgressView("正在处理…") }
-            if !result.isEmpty { Text(result).foregroundStyle(.green) }
-            if let error { Text(error).foregroundStyle(.red) }
-        }.evaCompactLayout().evaPageChrome()
-        .task(id: session.accountID) { await loadRegistration() }
-        .fileImporter(isPresented: $picker, allowedContentTypes: [.audio, .data]) { selection in
-            do {
-                let url = try selection.get()
-                let scope = url.startAccessingSecurityScopedResource(); defer { if scope { url.stopAccessingSecurityScopedResource() } }
-                let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
-                guard size > 0, size <= 10 * 1024 * 1024 else { throw APIError.service("音乐文件不能超过10MB") }
-                let bytes = try Data(contentsOf: url)
-                _ = try MultipartMusic(fields: [:], filename: url.lastPathComponent, music: bytes)
-                music = bytes; musicName = url.lastPathComponent; error = nil
-            } catch { self.error = error.localizedDescription }
-        }
-        .confirmationDialog(playerID == nil ? "确认提交报名？" : "确认上传参赛音乐？", isPresented: $confirm) {
-            Button("确认提交") { Task { await submit() } }
-        }
-    }
-    private var valid: Bool {
-        [name, phone, performanceTitle].allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-    }
-    private var registrationPath: String? {
-        guard let playerID, let id = Int(playerID), id > 0 else { return nil }
-        return "/member/event-registrations/\(id)"
-    }
-    private func loadRegistration() async {
-        let account = session.accountID
-        if accountID != account {
-            name = ""; phone = ""; countryCode = "+86"; organization = ""; teacher = ""
-            performanceTitle = ""; remark = ""; musicName = ""; music = nil; currentMusic = ""
-            result = ""; error = nil; canEdit = false
-        }
-        accountID = account
-        guard let path = registrationPath, let token = session.token else { return }
-        busy = true; canEdit = false; defer { busy = false }
-        do {
-            let details: JSONValue = try await session.api.request(path, token: token)
-            guard account == session.accountID, !Task.isCancelled else { return }
-            let audio: JSONValue = try await session.api.request(path + "/music", token: token)
-            guard account == session.accountID, !Task.isCancelled else { return }
-            name = details["name"].text; phone = details["phone"].text
-            countryCode = details["countryCode"].text.isEmpty ? "+86" : details["countryCode"].text
-            organization = details["organization"].text; teacher = details["teacher"].text
-            performanceTitle = details["performanceTitle"].text; remark = details["remark"].text
-            currentMusic = audio["fileName"].text
-            canEdit = details["canEdit"].bool == true
-        } catch { self.error = error.localizedDescription }
-    }
-    private func submit(detailsOnly: Bool = false) async {
-        guard !busy, accountID == session.accountID, let token = session.token else { return }
-        let account = session.accountID
-        busy = true; error = nil; result = ""; defer { busy = false }
-        do {
-            let fields = ["name": name.trimmingCharacters(in: .whitespacesAndNewlines), "phone": phone, "countryCode": countryCode, "organization": organization, "teacher": teacher, "performanceTitle": performanceTitle.trimmingCharacters(in: .whitespacesAndNewlines), "remark": remark]
-            if let path = registrationPath, canEdit {
-                if detailsOnly {
-                    let _: JSONValue = try await session.api.request(path, token: token, method: "PUT", body: JSONEncoder().encode(fields))
-                    guard account == session.accountID else { return }
-                    result = "报名资料已保存。"
-                } else if let music {
-                    let form = try MultipartMusic(fields: ["performanceTitle": fields["performanceTitle"] ?? ""], filename: musicName, music: music)
-                    let updated: JSONValue = try await session.api.request(path + "/music", token: token, method: "POST", body: form.body, contentType: form.contentType)
-                    guard account == session.accountID else { return }
-                    currentMusic = updated["fileName"].text
-                    self.music = nil; musicName = ""; result = "音乐已更新。"
-                }
-            } else if let group, valid {
-                var registration = fields; registration["groupId"] = group.id
-                if let music {
-                    let form = try MultipartMusic(fields: registration, filename: musicName, music: music)
-                    let _: JSONValue = try await session.api.request("/events/\(eventID)/register", token: token, method: "POST", body: form.body, contentType: form.contentType)
-                } else {
-                    let _: JSONValue = try await session.api.request("/events/\(eventID)/register", token: token, method: "POST", body: JSONEncoder().encode(registration))
-                }
-                guard account == session.accountID else { return }
-                result = "报名已提交，可在「我的比赛」查看进度、补交或更换音乐。"
-                self.music = nil; musicName = ""
-            }
-        } catch {
-            guard account == session.accountID else { return }
-            self.error = error.localizedDescription
-            if case APIError.sessionExpired = error { session.handle(error) }
-        }
-    }
 }
 struct RecordListView: View {
     @EnvironmentObject var session: Session

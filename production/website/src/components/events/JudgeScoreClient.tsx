@@ -1,58 +1,34 @@
 'use client';
-
 import Link from 'next/link';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { CheckCircle2, Send, ShieldAlert } from 'lucide-react';
-import { getStudentSession } from '@/lib/student-auth';
-
+import { getStudentSession, STUDENT_AUTH_CHANGED_EVENT } from '@/lib/student-auth';
+import { distributeScores } from '@/lib/score-allocation';
+import styles from './judging.module.css';
 type Criterion = { key: string; name: string; maxScore: number };
-type Payload = { group: { name: string; scoring_status: string }; player: { name: string; player_no: string; organization: string; teacher: string; performance_title: string }; criteria: Criterion[]; currentScore: { values: Record<string, number>; total: number | null; status: string; needsRescore?: boolean } };
-
+type Payload = { group: { name: string; scoring_status: string }; player: { name: string; player_no: string; organization: string; performance_title: string }; criteria: Criterion[]; currentScore: { values: Record<string, number>; total: number | null; status: string; needsRescore?: boolean } };
 export default function JudgeScoreClient({ slug, groupId, playerId }: { slug: string; groupId: string; playerId: string }) {
-  const [data, setData] = useState<Payload | null>(null);
-  const [scores, setScores] = useState<Record<string, string>>({});
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-  const [saving, setSaving] = useState(false);
-  const endpoint = `/api/events-news/${slug}/judge/groups/${groupId}/players/${playerId}`;
-
-  useEffect(() => {
-    const session = getStudentSession();
-    if (!session) { setError('请先登录'); return; }
-    fetch(endpoint, { headers: { Authorization: `Bearer ${session.token}` } })
-      .then(async (response) => { const payload = await response.json(); if (!response.ok || !payload.success) throw new Error(payload.error || '加载失败'); setData(payload.data); setScores(Object.fromEntries(payload.data.criteria.map((item: Criterion) => [item.key, payload.data.currentScore.values[item.key] ?? '']))); })
-      .catch((reason) => setError(reason instanceof Error ? reason.message : '加载失败'));
-  }, [endpoint]);
-  const total = useMemo(() => Object.values(scores).reduce((sum, value) => sum + (Number(value) || 0), 0), [scores]);
-
-  async function submit(event: FormEvent) {
-    event.preventDefault(); setError(''); setMessage('');
-    const session = getStudentSession(); if (!session) { setError('请先登录'); return; }
-    setSaving(true);
-    try {
-      const response = await fetch(endpoint, { method: 'POST', headers: { Authorization: `Bearer ${session.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ scores }) });
-      const payload = await response.json(); if (!response.ok || !payload.success) throw new Error(payload.error || '评分提交失败');
-      setMessage(`评分已提交，我的评分：${Number(payload.data.total).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`);
-      setData((current) => current ? { ...current, currentScore: { values: Object.fromEntries(Object.entries(scores).map(([key, value]) => [key, Number(value)])), total: payload.data.total, status: 'submitted' } } : current);
-    } catch (reason) { setError(reason instanceof Error ? reason.message : '评分提交失败'); } finally { setSaving(false); }
-  }
-
-  if (!data) return <State message={error || '正在加载评分表…'} />;
-  const submitted = !data.currentScore.needsRescore && ['submitted', 'reviewed', 'published'].includes(data.currentScore.status);
-  return <>
-    <section className="rounded-xl bg-[#1A1A1A] p-4 text-white"><div className="text-[11px] text-gold">{data.group.name}</div><h1 className="mt-1 font-serif text-2xl font-bold">{data.player.name}</h1><div className="mt-1 text-xs text-white/60">{[data.player.player_no && `编号 ${data.player.player_no}`, data.player.performance_title, data.player.organization].filter(Boolean).join(' · ')}</div></section>
-    {data.currentScore.needsRescore && <p role="alert" className="mt-4 rounded-lg bg-amber-50 p-4 text-sm text-amber-900">历史评分为 {data.currentScore.total}，超出当前满分。请按当前10分制重新填写并提交评分。</p>}
-    {submitted && <div className="mt-4 flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3 text-emerald-800"><span className="inline-flex items-center gap-2 text-sm font-semibold"><CheckCircle2 className="h-4 w-4" />我的评分结果</span><strong className="text-xl">{data.currentScore.total?.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}</strong></div>}
-    <form onSubmit={submit} className="mt-4 rounded-2xl border border-sand/60 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-center justify-between"><h2 className="font-semibold text-text">评分项</h2><strong className="text-crimson">合计 {total.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}</strong></div>
-      <div className="space-y-3">{data.criteria.map((criterion) => <label key={criterion.key} className="flex flex-col items-stretch justify-between gap-2 rounded-lg bg-warm-white px-3 py-3 sm:flex-row sm:items-center sm:gap-4"><span className="min-w-0 text-sm font-medium text-text">{criterion.name}<small className="ml-1 text-text-muted">/ {criterion.maxScore}</small></span><input required inputMode="decimal" type="number" min="0" max={criterion.maxScore} step="0.01" value={scores[criterion.key] ?? ''} onChange={(event) => setScores((current) => ({ ...current, [criterion.key]: event.target.value }))} aria-label={`${criterion.name}，满分${criterion.maxScore}分`} style={{ lineHeight: 'normal', WebkitTextFillColor: '#2C1810' }} className="h-14 w-full rounded-lg border border-sand bg-white px-3 py-0 text-right text-xl font-bold text-text outline-none focus:border-gold-dark sm:w-28" /></label>)}</div>
-      {error && <div className="mt-3 text-sm text-crimson">{error}</div>}{message && <div className="mt-3 text-sm font-medium text-emerald-700">{message}</div>}
-      <button disabled={saving || data.group.scoring_status === 'locked'} className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-crimson font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" />{saving ? '正在提交…' : submitted ? '修改并重新提交' : '提交评分'}</button>
-    </form>
-    <Link href={`/events/${slug}/judge/groups/${groupId}`} prefetch={false} aria-disabled={saving} onClick={(event) => { if (saving) event.preventDefault(); }} className="mt-4 flex min-h-11 w-full items-center justify-center rounded-lg border border-sand bg-white px-4 py-3 font-semibold text-crimson">
-      返回选手列表，继续评分
-    </Link>
-  </>;
+ const [data,setData]=useState<Payload|null>(null),[scores,setScores]=useState<Record<string,string>>({}),[error,setError]=useState(''),[message,setMessage]=useState(''),[saving,setSaving]=useState(false),[retry,setRetry]=useState(0),[draft,setDraft]=useState<string|null>(null);
+ const account=useRef(''),weights=useRef<number[]>([]),inflight=useRef(false);
+ const endpoint=`/api/events-news/${slug}/judge/groups/${groupId}/players/${playerId}`;
+ useEffect(()=>{const controller=new AbortController();const session=getStudentSession();const onAuth=()=>{setData(null);setScores({});setDraft(null);setRetry(n=>n+1);};window.addEventListener(STUDENT_AUTH_CHANGED_EVENT,onAuth);window.addEventListener('storage',onAuth);setData(null);setScores({});setDraft(null);setError('');setMessage('');if(!session){setError('请先登录获授权的评委账号');return()=>{window.removeEventListener(STUDENT_AUTH_CHANGED_EVENT,onAuth);window.removeEventListener('storage',onAuth);};}account.current=session.token;
+ fetch(endpoint,{cache:'no-store',signal:controller.signal,headers:{Authorization:`Bearer ${session.token}`}}).then(async r=>{const p=await r.json();if(!r.ok||!p.success)throw Error(p.error||'加载失败');if(getStudentSession()?.token!==session.token)throw Error('账号已变化，请重新加载');setData(p.data);setScores(Object.fromEntries(p.data.criteria.map((c:Criterion)=>[c.key,String(p.data.currentScore.values[c.key]??'')])));}).catch(e=>{if(e.name!=='AbortError')setError(e.message||'加载失败');});return()=>{controller.abort();window.removeEventListener(STUDENT_AUTH_CHANGED_EVENT,onAuth);window.removeEventListener('storage',onAuth);};},[endpoint,retry]);
+ const criteria=data?.criteria||[],total=criteria.reduce((s,c)=>s+(Number(scores[c.key])||0),0),max=criteria.reduce((s,c)=>s+c.maxScore,0),locked=data?.group.scoring_status==='locked';
+ const valid=criteria.length>0&&criteria.every(c=>String(scores[c.key]??'').trim()!==''&&Number.isFinite(Number(scores[c.key]))&&Number(scores[c.key])>=0&&Number(scores[c.key])<=c.maxScore)&& (draft===null||(draft.trim()!==''&&Number.isFinite(Number(draft))&&Number(draft)>=0&&Number(draft)<=max));
+ function editTotal(raw:string){setDraft(raw);if(raw.trim()===''||!Number.isFinite(Number(raw))||Number(raw)<0||Number(raw)>max)return;const next=distributeScores(criteria.map(c=>c.maxScore),weights.current,Number(raw));setScores(Object.fromEntries(criteria.map((c,i)=>[c.key,next[i].toFixed(2)])));setMessage('');}
+ async function submit(e:FormEvent){e.preventDefault();if(inflight.current||locked||!valid)return;setError('');setMessage('');const session=getStudentSession();if(!session||session.token!==account.current){setError('账号已变化，请重新加载');return;}if(!window.confirm(`确认提交 ${data?.player.name} 的本人评分？合计 ${total.toFixed(2)} 分`))return;inflight.current=true;setSaving(true);
+ try{const r=await fetch(endpoint,{method:'POST',cache:'no-store',headers:{Authorization:`Bearer ${session.token}`,'Content-Type':'application/json'},body:JSON.stringify({scores})});const p=await r.json();if(getStudentSession()?.token!==session.token)throw Error('账号已变化，请重新加载');if(!r.ok||!p.success)throw Error(p.error||'评分提交失败');setMessage(`评分已提交，本人评分：${Number(p.data.total).toFixed(2)}`);setData(d=>d?{...d,currentScore:{values:Object.fromEntries(Object.entries(scores).map(([k,v])=>[k,Number(v)])),total:p.data.total,status:'submitted'}}:d);}catch(e){setError(e instanceof Error?e.message:'提交失败，请重试');}finally{inflight.current=false;setSaving(false);}}
+ if(!data)return <div className={styles.state}><ShieldAlert aria-hidden="true"/><p role="status">{error||'正在加载评分表…'}</p>{error&&<button onClick={()=>setRetry(n=>n+1)}>重新加载</button>}</div>;
+ const submitted=!data.currentScore.needsRescore&&['submitted','reviewed','published'].includes(data.currentScore.status);
+ return <div className={styles.workspace}>
+ <section className={styles.identity}><h1>{data.player.player_no} {data.player.name}</h1><p>{data.player.performance_title||'节目名称未填写'}</p><p>{data.group.name}</p></section>
+ {data.currentScore.needsRescore&&<p role="alert">评分规则已变化，请按当前规则重新评分。</p>}
+ {submitted&&<p className={styles.success}><CheckCircle2 size={18}/>本人已提交：{data.currentScore.total?.toFixed(2)} 分</p>}
+ {locked&&<p role="status">该组别评分已锁定，只能查看。</p>}
+ <form onSubmit={submit}><fieldset disabled={saving||locked} className={styles.fields}><legend>评分项目 <small>满分 {max} 分</small></legend><p className={styles.hint}>输入分数，或左右拖动调节</p>
+ {criteria.map(c=><div className={styles.criterion} key={c.key}><div className={styles.criterionHeading}><label htmlFor={`score-${c.key}`}>{c.name}</label><small>满分 {c.maxScore} 分</small><input id={`score-${c.key}`} required type="number" inputMode="decimal" min={0} max={c.maxScore} step="0.01" value={scores[c.key]??''} onChange={e=>{setDraft(null);setMessage('');setScores(s=>({...s,[c.key]:e.target.value}));}}/></div><div className={styles.slider}><span>0</span><input aria-label={`${c.name}，左右拖动评分`} type="range" min={0} max={c.maxScore} step="0.01" value={Math.min(c.maxScore,Math.max(0,Number(scores[c.key])||0))} onChange={e=>{setDraft(null);setMessage('');setScores(s=>({...s,[c.key]:Number(e.target.value).toFixed(2)}));}}/><span>{c.maxScore}</span></div></div>)}
+ <div className={styles.total}><label htmlFor="judge-total">总分（可修改）</label><input id="judge-total" type="number" inputMode="decimal" min={0} max={max} step="0.01" required value={draft??total.toFixed(2)} onFocus={()=>{weights.current=criteria.map(c=>Number(scores[c.key])||0);}} onChange={e=>editTotal(e.target.value)}/><span>/ {max}</span><p>修改总分，各项按比例分配</p></div>
+ </fieldset>{error&&<p role="alert" className={styles.error}>{error}</p>}{message&&<p role="status" className={styles.success}>{message}</p>}
+ <button disabled={saving||locked||!valid} className={styles.submit}><Send size={18}/>{saving?'正在提交…':submitted?'修改本人评分':'确认评分'}</button></form>
+ <Link href={`/events/${slug}/judge/groups/${groupId}`} prefetch={false} aria-disabled={saving} onClick={e=>{if(saving)e.preventDefault();}} className={styles.back}>返回选手列表，继续评分</Link></div>;
 }
-
-function State({ message }: { message: string }) { return <div className="rounded-2xl border border-sand/60 bg-white p-10 text-center text-sm text-text-muted"><ShieldAlert className="mx-auto mb-3 h-7 w-7 text-gold-dark" />{message}</div>; }

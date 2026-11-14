@@ -24,6 +24,8 @@ export async function POST(request: Request) {
   const name = cleanText(body.name);
   if (!competitionId) return jsonError('缺少赛事ID');
   if (!name) return jsonError('评分规则名称不能为空');
+  const requestedTotal = body.totalScore ?? body.total_score;
+  if (requestedTotal != null && Number(requestedTotal) !== 10) return jsonError('赛事总分固定为10分，不可修改');
 
   return withRequestEventDb(request, (db) => {
     const criteria = Array.isArray(body.criteria) ? JSON.stringify(body.criteria) : cleanText(body.criteriaJson ?? body.criteria_json, '[]');
@@ -39,7 +41,7 @@ export async function POST(request: Request) {
           WHERE id = ?
         `).run(
           name,
-          toNumber(body.totalScore ?? body.total_score, 10),
+          10,
           criteria,
           body.dropHighLow ?? body.drop_high_low ? 1 : 0,
           body.judgeAnonymous ?? body.judge_anonymous ? 1 : 0,
@@ -59,7 +61,7 @@ export async function POST(request: Request) {
         `).run(
           competitionId,
           name,
-          toNumber(body.totalScore ?? body.total_score, 10),
+          10,
           criteria,
           body.dropHighLow ?? body.drop_high_low ? 1 : 0,
           body.judgeAnonymous ?? body.judge_anonymous ? 1 : 0,

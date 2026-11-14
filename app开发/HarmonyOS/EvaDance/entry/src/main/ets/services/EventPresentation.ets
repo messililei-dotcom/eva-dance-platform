@@ -31,3 +31,22 @@ export function eventState(row: Row, now: number = Date.now()): string {
   if (end !== undefined && end < now) return '报名已截止';
   return row.registrationStatus === 'open' ? '报名中' : '报名未开放';
 }
+
+// Keep unknown or mixed ranges under All rather than assigning an invented category.
+export function eventAgeGroup(name: string, ageRange: string = '', category: string = ''): string {
+  const text = [name, ageRange, category].filter((value: string) => value.length > 0).join(' ').toLowerCase();
+  if (/青少年|少年|\bteen(?:ager)?s?\b|\byouth\b/.test(text)) return '青少年';
+  if (/少儿|幼儿|儿童|\bchildren\b|\bchild\b|\bkids?\b/.test(text)) return '少儿';
+  if (/成人|成年|\badults?\b/.test(text)) return '成人';
+  const age = ageRange.trim();
+  const range = age.match(/^(\d{1,2})\s*(?:岁\s*)?[-—–~～至]\s*(\d{1,2})\s*岁?$/);
+  if (range) {
+    const low = Number(range[1]), high = Number(range[2]);
+    if (high < low) return '';
+    if (low >= 18) return '成人';
+    if (low >= 12 && high < 18) return '青少年';
+    if (high < 12) return '少儿';
+  }
+  const over = age.match(/^(\d{1,2})\s*(?:岁及以上|岁以上|\+)$/);
+  return over && Number(over[1]) >= 18 ? '成人' : '';
+}

@@ -1,0 +1,135 @@
+--- app开发/共享资料/同步更新/20261113-event-registration-entry/before/iOS/EvaDance/Sources/EvaDanceApp/EventsView.swift
++++ app开发/iOS/EvaDance/Sources/EvaDanceApp/EventsView.swift
+@@ -28,7 +28,17 @@
+                 LazyVGrid(columns: typeSize.isAccessibilitySize ? [GridItem(.flexible())] : [GridItem(.adaptive(minimum: 280), spacing: 16, alignment: .top)], alignment: .leading, spacing: 14) {
+                     ForEach(events) { row in
+                         VStack(spacing: 4) {
+-                            NavigationLink { EventDetailView(id: row.id) } label: { eventCard(row.value) }.buttonStyle(.plain)
++                            ZStack(alignment: .topLeading) {
++                                NavigationLink { EventDetailView(id: row.id) } label: { eventCard(row.value) }.buttonStyle(.plain)
++                                if EventPresentation.state(row.value) == "报名中" {
++                                    NavigationLink { AuthGate { EventRegistrationView(eventID: row.id, group: nil) } } label: {
++                                        Text("报名中 · 点击报名").font(.subheadline.bold()).padding(.horizontal, 12).frame(minHeight: 44)
++                                            .foregroundStyle(EvaBrand.onAccent).background(EvaBrand.red, in: Capsule())
++                                    }.buttonStyle(.plain).padding(8)
++                                        .accessibilityLabel("报名：" + row.value["name"].text)
++                                        .accessibilityIdentifier("event.register.badge." + row.id)
++                                }
++                            }
+                             if EventPresentation.state(row.value) == "报名中" {
+                                 NavigationLink { AuthGate { EventRegistrationView(eventID: row.id, group: nil) } } label: { Text("点击报名 ›").font(.headline).frame(maxWidth: .infinity, minHeight: 48) }.buttonStyle(.borderedProminent).tint(EvaBrand.red)
+                             } else {
+@@ -83,9 +93,9 @@
+                             }
+                         } else { coverPlaceholder }
+                     }.frame(width: geometry.size.width, height: geometry.size.height)
+-                    Text(state).font(.subheadline.bold()).padding(.horizontal, 8).padding(.vertical, 5)
++                    if !open { Text(state).font(.subheadline.bold()).padding(.horizontal, 8).padding(.vertical, 5)
+                         .foregroundStyle(open ? EvaBrand.onAccent : Color.primary)
+-                        .background(open ? EvaBrand.red : EvaBrand.surface, in: Capsule()).padding(8)
++                        .background(open ? EvaBrand.red : EvaBrand.surface, in: Capsule()).padding(8) }
+                 }
+             }.aspectRatio(2.15, contentMode: .fit)
+             VStack(alignment: .leading, spacing: 10) {
+--- app开发/共享资料/同步更新/20261113-event-registration-entry/before/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -220,7 +220,9 @@
+         if(!goods&&box!=content){LinearLayout details=column();while(box.getChildCount()>0){View child=box.getChildAt(0);box.removeViewAt(0);details.addView(child);}box.setOrientation(LinearLayout.HORIZONTAL);box.setGravity(Gravity.CENTER_VERTICAL);LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(dp(112),dp(84));picture.rightMargin=dp(12);box.addView(image,picture);
+             details.addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->{int height=offline?dp(95):Math.min(dp(160),Math.max(dp(84),b-t));if(image.getLayoutParams().height!=height){android.view.ViewGroup.LayoutParams params=image.getLayoutParams();params.height=height;image.setLayoutParams(params);}});box.addView(details,new LinearLayout.LayoutParams(0,-2,1));}
+         else{int available=Math.max(1,getResources().getConfiguration().screenWidthDp-32);if(box!=content)available-=24;LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(-1,dp(goods?available:available*3/4));picture.bottomMargin=dp(12);box.addView(image,0,picture);image.addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->{int height=Math.round((r-l)*(goods?1f:0.75f));if(height>0&&image.getLayoutParams().height!=height){android.view.ViewGroup.LayoutParams params=image.getLayoutParams();params.height=height;image.setLayoutParams(params);}});}
+-        if(!validCover)return;int version=generation;imageIO.execute(()->{if(version!=generation)return;try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(!isFinishing()&&version==generation&&bitmap!=null){image.setScaleType(ImageView.ScaleType.CENTER_CROP);image.setImageBitmap(bitmap);image.setBackground(SwodUi.shape(this,android.graphics.Color.TRANSPARENT,8));}});}catch(Exception ignored){/* Keep a stable, non-deceptive cover placeholder. */}});
++        if(!validCover)return;int version=generation;imageIO.execute(()->{if(version!=generation)return;
++            try{android.graphics.Bitmap seed=BundledArtwork.read(this,url);if(seed!=null)runOnUiThread(()->{if(!isFinishing()&&version==generation){image.setScaleType(ImageView.ScaleType.CENTER_CROP);image.setImageBitmap(seed);image.setBackground(SwodUi.shape(this,android.graphics.Color.TRANSPARENT,8));}});}catch(Exception ignored){}
++            try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(!isFinishing()&&version==generation&&bitmap!=null){image.setScaleType(ImageView.ScaleType.CENTER_CROP);image.setImageBitmap(bitmap);image.setBackground(SwodUi.shape(this,android.graphics.Color.TRANSPARENT,8));}});}catch(Exception ignored){/* Keep a stable, non-deceptive cover placeholder. */}});
+     }
+     private void learningShortcuts(){LinearLayout shortcuts=row();boolean stacked=getResources().getConfiguration().fontScale>1.3f||getResources().getConfiguration().screenWidthDp<360;if(stacked)shortcuts.setOrientation(LinearLayout.VERTICAL);String[] labels={"我的课程","课时与核销","报名与成绩"};String[] icons={"learn","calendar","trophy"};Runnable[] targets={()->open(this::myCourses),()->open(this::schedule),()->open(this::myEvents)};for(int i=0;i<labels.length;i++){Button b=button(labels[i],targets[i]);b.setTextSize(14);b.setGravity(Gravity.CENTER);b.setPadding(dp(4),dp(6),dp(4),dp(6));b.setMinimumHeight(dp(52));b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);b.setCompoundDrawablePadding(dp(8));b.setBackground(SwodUi.touch(this,android.graphics.Color.TRANSPARENT,0));LinearLayout.LayoutParams p=stacked?new LinearLayout.LayoutParams(-1,-2):new LinearLayout.LayoutParams(0,-2,1);if(i<2&&!stacked)p.rightMargin=dp(8);shortcuts.addView(b,p);}content.addView(shortcuts);}
+     private void courses(){begin("线上学院");hero("伊娃东方舞","线上学院 · 从基础到进阶，找到适合你的课程");learningShortcuts();section("课程列表");load("/public/series","GET",null,false,v->{JSONArray rows=array(v);if(rows.length()>0&&!rows.getJSONObject(0).optBoolean("course_access_known",true))retryCourseAccess();searchable(rows,new String[]{"name","teacher","category"},r->{if(r.optBoolean("learning_unlocked"))studyCourse(r.optInt("id"),r.optString("name"));else open(()->course(r));});action("东方舞圈 · 官网资讯",()->open(this::website));});}
+@@ -344,7 +346,7 @@
+                     String raw=EventPresentation.value(event,"coverUrl","cover_url"),url=raw.startsWith("/")?"https://admin.swod.com.cn"+raw:raw;
+                     int version=generation;
+                     if(Policy.secureURL(url))imageIO.execute(()->{try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(version==generation&&!isFinishing()&&bitmap!=null){image.setScaleType(ImageView.ScaleType.CENTER_CROP);image.setImageBitmap(bitmap);artwork.setBackgroundColor(android.graphics.Color.TRANSPARENT);}});}catch(Exception ignored){}});
+-                    TextView badge=text(state,11);badge.setTextColor(open?(SwodUi.dark(this)?android.graphics.Color.BLACK:android.graphics.Color.WHITE):SwodUi.ink(this));badge.setBackground(SwodUi.shape(this,open?red:SwodUi.surface(this),16));android.widget.FrameLayout.LayoutParams badgeLayout=new android.widget.FrameLayout.LayoutParams(-2,-2);badgeLayout.setMargins(dp(6),dp(6),dp(6),dp(6));artwork.addView(badge,badgeLayout);
++                    TextView badge=text(state,11);badge.setTextColor(open?(SwodUi.dark(this)?android.graphics.Color.BLACK:android.graphics.Color.WHITE):SwodUi.ink(this));badge.setBackground(SwodUi.shape(this,open?red:SwodUi.surface(this),16));android.widget.FrameLayout.LayoutParams badgeLayout=new android.widget.FrameLayout.LayoutParams(-2,-2);badgeLayout.setMargins(dp(6),dp(6),dp(6),dp(6));artwork.addView(badge,badgeLayout);if(open){badge.setText("报名中 · 点击报名");badge.setMinHeight(dp(44));badge.setPadding(dp(12),0,dp(12),0);badge.setGravity(Gravity.CENTER);badge.setFocusable(true);badge.setContentDescription("报名："+event.optString("name"));badge.setOnClickListener(view->open(()->register(event.optInt("id"),new JSONObject())));}
+                     LinearLayout body=column();body.setPadding(0,dp(8),0,dp(8));card.addView(body);
+                     TextView name=text(event.optString("name"),18);name.setTypeface(null,android.graphics.Typeface.BOLD);body.addView(name);
+                     TextView date=text(EventPresentation.dates(event)+"\n"+(location.isEmpty()?"地点待定":location),14);date.setTextColor(SwodUi.muted(this));body.addView(date);
+--- app开发/共享资料/同步更新/20261113-event-registration-entry/before/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -1,3 +1,4 @@
++import { CourseArtwork } from '../components/CourseArtwork';
+ import { PublicEventView } from '../components/PublicEventView';
+ import { registrationCountries } from '../services/RegistrationCountries';
+ import { JudgeWorkspace } from '../components/JudgeWorkspace';
+@@ -939,7 +940,7 @@
+     Button({ type: ButtonType.Normal }) {
+       Row({ space: 12 }) {
+         if (coverImageURL(row.cover_image || '')) {
+-          Image(coverImageURL(row.cover_image || '')).width(112).height(95).objectFit(ImageFit.Cover).borderRadius(6).accessibilityLevel('no')
++          CourseArtwork({ url: coverImageURL(row.cover_image || '') }).width(112).height(95).borderRadius(6).accessibilityLevel('no')
+         } else {
+           Image($r('app.media.nav_calendar_on')).width(112).height(95).objectFit(ImageFit.ScaleDown).backgroundColor(SwodTheme.tonal).borderRadius(6).accessibilityLevel('no')
+         }
+@@ -963,7 +964,7 @@
+     Button({ type: ButtonType.Normal }) {
+     Row({ space: 14 }) {
+       if (this.route.screen === 'home' || this.route.screen === 'offline') {
+-        if (coverImageURL(row.cover_image || '')) { Image(coverImageURL(row.cover_image || '')).width(112).height(this.courseCardHeights.get(String(row.id || row.source_id || row.name)) || 96).objectFit(ImageFit.Cover).borderRadius(8).accessibilityLevel('no') }
++        if (coverImageURL(row.cover_image || '')) { CourseArtwork({ url: coverImageURL(row.cover_image || '') }).width(112).height(this.courseCardHeights.get(String(row.id || row.source_id || row.name)) || 96).borderRadius(8).accessibilityLevel('no') }
+         else { Image($r('app.media.nav_learn_on')).width(112).height(this.courseCardHeights.get(String(row.id || row.source_id || row.name)) || 96).objectFit(ImageFit.ScaleDown).backgroundColor(SwodTheme.tonal).borderRadius(12).accessibilityLevel('no') }
+       }
+       if (this.route.screen === 'shop' && coverImageURL(row.image || '')) { Image(coverImageURL(row.image || '')).width(112).height(112).objectFit(ImageFit.Cover).borderRadius(8).accessibilityLevel('no') }
+@@ -999,17 +1000,21 @@
+     Column({ space: 0 }) {
+       Stack({ alignContent: Alignment.TopStart }) {
+         if (row.coverUrl || row.cover_url) {
+-          Image(coverImageURL(row.coverUrl || row.cover_url || '')).width('100%').aspectRatio(2.15).objectFit(ImageFit.Cover).accessibilityLevel('no')
++          Image(coverImageURL(row.coverUrl || row.cover_url || '')).width('100%').aspectRatio(2.15).objectFit(ImageFit.Cover).accessibilityLevel('no').onClick(() => this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)))
+         } else {
+-          Column({ space: 8 }) { Image($r('app.media.nav_trophy_on')).width(32).height(32); Text('暂无封面').fontSize(12).fontColor(SwodTheme.muted) }.width('100%').aspectRatio(2.15).justifyContent(FlexAlign.Center).backgroundColor(SwodTheme.tonal)
++          Column({ space: 8 }) { Image($r('app.media.nav_trophy_on')).width(32).height(32); Text('暂无封面').fontSize(12).fontColor(SwodTheme.muted) }.width('100%').aspectRatio(2.15).justifyContent(FlexAlign.Center).backgroundColor(SwodTheme.tonal).onClick(() => this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)))
+         }
+-        Text(eventState(row)).fontSize(14).fontWeight(FontWeight.Bold)
+-          .fontColor(eventState(row) === '报名中' ? SwodTheme.onPrimary : SwodTheme.ink)
+-          .backgroundColor(eventState(row) === '报名中' ? SwodTheme.primary : SwodTheme.surface)
+-          .padding({ left: 8, right: 8, top: 5, bottom: 5 }).borderRadius(12).margin(6)
++        if (eventState(row) === '报名中') {
++          Button('报名中 · 点击报名').fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.onPrimary).backgroundColor(SwodTheme.primary)
++            .constraintSize({ minHeight: 44 }).padding({ left: 12, right: 12 }).borderRadius(22).margin(6)
++            .accessibilityText('报名：' + (row.name || '赛事')).onClick(() => this.go('register', '赛事报名', '', true, Number(row.id)))
++        } else {
++          Text(eventState(row)).fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).backgroundColor(SwodTheme.surface)
++            .padding({ left: 8, right: 8, top: 5, bottom: 5 }).borderRadius(12).margin(6)
++        }
+       }.width('100%')
+       Column({ space: 8 }) {
+-        Text(row.name || '赛事').fontSize(18).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%').constraintSize({ minHeight: 28 })
++        Text(row.name || '赛事').fontSize(18).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%').constraintSize({ minHeight: 44 }).onClick(() => this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)))
+         Text(eventDates(row)).fontSize(14).fontColor(SwodTheme.muted).width('100%').constraintSize({ minHeight: 28 })
+         Text(row.location || row.city || row.venue || '地点待定').fontSize(14).fontColor(SwodTheme.muted).width('100%')
+         Divider().color(SwodTheme.tonal)
+@@ -1023,7 +1028,6 @@
+           .constraintSize({ minHeight: 44 }).width('100%').onClick(() => { if (eventState(row) === '报名中') this.go('register', '赛事报名', '', true, Number(row.id)); else this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)); })
+       }.padding({ top: 8, bottom: 8 }).width('100%').alignItems(HorizontalAlign.Start)
+     }.width('100%')
+-      .onClick(() => this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)))
+   }
+   @Builder
+   private eventsPage() {
+@@ -1149,7 +1153,7 @@
+   private ownedCourseCard(course: Row) {
+     Button({ type: ButtonType.Normal }) {
+           Row({ space: 12 }) {
+-            if (coverImageURL(this.accountCourseCover(course))) { Image(coverImageURL(this.accountCourseCover(course))).alt($r('app.media.nav_learn_on')).width(96).height(96).objectFit(ImageFit.Cover).borderRadius(8).accessibilityLevel('no') }
++            if (coverImageURL(this.accountCourseCover(course))) { CourseArtwork({ url: coverImageURL(this.accountCourseCover(course)) }).width(96).height(96).borderRadius(8).accessibilityLevel('no') }
+             else { Image($r('app.media.nav_learn_on')).width(96).height(96).padding(28).backgroundColor(SwodTheme.tonal).borderRadius(8).accessibilityLevel('no') }
+             Column({ space: 8 }) {
+               Text(course.series_name || course.name || '线上课程').fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+@@ -1448,7 +1452,7 @@
+       }
+     }
+     if (this.route.screen === 'offlineDetail') {
+-      if (coverImageURL(this.detail.cover_image || '')) { Image(coverImageURL(this.detail.cover_image || '')).width('100%').aspectRatio(4 / 3).objectFit(ImageFit.Cover).borderRadius(8).accessibilityText((this.detail.name || '') + '课程封面') }
++      if (coverImageURL(this.detail.cover_image || '')) { CourseArtwork({ url: coverImageURL(this.detail.cover_image || '') }).width('100%').aspectRatio(4 / 3).borderRadius(8).accessibilityText((this.detail.name || '') + '课程封面') }
+       Text('课程介绍').fontSize(18).fontWeight(FontWeight.Bold)
+       Text(offlineDescription(this.detail)).fontSize(16).lineHeight(26)
+       ForEach(offlineCopy(this.detail)?.outline || this.detail.outline || [], (text: string, index: number) => { Text((index + 1) + '. ' + text).fontSize(14).lineHeight(24) }, (text: string) => text)

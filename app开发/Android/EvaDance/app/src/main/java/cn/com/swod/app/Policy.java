@@ -11,7 +11,7 @@ public final class Policy {
     public static boolean publicRead(String path, String method) {
         if (path == null || method == null) return false;
         String route = path.split("\\?", 2)[0];
-        return method.equals("GET") && route.matches("^/(public/(series(/[1-9][0-9]*(/(courses|detail))?)?|offline-courses|calendar|home-stats)|events(/[1-9][0-9]*)?)$");
+        return method.equals("GET") && route.matches("^/(public/(series(/[1-9][0-9]*(/(courses|detail))?)?|offline-courses|calendar|home-stats)|events(/[1-9][0-9]*(/groups/[1-9][0-9]*(/players/[1-9][0-9]*)?)?)?)$");
     }
     public static boolean safePath(String path) {
         return path != null && path.startsWith("/") && !path.startsWith("//") && !path.contains("..") && !path.contains("://") && !path.contains("\\") && !path.matches(".*[\\r\\n\\t].*") && !path.toLowerCase(Locale.ROOT).matches(".*%(2f|2e|5c|25).*?");

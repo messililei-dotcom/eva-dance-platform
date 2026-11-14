@@ -1,0 +1,44 @@
+✔ sleep-inclusive elapsed time expires at 24h without using editable wall time (0.396916ms)
+✔ reboot, unavailable boot identity and backwards elapsed time fail closed (0.11025ms)
+✔ first audio lesson keeps its source title and media kind instead of masquerading as a video (56.634375ms)
+✔ video lessons and resume data remain associated with the real video ID (12.660708ms)
+✔ new learner enters first lesson directly (7.929209ms)
+✔ resume chooses latest server history rather than catalog order (8.181709ms)
+✔ foreign and unwatched rows cannot choose a lesson, empty course stays empty (6.270958ms)
+✔ offline course summary matches mini-program catalog and ordering fixtures (10.203167ms)
+✔ cancel during protected credential write restores the previous session on disk (72.091042ms)
+✔ logout during protected credential write cannot restore an account on restart (14.901667ms)
+✔ external link policy permits the filing query and retains the existing trusted destinations (10.646875ms)
+✔ member password login uses the review-capable app endpoint and replaces the session (12.309625ms)
+✔ carrier login sends only the operator token and accepts server-owned identity (11.128542ms)
+✔ a late carrier login response cannot restore a cleared account (7.353375ms)
+✔ an incomplete carrier response never creates a logged-in account (7.202458ms)
+✔ course covers resolve server-relative URLs without accepting unsafe schemes or hosts (6.844833ms)
+✔ PATCH uses native RCP with bearer auth, no redirect and no shared cache (7.22575ms)
+✔ PATCH redirect is rejected and its session is closed (8.379042ms)
+✔ PATCH 401 refreshes through the existing API before retrying with the renewed token (6.869959ms)
+✔ logout during PATCH prevents credential refresh and replay (6.40725ms)
+✔ native client has no administrator login or request transport (13.990208ms)
+✔ invalid PATCH paths are rejected before starting a network session (5.974708ms)
+✔ existing GET transport retains cache and redirect protection (5.53925ms)
+✔ sms login cannot commit a delayed response after account changed (6.0405ms)
+✔ sms login cannot commit a delayed response after login screen closed (4.95225ms)
+✔ password login cannot commit a delayed response after account changed (5.707416ms)
+✔ password login cannot commit a delayed response after login screen closed (5.507584ms)
+✔ carrier login cannot commit a delayed response after account changed (4.964125ms)
+✔ carrier login cannot commit a delayed response after login screen closed (5.847959ms)
+✔ only public group and player GETs use public transport; judge, malformed routes and writes remain private (5.945458ms)
+✔ offline lease rejects another account, session, installation and lesson (0.510958ms)
+✔ 24h expiry cannot be stretched; ordinary download and nonfinite values are denied (0.091583ms)
+✔ automatic renewal stays quiet offline and throttles online attempts (0.082292ms)
+✔ automatic renewal survives a network outage, recovers without a button and discards a revoked grant (0.502042ms)
+✔ account switch during renewal cannot persist another account response (0.112458ms)
+✔ an invalid old clock can recover automatically after reconnecting (0.116375ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 408.830208

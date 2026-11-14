@@ -1,0 +1,78 @@
+[
+  {
+    "name": "ios-build",
+    "returncode": 0,
+    "seconds": 23.2,
+    "command": [
+      "xcodebuild",
+      "-project",
+      "EvaDance.xcodeproj",
+      "-scheme",
+      "EvaDance",
+      "-configuration",
+      "Debug",
+      "-destination",
+      "generic/platform=iOS Simulator",
+      "-derivedDataPath",
+      "/tmp/swod-profile-v2-build",
+      "CODE_SIGN_IDENTITY=-",
+      "CODE_SIGNING_ALLOWED=YES",
+      "build"
+    ],
+    "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance"
+  },
+  {
+    "name": "ios-core-checks",
+    "returncode": 0,
+    "seconds": 14.2,
+    "command": [
+      "swift",
+      "run",
+      "--scratch-path",
+      "/tmp/swod-profile-v2-core",
+      "EvaCoreChecks"
+    ],
+    "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance"
+  },
+  {
+    "name": "android-checks",
+    "returncode": 0,
+    "seconds": 3.0,
+    "command": [
+      "./gradlew",
+      "assembleDebug",
+      "testDebugUnitTest",
+      "lintDebug",
+      "--console=plain"
+    ],
+    "cwd": "/Users/lilei/Library/Caches/SWOD/Android/profile-concept-v2-20261113"
+  },
+  {
+    "name": "harmony-build",
+    "returncode": 0,
+    "seconds": 6.6,
+    "command": [
+      "/Users/lilei/Library/Huawei/CommandLineTools/6.1.1.418/command-line-tools/bin/hvigorw",
+      "assembleHap",
+      "-p",
+      "product=default",
+      "-p",
+      "buildMode=debug",
+      "--no-daemon"
+    ],
+    "cwd": "/Users/lilei/Library/Caches/SWOD/HarmonyOS/profile-concept-v2-20261113"
+  },
+  {
+    "name": "harmony-checks",
+    "returncode": 0,
+    "seconds": 0.6,
+    "command": [
+      "node",
+      "--test",
+      "scripts/platform-api.test.cjs",
+      "scripts/course-media.test.cjs",
+      "scripts/event-presentation.test.cjs"
+    ],
+    "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/HarmonyOS/EvaDance"
+  }
+]

@@ -34,8 +34,8 @@ function inferType(item) {
   const text = `${item.category || ""}${item.name || ""}${item.subtitle || ""}${item.source_name || ""}`;
   if (item.source_type === "official_dance_collection") return "dance";
   if (/成品舞|作品|编舞|舞蹈/.test(text)) return "dance";
-  if (item.source_type === "official_online" || item.category === hiddenOnlineCategory || item.category === "线上学院") return "online";
-  if (new RegExp(["线", "上"].join("") + "|网课|" + ["视", "频"].join("") + "|录播").test(text)) return "online";
+  if (item.source_type === "official_online" || item.category === hiddenOnlineCategory || item.category === "视频专区") return "online";
+  if (new RegExp(["线", "上"].join("") + "|在线视频|" + ["视", "频"].join("") + "|录播").test(text)) return "online";
   if (item.source_type === "platform_offline_course" || item.source_type === "official_offline") return "offline";
   if (new RegExp(`线下|门徒|传承|${mentorKeyword}|${offlineKeyword}|面授|集训|密训|周末`).test(text)) return "offline";
   return "offline";
@@ -119,7 +119,7 @@ Page(share.withShare("system", videoFeature.withVideoFeature({
   },
 
   goDetail(event) {
-    videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}` });
+    return videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${event.currentTarget.dataset.id}`, videoAvailable: this.data.videoPlaybackEnabled });
   },
 
   onImageError(event) {

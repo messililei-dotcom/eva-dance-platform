@@ -33,7 +33,7 @@ final class CourseCacheManager {
         context=c.getApplicationContext();vault=new TokenVault(context,"course-cache");driver=new AliyunSecureCacheDriver(context);root=new File(context.getNoBackupFilesDir(),"course-cache");
         try{String saved=vault.read();inventory=saved==null?new JSONObject():new JSONObject(saved);if(!inventory.has("device"))inventory.put("device",UUID.randomUUID().toString().replace("-","")+UUID.randomUUID().toString().replace("-",""));
             if(!inventory.has("items"))inventory.put("items",new JSONArray());for(JSONObject row:all())if(!"ready".equals(row.optString("state"))){row.put("state","paused");row.put("file","");}persist();
-        }catch(Exception e){inventory=new JSONObject();message="安全缓存索引不可用，请联网后重试";}
+        }catch(Exception e){inventory=new JSONObject();message="安全离线内容索引不可用，请联网后重试";}
         io.scheduleWithFixedDelay(this::refreshNow,0,60,TimeUnit.SECONDS);
     }
     void listen(Runnable r){listeners.add(r);}void unlisten(Runnable r){listeners.remove(r);}
@@ -54,10 +54,10 @@ final class CourseCacheManager {
     synchronized boolean usable(JSONObject r){try{return Policy.SUPPORTS_OFFLINE_DOWNLOAD&&current(r)&&"ready".equals(r.optString("state"))&&file(r)!=null&&device().equals(r.getJSONObject("lease").getString("device_id"))&&lease(r.getJSONObject("lease")).permits(now(r));}catch(Exception e){return false;}}
     synchronized JSONObject get(int id){for(JSONObject r:visible())if(r.optInt("id")==id)return r;return null;}
     synchronized void purge(){generation++;downloading=0;main.post(driver::stop);renewals.values().forEach(AutomaticVideoCacheRenewal::close);renewals.clear();try{inventory.put("items",new JSONArray());persist();}catch(Exception e){vault.clear();}deleteTree(root);changed();}
-    synchronized void remove(int id){if(downloading==id){generation++;downloading=0;main.post(driver::stop);}AutomaticVideoCacheRenewal old=renewals.remove(id);if(old!=null)old.close();JSONArray next=new JSONArray();for(JSONObject r:all())if(r.optInt("id")!=id)next.put(r);try{inventory.put("items",next);persist();}catch(Exception e){message="缓存索引保存失败";}deleteTree(new File(root,String.valueOf(id)));changed();}
-    private void deleteTree(File f){try{if(!f.getCanonicalPath().startsWith(context.getNoBackupFilesDir().getCanonicalPath()+File.separator))return;File[] children=f.listFiles();if(children!=null)for(File child:children)deleteTree(child);if(f.exists()&&!f.delete())message="部分缓存待下次清理";}catch(Exception ignored){}}
+    synchronized void remove(int id){if(downloading==id){generation++;downloading=0;main.post(driver::stop);}AutomaticVideoCacheRenewal old=renewals.remove(id);if(old!=null)old.close();JSONArray next=new JSONArray();for(JSONObject r:all())if(r.optInt("id")!=id)next.put(r);try{inventory.put("items",next);persist();}catch(Exception e){message="离线索引保存失败";}deleteTree(new File(root,String.valueOf(id)));changed();}
+    private void deleteTree(File f){try{if(!f.getCanonicalPath().startsWith(context.getNoBackupFilesDir().getCanonicalPath()+File.separator))return;File[] children=f.listFiles();if(children!=null)for(File child:children)deleteTree(child);if(f.exists()&&!f.delete())message="部分离线内容待下次清理";}catch(Exception ignored){}}
     void refresh(){io.execute(this::refreshNow);}
-    synchronized void pause(int id){if(downloading!=id)return;generation++;downloading=0;main.post(driver::stop);try{JSONObject live=row(id);if(live!=null)live.put("state","paused");persist();}catch(Exception e){message="缓存索引保存失败";}changed();}
+    synchronized void pause(int id){if(downloading!=id)return;generation++;downloading=0;main.post(driver::stop);try{JSONObject live=row(id);if(live!=null)live.put("state","paused");persist();}catch(Exception e){message="离线索引保存失败";}changed();}
     private void refreshNow(){
         if(!api().loggedIn())return;
         for(JSONObject stale:all())if(!current(stale))remove(stale.optInt("id"));
@@ -77,21 +77,21 @@ final class CourseCacheManager {
     }
     private JSONObject authorize(int id,String action,String material)throws Exception{return (JSONObject)api().request("/video/"+id+"/cache-authorization","POST",new JSONObject().put("action",action).put("device_id",device()).put("material_version",material),true);}
     void download(int id,String title,String course){
-        if(!Policy.SUPPORTS_OFFLINE_DOWNLOAD){message="课程安全缓存尚未开放，请先在线观看";changed();return;}
+        if(!Policy.SUPPORTS_OFFLINE_DOWNLOAD){message="安全离线观看尚未开放，请先在线观看";changed();return;}
         final long active;
-        synchronized(this){if(downloading!=0){message="请等待当前课节缓存完成，或先取消任务";changed();return;}if(!driver.configured()){message="安全缓存授权尚未配置完成，请先在线观看";changed();return;}if(all().size()>=12&&row(id)==null){message="最多缓存12节，请先删除不需要的缓存";changed();return;}downloading=id;active=generation;}
-        message="正在验证缓存权限";changed();io.execute(()->{long stamp=SystemClock.elapsedRealtime();try{
+        synchronized(this){if(downloading!=0){message="请等待当前课节下载完成，或先取消任务";changed();return;}if(!driver.configured()){message="安全下载授权尚未配置完成，请先在线观看";changed();return;}if(all().size()>=12&&row(id)==null){message="最多下载12节，请先删除不需要的离线内容";changed();return;}downloading=id;active=generation;}
+        message="正在验证离线观看权限";changed();io.execute(()->{long stamp=SystemClock.elapsedRealtime();try{
             JSONObject grant=authorize(id,"download","");String auth=grant.getJSONObject("credential").getString("play_auth");JSONObject clean=new JSONObject(grant.toString());clean.remove("credential");
             final JSONObject entry=new JSONObject().put("id",id).put("nonce",UUID.randomUUID().toString()).put("title",title).put("course",course).put("lease",clean).put("server",grant.getLong("issued_at")).put("elapsed",stamp).put("boot",boot()).put("state","downloading").put("percent",0);
             try{JSONObject progress=(JSONObject)api().request("/video/"+id+"/progress","GET",null,true);entry.put("position",progress.optDouble("progress")).put("revision",progress.optInt("revision"));}catch(Exception ignored){}
             final long limit;
-            synchronized(this){if(active!=generation||!current(entry))return;downloading=0;remove(id);downloading=id;long used=AliyunSecureCacheDriver.directoryBytes(root);limit=Math.min(grant.getLong("max_bytes"),Math.min(2147483648L-used,context.getNoBackupFilesDir().getUsableSpace()-104857600));inventory.getJSONArray("items").put(entry);persist();}
+            synchronized(this){if(active!=generation||!current(entry))return;downloading=0;remove(id);downloading=id;long used=AliyunSecureCacheDriver.directoryBytes(root);limit=Math.min(grant.getLong("max_bytes"),Math.min(2147483648L-used,context.getNoBackupFilesDir().getUsableSpace()-104857600));inventory.getJSONArray("items").put(entry);persist();}changed();
             main.post(()->{synchronized(this){if(active!=generation||!current(entry))return;}try{driver.start(grant.getString("vod_video_id"),auth,new File(root,String.valueOf(id)),limit,
                 ()->{synchronized(this){JSONObject live=row(id);try{return active==generation&&live!=null&&entry.getString("nonce").equals(live.optString("nonce"))&&current(live)&&lease(live.getJSONObject("lease")).permits(now(live));}catch(Exception e){return false;}}},
                 new AliyunSecureCacheDriver.Listener(){public void progress(int percent){synchronized(CourseCacheManager.this){JSONObject live=row(id);if(live!=null&&active==generation)try{live.put("percent",Math.max(0,Math.min(99,percent)));}catch(Exception ignored){}}changed();}
-                    public void complete(File f){synchronized(CourseCacheManager.this){if(active!=generation||!current(entry))return;try{entry.put("file",f.getCanonicalPath().substring(root.getCanonicalPath().length()+1)).put("bytes",AliyunSecureCacheDriver.directoryBytes(new File(root,String.valueOf(id)))).put("percent",100).put("state","ready");persist();downloading=0;message="缓存完成";}catch(Exception e){remove(id);message="缓存无法安全保存，请重试";}}changed();refresh();}
+                    public void complete(File f){synchronized(CourseCacheManager.this){if(active!=generation||!current(entry))return;try{entry.put("file",f.getCanonicalPath().substring(root.getCanonicalPath().length()+1)).put("bytes",AliyunSecureCacheDriver.directoryBytes(new File(root,String.valueOf(id)))).put("percent",100).put("state","ready");persist();downloading=0;message="下载完成";}catch(Exception e){remove(id);message="下载内容无法安全保存，请重试";}}changed();refresh();}
                     public void failure(String text){synchronized(CourseCacheManager.this){if(active!=generation)return;remove(id);message=text;}changed();}});
-            }catch(Exception e){synchronized(this){if(active==generation){remove(id);message="安全缓存失败，请联网重试";}}changed();}});
+            }catch(Exception e){synchronized(this){if(active==generation){remove(id);message="安全下载失败，请联网重试";}}changed();}});
         }catch(Exception e){synchronized(this){if(active==generation){downloading=0;message=e.getMessage();}}changed();}});
     }
     synchronized void checkpoint(int id,double position,double duration){JSONObject r=row(id);if(r==null||!usable(r)||!Double.isFinite(position)||!Double.isFinite(duration)||duration<=0||position<0||position>duration+1)return;try{r.put("position",Math.min(position,duration)).put("duration",duration).put("pending",true);persist();}catch(Exception e){message="本机学习进度保存失败";}}

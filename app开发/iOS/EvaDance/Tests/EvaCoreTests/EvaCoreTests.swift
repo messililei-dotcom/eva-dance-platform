@@ -116,12 +116,12 @@ final class EvaCoreTests {
         XCTAssertNil(CartPolicy.total([line,line]))
     }
     func testSharedPlatformPublicRoutesNeverForwardPrivateRequests() {
-        for path in ["/public/series", "/public/series/1/courses", "/public/offline-courses", "/events/2"] {
+        for path in ["/public/series", "/public/series/1/courses", "/public/offline-courses", "/events/2", "/events/2/groups/3", "/events/2/groups/3/players/4"] {
             XCTAssertTrue(AppPolicy.isSharedPublicRead(path,method:"GET",hasToken:false))
             XCTAssertFalse(AppPolicy.isSharedPublicRead(path,method:"POST",hasToken:false))
             XCTAssertFalse(AppPolicy.isSharedPublicRead(path,method:"GET",hasToken:true))
         }
-        for path in ["/auth/login", "/member/profile", "/public/series/1/progress", "/events/2/register", "/video/1/play", "/public/../member/profile"] {
+        for path in ["/auth/login", "/member/profile", "/public/series/1/progress", "/events/2/register", "/events/2/judge", "/events/2/groups/0", "/events/2/groups/3/players/4/edit", "/video/1/play", "/public/../member/profile"] {
             XCTAssertFalse(AppPolicy.isSharedPublicRead(path,method:"GET",hasToken:false))
         }
         XCTAssertEqual(AppPolicy.apiBase.host,AppPolicy.publicAPIBase.host)
@@ -144,22 +144,6 @@ final class EvaCoreTests {
         catch APIError.service(let message) {XCTAssertEqual(message,"重复报名")}
         let resultWithoutData:JSONValue = try await client(#"{"success":true}"#).request("/notes/1",method:"DELETE")
         XCTAssertEqual(resultWithoutData,.null)
-    }
-
-    func testStaffLoginCannotPromoteMemberCredentials() async throws {
-        let result = try await client(#"{"token":"staff-fixture","user":{"id":3,"name":"工作人员","role":"event_admin"}}"#).staffLogin(username: "fixture", password: "test-only")
-        XCTAssertEqual(result.user.role, "event_admin")
-        XCTAssertEqual(StubProtocol.lastRequest?.url?.path, "/api/login")
-        XCTAssertNil(StubProtocol.lastRequest?.value(forHTTPHeaderField: "Authorization"))
-        do { _ = try await client(#"{"token":"fixture","user":{"id":3,"name":"普通会员","role":"member"}}"#).staffLogin(username: "fixture", password: "test-only"); XCTFail() }
-        catch APIError.denied { } catch { XCTFail("Wrong staff role error") }
-    }
-    func testStaffExportsPreserveNumbersAndRejectFormulaInjection() {
-        XCTAssertEqual(StaffPolicy.csvCell("001"), "\"'001\"")
-        XCTAssertEqual(StaffPolicy.csvCell("=HYPERLINK(test)"), "\"'=HYPERLINK(test)\"")
-        XCTAssertNil(StaffPolicy.musicURL(0))
-        XCTAssertEqual(StaffPolicy.musicURL(12)?.path, "/api/event/music/12")
-        XCTAssertFalse(StaffPolicy.allows("member"))
     }
 
     func testMultipartMusicRejectsIdentityAndSanitizesHeaders() throws {
@@ -250,8 +234,6 @@ private func checkEventPresentation() {
         try await suite.testNativeLoginDTOAndBusinessErrors()
         try suite.testPracticePlanBoundariesAndSearch()
         suite.testSharedPlatformPublicRoutesNeverForwardPrivateRequests()
-        try await suite.testStaffLoginCannotPromoteMemberCredentials()
-        suite.testStaffExportsPreserveNumbersAndRejectFormulaInjection()
         try suite.testMultipartMusicRejectsIdentityAndSanitizesHeaders()
         XCTAssertEqual(CompetitionRecord.result(.object(["resultPublished":.bool(false),"totalScore":.number(99),"awardName":.string("冠军")])), "成绩待公示")
         XCTAssertEqual(CompetitionRecord.result(.object(["resultPublished":.string("true"),"totalScore":.number(99)])), "成绩待公示")
@@ -307,7 +289,55 @@ private func checkEventPresentation() {
         XCTAssertTrue(clockAnchor.now(elapsedMS: 1000, boot: "boot-1").isNaN)
         XCTAssertTrue(VideoCacheClockAnchor(serverMS: 1000, elapsedMS: 2000, boot: "").now(elapsedMS: 3000, boot: "").isNaN)
         print("Offline elapsed-clock reboot and rollback checks passed")
-        print("21 contract checks; failures=\(failures)")
+        let learningRecords: JSONValue = .array([
+            .object(["progress": .number(50), "duration": .number(100)]),
+            .object(["completed": .number(1)]),
+            .object(["progress": .number(0), "duration": .number(100)])
+        ])
+        XCTAssertEqual(CoursePresentation.learningPercent(learningRecords), 50)
+        XCTAssertEqual(CoursePresentation.learningPercent(.array([])), 0)
+        XCTAssertEqual(CoursePresentation.learningPercent(.array([.object(["progress": .number(-5), "duration": .number(100)])])), 0)
+        XCTAssertEqual(CoursePresentation.learningPercent(.array([.object(["progress": .number(200), "duration": .number(100)])])), 100)
+        print("Course-level progress aggregation checks passed")
+        XCTAssertFalse(PlaybackGesturePolicy.isVertical(x: 60, y: 20))
+        XCTAssertFalse(PlaybackGesturePolicy.isVertical(x: 0, y: 8))
+        XCTAssertTrue(PlaybackGesturePolicy.isVertical(x: 4, y: -40))
+        XCTAssertEqual(PlaybackGesturePolicy.level(initial: 0.5, translation: -400, height: 200), 1)
+        XCTAssertEqual(PlaybackGesturePolicy.level(initial: 0.5, translation: 400, height: 200, minimum: 0.05), 0.05)
+        XCTAssertEqual(PlaybackGesturePolicy.level(initial: 0.5, translation: 400, height: 200), 0)
+        print("Playback gesture direction and clamp checks passed")
+        let timedNotes: [JSONValue] = [.object(["id": .number(1), "timestamp_seconds": .number(10), "content": .string("测试笔记")])]
+        XCTAssertTrue(NoteDanmakuPolicy.visible(timedNotes, at: 9.99).isEmpty)
+        XCTAssertEqual(NoteDanmakuPolicy.visible(timedNotes, at: 10).count, 1)
+        XCTAssertEqual(NoteDanmakuPolicy.visible(timedNotes, at: 17.99).count, 1)
+        XCTAssertTrue(NoteDanmakuPolicy.visible(timedNotes, at: 18).isEmpty)
+        XCTAssertTrue(NoteDanmakuPolicy.visible(timedNotes, at: .nan).isEmpty)
+        XCTAssertEqual(NoteDanmakuPolicy.visible(timedNotes, at: 12), NoteDanmakuPolicy.visible(timedNotes, at: 12))
+        XCTAssertEqual(NoteDanmakuPolicy.visible(Array(repeating: timedNotes[0], count: 8), at: 11).count, 3)
+        XCTAssertTrue(NoteDanmakuPolicy.visible([.object(["timestamp_seconds": .number(-1), "content": .string("拒绝无效时间")])], at: 0).isEmpty)
+        print("Note overlay time boundary, seeking, pause and density checks passed")
+        let offlineSample = try JSONDecoder().decode(JSONValue.self, from: Data(#"[{"id":1,"group_key":"  SAMPLE   Course ","name":"课程","start_date":"2027-01-01","price":100.5,"group_total_students":7,"cover_image":"cover"},{"id":2,"group_key":"sample course","name":"课程","subtitle":"2028年","price":200,"group_total_students":7}]"#.utf8))
+        let summary = OfflineCatalog.grouped(offlineSample.list)
+        XCTAssertEqual(summary.count, 1)
+        XCTAssertEqual(summary[0]["id"].number, 2)
+        XCTAssertEqual(summary[0]["offline_period_count"].number, 2)
+        XCTAssertEqual(summary[0]["offline_student_count"].number, 7)
+        XCTAssertEqual(summary[0]["offline_latest_period"].text, "2028年")
+        XCTAssertEqual(summary[0]["cover_image"].text, "cover")
+        XCTAssertEqual(OfflineCatalog.price(summary[0]), "¥100.5起")
+        XCTAssertEqual(offlineSample.list[0]["offline_period_count"], .null)
+        let offlineFixturePath = ProcessInfo.processInfo.environment["SWOD_OFFLINE_FIXTURE"]
+        if let offlineFixturePath {
+            let fixture = try JSONDecoder().decode(JSONValue.self, from: Data(contentsOf: URL(fileURLWithPath: offlineFixturePath)))
+            let groups = OfflineCatalog.grouped(fixture["rows"].list)
+            XCTAssertEqual(groups.count, fixture["expected"].list.count)
+            for (group, expected) in zip(groups, fixture["expected"].list) {
+                for key in ["id", "offline_period_count", "offline_latest_period", "offline_student_count", "offline_min_price", "cover_image"] { XCTAssertEqual(group[key], expected[key]) }
+                XCTAssertEqual(OfflineCatalog.price(group), expected["priceText"].text)
+            }
+            print("Offline live catalog and edge fixtures match mini-program: \(groups.count) grouped courses")
+        }
+        print("22 contract checks; failures=\(failures)")
         if failures > 0 { exit(1) }
     }
 }

@@ -92,43 +92,29 @@ struct MainTabs: View {
 }
 struct CoursesView: View {
     @EnvironmentObject var session: Session
-    @State private var series: [Series] = []
-    @State private var recent: [RecentLesson] = []
-    @State private var loading = false
+    @StateObject private var store = SiteStore()
     var body: some View {
-        List {
-            if loading { ProgressView("正在加载课程") }
-            if !recent.isEmpty {
-                Section("继续学习") {
-                    ForEach(recent) { item in
-                        NavigationLink { PlayerView(lessonID: item.video_id, title: item.course_name) } label: {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(item.course_name).font(.headline)
-                                Text(item.series_name ?? "").font(.subheadline).foregroundStyle(.secondary)
-                            }.padding(.vertical, 6)
+        AuthGate {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    LoadState(store: store) { Task { await store.loadOwnedCourses(session: session) } }
+                    ForEach(store.data.rows) { item in
+                        if let id = Int(item.value["series_id"].text), id > 0 {
+                            NavigationLink { CourseStudyEntryView(id: id, title: item.value["series_name"].text) } label: {
+                                AccountCourseRow(course: item.value)
+                            }
+                            Divider()
                         }
                     }
-                }
-            }
-            Section("我的课程") {
-                ForEach(series) { item in
-                    NavigationLink { CatalogView(series: item) } label: {
-                        VStack(alignment: .leading, spacing: 6) { Text(item.series_name); Text("✓ 已解锁").font(.caption).foregroundStyle(.green); Text("继续学习").font(.subheadline).foregroundStyle(.green) }
+                    if !store.busy && store.error == nil && store.data.list.isEmpty {
+                        Text("暂无已解锁课程").foregroundStyle(.secondary).padding(.vertical, 16)
                     }
-                }
-                if !loading && series.isEmpty { Text("暂无已解锁课程，下拉刷新查看最新内容。").foregroundStyle(.secondary) }
+                }.buttonStyle(EvaPressStyle()).padding(.horizontal, 16).frame(maxWidth: 760).frame(maxWidth: .infinity)
             }
-        }.evaCompactLayout().evaPageChrome()
-        .toolbar { Button("刷新") { Task { await load() } }.disabled(loading) }
-        .task { await load() }.refreshable { await load() }
-    }
-    private func load() async {
-        guard let token = session.token else { return }; loading = true; defer { loading = false }
-        do {
-            async let courses: [Series] = session.api.request("/member/authorized-series", token: token)
-            async let records: [RecentLesson] = session.api.request("/member/recent-courses", token: token)
-            (series, recent) = try await (courses, records)
-        } catch { session.handle(error) }
+        }.evaCompactLayout().evaPageChrome().navigationTitle("我的课程")
+        .toolbar { Button("刷新") { Task { await store.loadOwnedCourses(session: session) } }.disabled(store.busy) }
+        .task(id: session.accountID) { await store.loadOwnedCourses(session: session) }
+        .refreshable { await store.loadOwnedCourses(session: session) }
     }
 }
 struct CatalogView: View {

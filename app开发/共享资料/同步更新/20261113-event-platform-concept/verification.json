@@ -1,0 +1,315 @@
+{
+  "checkedAt": "2026-11-13T19:37:38.423097+08:00",
+  "request": "已确认赛事概念图落地：列表4:3、详情缩小裁切、组别荣誉榜与成绩列表",
+  "latestInstructions": {
+    "websiteAndPWA": "deploy",
+    "mini": "local changes and testing only; do not upload",
+    "iOSAndroidHarmony": "local changes and testing only; do not upload"
+  },
+  "sourceChanges": [
+    {
+      "path": "production/website/src/app/events-news/page.tsx",
+      "sha256": "26d61aae134bf29e629e648f9c9cba4036c6b19def299d70fa3ddd78258cfa20",
+      "backedUp": true
+    },
+    {
+      "path": "production/website/src/app/events-news/[slug]/page.tsx",
+      "sha256": "ffa12c1f666e72c40a6cb2abbad4fd9e0ad1ffed7f941ac2b74c2c675cb0fe09",
+      "backedUp": true
+    },
+    {
+      "path": "production/website/src/app/events-news/[slug]/groups/[groupId]/page.tsx",
+      "sha256": "9bf9e684bfb8171daac07eea7aed35247a43ebb775871c3dac282eec250bcd73",
+      "backedUp": true
+    },
+    {
+      "path": "production/website/src/app/mobile-app.css",
+      "sha256": "9cb8ce990fcae267dc5e5eba29a1463a861aa5480a4d7d40c43d5141b0842ac1",
+      "backedUp": true
+    },
+    {
+      "path": "production/website/src/components/events/EventPlatformSearch.tsx",
+      "sha256": "76fdfa817311c3d2d5b22e625417b01ce046f1bea36e63b554acf07f8d93c7fe",
+      "backedUp": true
+    },
+    {
+      "path": "production/website/src/components/events/EventGroupSearch.tsx",
+      "sha256": "352f16a5d56081fafec875e3df8e445cf5746c3aac5515aed64e4f77ffab03bb",
+      "backedUp": true
+    },
+    {
+      "path": "production/website/public/sw.js",
+      "sha256": "24ded95d84c7d5dc45a440ce1c721ef0d280093bf3060f52a0fe3d38791ab09a",
+      "backedUp": true
+    },
+    {
+      "path": "10-小程序miniprogram/pages/events/events.js",
+      "sha256": "b37edcd388f35ca0230522676698a7d3de6c9d8866fbf6eeca43ff1d84103292",
+      "backedUp": true
+    },
+    {
+      "path": "10-小程序miniprogram/pages/events/events.wxml",
+      "sha256": "097af3a55ce954a7425062cdc77290208a016a661b056e80eeec419bda63a99a",
+      "backedUp": true
+    },
+    {
+      "path": "10-小程序miniprogram/pages/events/events.wxss",
+      "sha256": "3c4b4e7a32b6367dbe4cf441b92524c3c8840f4bb0cc95597333319f06beaeb6",
+      "backedUp": true
+    },
+    {
+      "path": "10-小程序miniprogram/pages/event-detail/event-detail.js",
+      "sha256": "72e4a6b2dbc84bc112d00d520114edb993de3c6364a765de6076c78cc585fa75",
+      "backedUp": true
+    },
+    {
+      "path": "10-小程序miniprogram/pages/event-detail/event-detail.wxml",
+      "sha256": "a1375e78bcfd3a31b8062f8d3e4003ddea1d7e2d979c1a1a612ba4bef0af2bee",
+      "backedUp": true
+    },
+    {
+      "path": "10-小程序miniprogram/pages/event-detail/event-detail.wxss",
+      "sha256": "7f92e42f8d96d7eca07b3dccc1ff4cfe48006b3274da11a8b34d649e83facd5e",
+      "backedUp": true
+    },
+    {
+      "path": "10-小程序miniprogram/pages/event-group/event-group.js",
+      "sha256": "8084a60bad35a7418712766f938c0e0b305811d49e4ba16532c189b340268140",
+      "backedUp": true
+    },
+    {
+      "path": "10-小程序miniprogram/pages/event-group/event-group.wxml",
+      "sha256": "dd36395f41bc9b97da1e4964138808478361623bc4fe393c0a8075efbcd1726a",
+      "backedUp": true
+    },
+    {
+      "path": "10-小程序miniprogram/pages/event-group/event-group.wxss",
+      "sha256": "c53040040d324259abd1860a46b54fd4b0cc5c35d3a0bbc2bf68cd7491d2c3da",
+      "backedUp": true
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventsView.swift",
+      "sha256": "b330355d3b352a310a85866df8141727033a48645d49f79bf7e18af9ef60f904",
+      "backedUp": true
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventDetailView.swift",
+      "sha256": "e0a6da184cd938c3bf515245c7ede5279801dcc68bbda839e115b350487e3d38",
+      "backedUp": true
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventParticipantViews.swift",
+      "sha256": "9fad2ff5e5b3c7f4fe0065085cd002b520ca316cefa10e41588865f9a8ba1af5",
+      "backedUp": true
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventUI.swift",
+      "sha256": "b15bed4bb596e189700a66de9b2cc5582bbd429bdc719330359452cd4055d6e4",
+      "backedUp": true
+    },
+    {
+      "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java",
+      "sha256": "61e5a4610e1e62f8e2b3c635a94e986307fd7217a7e495626b6fe6b5070e0ae0",
+      "backedUp": true
+    },
+    {
+      "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+      "sha256": "e6d4d5b5da3b5ccae477850bc91c9a4fd90ef7437084250850a60f391d06f436",
+      "backedUp": true
+    },
+    {
+      "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/components/PublicEventView.ets",
+      "sha256": "267da5407974fa0a3bbf4fea76592e9bda3f66f2c76096bb76c436289081d5e8",
+      "backedUp": true
+    },
+    {
+      "path": "production/website/src/app/events-news/events.module.css",
+      "sha256": "baaec5d5201e4e74125ed80b6f4f451bcf8089d90af12c24d970807baec8dfd6",
+      "backedUp": false
+    },
+    {
+      "path": "production/website/src/components/Navbar_v2.tsx",
+      "sha256": "4962b79cd54dc54db8387fea9ceb3b2fe150a76b42efbfb0254ae3ed829f1ded",
+      "backedUp": true
+    }
+  ],
+  "builds": [
+    {
+      "name": "ios-core-checks",
+      "returncode": 0,
+      "seconds": 11.3,
+      "command": [
+        "swift",
+        "run",
+        "--scratch-path",
+        "/tmp/swod-event-platform-core",
+        "EvaCoreChecks"
+      ],
+      "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance"
+    },
+    {
+      "name": "harmony-build",
+      "returncode": 0,
+      "seconds": 12.1,
+      "command": [
+        "/Users/lilei/Library/Huawei/CommandLineTools/6.1.1.418/command-line-tools/bin/hvigorw",
+        "assembleHap",
+        "-p",
+        "product=default",
+        "-p",
+        "buildMode=debug",
+        "--no-daemon"
+      ],
+      "cwd": "/Users/lilei/Library/Caches/SWOD/HarmonyOS/event-platform-concept-20261113"
+    },
+    {
+      "name": "harmony-checks",
+      "returncode": 0,
+      "seconds": 0.5,
+      "command": [
+        "node",
+        "--test",
+        "scripts/platform-api.test.cjs",
+        "scripts/course-media.test.cjs",
+        "scripts/event-presentation.test.cjs"
+      ],
+      "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/HarmonyOS/EvaDance"
+    },
+    {
+      "name": "ios-build",
+      "returncode": 0,
+      "seconds": 16.3,
+      "command": [
+        "xcodebuild",
+        "-project",
+        "EvaDance.xcodeproj",
+        "-scheme",
+        "EvaDance",
+        "-configuration",
+        "Debug",
+        "-destination",
+        "generic/platform=iOS Simulator",
+        "-derivedDataPath",
+        "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/共享资料/同步更新/20261113-event-platform-concept/build-cache/ios-derived-data",
+        "CODE_SIGN_IDENTITY=-",
+        "CODE_SIGNING_ALLOWED=YES",
+        "ARCHS=arm64",
+        "ONLY_ACTIVE_ARCH=YES",
+        "COMPILER_INDEX_STORE_ENABLE=NO",
+        "build"
+      ],
+      "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance"
+    },
+    {
+      "name": "android-checks",
+      "returncode": 0,
+      "seconds": 8.2,
+      "command": [
+        "./gradlew",
+        "assembleDebug",
+        "testDebugUnitTest",
+        "lintDebug",
+        "--console=plain"
+      ],
+      "cwd": "/Users/lilei/Library/Caches/SWOD/Android/event-platform-concept-20261113"
+    }
+  ],
+  "miniTests": {
+    "passed": 158,
+    "failed": 0,
+    "IDE": "observed zero errors in WeChat DevTools; runtime tested list and compact detail with actual server data"
+  },
+  "website": {
+    "buildId": "SdhNqLe1V76k8vIC9ZUGp",
+    "backup": "/www/wwwroot/dongfangwuquan/deploy-backups/event-platform-concept-20261113",
+    "health": "passed",
+    "files": {
+      "src/app/events-news/page.tsx": "26d61aae134bf29e629e648f9c9cba4036c6b19def299d70fa3ddd78258cfa20",
+      "src/app/events-news/[slug]/page.tsx": "ffa12c1f666e72c40a6cb2abbad4fd9e0ad1ffed7f941ac2b74c2c675cb0fe09",
+      "src/app/events-news/[slug]/groups/[groupId]/page.tsx": "9bf9e684bfb8171daac07eea7aed35247a43ebb775871c3dac282eec250bcd73",
+      "src/app/events-news/events.module.css": "baaec5d5201e4e74125ed80b6f4f451bcf8089d90af12c24d970807baec8dfd6",
+      "src/app/mobile-app.css": "9cb8ce990fcae267dc5e5eba29a1463a861aa5480a4d7d40c43d5141b0842ac1",
+      "src/components/events/EventPlatformSearch.tsx": "76fdfa817311c3d2d5b22e625417b01ce046f1bea36e63b554acf07f8d93c7fe",
+      "src/components/events/EventGroupSearch.tsx": "352f16a5d56081fafec875e3df8e445cf5746c3aac5515aed64e4f77ffab03bb",
+      "public/sw.js": "24ded95d84c7d5dc45a440ce1c721ef0d280093bf3060f52a0fe3d38791ab09a",
+      "src/components/Navbar_v2.tsx": "4962b79cd54dc54db8387fea9ceb3b2fe150a76b42efbfb0254ae3ed829f1ded"
+    },
+    "databaseMutation": false,
+    "miniUploaded": false,
+    "appsUploaded": false,
+    "finalRouteStatus": {
+      "/events": 200,
+      "/events?status=registering": 200,
+      "/events/event-2026-100060": 200,
+      "/events/event-2026-100060/groups/204276": 200,
+      "/sw.js": 200
+    },
+    "pm2": "online"
+  },
+  "httpChecks": {
+    "list": true,
+    "registeringCards": [
+      "K5-GBA湾区舞蹈节",
+      "凰之翎第六届国际舞蹈艺术节"
+    ],
+    "endedFilter": true,
+    "detail": "/events/event-2026-100060",
+    "group": "/events/event-2026-100060/groups/204276",
+    "unpublishedGroupHasNoPodium": true,
+    "coverStyles": true,
+    "workerVersion": "swod-pwa-v15-event-platform-20261113"
+  },
+  "publicHTTP": {
+    "eventsNewDesign": true,
+    "realK5AndSixthEvent": true,
+    "serviceWorker": "swod-pwa-v15-event-platform-20261113"
+  },
+  "legacyWebTests": {
+    "candidatePassed": 9,
+    "candidateFailed": 5,
+    "unchangedProductionBaselinePassed": 9,
+    "unchangedProductionBaselineFailed": 5,
+    "detail": "React cache test harness and alias resolution; legacy direct WeChat login selector; preexisting service-worker assertion. Not introduced by this UI change; see ops logs."
+  },
+  "artifacts": [
+    {
+      "platform": "iOS Simulator",
+      "path": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/共享资料/同步更新/20261113-event-platform-concept/build-cache/ios-derived-data/Build/Products/Debug-iphonesimulator/EvaDance.app/EvaDance",
+      "sha256": "f455c16e50633af55bd515e69bdc3f3f166da032fd6c9be25ff30b51b61c893d",
+      "bytes": 40416
+    },
+    {
+      "platform": "Android Debug",
+      "path": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/共享资料/同步更新/20261113-event-platform-concept/build-cache/android-cache/app/build/outputs/apk/debug/app-debug.apk",
+      "sha256": "afcd294abf497154159d3c5b311389df5013267788f89c9631aca4bcb6fa5853",
+      "bytes": 38332846
+    },
+    {
+      "platform": "HarmonyOS unsigned debug",
+      "path": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/共享资料/同步更新/20261113-event-platform-concept/build-cache/harmony-cache/entry/build/default/outputs/default/entry-default-unsigned.hap",
+      "sha256": "33a729decc4deb9880bdd49356ed89258af2f424adbab4fc2b80f23b63b73bf9",
+      "bytes": 25278083
+    }
+  ],
+  "runtime": {
+    "iOSSimulator": "built, installed over existing app without data reset, launched; event list, compact detail, group privacy state opened via Device Hub",
+    "mini": "source updated and DevTools run; not uploaded",
+    "AndroidHarmony": "debug build and existing regressions passed; runtime/physical-device visual acceptance remains pending",
+    "website": "desktop candidate visually checked; public final HTML, route status, file hashes and worker version verified",
+    "installedPWA": "physical installed-PWA activation/upgrade acceptance pending"
+  },
+  "preserved": [
+    "Original server photos and event IDs; no illustrative mockup data imported",
+    "Authentication, registration/payment/music handlers and course entitlements",
+    "Original signatures, bundle/package IDs, release versions and store state",
+    "Preexisting unrelated working-tree changes"
+  ],
+  "uploads": {
+    "mini": false,
+    "iOS": false,
+    "Android": false,
+    "HarmonyOS": false
+  },
+  "testWritesToProduction": false,
+  "cleanup": "Stopped task preview server and SSH tunnel; preserved original build/cache files and user activity"
+}

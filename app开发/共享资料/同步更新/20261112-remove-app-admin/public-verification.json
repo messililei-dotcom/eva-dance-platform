@@ -1,0 +1,120 @@
+{
+  "checkedAt": "2026-11-12T13:45:00.913478+08:00",
+  "checks": [
+    {
+      "path": "/api/login",
+      "platform": "ios",
+      "method": "POST",
+      "status": 403
+    },
+    {
+      "path": "/api/event/competitions",
+      "platform": "ios",
+      "method": "GET",
+      "status": 403
+    },
+    {
+      "path": "/api/event/players/1",
+      "platform": "ios",
+      "method": "POST",
+      "status": 403
+    },
+    {
+      "path": "/api/app/v1/events",
+      "platform": "ios",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/app/v1/events/1/judge",
+      "platform": "ios",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/login",
+      "platform": "android",
+      "method": "POST",
+      "status": 403
+    },
+    {
+      "path": "/api/event/competitions",
+      "platform": "android",
+      "method": "GET",
+      "status": 403
+    },
+    {
+      "path": "/api/event/players/1",
+      "platform": "android",
+      "method": "POST",
+      "status": 403
+    },
+    {
+      "path": "/api/app/v1/events",
+      "platform": "android",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/app/v1/events/1/judge",
+      "platform": "android",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/login",
+      "platform": "harmony",
+      "method": "POST",
+      "status": 403
+    },
+    {
+      "path": "/api/event/competitions",
+      "platform": "harmony",
+      "method": "GET",
+      "status": 403
+    },
+    {
+      "path": "/api/event/players/1",
+      "platform": "harmony",
+      "method": "POST",
+      "status": 403
+    },
+    {
+      "path": "/api/app/v1/events",
+      "platform": "harmony",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/app/v1/events/1/judge",
+      "platform": "harmony",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/event/competitions",
+      "platform": "web",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/login",
+      "platform": "web",
+      "method": "POST",
+      "status": 400
+    },
+    {
+      "path": "/api/app/v1/config",
+      "platform": "ios",
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "flags": {
+    "oneTapLogin": true,
+    "offlineDownload": false,
+    "pushEnabled": false
+  },
+  "realAdminCredentialsUsed": false,
+  "realManagementOrScoreWrites": false
+}

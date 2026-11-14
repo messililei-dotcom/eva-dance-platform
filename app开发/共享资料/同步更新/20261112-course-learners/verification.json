@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-11-12T12:05:40.096444+08:00",
+  "request": "课程卡片显示与小程序一致的学员数",
+  "sourceOfTruth": {
+    "miniUI": "10-小程序miniprogram/shared/popularity.js",
+    "sharedRoute": "10-统一平台admin-platform/src/lib/server/app-route-map.ts",
+    "formula": "total_students + server student_display_base; no local random base or hardcoded803",
+    "meaning": "Configured public display count, not real-time concurrent learners. total_students counts distinct historical CourseAuthorization members without active-only filtering; do not describe as currently learning.",
+    "missingOrInvalid": "Hide count rather than fabricate zero or a fallback base"
+  },
+  "publicAPI": "Compared mini/public/series and app/v1/public/series, 58 course fields identical. Sample id6 total_students105 + base698 =803.",
+  "changes": [
+    "iOS catalogue/detail and owned-course cards",
+    "Android catalogue/detail and owned-course cards",
+    "Harmony catalogue and owned-course cards"
+  ],
+  "verification": {
+    "iOS": "Simulator Debug build passed; installed retaining session. CUA read course id6 card: 伊娃 · 35 节课 · 803名学员, ✓ 已解锁. Other cards show their own counts.",
+    "Android": "Debug assemble and existing32 unit suite passed/up-to-date; current UI runtime not verified",
+    "Harmony": "Unsigned Debug HAP compiled; current UI runtime not verified",
+    "device": "No physical device verification"
+  },
+  "sources": {
+    "iOS/EvaDance/Sources/EvaCore/CoursePresentation.swift": "e2a4d733344cca8f29d366cc6ffdd0a095c5169f8e1026aa3c0d3531b746556a",
+    "iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift": "51324ab6ff284e5c0a920de58e04e4030a1a37bd7632b2c62394864c7fb85ce2",
+    "iOS/EvaDance/Sources/EvaDanceApp/AccountCourseRow.swift": "174d3ccb2227daca96a305edf4ed67086406f01bc4a7d805847c36f0d4f2279f",
+    "Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "c1912977d4a0daa5b4bc0e02f4a65859588e15707d1b839edf5174d7c70ea3e1",
+    "HarmonyOS/EvaDance/entry/src/main/ets/services/CoursePresentation.ets": "ee51c347d5c770f315af7d508c9eb1b4ac4fc5acb6dc1506f2e2af686ae7ab95",
+    "HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets": "d1b9cf71f7155d95f35e3236192de8ab96342678e3ad2cb4172b7681798df5cb",
+    "HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "6a2ab1640b0b8f49df22eb41e490e8cb0093be09dcf4c08f948194f8c6cbd161"
+  },
+  "release": "Local code and iOS simulator updated; no release registry, original identity, production feature flags or store submissions changed."
+}

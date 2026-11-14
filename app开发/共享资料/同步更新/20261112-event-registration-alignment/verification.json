@@ -1,0 +1,65 @@
+{
+  "checkedAt": "2026-11-12T14:16:01.359098+08:00",
+  "request": "Align native event registration page to supplied mini-program screenshots",
+  "layout": [
+    "Black event header with gold registration label, event title/date/location",
+    "Warm page canvas and bordered white form; dark appearance retained",
+    "Stacked visible required/optional labels, outlined inputs, side-by-side country code and phone",
+    "Searchable group selector using fresh event groups and selected group fee",
+    "Optional music chooser before multiline remarks; red music and submit buttons; payment continuation hint",
+    "Form width constrained for tablets, scrolling and existing native back navigation retained"
+  ],
+  "behavior": {
+    "countries": "Same18 country/region options as mini-program, plus editable calling code",
+    "profile": "Verified current member profile fills name and phone; async account/session guards retained",
+    "groups": "Fetched from current event endpoint; server group ID used at submission; no invented fallback groups",
+    "music": "Existing system document pickers and MP3/WAV/M4A/AAC/FLAC10MB validation retained; optional on initial registration; later replace under existing authorization",
+    "submission": "Existing single-group submission and confirmation retained. No new batch registration/shared-payment behavior is claimed. Footer says multiple groups may be registered, without claiming a single transaction.",
+    "edit": "Existing member-owned edit/canEdit and music replacement paths retained",
+    "entry": "Added direct event registration entry when event is open; existing individual group entries retained"
+  },
+  "publicReadOnlyCheck": {
+    "eventId": 100061,
+    "name": "K5-GBA湾区舞蹈节",
+    "startDate": "2026-11-26",
+    "location": "广州",
+    "groups": [],
+    "checkedAt": "2026-11-12T14:15:07.686897+08:00",
+    "miniProgramGroupCount": 0,
+    "miniCompetitionName": "K5-GBA湾区舞蹈节"
+  },
+  "checks": {
+    "iOS": "Generic physical development build and simulator build passed;22 core check groups zero failures",
+    "Android": {
+      "debugBuild": "passed",
+      "tests": 32,
+      "failures": 0
+    },
+    "HarmonyOS": "Unsigned Debug HAP compiled;27 platform API/course-media regression tests passed",
+    "countryOptions": "All18 labels,flags and codes checked against mini-program source across3 platforms",
+    "simulatorInstall": "Latest iOS simulator development app installation succeeded",
+    "runtime": "Not visually accepted: CUA returned Mac locked and automatic unlock unsuccessful. No bypass attempted. Physical iPhone reported unavailable, so this change was not installed to physical device. No Android/Harmony runtime acceptance performed.",
+    "liveWrites": "No registration submissions, music uploads, payments or live member changes performed"
+  },
+  "release": {
+    "newStoreUploads": false,
+    "newReviewSubmissions": false,
+    "existingSubmissionsChanged": false,
+    "bundleIDsOriginalDistributionSignaturesFiling": "unchanged",
+    "serverDeployment": "none"
+  },
+  "sourceSHA256": {
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift": "9bfacf38266a9f1185754cf545bb4417d139a264a6f80284925e681ff9734de1",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventRegistrationView.swift": "f15766e12b4de6bc339df2e6d08963a9c33ee3a5014a6617b116b77a93d03bd2",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventRegistrationStyle.swift": "cfb0fe812512b40ee98542c88918793da5fbcf9ecb375a4f81bbb371fe9c7128",
+    "app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj": "69bb560d188c3676749f799f81ffeeddacd3678d114212a1723e62f2b878df69",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "d1903749288723df679c4930003664a72590e0a123fae56a8b5254486aecebfc",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/RegistrationCountries.java": "1fe6d30bea24f204629fd88325bd5452c392f634b0c9561dfc09282bc0c2700c",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "672d92f6ef4d2f07dce5fb6be12015b8d7384a4c2ba9283fc0b4352daf941dd5",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/RegistrationCountries.ets": "6550c6483909eb4f986302a129edf5f36bfcc3079479e9647a33dfac7ca7cb69",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets": "8ce399be019ac54cf484d0afa5e3342c172fc8a2367d380646430f408f35cfc3",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/SwodTheme.ets": "cc61660074ccd7660e2d4f9d9c95198131be0f047144a8e4e275d1062a189b9e",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/element/color.json": "fa9a35d1126623ce5647e2f582d55a213f722366d3678f0030c438d4b712126b",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/element/color.json": "b61e662de4f8d1837404d7d957cf2ddf275a0923f595f3ddf5c2c16c1ae35a02"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-11-12T13:05:07.070337+08:00",
+  "authorization": "2026-11-12 user requested development and deployment of native local-SIM login; supersedes earlier instruction to keep this capability off. Other production switches remain unchanged.",
+  "implementation": "Three native SDKs call official operator authorization pages only after explicit user action/consent. Provider SDK token exchanged by server GetMobile; never accept client phone as identity. Existing App authentication and course entitlements retained.",
+  "sources": {
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CarrierLogin.java": "726ae8151a73c08b25e5e6543157c155eaa0d2be92bba836ed07322923be8d23",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CarrierLogin.ets": "47ac8c4ca1b1be53aefea46088cf491258280b1eb119b06df788da21eb00ac1f",
+    "10-统一平台admin-platform/src/lib/server/app-carrier-auth.ts": "6a4fa02b47730a4e52c2278e5d951c92faf56c64dd899b4f511a010885af4e6b"
+  },
+  "nativeChanges": {
+    "Android": "Ignore callbacks from cancelled or previous attempt",
+    "HarmonyOS": "Cancel during resource preparation cannot open a late auth page; ignore stale SDK callbacks",
+    "iOS": "Existing generation/cancellation guard retained; simulator clearly explains no SIM authentication"
+  },
+  "checks": {
+    "serverAuth": {
+      "passed": 18,
+      "failed": 0
+    },
+    "harmonyCancellationRegression": {
+      "passed": 2,
+      "failed": 0,
+      "kind": "Mocked SDK control-flow only, not operator SIM proof"
+    },
+    "iOSCore": "22 check groups zero failures",
+    "Android": "Debug build and existing32 test suite pass/up-to-date",
+    "HarmonyOS": "Unsigned Debug HAP build passed",
+    "shippedArtifacts": "iOS14 Android21 Harmony23 reviewed packages each contain private SDK configuration with correct app identity; no secret values retained in evidence"
+  },
+  "deployment": {
+    "checkedAt": "2026-11-12T05:03:58.742949+00:00",
+    "backup": "/www/wwwroot/dongfangwuquan/deploy-backups/carrier-login-20261112T050358Z",
+    "buildId": "kGGAziGGzhCwQ-M0iHHz3",
+    "priorRuntimeFlag": null,
+    "changedKeys": [
+      "APP_ONE_TAP_ENABLED"
+    ],
+    "nativePackageChanged": false,
+    "secretsPrinted": false,
+    "health": {
+      "oneTapLogin": true,
+      "offlineDownload": false,
+      "pushEnabled": false
+    },
+    "status": "deployed"
+  },
+  "publicVerificationFile": "production-verification.json",
+  "remaining": [
+    "Real SIM/operator token retrieval and successful login not verified",
+    "Android/Harmony cancellation fixes are local development changes; not in current store packages",
+    "No paid plan purchase, new agreements, account resets or store resubmission performed"
+  ]
+}

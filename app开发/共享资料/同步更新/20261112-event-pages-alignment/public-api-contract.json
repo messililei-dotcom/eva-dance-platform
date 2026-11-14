@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-11-12T14:33:52.785540+08:00",
+  "publicSource": "https://admin.swod.com.cn/api/mini",
+  "eventId": 28,
+  "eventGroupCount": 49,
+  "registrationPublic": true,
+  "judgeScoresPublic": true,
+  "groupId": 1730,
+  "groupPlayerCount": 5,
+  "eventResponseSHA256": "c0b719fdfdefbee65f5f0a0975485ae47efdffa47a883f37d566fe36e9d6a8cb",
+  "groupResponseSHA256": "384fff01703fc4bc51ff8353b4eb175df174a4fc9730e8d0045f58f522030bf2",
+  "publicGroupContract": true,
+  "playerId": 403,
+  "playerResponseSHA256": "1768b7454155921bc7f3ad9972ad0e94f16c6351784f3b6f502c1c4cb1186be3",
+  "publicPlayerContract": true,
+  "playerPublishedScorePresent": true,
+  "judgeScoresReturned": 7,
+  "privacyContract": "Public switch off: existing API anonymizes judge identity and returns null individual score; UI renders 未公开. This rule is covered by isolated server fixtures; live sample used a public-score event."
+}

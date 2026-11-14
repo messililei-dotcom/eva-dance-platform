@@ -113,7 +113,7 @@ export function proxy(request: NextRequest) {
   } else if (/^\/courses\/[^/]+\/videos(?:\/|$)/.test(pathname)) {
     // 学习页的 HTML 只是公共客户端外壳，个人进度和播放地址由禁止缓存的 API 另行读取。
     response.headers.set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=60');
-  } else if (pathname === '/events' || pathname.startsWith('/events/') || pathname === '/events-news' || pathname.startsWith('/events-news/') || pathname === '/api/events/search') {
+  } else if (pathname === '/event-results' || pathname.startsWith('/event-results/') || pathname === '/events' || pathname.startsWith('/events/') || pathname === '/events-news' || pathname.startsWith('/events-news/') || pathname === '/api/events/search') {
     response.headers.set('Cache-Control', 'private, no-store, no-cache, max-age=0, s-maxage=0');
   } else if (isPrivatePage(pathname)) {
     response.headers.set('Cache-Control', 'private, no-store, no-cache, max-age=0, s-maxage=0');

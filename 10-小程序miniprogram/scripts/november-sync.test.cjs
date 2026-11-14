@@ -131,10 +131,10 @@ test('editing a judge score retains its criterion key and submits the entered de
   let submitted;
   const { page } = pageAt('event-judge', {
     request: async (_url, options) => { submitted = options.data.scores; }
-  });
+  }, { showModal: options => { assert.match(options.content, /选手A.*8.75/); options.success({ confirm: true }); } });
   page.load = async () => {};
   page.setData({
-    id: '1', groupId: '2', playerId: '3',
+    id: '1', groupId: '2', playerId: '3', player: { id: 3, name: '选手A' }, loading: false,
     criteria: [{ key: 'total', name: '总评', maxScore: 10, value: '' }]
   });
   page.onScore({ currentTarget: { dataset: { index: 0 } }, detail: { value: '8.75' } });
@@ -164,4 +164,27 @@ test('a late 401 from a prior account cannot refresh or replace the current acco
   await assert.rejects(response, { code: 'SESSION_CHANGED' });
   assert.equal(renewals, 0);
   assert.equal(storage.token, 'new-token');
+});
+
+test('entrant names retain Chinese, English and internal spaces in queued registration payloads', () => {
+  const { page } = pageAt('event-register', {});
+  page.setData({ groups: [{ id: 8, name: '测试组' }], groupId: '8', phone: '13800001234', performanceTitle: '测试' });
+  for (const name of ['张 三', 'Connie Tse', '张三 Eva  Noor', 'Alexandria Catherine Elizabeth Montgomery', 'A'.repeat(120)]) {
+    page.setData({ name: '  ' + name + '  ' });
+    assert.equal(page.currentEntry().body.name, name);
+  }
+  page.setData({ name: 'A'.repeat(121) });
+  assert.throws(() => page.currentEntry(), /120/);
+});
+
+// A cancellation must never post scores or leave the form busy.
+test('judge confirmation cancellation and display failure keep scores unsubmitted', async () => {
+  for (const mode of ['cancel', 'fail']) {
+    let writes = 0;
+    const { page } = pageAt('event-judge', { request: async () => { writes++; } }, {
+      showModal: options => mode === 'cancel' ? options.success({confirm:false}) : options.fail()
+    });
+    page.setData({ id:'1', groupId:'2', playerId:'3', player:{name:'选手A'}, loading:false, total:'8.75', criteria:[{key:'total',name:'总评',maxScore:10,value:'8.75'}] });
+    await page.submit(); assert.equal(writes,0); assert.equal(page.data.submitting,false);
+  }
 });

@@ -93,7 +93,7 @@ export function recalculateGroupRankings(db: any, groupId: number) {
     const scoreRows = db.prepare(`
       SELECT s.judge_id, s.calculated_score, s.criteria_scores_json, s.version, COALESCE(gj.weight, 1) AS weight
       FROM event_scores s
-      LEFT JOIN event_group_judges gj ON gj.group_id = s.group_id AND gj.judge_id = s.judge_id
+      JOIN event_group_judges gj ON gj.group_id = s.group_id AND gj.judge_id = s.judge_id AND gj.status = 'active'
       WHERE s.group_id = ?
         AND s.player_id = ?
         AND s.score_status IN ('submitted', 'reviewed', 'published')
@@ -102,9 +102,8 @@ export function recalculateGroupRankings(db: any, groupId: number) {
     const scores = summarizeJudgeScoreRows(scoreRows).sort((a, b) => a.calculated_score - b.calculated_score);
     const drop = Boolean(rule.drop_high_low) && scores.length >= 6;
     const usedScores = drop ? scores.slice(1, -1) : scores;
-    const weightSum = usedScores.reduce((sum: number, row: any) => sum + Number(row.weight || 1), 0);
-    const scoreSum = usedScores.reduce((sum: number, row: any) => sum + Number(row.calculated_score || 0) * Number(row.weight || 1), 0);
-    const total = weightSum ? scoreSum / weightSum : 0;
+    const scoreSum = usedScores.reduce((sum: number, row: any) => sum + Number(row.calculated_score || 0), 0);
+    const total = usedScores.length ? scoreSum / usedScores.length : 0;
     return { player, total: Number(total.toFixed(Math.max(0, Math.min(4, Number(rule.decimal_places ?? 2))))), scoreCount: scores.length };
   }).sort((a: any, b: any) => b.total - a.total || String(a.player.player_no || '').localeCompare(String(b.player.player_no || '')));
 
@@ -142,5 +141,39 @@ export function rerankGroupRankings(db: any, groupId: number, updatedAt = nowIso
   `).all(groupId);
   const update = db.prepare('UPDATE event_rankings SET rank_no = ?, updated_at = ? WHERE id = ?');
   rankings.forEach((row: any, index: number) => update.run(index + 1, updatedAt, row.id));
+  syncCompletedGroupPublication(db, groupId, updatedAt);
   return rankings.length;
+}
+
+// Scores become public per entry; ranks stay zero until the whole group is complete.
+export function syncCompletedGroupPublication(db: any, groupId: number, updatedAt = nowIso()) {
+  const players = db.prepare(`SELECT p.id, r.manual_total FROM event_players p
+    LEFT JOIN event_rankings r ON r.group_id=p.group_id AND r.player_id=p.id
+    WHERE p.group_id=? AND p.audit_status!='rejected'
+      AND p.status NOT IN ('withdrawn','cancelled')`).all(groupId);
+  const judges = db.prepare(`SELECT DISTINCT judge_id FROM event_group_judges
+    WHERE group_id=? AND status='active'`).all(groupId);
+  const hasScore = db.prepare(`SELECT 1 FROM event_scores WHERE group_id=? AND player_id=? AND judge_id=?
+    AND score_status IN ('submitted','reviewed','published') LIMIT 1`);
+  const completed = players.filter((player: any) => player.manual_total != null ||
+    (judges.length > 0 && judges.every((judge: any) => hasScore.get(groupId, player.id, judge.judge_id))));
+  const groupComplete = players.length > 0 && completed.length === players.length;
+  const readyIds = new Set(completed.map((player: any) => player.id));
+  const publish = db.prepare(`UPDATE event_rankings SET status='published', published_total=calculated_total,
+    published_at=?, updated_at=? WHERE group_id=? AND player_id=?`);
+  const hide = db.prepare(`UPDATE event_rankings SET status='draft', published_total=NULL,
+    published_at='', updated_at=? WHERE group_id=? AND player_id=?`);
+  const publishScores = db.prepare(`UPDATE event_scores SET score_status='published',
+    published_score=calculated_score, updated_at=? WHERE group_id=? AND player_id=?
+      AND score_status IN ('submitted','reviewed','published')
+      AND EXISTS (SELECT 1 FROM event_group_judges gj WHERE gj.group_id=event_scores.group_id
+        AND gj.judge_id=event_scores.judge_id AND gj.status='active')`);
+  players.forEach((player: any) => {
+    if (readyIds.has(player.id)) {
+      publish.run(updatedAt, updatedAt, groupId, player.id);
+      publishScores.run(updatedAt, groupId, player.id);
+    } else hide.run(updatedAt, groupId, player.id);
+  });
+  if (!groupComplete) db.prepare(`UPDATE event_rankings SET rank_no=0 WHERE group_id=?`).run(groupId);
+  return groupComplete;
 }

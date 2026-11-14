@@ -1,0 +1,36 @@
+✔ first audio lesson keeps its source title and media kind instead of masquerading as a video (61.370625ms)
+✔ video lessons and resume data remain associated with the real video ID (10.928375ms)
+✔ new learner enters first lesson directly (8.457417ms)
+✔ resume chooses latest server history rather than catalog order (8.816792ms)
+✔ foreign and unwatched rows cannot choose a lesson, empty course stays empty (10.32775ms)
+✔ offline course summary matches mini-program catalog and ordering fixtures (14.868375ms)
+✔ cancel during protected credential write restores the previous session on disk (71.417875ms)
+✔ logout during protected credential write cannot restore an account on restart (14.379083ms)
+✔ external link policy permits the filing query and retains the existing trusted destinations (17.088333ms)
+✔ member password login uses the review-capable app endpoint and replaces the session (12.469917ms)
+✔ carrier login sends only the operator token and accepts server-owned identity (14.5965ms)
+✔ a late carrier login response cannot restore a cleared account (8.750125ms)
+✔ an incomplete carrier response never creates a logged-in account (7.724958ms)
+✔ course covers resolve server-relative URLs without accepting unsafe schemes or hosts (7.831666ms)
+✔ PATCH uses native RCP with bearer auth, no redirect and no shared cache (10.657792ms)
+✔ PATCH redirect is rejected and its session is closed (6.591333ms)
+✔ PATCH 401 refreshes through the existing API before retrying with the renewed token (6.661333ms)
+✔ logout during PATCH prevents credential refresh and replay (6.552084ms)
+✔ native client has no administrator login or request transport (6.58125ms)
+✔ invalid PATCH paths are rejected before starting a network session (7.742792ms)
+✔ existing GET transport retains cache and redirect protection (5.333042ms)
+✔ sms login cannot commit a delayed response after account changed (11.897625ms)
+✔ sms login cannot commit a delayed response after login screen closed (8.331125ms)
+✔ password login cannot commit a delayed response after account changed (5.015709ms)
+✔ password login cannot commit a delayed response after login screen closed (6.100584ms)
+✔ carrier login cannot commit a delayed response after account changed (4.948375ms)
+✔ carrier login cannot commit a delayed response after login screen closed (5.9265ms)
+✔ only public group and player GETs use public transport; judge, malformed routes and writes remain private (5.351541ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 414.229209

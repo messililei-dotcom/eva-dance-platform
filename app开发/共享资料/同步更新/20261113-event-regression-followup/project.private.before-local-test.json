@@ -1,0 +1,23 @@
+{
+  "description": "本机微信开发者工具调试配置；正式发布仍需在公众平台配置合法域名",
+  "setting": {
+    "urlCheck": true,
+    "coverView": false,
+    "lazyloadPlaceholderEnable": false,
+    "skylineRenderEnable": false,
+    "preloadBackgroundData": false,
+    "autoAudits": false,
+    "useApiHook": true,
+    "showShadowRootInWxmlPanel": false,
+    "useStaticServer": false,
+    "useLanDebug": false,
+    "showES6CompileOption": false,
+    "compileHotReLoad": true,
+    "checkInvalidKey": true,
+    "ignoreDevUnusedFiles": true,
+    "bigPackageSizeSupport": false
+  },
+  "libVersion": "3.17.3",
+  "projectname": "eva-dance-training-miniprogram",
+  "condition": {}
+}

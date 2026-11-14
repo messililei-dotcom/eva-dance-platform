@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-11-12T13:36:59.645084+08:00",
+  "request": "课程笔记作为默认开启、可关闭的弹幕显示",
+  "scope": "Only current authenticated member notes via existing private /notes?video_id endpoint; no social/public sharing and no backend schema change",
+  "behavior": {
+    "initial": "Enabled on opening each lesson",
+    "switch": "Player overlay 弹幕 开/关; notes tab also exposes toggle on iOS/Harmony",
+    "timeline": "8s window per timestamp, maximum3 simultaneous notes; position derived from media clock so pause/seek/loop follow playback",
+    "content": "Display up to120 characters on one line; original stored note unchanged",
+    "reload": "On entering lesson and after saving note, with manual retry on load error",
+    "accountSafety": "Session/lesson/request identity guards drop stale responses; no personal notes in public shared cache",
+    "protection": "Screen capture/video protection preserved; iOS hides notes while capture blocks video"
+  },
+  "checks": {
+    "iOS": "Physical development build passed; Core23 groups zero failures including time boundaries, invalid time, replay/seek state and density",
+    "Android": "Debug assemble passed",
+    "Harmony": "Unsigned Debug HAP compiled",
+    "iPhoneInstall": "Updated development test bundle installed; current session preserved",
+    "runtime": "Actual private-note playback and per-platform inline/fullscreen visual acceptance not completed. Harmony native full-screen overlay behavior specifically requires runtime verification. Synthetic checks are not device proof. No real user notes created/edited/deleted to manufacture evidence."
+  },
+  "sources": {
+    "app开发/iOS/EvaDance/Sources/EvaCore/NoteDanmakuPolicy.swift": "4c0cf5168c5c81e60153fc883e13e42a581a9cef724b3271b4c2d0d636803c76",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/LessonVideoSurface.swift": "557bd6a7b22cbf59ba4237523bfecd648196b0d9adc2997fdbb98f02193544a4",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift": "78d5ec92dc02db733e2b425d8faa0d9ed869c7c4444df886c7020b5f82a78fc7",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java": "7799621a642b46791a06fd7dce39d58fcb3fbdda14c85e812ba52d6f8b55fc8a",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "0a712d0d0303d75fde37e24da78f95cc287cf5ce92204015fd308471b1fb59fa",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets": "70f9bd7953dc6398d39153648e8144a25ac1684f9f6fe00f339c40665a9cf010"
+  },
+  "release": "No store upload/submission; existing release candidates, bundle IDs, signatures/filing and production flags unchanged"
+}

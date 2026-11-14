@@ -68,7 +68,7 @@ export async function POST(request: Request) {
   const competitionId = toNumber(body.competitionId ?? body.competition_id);
   const name = cleanText(body.name);
   if (!competitionId) return jsonError('缺少赛事ID');
-  if (!name) return jsonError('选手姓名不能为空');
+  if (!name || name.length > 120) return jsonError('请填写1至120个字符的选手姓名');
   if (!cleanText(body.performanceTitle) || cleanText(body.performanceTitle).length > 120) return jsonError('请填写1至120字的节目名称');
   const contact = normalizeEventMemberPhone(body.phone);
   if (!contact) return jsonError('手机号格式不正确');

@@ -1,0 +1,27 @@
+Building for debugging...
+[Planning deferred tasks]
+[23 / 38]
+[24 / 39] EvaCore
+[34 / 86]
+[39 / 86]
+[43 / 86]
+[48 / 86]
+[52 / 86]
+[55 / 86]
+[57 / 86]
+[58 / 86]
+[71 / 86] EvaCore
+[72 / 86] EvaCore
+[82 / 87] EvaCoreChecks-product
+[85 / 89] EvaCoreChecks-product
+[87 / 89] EvaCoreChecks-product
+Build complete! (5.90秒)
+Event count privacy, zero totals, date range and registration boundary checks passed
+Login input, consent, cooldown and operator event checks passed
+Course pricing, period availability, official introductions and catalog progress checks passed
+Offline lease identity, 24h expiry and automatic renewal recovery checks passed
+Offline elapsed-clock reboot and rollback checks passed
+Course-level progress aggregation checks passed
+Playback gesture direction and clamp checks passed
+Note overlay time boundary, seeking, pause and density checks passed
+22 contract checks; failures=0

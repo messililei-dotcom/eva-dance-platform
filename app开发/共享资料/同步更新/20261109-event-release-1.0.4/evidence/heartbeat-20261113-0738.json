@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-11-13T07:39:33.923583+08:00",
+  "version": "1.0.4",
+  "harmony": {
+    "build": 23,
+    "attemptedOfficialManagementURL": "https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2071129556072323840?appId=6917617955633704973&projectId=101653523865196397",
+    "browser": "Chrome existing profile, one fresh precise official navigation",
+    "observedDestination": "https://id1.cloud.huawei.com/CAS/portal/loginAuth.html",
+    "result": "Redirected to Huawei account sign-in; did not enter credentials, request repeated login, or bypass authentication",
+    "freshManagementStateVerified": false,
+    "freshPublicStateVerified": false,
+    "previousApprovalEvidence": "evidence/harmony23-approved-20261111/official-verification.json"
+  },
+  "ios": {
+    "build": 14,
+    "freshStatusVerified": false,
+    "lastManagementEvidence": "evidence/heartbeat-20261112-1943.json"
+  },
+  "android": {
+    "build": 21,
+    "freshStatusVerified": false,
+    "lastPublicEvidence": "evidence/heartbeat-20261113-0343.json"
+  },
+  "newReviewOrPublicResultVerified": false,
+  "newStoreSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "newNotificationNeeded": false,
+  "knownBlockedChannelsReopened": false,
+  "localDevelopmentChangesSubmitted": false
+}

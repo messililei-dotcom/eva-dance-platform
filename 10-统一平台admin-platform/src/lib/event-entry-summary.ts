@@ -17,7 +17,7 @@ export function eventEntrySummary(entries: any[]) {
       person = { ...entry, key, contestantNumber: `选手${String(people.size + 1).padStart(3, '0')}`, entries: [], totalRegistrationFee: 0 };
       people.set(key, person);
     }
-    const player = { ...entry, contestantNumber: person.contestantNumber, programNumber: `节目${String(index + 1).padStart(3, '0')}` };
+    const player = { ...entry, contestantNumber: person.contestantNumber, programNumber: `报名${String(index + 1).padStart(3, '0')}` };
     person.entries.push(player);
     // Sum registration snapshots in cents, including unpaid/refunded registrations.
     person.totalRegistrationFee = (Math.round(person.totalRegistrationFee * 100) + Math.round(Number(entry.registrationFee || 0) * 100)) / 100;

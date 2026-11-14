@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-11-12T11:06:32+08:00",
+  "version": "1.0.4",
+  "build": 14,
+  "appId": "6826038106",
+  "managementUrl": "https://appstoreconnect.apple.com/apps/6826038106/distribution/ios/version/deliverable",
+  "managementStatus": "可分发",
+  "automaticReleaseAfterApproval": true,
+  "automaticReleaseRadioChecked": true,
+  "automaticReleaseRadioDisabledBecauseDelivered": true,
+  "settingsChanged": false,
+  "chinaPublicVersion": "1.0.4",
+  "chinaPublicUrl": "https://apps.apple.com/cn/app/swod/id6826038106",
+  "updateNotesMatch": true,
+  "approvalTimestampVerified": false
+}

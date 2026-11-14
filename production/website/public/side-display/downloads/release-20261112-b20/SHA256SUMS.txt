@@ -1,0 +1,2 @@
+71529f95456ea9fdd0cd88972375793f08dbccd8df1b5920f71b5d4b7a810ff6  Side-Display-Mac-0.4.7.zip
+67923e90da53192dbb8da5ba6e87c922cd4c64c2540c67861b55ba1a268c8301  Side-Display-iOS0.5.0-build20-Mac0.4.7-source.zip

@@ -87,7 +87,7 @@ public enum AppPolicy {
     public static func isSharedPublicRead(_ path: String, method: String, hasToken: Bool) -> Bool {
         guard method == "GET", !hasToken else { return false }
         let route = String(path.split(separator: "?", maxSplits: 1).first ?? "")
-        return route.range(of: "^/(public/(series(/[1-9][0-9]*(/(courses|detail))?)?|offline-courses|calendar|home-stats)|events(/[1-9][0-9]*)?)$", options: .regularExpression) != nil
+        return route.range(of: "^/(public/(series(/[1-9][0-9]*(/(courses|detail))?)?|offline-courses|calendar|home-stats)|events(/[1-9][0-9]*(/groups/[1-9][0-9]*(/players/[1-9][0-9]*)?)?)?)$", options: .regularExpression) != nil
     }
     // No external course purchases, downloads or SDK claims in the initial learning client.
     public static let supportsDigitalPurchase = false

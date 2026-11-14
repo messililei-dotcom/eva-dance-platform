@@ -1,0 +1,511 @@
+--- before/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -25,6 +25,9 @@
+     private final ArrayDeque<Runnable> history = new ArrayDeque<>();
+     private Api api;
+     private LinearLayout root, content, pageActions, chromeBar;
++    private android.widget.FrameLayout pageStage;
++    private ImageView registrationBackdrop;
++    private View registrationTint, appNavigation;
+     private TextView title;
+     private TextView loginFeedback;
+     private Button backButton;
+@@ -85,14 +88,19 @@
+         int inset = Math.max(16, (windowWidth - (expanded ? railWidth : 0) - 880) / 2);
+         pageScroll = new ScrollView(this);pageScroll.setFillViewport(true); content = column();content.setPadding(dp(inset),dp(4),dp(inset),dp(16));pageScroll.addView(content);
+         refreshLayout=new androidx.swiperefreshlayout.widget.SwipeRefreshLayout(this);refreshLayout.addView(pageScroll);refreshLayout.setColorSchemeColors(red);refreshLayout.setOnChildScrollUpCallback((parent,child)->pageScroll.getScrollY()>0);refreshLayout.setOnRefreshListener(()->{dismissKeyboard();if(page!=null){refreshRequested=true;page.run();if(pendingLoads==0)refreshLayout.setRefreshing(false);}else refreshLayout.setRefreshing(false);});
++        pageStage=new android.widget.FrameLayout(this);
++        registrationBackdrop=new ImageView(this);registrationBackdrop.setScaleType(ImageView.ScaleType.CENTER_CROP);registrationBackdrop.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
++        registrationTint=new View(this);registrationTint.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
++        pageStage.addView(registrationBackdrop,new android.widget.FrameLayout.LayoutParams(-1,-1));pageStage.addView(registrationTint,new android.widget.FrameLayout.LayoutParams(-1,-1));pageStage.addView(refreshLayout,new android.widget.FrameLayout.LayoutParams(-1,-1));
++        registrationBackdrop.setVisibility(View.GONE);registrationTint.setVisibility(View.GONE);
+         LinearLayout tabs = row(); String[] names={"线上学院","线下课","赛事","商城","个人中心"};
+         if(expanded){tabs.setOrientation(LinearLayout.VERTICAL);tabs.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL);}
+         String[] icons={"learn","calendar","trophy","bag","person"};
+         Runnable[] pages={this::courses,this::offline,this::events,this::shop,this::account};
+         for(int i=0;i<names.length;i++) { final Runnable p=pages[i]; final int index=i; Button b=button(names[i],()->{if(index==4&&!api.loggedIn()){if(!loginPageVisible)open(this::login);return;}history.clear();selectTab(index);page=p;p.run();}); b.setTextSize(12);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);b.setCompoundDrawablePadding(dp(6));b.setGravity(Gravity.CENTER);b.setPadding(dp(2),dp(expanded?6:10),dp(2),dp(expanded?6:8));tabButtons[i]=b; tabs.addView(b,expanded?new LinearLayout.LayoutParams(-1,dp(64)):new LinearLayout.LayoutParams(0,dp(68),1)); }
+         tabs.setPadding(dp(6),dp(4),dp(6),dp(4));tabs.setBackgroundColor(SwodUi.surface(this));
+-        if(expanded){LinearLayout body=row();body.setGravity(Gravity.TOP);ScrollView rail=new ScrollView(this);rail.setVerticalScrollBarEnabled(false);rail.addView(tabs,new ScrollView.LayoutParams(-1,-2));body.addView(rail,new LinearLayout.LayoutParams(dp(railWidth),-1));body.addView(refreshLayout,new LinearLayout.LayoutParams(0,-1,1));root.addView(body,new LinearLayout.LayoutParams(-1,0,1));}
+-        else{root.addView(refreshLayout,new LinearLayout.LayoutParams(-1,0,1));root.addView(tabs);}
++        if(expanded){LinearLayout body=row();body.setGravity(Gravity.TOP);ScrollView rail=new ScrollView(this);rail.setVerticalScrollBarEnabled(false);rail.addView(tabs,new ScrollView.LayoutParams(-1,-2));appNavigation=rail;body.addView(rail,new LinearLayout.LayoutParams(dp(railWidth),-1));body.addView(pageStage,new LinearLayout.LayoutParams(0,-1,1));root.addView(body,new LinearLayout.LayoutParams(-1,0,1));}
++        else{appNavigation=tabs;root.addView(pageStage,new LinearLayout.LayoutParams(-1,0,1));root.addView(tabs);}
+         selectTab(0); setContentView(root);if(android.os.Build.VERSION.SDK_INT>=33)getOnBackInvokedDispatcher().registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,()->{if(history.isEmpty())finish();else back();}); page=this::courses; courses();notificationIntent(getIntent());messageHandler.removeCallbacks(messagePoll);messageHandler.post(messagePoll);
+     }
+     // API 33+ registers OnBackInvokedDispatcher in onCreate; this override serves API 26-32.
+@@ -103,7 +111,7 @@
+     private void selectTab(int selected){String[] icons={"learn","calendar","trophy","bag","person"};for(int i=0;i<tabButtons.length;i++){Button b=tabButtons[i];if(b!=null){boolean active=i==selected;b.setSelected(active);b.setTextColor(active?red:SwodUi.muted(this));b.setTypeface(null,active?android.graphics.Typeface.BOLD:android.graphics.Typeface.NORMAL);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],active?red:SwodUi.muted(this)),null,null);b.setBackground(SwodUi.touch(this,active?SwodUi.tonal(this):SwodUi.surface(this),14));}}}
+     private void hero(String name,String description){LinearLayout box=column();box.setPadding(0,dp(4),0,dp(8));TextView heading=text(name,22);heading.setTypeface(null,android.graphics.Typeface.BOLD);box.addView(heading);TextView summary=text(description,14);summary.setTextColor(SwodUi.muted(this));box.addView(summary);content.addView(box);}
+     private void section(String name){TextView label=text(name,18);label.setTypeface(null,android.graphics.Typeface.BOLD);label.setPadding(0,dp(12),0,dp(4));content.addView(label);}
+-    private void begin(String name) {pageScroll.setBackgroundColor(SwodUi.canvas(this));accountNotice=null;if(refreshLayout!=null){refreshLayout.setEnabled(history.isEmpty());refreshLayout.setRefreshing(refreshRequested);}refreshRequested=false;pendingLoads=0;loginPageVisible=false;courseEntryRequest++;courseEntryBusy=false; if(pageActions!=null)pageActions.removeAllViews();loginFeedback=null;courseAccessVisible=false; generation++; content.removeAllViews(); title.setText("");title.setContentDescription(name);chromeBar.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
++    private void begin(String name) {if(appNavigation!=null)appNavigation.setVisibility(View.VISIBLE);if(registrationBackdrop!=null){registrationBackdrop.setImageDrawable(null);registrationBackdrop.setVisibility(View.GONE);registrationTint.setVisibility(View.GONE);}pageScroll.setBackgroundColor(SwodUi.canvas(this));accountNotice=null;if(refreshLayout!=null){refreshLayout.setEnabled(history.isEmpty());refreshLayout.setRefreshing(refreshRequested);}refreshRequested=false;pendingLoads=0;loginPageVisible=false;courseEntryRequest++;courseEntryBusy=false; if(pageActions!=null)pageActions.removeAllViews();loginFeedback=null;courseAccessVisible=false; generation++; content.removeAllViews(); title.setText("");title.setContentDescription(name);chromeBar.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
+     private int dp(int x) {return Math.round(x*getResources().getDisplayMetrics().density);}
+     private LinearLayout column(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.VERTICAL);return v;}
+     private LinearLayout row(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.HORIZONTAL);v.setGravity(Gravity.CENTER_VERTICAL);return v;}
+@@ -452,22 +460,42 @@
+         });
+     }
+ 
++    private int registrationPanel(){return android.graphics.Color.parseColor(SwodUi.dark(this)?"#F0202328":"#F0FFFFFF");}
++    private void registrationArtwork(JSONObject event,ImageView poster){
++        String url=first(event,"coverUrl","cover_url");if(!Policy.secureURL(url))return;
++        int version=generation;
++        imageIO.execute(()->{try{
++            android.graphics.Bitmap image=Images.read(url);if(image==null)return;
++            android.graphics.Bitmap blurred=RegistrationArtwork.blur(image);
++            runOnUiThread(()->{if(version!=generation||isFinishing())return;poster.setImageBitmap(image);poster.setVisibility(View.VISIBLE);registrationBackdrop.setImageBitmap(blurred);registrationBackdrop.setVisibility(View.VISIBLE);});
++        }catch(Exception ignored){}});
++    }
+     private int registrationLine(){return android.graphics.Color.parseColor(SwodUi.dark(this)?"#4A433A":"#EADFCE");}
+     private android.graphics.drawable.GradientDrawable registrationBox(int color){android.graphics.drawable.GradientDrawable shape=SwodUi.shape(this,color,8);shape.setStroke(dp(1),registrationLine());return shape;}
+     private void registrationLabel(LinearLayout parent,String label){TextView v=text(label,15);v.setTypeface(null,android.graphics.Typeface.BOLD);v.setPadding(0,dp(18),0,dp(10));parent.addView(v);}
+     private EditText registrationInput(LinearLayout parent,String prompt){EditText v=field(parent,prompt,false);v.setBackground(registrationBox(SwodUi.surface(this)));return v;}
+     private EditText registrationField(LinearLayout parent,String label,String prompt){registrationLabel(parent,label);EditText value=registrationInput(parent,prompt);value.setContentDescription(label);return value;}
+-    private void registrationPrimary(Button button){button.setGravity(Gravity.CENTER);button.setTextColor(SwodUi.dark(this)?android.graphics.Color.BLACK:android.graphics.Color.WHITE);button.setTypeface(null,android.graphics.Typeface.BOLD);button.setCompoundDrawables(null,null,null,null);button.setBackground(SwodUi.touch(this,SwodUi.primary(this),8));}
++    private void registrationPrimary(Button button){button.setGravity(Gravity.CENTER);button.setTextColor(android.graphics.Color.WHITE);button.setTypeface(null,android.graphics.Typeface.BOLD);button.setCompoundDrawables(null,null,null,null);button.setBackground(SwodUi.touch(this,android.graphics.Color.rgb(164,26,32),8));}
+     private java.util.List<JSONObject> registrationGroups(JSONArray groups,String query){java.util.List<JSONObject> result=new java.util.ArrayList<>();String q=query.trim().toLowerCase(Locale.ROOT);for(int i=0;i<groups.length();i++){JSONObject row=groups.optJSONObject(i);if(row!=null&&row.optInt("id")>0&&row.optString("name").toLowerCase(Locale.ROOT).contains(q))result.add(row);}return result;}
+     private void registrationForm(int event, int group, long player, JSONObject existing, String currentMusic,JSONObject competition,JSONArray groups) {
+         musicBytes = null; musicFilename = ""; musicReading = false;
+         final long registrationAccount=api.accountGeneration();
+-        pageScroll.setBackgroundColor(android.graphics.Color.parseColor(SwodUi.dark(this)?"#141619":"#F8F3EA"));
+-        LinearLayout page=content,outer=column(),header=column();int available=getResources().getConfiguration().screenWidthDp-(getResources().getConfiguration().screenWidthDp>=600?104:0)-32;LinearLayout.LayoutParams formWidth=new LinearLayout.LayoutParams(dp(Math.max(0,Math.min(680,available))),-2);formWidth.gravity=Gravity.CENTER_HORIZONTAL;page.addView(outer,formWidth);content=outer;header.setPadding(dp(16),dp(18),dp(16),dp(18));header.setBackground(SwodUi.shape(this,android.graphics.Color.parseColor("#1A1A1A"),14));
+-        TextView tag=text("赛事报名",12);tag.setTextColor(android.graphics.Color.parseColor("#C8A96E"));header.addView(tag);
+-        TextView heading=text(player>0?first(competition,"competitionName","groupName"):first(competition,"name"),22);heading.setTypeface(null,android.graphics.Typeface.BOLD);heading.setTextColor(android.graphics.Color.WHITE);header.addView(heading);
+-        if(player==0){TextView detail=text((first(competition,"startDate","start_date").isEmpty()?"比赛日期待定":first(competition,"startDate","start_date"))+" · "+(first(competition,"location","venue","city").isEmpty()?"地点待定":first(competition,"location","venue","city")),14);detail.setTextColor(android.graphics.Color.LTGRAY);header.addView(detail);}outer.addView(header);
+-        LinearLayout form=column();form.setPadding(dp(14),dp(6),dp(14),dp(18));form.setBackground(registrationBox(SwodUi.surface(this)));outer.addView(form);
++        appNavigation.setVisibility(View.GONE);pageScroll.setBackgroundColor(android.graphics.Color.TRANSPARENT);
++        pageStage.setBackgroundColor(android.graphics.Color.parseColor(SwodUi.dark(this)?"#141619":"#F8F3EA"));
++        registrationTint.setBackgroundColor(android.graphics.Color.parseColor(SwodUi.dark(this)?"#7A000000":"#47FFFFFF"));
++        registrationTint.setVisibility(View.VISIBLE);
++        LinearLayout page=content,outer=column(),header=column();
++        int available=getResources().getConfiguration().screenWidthDp-32;
++        LinearLayout.LayoutParams formWidth=new LinearLayout.LayoutParams(dp(Math.max(0,Math.min(680,available))),-2);formWidth.gravity=Gravity.CENTER_HORIZONTAL;
++        page.addView(outer,formWidth);content=outer;
++        ImageView poster=new ImageView(this);poster.setScaleType(ImageView.ScaleType.CENTER_CROP);poster.setContentDescription("赛事主图");poster.setBackground(SwodUi.shape(this,SwodUi.field(this),14));poster.setClipToOutline(true);poster.setVisibility(View.GONE);outer.addView(poster,new LinearLayout.LayoutParams(-1,dp(Math.round(Math.min(680,available)*9f/16))));
++        header.setPadding(dp(16),dp(12),dp(16),dp(12));header.setBackground(registrationBox(registrationPanel()));
++        TextView heading=text(player>0?first(competition,"competitionName","groupName"):first(competition,"name"),21);heading.setTypeface(null,android.graphics.Typeface.BOLD);header.addView(heading);
++        if(player==0){TextView detail=text((first(competition,"startDate","start_date").isEmpty()?"比赛日期待定":first(competition,"startDate","start_date"))+" · "+(first(competition,"location","venue","city").isEmpty()?"地点待定":first(competition,"location","venue","city")),14);detail.setTextColor(SwodUi.muted(this));header.addView(detail);}outer.addView(header);
++        registrationArtwork(competition,poster);
++        // Editing information remains available even if optional public artwork fails.
++        if(player>0&&competition.optInt("competitionId")>0){int version=generation;io.execute(()->{try{JSONObject data=object(api.request("/events/"+competition.optInt("competitionId"),"GET",null,false));runOnUiThread(()->{if(version==generation&&registrationAccount==api.accountGeneration()&&!isFinishing())registrationArtwork(object(data.opt("competition")),poster);});}catch(Exception ignored){}});}
++        LinearLayout form=column();form.setPadding(dp(20),dp(16),dp(20),dp(20));form.setBackground(registrationBox(registrationPanel()));outer.addView(form);
+         TextView formHeading=text(player>0?"修改报名 / 补交音乐":"填写报名信息",21);formHeading.setTypeface(null,android.graphics.Typeface.BOLD);form.addView(formHeading);TextView required=text("带 * 为必填项",12);required.setTextColor(SwodUi.muted(this));form.addView(required);
+         View separator=new View(this);separator.setBackgroundColor(registrationLine());form.addView(separator,new LinearLayout.LayoutParams(-1,dp(1)));
+         EditText name = registrationField(form,"参赛姓名 *","支持中文、英文和空格");
+@@ -543,7 +571,7 @@
+             });
+         });
+         registrationPrimary((Button)outer.getChildAt(outer.getChildCount()-1));
+-        if(player==0){TextView note=text("同一赛事可报名多个组别。未付款可在个人中心继续缴费。",12);note.setGravity(Gravity.CENTER);note.setTextColor(SwodUi.muted(this));outer.addView(note);}
++        if(player==0){TextView note=text("同一赛事可报名多个组别。未付款可在个人中心继续缴费。",12);note.setGravity(Gravity.CENTER);note.setTextColor(SwodUi.muted(this));note.setBackground(registrationBox(registrationPanel()));note.setPadding(dp(12),dp(12),dp(12),dp(12));outer.addView(note);}
+         content=page;
+     }
+     @Override protected void onActivityResult(int request,int result,Intent data){
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -162,6 +162,7 @@
+   @State private registrationGroupID: number = 0;
+   @State private registrationQuery: string = '';
+   @State private registrationReady: boolean = false;
++  @State private registrationPoster: string = '';
+   @State private registrationFeedback: string = '';
+   private music?: ArrayBuffer;
+   @State private mirror: boolean = false;
+@@ -371,7 +372,7 @@
+     if (screen === 'register' || screen === 'editRegistration') {
+       this.name = ''; this.eventPhone = ''; this.eventCountryCode = '+86'; this.organization = ''; this.teacher = '';
+       this.performanceTitle = ''; this.remark = ''; this.music = undefined; this.musicName = '';
+-      this.currentEventMusic = ''; this.registrationSaved = false; this.registrationGroups = []; this.registrationGroupID = groupID; this.registrationQuery = ''; this.registrationReady = false; this.registrationFeedback = '';
++      this.currentEventMusic = ''; this.registrationSaved = false; this.registrationGroups = []; this.registrationGroupID = groupID; this.registrationQuery = ''; this.registrationReady = false; this.registrationPoster = ''; this.registrationFeedback = '';
+     }
+     this.query = screen === 'home' ? this.courseQuery : ''; this.rows = []; this.detail = {}; this.error = ''; this.refundReason = ''; this.generation++; this.load();
+   }
+@@ -455,6 +456,7 @@
+         const data = await platform.request<Row>('/events/' + route.eventID);
+         if (version !== this.generation || binding !== platform.credentials?.sessionId) return;
+         this.detail = data; this.registrationGroups = data.groups || [];
++        this.registrationPoster = coverImageURL(data.competition?.coverUrl || data.competition?.cover_url || '');
+         if (!this.registrationGroups.some((item: Row) => Number(item.id) === this.registrationGroupID)) this.registrationGroupID = 0;
+         const profile = await platform.request<Row>('/member/profile', http.RequestMethod.GET, undefined, true);
+         if (version !== this.generation || binding !== platform.credentials?.sessionId) return;
+@@ -471,6 +473,14 @@
+         this.organization = data.organization || ''; this.teacher = data.teacher || '';
+         this.performanceTitle = data.performanceTitle || ''; this.remark = data.remark || '';
+         this.currentEventMusic = audio.fileName || ''; this.detail = data; this.registrationReady = true;
++        // Public artwork is optional and must not prevent editing the registration.
++        if (Number(data.competitionId) > 0) {
++          try {
++            const event = await platform.request<Row>('/events/' + Number(data.competitionId));
++            if (version !== this.generation || binding !== platform.credentials?.sessionId) return;
++            this.registrationPoster = coverImageURL(event.competition?.coverUrl || event.competition?.cover_url || '');
++          } catch { /* Keep the editable form without artwork. */ }
++        }
+       } else if (route.screen === 'study') {
+         const binding = platform.credentials?.sessionId;
+         const units = await platform.request<Row[]>(route.path);
+@@ -877,11 +887,13 @@
+   @Builder
+   private eventRegistrationForm() {
+     Column({ space: 0 }) {
+-      Column({ space: 12 }) {
+-        Text('赛事报名').fontSize(12).fontWeight(FontWeight.Bold).fontColor('#C8A96E').padding({ left: 10, right: 10, top: 5, bottom: 5 }).border({ width: 1, color: '#736143' }).borderRadius(20)
+-        Text(this.route.screen === 'register' ? (this.detail.competition?.name || '赛事报名') : (this.detail.competitionName || '修改报名 / 补交音乐')).fontSize(23).fontWeight(FontWeight.Bold).fontColor(Color.White).width('100%')
+-        if (this.route.screen === 'register') { Text((this.detail.competition?.startDate || this.detail.competition?.start_date || '比赛日期待定') + ' · ' + (this.detail.competition?.location || this.detail.competition?.venue || '地点待定')).fontSize(14).fontColor('#BBBBBB').width('100%') }
+-      }.alignItems(HorizontalAlign.Start).width('100%').padding(20).backgroundColor('#1A1A1A').borderRadius({ topLeft: 14, topRight: 14 })
++      if (this.registrationPoster) {
++        Image(this.registrationPoster).width('100%').aspectRatio(16 / 9).objectFit(ImageFit.Cover).borderRadius({ topLeft: 14, topRight: 14 }).accessibilityText('赛事主图')
++      }
++      Column({ space: 8 }) {
++        Text(this.route.screen === 'register' ? (this.detail.competition?.name || '赛事报名') : (this.detail.competitionName || '修改报名 / 补交音乐')).fontSize(21).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
++        if (this.route.screen === 'register') { Text((this.detail.competition?.startDate || this.detail.competition?.start_date || '比赛日期待定') + ' · ' + (this.detail.competition?.location || this.detail.competition?.venue || '地点待定')).fontSize(14).fontColor(SwodTheme.muted).width('100%') }
++      }.alignItems(HorizontalAlign.Start).width('100%').padding(16).backgroundColor(SwodTheme.registrationPanel)
+       Column({ space: 24 }) {
+         if (!this.loggedIn) { this.action('登录后报名', () => this.go('login', '手机号登录')) }
+         else if (this.registrationSaved) { Text('报名已提交，可在个人中心继续缴费、补交或更换音乐。').fontSize(16).fontColor(SwodTheme.ink); this.action('前往个人中心查看报名与缴费', () => this.go('myEvents', '我的比赛', '/member/events', true)) }
+@@ -913,7 +925,7 @@
+           Column({ space: 10 }) {
+             Text('上传音乐（选填）').fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+             Text('可先报名，之后在个人中心补交或更换音乐。').fontSize(14).fontColor(SwodTheme.muted).width('100%')
+-            Button('选择音乐文件').constraintSize({ minHeight: 48 }).borderRadius(8).backgroundColor(SwodTheme.primary).fontColor(SwodTheme.onPrimary).width('100%').onClick(() => { if (!this.busy) this.chooseMusic(); })
++            Button('选择音乐文件').constraintSize({ minHeight: 48 }).borderRadius(8).backgroundColor('#A41A20').fontColor(Color.White).width('100%').onClick(() => { if (!this.busy) this.chooseMusic(); })
+             Text('从系统文件中选择。支持 MP3、WAV、M4A、AAC、FLAC，最大10MB。').fontSize(14).fontColor(SwodTheme.muted).width('100%')
+             if (this.currentEventMusic) { Text('当前音乐：' + this.currentEventMusic).fontSize(14).fontColor(SwodTheme.muted).width('100%') }
+             Text(this.musicName || '尚未选择音乐文件').fontSize(14).fontColor(SwodTheme.muted).width('100%')
+@@ -923,17 +935,17 @@
+           this.registrationField('备注', this.remark, '可填写参赛项目、作品或其他说明', (v: string) => { this.remark = v; }, true)
+           if (this.registrationFeedback) { Text(this.registrationFeedback).fontSize(15).fontColor('#15803D').width('100%') }
+         } else if (!this.busy && !this.error) { Text('此报名当前不可修改').fontSize(16).fontColor(SwodTheme.ink) }
+-      }.alignItems(HorizontalAlign.Start).padding(16).width('100%').backgroundColor(SwodTheme.surface).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius({ bottomLeft: 14, bottomRight: 14 }).enabled(!this.busy)
++      }.alignItems(HorizontalAlign.Start).padding(20).width('100%').backgroundColor(SwodTheme.registrationPanel).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius({ bottomLeft: 14, bottomRight: 14 }).enabled(!this.busy)
+       if (this.loggedIn && !this.registrationSaved && this.registrationReady) {
+         Column({ space: 10 }) {
+           if (this.route.screen === 'editRegistration') {
+-            Button('保存报名资料').constraintSize({ minHeight: 48 }).width('100%').borderRadius(8).backgroundColor(SwodTheme.primary).fontColor(SwodTheme.onPrimary).enabled(!this.busy && this.detail.canEdit === true).onClick(() => { this.register(true); })
++            Button('保存报名资料').constraintSize({ minHeight: 48 }).width('100%').borderRadius(8).backgroundColor('#A41A20').fontColor(Color.White).enabled(!this.busy && this.detail.canEdit === true).onClick(() => { this.register(true); })
+             this.action('上传音乐', () => this.confirm('确认上传参赛音乐？', () => { this.register(); }))
+-          } else { Button('提交赛事报名').constraintSize({ minHeight: 48 }).width('100%').borderRadius(8).backgroundColor(SwodTheme.primary).fontColor(SwodTheme.onPrimary).enabled(!this.busy).onClick(() => this.confirm('确认提交本组报名？', () => { this.register(); })) }
++          } else { Button('提交赛事报名').constraintSize({ minHeight: 48 }).width('100%').borderRadius(8).backgroundColor('#A41A20').fontColor(Color.White).enabled(!this.busy).onClick(() => this.confirm('确认提交本组报名？', () => { this.register(); })) }
+           Text('同一赛事可报名多个组别。未付款可在个人中心继续缴费。').fontSize(13).fontColor(SwodTheme.muted).width('100%').textAlign(TextAlign.Center)
+-        }.padding({ top: 16, bottom: 24 }).width('100%')
+-      }
+-    }.width('100%').constraintSize({ maxWidth: 680 }).padding(8).backgroundColor(SwodTheme.registrationCanvas)
++        }.padding(20).width('100%').backgroundColor(SwodTheme.registrationPanel).borderRadius(14).margin({ top: 12, bottom: 24 })
++      }
++    }.width('100%').constraintSize({ maxWidth: 680 }).padding(8).backgroundColor(Color.Transparent)
+   }
+   @Builder
+   private offlineCourseCard(row: Row) {
+@@ -1651,7 +1663,7 @@
+         Refresh({ refreshing: $$this.refreshing }) {
+           Scroll(this.catalogScroller) {
+             Column({ space: 6 }) { this.content() }
+-              .alignItems(this.route.screen === 'login' ? HorizontalAlign.Center : HorizontalAlign.Start)
++              .alignItems(this.route.screen === 'login' || this.isRegistrationPage() ? HorizontalAlign.Center : HorizontalAlign.Start)
+               .padding({ left: 16, right: 16, top: 4, bottom: 12 }).width('100%')
+               .constraintSize({ maxWidth: this.wideWindow && this.route.screen === 'home' ? 880 : 760 })
+               .onAreaChange((_old: Area, area: Area) => {
+@@ -1662,9 +1674,18 @@
+       }
+     }.layoutWeight(1).width(this.wideWindow ? 'auto' : '100%').height(this.wideWindow ? '100%' : 'auto')
+   }
++  private isRegistrationPage(): boolean { return this.route.screen === 'register' || this.route.screen === 'editRegistration'; }
+   @Builder private pageContent() {
++    Stack() {
++      if (this.isRegistrationPage()) {
++        Stack() {
++          if (this.registrationPoster) { Image(this.registrationPoster).width('100%').height('100%').objectFit(ImageFit.Cover).blur(40).scale({ x: 1.15, y: 1.15 }).accessibilityLevel('no') }
++          Column().width('100%').height('100%').backgroundColor(SwodTheme.registrationTint)
++        }.width('100%').height('100%').clip(true).hitTestBehavior(HitTestMode.None).backgroundColor(SwodTheme.registrationCanvas)
++      }
+     Flex({ direction: this.wideWindow ? FlexDirection.RowReverse : FlexDirection.Column }) {
+       this.routeContent()
++      if (!this.isRegistrationPage()) {
+       Scroll() {
+       Flex({ direction: this.wideWindow ? FlexDirection.Column : FlexDirection.Row }) {
+         this.navItem('线上学院', 'home', this.activeTab === 'home' ? $r('app.media.nav_learn_on') : $r('app.media.nav_learn'), '线上学院', '/public/series')
+@@ -1676,8 +1697,10 @@
+       }.scrollable(this.wideWindow ? ScrollDirection.Vertical : ScrollDirection.None)
+         .scrollBar(BarState.Off).align(Alignment.Top).width(this.wideWindow ? 104 : '100%')
+         .height(this.wideWindow ? '100%' : 'auto').backgroundColor(SwodTheme.surface)
+-    }.backgroundColor(SwodTheme.canvas).width('100%').height('100%')
++      }
++    }.backgroundColor(this.isRegistrationPage() ? Color.Transparent : SwodTheme.canvas).width('100%').height('100%')
+       .onAreaChange((_old: Area, area: Area) => { this.wideWindow = Number(area.width) >= 600; })
++    }.width('100%').height('100%')
+   }
+   build() {
+     if (this.needsScreenProtection(this.route) && !this.sensitiveScreenReady) {
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/SwodTheme.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/SwodTheme.ets
+@@ -1,5 +1,7 @@
+ /** Semantic color roles shared by the native pages and dark appearance. */
+ export class SwodTheme {
++  static readonly registrationPanel: ResourceColor = $r('app.color.registration_panel');
++  static readonly registrationTint: ResourceColor = $r('app.color.registration_tint');
+   static readonly registrationCanvas: ResourceColor = $r('app.color.registration_canvas');
+   static readonly registrationLine: ResourceColor = $r('app.color.registration_line');
+   static readonly canvas: ResourceColor = $r('app.color.swod_surface');
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/element/color.json
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/element/color.json
+@@ -39,6 +39,14 @@
+     {
+       "name": "registration_line",
+       "value": "#EADFCE"
++    },
++    {
++      "name": "registration_panel",
++      "value": "#F0FFFFFF"
++    },
++    {
++      "name": "registration_tint",
++      "value": "#47FFFFFF"
+     }
+   ]
+ }
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/element/color.json
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/dark/element/color.json
+@@ -39,6 +39,14 @@
+     {
+       "name": "registration_line",
+       "value": "#4A433A"
++    },
++    {
++      "name": "registration_panel",
++      "value": "#F0202328"
++    },
++    {
++      "name": "registration_tint",
++      "value": "#7A000000"
+     }
+   ]
+ }
+--- before/app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj
++++ after/app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj
+@@ -276,6 +276,26 @@
+ "isa" = "PBXBuildFile";
+ "fileRef" = "7550BF764F4279194FD2696C";
+ };
++"C4D3AC61373AB97FD845D346" = {
++"isa" = "PBXFileReference";
++"lastKnownFileType" = "sourcecode.swift";
++"path" = "Sources/EvaDanceApp/EventRegistrationBackdrop.swift";
++"sourceTree" = "<group>";
++};
++"228F699AC351BAC62CB488F5" = {
++"isa" = "PBXBuildFile";
++"fileRef" = "C4D3AC61373AB97FD845D346";
++};
++"A02F90990BCF5CC9AE685EF6" = {
++"isa" = "PBXFileReference";
++"lastKnownFileType" = "sourcecode.swift";
++"path" = "Sources/EvaDanceApp/EventRegistrationPoster.swift";
++"sourceTree" = "<group>";
++};
++"AAEC103304020A8F64731A8A" = {
++"isa" = "PBXBuildFile";
++"fileRef" = "A02F90990BCF5CC9AE685EF6";
++};
+ "4C69EEDB244C6563CDD6FB79" = {
+ "isa" = "PBXFileReference";
+ "lastKnownFileType" = "sourcecode.swift";
+@@ -660,7 +680,7 @@
+ };
+ "4813494D137E1631BBA301D5" = {
+ "isa" = "PBXGroup";
+-"children" = ( "D52D5C49A794426350D3A7FB", "6B226A4971EA7C10081FF59F", "55725A32BDBC69C7CA4ADC27", "D90FD9BF934C389E1EDF3FD4", "7D54F1C1874DE8DFB2CAB8C4", "81864538E639F1A2E54E91D9", "CCF55ECA6D0D8B3571560762", "FC5B342274D594D70F16D8E3", "3DE45AFDA19C6379830EA524", "D365295077D7FC62379EF936", "56176A749AFDC37A8CA0C094", "8AD987470CCD01353549B346", "6B58734A28CA9AACE961205D", "637271FC0D5B44BFCBE3E1EE", "8E8350164E7F78675828DD9B", "96C8BB2F9C7BA64F4D3CE6B3", "CAE99DF85457AC09B9E4FB21", "10646B99D882B1100FD0F59F", "12BF3F04B3D5ADD1BD0E495B", "5970BA8B84CE918068935CA7", "955BAF856D35BDD8518F616C", "4FA4724CDD3BB63ECD4E4C91", "3D9A44E396B18F90CDA5B02B", "55E384D46FF217A9EA069A71", "4EAB7BD561D3D13FB28D6D6B", "81890458E2DC9968F7F6626C", "7550BF764F4279194FD2696C", "4C69EEDB244C6563CDD6FB79", "8261B879DD7A3BF4E705C25D", "EBB88D295F1B48C90767FCB1", "DB4F3BA37A3C86777276EFA0", "5AFEB74CA9F2E77773EC3CB5", "383589944C1172F33BD9061A", "B932D970E331A4211F8FEF02", "0A9F132394D2D869486E91B0", "729D98B8C277C9E9BB7F850D", "A11F40CD465ECE35DBF6C534", "F75073D48CBC0D642332BC37", "12BC9BAF489F093AE0E8619B", "E100F589B9621154CF7A1A8D", "929C659FD617B2845705E6E0", "3B3C8BE5FDA7119295BD2C26", "5166F6C55C5F65F8AD34324C", "25BBF725CEAF683777EA6197", "6E53E2F5E52C3ECCD9A8BA8F", "ACCC0120E1D271FFEAB95736", "131F716279A998597B23DF85", "F712CA44479FE5D168DCD3CA", "6D2FDD52C7BF889083ED934F", "BA26EB7A465D3B3B2219C3E5", "8A12A3212CC96AFD5D0516C1", "ED254B5CA0100E0CFAE01C52", "529C3590CBA26C828828E62B", "8992E5069E6CB2ADA7E30918", "42A4F8E820A402B195FC3347", "45C646E9915C3F8DF471A37C", "45C66AB82B8E87038BAE9A09", "8BF729FFE074CAEE622C0292", "9B50F49C45B2732D474F631D", "FF92D541C4DD1008E9E8550B", "0A672A95F3C32EF5CF1F7853", "C9911F235679EBD020BB296E", "632141AA5538A1E76B774C7F", "463BF4862B40B4A6EBBD0F60", "0A3E27B8CA818264D75C8D81" );
++"children" = ( "D52D5C49A794426350D3A7FB", "6B226A4971EA7C10081FF59F", "55725A32BDBC69C7CA4ADC27", "D90FD9BF934C389E1EDF3FD4", "7D54F1C1874DE8DFB2CAB8C4", "81864538E639F1A2E54E91D9", "CCF55ECA6D0D8B3571560762", "FC5B342274D594D70F16D8E3", "3DE45AFDA19C6379830EA524", "D365295077D7FC62379EF936", "56176A749AFDC37A8CA0C094", "8AD987470CCD01353549B346", "6B58734A28CA9AACE961205D", "637271FC0D5B44BFCBE3E1EE", "8E8350164E7F78675828DD9B", "96C8BB2F9C7BA64F4D3CE6B3", "CAE99DF85457AC09B9E4FB21", "10646B99D882B1100FD0F59F", "12BF3F04B3D5ADD1BD0E495B", "5970BA8B84CE918068935CA7", "955BAF856D35BDD8518F616C", "4FA4724CDD3BB63ECD4E4C91", "3D9A44E396B18F90CDA5B02B", "55E384D46FF217A9EA069A71", "4EAB7BD561D3D13FB28D6D6B", "81890458E2DC9968F7F6626C", "7550BF764F4279194FD2696C", "C4D3AC61373AB97FD845D346", "A02F90990BCF5CC9AE685EF6", "4C69EEDB244C6563CDD6FB79", "8261B879DD7A3BF4E705C25D", "EBB88D295F1B48C90767FCB1", "DB4F3BA37A3C86777276EFA0", "5AFEB74CA9F2E77773EC3CB5", "383589944C1172F33BD9061A", "B932D970E331A4211F8FEF02", "0A9F132394D2D869486E91B0", "729D98B8C277C9E9BB7F850D", "A11F40CD465ECE35DBF6C534", "F75073D48CBC0D642332BC37", "12BC9BAF489F093AE0E8619B", "E100F589B9621154CF7A1A8D", "929C659FD617B2845705E6E0", "3B3C8BE5FDA7119295BD2C26", "5166F6C55C5F65F8AD34324C", "25BBF725CEAF683777EA6197", "6E53E2F5E52C3ECCD9A8BA8F", "ACCC0120E1D271FFEAB95736", "131F716279A998597B23DF85", "F712CA44479FE5D168DCD3CA", "6D2FDD52C7BF889083ED934F", "BA26EB7A465D3B3B2219C3E5", "8A12A3212CC96AFD5D0516C1", "ED254B5CA0100E0CFAE01C52", "529C3590CBA26C828828E62B", "8992E5069E6CB2ADA7E30918", "42A4F8E820A402B195FC3347", "45C646E9915C3F8DF471A37C", "45C66AB82B8E87038BAE9A09", "8BF729FFE074CAEE622C0292", "9B50F49C45B2732D474F631D", "FF92D541C4DD1008E9E8550B", "0A672A95F3C32EF5CF1F7853", "C9911F235679EBD020BB296E", "632141AA5538A1E76B774C7F", "463BF4862B40B4A6EBBD0F60", "0A3E27B8CA818264D75C8D81" );
+ "sourceTree" = "<group>";
+ };
+ "4C62EC40DF63DF0873D128AE" = {
+@@ -679,7 +699,7 @@
+ "878A52FC5FF6A57D50B7B870" = {
+ "isa" = "PBXSourcesBuildPhase";
+ "buildActionMask" = 2147483647;
+-"files" = ( "5E78D5B3B213E0E6B985B4FB", "0F12A2669499D01FCAA3A9C8", "371B50D843ECF682A93A18C3", "5EA6C4EBD064F4094D4D6C46", "884B7AC3F4323A16649A3CCD", "2FF545814F363265D5AD097E", "636ED2E0205D6C13BB880E45", "8442C6965CCF380F3FD2A6FB", "C0B34F9CEE72AFD0921D157E", "5940091F5A85BD7B360AEEB4", "790B8D9D6B0E5338AE9E1A5A", "F6D632089170673A4EA049FA", "BD00DF6DF6F592B6BE345172", "E9D312E46B194E2B0E877AD0", "393AE1E9957D8278A5A67B0C", "CE948713DBC087D8A451908D", "981F1C91E4BC94FA65FC995A", "7DE3528807F2B29C618094B6", "C9E4B6127A193042EC51527D", "E3477D227B1CAEB0FEDEB941", "C754B7C7C5C2A581F968D7F4", "A4F19986400AA8E15B362C77", "766329BAC38E00DAFD75894C", "5BDA1848E55504A3A6D8E45D", "C476BEA7783881EFB59C8E6F", "6327793EFBC7DCBDBD94D3F5", "32F0933C1880B6C7609CFCEA", "FA2DC2491F9C8DF3B02F4C25", "D5E82B5BEB44E211F027F18B", "8A019E5DDDD2BCCC7AACBB75", "EF717CEA013D6723DCC9D156", "BBA4B39CD9ACACBFE75268A0", "B4C7D3F1B7F280E85E85CA38", "B074824B0610DF79A1279F5E", "D7F4FBC92F76376C1CD0729B", "B916AFF570682BD904CD9C54", "14947F7B6672648CE249BA57", "0DF836AD4751E2C40F4EDB1E", "749FF3A0D12F6083B23ABBDD", "2A86D1F606CA9593E8E7813D", "478A2FEB9B9BBEEC551BC0DA", "D34B0EE5850F73FE90A0E3F8", "08F4B81367659ABA573CBF9B", "DEC520EFE73AA049F1D23FEE", "DF033BB7D333F6E6BEA08328", "C28621EE198A9AF1B5A3BEA5", "D4717E498B619E6361A5810C", "F96FB527BBD862B252EC6B8D", "D1BA965BFA2970438908AE6F", "35CB5B247FEC3B7004E36625" );
++"files" = ( "5E78D5B3B213E0E6B985B4FB", "0F12A2669499D01FCAA3A9C8", "371B50D843ECF682A93A18C3", "5EA6C4EBD064F4094D4D6C46", "884B7AC3F4323A16649A3CCD", "2FF545814F363265D5AD097E", "636ED2E0205D6C13BB880E45", "8442C6965CCF380F3FD2A6FB", "C0B34F9CEE72AFD0921D157E", "5940091F5A85BD7B360AEEB4", "790B8D9D6B0E5338AE9E1A5A", "F6D632089170673A4EA049FA", "BD00DF6DF6F592B6BE345172", "E9D312E46B194E2B0E877AD0", "393AE1E9957D8278A5A67B0C", "CE948713DBC087D8A451908D", "981F1C91E4BC94FA65FC995A", "7DE3528807F2B29C618094B6", "C9E4B6127A193042EC51527D", "E3477D227B1CAEB0FEDEB941", "C754B7C7C5C2A581F968D7F4", "A4F19986400AA8E15B362C77", "766329BAC38E00DAFD75894C", "5BDA1848E55504A3A6D8E45D", "C476BEA7783881EFB59C8E6F", "6327793EFBC7DCBDBD94D3F5", "32F0933C1880B6C7609CFCEA", "228F699AC351BAC62CB488F5", "AAEC103304020A8F64731A8A", "FA2DC2491F9C8DF3B02F4C25", "D5E82B5BEB44E211F027F18B", "8A019E5DDDD2BCCC7AACBB75", "EF717CEA013D6723DCC9D156", "BBA4B39CD9ACACBFE75268A0", "B4C7D3F1B7F280E85E85CA38", "B074824B0610DF79A1279F5E", "D7F4FBC92F76376C1CD0729B", "B916AFF570682BD904CD9C54", "14947F7B6672648CE249BA57", "0DF836AD4751E2C40F4EDB1E", "749FF3A0D12F6083B23ABBDD", "2A86D1F606CA9593E8E7813D", "478A2FEB9B9BBEEC551BC0DA", "D34B0EE5850F73FE90A0E3F8", "08F4B81367659ABA573CBF9B", "DEC520EFE73AA049F1D23FEE", "DF033BB7D333F6E6BEA08328", "C28621EE198A9AF1B5A3BEA5", "D4717E498B619E6361A5810C", "F96FB527BBD862B252EC6B8D", "D1BA965BFA2970438908AE6F", "35CB5B247FEC3B7004E36625" );
+ "runOnlyForDeploymentPostprocessing" = 0;
+ };
+ "E2AA269EB967A8853A258BFA" = {
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/EventRegistrationView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/EventRegistrationView.swift
+@@ -9,6 +9,10 @@
+     var playerID: String? = nil
+     @Environment(\.colorScheme) private var colorScheme
+     @State private var competition: JSONValue = .null
++    @State private var posterURL: URL?
++    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
++    private let actionColor = Color(red: 0.643, green: 0.102, blue: 0.125)
++    private var panelColor: Color { EvaBrand.surface.opacity(reduceTransparency ? 1 : 0.94) }
+     @State private var groups: [JSONValue] = []
+     @State private var selectedGroupID = ""
+     @State private var groupQuery = ""
+@@ -63,21 +67,21 @@
+                     }
+                     if let error { Text(error).foregroundStyle(EvaBrand.red).accessibilityAddTraits(.isStaticText); if !formReady { Button("重新加载") { Task { await loadRegistration() } } } }
+                     if !result.isEmpty { Text(result).foregroundStyle(.green); NavigationLink("前往个人中心查看报名与缴费") { MyCompetitionsView() } }
+-                }.padding(16).background(EvaBrand.surface).clipShape(EventRegistrationShape(top: false, bottom: true))
++                }.padding(20).background(panelColor).clipShape(EventRegistrationShape(top: false, bottom: true))
+                     .overlay(alignment: .bottom) { EventRegistrationShape(top: false, bottom: true).stroke(borderColor, lineWidth: 1) }
+                     .disabled(busy)
+                 VStack(spacing: 10) {
+                     if playerID == nil {
+-                        Button(busy ? "正在提交…" : "提交赛事报名") { confirm = true }.buttonStyle(.borderedProminent).tint(EvaBrand.red).controlSize(.large).disabled(!valid || busy || !result.isEmpty || !formReady)
++                        Button(busy ? "正在提交…" : "提交赛事报名") { confirm = true }.buttonStyle(.borderedProminent).tint(actionColor).foregroundStyle(.white).controlSize(.large).disabled(!valid || busy || !result.isEmpty || !formReady)
+                         Text("同一赛事可报名多个组别。未付款可在个人中心继续缴费。").font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                     } else {
+-                        Button("保存报名资料") { Task { await submit(detailsOnly: true) } }.buttonStyle(.borderedProminent).tint(EvaBrand.red).controlSize(.large).disabled(!valid || busy || !canEdit)
++                        Button("保存报名资料") { Task { await submit(detailsOnly: true) } }.buttonStyle(.borderedProminent).tint(actionColor).foregroundStyle(.white).controlSize(.large).disabled(!valid || busy || !canEdit)
+                         Button("上传音乐") { confirm = true }.buttonStyle(.bordered).controlSize(.large).disabled(music == nil || performanceTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || busy || !canEdit)
+                     }
+                     if busy && formReady { ProgressView("正在处理…") }
+-                }.frame(maxWidth: .infinity).padding(.top, 16).padding(.bottom, 24)
++                }.frame(maxWidth: .infinity).padding(20).background(panelColor, in: RoundedRectangle(cornerRadius: 14)).padding(.top, 12).padding(.bottom, 24)
+             }.frame(maxWidth: 680).padding(.horizontal, 12).padding(.top, 10).frame(maxWidth: .infinity)
+-        }.scrollDismissesKeyboard(.interactively).background(pageColor).evaPageChrome().navigationTitle(playerID == nil ? "赛事报名" : "修改报名 / 补交音乐")
++        }.scrollDismissesKeyboard(.interactively).background { EventRegistrationBackdrop(url: posterURL, fallback: pageColor) }.evaPageChrome().toolbar(.hidden, for: .tabBar).navigationTitle(playerID == nil ? "赛事报名" : "修改报名 / 补交音乐")
+         .task(id: session.accountID) { await loadRegistration() }
+         .fileImporter(isPresented: $picker, allowedContentTypes: [.audio, .data]) { selection in
+             do {
+@@ -95,11 +99,20 @@
+         }
+     }
+     private var registrationHeader: some View {
+-        VStack(alignment: .leading, spacing: 12) {
+-            Text("赛事报名").font(.caption.bold()).foregroundStyle(EvaBrand.gold).padding(.horizontal, 10).padding(.vertical, 5).background(EvaBrand.gold.opacity(0.12), in: Capsule()).overlay { Capsule().stroke(EvaBrand.gold.opacity(0.45), lineWidth: 1) }
+-            Text(playerID == nil ? (competition["name"].text.isEmpty ? "赛事报名" : competition["name"].text) : (competition["competitionName"].text.isEmpty ? "修改报名 / 补交音乐" : competition["competitionName"].text)).font(.title2.bold()).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
+-            if playerID == nil { Text((competition.firstText("startDate", "start_date").isEmpty ? "比赛日期待定" : String(competition.firstText("startDate", "start_date").prefix(10))) + " · " + (competition.firstText("location", "venue", "city").isEmpty ? "地点待定" : competition.firstText("location", "venue", "city"))).font(.subheadline).foregroundStyle(.white.opacity(0.7)) }
+-        }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(Color(white: 0.1)).clipShape(EventRegistrationShape(top: true, bottom: false))
++        VStack(alignment: .leading, spacing: 0) {
++            if let posterURL {
++                EventRegistrationPoster(url: posterURL)
++                    .accessibilityLabel("赛事主图")
++            }
++            VStack(alignment: .leading, spacing: 8) {
++                Text(playerID == nil ? (competition["name"].text.isEmpty ? "赛事报名" : competition["name"].text) : (competition["competitionName"].text.isEmpty ? "修改报名 / 补交音乐" : competition["competitionName"].text))
++                    .font(.title3.bold()).fixedSize(horizontal: false, vertical: true)
++                if playerID == nil {
++                    Text((competition.firstText("startDate", "start_date").isEmpty ? "比赛日期待定" : String(competition.firstText("startDate", "start_date").prefix(10))) + " · " + (competition.firstText("location", "venue", "city").isEmpty ? "地点待定" : competition.firstText("location", "venue", "city")))
++                        .font(.subheadline).foregroundStyle(.secondary)
++                }
++            }.padding(16).frame(maxWidth: .infinity, alignment: .leading).background(panelColor)
++        }.clipShape(EventRegistrationShape(top: true, bottom: false))
+     }
+     private func labeledField(_ label: String, prompt: String, text: Binding<String>) -> some View {
+         VStack(alignment: .leading, spacing: 10) { Text(label).font(.headline); TextField(prompt, text: text).autocorrectionDisabled().registrationInput(border: borderColor).accessibilityLabel(label) }
+@@ -129,7 +142,7 @@
+         VStack(alignment: .leading, spacing: 10) {
+             Text("上传音乐（选填）").font(.headline)
+             Text("可先报名，之后在个人中心补交或更换音乐。").font(.subheadline).foregroundStyle(.secondary)
+-            Button("选择音乐文件") { picker = true }.buttonStyle(.borderedProminent).tint(EvaBrand.red).controlSize(.large).frame(maxWidth: .infinity).disabled(busy)
++            Button("选择音乐文件") { picker = true }.buttonStyle(.borderedProminent).tint(actionColor).foregroundStyle(.white).controlSize(.large).frame(maxWidth: .infinity).disabled(busy)
+             Text("从系统文件中选择。支持 MP3、WAV、M4A、AAC、FLAC，最大10MB。").font(.subheadline).foregroundStyle(.secondary)
+             if !currentMusic.isEmpty { Text("当前音乐：" + currentMusic).font(.subheadline).foregroundStyle(.secondary) }
+             Text(musicName.isEmpty ? "尚未选择音乐文件" : musicName).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+@@ -147,7 +160,7 @@
+     private func loadRegistration() async {
+         let account = session.accountID
+         if accountID != account {
+-            formReady = false; groups = []; competition = .null; selectedGroupID = ""; groupQuery = ""
++            formReady = false; groups = []; competition = .null; posterURL = nil; selectedGroupID = ""; groupQuery = ""
+             name = ""; phone = ""; countryCode = "+86"; organization = ""; teacher = ""
+             performanceTitle = ""; remark = ""; musicName = ""; music = nil; currentMusic = ""
+             result = ""; error = nil; canEdit = false
+@@ -160,6 +173,7 @@
+                 let detail: JSONValue = try await session.api.request("/events/\(eventID)")
+                 guard account == session.accountID, !Task.isCancelled else { return }
+                 competition = detail["competition"]; groups = detail["groups"].list
++                posterURL = AppPolicy.secureMediaURL(competition.firstText("coverUrl", "cover_url"))
+                 if selectedGroupID.isEmpty { selectedGroupID = group?.id ?? "" }
+                 if !groups.contains(where: { $0["id"].text == selectedGroupID }) { selectedGroupID = "" }
+                 let profile: JSONValue = try await session.api.request("/member/profile", token: token)
+@@ -184,6 +198,13 @@
+             currentMusic = audio["fileName"].text
+             competition = details; formReady = true
+             canEdit = details["canEdit"].bool == true
++            // Artwork is optional; its failure must never block an editable registration.
++            let posterEventID = details["competitionId"].text.isEmpty ? eventID : details["competitionId"].text
++            if let eventNumber = Int(posterEventID), eventNumber > 0,
++               let event: JSONValue = try? await session.api.request("/events/\(eventNumber)"),
++               account == session.accountID, !Task.isCancelled {
++                posterURL = AppPolicy.secureMediaURL(event["competition"].firstText("coverUrl", "cover_url"))
++            }
+         } catch { self.error = error.localizedDescription }
+     }
+     private func submit(detailsOnly: Bool = false) async {
+--- /dev/null
++++ app开发/iOS/EvaDance/Sources/EvaDanceApp/EventRegistrationPoster.swift
+@@ -0,0 +1,14 @@
++import SwiftUI
++
++/// Current event artwork only; missing artwork leaves a quiet, readable fallback.
++struct EventRegistrationPoster: View {
++    let url: URL
++    var body: some View {
++        GeometryReader { geometry in
++            AsyncImage(url: url) { phase in
++                if let image = phase.image { image.resizable().scaledToFill() }
++                else { EvaBrand.field.overlay { Image(systemName: "photo").foregroundStyle(.secondary) } }
++            }.frame(width: geometry.size.width, height: geometry.size.height).clipped()
++        }.aspectRatio(16 / 9, contentMode: .fit)
++    }
++}
+--- /dev/null
++++ app开发/iOS/EvaDance/Sources/EvaDanceApp/EventRegistrationBackdrop.swift
+@@ -0,0 +1,26 @@
++import SwiftUI
++
++/// Static blur is decorative and never handles touches or contains member information.
++struct EventRegistrationBackdrop: View {
++    let url: URL?
++    let fallback: Color
++    @Environment(\.colorScheme) private var colorScheme
++    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
++    var body: some View {
++        GeometryReader { geometry in
++            ZStack {
++                fallback
++                if let url, !reduceTransparency {
++                    AsyncImage(url: url) { phase in
++                        if let image = phase.image {
++                            image.resizable().scaledToFill()
++                                .frame(width: geometry.size.width, height: geometry.size.height)
++                                .blur(radius: 36, opaque: true).scaleEffect(1.15)
++                        }
++                    }
++                    (colorScheme == .dark ? Color.black : Color.white).opacity(colorScheme == .dark ? 0.48 : 0.28)
++                }
++            }.frame(width: geometry.size.width, height: geometry.size.height).clipped()
++        }.ignoresSafeArea().allowsHitTesting(false).accessibilityHidden(true)
++    }
++}
+--- /dev/null
++++ app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/RegistrationArtwork.java
+@@ -0,0 +1,29 @@
++package cn.com.swod.app;
++
++import android.graphics.Bitmap;
++
++/** Bounded static blur, computed off the UI thread and supported back to API 26. */
++final class RegistrationArtwork {
++    static Bitmap blur(Bitmap source) {
++        final int size=64, radius=5;
++        Bitmap small=Bitmap.createScaledBitmap(source,size,size,true);
++        int[] pixels=new int[size*size],output=new int[size*size];
++        small.getPixels(pixels,0,size,0,0,size,size);
++        for(int pass=0;pass<3;pass++) {
++            for(int axis=0;axis<2;axis++) {
++                for(int y=0;y<size;y++)for(int x=0;x<size;x++) {
++                    int red=0,green=0,blue=0;
++                    for(int d=-radius;d<=radius;d++) {
++                        int xx=axis==0?Math.max(0,Math.min(size-1,x+d)):x;
++                        int yy=axis==1?Math.max(0,Math.min(size-1,y+d)):y;
++                        int color=pixels[yy*size+xx];red+=(color>>16)&255;green+=(color>>8)&255;blue+=color&255;
++                    }
++                    int count=radius*2+1;output[y*size+x]=0xff000000|((red/count)<<16)|((green/count)<<8)|(blue/count);
++                }
++                int[] swap=pixels;pixels=output;output=swap;
++            }
++        }
++        return Bitmap.createBitmap(pixels,size,size,Bitmap.Config.ARGB_8888);
++    }
++    private RegistrationArtwork() {}
++}

@@ -1,0 +1,25 @@
+import Foundation
+import SwiftUI
+@main struct ControlsCheck {
+  @MainActor static func main() async throws {
+    let controls = PlaybackControls(hideDelay: 30_000_000)
+    assert(controls.visible)
+    controls.update(playing: true)
+    assert(!controls.visible, "Normal playback must be clean immediately")
+    controls.tap(); assert(controls.visible, "Explicit tap must expose controls")
+    try await Task.sleep(nanoseconds: 90_000_000)
+    assert(!controls.visible, "Explicit controls must auto-hide")
+    controls.tap(); controls.interaction(true)
+    try await Task.sleep(nanoseconds: 90_000_000)
+    assert(controls.visible, "A progress drag must remain usable")
+    controls.hide(); assert(!controls.visible)
+    controls.interaction(false)
+    try await Task.sleep(nanoseconds: 90_000_000)
+    assert(!controls.visible)
+    controls.update(playing: false); assert(controls.visible, "Pause controls remain accessible")
+    controls.update(playing: true, keepVisible: true); assert(!controls.visible, "Accessibility must not create unsolicited overlays")
+    controls.reveal(); assert(controls.visible, "Explicit accessible control reveal remains usable")
+    controls.cancel()
+    print("Playback control state checks passed: immediate clean play, reveal, auto-hide, drag, pause, accessible reveal")
+  }
+}

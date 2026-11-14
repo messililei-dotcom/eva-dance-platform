@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-11-11T17:18:13+08:00",
+  "newSubmissions": 0,
+  "copyright": {
+    "currentStatusVerified": false,
+    "loginRequired": true,
+    "lastVerifiedStatus": "待受理",
+    "lastVerifiedDate": "2026-11-10"
+  },
+  "huaweiAndroid": {
+    "currentStatusVerified": false,
+    "loginRequired": true,
+    "lastVerifiedStatus": "1.0.4(21)正在审核",
+    "lastVerifiedDate": "2026-11-10"
+  },
+  "xiaomi": {
+    "draftBuild": 22,
+    "independentReopenVerified": true,
+    "issuedCopyrightRequired": true
+  },
+  "vivo": {
+    "draftBuild": 22,
+    "independentReopenVerified": true,
+    "copyrightValidation": "请选择版权证明"
+  },
+  "honor": {
+    "version": "1.0.4",
+    "draftStatus": "准备提交"
+  },
+  "oppo": {
+    "currentStatusVerified": false,
+    "freshPageRedirectedToLogin": true
+  },
+  "tencent": {
+    "currentStatusVerified": false,
+    "freshPageRequiresLogin": true
+  }
+}

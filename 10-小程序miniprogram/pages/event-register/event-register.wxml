@@ -25,7 +25,7 @@
     </view>
     <view class="form-title"><view>填写报名信息</view><text>带 * 为必填项</text></view>
 
-    <view class="field"><text>参赛姓名 *</text><input value="{{name}}" placeholder="参赛学员姓名" data-field="name" bindinput="onInput"></input></view>
+    <view class="field"><text>参赛姓名 *</text><input value="{{name}}" placeholder="支持中文、英文和空格" maxlength="120" data-field="name" bindinput="onInput"></input></view>
     <view class="field"><text>手机号码 *</text><view class="phone-row"><view class="phone-country"><picker range="{{countryOptions}}" range-key="label" bindchange="onCountryChange" aria-label="选择国家或地区区号"><view class="phone-flag">{{countryFlag}}⌄</view></picker><input value="{{countryCode}}" placeholder="+86" data-field="countryCode" bindinput="onInput" maxlength="4" aria-label="国家或地区区号" /></view><input class="phone-number" value="{{phone}}" type="text" maxlength="20" placeholder="手机号码" data-field="phone" bindinput="onInput" bindblur="onPhoneBlur" /></view></view>
     <view class="field"><text>机构 / 舞蹈室</text><input value="{{organization}}" placeholder="选填" data-field="organization" bindinput="onInput"></input></view>
     <view class="field"><text>指导老师</text><input value="{{teacher}}" placeholder="选填" data-field="teacher" bindinput="onInput"></input></view>

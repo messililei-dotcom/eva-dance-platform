@@ -1,0 +1,56 @@
+{
+  "checkedAt": "2026-11-12T14:59:37.625193+08:00",
+  "request": "Keep the course video picture completely clean during playback",
+  "changes": [
+    "Removed learning-code/session-suffix overlays from online and offline player surfaces across3 native platforms",
+    "Removed all note text and note switches from video canvas; own time-synced notes remain under video in notes pane, default on and switchable",
+    "Normal playback immediately hides controls; explicit tap reveals temporary controls, auto-hide retained",
+    "Android fullscreen/settings overlay buttons share transport visibility; no permanently visible video-stage utility controls",
+    "Brightness/volume/hold-speed gestures retained; gesture feedback no longer overlays the video; Android/Harmony feedback lives below canvas",
+    "iOS rotation feedback moved outside the video; paused and user-requested controls remain available; Harmony provides external play/pause and Android accessible click reveals controls"
+  ],
+  "preserved": [
+    "Authenticated playback and current entitlement rechecks",
+    "Progress, continuation, seeking, playlists, speed, mirror and fullscreen state",
+    "Capture/secure-window protection and authorization-loss blocking",
+    "Existing production cache/push/carrier/WeChat flags; no server deployment",
+    "Original bundle IDs, distribution signing configuration and filing"
+  ],
+  "checks": {
+    "iOS": "Physical-development-target and simulator builds passed;22 core check groups passed",
+    "controls": "Standalone MainActor state check passed: immediate hide on start, explicit reveal, auto-hide, scrub interaction, pause and accessible reveal; source retained as PlaybackControlStateCheck.swift.txt",
+    "Android": {
+      "debugBuild": "passed",
+      "unitTests": 32,
+      "failures": 0
+    },
+    "HarmonyOS": "Unsigned Debug HAP compiled;28 API/course-media checks passed",
+    "source": "No learning-code overlay remains in any online/offline video surface; Android secure flags and iOS capture blocker retained",
+    "simulatorInstall": "Final iOS simulator development app installed",
+    "runtime": "Actual video playback and full-screen visuals not accepted: Mac locked and CUA automatic unlock failed. No bypass or screenshot-protection relaxation attempted. No new physical-device install claimed."
+  },
+  "release": {
+    "newStoreUpload": false,
+    "newReviewSubmission": false,
+    "existingReviewChanged": false,
+    "signedStoreCandidateGenerated": false
+  },
+  "limits": [
+    "This changes app-generated overlays; source video pixels were not edited",
+    "Transient controls displayed by explicit user action remain available",
+    "Capture, background and authorization-blocked states still intentionally obscure/stop content",
+    "Actual media, hardware volume/brightness and phone/tablet fullscreen acceptance remain pending"
+  ],
+  "sourceSHA256": {
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/LessonVideoSurface.swift": "906e09a4ae21a3fd2c8a4ed58adf85f404c8bf65bbeaa04db854c31c80c2d4c2",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/OfflineCoursePlayerView.swift": "36ecf7631f326d458850737c296cf488495137d36f12a27f67dbd01871b89936",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java": "ab307d5d5da68bae03b532f26528605343980b9e33ad8c0931b1da37d7704ac6",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/OfflineCourseActivity.java": "b30b16699499267b1184cb4d5d7e21f17041b1ec4a30731576ca2afdc7a0b453",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "91b5c4e03f1d2d7230c9be2e0ad97afbeefd077215c469505ceedb39fcb0cb2d",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/CachedCourses.ets": "bff13a26d183127e5c6dfe5b194e7cbe3614a9d5e847d04d4093d2b2dbffd62a",
+    "app开发/AGENTS.md": "ad8dc7752232932f6205e1a2eab4a56bd9f1edf89785231ba3e3bdfc2b98fd29",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift": "2b65f66d8d4c8ba24a597ef4274659abf3ed94f8955d1f4e9c80236c91237761",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlaybackControls.swift": "374ae8aa70d754252b19fae95742aea4dc485a2573f1d835d70c7ea677416326",
+    "app开发/iOS/EvaDance/Tests/EvaPlaybackTests/PlaybackSurfaceTests.swift": "3948688264da3b19ffed5eeef3aa5ee68b6804bd5a116d1b92910f4369762e13"
+  }
+}

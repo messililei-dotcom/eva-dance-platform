@@ -60,7 +60,7 @@ export default class EntryAbility extends UIAbility {
         if (this.activeStage !== windowStage) throw new Error('Window stage is no longer active');
         platform.screenProtected = true;
       };
-      if (platform.credentials || platform.staff) {
+      if (platform.credentials) {
         await platform.protectScreen();
       }
     } catch {

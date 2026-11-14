@@ -1,4 +1,5 @@
 const eventView=require('../../shared/event-view');
+const { eventAgeGroup } = require('../../shared/event-age');
 const share = require("../../shared/share");
 const api = require("../../utils/api");
 
@@ -22,10 +23,10 @@ function normalizeRanking(item) {
 
 Page(share.withShare("event-detail", {
   data: {
-    id: null, loading: true, competition: {}, groups: [], visibleGroups: [], groupPage:1, groupPageCount:1, groupTotal:0, groupKeyword: "", players: [], judges: [],
-    rankings: [], sessions: [], awards: [], registrations: [], activePanel: "overview",
+    id: null, loading: true, competition: {}, groups: [], visibleGroups: [], groupPage:1, groupPageCount:1, groupTotal:0, groupKeyword: "", groupAgeFilter: "全部", groupAgeFilters: ["全部", "成人", "青少年", "少儿"], registrationsLoading: false, registrationError: "", players: [], judges: [],
+    rankings: [], sessions: [], awards: [], registrations: [], activePanel: "groups",
     panels: [
-      { key: "overview", label: "赛事" }, { key: "groups", label: "组别" },
+      { key: "overview", label: "概览" }, { key: "groups", label: "组别" },
       { key: "players", label: "选手" }, { key: "judges", label: "评委" },
       { key: "results", label: "成绩" }
     ]
@@ -46,7 +47,7 @@ Page(share.withShare("event-detail", {
       const data = await api.getEventDetail(this.data.id);
       const competition = data.competition || {};
       const { registrationOpen, statusText } = require('../../shared/event-state').eventState(competition);
-      const groups=(data.groups||[]).map((g,i)=>({...g,ordinal:i+1,playerCountText:g.playerCount==null?'报名信息未公开':g.playerCount+'位'}));
+      const groups=(data.groups||[]).map((g,i)=>({...g,ordinal:i+1,ageCategory:eventAgeGroup(g.name,g.ageRange,g.category),playerCountText:g.playerCount==null?'报名信息未公开':g.playerCount+'位选手',groupStatusText:Number(g.rankingCount)>0?'已公示'+g.rankingCount+'项得分':registrationOpen?'报名中':'成绩待公布'}));
       this.setData({
         competition: {
           ...competition,
@@ -58,20 +59,27 @@ Page(share.withShare("event-detail", {
           registrationOpen,
           feeText: Number(competition.registrationFee || 0) > 0 ? `¥${Number(competition.registrationFee).toFixed(2)}` : "免费"
         },
-        groups, players: (data.players || []).map(eventView.player), judges: (data.judges || []).map(j=>({...j,initial:String(j.name||'评').slice(0,1)})),
+        groups, players: (data.players || []).map(eventView.player), judges: (competition.judgeScoresPublic ? data.judges || [] : []).map(j=>({...j,initial:String(j.name||'评').slice(0,1)})),
         rankings: (data.rankings || []).map(normalizeRanking), awards: data.awards || [],
         sessions: (data.sessions || []).map(item => ({ ...item, timeText: shortDate(item.startsAt) })),
         loading: false
       });
       this.applyGroupPage(1);
-      wx.setNavigationBarTitle({ title: competition.name || "赛事详情" });
+      wx.setNavigationBarTitle({ title: "赛事详情" });
     } catch (err) {
       this.setData({ loading: false });
       wx.showToast({ title: err.message || "赛事详情加载失败", icon: "none" });
     }
   },
   async loadRegistrations() {
-    const rows = await api.getMyEventRegistrations(this.data.id).catch(() => []);
+    const version = (this.registrationLoadVersion || 0) + 1;
+    this.registrationLoadVersion = version;
+    const account = wx.getStorageSync ? String(wx.getStorageSync('token') || '') : '';
+    this.setData({ registrationsLoading: true, registrationError: '' });
+    try {
+    const rows = await api.getMyEventRegistrations(this.data.id);
+    if (version !== this.registrationLoadVersion) return;
+    if (wx.getStorageSync && String(wx.getStorageSync('token') || '') !== account) { this.setData({ registrations: [], registrationsLoading: false, registrationError: '登录状态已更新，请重新加载报名信息' }); return; }
     const auditLabels = { pending: '已报名', approved: '已报名', rejected: '未通过' };
     const paidLabels = { unpaid: "待缴费", paid: "已缴费", refunded: "已退款" };
     this.setData({ registrations: (rows || []).map(item => ({
@@ -81,18 +89,23 @@ Page(share.withShare("event-detail", {
       resultText: item.resultPublished
         ? `${item.awardName || (item.rankNo ? `第${item.rankNo}名` : "成绩已公示")} · ${item.totalScore == null ? "-" : item.totalScore}分`
         : "成绩待公示"
-    })) });
+    })), registrationsLoading: false });
+    } catch (error) { if (version === this.registrationLoadVersion) this.setData({ registrations: [], registrationsLoading: false, registrationError: error.message || '报名信息加载失败，请重试' }); }
   },
+  goMyRegistrations() { this.setData({ activePanel: 'registrations' }); this.loadRegistrations(); },
+
   payRegistration(event) { wx.navigateTo({url:'/pages/course-checkout/course-checkout?kind=event&id='+encodeURIComponent(event.currentTarget.dataset.id)}); },
   switchPanel(event) { this.setData({ activePanel: event.currentTarget.dataset.key }); },
+  onGroupAgeFilter(event) { this.setData({ groupAgeFilter: event.currentTarget.dataset.age }); this.applyGroupPage(1); },
   onGroupSearch(event) { this.setData({ groupKeyword:String(event.detail.value||'') });this.applyGroupPage(1); },
   applyGroupPage(number) {
     const query=this.data.groupKeyword.trim().toLowerCase();
-    const rows=this.data.groups.filter(g=>!query||`${g.name} ${g.category||''} ${g.danceType||''} ${g.ageRange||''}`.toLowerCase().includes(query));
+    const rows=this.data.groups.filter(g=>(this.data.groupAgeFilter==='全部'||g.ageCategory===this.data.groupAgeFilter)&&(!query||`${g.name} ${g.category||''} ${g.danceType||''} ${g.ageRange||''}`.toLowerCase().includes(query)));
     const p=eventView.page(rows,number);
     this.setData({visibleGroups:p.rows,groupPage:p.number,groupPageCount:p.pages,groupTotal:p.total});
   },
   changeGroupPage(event) { this.applyGroupPage(this.data.groupPage+Number(event.currentTarget.dataset.offset)); },
+  openJudge(event){wx.navigateTo({url:`/pages/event-judge-profile/event-judge-profile?id=${encodeURIComponent(this.data.id)}&judgeId=${encodeURIComponent(event.currentTarget.dataset.id)}`});},
   openPlayer(event) { const {group,id}=event.currentTarget.dataset;wx.navigateTo({url:`/pages/event-player/event-player?id=${this.data.id}&groupId=${group}&playerId=${id}`}); },
   openGroup(event) {
     const groupId = event.currentTarget.dataset.id;

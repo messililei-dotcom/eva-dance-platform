@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-11-12T13:30:28.249150+08:00",
+  "change": "Remove redundant unlock badge from private owned-course cards and accessibility descriptions on all3 platforms; shared private course-list renderer follows same rule",
+  "retained": [
+    "covers",
+    "course title",
+    "learner display count",
+    "learning percent/progress bar",
+    "profile expand/collapse"
+  ],
+  "authorization": "Only presentation changed; server-owned course list and playback authorization untouched. Public catalogue badges remain. Latest user request overrides older universal personal-card unlock badge rule; narrow exception recorded in docs/课程权益展示规则.md.",
+  "builds": "iOS physical Debug, Android Debug, Harmony unsigned Debug passed",
+  "runtime": "Physical iPhone test package updated successfully; current UI not rechecked. Android/Harmony UI not run.",
+  "release": "No store submission or new signed release candidate; original identifiers/signatures/filing unchanged"
+}

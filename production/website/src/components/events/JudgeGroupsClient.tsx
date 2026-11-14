@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ChevronRight, ClipboardCheck, ShieldAlert } from 'lucide-react';
-import { getStudentSession } from '@/lib/student-auth';
+import { getStudentSession, STUDENT_AUTH_CHANGED_EVENT } from '@/lib/student-auth';
 
 type Group = { id: number; name: string; player_count: number; scored_count: number };
 
@@ -13,24 +13,26 @@ export default function JudgeGroupsClient({ slug }: { slug: string }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let active=true;const invalidate=()=>{active=false;setData(null);setError("账号已变化，请重新打开评委入口");};window.addEventListener(STUDENT_AUTH_CHANGED_EVENT,invalidate);window.addEventListener("storage",invalidate);
     const session = getStudentSession();
-    if (!session) { setError('请先登录'); return; }
-    fetch(`/api/events-news/${slug}/judge`, { headers: { Authorization: `Bearer ${session.token}` } })
+    if (!session) { setError('请先登录'); return()=>{window.removeEventListener(STUDENT_AUTH_CHANGED_EVENT,invalidate);window.removeEventListener('storage',invalidate);}; }
+    fetch(`/api/events-news/${slug}/judge`, { cache:'no-store', headers: { Authorization: `Bearer ${session.token}` } })
       .then(async (response) => {
         const payload = await response.json();
         if (!response.ok || !payload.success) throw new Error(payload.error || '加载失败');
-        setData(payload.data);
+        if(active&&getStudentSession()?.token===session.token)setData(payload.data);
       })
-      .catch((reason) => setError(reason instanceof Error ? reason.message : '加载失败'));
+      .catch((reason) => {if(active)setError(reason instanceof Error ? reason.message : '加载失败');});
+    return()=>{active=false;window.removeEventListener(STUDENT_AUTH_CHANGED_EVENT,invalidate);window.removeEventListener('storage',invalidate);};
   }, [slug]);
 
   if (error) return <PermissionState message={error} />;
   if (!data) return <div className="rounded-2xl border border-sand/60 bg-white p-10 text-center text-sm text-text-muted">正在加载评委任务…</div>;
   return (
     <>
-      <div className="mb-4 flex items-center justify-between rounded-xl bg-[#1A1A1A] px-4 py-3 text-white">
-        <div><div className="text-[11px] text-gold">当前评委</div><div className="mt-0.5 font-semibold">{data.judge.name}</div></div>
-        <ClipboardCheck className="h-6 w-6 text-gold" />
+      <div className="mb-4 flex items-center justify-between rounded-xl border border-sand bg-white px-4 py-3 text-text">
+        <div><div className="text-[11px] text-crimson">当前评委</div><div className="mt-0.5 font-semibold">{data.judge.name}</div></div>
+        <ClipboardCheck className="h-6 w-6 text-crimson" />
       </div>
       <input aria-label="搜索负责组别名称" placeholder="输入组别名称模糊搜索" value={query} onChange={e => setQuery(e.target.value)} className="mb-4 w-full rounded-lg border border-sand bg-white px-4 py-3 text-sm outline-none focus:border-gold-dark" />
       {query.trim() && !data.groups.some(group => group.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) && <p role="status" className="mb-4 text-sm text-text-muted">未找到相关组别</p>}
@@ -42,7 +44,7 @@ export default function JudgeGroupsClient({ slug }: { slug: string }) {
                 <div className="truncate font-semibold text-text">{group.name}</div>
                 <div className="mt-1 text-xs text-text-muted">{group.scored_count}/{group.player_count} 位选手已评分</div>
               </div>
-              <ChevronRight className="h-5 w-5 shrink-0 text-gold-dark" />
+              <ChevronRight className="h-5 w-5 shrink-0 text-crimson-dark" />
             </Link>
           ))}
         </div>
@@ -52,5 +54,5 @@ export default function JudgeGroupsClient({ slug }: { slug: string }) {
 }
 
 function PermissionState({ message }: { message: string }) {
-  return <div className="rounded-2xl border border-sand/60 bg-white px-5 py-12 text-center"><ShieldAlert className="mx-auto h-8 w-8 text-gold-dark" /><div className="mt-3 font-semibold text-text">{message}</div></div>;
+  return <div className="rounded-2xl border border-sand/60 bg-white px-5 py-12 text-center"><ShieldAlert className="mx-auto h-8 w-8 text-crimson-dark" /><div className="mt-3 font-semibold text-text">{message}</div></div>;
 }

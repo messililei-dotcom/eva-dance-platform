@@ -108,7 +108,7 @@ Page(share.withShare('event-register', {
   currentEntry() {
     const group = this.data.groups.find(g => String(g.id) === String(this.data.groupId));
     if (!group) throw new Error('请选择参赛组别');
-    if (!this.data.name.trim()) throw new Error('请填写姓名');
+    if (!this.data.name.trim() || this.data.name.trim().length > 120) throw new Error('请填写1至120个字符的选手姓名');
     normalizeEventPhone(this.data.phone, this.data.countryCode);
     if (!this.data.performanceTitle.trim()) throw new Error('请填写节目（音乐）名字');
     const body = { groupId: group.id };

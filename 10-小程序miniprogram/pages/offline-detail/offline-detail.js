@@ -1,3 +1,4 @@
+const { contentText } = require("../../shared/review-text");
 const share = require("../../shared/share");
 const api = require("../../utils/api");
 const { offlineIntroduction, periodPurchase } = require("../../shared/offline-course-info");
@@ -20,22 +21,25 @@ Page(share.withShare("offline-detail", {
     try {
       const rows = await api.getOfflineCourses();
       const group = findOfflineCourseGroup(rows || [], id);
-      if (!group) throw new Error("线下课程不存在或已下架");
+      if (!group) throw new Error("线下活动不存在或已下架");
       const source = group.periods.find(item => String(item.id) === String(id)) || group.periods[0];
       const periods = group.periods.map(item => ({
         ...item,
+        name: contentText(item.name),
         ...periodPurchase(item),
         coverImage: item.cover_image || "",
         anonymous_students: anonymousStudents(item.total_students),
         teacherText: item.teacher || "伊娃东方舞导师",
-        statusText: ({ active: "开课中", planned: "待开课", completed: "已结课", inactive: "暂未开放", cancelled: "已取消" })[item.period_status] || item.period_status || "",
+        statusText: ({ active: "进行中", planned: "待开始", completed: "已结束", inactive: "暂未开放", cancelled: "已取消" })[item.period_status] || item.period_status || "",
         dateText: item.periodLabel,
-        sessionsText: `${Number(item.total_courses || 0)} 课次`,
+        sessionsText: `${Number(item.total_courses || 0)} 次`,
         priceText: Number(item.price || 0) > 0 ? formatPrice(item.price) : "请咨询",
-        descriptionText: item.description || item.subtitle || ""
+        descriptionText: contentText(item.description || item.subtitle)
       }));
+      const introduction = offlineIntroduction(source);
       const course = {
         ...source,
+        name: contentText(source.name),
         coverImage: group.cover_image || "",
         teacherText: source.teacher || "伊娃东方舞导师",
         dateText: group.latestPeriodText,
@@ -43,16 +47,18 @@ Page(share.withShare("offline-detail", {
         priceText: Number(group.minPrice || 0) > 0
           ? `${formatPrice(group.minPrice)}${group.periodCount > 1 ? "起" : ""}`
           : "请咨询",
-        ...offlineIntroduction(source),
+        ...introduction,
+        descriptionText: contentText(introduction.descriptionText),
+        outline: introduction.outline.map(text => contentText(text)),
         periodCount: group.periodCount,
         studentCount: group.studentCount,
         anonymousStudents: anonymousStudents(group.studentCount),
         periods
       };
       this.setData({ course, loading: false });
-      wx.setNavigationBarTitle({ title: course.name || "线下课程详情" });
+      wx.setNavigationBarTitle({ title: course.name || "线下活动详情" });
     } catch (err) {
-      this.setData({ loading: false, error: err.message || "课程加载失败" });
+      this.setData({ loading: false, error: err.message || "内容加载失败" });
     }
   },
   buyCourse(e) {

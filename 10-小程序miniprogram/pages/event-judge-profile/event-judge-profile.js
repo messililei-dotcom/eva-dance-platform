@@ -1,0 +1,3 @@
+const api=require('../../utils/api');
+const share=require('../../shared/share');
+Page(share.withShare('event-judge-profile',{data:{loading:true,error:'',judge:null,competition:{}},onLoad(o){this.id=o.id;this.judgeId=o.judgeId;this.load();},async load(){this.setData({loading:true,error:''});try{const d=await api.getEventDetail(this.id);const j=(d.competition&&d.competition.judgeScoresPublic)?(d.judges||[]).find(j=>String(j.id)===String(this.judgeId)):null;this.setData({loading:false,competition:d.competition,judge:j?{...j,initial:String(j.name||'评').slice(0,1),bio:String(j.bio||'').replace(/<[^>]*>/g,'')}:null});}catch(e){this.setData({loading:false,error:e.message||'加载失败'});}},back(){wx.navigateBack();}}));

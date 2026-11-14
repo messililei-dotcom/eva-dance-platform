@@ -41,4 +41,16 @@ final class EventPresentation {
         if(start!=null&&start.isAfter(now))return "报名未开始";if(end!=null&&end.isBefore(now))return "报名已截止";
         return registration.equals("open")?"报名中":"报名未开放";
     }
+    static String ageGroup(JSONObject row){
+        String text=(value(row,"name")+" "+value(row,"ageRange")+" "+value(row,"category")).toLowerCase(java.util.Locale.ROOT);
+        if(java.util.regex.Pattern.compile("青少年|少年|\\bteen(?:ager)?s?\\b|\\byouth\\b").matcher(text).find())return "青少年";
+        if(java.util.regex.Pattern.compile("少儿|幼儿|儿童|\\bchildren\\b|\\bchild\\b|\\bkids?\\b").matcher(text).find())return "少儿";
+        if(java.util.regex.Pattern.compile("成人|成年|\\badults?\\b").matcher(text).find())return "成人";
+        String age=value(row,"ageRange").trim();
+        java.util.regex.Matcher range=java.util.regex.Pattern.compile("^(\\d{1,2})\\s*(?:岁\\s*)?[-—–~～至]\\s*(\\d{1,2})\\s*岁?$").matcher(age);
+        if(range.matches()){int low=Integer.parseInt(range.group(1)),high=Integer.parseInt(range.group(2));if(high<low)return "";if(low>=18)return "成人";if(low>=12&&high<18)return "青少年";if(high<12)return "少儿";}
+        java.util.regex.Matcher over=java.util.regex.Pattern.compile("^(\\d{1,2})\\s*(?:岁及以上|岁以上|\\+)$").matcher(age);
+        return over.matches()&&Integer.parseInt(over.group(1))>=18?"成人":"";
+    }
+
 }

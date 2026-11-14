@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-11-11T19:28:44+08:00",
+  "version": "1.0.4",
+  "build": 23,
+  "bundleName": "cn.com.swod.evadance",
+  "reviewRecordId": "2071129556072323840",
+  "officialStatus": "已上架",
+  "reviewStatus": "approved",
+  "listedAt": "2026-11-10T15:00:30+08:00",
+  "automaticReleaseAfterApproval": true,
+  "officialMessage": "您的应用“SWOD”已通过审核并成功上架，同时您的应用还存在一些问题需要您的关注或处理，详情请参考审核报告。",
+  "signedPackage": "SWOD-1.0.4-23-release.app",
+  "officialUploadTime": "2026-11-10 09:40:05",
+  "officialVersion": "1.0.4（23）",
+  "publicVerification": {
+    "attemptedUrl": "https://appgallery.huawei.com/app/C6917617955633704973",
+    "result": "No matching app details rendered. Official storefront search SWOD opened Android C119475083; Harmony public version and regional download entries remain unverified.",
+    "chinaVerified": false,
+    "otherRegionVerified": false
+  },
+  "advisoryAttachments": {
+    "archive": "evidence/harmony23-approved-20261111/review-attachments.zip",
+    "sha256": "9dbe5cbaee79c2b630073e09237669cf12ec14090e33a437c2aea8152e97724b",
+    "imageObserved": "Official attachment marks the login page message indicating carrier one-tap login is not currently available and suggests SMS or password login.",
+    "videoReview": "Saved original video; playback inspection pending. ffprobe unavailable in current PATH."
+  }
+}

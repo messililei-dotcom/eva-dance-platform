@@ -1,7 +1,8 @@
 const config = require('./runtime-config');
+const { contentText } = require('./review-text');
 const HOME = '/pages/home/home';
-const titles = { mall:'伊娃甄选 · 官方商城', messages:'伊娃东方舞 · 通知', home:'伊娃东方舞线上学院', system:'伊娃东方舞 · 全部课程', offline:'伊娃东方舞 · 线下课程', events:'伊娃东方舞赛事', profile:'伊娃东方舞 · 个人中心', 'commerce-orders':'伊娃东方舞 · 课程订单', login:'伊娃东方舞 · 学员登录', admin:'伊娃东方舞', 'profile-edit':'伊娃东方舞 · 学员中心' };
-const descriptions = { home:'系统课程与东方舞学习，查看课程介绍和目录', system:'从基础训练到成品舞，找到适合自己的课程', offline:'查看导师、课程安排和期次，了解线下培训', events:'查看赛事介绍、赛程与报名安排', mall:'精选舞服、练习装备与配饰，查看商品详情', profile:'查看个人课程、学习记录与服务', messages:'登录后查看自己的课程与服务通知', login:'登录后同步课程与个人服务', 'commerce-orders':'登录后查看自己的课程订单', 'profile-edit':'登录后管理自己的个人资料', admin:'东方舞课程、赛事与精选好物' };
+const titles = { mall:'伊娃甄选 · 官方商城', messages:'伊娃东方舞 · 通知', home:'伊娃东方舞视频专区', system:'伊娃东方舞 · 全部内容', offline:'伊娃东方舞 · 线下活动', events:'伊娃东方舞赛事', profile:'伊娃东方舞 · 个人中心', 'commerce-orders':'伊娃东方舞 · 内容订单', login:'伊娃东方舞 · 学员登录', admin:'伊娃东方舞', 'profile-edit':'伊娃东方舞 · 学员中心' };
+const descriptions = { home:'系统内容与东方舞学习，查看内容介绍和目录', system:'从基础训练到成品舞，找到适合自己的内容', offline:'查看导师、内容安排和期次，了解线下交流', events:'查看赛事介绍、赛程与报名安排', mall:'精选舞服、练习装备与配饰，查看商品详情', profile:'查看个人内容、学习记录与服务', messages:'登录后查看自己的内容与服务通知', login:'登录后同步内容与个人服务', 'commerce-orders':'登录后查看自己的内容订单', 'profile-edit':'登录后管理自己的个人资料', admin:'东方舞内容、赛事与精选好物' };
 function text(value) { return String(value || '').replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi,'').replace(/<[^>]*>/g,'').replace(/&nbsp;|&#160;/gi,' ').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/g,"'").replace(/\s+/g,' ').trim(); }
 function cover(item = {}) {
   const value = String(item.cover_image || item.coverImage || item.coverUrl || item.cover_url || item.image || '').trim();
@@ -18,7 +19,7 @@ function link(route, params) {
   return route + (query ? '?' + query : '');
 }
 function card(title, route, params, item = {}, detail = '') {
-  const heading=text(title) || '伊娃东方舞', intro=text(detail) || '了解东方舞课程与服务';
+  const heading=contentText(text(title)) || '伊娃东方舞', intro=contentText(text(detail)) || '了解东方舞内容与服务';
   return {title:heading.slice(0,48)+' · '+intro.slice(0,36),path:link(route,params),imageUrl:cover(item)};
 }
 function intro(item = {}, fallback) { return text(item.descriptionText || item.description || item.summary || item.subtitle || item.introduction) || fallback; }
@@ -26,7 +27,7 @@ function resolveShare(page, route) {
   const d=page.data || {},o=page.shareOptions || {};
   if (route==='learning-records') return resolveShare({data:{}},'profile');
   if (route==='event-music') return resolveShare({data:{}},'events');
-  if (route==='event-judge') return resolveShare({data:{id:d.id,competition:d.competition}},'event-detail');
+  if (route==='event-judge' || route==='event-judge-profile') return resolveShare({data:{id:d.id || o.id,competition:d.competition}},'event-detail');
   if (route==='course-checkout' && d.kind==='event') return resolveShare({data:{}},'events');
   if (route==='course-checkout') return resolveShare({data:d.kind==='offline'?{courseId:Number(d.id)+900000,course:d.offer}:{id:d.id,series:d.offer}},d.kind==='offline'?'offline-detail':'detail');
   if (route==='shop-product') {
@@ -37,19 +38,19 @@ function resolveShare(page, route) {
   if (['shop-checkout','shop-orders'].includes(route)) return resolveShare({data:{}},'mall');
   if (route==='player' || route==='detail') {
     const p=(route==='player'?d.course:d.series) || {},id=route==='player'?(d.seriesId || o.seriesId):(d.id || o.id);
-    if (!id || d.loadError || d.playbackError==='课程已隐藏或下架') return resolveShare({data:{}},'home');
-    return card(p.name || '东方舞课程','/pages/detail/detail',{id},p,intro(p,p.teacher ? `${p.teacher} · 查看课程介绍和目录` : '查看课程介绍和完整目录'));
+    if (!id || d.loadError || d.playbackError==='内容已隐藏或下架') return resolveShare({data:{}},'home');
+    return card(p.name || '东方舞内容','/pages/detail/detail',{id},p,intro(p,p.teacher ? `${p.teacher} · 查看内容介绍和目录` : '查看内容介绍和完整目录'));
   }
   if (route==='offline-detail' && !(d.courseId || o.id)) return resolveShare({data:{}},'offline');
   if (['event-detail','event-group','event-register','event-player'].includes(route) && !(d.id || d.competitionId || o.id)) return resolveShare({data:{}},'events');
-  if (route==='offline-detail') return card(d.course?.name || '线下课程','/pages/offline-detail/offline-detail',{id:d.courseId || o.id},d.course || {},intro(d.course,d.course?.teacherText || '查看导师、课程安排和期次'));
+  if (route==='offline-detail') return card(d.course?.name || '线下活动','/pages/offline-detail/offline-detail',{id:d.courseId || o.id},d.course || {},intro(d.course,d.course?.teacherText || '查看导师、内容安排和期次'));
   if (['event-detail','event-group','event-register','event-player'].includes(route)) return card(d.competition?.name || '东方舞赛事','/pages/event-detail/event-detail',{id:d.id || d.competitionId || o.id},d.competition || {},intro(d.competition,d.competition?.dateText || '查看赛事介绍、组别与报名安排'));
   const item=route==='mall'?d.visibleProducts?.[0]:route==='home'?d.carouselCourses?.[0]:route==='system'?d.courses?.[0]:route==='offline'?d.visibleCourses?.[0]:route==='events'?d.visibleEvents?.[0]:{};
   return card(titles[route],route==='admin'?HOME:`/pages/${route}/${route}`,{},item || {},descriptions[route]);
 }
 const landingPages = new Set(['home','mall','detail','offline-detail','events','event-detail','profile']);
 async function preview(page, route, options) {
-  const target=landingPages.has(options._sharePage) ? options._sharePage : route;
+  const target=landingPages.has(options._sharePage) ? options._sharePage : route==='event-judge-profile' ? 'event-detail' : route;
   let data={},id=options.id || options.seriesId;
   page.setData({sharePreview:resolveShare({data:{},shareOptions:{}},target)});
   try {

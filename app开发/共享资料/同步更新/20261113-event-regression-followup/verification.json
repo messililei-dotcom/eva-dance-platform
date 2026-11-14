@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-13",
+  "scope": "mini-program-only",
+  "tests": {
+    "passed": 163,
+    "failed": 0,
+    "total": 163
+  },
+  "detailRegressionTests": {
+    "passed": 5,
+    "failed": 0
+  },
+  "sharedConfigCheck": "passed",
+  "localCompileErrors": 0,
+  "nativeShareMenuObserved": true,
+  "unpublishedJudgeProfileHidden": true,
+  "miniUploaded": false,
+  "appsUploaded": false,
+  "realDeviceAccepted": false,
+  "temporaryCompileEntriesRemoved": 1,
+  "sourceSHA256": {
+    "10-小程序miniprogram/pages/event-judge-profile/event-judge-profile.js": "bb28b8eccce4bef7641b094f6f8106ce3ae2331fa5d11d75b2d1a9c4aedb31e8",
+    "10-小程序miniprogram/pages/event-judge-profile/event-judge-profile.wxml": "3525b80ce63b8181de4feed563c179ef65d8eaaabc86503d43555c658de760cb",
+    "10-小程序miniprogram/shared/share.js": "6f0395ba30f01a1ed689070cade5e9235df189479c8fcd72b263bdd93e80bb56",
+    "10-小程序miniprogram/scripts/november-sync.test.cjs": "c4f8dfa90a8e8de7964ffe359d53d2eea070f102040259f7cc44cbed7c7359ad",
+    "10-小程序miniprogram/scripts/sharing.test.cjs": "d27904c5dcd9697f273dd8a33e049b7eada193bd8d5602947dd57c71bdffdedf"
+  }
+}

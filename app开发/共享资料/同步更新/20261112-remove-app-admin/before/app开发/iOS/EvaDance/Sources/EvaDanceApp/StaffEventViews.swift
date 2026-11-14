@@ -94,6 +94,15 @@ struct StaffCompetitionsView: View {
 struct StaffCompetitionView: View {
     @EnvironmentObject var staff: StaffSession
     @StateObject private var store = StaffData()
+    @StateObject private var detail = StaffData()
+    @State private var sortResult = ""
+    private var eventPath: String { "/event/competitions/\(event["id"].text)" }
+
+    private func money(_ key: String) -> String {
+        let value = detail.data["revenue"][key]
+        guard case .number(let fen) = value else { return "—" }
+        return (fen / 100).formatted(.currency(code: "CNY"))
+    }
     let event: JSONValue
     @State private var operation: String?
     var body: some View {
@@ -104,6 +113,14 @@ struct StaffCompetitionView: View {
             NavigationLink("组别管理与出场顺序") { StaffGroupsView(eventID: event["id"].text) }
             NavigationLink("赛程") { StaffRecordView(title: "赛程", path: "/event/competitions/\(event["id"].text)", fields: ["startDate", "endDate", "location", "registrationStatus"]) }
             Section("报名与公示") {
+                if case .object = detail.data["revenue"] {
+                    LabeledContent("总收入", value: money("totalFen"))
+                    LabeledContent("平台缴费", value: money("platformFen"))
+                }
+                StaffStatus(store: detail) { Task { await detail.load(eventPath, staff: staff) } }
+                Button("出场随机排序") { operation = "randomizeSequence" }
+                    .foregroundStyle(.green)
+                if !sortResult.isEmpty { Text(sortResult).font(.caption) }
                 Button("开放报名") { operation = "openRegistration" }
                 Button("关闭报名") { operation = "closeRegistration" }
                 Button("公开报名信息") { operation = "showRegistration" }
@@ -111,10 +128,28 @@ struct StaffCompetitionView: View {
                 Button("公开评委评分") { operation = "showJudgeScores" }
                 Button("隐藏评委评分") { operation = "hideJudgeScores" }
             }.disabled(store.busy)
-            StaffStatus(store: store) { }
+            if store.busy { ProgressView() }
+            if let error = store.error { Text(error).foregroundStyle(.red) }
         }.evaCompactLayout().evaPageChrome()
-        .confirmationDialog("确认修改此赛事的报名或公示设置？", isPresented: Binding(get: {operation != nil}, set: {if !$0 {operation = nil}})) {
-            if let operation { Button("确认修改") { Task { _ = await store.send("/event/competitions/\(event["id"].text)", method: "PATCH", body: ["action": operation], staff: staff); self.operation = nil } } }
+        .task { await detail.load(eventPath, staff: staff) }
+        .refreshable { await detail.load(eventPath, staff: staff) }
+        .confirmationDialog(operation == "randomizeSequence" ? "重新随机编排本赛事各组的出场顺序？" : "确认修改此赛事的报名或公示设置？",
+            isPresented: Binding(get: { operation != nil }, set: { if !$0 { operation = nil } }),
+            presenting: operation
+        ) { action in
+            Button("确认") { Task { await apply(action) } }
+        }
+    }
+
+    private func apply(_ action: String) async {
+        if action == "randomizeSequence" {
+            guard let id = Int(event["id"].text) else { return }
+            sortResult = ""
+            if let result = await store.send("/event/performances/randomize", body: ["competitionId": id], staff: staff) {
+                sortResult = "已编排 \(result["updated"].text) 条报名"
+            }
+        } else {
+            _ = await store.send(eventPath, method: "PATCH", body: ["action": action], staff: staff)
         }
     }
 }
@@ -227,9 +262,22 @@ struct StaffPlayerView: View {
                     ForEach([("姓名", "name"), ("完整组别", "groupName"), ("手机号", "phone"), ("机构", "organization"), ("老师", "teacher"), ("节目", "performanceTitle"), ("编号", "playerNo"), ("出场顺序", "sequenceNo")], id: \.1) { label, key in LabeledContent(label, value: player[key].text) }
                 }
                 Section("报名和音乐") {
-                    LabeledContent("音乐", value: player["musicName"].text.isEmpty ? "未关联" : player["musicName"].text)
-                    LabeledContent("时长", value: player["musicDuration"].text + " 秒")
-                    if let musicID = Int(player["musicFileId"].text), musicID > 0 { NavigationLink("试听音乐") { StaffMusicView(id: musicID, name: player["musicName"].text) } }
+                    if let musicID = Int(player["musicFileId"].text), musicID > 0 {
+                        NavigationLink {
+                            StaffMusicView(id: musicID, name: player["musicName"].text)
+                        } label: {
+                            HStack {
+                                Text(player["musicName"].text).lineLimit(1)
+                                Spacer()
+                                if player["musicDuration"].number > 0 {
+                                    Text(player["musicDuration"].text + " 秒").fixedSize().foregroundStyle(.secondary)
+                                }
+                                Image(systemName: "play.circle").accessibilityLabel("试听音乐")
+                            }
+                        }
+                    } else {
+                        Text("未关联音乐")
+                    }
                 }
                 Section("报名费") {
                     LabeledContent("应收", value: "¥" + String(format: "%.2f", player["registrationFee"].number))
@@ -258,11 +306,11 @@ struct StaffPlayerEditor: View {
     @State private var done = false
     var body: some View {
         Form {
-            TextField("姓名", text: $name); TextField("手机号", text: $phone)
+            TextField("姓名（支持中文、英文和空格）", text: $name); TextField("手机号", text: $phone)
             TextField("机构", text: $organization); TextField("指导老师", text: $teacher)
             TextField("节目名称", text: $title); TextField("备注", text: $remark)
             Text("缴费状态须通过独立流水登记，编号由平台管理。").font(.caption)
-            Button("保存修正") { confirm = true }.disabled(store.busy || name.isEmpty || phone.isEmpty || title.isEmpty || done)
+            Button("保存修正") { confirm = true }.disabled(store.busy || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || name.trimmingCharacters(in: .whitespacesAndNewlines).utf16.count > 120 || phone.isEmpty || title.isEmpty || done)
             if done { Text("报名资料已更新") }
             StaffStatus(store: store) { }
         }.evaCompactLayout().evaPageChrome().task { name = player["name"].text; phone = player["phone"].text; organization = player["organization"].text; teacher = player["teacher"].text; title = player["performanceTitle"].text; remark = player["remark"].text }

@@ -1,3 +1,4 @@
+import styles from './events.module.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CalendarDays, ChevronRight, MapPin, Medal, Trophy, Users } from 'lucide-react';
@@ -25,45 +26,44 @@ const EVENTS_PER_PAGE = 12;
 export default async function EventsNewsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ page?: string }>;
+  searchParams?: Promise<{ page?: string; status?: string }>;
 }) {
   const news = getEventsNews().filter((item) => item.reportType !== 'course');
-  const requestedPage = Number((await searchParams)?.page || 1);
-  const totalPages = Math.max(1, Math.ceil(news.length / EVENTS_PER_PAGE));
+  const parameters = await searchParams;
+  const statusFilter = parameters?.status === 'registering' || parameters?.status === 'ended' ? parameters.status : 'all';
+  const filteredNews = statusFilter === 'all' ? news : news.filter(item => getEventStatus(item) === statusFilter);
+  const requestedPage = Number(parameters?.page || 1);
+  const totalPages = Math.max(1, Math.ceil(filteredNews.length / EVENTS_PER_PAGE));
   const currentPage = Number.isInteger(requestedPage)
     ? Math.min(Math.max(requestedPage, 1), totalPages)
     : 1;
-  const pagedNews = news.slice((currentPage - 1) * EVENTS_PER_PAGE, currentPage * EVENTS_PER_PAGE);
+  const pagedNews = filteredNews.slice((currentPage - 1) * EVENTS_PER_PAGE, currentPage * EVENTS_PER_PAGE);
   const totalPlayers = news.reduce((sum, item) => sum + item.stats.players, 0);
-  const totalScores = news.reduce((sum, item) => sum + item.stats.scores, 0);
+  const totalGroups = news.reduce((sum, item) => sum + item.stats.groups, 0);
 
   return (
-    <div data-mobile-surface="events" className="mobile-events-surface min-h-screen bg-warm-white">
-      <section className="bg-[#1A1A1A] text-white">
+    <div data-mobile-surface="events" className={`mobile-events-surface min-h-screen ${styles.platform}`}>
+      <section className={styles.hero}>
         <div className="mx-auto grid max-w-7xl gap-4 px-4 pb-6 pt-20 sm:px-6 md:gap-8 md:pb-14 md:pt-28 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
           <div>
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-medium text-gold md:gap-2 md:px-4 md:py-1.5 md:text-sm">
-                <Trophy className="h-4 w-4" />
-                东方舞赛事平台
-              </span>
               <h1 className="mt-3 font-serif text-3xl font-bold leading-tight md:mt-5 md:text-6xl">
                 AiwaRaks赛事平台
               </h1>
+              <p className="mt-3 text-base">发现赛事，记录每一次闪耀</p>
             </div>
           </div>
 
           <div>
-            <div className="grid grid-cols-3 divide-x divide-white/10 border border-white/10 bg-white/[0.06]">
+            <div className={`grid grid-cols-3 divide-x divide-sand/50 ${styles.metrics}`}>
               {[
                 { value: news.length, label: '赛事总数', icon: Trophy },
                 { value: totalPlayers, label: news.some(item => item.registrationPublic === false) ? '已公开参与' : '累计参与', icon: Users },
-                { value: totalScores, label: '记录数据', icon: Medal },
+                { value: totalGroups, label: '赛事组别', icon: Medal },
               ].map((item) => (
                 <div key={item.label} className="min-w-0 px-2 py-3 text-center md:p-5">
-                  <item.icon className="mx-auto mb-1.5 h-4 w-4 text-gold md:mb-3 md:h-5 md:w-5" />
-                  <div className="truncate font-serif text-lg font-bold md:text-3xl">{item.value.toLocaleString()}</div>
-                  <div className="mt-0.5 whitespace-nowrap text-[10px] text-white/60 md:mt-1 md:text-sm">{item.label}</div>
+                  <strong>{item.value.toLocaleString()}</strong>
+                  <span>{item.label}</span>
                 </div>
               ))}
             </div>
@@ -73,18 +73,20 @@ export default async function EventsNewsPage({
 
       <section id="event-list" className="scroll-mt-20 py-8 md:py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-5 flex items-center justify-between gap-3 md:mb-8 md:gap-6">
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="shrink-0 font-serif text-2xl font-bold text-text md:text-4xl">全部赛事</h2>
             <EventPlatformSearch events={news.map(({ slug, title, location }) => ({ slug, title, location }))} />
           </div>
 
-          <div className="grid grid-cols-2 gap-3 md:gap-5 xl:grid-cols-3">
+          <nav className={styles.filters} aria-label="按赛事状态筛选">{[['all','全部赛事'],['registering','报名中'],['ended','已结束']].map(([key,label]) => <Link key={key} href={`/events?status=${key}#event-list`} aria-current={statusFilter === key ? 'page' : undefined}>{label}</Link>)}</nav>
+          {!pagedNews.length && <p className="py-12 text-center text-text-muted">暂无符合条件的赛事</p>}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
             {pagedNews.map((item, index) => {
               const status = getEventStatus(item);
 
               return (
                 <div key={item.slug}>
-                  <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-sand/50 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                  <article className={`group flex h-full flex-col overflow-hidden bg-white ${styles.card}`}>
                     <a href={`/events/${item.slug}`} aria-label={`查看赛事：${item.title}`} className="flex flex-1 flex-col">
                       <div className="relative aspect-[4/3] bg-[#1A1A1A]">
                       {item.coverImage ? (
@@ -110,7 +112,7 @@ export default async function EventsNewsPage({
                       </div>
 
                       <div className="flex flex-1 flex-col p-3 pb-0 md:p-5 md:pb-0">
-                      <div className="mb-2 flex flex-col gap-1 text-[10px] text-text-muted md:mb-3 md:flex-row md:flex-wrap md:gap-3 md:text-xs">
+                      <div className="mb-2 flex flex-col gap-1 text-sm text-text-muted md:mb-3 md:flex-row md:flex-wrap md:gap-3 md:text-xs">
                         <span className="inline-flex items-center gap-1">
                           <CalendarDays className="h-3.5 w-3.5 text-gold-dark" />
                           {item.dateRange}
@@ -120,7 +122,7 @@ export default async function EventsNewsPage({
                           {item.location}
                         </span>
                       </div>
-                      <h3 className="line-clamp-2 font-serif text-base font-bold leading-snug text-text transition-colors group-hover:text-crimson md:text-xl">
+                      <h3 className="line-clamp-2 font-serif text-lg font-bold leading-snug text-text transition-colors group-hover:text-crimson md:text-xl">
                         {item.title}
                       </h3>
                       <p className="mt-3 hidden line-clamp-3 text-sm leading-6 text-text-secondary md:block">
@@ -130,7 +132,7 @@ export default async function EventsNewsPage({
                         {statLabels.map(({ key, label }) => (
                           <div key={key}>
                             <div className="text-base font-bold text-gold-dark md:text-lg">{key === 'players' && item.registrationPublic === false ? '暂未公开' : item.stats[key].toLocaleString()}</div>
-                            <div className="text-[10px] text-text-muted md:text-xs">{item.statLabels?.[key] || label}</div>
+                            <div className="text-sm text-text-muted">{item.statLabels?.[key] || label}</div>
                           </div>
                         ))}
                       </div>
@@ -155,7 +157,7 @@ export default async function EventsNewsPage({
                         </StudentProtectedLink>
                         </div>
                       ) : (
-                        <Link href={`/events/${item.slug}`} className="inline-flex w-full items-center justify-center gap-1.5 text-xs font-semibold text-crimson md:gap-2 md:text-sm">
+                        <Link href={`/events/${item.slug}`} className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 text-sm font-semibold text-crimson">
                           查看赛事
                           <ChevronRight className="h-4 w-4" />
                         </Link>
@@ -169,13 +171,13 @@ export default async function EventsNewsPage({
           {totalPages > 1 ? (
             <nav className="mt-8 flex items-center justify-center gap-3" aria-label="赛事分页">
               {currentPage > 1 ? (
-                <a rel="prev" className="rounded-md border border-sand bg-white px-4 py-2 text-sm font-semibold text-text" href={`/events?page=${currentPage - 1}#event-list`}>
+                <a rel="prev" className="rounded-md border border-sand bg-white px-4 py-2 text-sm font-semibold text-text" href={`/events?status=${statusFilter}&page=${currentPage - 1}#event-list`}>
                   上一页
                 </a>
               ) : null}
               <span aria-live="polite" className="text-sm text-text-muted">第 {currentPage} / {totalPages} 页</span>
               {currentPage < totalPages ? (
-                <a rel="next" className="rounded-md bg-crimson px-4 py-2 text-sm font-semibold text-white" href={`/events?page=${currentPage + 1}#event-list`}>
+                <a rel="next" className="rounded-md bg-crimson px-4 py-2 text-sm font-semibold text-white" href={`/events?status=${statusFilter}&page=${currentPage + 1}#event-list`}>
                   下一页
                 </a>
               ) : null}

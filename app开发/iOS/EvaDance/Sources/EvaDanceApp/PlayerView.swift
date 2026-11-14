@@ -88,7 +88,7 @@ import EvaCore
                     try await CourseAudioSession.activate()
                     guard !Task.isCancelled, self.active, self.playRequest == request else { return }
                     self.audioTask = nil; self.audioActivated = true
-                    self.player.isMuted = false; self.player.volume = 1
+                    self.player.isMuted = false
                     self.player.playImmediately(atRate: self.speed); self.playing = true
                 } catch {
                     guard self.playRequest == request else { return }
@@ -143,8 +143,14 @@ struct PlayerView: View {
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var model = LessonPlayer()
     @StateObject private var controls = PlaybackControls()
+    @StateObject private var orientation = PlaybackOrientation()
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     @State private var mirror = false
+    @State private var notesEnabled = true
+    @State private var noteRows: [JSONValue] = []
+    @State private var noteSession = ""
+    @State private var noteRequest = UUID()
+    @State private var noteError: String?
     @State private var screenCaptured = false
     @State private var showCacheInfo = false
     @State private var showNote = false
@@ -169,9 +175,12 @@ struct PlayerView: View {
     private var current: Lesson? { playlist.first { $0.id == lessonID } }
     var body: some View {
         ScrollViewReader { proxy in
+            VStack(spacing: 0) {
+                videoStage.frame(maxWidth: .infinity, maxHeight: orientation.fullscreen ? .infinity : nil).background(.black)
+                if !orientation.message.isEmpty { Text(orientation.message).font(.subheadline).foregroundStyle(.secondary).padding(8) }
+                if !orientation.fullscreen {
             ScrollView {
                 VStack(spacing: 8) {
-                    videoStage
                     VStack(alignment: .leading, spacing: 7) {
                         if CoursePresentation.isAudio(title) { Label("音频课程", systemImage: "waveform").font(.caption).foregroundStyle(.secondary) }
                         Text(title).font(.headline).fixedSize(horizontal: false, vertical: true)
@@ -219,6 +228,14 @@ struct PlayerView: View {
                     } else if tab == 1 {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("记录本节练习心得").font(.headline)
+                            Toggle("显示同步笔记", isOn: $notesEnabled)
+                            Text("笔记显示在此处，不遮挡视频画面。").font(.subheadline).foregroundStyle(.secondary)
+                            if notesEnabled && noteSession == session.credentials?.sessionId {
+                                ForEach(Array(NoteDanmakuPolicy.visible(noteRows, at: model.position).enumerated()), id: \.offset) { entry in
+                                    VStack(alignment: .leading, spacing: 6) { Text(time(entry.element["timestamp_seconds"].number)).font(.caption).foregroundStyle(.secondary); Text(entry.element["content"].text).font(.body).textSelection(.enabled) }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 6)
+                                }
+                            }
+                            if let noteError { Text(noteError).foregroundStyle(.secondary); Button("重新加载笔记") { Task { await loadNotes() } } }
                             Text("笔记与书签会记录当前播放位置，可在个人中心查看。").font(.subheadline).foregroundStyle(.secondary)
                             Button("写笔记 / 添加书签 · \(time(model.position))") { showNote = true }.frame(minHeight: 44).disabled(model.loading || model.failure != nil)
                         }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 8).padding(.horizontal, 12)
@@ -230,9 +247,14 @@ struct PlayerView: View {
                     }
                 }.padding(.bottom, 16)
             }.background(EvaBrand.canvas)
+                }
+            }.background(orientation.fullscreen ? Color.black : EvaBrand.canvas)
         }.evaPageChrome()
+        .background { (orientation.fullscreen ? Color.black : EvaBrand.canvas).ignoresSafeArea() }
         #if os(iOS)
         .toolbar(.hidden, for: .tabBar)
+        .toolbar(orientation.fullscreen ? .hidden : .visible, for: .navigationBar)
+        .statusBarHidden(orientation.fullscreen)
         .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { notice in
             screenCaptured = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.contains { $0.screen.isCaptured }
             if screenCaptured { model.pause() }
@@ -265,43 +287,52 @@ struct PlayerView: View {
         .onChange(of: model.playing) { playing in controls.update(playing: playing, keepVisible: voiceOver) }
         .onChange(of: voiceOver) { enabled in controls.update(playing: model.playing, keepVisible: enabled) }
         .onChange(of: showSettings) { shown in controls.interaction(shown) }
-        .onDisappear { controls.cancel(); model.stop(); Task { await model.save(id: lessonID, session: session) } }
-        .sheet(isPresented: $showNote) { LessonNoteView(lessonID: lessonID, timestamp: model.position).environmentObject(session) }
+        .onDisappear { orientation.exit(); controls.cancel(); model.stop(); Task { await model.save(id: lessonID, session: session) } }
+        .task(id: session.accountID) { await loadNotes() }
+        .sheet(isPresented: $showNote, onDismiss: { Task { await loadNotes() } }) { LessonNoteView(lessonID: lessonID, timestamp: model.position).environmentObject(session) }
         .sheet(isPresented: $showSettings) {
             NavigationStack {
                 Form {
-                    if AppPolicy.supportsOfflineDownload {
                     Section {
-                        Text("缓存联网时自动续期，可连续离线观看最长 24 小时。学习权益到期或撤销后停止使用。").font(.footnote).foregroundStyle(.secondary)
+                        Text("离线授权联网时自动续期，可连续离线观看最长 24 小时。学习权益到期或撤销后停止使用。").font(.footnote).foregroundStyle(.secondary)
                         CourseCacheActions(cache: session.videoCache, lessonID: lessonID, title: title, course: courseTitle)
-                    } header: { Text("课程缓存") }
-                    }
-                    Toggle("镜面练习", isOn: $mirror)
-                    Toggle("循环本节", isOn: $model.loop)
-                    Picker("播放速度", selection: $model.speed) { ForEach([Float(0.75), 1, 1.25, 1.5], id: \.self) { rate in Text("\(rate, specifier: "%.3g") 倍").tag(rate) } }
+                    } header: { Text("离线观看") }
+                    Toggle("镜像翻转", isOn: $mirror)
+                    Toggle("单集循环", isOn: $model.loop)
+                    Picker("播放速度", selection: $model.speed) { ForEach([Float(0.75), 1, 1.25, 1.5, 2], id: \.self) { rate in Text("\(rate, specifier: "%.3g") 倍").tag(rate) } }
                         .onChange(of: model.speed) { speed in model.endHold(); if model.playing { model.player.rate = speed } }
                     if !model.qualities.isEmpty {
                         Picker("清晰度", selection: $model.quality) { ForEach(model.qualities) { Text($0.label).tag($0.value) } }.disabled(model.loading)
                             .onChange(of: model.quality) { value in guard !model.loading else { return }; Task { await model.load(id: lessonID, session: session, selectedQuality: value) } }
                     }
                 }.navigationTitle("播放设置").navigationBarTitleDisplayMode(.inline).toolbar { Button("完成") { showSettings = false } }
-            }.presentationDetents([.medium, .large])
+            }.presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
         }
+    }
+    @MainActor private func loadNotes() async {
+        let request = UUID(); noteRequest = request
+        noteRows = []; noteError = nil; noteSession = ""
+        guard let token = session.token, let account = session.credentials?.sessionId else { return }
+        do {
+            let result: JSONValue = try await session.api.request("/notes?video_id=\(lessonID)", token: token)
+            guard !Task.isCancelled, request == noteRequest, account == session.credentials?.sessionId else { return }
+            noteRows = result.list; noteSession = account
+        } catch { if request == noteRequest, account == session.credentials?.sessionId { noteError = "课程笔记暂未加载，请重试。" } }
     }
     private var videoStage: some View {
         LessonVideoSurface(model: model, controls: controls, mirror: mirror,
-            watermark: "SWOD · 学习码 " + (session.credentials?.sessionId.suffix(8).uppercased() ?? "未登录"),
             blockedMessage: screenCaptured ? "屏幕共享或录制期间暂停课程画面" : scenePhase != .active ? "课程已暂停" : nil,
             canPlay: !screenCaptured,
             onSettings: { showSettings = true },
+            orientation: orientation,
             onSave: { Task { await model.save(id: lessonID, session: session) } },
             previous: {
                 if let index = playlist.firstIndex(where: { $0.id == lessonID }), index > 0 {
-                    NavigationLink { destination(playlist[index - 1]) } label: { Text("上一节").frame(minWidth: 60, minHeight: 44) }
+                    NavigationLink { destination(playlist[index - 1]) } label: { Image(systemName: "backward.end.fill").frame(width: 40, height: 44).accessibilityLabel("上一节") }
                 }
             }, next: {
                 if let index = playlist.firstIndex(where: { $0.id == lessonID }), index + 1 < playlist.count {
-                    NavigationLink { destination(playlist[index + 1]) } label: { Text("下一节").frame(minWidth: 60, minHeight: 44) }
+                    NavigationLink { destination(playlist[index + 1]) } label: { Image(systemName: "forward.end.fill").frame(width: 40, height: 44).accessibilityLabel("下一节") }
                 }
             })
     }

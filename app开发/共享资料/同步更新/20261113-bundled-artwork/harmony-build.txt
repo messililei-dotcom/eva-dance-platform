@@ -1,0 +1,449 @@
+> hvigor [32mUP-TO-DATE :entry:default@PreBuild...  [39m
+> hvigor [32mFinished :entry:default@CreateModuleInfo... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateMetadata...  [39m
+> hvigor [32mFinished :entry:default@ConfigureCmake... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MergeProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CreateBuildProfile...  [39m
+> hvigor [32mFinished :entry:default@PreCheckSyscap... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GeneratePkgContextInfo...  [39m
+> hvigor [32mFinished :entry:default@GeneratePkgSdkInfo... after 3 ms [39m
+> hvigor [32mFinished :entry:default@ProcessIntegratedHsp... after 1 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithCmake... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MakePackInfo...  [39m
+> hvigor [32mFinished :entry:default@SyscapTransform... after 16 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessRouterMap...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessShareConfig...  [39m
+> hvigor [32mFinished :entry:default@ProcessStartupConfig... after 2 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithNinja... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessResource...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateLoaderJson...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessLibs...  [39m
+> hvigor [33mWARN: Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/resources/base/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/resources/en_US/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/resources/zh_CN/element/string.json
+Warning: 'EntryAbility_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/premierlibrary@lnrri91+jjgcyy1+1xavot4lilwswsxu9g5lqsvtmvo=/oh_modules/premierlibrary/src/main/resources/base/element/string.json
+Warning: 'EntryAbility_label' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/premierlibrary@lnrri91+jjgcyy1+1xavot4lilwswsxu9g5lqsvtmvo=/oh_modules/premierlibrary/src/main/resources/base/element/string.json
+Warning: 'module_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/premierlibrary@lnrri91+jjgcyy1+1xavot4lilwswsxu9g5lqsvtmvo=/oh_modules/premierlibrary/src/main/resources/base/element/string.json
+Warning: 'start_window_background' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/resources/base/element/color.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/premierlibrary@lnrri91+jjgcyy1+1xavot4lilwswsxu9g5lqsvtmvo=/oh_modules/premierlibrary/src/main/resources/base/element/color.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+logger@1.0.2/oh_modules/@aliyun/logger/src/main/resources/base/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+logger@1.0.2/oh_modules/@aliyun/logger/src/main/resources/en_US/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+logger@1.0.2/oh_modules/@aliyun/logger/src/main/resources/zh_CN/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+error@1.0.2/oh_modules/@aliyun/error/src/main/resources/base/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+error@1.0.2/oh_modules/@aliyun/error/src/main/resources/en_US/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+error@1.0.2/oh_modules/@aliyun/error/src/main/resources/zh_CN/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+els@1.3.2/oh_modules/@aliyun/els/src/main/resources/base/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+els@1.3.2/oh_modules/@aliyun/els/src/main/resources/en_US/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+els@1.3.2/oh_modules/@aliyun/els/src/main/resources/zh_CN/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+edid@1.1.0/oh_modules/@aliyun/edid/src/main/resources/base/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+edid@1.1.0/oh_modules/@aliyun/edid/src/main/resources/en_US/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+edid@1.1.0/oh_modules/@aliyun/edid/src/main/resources/zh_CN/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/cmccssosdk@wd+fkhmnrsqfbdyxtcne4myumlfijtnye57vsbm7hfe=/oh_modules/cmccssosdk/src/main/resources/base/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/cmccssosdk@wd+fkhmnrsqfbdyxtcne4myumlfijtnye57vsbm7hfe=/oh_modules/cmccssosdk/src/main/resources/en_US/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/cmccssosdk@wd+fkhmnrsqfbdyxtcne4myumlfijtnye57vsbm7hfe=/oh_modules/cmccssosdk/src/main/resources/zh_CN/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/unicom_login_harmony@pfpki8r9tj+faijeqogtjvnwbgdqcj3uxk8ed8djosi=/oh_modules/unicom_login_harmony/src/main/resources/base/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/unicom_login_harmony@pfpki8r9tj+faijeqogtjvnwbgdqcj3uxk8ed8djosi=/oh_modules/unicom_login_harmony/src/main/resources/en_US/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/unicom_login_harmony@pfpki8r9tj+faijeqogtjvnwbgdqcj3uxk8ed8djosi=/oh_modules/unicom_login_harmony/src/main/resources/zh_CN/element/string.json
+Warning: 'module_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/ctaccount@qccjk9bmoqtng+2vpbi+2wqjznsjx4thqhodhlvlvn0=/oh_modules/ctaccount/src/main/resources/base/element/string.json
+Warning: 'module_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/premierlibrary@lnrri91+jjgcyy1+1xavot4lilwswsxu9g5lqsvtmvo=/oh_modules/premierlibrary/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/ctaccount@qccjk9bmoqtng+2vpbi+2wqjznsjx4thqhodhlvlvn0=/oh_modules/ctaccount/src/main/resources/en_US/element/string.json
+Warning: 'module_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/premierlibrary@lnrri91+jjgcyy1+1xavot4lilwswsxu9g5lqsvtmvo=/oh_modules/premierlibrary/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/ctaccount@qccjk9bmoqtng+2vpbi+2wqjznsjx4thqhodhlvlvn0=/oh_modules/ctaccount/src/main/resources/zh_CN/element/string.json
+Warning: 'start_window_background' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/resources/base/element/color.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/ctaccount@qccjk9bmoqtng+2vpbi+2wqjznsjx4thqhodhlvlvn0=/oh_modules/ctaccount/src/main/resources/base/element/color.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@taobao-ohos+craft@g3hyhj4n8fwjasfq+ihcjmjgh3oikrtmkn75ubknxfw=/oh_modules/@taobao-ohos/craft/src/main/resources/base/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@taobao-ohos+craft@g3hyhj4n8fwjasfq+ihcjmjgh3oikrtmkn75ubknxfw=/oh_modules/@taobao-ohos/craft/src/main/resources/en_US/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@taobao-ohos+craft@g3hyhj4n8fwjasfq+ihcjmjgh3oikrtmkn75ubknxfw=/oh_modules/@taobao-ohos/craft/src/main/resources/zh_CN/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/dljson@8y7fmo8pk++iwzbzxufn+xmuihidjjlrg5qftpjx2tg=/oh_modules/dljson/src/main/resources/base/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/dljson@8y7fmo8pk++iwzbzxufn+xmuihidjjlrg5qftpjx2tg=/oh_modules/dljson/src/main/resources/en_US/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/dljson@8y7fmo8pk++iwzbzxufn+xmuihidjjlrg5qftpjx2tg=/oh_modules/dljson/src/main/resources/zh_CN/element/string.json
+Warning: 'EntryAbility_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/base/element/string.json
+Warning: 'EntryAbility_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/premierlibrary@lnrri91+jjgcyy1+1xavot4lilwswsxu9g5lqsvtmvo=/oh_modules/premierlibrary/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/en_US/element/string.json
+Warning: 'EntryAbility_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/premierlibrary@lnrri91+jjgcyy1+1xavot4lilwswsxu9g5lqsvtmvo=/oh_modules/premierlibrary/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/zh_CN/element/string.json
+Warning: 'EntryAbility_label' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/base/element/string.json
+Warning: 'EntryAbility_label' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/premierlibrary@lnrri91+jjgcyy1+1xavot4lilwswsxu9g5lqsvtmvo=/oh_modules/premierlibrary/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/en_US/element/string.json
+Warning: 'EntryAbility_label' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/premierlibrary@lnrri91+jjgcyy1+1xavot4lilwswsxu9g5lqsvtmvo=/oh_modules/premierlibrary/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/zh_CN/element/string.json
+Warning: 'module_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/base/element/string.json
+Warning: 'module_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/premierlibrary@lnrri91+jjgcyy1+1xavot4lilwswsxu9g5lqsvtmvo=/oh_modules/premierlibrary/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/en_US/element/string.json
+Warning: 'module_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/premierlibrary@lnrri91+jjgcyy1+1xavot4lilwswsxu9g5lqsvtmvo=/oh_modules/premierlibrary/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/zh_CN/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/base/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/en_US/element/string.json
+Warning: 'page_show' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/zh_CN/element/string.json
+Warning: 'getnetwork_reason' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/base/element/string.json
+Warning: 'iternet_reason' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/base/element/string.json
+Warning: 'setnetwork_reason' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/base/element/string.json
+Warning: 'CtaccountAbility_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/ctaccount@qccjk9bmoqtng+2vpbi+2wqjznsjx4thqhodhlvlvn0=/oh_modules/ctaccount/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/base/element/string.json
+Warning: 'CtaccountAbility_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/ctaccount@qccjk9bmoqtng+2vpbi+2wqjznsjx4thqhodhlvlvn0=/oh_modules/ctaccount/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/en_US/element/string.json
+Warning: 'CtaccountAbility_desc' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/ctaccount@qccjk9bmoqtng+2vpbi+2wqjznsjx4thqhodhlvlvn0=/oh_modules/ctaccount/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/zh_CN/element/string.json
+Warning: 'CtaccountAbility_label' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/ctaccount@qccjk9bmoqtng+2vpbi+2wqjznsjx4thqhodhlvlvn0=/oh_modules/ctaccount/src/main/resources/base/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/base/element/string.json
+Warning: 'CtaccountAbility_label' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/ctaccount@qccjk9bmoqtng+2vpbi+2wqjznsjx4thqhodhlvlvn0=/oh_modules/ctaccount/src/main/resources/en_US/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/en_US/element/string.json
+Warning: 'CtaccountAbility_label' conflict, first declared.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/ctaccount@qccjk9bmoqtng+2vpbi+2wqjznsjx4thqhodhlvlvn0=/oh_modules/ctaccount/src/main/resources/zh_CN/element/string.json
+but declared again.
+at /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/intermediates/res/default/resource_str/zh_CN/element/string.json
+[39m
+> hvigor [32mFinished :entry:default@CompileResource... after 336 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@DoNativeStrip...  [39m
+> hvigor [32mFinished :entry:default@BuildJS... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@CacheNativeLibs...  [39m
+> hvigor [33mWARN: [33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+error@1.0.2/oh_modules/@aliyun/error/src/main/ets/Index.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+error@1.0.2/oh_modules/@aliyun/error/Index.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/ets/g/h.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/ets/g/e.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/ets/i/e.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/ets/push/e.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+logger@1.0.2/oh_modules/@aliyun/logger/src/main/ets/d.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+logger@1.0.2/oh_modules/@aliyun/logger/Index.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/src/main/ets/g/j.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/@aliyun+push@1.2.5/oh_modules/@aliyun/push/Index.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/h/k/n.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/h/i/f/j.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/h/z1/o2.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/h/k/m.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/h/k/l.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/f/g.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/f/PageOrientation.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/f/AuthUiConfig.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/src/main/ets/e/PhoneNumberAuthHelper.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/release/EvaDance/oh_modules/.ohpm/numberauth_standard@7xab22hosyngacohudx6mzfjiheqvu4xx47cost+gmc=/oh_modules/numberauth_standard/Index.d.ets:2:1
+ Switching off type checks with in-place comments is not allowed (arkts-strict-typing-required)
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN: For details about ArkTS syntax errors, see FAQs[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/HuksVault.ets:20:15
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/HuksVault.ets:21:9
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/HuksVault.ets:22:11
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/HuksVault.ets:34:26
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/HuksVault.ets:43:10
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/HuksVault.ets:45:30
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/PlatformApi.ets:161:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/PlatformApi.ets:166:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/PlatformApi.ets:182:12
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/PlatformApi.ets:182:55
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/PlatformApi.ets:187:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:45:22
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:46:30
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:48:5
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:48:72
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:52:22
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:53:26
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:54:30
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:68:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:70:22
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:71:9
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:71:63
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AppPush.ets:83:58
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/components/JudgeWorkspace.ets:51:17
+ 'show' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:9:25
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:11:18
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:12:11
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:12:52
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:12:91
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:16:10
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/AliyunSecureCacheDriver.ets:42:18
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/services/CourseCacheStore.ets:163:77
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:194:51
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:202:39
+ 'getMaxVolume' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:203:39
+ 'getVolume' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:217:42
+ 'setVolume' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:217:42
+ To use this API, you need to apply for the permissions: ohos.permission.ACCESS_NOTIFICATION_POLICY
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:295:13
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:592:17
+ 'show' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/src/main/ets/pages/Index.ets:1072:23
+ 'show' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in '@aliyun/push'.[39m [33m[39m[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in 'numberauth_standard'.[39m [33m[39m[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in '@aliyun/logger'.[39m [33m[39m[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in '@aliyun/error'.[39m [33m[39m[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in 'cmccssosdk'.[39m [33m[39m[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in 'unicom_login_harmony'.[39m [33m[39m[39m[39m
+[33mWARN: [33m[33m[39m [33mArkTS:WARN Property 'sourceMapsPath' not found in 'ctaccount'.[39m [33m[39m[39m[39m
+[39m
+> hvigor [32mFinished :entry:default@CompileArkTS... after 5 s 541 ms [39m
+> hvigor [32mFinished :entry:default@GeneratePkgModuleJson... after 2 ms [39m
+> hvigor [32mFinished :entry:default@ProcessCompiledResources... after 1 ms [39m
+> hvigor [32mFinished :entry:default@PackageHap... after 426 ms [39m
+> hvigor [32mFinished :entry:default@PackingCheck... after 3 ms [39m
+> hvigor [33mWARN: No signingConfig found for product default[39m
+> hvigor [32mFinished :entry:default@SignHap... after 2 ms [39m
+> hvigor [32mFinished :entry:default@CollectDebugSymbol... after 1 ms [39m
+> hvigor [32mFinished :entry:assembleHap... after 1 ms [39m
+> hvigor [32mBUILD SUCCESSFUL in 8 s 679 ms [39m

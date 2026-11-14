@@ -33,6 +33,7 @@ type PlatformEventRow = {
   start_date: string;
   end_date: string;
   location: string;
+  organizer: string;
   description: string;
   cover_url: string;
   group_count: number;
@@ -78,6 +79,7 @@ function platformEventToNews(row: PlatformEventRow): EventNews {
     date: startDate || `${year}-01-01`,
     dateRange,
     location,
+    organizer: row.organizer || '',
     categoryLabel: '东方舞赛事',
     reportType: 'event',
     registrationPublic: Number(row.registration_public) === 1,
@@ -107,6 +109,7 @@ function getPlatformEvents(competitionId?: number): EventNews[] {
         COALESCE(c.start_date, '') AS start_date,
         COALESCE(c.end_date, '') AS end_date,
         COALESCE(c.location, '') AS location,
+        COALESCE(c.organizer, '') AS organizer,
         COALESCE(c.description, '') AS description,
         COALESCE(c.cover_url, '') AS cover_url,
         (SELECT COUNT(*) FROM event_groups g WHERE g.competition_id = c.id) AS group_count,

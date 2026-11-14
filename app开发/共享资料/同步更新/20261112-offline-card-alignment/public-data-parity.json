@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-11-12T05:54:22.694Z",
+  "sourceRows": 140,
+  "groupCount": 40,
+  "appMiniPublicRowsEqual": true,
+  "preview": [
+    {
+      "id": 900266,
+      "offline_period_count": 2,
+      "offline_latest_period": "2028-12-25 至 2028-12-30",
+      "offline_student_count": 4,
+      "offline_min_price": 5980,
+      "cover_image": "https://www.swod.com.cn/api/platform-offline-courses/cover/tito-seif-masterclass.png",
+      "priceText": "¥5980起"
+    },
+    {
+      "id": 900131,
+      "offline_period_count": 4,
+      "offline_latest_period": "2027-10-01 至 2027-10-07",
+      "offline_student_count": 45,
+      "offline_min_price": 1990,
+      "cover_image": "https://www.swod.com.cn/api/platform-offline-courses/cover/ai-theme-holiday-intensive-20260813.webp",
+      "priceText": "¥1990起"
+    },
+    {
+      "id": 900137,
+      "offline_period_count": 6,
+      "offline_latest_period": "2028年",
+      "offline_student_count": 39,
+      "offline_min_price": 840,
+      "cover_image": "https://www.swod.com.cn/api/platform-offline-courses/cover/ai-theme-musicality-20260813.webp",
+      "priceText": "¥840起"
+    },
+    {
+      "id": 900126,
+      "offline_period_count": 11,
+      "offline_latest_period": "2027-07-10 至 2027-07-29",
+      "offline_student_count": 68,
+      "offline_min_price": 3750,
+      "cover_image": "https://www.swod.com.cn/api/platform-offline-courses/cover/international-technique-masterclass.png",
+      "priceText": "¥3750起"
+    },
+    {
+      "id": 900130,
+      "offline_period_count": 8,
+      "offline_latest_period": "2027-05-10 至 2027-05-29",
+      "offline_student_count": 25,
+      "offline_min_price": 2500,
+      "cover_image": "https://www.swod.com.cn/api/platform-offline-courses/cover/international-disciple-program.jpg",
+      "priceText": "¥2500起"
+    }
+  ]
+}

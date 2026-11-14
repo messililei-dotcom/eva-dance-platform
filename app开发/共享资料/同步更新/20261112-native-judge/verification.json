@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-11-12T13:28:34.823413+08:00",
+  "request": "赛事中补齐评委入口和功能",
+  "entry": "三端赛事详情→评委入口；未登录先登录学习账号",
+  "implemented": [
+    "服务端核验当前会员的赛事评委授权",
+    "仅显示获授权组别和本人评分",
+    "组别/选手搜索，鸿蒙50条分页",
+    "读取当前规则和本人历史分数",
+    "分项范围校验和合计确认后提交",
+    "修改本人评分沿用后端版本及审计",
+    "锁定组别只读与无权限提示",
+    "重复提交保护与会话切换响应隔离"
+  ],
+  "backend": "Added private GET/POST events/:id/judge allowlist to existing native App session adapter, delegating to existing mini-program judge route. No admin login/role granting endpoint exposed. Only one production source file changed; production snapshot build and rollback backup retained.",
+  "deployment": {
+    "buildId": "Yyx3DI1dBN3WuaxNm6kSX",
+    "backup": "/www/wwwroot/dongfangwuquan/deploy-backups/native-judge-20261112",
+    "health": "passed",
+    "files": {
+      "src/lib/server/app-route-map.ts": "6bf65f5c8688dc024d618a46346ed016a3f6f44cad6205a49f6bcb336be44534"
+    }
+  },
+  "checks": {
+    "server": "23 tests passed, zero failures: 18 existing session/auth and 5 new judge mapping, permission, numeric bounds, lock/withdrawal, correction/audit cases",
+    "rankingScope": "New tests use in-memory synthetic DB and mock ranking recalculation; existing ranking engine unchanged. They do not establish full live ranking acceptance.",
+    "iOS": "Physical-device Debug compile passed; new test bundle installed preserving original bundle ID/team and current login. Not a store candidate.",
+    "Android": "Debug compile passed; current judge UI not run",
+    "HarmonyOS": "Unsigned Debug HAP compiled; current judge UI not run",
+    "production": "Unauthenticated GET and forged member_id both401; oneTap true, offline/push false preserved",
+    "nativeJudgeFlow": "Not run with a real authorized judge account; no production score submissions or permission changes made"
+  },
+  "sources": {
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/JudgeWorkspaceView.swift": "c064c1079a4062cd7359f80d2729e4cf5cb1084bed3aeea6d422b5e72832ef73",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift": "b51826e2d12af7b942da958144cd2cb7e7a70211a512658a934b1a41a3327136",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "41b4da75ab24b9f645e2006efa939cd7cdd47708e2276a1ee6280a0bb9f0e0c0",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/components/JudgeWorkspace.ets": "0bc5c4b25dc2a256d55a68d6d550ebdb3cd79f3ad7f0bdf55f35766706bb6c5b",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "5f8bb2018c0f3ea52e97ed2c32f7bdc9c6cc95800c9f9393239021c9c76510dd",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets": "f4b08372ccf95956243d89e7c84f08a10509f0adcd3de92dedb97d03fd13f5f2",
+    "10-统一平台admin-platform/src/lib/server/app-route-map.ts": "6bf65f5c8688dc024d618a46346ed016a3f6f44cad6205a49f6bcb336be44534",
+    "10-统一平台admin-platform/scripts/app-judge.test.cjs": "74520685c5a04e0897293743d1aed6baca7e5ff87d309ac28b6f5197f90f4ff5"
+  },
+  "store": "No new signed release registry entry, upload or submission; earlier reviewed packages untouched"
+}

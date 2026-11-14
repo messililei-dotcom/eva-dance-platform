@@ -1,0 +1,81 @@
+[
+  {
+    "name": "ios-build",
+    "returncode": 0,
+    "seconds": 10.3,
+    "command": [
+      "xcodebuild",
+      "-project",
+      "EvaDance.xcodeproj",
+      "-scheme",
+      "EvaDance",
+      "-configuration",
+      "Debug",
+      "-destination",
+      "generic/platform=iOS Simulator",
+      "-derivedDataPath",
+      "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/共享资料/同步更新/20261113-event-detail-concept-v2/build-cache/ios-derived-data",
+      "CODE_SIGN_IDENTITY=-",
+      "CODE_SIGNING_ALLOWED=YES",
+      "ARCHS=arm64",
+      "ONLY_ACTIVE_ARCH=YES",
+      "COMPILER_INDEX_STORE_ENABLE=NO",
+      "build"
+    ],
+    "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance"
+  },
+  {
+    "name": "ios-core-checks",
+    "returncode": 0,
+    "seconds": 4.0,
+    "command": [
+      "swift",
+      "run",
+      "--scratch-path",
+      "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/共享资料/同步更新/20261113-event-detail-concept-v2/build-cache/ios-core-scratch",
+      "EvaCoreChecks"
+    ],
+    "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance"
+  },
+  {
+    "name": "android-checks",
+    "returncode": 0,
+    "seconds": 4.9,
+    "command": [
+      "./gradlew",
+      "assembleDebug",
+      "testDebugUnitTest",
+      "lintDebug",
+      "--console=plain"
+    ],
+    "cwd": "/Users/lilei/Library/Caches/SWOD/Android/event-detail-concept-v2-20261113"
+  },
+  {
+    "name": "harmony-build",
+    "returncode": 0,
+    "seconds": 8.5,
+    "command": [
+      "/Users/lilei/Library/Huawei/CommandLineTools/6.1.1.418/command-line-tools/bin/hvigorw",
+      "assembleHap",
+      "-p",
+      "product=default",
+      "-p",
+      "buildMode=debug",
+      "--no-daemon"
+    ],
+    "cwd": "/Users/lilei/Library/Caches/SWOD/HarmonyOS/event-detail-concept-v2-20261113"
+  },
+  {
+    "name": "harmony-checks",
+    "returncode": 0,
+    "seconds": 0.7,
+    "command": [
+      "node",
+      "--test",
+      "scripts/platform-api.test.cjs",
+      "scripts/course-media.test.cjs",
+      "scripts/event-presentation.test.cjs"
+    ],
+    "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/HarmonyOS/EvaDance"
+  }
+]

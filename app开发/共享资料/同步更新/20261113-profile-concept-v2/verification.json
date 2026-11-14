@@ -1,0 +1,192 @@
+{
+  "checkedAt": "2026-11-13T19:09:04.436033+08:00",
+  "request": "Implement approved personal center V2; remove private course unlocked badges",
+  "concept": "个人中心概念图-v2.png",
+  "builds": [
+    {
+      "name": "ios-build",
+      "returncode": 0,
+      "seconds": 23.2,
+      "command": [
+        "xcodebuild",
+        "-project",
+        "EvaDance.xcodeproj",
+        "-scheme",
+        "EvaDance",
+        "-configuration",
+        "Debug",
+        "-destination",
+        "generic/platform=iOS Simulator",
+        "-derivedDataPath",
+        "/tmp/swod-profile-v2-build",
+        "CODE_SIGN_IDENTITY=-",
+        "CODE_SIGNING_ALLOWED=YES",
+        "build"
+      ],
+      "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance"
+    },
+    {
+      "name": "ios-core-checks",
+      "returncode": 0,
+      "seconds": 14.2,
+      "command": [
+        "swift",
+        "run",
+        "--scratch-path",
+        "/tmp/swod-profile-v2-core",
+        "EvaCoreChecks"
+      ],
+      "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance"
+    },
+    {
+      "name": "android-checks",
+      "returncode": 0,
+      "seconds": 3.0,
+      "command": [
+        "./gradlew",
+        "assembleDebug",
+        "testDebugUnitTest",
+        "lintDebug",
+        "--console=plain"
+      ],
+      "cwd": "/Users/lilei/Library/Caches/SWOD/Android/profile-concept-v2-20261113"
+    },
+    {
+      "name": "harmony-build",
+      "returncode": 0,
+      "seconds": 6.6,
+      "command": [
+        "/Users/lilei/Library/Huawei/CommandLineTools/6.1.1.418/command-line-tools/bin/hvigorw",
+        "assembleHap",
+        "-p",
+        "product=default",
+        "-p",
+        "buildMode=debug",
+        "--no-daemon"
+      ],
+      "cwd": "/Users/lilei/Library/Caches/SWOD/HarmonyOS/profile-concept-v2-20261113"
+    },
+    {
+      "name": "harmony-checks",
+      "returncode": 0,
+      "seconds": 0.6,
+      "command": [
+        "node",
+        "--test",
+        "scripts/platform-api.test.cjs",
+        "scripts/course-media.test.cjs",
+        "scripts/event-presentation.test.cjs"
+      ],
+      "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/HarmonyOS/EvaDance"
+    }
+  ],
+  "checks": {
+    "iosContractGroups": 22,
+    "android": {
+      "tests": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "harmonyTests": 32,
+    "harmonyFailures": 0,
+    "compiledSourcesMatchWorkspace": true,
+    "profileAndRightsLoadingUnchanged": true,
+    "layoutDetector": "No mechanical findings; not native rendering acceptance"
+  },
+  "featureSwitches": "Offline download remains controlled by existing release switches; currently disabled on all three platforms, so the offline tile is omitted. No security/download gate enabled.",
+  "runtime": {
+    "actualUIVerified": false,
+    "reason": "CUA reported Mac locked; no fallback automation, install, screenshots, taps or bypass attempted",
+    "phoneTabletDarkLargeType": "pending actual runtime verification",
+    "physicalDeviceInstalled": false
+  },
+  "release": {
+    "debugBuildsOnly": true,
+    "formalReleaseSigningPerformed": false,
+    "uploaded": false,
+    "submitted": false,
+    "published": false,
+    "versionOrIdentityChanged": false
+  },
+  "artifacts": [
+    {
+      "platform": "iOS",
+      "path": "/tmp/swod-profile-v2-build/Build/Products/Debug-iphonesimulator/EvaDance.app",
+      "kind": "simulator app; not installed"
+    },
+    {
+      "platform": "Android",
+      "path": "/Users/lilei/Library/Caches/SWOD/Android/profile-concept-v2-20261113/app/build/outputs/apk/debug/app-debug.apk",
+      "kind": "debug APK",
+      "bytes": 38543838,
+      "sha256": "313b6458348c727c9c373c2e70ce3fb3e4c18eb370f0b739ad9a36d4c9f88af7"
+    },
+    {
+      "platform": "HarmonyOS",
+      "path": "/Users/lilei/Library/Caches/SWOD/HarmonyOS/profile-concept-v2-20261113/entry/build/default/outputs/default/entry-default-unsigned.hap",
+      "kind": "unsigned debug HAP",
+      "bytes": 25270272,
+      "sha256": "5841e8e28292fb9fdbcb0e82eb05b1f72838709945817db23010b614ea17e96b"
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift",
+      "beforeSHA256": "4a47ccc6313786b76d8ec849ac03af919acced2769031f60534e701dea502cf5",
+      "afterSHA256": "5712daf7b1efd4f0f4a3593028f4405d18efcdbf9e5ea4fc3d1f0fbdcbea7c85"
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountHeaderView.swift",
+      "beforeSHA256": "e1b630683e37754c78ac5120d232e9182bb17d4a87e76a3df5035c9d5ded1b9b",
+      "afterSHA256": "af29eea445eb0d8fed5e2ae2537bfa0cca0a62d2c4ca1c7cfbf417a23b599655"
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountSummaryView.swift",
+      "beforeSHA256": "0bb2055c0b0fd5d6dd1f5a6fe0dc38ffcded37cadc753a79475f601d07917437",
+      "afterSHA256": "f1fe337a03622f1fdf7a3554e94cae5df07a922492d90d5633f54cc9903cf0ee"
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountShortcutView.swift",
+      "beforeSHA256": "fb064902da4ae82ad4c36c72e72124905e75d680b4b90b48edc7417a506acd33",
+      "afterSHA256": "9ce20e9b655503f750f5fe1785d4d66cb9118b3cd82b42837e036ae97e809ee8"
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountCourseRow.swift",
+      "beforeSHA256": "11cd6d6c82f7c5a2613f86c08165bda115c37ee57a6d1ca5c424c1badc63e249",
+      "afterSHA256": "4621341a04cf24e3bd7886e55bafb6f9f4184a4bff43e349b3ae05d345b1a103"
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountServiceRow.swift",
+      "beforeSHA256": "91a69a697a3f68aaf9c70606eb0c1bc20f74904adf67524bbd436706ccb8414c",
+      "afterSHA256": "442be0948ce3d1a392c89253e5a2c769f6cfa8cffc20686111055e3f16295195"
+    },
+    {
+      "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java",
+      "beforeSHA256": "94750007acb09ac995bbd4649cf69cd6686436eb127266956f3c75cb08ce355b",
+      "afterSHA256": "a4358d63f88a4c4a155e333957d81727e1777e1efac2a39affddd8509b2c251c"
+    },
+    {
+      "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodUi.java",
+      "beforeSHA256": "e186a5c5a1bbeeff40efcfaa28f12220325b0cebadb0580710f2728d65610586",
+      "afterSHA256": "851023d257a8c083c904936a48bbffc94e034064010d21b8815f12baeeb3a9f1"
+    },
+    {
+      "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+      "beforeSHA256": "134f861bca73095f39a0d7d2bb2ac575d61d38c4364b3078629229a067a84366",
+      "afterSHA256": "a61e34461da77d9c662010a1daadaaa40f43a861cd32775fb241be0123bbe804"
+    },
+    {
+      "path": "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/profile_settings.svg",
+      "beforeSHA256": null,
+      "afterSHA256": "0b6ab41dd277a1f87aa081bbcd97a8120fb61aa936cf4fc769fa1c4e2b047e96"
+    },
+    {
+      "path": "app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/profile_download.svg",
+      "beforeSHA256": null,
+      "afterSHA256": "19a3ebdf910859125dc0d71ea55c2425465f0c4b29140850a64db6aa58a7a526"
+    }
+  ],
+  "rollback": "before/ is the exact dirty-workspace baseline; changes.patch includes only this task. Restore selectively without overwriting later work.",
+  "cleanup": "Removed only compiler intermediates created for this task after verification to recover local disk space; kept final development artifacts and all user files."
+}

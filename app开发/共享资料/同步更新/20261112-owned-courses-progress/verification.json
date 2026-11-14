@@ -1,0 +1,75 @@
+{
+  "checkedAt": "2026-11-12T11:43:51+08:00",
+  "userRequest": "Replace recent lesson rows with owned online course cards matching profile, show learning percentage, remove every 继续学习 label across native apps",
+  "progressDefinition": "Floor of average watched fraction over all lessons from authenticated series progress; completed=100%, bounded 0..100. No records=0%, request failure=进度待同步.",
+  "entitlementSource": "Authenticated /member/authorized-series, server series_id",
+  "sourceFiles": [
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/EvaDanceApp.swift",
+      "sha256": "e0b8e7a712d481a3c733745d698bfc4aafb05516361bc89cf2f8dada6a4ab0f9"
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountCourseRow.swift",
+      "sha256": "b0f4637d647d11c22fac1725eba84d3d6a34b6a03e34107d4ea58dc79c41dec7"
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift",
+      "sha256": "eb56b98b80a3d9e5cae9aeb7d980869a842058d1e94e2e833bb79c14a8aebc6e"
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift",
+      "sha256": "41ce57c16c3107edf0d4bce4b30bd7c023d6b0a6b0d38351927eb0c5801e75ca"
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCatalogView.swift",
+      "sha256": "e1b98b55a6e70ed5195c4362af0e9ffc616dd945cf88f04839d62bf392b90c57"
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Sources/EvaCore/CoursePresentation.swift",
+      "sha256": "3873cb5b8b18ba7db235539420914975167b71672ed8984da89ee1e8facf9a02"
+    },
+    {
+      "path": "app开发/iOS/EvaDance/Tests/EvaCoreTests/EvaCoreTests.swift",
+      "sha256": "97aa00803773c08eff3d4a4374f5a3c10e9fb3fb47caeb0c30387346e8881f21"
+    },
+    {
+      "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java",
+      "sha256": "46c353e9361b28fbc210255c044c33ebb989180cc3f7ca40fa5e863e9cd6ea37"
+    },
+    {
+      "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+      "sha256": "9b6b07a3d8eab6cbd71746baaf2744f27dd683c1fc0bbdfbf43e1f3027c6392d"
+    },
+    {
+      "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets",
+      "sha256": "2744ab81c6a6cd272f2f5f7c0f5e25c73b13c0323bd12f9e134f8210fde9de9a"
+    }
+  ],
+  "ios": {
+    "simulatorBuild": "passed",
+    "coreChecks": "passed, zero failures including course percentage cases",
+    "simulatorInstalled": true,
+    "liveUIVerified": true,
+    "observedCourse": "黄金陀螺·旋转训练",
+    "observedPercentage": 2,
+    "cardSharedWithProfile": true,
+    "continuesLearningLabelsRemaining": 0
+  },
+  "android": {
+    "debugBuild": "passed",
+    "unitTests": 32,
+    "failures": 0,
+    "uiRuntimeVerified": false,
+    "buildDirectory": "/Users/lilei/Library/Caches/SWOD/Android/owned-courses-20261112"
+  },
+  "harmony": {
+    "debugBuild": "passed",
+    "releaseSigning": "not performed",
+    "uiRuntimeVerified": false,
+    "buildDirectory": "/Users/lilei/Library/Caches/SWOD/HarmonyOS/owned-courses-20261112"
+  },
+  "physicalDeviceVerified": false,
+  "storeUploaded": false,
+  "storeSubmitted": false,
+  "courseAccessRules": "Latest user request supersedes prior native course-card continue-learning copy; active rights badge and server playback checks preserved."
+}

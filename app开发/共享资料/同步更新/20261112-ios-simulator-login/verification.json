@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-11-12T11:31:37+08:00",
+  "scope": "Local iOS simulator SMS login",
+  "simulator": "D9621B1C-436D-4A03-A9EA-2F87D3747CBD",
+  "version": "1.0.4",
+  "build": 14,
+  "observedError": "验证码错误或已过期",
+  "serverObservation": {
+    "smsSentAt": "2026-11-12T11:18:28+08:00",
+    "appSessionCreatedAt": "2026-11-12T11:18:39+08:00",
+    "verificationCodeWasConsumed": true
+  },
+  "rootCause": "Previous simulator build omitted simulated application-identifier entitlement; securityd returned -34018 during TokenStore read/update after server authentication succeeded.",
+  "fix": "Rebuilt with standard Xcode simulator signing enabled; simulated application identifier RT4J8ZD4JU.cn.com.swod.app embedded by Xcode.",
+  "installedApp": "/tmp/swod-simulator-login-build/Build/Products/Debug-iphonesimulator/EvaDance.app",
+  "buildSucceeded": true,
+  "simulatorLaunchPassed": true,
+  "nativeKeychainRegression": {
+    "source": "simulator/keychain-probe.swift",
+    "exercisesActualTokenStore": true,
+    "sourceSHA256": "af115c1ac85b914bf88477eeff0ac2017ced5d4822ae5e6ebcb906a533132968",
+    "withoutSimulatedEntitlements": "FAIL: TokenStore save rejected; securityd -34018",
+    "withSimulatedEntitlements": "PASS: actual TokenStore save, read and delete",
+    "probeUsesSeparateKeychainIdentity": true
+  },
+  "freshSMSLoginRetest": "passed by user input; UI showed unlocked course cards",
+  "productionSourceChanged": false,
+  "storeArtifactsChanged": false,
+  "sessionRestoredAfterRelaunch": true,
+  "restoredUIEvidence": "Continue Learning heading visible after terminate and relaunch"
+}

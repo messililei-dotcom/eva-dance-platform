@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <uses-permission android:name="android.permission.GET_TASKS" tools:node="remove"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -12,7 +13,7 @@
             <intent-filter><action android:name="com.alibaba.push2.action.NOTIFICATION_OPENED"/><action android:name="com.alibaba.push2.action.NOTIFICATION_REMOVED"/><action android:name="com.alibaba.sdk.android.push.RECEIVE"/></intent-filter>
         </receiver>
         <activity android:name=".PushPopupActivity" android:exported="true" android:launchMode="singleTask" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
-        <activity android:name=".PlayerActivity" android:exported="false"/>
+        <activity android:name=".PlayerActivity" android:exported="false" android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden"/>
         <activity android:name=".CourseCacheActivity" android:exported="false"/>
         <activity android:name=".OfflineCourseActivity" android:exported="false"/>
         <activity android:name=".MainActivity" android:exported="true">

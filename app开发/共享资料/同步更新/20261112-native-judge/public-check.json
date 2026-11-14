@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-11-12T13:27:53.199554+08:00",
+  "anonymousTests": [
+    {
+      "path": "events/1/judge",
+      "status": 401,
+      "reply": {
+        "success": false,
+        "message": "请重新登录"
+      }
+    },
+    {
+      "path": "events/1/judge?member_id=7&groupId=3&playerId=5",
+      "status": 401,
+      "reply": {
+        "success": false,
+        "message": "请重新登录"
+      }
+    }
+  ],
+  "flags": {
+    "oneTapLogin": true,
+    "offlineDownload": false,
+    "pushEnabled": false
+  },
+  "realScoresWritten": 0
+}

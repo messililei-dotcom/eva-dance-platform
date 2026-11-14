@@ -31,6 +31,22 @@
     {
       "name": "swod_on_primary",
       "value": "#000000"
+    },
+    {
+      "name": "registration_canvas",
+      "value": "#141619"
+    },
+    {
+      "name": "registration_line",
+      "value": "#4A433A"
+    },
+    {
+      "name": "registration_panel",
+      "value": "#F0202328"
+    },
+    {
+      "name": "registration_tint",
+      "value": "#7A000000"
     }
   ]
 }

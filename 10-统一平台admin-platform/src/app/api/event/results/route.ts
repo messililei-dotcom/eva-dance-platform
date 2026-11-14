@@ -40,7 +40,7 @@ export async function GET(request: Request) {
       LEFT JOIN event_groups g ON g.id = r.group_id
       LEFT JOIN event_players p ON p.id = r.player_id
       LEFT JOIN Member m ON m.id = p.member_id
-      LEFT JOIN event_scores s ON s.group_id = r.group_id AND s.player_id = r.player_id AND s.score_status != 'voided'
+      LEFT JOIN event_scores s ON s.group_id = r.group_id AND s.player_id = r.player_id AND s.score_status IN ('submitted','reviewed','published')
       LEFT JOIN event_group_judges gj ON gj.group_id = r.group_id AND gj.status = 'active'
       ${where}
       GROUP BY r.id
@@ -99,7 +99,7 @@ export async function PATCH(request: Request) {
       if (player.audit_status === 'rejected' || ['withdrawn','cancelled'].includes(player.status)) return jsonError('该报名已失效，不能修改最终得分');
 
       const manualTotal = action === 'set_manual_score' ? Number(body.finalScore ?? body.final_score) : null;
-      if (action === 'set_manual_score' && (manualTotal === null || !Number.isFinite(manualTotal) || manualTotal < 0)) return jsonError('最终得分必须是不小于 0 的数字');
+      if (action === 'set_manual_score' && (manualTotal === null || !Number.isFinite(manualTotal) || manualTotal < 1 || manualTotal > 10)) return jsonError('最终得分必须是 1～10 分之间的数字');
 
       const operator = cleanText(body.operator, 'admin');
       const reason = cleanText(body.reason, action === 'set_manual_score' ? '后台直接修改最终得分' : '取消人工最终得分');

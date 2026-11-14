@@ -33,8 +33,8 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     authorizedCourses: [], coursesError: "",
     counts: {}, showAllCourses: false, previewCourses: [],
     learningServices: [
-      { key: "notes", title: "学习笔记", description: "回顾课节中的学习心得", icon: "book" },
-      { key: "bookmarks", title: "学习书签", description: "查看标记过的课节与时间", icon: "award" },
+      { key: "notes", title: "学习笔记", description: "回顾分节中的学习心得", icon: "book" },
+      { key: "bookmarks", title: "学习书签", description: "查看标记过的分节与时间", icon: "award" },
       { key: "growth", title: "成长档案", description: "查看学员等级、经验与成长记录", icon: "calendar" }
     ],
     offlineCourses: [],
@@ -160,7 +160,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     const [profile, authorized, recent, catalog, payments, certificates, eventRegistrations] = await Promise.all([
       api.getMemberProfile().catch(err => { profileFailure = err; return null; }),
       api.getAuthorizedSeries().then(rows => {
-        if (!Array.isArray(rows)) throw new Error("课程权益暂时无法加载");
+        if (!Array.isArray(rows)) throw new Error("内容权益暂时无法加载");
         return rows;
       }).catch(err => { coursesFailure = err; return []; }),
       api.getRecentCourses().catch(() => []),
@@ -197,7 +197,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
       const source = catalogMap[String(id)] || {};
       return [{
         id,
-        name: cleanText(item.series_name || item.name || source.name, "未命名课程"),
+        name: cleanText(item.series_name || item.name || source.name, "未命名内容"),
         cover_image: item.cover_image || source.cover_image || "",
         total_courses: Number(item.total_courses || source.total_courses || 0)
       }];
@@ -226,7 +226,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
     const offlineKeyword = /线下|集训|师资|门徒|培训|私教|工作坊/;
     const offlineCourses = (payments || []).filter(item => offlineKeyword.test(`${item.courseType || item.course_type || ""} ${item.courseName || item.course_name || ""}`)).map(item => ({
       ...item,
-      courseName: cleanText(item.courseName || item.course_name || "线下课程"),
+      courseName: cleanText(item.courseName || item.course_name || "线下活动"),
       courseSubType: cleanText(item.courseSubType || item.course_sub_type || ""),
       displayDate: String(item.date || item.payment_date || "").slice(0, 10) || "-",
       displayAmount: formatPaymentAmount(item.amount || 0),
@@ -269,7 +269,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
       wechatIdentityText: (member.wx_unionid || member.wx_openid) ? "微信身份已同步" : "",
       authorizedCourses,
       previewCourses: this.data.showAllCourses ? authorizedCourses : authorizedCourses.slice(0, 4),
-      coursesError: coursesFailure ? "课程权益暂时无法加载，请重试" : "",
+      coursesError: coursesFailure ? "内容权益暂时无法加载，请重试" : "",
       counts,
       offlineCourses,
       ...((this.eventsRequestId || 0) === eventsVersion ? {
@@ -281,7 +281,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
       certificates: (certificates || []).map(cert => ({
         id: cert.id,
         certificateNo: cert.certificateNo || cert.certificate_no || "",
-        courseName: cleanText(cert.courseName || cert.course_name || cert.name || "课程证书"),
+        courseName: cleanText(cert.courseName || cert.course_name || cert.name || "活动证书"),
         displayIssueDate: String(cert.issueDate || cert.issue_date || "").slice(0, 10) || "待登记日期",
         openUrl: cert.pdfUrl || cert.pdf_url || cert.verifyUrl || cert.verify_url || "",
         status: cert.status || "active",
@@ -407,7 +407,7 @@ Page(share.withShare("profile", videoFeature.withVideoFeature({
   openProfileCourse(event) {
     const id = Number(event.currentTarget.dataset.id);
     if (!this.data.authorizedCourses.some(course => course.id === id)) return;
-    videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${id}` });
+    return videoFeature.navigateTo({ url: `/pages/player/player?seriesId=${id}`, videoAvailable: this.data.videoPlaybackEnabled });
   },
 
   openOfflineSchedule() {

@@ -1,6 +1,12 @@
+import { CourseArtwork } from '../components/CourseArtwork';
+import { PublicEventView } from '../components/PublicEventView';
+import { registrationCountries } from '../services/RegistrationCountries';
+import { JudgeWorkspace } from '../components/JudgeWorkspace';
 import { OfflineMonthCalendar } from '../components/OfflineMonthCalendar';
 import { appPush } from '../services/AppPush';
 import accessibility from '@ohos.accessibility';
+import audio from '@ohos.multimedia.audio';
+import window from '@ohos.window';
 import { notificationManager } from '@kit.NotificationKit';
 import { http } from '@kit.NetworkKit';
 import { common } from '@kit.AbilityKit';
@@ -9,7 +15,7 @@ import { webview } from '@kit.ArkWeb';
 import { picker, fileIo } from '@kit.CoreFileKit';
 import { Row, WriteBody, PaymentFlags, MediaQuality } from '../services/Models';
 import { platform, PlatformFailure, secureMedia, coverImageURL, externalURLAllowed, ApiMethod } from '../services/PlatformApi';
-import { coursePrice, originalPrice, offlineCopy, offlineDescription, canPurchasePeriod, groupedCourses, catalogLessons, startingLesson } from '../services/CoursePresentation';
+import { learnerText, coursePrice, originalPrice, offlineCopy, offlineDescription, canPurchasePeriod, groupedCourses, offlinePeriods, offlineGroupPrice, catalogLessons, startingLesson } from '../services/CoursePresentation';
 import { CarrierLogin } from '../services/CarrierLogin';
 import { eventCount, eventAggregate, eventDates, eventState } from '../services/EventPresentation';
 import { SwodTheme } from '../services/SwodTheme';
@@ -20,9 +26,10 @@ import { CachedCourses } from './CachedCourses';
 import { goodsInput, paymentURL, orderStatus } from '../services/ShopCheckout';
 import { productPrice, productStock } from '../services/ProductPresentation';
 
-interface Route { screen: string; title: string; path: string; auth: boolean; staff: boolean; eventID: number; groupID: number; }
+interface Route { playerID?: number; screen: string; title: string; path: string; auth: boolean; eventID: number; groupID: number; }
 interface VideoTime { time: number; }
 interface VideoDuration { duration: number; }
+interface VideoFullscreen { fullscreen: boolean; }
 
 @Entry
 @Component
@@ -31,6 +38,7 @@ struct Index {
   @State private accountCourseCovers: Row[] = [];
   @State private accountCoursesError: string = "";
   @State private accountCoursesLoading: boolean = false;
+  @State private accountCoursesExpanded: boolean = true;
   @State private accountColumns: number = 4;
   @State private unreadMessages: number = 0;
   @State private notificationStatus: string = '';
@@ -53,7 +61,7 @@ struct Index {
     } catch { /* A failed refresh does not erase the last successful count. */ }
   }
   @State private activeTab: string = 'home';
-  @State private route: Route = { screen: 'home', title: '线上学院', path: '/public/series', auth: false, staff: false, eventID: 0, groupID: 0 };
+  @State private route: Route = { screen: 'home', title: '线上学院', path: '/public/series', auth: false, eventID: 0, groupID: 0 };
   @State private wideWindow: boolean = false;
   @State private academyColumns: number = 1;
   @State private sensitiveScreenReady: boolean = false;
@@ -62,6 +70,9 @@ struct Index {
   @State private rows: Row[] = [];
   @State private detail: Row = {};
   @State private query: string = '';
+  @State private eventStatusFilter: string = '全部赛事';
+  @State private publicEventStatus: string = '';
+  @State private publicEventStatusID: number = 0;
   @State private refreshing: boolean = false;
   @State private onlyUnlocked: boolean = false;
   @State private courseCategory: string = '';
@@ -74,6 +85,7 @@ struct Index {
   @State private videoTab: number = 0;
   @State private videoSettings: boolean = false;
   @State private videoControlsVisible: boolean = true;
+  @State private videoFullscreen: boolean = false;
   private videoControlsTimer: number = -1;
   private videoScreenReader: boolean = false;
   private videoTouchStart: number = 0;
@@ -83,9 +95,9 @@ struct Index {
     if (this.videoControlsTimer >= 0) clearTimeout(this.videoControlsTimer);
     this.videoControlsTimer = -1;
   }
-  private resetVideoControls(): void { this.cancelVideoControlsTimer(); this.videoControlsVisible = true; }
+  private resetVideoControls(): void { this.cancelVideoControlsTimer(); this.videoControlsVisible = !this.videoPlaying; }
   private showVideoControls(): void {
-    this.resetVideoControls();
+    this.cancelVideoControlsTimer(); this.videoControlsVisible = true;
     if (!this.videoPlaying || this.videoSettings || this.videoScreenReader) return;
     this.videoControlsTimer = setTimeout(() => {
       this.videoControlsTimer = -1;
@@ -125,13 +137,10 @@ struct Index {
   @State private unlockedSeries: string[] = [];
   @State private courseAccessReady: boolean = false;
   @State private loggedIn: boolean = false;
-  @State private staffLoggedIn: boolean = false;
   @State private phone: string = '';
   @State private code: string = '';
   @State private memberPassword: string = '';
   @State private memberLoginMode: string = 'sms';
-  @State private username: string = '';
-  @State private password: string = '';
   @State private consent: boolean = false;
   @State private carrierReady: boolean = false;
   @State private carrierHint: string = '正在检查本机号码登录…';
@@ -144,20 +153,23 @@ struct Index {
   @State private teacher: string = '';
   @State private performanceTitle: string = '';
   @State private remark: string = '';
-  @State private paymentKind: string = 'charge';
-  @State private paymentMethod: string = 'wechat';
-  @State private amount: string = '';
-  @State private paidAt: string = '';
   @State private playURL: string = '';
   @State private musicName: string = '';
   @State private eventCountryCode: string = '+86';
   @State private eventPhone: string = '';
   @State private currentEventMusic: string = '';
+  @State private myEventsPage: number = 1;
+  @State private publicEventRevision: number = 0;
   @State private registrationSaved: boolean = false;
+  @State private registrationGroups: Row[] = [];
+  @State private registrationGroupID: number = 0;
+  @State private registrationQuery: string = '';
+  @State private registrationReady: boolean = false;
+  @State private registrationPoster: string = '';
+  @State private registrationFeedback: string = '';
   private music?: ArrayBuffer;
   @State private mirror: boolean = false;
   @State private loop: boolean = false;
-  private requestKey: string = '';
   @State private history: Route[] = [];
   private generation: number = 0;
   private selected: Row = {};
@@ -165,6 +177,86 @@ struct Index {
   @State private holdingSpeed: boolean = false;
   private videoPlaying: boolean = false;
   private holdTimer: number = -1;
+  @State private adjustmentMessage: string = '';
+  private stageWidth: number = 1;
+  private stageHeight: number = 200;
+  private adjustmentGeneration: number = 0;
+  private adjustingLevel: boolean = false;
+  private brightnessGesture: boolean = false;
+  private gestureLevel: number = 0.5;
+  private gestureReady: boolean = false;
+  private originalBrightness: number | undefined = undefined;
+  private playbackWindow: window.Window | undefined = undefined;
+  private maxMediaVolume: number = 15;
+  private adjustmentTimer: number = -1;
+  private volumePending: boolean = false;
+  private async prepareAdjustment(left: boolean): Promise<void> {
+    const generation = ++this.adjustmentGeneration;
+    this.brightnessGesture = left; this.gestureReady = false;
+    try {
+      if (left) {
+        const active = await window.getLastWindow(getContext(this));
+        if (generation !== this.adjustmentGeneration) return;
+        this.playbackWindow = active;
+        const brightness = active.getWindowProperties().brightness;
+        if (this.originalBrightness === undefined) this.originalBrightness = brightness;
+        this.gestureLevel = brightness >= 0 ? brightness : 0.5;
+      } else {
+        const manager = audio.getAudioManager();
+        const maximum = await manager.getMaxVolume(audio.AudioVolumeType.MEDIA);
+        const current = await manager.getVolume(audio.AudioVolumeType.MEDIA);
+        if (generation !== this.adjustmentGeneration) return;
+        this.maxMediaVolume = Math.max(1, maximum); this.gestureLevel = current / this.maxMediaVolume;
+      }
+      this.gestureReady = true;
+    } catch { if (generation === this.adjustmentGeneration) this.adjustmentMessage = left ? '亮度调节暂不可用' : '请使用设备音量键调节'; }
+  }
+  private async changeAdjustment(dy: number): Promise<void> {
+    if (!this.gestureReady || this.volumePending) return;
+    const generation = this.adjustmentGeneration;
+    const value = Math.min(1, Math.max(this.brightnessGesture ? 0.05 : 0, this.gestureLevel - dy / Math.max(160, this.stageHeight)));
+    this.volumePending = true;
+    try {
+      if (this.brightnessGesture) await this.playbackWindow?.setWindowBrightness(value);
+      else await audio.getAudioManager().setVolume(audio.AudioVolumeType.MEDIA, Math.round(value * this.maxMediaVolume));
+      if (generation === this.adjustmentGeneration) this.adjustmentMessage = (this.brightnessGesture ? '亮度 ' : '音量 ') + Math.round(value * 100) + '%';
+    } catch { if (generation === this.adjustmentGeneration) this.adjustmentMessage = this.brightnessGesture ? '亮度调节暂不可用' : '请使用设备音量键调节'; }
+    finally { this.volumePending = false; }
+  }
+  private restorePlaybackBrightness(): void {
+    this.adjustmentGeneration++; this.gestureReady = false;
+    if (this.originalBrightness !== undefined) this.playbackWindow?.setWindowBrightness(this.originalBrightness).catch(() => {});
+    this.originalBrightness = undefined; this.adjustmentMessage = '';
+    if (this.adjustmentTimer >= 0) clearTimeout(this.adjustmentTimer);
+  }
+  @Builder
+  private playerSettingsSheet() {
+    Scroll() {
+      Column({ space: 20 }) {
+        Text('播放设置').fontSize(20).fontWeight(FontWeight.Bold)
+        Text('离线授权联网时自动续期，可连续离线观看最长 24 小时；学习权益到期或撤销后停止使用。').fontSize(14).fontColor(SwodTheme.muted)
+        this.action('离线观看', () => {
+          if (!COURSE_CACHE_RELEASE_ENABLED || !this.courseCache) { this.offlineAvailabilityMessage = '安全离线观看尚未开放，请先在线观看'; return; }
+          const lesson = Number(this.currentLessonID); const title = this.route.title; const course = this.videoCourseTitle;
+          this.videoSettings = false; this.go('cache', '离线观看', '', true);
+          this.courseCache.download(lesson, title, course);
+        })
+        if (this.offlineAvailabilityMessage) { Text(this.offlineAvailabilityMessage).fontSize(14).fontColor(SwodTheme.muted) }
+        if (COURSE_CACHE_RELEASE_ENABLED) {
+        this.action('管理离线内容', () => this.go('cache', '离线观看', '', true))
+        }
+        if (this.videoQualities.length > 1) {
+          Select(this.videoQualities.map((quality: MediaQuality): SelectOption => ({ value: quality.label }))).selected(this.videoQuality).value(this.videoQualities[this.videoQuality]?.label || '自动').onSelect((index: number) => {
+            if (index < 0 || index >= this.videoQualities.length || index === this.videoQuality) return;
+            this.endHoldSpeed(); this.videoPlaying = false; this.controller.pause(); this.qualityResume = this.playbackPosition; this.qualityChanging = true; this.videoQuality = index; this.playURL = this.videoQualities[index].url;
+          }).enabled(this.duration > 0 && !this.qualityChanging).accessibilityText('视频清晰度')
+        }
+        Row({ space: 8 }) { ForEach([0.75, 1, 1.25, 1.5, 2], (rate: number) => { Button(rate + ' 倍').onClick(() => { this.endHoldSpeed(); this.selectedPlaybackRate = rate; }).backgroundColor(this.selectedPlaybackRate === rate ? SwodTheme.tonal : SwodTheme.surface).fontColor(SwodTheme.ink) }, (rate: number) => String(rate)) }
+        Row() { Checkbox().select(this.mirror).onChange((v: boolean) => { this.mirror = v; }); Text('镜像翻转'); Checkbox().select(this.loop).onChange((v: boolean) => { this.loop = v; }); Text('单集循环') }
+
+      }.padding(24).width('100%').alignItems(HorizontalAlign.Start)
+    }.width('100%')
+  }
   private holdX: number = 0;
   private holdY: number = 0;
   private endHoldSpeed(): void {
@@ -173,28 +265,73 @@ struct Index {
   }
   private onVideoTouch(event: TouchEvent): void {
     if (event.type === TouchType.Down) {
-      this.endHoldSpeed();
+      this.endHoldSpeed(); this.adjustingLevel = false;
       this.cancelVideoControlsTimer(); this.videoTouchStart = Date.now(); this.videoTouchMoved = false;
-      if (event.touches.length === 1) { this.holdX = event.touches[0].x; this.holdY = event.touches[0].y; }
+      if (event.touches.length === 1) { this.holdX = event.touches[0].x; this.holdY = event.touches[0].y; this.prepareAdjustment(this.holdX < this.stageWidth / 2); }
       if (!this.videoPlaying || event.touches.length !== 1 || event.touches[0].y > 190) return;
       this.holdTimer = setTimeout(() => { this.holdTimer = -1; if (this.videoPlaying) { this.holdingSpeed = true; if (!this.videoScreenReader) this.videoControlsVisible = false; } }, 400);
     } else if (event.type === TouchType.Move) {
+      if (event.touches.length === 1) {
+        const dx = event.touches[0].x - this.holdX; const dy = event.touches[0].y - this.holdY;
+        if (this.adjustingLevel || (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx) * 1.2)) {
+          this.adjustingLevel = true; this.videoTouchMoved = true; this.endHoldSpeed(); this.resetVideoControls();
+          if (this.adjustmentTimer >= 0) clearTimeout(this.adjustmentTimer);
+          this.changeAdjustment(dy);
+        }
+      }
       if (event.touches.length !== 1 || Math.max(Math.abs(event.touches[0].x - this.holdX), Math.abs(event.touches[0].y - this.holdY)) > 12) { this.videoTouchMoved = true; this.endHoldSpeed(); }
     } else {
+      this.adjustmentTimer = setTimeout(() => { this.adjustmentMessage = ''; }, 900);
+      this.adjustmentGeneration++; this.gestureReady = false; this.adjustingLevel = false;
       const held = this.holdingSpeed || Date.now() - this.videoTouchStart >= 400;
       this.endHoldSpeed();
-      if (!held || this.videoTouchMoved || this.videoScreenReader) this.showVideoControls();
+      if (held || this.videoTouchMoved) this.resetVideoControls();
+      else if (this.videoPlaying && this.videoControlsVisible) { this.cancelVideoControlsTimer(); this.videoControlsVisible = false; }
+      else this.showVideoControls();
     }
   }
-  onPageHide(): void { this.resetVideoControls(); this.endHoldSpeed(); this.videoPlaying = false; this.controller.pause(); this.saveProgress(); }
+  onPageHide(): void { this.restorePlaybackBrightness(); this.exitVideoFullscreen(); this.resetVideoControls(); this.endHoldSpeed(); this.videoPlaying = false; this.controller.pause(); this.saveProgress(); }
+  private openVideoFullscreen(landscape: boolean): void {
+    if (!this.playURL) return;
+    this.endHoldSpeed();
+    this.resetVideoControls();
+    try { this.controller.requestFullscreen(landscape); }
+    catch { this.getUIContext().getPromptAction().showToast({ message: '暂时无法打开全屏，请重试' }); }
+  }
+  private exitVideoFullscreen(): void {
+    if (!this.videoFullscreen) return;
+    try { this.controller.exitFullscreen(); } catch {}
+  }
   private controller: VideoController = new VideoController();
   private playbackPosition: number = 0;
+  @State private notePosition: number = 0;
+  @State private notesEnabled: boolean = true;
+  @State private videoNotes: Row[] = [];
+  @State private notesError: string = '';
+  private notesSession: string = '';
+  private notesRequest: number = 0;
+  private async loadVideoNotes(): Promise<void> {
+    const request = ++this.notesRequest; const version = this.generation;
+    const session = platform.credentials?.sessionId; const id = this.currentLessonID;
+    this.videoNotes = []; this.notesSession = ''; this.notesError = '';
+    if (!session || !id) return;
+    try {
+      const rows = await platform.request<Row[]>('/notes?video_id=' + id, http.RequestMethod.GET, undefined, true);
+      if (request !== this.notesRequest || version !== this.generation || id !== this.currentLessonID || session !== platform.credentials?.sessionId) return;
+      this.videoNotes = rows; this.notesSession = session;
+    } catch { if (request === this.notesRequest && version === this.generation && session === platform.credentials?.sessionId) this.notesError = '课程笔记暂未加载，请重试'; }
+  }
+  private visibleVideoNotes(): Row[] {
+    if (!this.notesEnabled || this.notesSession !== platform.credentials?.sessionId) return [];
+    return this.videoNotes.filter((row: Row) => row.timestamp_seconds !== undefined && Number.isFinite(row.timestamp_seconds) && row.timestamp_seconds >= 0 && this.notePosition >= row.timestamp_seconds && this.notePosition < row.timestamp_seconds + 8 && !!row.content?.trim()).slice(0, 3);
+  }
   @State private duration: number = 0;
   private revision: number = 0;
   private lastCheckpoint: number = 0;
   private checkpointPending: boolean = false;
   private cacheDriver?: AliyunSecureCacheDriver;
   private courseCache?: CourseCacheStore;
+  @State private offlineAvailabilityMessage: string = '';
 
   aboutToAppear(): void {
     try { this.videoScreenReader = accessibility.isScreenReaderOpenSync(); accessibility.on('screenReaderStateChange', this.screenReaderChanged); } catch { this.videoScreenReader = true; }
@@ -205,10 +342,10 @@ struct Index {
     this.load(); this.refreshMessages(); this.messageTimer = setInterval(() => { this.refreshMessages(); }, 30000);
   }
   onPageShow(): void { this.refreshMessages(); this.courseCache?.refresh(); if (!this.busy && (this.route.screen === 'home' || this.route.screen === 'account' || this.route.path.startsWith('/member/authorized-series'))) this.load(); }
-  aboutToDisappear(): void { try { accessibility.off('screenReaderStateChange', this.screenReaderChanged); } catch {} this.resetVideoControls(); if (this.messageTimer >= 0) clearInterval(this.messageTimer); if (this.smsTimer >= 0) clearInterval(this.smsTimer); this.carrierLogin.cancel(); this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.generation++; }
-  onBackPress(): boolean { if (this.history.length === 0) return false; this.back(); return true; }
+  aboutToDisappear(): void { this.restorePlaybackBrightness(); this.exitVideoFullscreen(); try { accessibility.off('screenReaderStateChange', this.screenReaderChanged); } catch {} this.resetVideoControls(); if (this.messageTimer >= 0) clearInterval(this.messageTimer); if (this.smsTimer >= 0) clearInterval(this.smsTimer); this.carrierLogin.cancel(); this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.generation++; }
+  onBackPress(): boolean { if (this.videoFullscreen) { this.exitVideoFullscreen(); return true; } if (this.history.length === 0) return false; this.back(); return true; }
   private needsScreenProtection(route: Route): boolean {
-    return this.loggedIn || this.staffLoggedIn || !!platform.credentials || !!platform.staff || route.auth || route.staff ||
+    return this.loggedIn || !!platform.credentials || route.auth ||
       !['home', 'offline', 'events', 'shop'].includes(route.screen);
   }
   private async protectSensitiveScreen(): Promise<void> {
@@ -225,25 +362,27 @@ struct Index {
       this.screenProtectionPending = false;
     }
   }
-  private go(screen: string, title: string, path: string = '', auth: boolean = false, eventID: number = 0, groupID: number = 0, staff: boolean = false): void {
+  private go(screen: string, title: string, path: string = '', auth: boolean = false, eventID: number = 0, groupID: number = 0, playerID: number = 0): void {
     this.refreshing = false;
-    this.resetVideoControls();
-    this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.playURL = '';
+    this.restorePlaybackBrightness(); this.resetVideoControls();
+    this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.playURL = ''; this.videoNotes = []; this.notesRequest++;
     this.history.push(this.route);
     if (screen === 'login') { this.phone = ''; this.code = ''; this.memberPassword = ''; this.consent = false; this.memberLoginMode = 'sms'; this.loginNotice = ''; }
-    this.route = { screen: screen, title: title, path: path, auth: auth, eventID: eventID, groupID: groupID, staff: staff };
+    if (screen === 'account') this.accountCoursesExpanded = true;
+    if (screen === 'myEvents') this.myEventsPage = 1;
+    this.route = { screen: screen, title: title, path: path, auth: auth, eventID: eventID, groupID: groupID, playerID: playerID };
     if (this.needsScreenProtection(this.route)) this.protectSensitiveScreen();
     if (screen === 'register' || screen === 'editRegistration') {
       this.name = ''; this.eventPhone = ''; this.eventCountryCode = '+86'; this.organization = ''; this.teacher = '';
       this.performanceTitle = ''; this.remark = ''; this.music = undefined; this.musicName = '';
-      this.currentEventMusic = ''; this.registrationSaved = false;
+      this.currentEventMusic = ''; this.registrationSaved = false; this.registrationGroups = []; this.registrationGroupID = groupID; this.registrationQuery = ''; this.registrationReady = false; this.registrationPoster = ''; this.registrationFeedback = '';
     }
     this.query = screen === 'home' ? this.courseQuery : ''; this.rows = []; this.detail = {}; this.error = ''; this.refundReason = ''; this.generation++; this.load();
   }
   private back(): void {
     this.refreshing = false;
-    this.resetVideoControls();
-    this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.playURL = '';
+    this.restorePlaybackBrightness(); this.resetVideoControls();
+    this.endHoldSpeed(); this.videoPlaying = false; this.saveProgress(); this.controller.pause(); this.playURL = ''; this.videoNotes = []; this.notesRequest++;
     const previous = this.history.pop(); if (!previous) return;
     this.route = previous;
     if (this.needsScreenProtection(this.route)) this.protectSensitiveScreen();
@@ -296,8 +435,7 @@ struct Index {
     this.busy = true; this.error = '';
     try {
       if (!route.path) return;
-      if (route.staff && !platform.staff) throw new PlatformFailure('请使用工作人员账号登录', 401);
-      if (route.auth && !route.staff && !platform.credentials) throw new PlatformFailure('请先登录', 401);
+      if (route.auth && !platform.credentials) throw new PlatformFailure('请先登录', 401);
       if (route.screen === 'home' || route.screen === 'catalog' || route.path.startsWith('/member/authorized-series')) {
         this.unlockedSeries = []; this.courseAccessReady = !platform.credentials;
         const member = platform.credentials?.memberId;
@@ -307,7 +445,8 @@ struct Index {
           this.unlockedSeries = rights.map((row: Row) => String(row.series_id || row.id)); this.courseAccessReady = true;
         } catch { this.courseAccessReady = false; } }
       }
-      const lists = ['home', 'offline', 'events', 'catalog', 'certificates', 'staffHome', 'staffGroups'];
+      if (['event', 'eventGroup', 'eventPlayer'].includes(route.screen)) { this.publicEventRevision++; return; }
+      const lists = ['home', 'offline', 'events', 'catalog', 'certificates'];
       if (route.screen === 'account') {
         this.accountCourses = []; this.accountCoursesError = '';
         const binding = platform.credentials?.sessionId;
@@ -315,6 +454,18 @@ struct Index {
         if (version !== this.generation || binding !== platform.credentials?.sessionId) return;
         this.detail = profile;
         await this.loadAccountCourses(version, binding);
+      } else if (route.screen === 'register') {
+        const binding = platform.credentials?.sessionId;
+        const data = await platform.request<Row>('/events/' + route.eventID);
+        if (version !== this.generation || binding !== platform.credentials?.sessionId) return;
+        this.detail = data; this.registrationGroups = data.groups || [];
+        this.registrationPoster = coverImageURL(data.competition?.coverUrl || data.competition?.cover_url || '');
+        if (!this.registrationGroups.some((item: Row) => Number(item.id) === this.registrationGroupID)) this.registrationGroupID = 0;
+        const profile = await platform.request<Row>('/member/profile', http.RequestMethod.GET, undefined, true);
+        if (version !== this.generation || binding !== platform.credentials?.sessionId) return;
+        const member = profile.member || profile;
+        if (!this.name) this.name = member.name || ''; if (!this.eventPhone) this.eventPhone = member.phone || '';
+        this.registrationReady = true;
       } else if (route.screen === 'editRegistration') {
         const binding = platform.credentials?.sessionId;
         const data = await platform.request<Row>(route.path, http.RequestMethod.GET, undefined, true);
@@ -324,7 +475,15 @@ struct Index {
         this.name = data.name || ''; this.eventPhone = data.phone || ''; this.eventCountryCode = data.countryCode || '+86';
         this.organization = data.organization || ''; this.teacher = data.teacher || '';
         this.performanceTitle = data.performanceTitle || ''; this.remark = data.remark || '';
-        this.currentEventMusic = audio.fileName || ''; this.detail = data;
+        this.currentEventMusic = audio.fileName || ''; this.detail = data; this.registrationReady = true;
+        // Public artwork is optional and must not prevent editing the registration.
+        if (Number(data.competitionId) > 0) {
+          try {
+            const event = await platform.request<Row>('/events/' + Number(data.competitionId));
+            if (version !== this.generation || binding !== platform.credentials?.sessionId) return;
+            this.registrationPoster = coverImageURL(event.competition?.coverUrl || event.competition?.cover_url || '');
+          } catch { /* Keep the editable form without artwork. */ }
+        }
       } else if (route.screen === 'study') {
         const binding = platform.credentials?.sessionId;
         const units = await platform.request<Row[]>(route.path);
@@ -338,7 +497,7 @@ struct Index {
         this.startVideo(lesson, true);
         this.loadVideoIntroduction(route.path.replace('/courses', '/detail'));
       } else if (lists.includes(route.screen)) {
-        const value = route.staff ? await platform.staffRequest<Row[]>(route.path) : await platform.request<Row[]>(route.path, http.RequestMethod.GET, undefined, route.auth);
+        const value = await platform.request<Row[]>(route.path, http.RequestMethod.GET, undefined, route.auth);
         if (version === this.generation) {
           if (route.screen === 'offline') { this.offlineRows = value || []; this.rows = groupedCourses(value || []); } else this.rows = value || [];
           if (route.screen === 'catalog') { this.catalogPage = 1; this.progressRows = []; if (platform.credentials) { try { const progress = await platform.request<Row[]>(route.path.replace('/courses', '/progress'), http.RequestMethod.GET, undefined, true); if (version === this.generation) this.progressRows = progress; } catch { /* Unknown progress is never displayed as completed. */ } } }
@@ -346,6 +505,10 @@ struct Index {
       } else if (route.screen === 'records') {
         const value = await platform.request<Row[]>(route.path, http.RequestMethod.GET, undefined, true);
         if (version === this.generation) this.rows = value || [];
+        if (route.path === '/member/authorized-series') {
+          await this.loadAccountCourses(version);
+          if (version === this.generation) this.rows = this.accountCourses;
+        }
       } else if (route.screen === 'video') {
         const id = Number(this.selected.id || this.selected.video_id);
         const progress = await platform.request<Row>('/video/' + id + '/progress', http.RequestMethod.GET, undefined, true);
@@ -357,9 +520,9 @@ struct Index {
         this.videoQualities = [{ value: 'auto', label: '自动', url: value.play_url || '' }];
         for (const quality of value.quality_options || []) { if (quality.url === this.videoQualities[0].url) this.videoQualities[0] = quality; if (secureMedia(quality.url) && !this.videoQualities.some((item: MediaQuality) => item.url === quality.url)) this.videoQualities.push(quality); }
         this.videoQuality = 0; this.qualityResume = -1; this.qualityChanging = false;
-        this.playURL = value.play_url || ''; this.detail = value;
+        this.playURL = value.play_url || ''; this.detail = value; this.loadVideoNotes();
       } else {
-        const value = route.staff ? await platform.staffRequest<Row>(route.path) : await platform.request<Row>(route.path, http.RequestMethod.GET, undefined, route.auth);
+        const value = await platform.request<Row>(route.path, http.RequestMethod.GET, undefined, route.auth);
         if (version !== this.generation) return;
         if (route.screen === 'courseCheckout' && (!value?.offer || value.offer.priceFen === undefined ||
           !Number.isSafeInteger(value.offer.priceFen) || value.offer.priceFen < 0 ||
@@ -378,15 +541,12 @@ struct Index {
           if (!fresh) throw new Error('商品已下架，请返回商城重新选择');
           this.checkoutProduct = fresh; this.detail = fresh;
         }
-        if (route.screen === 'staffEntries') this.rows = (value.players || []).filter((row: Row) => route.groupID === 0 || row.groupId === route.groupID);
-        if (route.screen === 'staffContestants') this.rows = value.contestants || [];
         if (route.screen === 'messages') this.rows = value.items || [];
         if (route.screen === 'message' && value.recipientId) {
           try { await platform.request<Object>('/member/messages/' + value.recipientId + '/read', 'PATCH', {}, true); }
           catch { if (version === this.generation) this.error = '已读状态未同步，请重新打开消息重试'; }
           this.refreshMessages();
         }
-        if (route.screen === 'staffLedger') this.rows = [];
       }
     } catch (failure) {
       if (version === this.generation) {
@@ -395,14 +555,14 @@ struct Index {
         this.error = failure instanceof Error ? failure.message : '网络请求失败，请重试';
       }
     } finally {
-      if (version === this.generation) { this.busy = false; this.loggedIn = platform.credentials !== undefined; this.staffLoggedIn = platform.staff !== undefined; }
+      if (version === this.generation) { this.busy = false; this.loggedIn = platform.credentials !== undefined; }
     }
   }
   private filtered(): Row[] {
     const terms = this.query.trim().toLocaleLowerCase().split(/\s+/);
     return this.rows.filter((row: Row) => {
       if (this.route.screen === 'home' && ((this.courseCategory && row.category !== this.courseCategory) || (this.onlyUnlocked && (!this.courseAccessReady || !this.isCourseUnlocked(row))))) return false;
-      const text = [row.name, row.series_name, row.course_name, row.teacher, row.category, row.groupName, row.musicName, row.performanceTitle, row.phone, row.organization, row.programNumber, row.contestantNumber].join(' ').toLocaleLowerCase();
+      const text = [row.name, row.series_name, row.course_name, row.teacher, row.category, row.groupName, row.musicName, row.performanceTitle, row.phone, row.organization, row.programNumber, row.contestantNumber, row.offline_search_text].join(' ').toLocaleLowerCase();
       return terms.every((term: string) => text.includes(term));
     });
   }
@@ -413,7 +573,7 @@ struct Index {
   }
   private title(row: Row): string { return row.name || row.courseName || row.course_name || row.series_name || row.title || row.playerName || row.label || '记录'; }
   private summary(row: Row): string {
-    if (this.route.screen === 'home') return [row.teacher, row.category, row.total_courses !== undefined ? row.total_courses + ' 节课程' : ''].filter((text: string | undefined) => !!text).join(' · ');
+    if (this.route.screen === 'home') return [row.teacher, row.category, row.total_courses !== undefined ? row.total_courses + ' 节课程' : '', learnerText(row)].filter((text: string | undefined) => !!text).join(' · ');
     return [row.subtitle, row.teacher, row.category, this.route.screen === 'home' && row.total_courses !== undefined ? row.total_courses + ' 节课程' : '', this.route.screen === 'offline' ? [row.start_date, row.location, '期次课时'].filter((v: string | undefined) => !!v).join(' · ') : '', row.groupName, row.contestantNumber, row.programNumber, row.sequenceNo ? '出场顺序 ' + row.sequenceNo : '', row.musicName ? '音乐：' + row.musicName : '', row.paidStatus, row.content].filter((text: string | undefined) => text !== undefined && text !== '').join(' · ');
   }
   private eventResult(row: Row): string {
@@ -433,11 +593,11 @@ struct Index {
       this.go('messages', '学习消息', '/member/messages?limit=20&cursor=0', true);
     } catch { this.error = '标记已读未完成，请重试'; }
   }
-  private async write(path: string, body: WriteBody, method: ApiMethod = http.RequestMethod.POST, staff: boolean = false): Promise<void> {
+  private async write(path: string, body: WriteBody, method: ApiMethod = http.RequestMethod.POST): Promise<void> {
     if (this.busy) return; const version = this.generation; this.busy = true; this.error = '';
     try {
-      if (staff) await platform.staffRequest<Row>(path, method, body); else await platform.request<Row>(path, method, body, true);
-      if (version === this.generation) { this.error = '操作已完成，请刷新查看平台最新记录'; this.rows = []; }
+      await platform.request<Row>(path, method, body, true);
+      if (version === this.generation) { this.error = '操作已完成，请刷新查看平台最新记录'; this.rows = []; if (path === '/notes' && this.route.screen === 'video') this.loadVideoNotes(); }
     } catch (failure) { if (version === this.generation) this.error = failure instanceof Error ? failure.message : '提交失败，请重试'; }
     finally { if (version === this.generation) this.busy = false; }
   }
@@ -449,11 +609,6 @@ struct Index {
     if (this.route.screen === 'home') this.go(this.isCourseUnlocked(row) ? 'study' : 'catalog', this.title(row), '/public/series/' + Number(row.id) + '/courses', this.isCourseUnlocked(row));
     else if (this.route.screen === 'offline') { this.go('offlineDetail', this.title(row)); this.detail = row; }
     else if (this.route.screen === 'events') this.go('event', this.title(row), '/events/' + Number(row.id), false, Number(row.id));
-    else if (this.route.screen === 'staffHome') this.go('staffCompetition', this.title(row), '', false, Number(row.id), 0, true);
-    else if (this.route.screen === 'staffGroups') {
-      const eventID = this.route.eventID; this.go('staffGroup', this.title(row), '', false, eventID, Number(row.id), true); this.detail = row;
-    } else if (['staffEntries', 'staffPersonEntries'].includes(this.route.screen)) this.go('staffPlayer', this.title(row), '/event/players/' + Number(row.id), false, this.route.eventID, this.route.groupID, true);
-    else if (this.route.screen === 'staffContestants') { this.go('staffPersonEntries', row.contestantNumber + ' · ' + this.title(row), '', false, this.route.eventID, 0, true); this.rows = row.entries || []; this.detail = row; }
     else if (this.route.screen === 'certificates') this.openURL(row.verifyUrl || '');
     else if (this.route.screen === 'shop') { this.go('product', this.title(row)); this.detail = row; }
     else if (this.route.screen === 'shopOrders') this.go('shopOrder', '订单详情', '/shop/orders/' + String(row.id), true);
@@ -474,6 +629,7 @@ struct Index {
     // Capture the old lesson checkpoint before changing the selected lesson.
     this.saveProgress(); this.duration = 0; this.playbackPosition = 0; this.revision = 0;
     this.videoQuery = ''; this.videoPage = Math.floor(Math.max(0, this.videoPlaylist.findIndex((item: Row) => String(item.id) === String(row.id || row.video_id))) / 50) + 1; this.lastAuthorization = Date.now();
+    this.videoNotes = []; this.notePosition = 0; this.notesSession = ''; this.notesRequest++; this.notesEnabled = true;
     this.currentLessonID = String(row.id || row.video_id); this.videoTab = 0; this.videoSettings = false; this.videoQualities = []; this.qualityChanging = false; this.qualityResume = -1;
     this.selected = row; this.go('video', this.title(row), '/video/' + Number(row.id || row.video_id) + '/play', true);
     if (fromVideo || directCourse) this.history.pop();
@@ -531,12 +687,6 @@ struct Index {
     catch (failure) { if (version === this.generation) this.error = failure instanceof Error ? failure.message : '登录失败'; }
     finally { if (version === this.generation) this.busy = false; }
   }
-  private async loginStaff(): Promise<void> {
-    if (this.busy) return; this.busy = true; const secret = this.password; this.password = '';
-    try { await platform.loginStaff(this.username, secret); this.staffLoggedIn = true; this.go('staffHome', '赛事管理', '/event/competitions', false, 0, 0, true); }
-    catch (failure) { this.error = failure instanceof Error ? failure.message : '登录失败'; }
-    finally { this.busy = false; }
-  }
   private async sendCode(): Promise<void> {
     this.updateSMSCooldown();
     if (!this.consent || !/^1[3-9][0-9]{9}$/.test(this.phone) || this.busy || this.smsSeconds > 0) { this.error = '请填写有效手机号、同意协议并等待验证码冷却结束'; return; }
@@ -554,7 +704,7 @@ struct Index {
     this.webURL = url; this.webLoading = true; this.webError = '';
     const title = url === 'https://beian.miit.gov.cn/' ? '备案查询' :
       url.endsWith('/privacy') ? '隐私政策' : url.endsWith('/terms') ? '服务条款' :
-      url.endsWith('/contact') ? '微信客服' : url.includes('/checkout/online/') ? '确认课程订单' : '证书查询';
+      url.endsWith('/contact') ? '微信客服' : url.includes('/checkout/event/') ? '赛事报名缴费' : url.includes('/checkout/online/') ? '确认课程订单' : '证书查询';
     this.go('web', title);
   }
   private openCourseCheckout(seriesID: string): void {
@@ -656,11 +806,12 @@ struct Index {
     if (this.busy || this.registrationSaved) return;
     const editing = this.route.screen === 'editRegistration';
     if (editing && !this.detail.canEdit) return;
+    if (!editing && (!this.registrationReady || !this.registrationGroups.some((group: Row) => Number(group.id) === this.registrationGroupID))) { this.error = '请选择参赛组别'; return; }
     if (!this.performanceTitle.trim() || ((!editing || detailsOnly) && (!this.name.trim() || !this.eventPhone.trim()))) {
       this.error = '请填写姓名、联系电话和节目名称'; return;
     }
     if (editing && !detailsOnly && !this.music) { this.error = '请选择音乐文件'; return; }
-    this.busy = true; this.error = ''; const version = this.generation;
+    this.busy = true; this.error = ''; this.registrationFeedback = ''; const version = this.generation; const binding = platform.credentials?.sessionId;
     try {
       const fields: Record<string, string> = {};
       fields['name'] = this.name.trim(); fields['phone'] = this.eventPhone.trim();
@@ -671,13 +822,13 @@ struct Index {
         else if (this.music) await platform.replaceEventMusic(this.route.path, fields['performanceTitle'], this.musicName, this.music);
         if (version !== this.generation) return;
         if (!detailsOnly) { this.currentEventMusic = this.musicName; this.music = undefined; this.musicName = ''; }
-        this.error = detailsOnly ? '报名资料已保存' : '音乐已更新';
+        this.registrationFeedback = detailsOnly ? '报名资料已保存' : '音乐已更新';
       } else {
-        fields['groupId'] = String(this.route.groupID);
+        fields['groupId'] = String(this.registrationGroupID);
         await platform.registerWithMusic(this.route.eventID, fields, this.musicName, this.music);
-        if (version !== this.generation) return;
+        if (version !== this.generation || binding !== platform.credentials?.sessionId) return;
         this.registrationSaved = true; this.music = undefined; this.musicName = '';
-        this.error = '报名已提交，可在「我的比赛」查看进度、补交或更换音乐。';
+        this.error = '';
       }
     } catch (failure) { if (version === this.generation) this.error = failure instanceof Error ? failure.message : '操作失败，请重试'; }
     finally { if (version === this.generation) this.busy = false; }
@@ -696,17 +847,6 @@ struct Index {
         } catch (refreshError) { if (version === this.generation) this.error = '学习进度尚未同步，请检查网络'; }
       } else if (version === this.generation) this.error = '学习进度尚未同步，请检查网络';
     } finally { this.checkpointPending = false; }
-  }
-  private staffEntries(people: boolean = false): void {
-    this.go(people ? 'staffContestants' : 'staffEntries', people ? '选手汇总' : '报名和音乐', '/event/entry-summary?competitionId=' + this.route.eventID, false, this.route.eventID, this.route.groupID, true);
-  }
-  private editPlayer(): void {
-    const row = this.detail; this.selected = row; this.name = row.name || ''; this.phone = row.phone || ''; this.organization = row.organization || ''; this.teacher = row.teacher || ''; this.performanceTitle = row.performanceTitle || ''; this.remark = row.remark || '';
-    this.go('staffEditor', '修正报名资料', '', false, this.route.eventID, 0, true);
-  }
-  private payment(): void {
-    this.selected = this.detail; this.amount = String(this.detail.registrationFee || 0); this.paymentKind = 'charge'; this.paymentMethod = 'wechat'; this.paidAt = new Date().toISOString(); this.remark = ''; this.requestKey = util.generateRandomUUID();
-    this.go('staffPayment', '登记实际缴费 / 退款', '', false, this.route.eventID, 0, true);
   }
   @Builder
   private action(label: string, submit: () => void) { Button(label, { type: ButtonType.Normal }).fontSize(16).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).borderRadius(0).padding({ left: 0, right: 0, top: 8, bottom: 8 }).constraintSize({ minHeight: 48 }).width('100%').margin({ top: 4, bottom: 4 }).onClick(submit).enabled(!this.busy).accessibilityText(label) }
@@ -733,12 +873,113 @@ struct Index {
     }.layoutWeight(this.wideWindow ? 0 : 1).width(this.wideWindow ? '100%' : 'auto')
       .constraintSize({ minHeight: 68 }).borderRadius(14).backgroundColor(this.activeTab === screen ? SwodTheme.tonal : SwodTheme.surface).onClick(() => this.selectTab(screen, title, path, auth)).accessibilityText(label + (this.activeTab === screen ? '，已选中' : ''))
   }
+  private myEventRows(): Row[] { const query = this.query.trim().toLowerCase(); return (this.detail.entries || []).filter((row: Row) => ((row.competitionName || '') + ' ' + (row.groupName || '') + ' ' + (row.entrantName || '')).toLowerCase().includes(query)); }
+  private matchingRegistrationGroups(): Row[] { const query = this.registrationQuery.trim().toLowerCase(); return this.registrationGroups.filter((item: Row) => (item.name || '').toLowerCase().includes(query)); }
+  private registrationCountryFlag(): string { return registrationCountries.find((item) => item.code === this.eventCountryCode)?.flag || '🌐'; }
+  @Builder
+  private registrationField(label: string, value: string, placeholder: string, changed: (value: string) => void, multiline: boolean = false) {
+    Column({ space: 10 }) {
+      Text(label).fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+      if (multiline) {
+        TextArea({ placeholder: placeholder, text: value }).height(128).maxLength(500).fontSize(16).fontColor(SwodTheme.ink).backgroundColor(SwodTheme.surface).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius(8).padding(12).onChange(changed).accessibilityText(label)
+      } else {
+        TextInput({ placeholder: placeholder, text: value }).constraintSize({ minHeight: 48 }).maxLength(120).fontSize(16).fontColor(SwodTheme.ink).backgroundColor(SwodTheme.surface).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius(8).padding(12).onChange(changed).accessibilityText(label)
+      }
+    }.alignItems(HorizontalAlign.Start).width('100%')
+  }
+  @Builder
+  private eventRegistrationForm() {
+    Column({ space: 0 }) {
+      if (this.registrationPoster) {
+        Image(this.registrationPoster).width('100%').aspectRatio(16 / 9).objectFit(ImageFit.Cover).borderRadius({ topLeft: 14, topRight: 14 }).accessibilityText('赛事主图')
+      }
+      Column({ space: 8 }) {
+        Text(this.route.screen === 'register' ? (this.detail.competition?.name || '赛事报名') : (this.detail.competitionName || '修改报名 / 补交音乐')).fontSize(21).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+        if (this.route.screen === 'register') { Text((this.detail.competition?.startDate || this.detail.competition?.start_date || '比赛日期待定') + ' · ' + (this.detail.competition?.location || this.detail.competition?.venue || '地点待定')).fontSize(14).fontColor(SwodTheme.muted).width('100%') }
+      }.alignItems(HorizontalAlign.Start).width('100%').padding(16).backgroundColor(SwodTheme.registrationPanel)
+      Column({ space: 24 }) {
+        if (!this.loggedIn) { this.action('登录后报名', () => this.go('login', '手机号登录')) }
+        else if (this.registrationSaved) { Text('报名已提交，可在个人中心继续缴费、补交或更换音乐。').fontSize(16).fontColor(SwodTheme.ink); this.action('前往个人中心查看报名与缴费', () => this.go('myEvents', '我的比赛', '/member/events', true)) }
+        else if (this.route.screen === 'register' || this.detail.canEdit) {
+          Column({ space: 6 }) { Text(this.route.screen === 'register' ? '填写报名信息' : '修改报名 / 补交音乐').fontSize(22).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%'); Text('带 * 为必填项').fontSize(13).fontColor(SwodTheme.muted).width('100%'); Divider().color(SwodTheme.registrationLine).margin({ top: 6 }) }.width('100%')
+          this.registrationField('参赛姓名 *', this.name, '支持中文、英文和空格', (v: string) => { this.name = v; })
+          Column({ space: 10 }) {
+            Text('手机号码 *').fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+            Row({ space: 8 }) {
+              Row({ space: 0 }) {
+                Select(registrationCountries.map((country): SelectOption => ({ value: country.flag + ' ' + country.name + ' ' + country.code }))).value(this.registrationCountryFlag() + '⌄').font({ size: 14 }).constraintSize({ minHeight: 48 }).width(52).onSelect((index: number) => { this.eventCountryCode = registrationCountries[index].code; }).accessibilityText('选择国家或地区区号')
+                TextInput({ placeholder: '+86', text: this.eventCountryCode }).type(InputType.PhoneNumber).fontSize(16).maxLength(4).layoutWeight(1).height(48).backgroundColor(Color.Transparent).padding(0).onChange((v: string) => { this.eventCountryCode = v; }).accessibilityText('国家或地区区号')
+              }.width(126).backgroundColor(SwodTheme.surface).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius(8)
+              TextInput({ placeholder: '手机号码', text: this.eventPhone }).type(InputType.PhoneNumber).fontSize(16).layoutWeight(1).height(48).backgroundColor(SwodTheme.surface).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius(8).padding(12).onChange((v: string) => { this.eventPhone = v; }).accessibilityText('手机号码，必填')
+            }.width('100%')
+          }.width('100%')
+          this.registrationField('机构 / 舞蹈室', this.organization, '选填', (v: string) => { this.organization = v; })
+          this.registrationField('指导老师', this.teacher, '选填', (v: string) => { this.teacher = v; })
+          if (this.route.screen === 'register') {
+            Column({ space: 10 }) {
+              Text('参赛组别 *').fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+              TextInput({ placeholder: '搜索组别、舞种或年龄', text: this.registrationQuery }).height(48).fontSize(16).backgroundColor(SwodTheme.surface).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius(8).padding(12).onChange((v: string) => { this.registrationQuery = v; }).accessibilityText('搜索参赛组别、舞种或年龄')
+              Select(this.matchingRegistrationGroups().map((group: Row): SelectOption => ({ value: group.name || '' }))).value(this.registrationGroups.find((group: Row) => Number(group.id) === this.registrationGroupID)?.name || '请选择组别').height(48).font({ size: 16 }).width('100%').backgroundColor(SwodTheme.surface).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius(8).onSelect((index: number) => { const group = this.matchingRegistrationGroups()[index]; if (group) this.registrationGroupID = Number(group.id); }).accessibilityText('选择参赛组别，必填')
+              if (this.matchingRegistrationGroups().length === 0 && this.registrationReady) { Text('未找到匹配组别，请修改搜索内容').fontSize(14).fontColor(SwodTheme.muted) }
+              if (this.registrationGroupID > 0) { Text('本组别报名费 ¥' + String(this.registrationGroups.find((group: Row) => Number(group.id) === this.registrationGroupID)?.registrationFee || 0)).fontSize(14).fontColor(SwodTheme.primary) }
+            }.alignItems(HorizontalAlign.Start).width('100%')
+          } else if (this.detail.groupName) { Text('参赛组别：' + this.detail.groupName).fontSize(14).fontColor(SwodTheme.muted) }
+          this.registrationField('节目（音乐）名字 *', this.performanceTitle, '节目（音乐）名字', (v: string) => { this.performanceTitle = v; })
+          Column({ space: 10 }) {
+            Text('上传音乐（选填）').fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+            Text('可先报名，之后在个人中心补交或更换音乐。').fontSize(14).fontColor(SwodTheme.muted).width('100%')
+            Button('选择音乐文件').constraintSize({ minHeight: 48 }).borderRadius(8).backgroundColor('#A41A20').fontColor(Color.White).width('100%').onClick(() => { if (!this.busy) this.chooseMusic(); })
+            Text('从系统文件中选择。支持 MP3、WAV、M4A、AAC、FLAC，最大10MB。').fontSize(14).fontColor(SwodTheme.muted).width('100%')
+            if (this.currentEventMusic) { Text('当前音乐：' + this.currentEventMusic).fontSize(14).fontColor(SwodTheme.muted).width('100%') }
+            Text(this.musicName || '尚未选择音乐文件').fontSize(14).fontColor(SwodTheme.muted).width('100%')
+            if (this.musicName) { this.action('移除所选音乐', () => { if (!this.busy) { this.music = undefined; this.musicName = ''; } }) }
+            Divider().color(SwodTheme.registrationLine)
+          }.alignItems(HorizontalAlign.Start).width('100%')
+          this.registrationField('备注', this.remark, '可填写参赛项目、作品或其他说明', (v: string) => { this.remark = v; }, true)
+          if (this.registrationFeedback) { Text(this.registrationFeedback).fontSize(15).fontColor('#15803D').width('100%') }
+        } else if (!this.busy && !this.error) { Text('此报名当前不可修改').fontSize(16).fontColor(SwodTheme.ink) }
+      }.alignItems(HorizontalAlign.Start).padding(20).width('100%').backgroundColor(SwodTheme.registrationPanel).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius({ bottomLeft: 14, bottomRight: 14 }).enabled(!this.busy)
+      if (this.loggedIn && !this.registrationSaved && this.registrationReady) {
+        Column({ space: 10 }) {
+          if (this.route.screen === 'editRegistration') {
+            Button('保存报名资料').constraintSize({ minHeight: 48 }).width('100%').borderRadius(8).backgroundColor('#A41A20').fontColor(Color.White).enabled(!this.busy && this.detail.canEdit === true).onClick(() => { this.register(true); })
+            this.action('上传音乐', () => this.confirm('确认上传参赛音乐？', () => { this.register(); }))
+          } else { Button('提交赛事报名').constraintSize({ minHeight: 48 }).width('100%').borderRadius(8).backgroundColor('#A41A20').fontColor(Color.White).enabled(!this.busy).onClick(() => this.confirm('确认提交本组报名？', () => { this.register(); })) }
+          Text('同一赛事可报名多个组别。未付款可在个人中心继续缴费。').fontSize(13).fontColor(SwodTheme.muted).width('100%').textAlign(TextAlign.Center)
+        }.padding(20).width('100%').backgroundColor(SwodTheme.registrationPanel).borderRadius(14).margin({ top: 12, bottom: 24 })
+      }
+    }.width('100%').constraintSize({ maxWidth: 680 }).padding(8).backgroundColor(Color.Transparent)
+  }
+  @Builder
+  private offlineCourseCard(row: Row) {
+    Button({ type: ButtonType.Normal }) {
+      Row({ space: 12 }) {
+        if (coverImageURL(row.cover_image || '')) {
+          CourseArtwork({ url: coverImageURL(row.cover_image || '') }).width(112).height(95).borderRadius(6).accessibilityLevel('no')
+        } else {
+          Image($r('app.media.nav_calendar_on')).width(112).height(95).objectFit(ImageFit.ScaleDown).backgroundColor(SwodTheme.tonal).borderRadius(6).accessibilityLevel('no')
+        }
+        Column({ space: 7 }) {
+          Text(row.name || '线下课程').fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+          Text(row.teacher || '伊娃东方舞导师').fontSize(14).fontColor(SwodTheme.muted).width('100%')
+          Text(row.offline_latest_period === '期次待公布' ? '期次安排待公布' : '最新期次：' + (row.offline_latest_period || '')).fontSize(14).fontColor(SwodTheme.muted).width('100%')
+          Text(String(row.offline_student_count || 0) + ' 位已报名学员').fontSize(14).fontColor(SwodTheme.muted).width('100%')
+          Divider().strokeWidth(0.5).color(SwodTheme.muted).opacity(0.2)
+          Row({ space: 8 }) {
+            Text(String(row.offline_period_count || 0) + ' 个期次').fontSize(14).fontColor(SwodTheme.muted).layoutWeight(1)
+            Text(offlineGroupPrice(row)).fontSize(14).fontColor(SwodTheme.primary)
+          }.width('100%')
+        }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+      }.padding({ top: 12, bottom: 12 }).width('100%').alignItems(VerticalAlign.Center)
+    }.padding(0).backgroundColor(Color.Transparent).borderRadius(0).width('100%').onClick(() => this.tap(row)).accessibilityText((row.name || '线下课程') + '，' + (row.teacher || '') + '，最新期次：' + (row.offline_latest_period || '') + '，' + String(row.offline_student_count || 0) + ' 位已报名学员，' + String(row.offline_period_count || 0) + ' 个期次，' + offlineGroupPrice(row) + '，查看课程期次')
+    Divider().strokeWidth(0.5).color(SwodTheme.muted).opacity(0.18)
+  }
   @Builder
   private card(row: Row) {
     Button({ type: ButtonType.Normal }) {
     Row({ space: 14 }) {
       if (this.route.screen === 'home' || this.route.screen === 'offline') {
-        if (coverImageURL(row.cover_image || '')) { Image(coverImageURL(row.cover_image || '')).width(112).height(this.courseCardHeights.get(String(row.id || row.source_id || row.name)) || 96).objectFit(ImageFit.Cover).borderRadius(8).accessibilityLevel('no') }
+        if (coverImageURL(row.cover_image || '')) { CourseArtwork({ url: coverImageURL(row.cover_image || '') }).width(112).height(this.courseCardHeights.get(String(row.id || row.source_id || row.name)) || 96).borderRadius(8).accessibilityLevel('no') }
         else { Image($r('app.media.nav_learn_on')).width(112).height(this.courseCardHeights.get(String(row.id || row.source_id || row.name)) || 96).objectFit(ImageFit.ScaleDown).backgroundColor(SwodTheme.tonal).borderRadius(12).accessibilityLevel('no') }
       }
       if (this.route.screen === 'shop' && coverImageURL(row.image || '')) { Image(coverImageURL(row.image || '')).width(112).height(112).objectFit(ImageFit.Cover).borderRadius(8).accessibilityLevel('no') }
@@ -749,7 +990,7 @@ struct Index {
           Text(productPrice(row)).fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary)
           Text(productStock(row)).fontSize(14).fontColor(SwodTheme.muted)
         }
-        if ((this.route.screen === 'home' || this.route.path.startsWith('/member/authorized-series')) && this.isCourseUnlocked(row)) { Text('✓ 已解锁').fontSize(16).fontColor('#15803d'); Text('继续学习').fontSize(14).fontColor('#15803d') } else if (this.route.screen === 'home' && !this.courseAccessReady) { Text('学习权益暂无法确认').fontSize(12).fontColor(SwodTheme.muted) } else if (row.price !== undefined) { Text(coursePrice(row)).fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary); if (originalPrice(row)) { Text(originalPrice(row)).fontSize(12).fontColor(SwodTheme.muted).decoration({ type: TextDecorationType.LineThrough }) } }
+        if ((this.route.screen === 'home' || this.route.path.startsWith('/member/authorized-series')) && this.isCourseUnlocked(row)) { Text('✓ 已解锁').fontSize(16).fontColor('#15803d') } else if (this.route.screen === 'home' && !this.courseAccessReady) { Text('学习权益暂无法确认').fontSize(12).fontColor(SwodTheme.muted) } else if (row.price !== undefined) { Text(coursePrice(row)).fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary); if (originalPrice(row)) { Text(originalPrice(row)).fontSize(12).fontColor(SwodTheme.muted).decoration({ type: TextDecorationType.LineThrough }) } }
       }.layoutWeight(1).alignItems(HorizontalAlign.Start).onAreaChange((_old: Area, area: Area) => {
         if (this.route.screen !== 'home' && this.route.screen !== 'offline') return;
         const key = String(row.id || row.source_id || row.name);
@@ -759,7 +1000,7 @@ struct Index {
         }
       })
     }.padding({ top: 8, bottom: 8 }).width('100%').constraintSize({ minHeight: 64 })
-    }.padding(0).backgroundColor(Color.Transparent).borderRadius(0).width('100%').stateEffect(true).onClick(() => this.tap(row)).accessibilityText(this.title(row) + '，' + this.summary(row) + ((this.route.screen === 'home' || this.route.path.startsWith('/member/authorized-series')) && this.isCourseUnlocked(row) ? '，已解锁，继续学习' : '，查看详情'))
+    }.padding(0).backgroundColor(Color.Transparent).borderRadius(0).width('100%').stateEffect(true).onClick(() => this.tap(row)).accessibilityText(this.title(row) + '，' + this.summary(row) + ((this.route.screen === 'home' || this.route.path.startsWith('/member/authorized-series')) && this.isCourseUnlocked(row) ? '，已解锁' : '，查看详情'))
     Divider().strokeWidth(0.5).color(SwodTheme.muted).opacity(0.18)
   }
   @Builder
@@ -774,19 +1015,23 @@ struct Index {
     Column({ space: 0 }) {
       Stack({ alignContent: Alignment.TopStart }) {
         if (row.coverUrl || row.cover_url) {
-          Image(coverImageURL(row.coverUrl || row.cover_url || '')).width('100%').aspectRatio(1.25).objectFit(ImageFit.Cover).accessibilityLevel('no')
+          Image(coverImageURL(row.coverUrl || row.cover_url || '')).width('100%').aspectRatio(4 / 3).objectFit(ImageFit.Cover).accessibilityLevel('no').onClick(() => this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)))
         } else {
-          Column({ space: 8 }) { Image($r('app.media.nav_trophy_on')).width(32).height(32); Text('暂无封面').fontSize(12).fontColor(SwodTheme.muted) }.width('100%').aspectRatio(1.25).justifyContent(FlexAlign.Center).backgroundColor(SwodTheme.tonal)
+          Column({ space: 8 }) { Image($r('app.media.nav_trophy_on')).width(32).height(32); Text('暂无封面').fontSize(12).fontColor(SwodTheme.muted) }.width('100%').aspectRatio(4 / 3).justifyContent(FlexAlign.Center).backgroundColor(SwodTheme.tonal).onClick(() => this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)))
         }
-        Text(eventState(row)).fontSize(11).fontWeight(FontWeight.Bold)
-          .fontColor(eventState(row) === '报名中' ? SwodTheme.onPrimary : SwodTheme.ink)
-          .backgroundColor(eventState(row) === '报名中' ? SwodTheme.primary : SwodTheme.surface)
-          .padding({ left: 8, right: 8, top: 5, bottom: 5 }).borderRadius(12).margin(6)
+        if (eventState(row) === '报名中') {
+          Button('报名中 · 点击报名').fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.onPrimary).backgroundColor(SwodTheme.primary)
+            .constraintSize({ minHeight: 44 }).padding({ left: 12, right: 12 }).borderRadius(22).margin(6)
+            .accessibilityText('报名：' + (row.name || '赛事')).onClick(() => this.go('register', '赛事报名', '', true, Number(row.id)))
+        } else {
+          Text(eventState(row)).fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).backgroundColor(SwodTheme.surface)
+            .padding({ left: 8, right: 8, top: 5, bottom: 5 }).borderRadius(12).margin(6)
+        }
       }.width('100%')
       Column({ space: 8 }) {
-        Text(eventDates(row)).fontSize(11).fontColor(SwodTheme.muted).width('100%').constraintSize({ minHeight: 28 })
-        Text(row.location || row.city || row.venue || '地点待定').fontSize(11).fontColor(SwodTheme.muted).width('100%')
-        Text(row.name || '赛事').fontSize(15).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%').constraintSize({ minHeight: 48 })
+        Text(row.name || '赛事').fontSize(18).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%').constraintSize({ minHeight: 44 }).onClick(() => this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)))
+        Text(eventDates(row)).fontSize(14).fontColor(SwodTheme.muted).width('100%').constraintSize({ minHeight: 28 })
+        Text(row.location || row.city || row.venue || '地点待定').fontSize(14).fontColor(SwodTheme.muted).width('100%')
         Divider().color(SwodTheme.tonal)
         Row() {
           this.eventMetric(eventCount(row.groupCount), '组别')
@@ -795,10 +1040,9 @@ struct Index {
         }.width('100%')
         Button(eventState(row) === '报名中' ? '点击报名 ›' : '查看详情 ›', { type: ButtonType.Normal })
           .fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.onPrimary).backgroundColor(SwodTheme.primary).borderRadius(8)
-          .constraintSize({ minHeight: 44 }).width('100%').onClick(() => this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)))
+          .constraintSize({ minHeight: 44 }).width('100%').onClick(() => { if (eventState(row) === '报名中') this.go('register', '赛事报名', '', true, Number(row.id)); else this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)); })
       }.padding({ top: 8, bottom: 8 }).width('100%').alignItems(HorizontalAlign.Start)
-    }.width('100%')
-      .onClick(() => this.go('event', row.name || '赛事详情', '/events/' + Number(row.id), false, Number(row.id)))
+    }.width('100%').padding(12).backgroundColor(SwodTheme.surface).borderRadius(14).clip(true)
   }
   @Builder
   private eventsPage() {
@@ -806,19 +1050,21 @@ struct Index {
       TextInput({ placeholder: '搜索赛事或地点', text: this.query }).layoutWeight(1).height(44).fontSize(14)
         .fontColor(SwodTheme.ink).placeholderColor(SwodTheme.muted).backgroundColor(SwodTheme.surface).borderRadius(12).onChange((v: string) => { this.query = v; })
       Button('我的比赛', { type: ButtonType.Normal }).fontSize(12).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 44, minWidth: 44 }).onClick(() => this.go('myEvents', '我的比赛', '/member/events', true))
-      Button('管理', { type: ButtonType.Normal }).fontSize(12).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 44, minWidth: 44 }).accessibilityText('赛事管理').onClick(() => this.go(this.staffLoggedIn ? 'staffHome' : 'staffLogin', '赛事管理', this.staffLoggedIn ? '/event/competitions' : '', false, 0, 0, true))
     }.width('100%')
 
     Column({ space: 14 }) {
-      Text('AiwaRaks赛事平台').fontSize(22).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+      Text('AiwaRaks赛事平台').fontSize(26).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+      Text('发现赛事，记录每一次闪耀').fontSize(14).fontColor(SwodTheme.muted).width('100%')
       Row() {
         this.eventMetric(this.busy || this.error ? '—' : String(this.rows.length), '赛事总数', false)
         this.eventMetric(this.busy || this.error ? '—' : eventAggregate(this.rows, true), '累计参赛', false)
         this.eventMetric(this.busy || this.error ? '—' : eventAggregate(this.rows, false), '记录数据', false)
       }.width('100%')
     }.padding({ top: 8, bottom: 8 }).width('100%')
-    GridRow({ columns: { xs: 2, sm: 2, md: 2, lg: 2 }, gutter: 12 }) {
-      ForEach(this.rows.filter((row: Row) => !this.query.trim() || ((row.name || '') + ' ' + (row.location || row.city || row.venue || '')).toLowerCase().includes(this.query.trim().toLowerCase())), (row: Row) => {
+    Row({ space: 10 }) { ForEach(['全部赛事', '报名中', '已结束'], (label: string) => { Button(label).fontSize(14).constraintSize({ minHeight: 44 }).borderRadius(24).backgroundColor(this.eventStatusFilter === label ? SwodTheme.primary : SwodTheme.surface).fontColor(this.eventStatusFilter === label ? SwodTheme.onPrimary : SwodTheme.muted).onClick(() => { this.eventStatusFilter = label; }) }) }.width('100%')
+    Text('全部赛事').fontSize(22).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+    GridRow({ columns: { xs: 1, sm: 1, md: 2, lg: 2 }, gutter: 16 }) {
+      ForEach(this.rows.filter((row: Row) => (this.eventStatusFilter === '全部赛事' || eventState(row) === this.eventStatusFilter) && (!this.query.trim() || ((row.name || '') + ' ' + (row.location || row.city || row.venue || '')).toLowerCase().includes(this.query.trim().toLowerCase()))), (row: Row) => {
         GridCol() { this.eventTile(row) }.margin({ bottom: 12 })
       }, (row: Row) => String(row.id))
     }.width('100%')
@@ -835,10 +1081,14 @@ struct Index {
     }.width('100%').padding({ top: 12, bottom: 20 })
     Column({ space: 12 }) {
       Button('手机号一键登录', { type: ButtonType.Normal })
-        .fontSize(17).fontWeight(FontWeight.Bold).fontColor(this.carrierReady && this.consent && !this.busy ? Color.White : SwodTheme.muted)
-        .backgroundColor(this.carrierReady && this.consent && !this.busy ? SwodTheme.primary : SwodTheme.tonal)
+        .fontSize(17).fontWeight(FontWeight.Bold).fontColor(this.carrierReady && !this.busy ? Color.White : SwodTheme.muted)
+        .backgroundColor(this.carrierReady && !this.busy ? SwodTheme.primary : SwodTheme.tonal)
         .borderRadius(12).constraintSize({ minHeight: 48 }).width('100%')
-        .enabled(this.carrierReady && this.consent && !this.busy).onClick(() => this.loginCarrier())
+        .enabled(this.carrierReady && !this.busy).onClick(() => {
+          if (this.consent) { this.loginCarrier(); return; }
+          const version = this.generation;
+          AlertDialog.show({ title: '请先阅读并同意协议', message: '请阅读登录页的《隐私政策》和《服务条款》。点击“同意并继续”将勾选协议，并进入运营商号码认证。', primaryButton: { value: '暂不同意', action: () => {} }, secondaryButton: { value: '同意并继续', action: () => { if (version === this.generation && this.route.screen === 'login') { this.consent = true; this.loginCarrier(); } } } });
+        })
       Text(this.carrierHint).fontSize(12).fontColor(SwodTheme.muted).textAlign(TextAlign.Center).width('100%')
       Text(this.memberLoginMode === 'sms' ? '或使用验证码登录' : '或使用账号密码登录').fontSize(12).fontColor(SwodTheme.muted).textAlign(TextAlign.Center).width('100%').margin({ top: 4 })
       Text('手机号').fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
@@ -886,36 +1136,6 @@ struct Index {
       .margin({ top: 10 }).onClick(() => { this.memberPassword = ''; this.code = ''; this.carrierLogin.cancel(); this.back(); })
     Text('与官网、小程序共用学习账号').fontSize(12).fontColor(SwodTheme.muted).textAlign(TextAlign.Center).width('100%')
   }
-  @Builder
-  private staffForm() {
-    Text('工作人员账号独立登录，平台核验赛事归属和权限。').fontSize(13)
-    TextInput({ placeholder: '工作人员账号', text: this.username }).onChange((v: string) => { this.username = v; })
-    TextInput({ placeholder: '密码', text: this.password }).type(InputType.Password).onChange((v: string) => { this.password = v; })
-    this.action('登录赛事管理', () => { this.loginStaff(); })
-  }
-  @Builder
-  private staffEditor() {
-    TextInput({ placeholder: '姓名', text: this.name }).onChange((v: string) => { this.name = v; })
-    this.intro('东方舞圈', '登录后同步课程、学习进度与个人资料')
-    TextInput({ placeholder: '手机号', text: this.phone }).type(InputType.PhoneNumber).onChange((v: string) => { this.phone = v; })
-    TextInput({ placeholder: '机构', text: this.organization }).onChange((v: string) => { this.organization = v; })
-    TextInput({ placeholder: '指导老师', text: this.teacher }).onChange((v: string) => { this.teacher = v; })
-    TextInput({ placeholder: '节目名称', text: this.performanceTitle }).onChange((v: string) => { this.performanceTitle = v; })
-    TextInput({ placeholder: '备注', text: this.remark }).onChange((v: string) => { this.remark = v; })
-    Text('缴费状态通过独立流水登记，编号由平台管理。').fontSize(12)
-    this.action('保存修正', () => this.confirm('确认保存本条报名资料？', () => { this.write('/event/players/' + this.selected.id, { name: this.name, phone: this.phone, organization: this.organization, teacher: this.teacher, performanceTitle: this.performanceTitle, remark: this.remark }, http.RequestMethod.PUT, true); }))
-  }
-  @Builder
-  private paymentForm() {
-    Text(this.selected.name + ' · ' + this.selected.groupName).fontSize(15)
-    Select([{ value: '实际缴费' }, { value: '实际退款' }]).selected(this.paymentKind === 'charge' ? 0 : 1).onSelect((index: number) => { this.paymentKind = index === 0 ? 'charge' : 'refund'; })
-    TextInput({ placeholder: '金额（元）', text: this.amount }).type(InputType.Number).onChange((v: string) => { this.amount = v; })
-    Select([{ value: '微信' }, { value: '支付宝' }, { value: '银行卡' }, { value: '现金' }, { value: '其他' }]).selected(0).onSelect((index: number) => { this.paymentMethod = ['wechat', 'alipay', 'bank', 'cash', 'other'][index]; })
-    TextInput({ placeholder: '实际时间（ISO日期时间）', text: this.paidAt }).onChange((v: string) => { this.paidAt = v; })
-    TextInput({ placeholder: '备注', text: this.remark }).onChange((v: string) => { this.remark = v; })
-    Text('单条报名一次缴清；退款须全额退回。此处登记实际流水，款项须另行完成。').fontSize(12)
-    this.action('提交实际流水', () => this.confirm('确认已经实际完成收款或退款，并登记 ¥' + this.amount + '？', () => { this.write('/event/players/' + this.selected.id + '/payments', { kind: this.paymentKind, method: this.paymentMethod, amount: Number(this.amount), paidAt: this.paidAt, remark: this.remark, requestKey: this.requestKey }, http.RequestMethod.POST, true); }))
-  }
   private async loadAccountCourses(version: number = this.generation, binding: string | undefined = platform.credentials?.sessionId): Promise<void> {
     this.accountCoursesError = ''; this.accountCoursesLoading = true;
     try {
@@ -926,9 +1146,46 @@ struct Index {
         const catalogue = await platform.request<Row[]>('/public/series');
         if (version === this.generation && binding === platform.credentials?.sessionId) this.accountCourseCovers = catalogue;
       } catch { /* Artwork failure never removes an authorized learning entry. */ }
+      for (let index = 0; index < this.accountCourses.length; index++) {
+        if (version !== this.generation || binding !== platform.credentials?.sessionId) return;
+        const course = this.accountCourses[index];
+        try {
+          const records = await platform.request<Row[]>('/public/series/' + course.series_id + '/progress', http.RequestMethod.GET, undefined, true);
+          if (version !== this.generation || binding !== platform.credentials?.sessionId) return;
+          let total = 0;
+          records.forEach((record: Row) => {
+            const duration = Number(record.duration || 0);
+            const watched = Number(record.progress || 0);
+            total += record.completed === 1 ? 1 : duration > 0 && Number.isFinite(watched) ? Math.min(1, Math.max(0, watched / duration)) : 0;
+          });
+          course.learning_percent = records.length > 0 ? Math.floor(total / records.length * 100) : 0;
+          this.accountCourses = this.accountCourses.map((item: Row) => item.series_id === course.series_id ? course : item);
+          if (this.route.path === '/member/authorized-series') this.rows = this.accountCourses;
+        } catch { /* Progress remains unknown until a successful refresh. */ }
+      }
     } catch {
       if (version === this.generation && binding === platform.credentials?.sessionId) { this.accountCourses = []; this.accountCoursesError = '课程权益暂时无法加载，请重试'; }
     } finally { if (version === this.generation && binding === platform.credentials?.sessionId) this.accountCoursesLoading = false; }
+  }
+  @Builder
+  private ownedCourseCard(course: Row) {
+    Button({ type: ButtonType.Normal }) {
+          Row({ space: 12 }) {
+            if (coverImageURL(this.accountCourseCover(course))) { CourseArtwork({ url: coverImageURL(this.accountCourseCover(course)) }).width(112).height(84).borderRadius(8).accessibilityLevel('no') }
+            else { Image($r('app.media.nav_learn_on')).width(112).height(84).padding(28).backgroundColor(SwodTheme.tonal).borderRadius(8).accessibilityLevel('no') }
+            Column({ space: 8 }) {
+              Text(course.series_name || course.name || '线上课程').fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+            if (this.accountCourseLearners(course)) { Text(this.accountCourseLearners(course)).fontSize(12).fontColor(SwodTheme.muted) }
+              Text(course.learning_percent !== undefined ? '学习进度 ' + course.learning_percent + '%' : '进度待同步').fontSize(14).fontColor(SwodTheme.muted).width('100%')
+              if (course.learning_percent !== undefined) { Progress({ value: course.learning_percent, total: 100, type: ProgressType.Linear }).color(SwodTheme.primary).width('100%') }
+              if (this.route.screen === 'account') { Text('继续学习 ›').fontSize(15).fontWeight(FontWeight.Medium).fontColor(SwodTheme.primary) }
+            }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+          }.width('100%').padding({ top: 12, bottom: 12 })
+        }.width('100%').backgroundColor(Color.Transparent).borderRadius(0).onClick(() => this.go('study', course.series_name || course.name || '课程学习', '/public/series/' + course.series_id + '/courses', true)).accessibilityText((course.series_name || course.name || '线上课程') + '，' + this.accountCourseLearners(course) + '，' + (course.learning_percent !== undefined ? '学习进度 ' + course.learning_percent + '%' : '进度待同步'))
+        Divider().color(SwodTheme.field)
+  }
+  private accountCourseLearners(course: Row): string {
+    return learnerText(this.accountCourseCovers.find((item: Row) => Number(item.id) === Number(course.series_id)) || course);
   }
   private accountCourseCover(course: Row): string {
     return course.cover_image || this.accountCourseCovers.find((item: Row) => Number(item.id) === Number(course.series_id))?.cover_image || '';
@@ -943,10 +1200,9 @@ struct Index {
       Button({ type: ButtonType.Normal }) {
         Column({ space: 6 }) {
           Image(icon).width(24).height(24).fillColor(SwodTheme.primary).accessibilityLevel('no')
-          Text(value).fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).textAlign(TextAlign.Center)
-          Text(label).fontSize(14).fontColor(SwodTheme.muted).textAlign(TextAlign.Center)
+          Text(label).fontSize(14).fontColor(SwodTheme.ink).textAlign(TextAlign.Center)
         }.padding({ top: 12, bottom: 12, left: 2, right: 2 }).width('100%')
-      }.width(this.accountColumns === 4 ? '25%' : '50%').constraintSize({ minHeight: 92 }).backgroundColor(Color.Transparent).borderRadius(0).onClick(submit).accessibilityText(label + '，' + value)
+      }.width(this.accountColumns === 4 ? '25%' : '50%').constraintSize({ minHeight: 76 }).backgroundColor(Color.Transparent).borderRadius(0).onClick(submit).accessibilityText(label)
   }
   @Builder
   private accountService(label: string, caption: string, icon: Resource, submit: () => void) {
@@ -975,60 +1231,106 @@ struct Index {
     Text(label).fontSize(19).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).padding({ top: 16, bottom: 4 }).width('100%')
   }
   @Builder
+  private accountSectionBreak() {
+    Row().width('100%').height(8).backgroundColor(SwodTheme.field).margin({ top: 8, bottom: 8 })
+  }
+  @Builder
+  private accountPlainRow(label: string, submit: () => void) {
+    Button({ type: ButtonType.Normal }) {
+      Row({ space: 8 }) {
+        Text(label).fontSize(16).fontColor(SwodTheme.ink).layoutWeight(1)
+        Image($r('app.media.nav_back')).width(18).height(18).rotate({ angle: 180 }).accessibilityLevel('no')
+      }.width('100%').padding({ top: 14, bottom: 14 })
+    }.width('100%').constraintSize({ minHeight: 48 }).borderRadius(0).backgroundColor(Color.Transparent).onClick(submit).accessibilityText(label)
+  }
+  @Builder
+  private accountServiceTile(label: string, icon: Resource, submit: () => void) {
+    Button({ type: ButtonType.Normal }) {
+      Row({ space: 10 }) {
+        Image(icon).width(34).height(34).padding(6).fillColor(SwodTheme.primary).backgroundColor(SwodTheme.tonal).borderRadius(8).accessibilityLevel('no')
+        Text(label).fontSize(16).fontColor(SwodTheme.ink).layoutWeight(1)
+      }.width('100%').padding({ top: 12, bottom: 12, right: 8 })
+    }.width('50%').constraintSize({ minHeight: 64 }).backgroundColor(Color.Transparent).borderRadius(0).onClick(submit).accessibilityText(label)
+  }
+  @Builder
   private accountPage() {
+    Row({ space: 12 }) {
+      Text('SWOD').fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary)
+      Text('个人中心').fontSize(22).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).layoutWeight(1)
+      if (this.loggedIn) {
+        Button({ type: ButtonType.Normal }) {
+          Stack({ alignContent: Alignment.TopEnd }) {
+            Image($r('app.media.profile_bell')).width(22).height(22).fillColor(SwodTheme.ink)
+            if (this.unreadMessages > 0) { Circle().width(6).height(6).fill(SwodTheme.primary) }
+          }
+        }.width(44).height(48).backgroundColor(Color.Transparent).onClick(() => this.go('messages', '学习消息', '/member/messages?limit=20&cursor=0', true)).accessibilityText('通知，' + this.unreadMessages + '条未读')
+      }
+      Button({ type: ButtonType.Normal }) { Image($r('app.media.profile_settings')).width(22).height(22).fillColor(SwodTheme.ink) }
+        .width(44).height(48).backgroundColor(Color.Transparent).onClick(() => this.go('accountSettings', '账号与隐私')).accessibilityText('账号与隐私设置')
+    }.width('100%')
     Row({ space: 14 }) {
       if (this.loggedIn && coverImageURL(this.detail.avatar_url || this.detail.wx_avatar_url || '')) {
-        Image(coverImageURL(this.detail.avatar_url || this.detail.wx_avatar_url || '')).alt($r('app.media.nav_person_on')).width(64).height(64).objectFit(ImageFit.Cover).borderRadius(32).accessibilityText('个人头像')
+        Image(coverImageURL(this.detail.avatar_url || this.detail.wx_avatar_url || '')).alt($r('app.media.nav_person_on')).width(56).height(56).objectFit(ImageFit.Cover).borderRadius(28).accessibilityText('个人头像')
       } else {
-        Image($r('app.media.nav_person_on')).width(64).height(64).padding(14).fillColor(SwodTheme.primary).backgroundColor(SwodTheme.tonal).borderRadius(32).accessibilityLevel('no')
+        Image($r('app.media.nav_person_on')).width(56).height(56).padding(14).fillColor(SwodTheme.primary).backgroundColor(SwodTheme.tonal).borderRadius(28).accessibilityLevel('no')
       }
       Column({ space: 6 }) {
         Text(this.loggedIn ? this.detail.wx_nickname || this.detail.wx_name || this.detail.name || '我的学习空间' : '欢迎来到伊娃东方舞').fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
         Text(!this.loggedIn ? '登录后同步课程与个人资料' : !this.detail.phone ? '资料与学习账号同步' : (this.detail.level ? this.detail.level + ' · ' : '') + this.detail.phone.replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2')).fontSize(14).fontColor(SwodTheme.muted).width('100%')
       }.layoutWeight(1).alignItems(HorizontalAlign.Start)
       if (this.loggedIn) {
-        Button({ type: ButtonType.Normal }) {
-          Column({ space: 4 }) {
-            Image($r('app.media.profile_bell')).width(24).height(24).fillColor(SwodTheme.primary).accessibilityLevel('no')
-            Text(this.unreadMessages > 0 ? (this.unreadMessages > 99 ? '99+' : String(this.unreadMessages)) + ' 未读' : '通知').fontSize(12).fontColor(SwodTheme.primary)
-          }
-        }.constraintSize({ minWidth: 48, minHeight: 48 }).backgroundColor(Color.Transparent).onClick(() => this.go('messages', '学习消息', '/member/messages?limit=20&cursor=0', true)).accessibilityText('通知，' + this.unreadMessages + '条未读')
+        Button('个人资料 ›', { type: ButtonType.Normal }).fontSize(14).fontColor(SwodTheme.muted)
+          .backgroundColor(Color.Transparent).constraintSize({ minHeight: 48 })
+          .onClick(() => this.go('profile', '个人资料', '/member/profile', true))
       }
     }.width('100%').padding({ top: 16, bottom: 16 })
-    if (!this.loggedIn) { this.action('手机号登录', () => this.go('login', '手机号登录')) }
-    else {
-      Flex({ wrap: FlexWrap.Wrap, alignItems: ItemAlign.Start }) {
-        this.accountShortcut('线上课', this.accountCount('authorized_count'), $r('app.media.nav_learn_on'), () => this.go('records', '我的课程', '/member/authorized-series', true))
-        this.accountShortcut('线下课', this.accountCount('offline_course_count'), $r('app.media.nav_calendar_on'), () => this.go('schedule', '期次课时', '/offline/overview', true))
-        this.accountShortcut('我的比赛', '报名与成绩', $r('app.media.nav_trophy_on'), () => this.go('myEvents', '我的比赛', '/member/events', true))
-        this.accountShortcut('我的证书', '查看证书', $r('app.media.profile_certificate'), () => this.go('certificates', '我的证书', '/certificates', true))
-      }.width('100%').onAreaChange((_old: Area, area: Area) => { this.accountColumns = Number(area.width) >= 328 ? 4 : 2; })
+    if (!this.loggedIn) {
+      this.action('手机号登录', () => this.go('login', '手机号登录'))
+      this.accountService('客服与售后', '学习权限、课程与订单问题', $r('app.media.profile_help'), () => this.go('support', '客服与售后'))
+      this.accountPlainRow('账号与隐私', () => this.go('accountSettings', '账号与隐私'))
+    } else {
       Divider().color(SwodTheme.field)
+      Flex({ wrap: FlexWrap.Wrap, alignItems: ItemAlign.Start }) {
+        this.accountShortcut('线上课', '', $r('app.media.nav_learn_on'), () => this.go('records', '我的课程', '/member/authorized-series', true))
+        this.accountShortcut('线下课', '', $r('app.media.nav_calendar_on'), () => this.go('schedule', '期次课时', '/offline/overview', true))
+        this.accountShortcut('我的比赛', '', $r('app.media.nav_trophy_on'), () => this.go('myEvents', '我的比赛', '/member/events', true))
+        this.accountShortcut('我的证书', '', $r('app.media.profile_certificate'), () => this.go('certificates', '我的证书', '/certificates', true))
+      }.width('100%').onAreaChange((_old: Area, area: Area) => { this.accountColumns = Number(area.width) >= 328 ? 4 : 2; })
+      this.accountSectionBreak()
+      Row() {
+        Text('我的课程').fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).layoutWeight(1)
+        Button(this.accountCoursesExpanded ? '收起 ⌃' : '展开 ⌄', { type: ButtonType.Normal })
+          .fontSize(14).fontColor(SwodTheme.muted).backgroundColor(Color.Transparent).constraintSize({ minWidth: 64, minHeight: 44 })
+          .onClick(() => { this.accountCoursesExpanded = !this.accountCoursesExpanded; })
+          .accessibilityText(this.accountCoursesExpanded ? '收起我的课程，已展开' : '展开我的课程，已收起')
+      }.width('100%')
+      if (this.accountCoursesExpanded) {
+        if (this.accountCoursesError) {
+          Text(this.accountCoursesError).fontSize(14).fontColor(SwodTheme.primary)
+          this.action('重新加载我的课程', () => { this.loadAccountCourses(); })
+        } else if (!this.busy && !this.error && !this.accountCoursesLoading && this.accountCourses.length === 0) { Text('暂无课程').fontSize(14).fontColor(SwodTheme.muted).padding({ top: 16, bottom: 16 }) }
+        if (this.accountCoursesLoading && !this.busy) { Text('正在加载我的课程…').fontSize(14).fontColor(SwodTheme.muted) }
+        ForEach(this.accountCourses, (course: Row) => { this.ownedCourseCard(course) }, (course: Row) => String(course.series_id))
+      }
+      this.accountPlainRow('查看全部课程与学习记录', () => this.go('records', '我的课程', '/member/authorized-series', true))
+      this.accountSectionBreak()
+      this.accountHeading('常用服务')
+      Flex({ wrap: FlexWrap.Wrap }) {
+        this.accountServiceTile('我的订单', $r('app.media.nav_bag_on'), () => this.go('shopOrders', '我的订单', '/shop/orders', true))
+        if (COURSE_CACHE_RELEASE_ENABLED) { this.accountServiceTile('离线观看', $r('app.media.profile_download'), () => this.go('cache', '离线观看', '', true)) }
+        this.accountServiceTile('学习笔记', $r('app.media.profile_notes'), () => this.go('records', '学习笔记', '/notes/all', true))
+        this.accountServiceTile('客服与售后', $r('app.media.profile_help'), () => this.go('support', '客服与售后'))
+      }.width('100%')
+      Divider().color(SwodTheme.field)
+      this.accountPlainRow('账号与隐私', () => this.go('accountSettings', '账号与隐私'))
+    }
+  }
+  @Builder
+  private accountSettingsPage() {
+    this.accountHeading('账号与隐私')
+    if (this.loggedIn) {
       this.accountService('个人资料', '姓名、手机号、生日和地址', $r('app.media.nav_person_on'), () => this.go('profile', '个人资料', '/member/profile', true))
-      this.accountService('我的比赛', '报名、缴费与比赛结果', $r('app.media.nav_trophy_on'), () => this.go('myEvents', '我的比赛', '/member/events', true))
       this.accountService('我的订单', '订单、到账与退款记录', $r('app.media.nav_bag_on'), () => this.go('shopOrders', '我的订单', '/shop/orders', true))
-      this.accountHeading('我的课程')
-      if (this.accountCoursesError) {
-        Text(this.accountCoursesError).fontSize(14).fontColor(SwodTheme.primary)
-        this.action('重新加载我的课程', () => { this.loadAccountCourses(); })
-      } else if (!this.busy && !this.error && !this.accountCoursesLoading && this.accountCourses.length === 0) { Text('暂无已解锁课程').fontSize(14).fontColor(SwodTheme.muted).padding({ top: 12, bottom: 12 }) }
-      if (this.accountCoursesLoading && !this.busy) { Text('正在加载我的课程…').fontSize(14).fontColor(SwodTheme.muted) }
-      ForEach(this.accountCourses, (course: Row) => {
-        Button({ type: ButtonType.Normal }) {
-          Row({ space: 12 }) {
-            if (coverImageURL(this.accountCourseCover(course))) { Image(coverImageURL(this.accountCourseCover(course))).alt($r('app.media.nav_learn_on')).width(96).height(96).objectFit(ImageFit.Cover).borderRadius(8).accessibilityLevel('no') }
-            else { Image($r('app.media.nav_learn_on')).width(96).height(96).padding(28).backgroundColor(SwodTheme.tonal).borderRadius(8).accessibilityLevel('no') }
-            Column({ space: 8 }) {
-              Text(course.series_name || course.name || '线上课程').fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
-              Text('✓ 已解锁').fontSize(14).fontColor('#15803d').width('100%')
-              Text('继续学习 ›').fontSize(14).fontColor(SwodTheme.primary).width('100%')
-            }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-          }.width('100%').padding({ top: 12, bottom: 12 })
-        }.width('100%').backgroundColor(Color.Transparent).borderRadius(0).onClick(() => this.go('study', course.series_name || course.name || '课程学习', '/public/series/' + course.series_id + '/courses', true)).accessibilityText((course.series_name || course.name || '线上课程') + '，已解锁，继续学习')
-        Divider().color(SwodTheme.field)
-      }, (course: Row) => String(course.series_id))
-      this.accountService('查看全部课程与学习记录', '已解锁课程与学习进度', $r('app.media.nav_learn_on'), () => this.go('records', '我的课程', '/member/authorized-series', true))
-      if (COURSE_CACHE_RELEASE_ENABLED) { this.accountService('课程缓存', '查看离线课程', $r('app.media.nav_learn_on'), () => this.go('cache', '课程缓存', '', true)) }
       this.accountHeading('线下课与证书')
       this.accountService('我的线下课程', '课时余额、期次与核销记录', $r('app.media.nav_calendar_on'), () => this.go('schedule', '期次课时', '/offline/overview', true))
       this.accountService('我的证书', '查看已颁发的学习证书', $r('app.media.profile_certificate'), () => this.go('certificates', '我的证书', '/certificates', true))
@@ -1043,7 +1345,6 @@ struct Index {
     }
     this.accountHeading('客服与帮助')
     this.accountService('客服与售后', '学习权限、课程与订单问题', $r('app.media.profile_help'), () => this.go('support', '客服与售后'))
-    this.accountService('赛事管理工作台', '工作人员入口', $r('app.media.nav_trophy_on'), () => this.go(this.staffLoggedIn ? 'staffHome' : 'staffLogin', '赛事管理', this.staffLoggedIn ? '/event/competitions' : '', false, 0, 0, true))
     this.accountService('隐私政策', '个人信息与隐私保护说明', $r('app.media.profile_shield'), () => this.openURL('https://www.swod.com.cn/privacy'))
     this.accountService('服务条款', '查看平台服务规则', $r('app.media.profile_notes'), () => this.openURL('https://www.swod.com.cn/terms'))
     Button({ type: ButtonType.Normal }) { Text($r('app.string.app_filing_number')).fontSize(12).fontColor(SwodTheme.muted) }.backgroundColor(Color.Transparent).constraintSize({ minHeight: 48 }).width('100%').onClick(() => this.openURL('https://beian.miit.gov.cn/')).accessibilityText('App备案号，湘ICP备2026005683号-5A，打开工信部备案查询')
@@ -1086,11 +1387,12 @@ struct Index {
     if (this.route.screen === 'events') { this.eventsPage() }
     if (this.route.screen === 'shop') { this.intro('伊娃甄选', '东方舞生活 · 官方商城') }
     if (this.route.screen === 'login') { this.loginForm() }
-    if (this.route.screen === 'staffLogin') { this.staffForm() }
-    if (this.route.screen === 'staffEditor') { this.staffEditor() }
-    if (this.route.screen === 'staffPayment') { this.paymentForm() }
-    if (this.route.screen === 'staffHome') { this.action('退出赛事管理', () => { platform.staff = undefined; this.staffLoggedIn = false; this.go('staffLogin', '工作人员登录'); }) }
+
+
+
+
     if (this.route.screen === 'account') { this.accountPage() }
+    if (this.route.screen === 'accountSettings') { this.accountSettingsPage() }
     if (this.route.screen === 'profile') {
       this.intro('个人资料', '与平台学习账号同步')
       this.profileDetail('姓名', this.detail.name || '')
@@ -1104,38 +1406,16 @@ struct Index {
       Text('伊琳老师：193 1002 9982').fontSize(16)
       this.action('查看微信客服二维码', () => this.openURL('https://www.swod.com.cn/contact'))
     }
-    if (this.route.screen === 'event') {
-      Text(this.detail.competition?.name || '').fontSize(18)
-      Text(this.detail.competition?.description || '').fontSize(14)
-      Text('完整组别名称').fontSize(15)
-      ForEach(this.detail.groups || [], (group: Row) => { this.action(group.name || '', () => { this.selected = group; this.name = ''; this.performanceTitle = ''; this.music = undefined; this.musicName = ''; this.go('register', '赛事报名', '', true, this.route.eventID, Number(group.id)); }) }, (group: Row) => String(group.id))
-      Text('赛程').fontSize(15)
-      ForEach(this.detail.sessions || [], (session: Row) => { Text([session.name, session.startsAt, session.venue].join(' · ')).fontSize(13) }, (session: Row) => String(session.id))
-      Text('已发布成绩').fontSize(15)
-      ForEach(this.detail.rankings || [], (rank: Row) => { Text([rank.rankNo, rank.playerName, rank.groupName, rank.publishedTotal].join(' · ')).fontSize(13) }, (rank: Row) => String(rank.id))
+    if (this.route.screen === 'judge') { JudgeWorkspace({ competitionId: this.route.eventID }) }
+    if (['event', 'eventGroup', 'eventPlayer'].includes(this.route.screen)) {
+      PublicEventView({ eventID: this.route.eventID, groupID: this.route.groupID, playerID: this.route.playerID || 0, revision: this.publicEventRevision,
+        onOpenGroup: (groupID: number) => this.go('eventGroup', '赛事组别', '', false, this.route.eventID, groupID),
+        onOpenPlayer: (groupID: number, playerID: number) => this.go('eventPlayer', '参赛详情', '', false, this.route.eventID, groupID, playerID),
+        onRegister: (groupID: number) => this.go('register', '赛事报名', '', true, this.route.eventID, groupID),
+        onJudge: () => { if (!platform.credentials) this.go('login', '手机号登录'); else this.go('judge', '评委工作台', '', true, this.route.eventID); },
+        onMine: () => this.go('myEvents', '我的比赛', '/member/events', true), onStateChange: (eventID: number, state: string) => { this.publicEventStatusID = eventID; this.publicEventStatus = state; } })
     }
-    if (this.route.screen === 'register' || this.route.screen === 'editRegistration') {
-      if (!this.loggedIn) { this.action('登录后报名', () => this.go('login', '手机号登录')) }
-      else if (this.registrationSaved) { this.action('查看我的比赛', () => this.go('myEvents', '我的比赛', '/member/events', true)) }
-      else if (this.route.screen === 'register' || this.detail.canEdit) {
-        if (this.route.screen === 'register') { Text(this.selected.name || '').fontSize(18) }
-        TextInput({ placeholder: '参赛姓名', text: this.name }).onChange((v: string) => { this.name = v; })
-        TextInput({ placeholder: '国家/地区区号', text: this.eventCountryCode }).type(InputType.PhoneNumber).onChange((v: string) => { this.eventCountryCode = v; })
-        TextInput({ placeholder: '联系电话', text: this.eventPhone }).type(InputType.PhoneNumber).onChange((v: string) => { this.eventPhone = v; })
-        TextInput({ placeholder: '机构（选填）', text: this.organization }).onChange((v: string) => { this.organization = v; })
-        TextInput({ placeholder: '指导老师（选填）', text: this.teacher }).onChange((v: string) => { this.teacher = v; })
-        TextInput({ placeholder: '节目（音乐）名字', text: this.performanceTitle }).onChange((v: string) => { this.performanceTitle = v; })
-        TextInput({ placeholder: '备注（选填）', text: this.remark }).onChange((v: string) => { this.remark = v; })
-        if (this.currentEventMusic) { Text('当前音乐：' + this.currentEventMusic).fontSize(13) }
-        Text('音乐选填，单个文件不超过 10 MB').fontSize(13)
-        this.action(this.musicName ? '更换音乐：' + this.musicName : '选择参赛音乐', () => { if (!this.busy) this.chooseMusic(); })
-        if (this.musicName) { this.action('移除所选音乐', () => { if (!this.busy) { this.music = undefined; this.musicName = ''; } }) }
-        if (this.route.screen === 'editRegistration') {
-          this.action('保存报名资料', () => { this.register(true); })
-          this.action('上传音乐', () => this.confirm('确认上传参赛音乐？', () => { this.register(); }))
-        } else { this.action('提交报名', () => this.confirm('确认提交本组报名？', () => { this.register(); })) }
-      } else if (!this.busy && !this.error) { Text('此报名当前不可修改') }
-    }
+    if (this.route.screen === 'register' || this.route.screen === 'editRegistration') { this.eventRegistrationForm() }
     if (this.route.screen === 'cache' && this.courseCache) { CachedCourses({ cache: this.courseCache }) }
     if (this.route.screen === 'catalog') {
       if (this.unlockedSeries.includes(this.currentSeriesID()) && platform.credentials) {
@@ -1174,40 +1454,31 @@ struct Index {
       }
       Stack({ alignContent: Alignment.TopStart }) {
       Video({ src: this.playURL, controller: this.controller, currentProgressRate: this.holdingSpeed ? 2 : this.selectedPlaybackRate }).width('100%').aspectRatio(this.selected.mediaKind === 'audio' ? 5 : 16 / 9).objectFit(ImageFit.Contain).controls(this.videoControlsVisible).loop(this.loop).scale({ x: this.mirror ? -1 : 1 })
-        .onPrepared((event?: VideoDuration) => { this.duration = event?.duration || 0; const position = this.qualityResume >= 0 ? this.qualityResume : this.playbackPosition; this.controller.setCurrentTime(Math.max(0, Math.min(position, this.duration))); this.playbackPosition = position; this.qualityResume = -1; this.qualityChanging = false; })
-        .onUpdate((event?: VideoTime) => { if (this.qualityChanging) return; this.playbackPosition = event?.time || 0; if (Date.now() - this.lastCheckpoint > 15000) { this.lastCheckpoint = Date.now(); this.saveProgress(); this.verifyVideoAccess(); } })
-        .onStart(() => { this.videoPlaying = true; this.showVideoControls(); })
+        .onFullscreenChange((event?: VideoFullscreen) => { this.videoFullscreen = event?.fullscreen || false; this.resetVideoControls(); })
+        .onPrepared((event?: VideoDuration) => { this.duration = event?.duration || 0; const position = this.qualityResume >= 0 ? this.qualityResume : this.playbackPosition; this.controller.setCurrentTime(Math.max(0, Math.min(position, this.duration))); this.playbackPosition = position; this.notePosition = position; this.qualityResume = -1; this.qualityChanging = false; })
+        .onUpdate((event?: VideoTime) => { if (this.qualityChanging) return; this.playbackPosition = event?.time || 0; this.notePosition = this.playbackPosition; if (Date.now() - this.lastCheckpoint > 15000) { this.lastCheckpoint = Date.now(); this.saveProgress(); this.verifyVideoAccess(); } })
+        .onStart(() => { this.videoPlaying = true; this.resetVideoControls(); })
         .onPause(() => { this.endHoldSpeed(); this.videoPlaying = false; this.resetVideoControls(); })
         .onFinish(() => { this.endHoldSpeed(); this.videoPlaying = false; this.resetVideoControls(); this.saveProgress(); })
         .onTouch((event: TouchEvent) => { this.onVideoTouch(event); })
         .onError(() => { this.qualityChanging = false; this.endHoldSpeed(); this.videoPlaying = false; this.resetVideoControls(); this.error = '媒体暂时无法播放，请返回后重试'; })
-        Text('SWOD · 学习码 ' + (platform.credentials?.sessionId || '').slice(-8).toUpperCase()).fontSize(11).fontColor('#CCFFFFFF').padding(8).backgroundColor('#55000000').margin(8).hitTestBehavior(HitTestMode.None)
-      }.width('100%')
+      }.width('100%').onAreaChange((oldArea: Area, area: Area) => { this.stageWidth = Number(area.width); this.stageHeight = Number(area.height); })
       Column({ space: 6 }) {
         Text(this.route.title).fontSize(18).fontWeight(FontWeight.Medium).fontColor(SwodTheme.ink).width('100%')
         if (this.selected.subtitle) { Text(this.selected.subtitle || '').fontSize(14).fontColor(SwodTheme.muted) }
         Text((this.duration > 0 ? '学习进度 ' + this.videoPercent(this.selected) : '进度待同步') + ' · 已看到 ' + Math.floor(this.playbackPosition / 60) + ':' + String(Math.floor(this.playbackPosition % 60)).padStart(2, '0')).fontSize(12).fontColor(SwodTheme.muted)
       }.alignItems(HorizontalAlign.Start).padding({ top: 6, bottom: 6 }).width('100%')
       Row({ space: 8 }) {
+        Button(this.videoPlaying ? '暂停' : '播放').constraintSize({ minHeight: 44 }).layoutWeight(1).onClick(() => { if (this.videoPlaying) this.controller.pause(); else this.controller.start(); })
         Button('上一节').constraintSize({ minHeight: 44 }).layoutWeight(1).enabled(this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID) > 0).onClick(() => { const at = this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID); if (at > 0) this.startVideo(this.videoPlaylist[at - 1]); })
-        Button('播放设置').constraintSize({ minHeight: 44 }).layoutWeight(1).onClick(() => { this.videoSettings = !this.videoSettings; this.showVideoControls(); })
+        Button('全屏').constraintSize({ minHeight: 44 }).layoutWeight(1).bindMenu([
+          { value: '横屏全屏', action: () => this.openVideoFullscreen(true) },
+          { value: '竖屏全屏', action: () => this.openVideoFullscreen(false) }
+        ]).accessibilityText('选择横屏或竖屏全屏播放')
+        Button('播放设置').constraintSize({ minHeight: 44 }).layoutWeight(1).onClick(() => { this.videoSettings = !this.videoSettings; this.showVideoControls(); }).bindSheet($$this.videoSettings, this.playerSettingsSheet(), { height: SheetSize.MEDIUM, dragBar: true })
         Button('下一节').constraintSize({ minHeight: 44 }).layoutWeight(1).enabled(this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID) >= 0 && this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID) + 1 < this.videoPlaylist.length).onClick(() => { const at = this.videoPlaylist.findIndex((row: Row) => String(row.id) === this.currentLessonID); if (at >= 0 && at + 1 < this.videoPlaylist.length) this.startVideo(this.videoPlaylist[at + 1]); })
       }.width('100%')
-      if (this.videoSettings) {
-        if (COURSE_CACHE_RELEASE_ENABLED) {
-        Text('课程缓存联网时自动续期，可连续离线观看最长 24 小时；学习权益到期或撤销后停止使用。').fontSize(14).fontColor(SwodTheme.muted)
-        this.action('缓存当前课节', () => { this.courseCache?.download(Number(this.currentLessonID), this.route.title, this.videoCourseTitle).then(() => { this.go('cache', '课程缓存', '', true); }); })
-        this.action('管理课程缓存', () => this.go('cache', '课程缓存', '', true))
-        }
-        if (this.videoQualities.length > 1) {
-          Select(this.videoQualities.map((quality: MediaQuality): SelectOption => ({ value: quality.label }))).selected(this.videoQuality).value(this.videoQualities[this.videoQuality]?.label || '自动').onSelect((index: number) => {
-            if (index < 0 || index >= this.videoQualities.length || index === this.videoQuality) return;
-            this.endHoldSpeed(); this.videoPlaying = false; this.controller.pause(); this.qualityResume = this.playbackPosition; this.qualityChanging = true; this.videoQuality = index; this.playURL = this.videoQualities[index].url;
-          }).enabled(this.duration > 0 && !this.qualityChanging).accessibilityText('视频清晰度')
-        }
-        Row({ space: 8 }) { ForEach([0.75, 1, 1.25, 1.5], (rate: number) => { Button(rate + ' 倍').onClick(() => { this.endHoldSpeed(); this.selectedPlaybackRate = rate; }).backgroundColor(this.selectedPlaybackRate === rate ? SwodTheme.tonal : SwodTheme.surface).fontColor(SwodTheme.ink) }, (rate: number) => String(rate)) }
-        Row() { Checkbox().select(this.mirror).onChange((v: boolean) => { this.mirror = v; }); Text('镜像'); Checkbox().select(this.loop).onChange((v: boolean) => { this.loop = v; }); Text('循环') }
-      }
+      if (this.adjustmentMessage) { Text(this.adjustmentMessage).fontSize(14).fontColor(SwodTheme.muted) }
       if (this.holdingSpeed) { Text('2 倍播放 · 松手恢复').fontSize(14) }
       Row() {
         ForEach([0, 1, 2], (index: number) => {
@@ -1236,6 +1507,12 @@ struct Index {
         }.padding({ top: 6, bottom: 6 }).width('100%')
       } else if (this.videoTab === 1) {
         Column({ space: 12 }) {
+          Toggle({ type: ToggleType.Switch, isOn: this.notesEnabled }).onChange((on: boolean) => { this.notesEnabled = on; }).accessibilityText('显示同步笔记')
+          Text('笔记显示在此处，不遮挡视频画面。').fontSize(14).fontColor(SwodTheme.muted)
+          ForEach(this.visibleVideoNotes(), (note: Row) => {
+            Column({ space: 6 }) { Text(Math.floor((note.timestamp_seconds || 0) / 60) + ':' + String(Math.floor((note.timestamp_seconds || 0) % 60)).padStart(2, '0')).fontSize(12).fontColor(SwodTheme.muted); Text(note.content || '').fontSize(16).fontColor(SwodTheme.ink).width('100%') }.alignItems(HorizontalAlign.Start).padding({ top: 6, bottom: 6 }).width('100%')
+          }, (note: Row) => String(note.id))
+          if (this.notesError) { Text(this.notesError).fontSize(13); this.action('重新加载笔记', () => this.loadVideoNotes()) }
           Text('记录本节练习心得').fontSize(17).fontWeight(FontWeight.Medium)
           TextInput({ placeholder: '本节学习笔记', text: this.remark }).onChange((v: string) => { this.remark = v; })
           this.action('保存当前播放位置的笔记', () => { if (this.remark.trim()) this.write('/notes', { video_id: Number(this.selected.id || this.selected.video_id), timestamp_seconds: this.playbackPosition, content: this.remark }); })
@@ -1245,12 +1522,12 @@ struct Index {
       }
     }
     if (this.route.screen === 'offlineDetail') {
-      if (coverImageURL(this.detail.cover_image || '')) { Image(coverImageURL(this.detail.cover_image || '')).width('100%').aspectRatio(4 / 3).objectFit(ImageFit.Cover).borderRadius(8).accessibilityText((this.detail.name || '') + '课程封面') }
+      if (coverImageURL(this.detail.cover_image || '')) { CourseArtwork({ url: coverImageURL(this.detail.cover_image || '') }).width('100%').aspectRatio(4 / 3).borderRadius(8).accessibilityText((this.detail.name || '') + '课程封面') }
       Text('课程介绍').fontSize(18).fontWeight(FontWeight.Bold)
       Text(offlineDescription(this.detail)).fontSize(16).lineHeight(26)
       ForEach(offlineCopy(this.detail)?.outline || this.detail.outline || [], (text: string, index: number) => { Text((index + 1) + '. ' + text).fontSize(14).lineHeight(24) }, (text: string) => text)
       Text('课程期次').fontSize(18).fontWeight(FontWeight.Bold)
-      ForEach(this.offlineRows.filter((period: Row) => (period.group_key || period.name) === (this.detail.group_key || this.detail.name)), (period: Row) => {
+      ForEach(offlinePeriods(this.offlineRows, this.detail), (period: Row) => {
         Column({ space: 12 }) {
           Text(period.subtitle || period.start_date || '期次安排').fontSize(17).fontWeight(FontWeight.Bold)
           Text([period.start_date || '', period.end_date || '', period.location || ''].filter((value: string) => !!value).join(' · ')).fontSize(14)
@@ -1336,28 +1613,10 @@ struct Index {
       Text('核销记录').fontSize(16)
       ForEach(this.detail.consumes || [], (row: Row) => { Text(row.course_name + ' · ' + row.consume_date + ' · 核销 ' + row.count + ' 课时').fontSize(14) }, (row: Row) => String(row.id))
     }
-    if (this.route.screen === 'staffCompetition') {
-      this.action('报名和音乐 · 节目汇总', () => this.staffEntries())
-      this.action('选手汇总 · 一人多项报名', () => this.staffEntries(true))
-      this.action('完整组别与出场顺序', () => this.go('staffGroups', '组别管理', '/event/groups?competitionId=' + this.route.eventID, false, this.route.eventID, 0, true))
-      this.action('开放报名', () => this.confirm('开放当前赛事报名？', () => { this.write('/event/competitions/' + this.route.eventID, { action: 'openRegistration' }, 'PATCH', true); }))
-      this.action('关闭报名', () => this.confirm('关闭当前赛事报名？', () => { this.write('/event/competitions/' + this.route.eventID, { action: 'closeRegistration' }, 'PATCH', true); }))
-    }
-    if (this.route.screen === 'staffGroup') {
-      Text(this.detail.name || '').fontSize(18)
-      this.action('报名、音乐与出场顺序', () => this.staffEntries())
-      this.action('随机安排本组出场顺序', () => this.confirm('重新随机编排本组有效报名？编号保持独立。', () => { this.write('/event/players/batch', { action: 'randomize_sequence', competitionId: this.route.eventID, groupId: this.route.groupID }, 'PATCH', true); }))
-    }
-    if (this.route.screen === 'staffPlayer') {
-      Text([this.detail.name, this.detail.phone, this.detail.groupName, this.detail.organization, this.detail.teacher, this.detail.performanceTitle, this.detail.musicName, this.detail.paidStatus].join('\n')).fontSize(15)
-      Text('出场顺序 ' + this.detail.sequenceNo + ' · 应收 ¥' + this.detail.registrationFee + ' · 已收 ¥' + this.detail.paidAmount).fontSize(14)
-      this.action('修正报名资料', () => this.editPlayer())
-      this.action('登记实际缴费 / 退款', () => this.payment())
-    }
-    if (['staffEntries', 'staffContestants'].includes(this.route.screen)) {
-      Text('共 ' + (this.detail.contestants || []).length + ' 名选手 · ' + (this.detail.players || []).length + ' 个节目').fontSize(14)
-      Text('完整记录先编号，再搜索；选手编号、节目编号与出场顺序分别管理。').fontSize(12)
-    }
+
+
+
+
     if (this.route.screen === 'growth' && this.detail.growth) {
       Text(this.detail.growth.level_display || '学员').fontSize(18).fontWeight(FontWeight.Bold)
       Text('成长经验 ' + Number(this.detail.growth.experience_total || 0)).fontSize(15)
@@ -1373,7 +1632,9 @@ struct Index {
       if (!(this.detail.ledger || []).length) { Text('暂无成长记录').fontSize(14) }
     }
     if (this.route.screen === 'myEvents') {
-      ForEach(this.detail.entries || [], (row: Row) => {
+      Text('我的比赛').fontSize(23).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+      TextInput({ placeholder: '搜索赛事、组别或参赛人', text: this.query }).height(48).fontSize(16).backgroundColor(SwodTheme.surface).borderRadius(10).onChange((value: string) => { this.query = value; this.myEventsPage = 1; })
+      ForEach(this.myEventRows().slice((this.myEventsPage - 1) * 20, this.myEventsPage * 20), (row: Row) => {
         Column({ space: 10 }) {
           Text(row.competitionName || '赛事').fontSize(18).fontWeight(FontWeight.Bold)
           Text((row.groupName || '未分组') + (row.playerNo ? ' · 选手号 ' + row.playerNo : '')).fontSize(15)
@@ -1381,11 +1642,14 @@ struct Index {
           if (row.performanceTitle) { Text('节目：' + row.performanceTitle).fontSize(14) }
           Text(this.eventAudit(row.auditStatus || '') + ' · ' + this.eventPaid(row.paidStatus || '') + ' · ' + (row.startDate || '')).fontSize(14).fontColor(SwodTheme.muted)
           Text(this.eventResult(row)).fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary)
+          if (row.resultPublished && row.judgeScores?.length) { ForEach(row.judgeScores || [], (score: Row) => { Row({ space: 12 }) { Text(score.judgeName || '评委').fontSize(14).fontColor(SwodTheme.muted).layoutWeight(1); Text(score.score == null ? '未公开' : String(score.score)).fontSize(15).fontColor(SwodTheme.primary) }.width('100%') }) }
+          if (row.canPay && Number(row.playerId) > 0) { this.action('继续缴费 · 前往官方收银台', () => this.openURL('https://www.swod.com.cn/checkout/event/' + row.playerId)) }
           if (Number(row.playerId) > 0) { this.action('修改报名 / 补交音乐', () => this.go('editRegistration', '修改报名 / 补交音乐', '/member/event-registrations/' + Number(row.playerId), true)) }
           if (Number(row.competitionId) > 0) { this.action('赛事详情', () => this.go('event', row.competitionName || '赛事详情', '/events/' + Number(row.competitionId), false, Number(row.competitionId))) }
-        }.width('100%').alignItems(HorizontalAlign.Start).padding(12)
+        }.width('100%').alignItems(HorizontalAlign.Start).padding(16).backgroundColor(SwodTheme.surface).borderRadius(14).margin({ bottom: 12 })
       }, (row: Row) => String(row.playerId || row.id))
-      if (!this.busy && !this.error && (this.detail.entries || []).length === 0) { Text('暂无比赛报名和结果记录').fontSize(15).fontColor(SwodTheme.muted) }
+      if (this.myEventRows().length > 20) { Row({ space: 8 }) { Button('上一页').constraintSize({ minHeight: 44 }).enabled(this.myEventsPage > 1).onClick(() => { this.myEventsPage--; }); Text(this.myEventsPage + ' / ' + Math.ceil(this.myEventRows().length / 20)).fontSize(14).fontColor(SwodTheme.muted).layoutWeight(1).textAlign(TextAlign.Center); Button('下一页').constraintSize({ minHeight: 44 }).enabled(this.myEventsPage * 20 < this.myEventRows().length).onClick(() => { this.myEventsPage++; }) }.width('100%') }
+      if (!this.busy && !this.error && this.myEventRows().length === 0) { Text(this.query ? '未找到匹配记录' : '暂无比赛报名和结果记录').fontSize(15).fontColor(SwodTheme.muted) }
     }
     if (this.route.screen === 'messages') {
       this.action('系统通知设置', () => { appPush.enable().then(() => { this.notificationStatus = appPush.status; }); })
@@ -1404,7 +1668,7 @@ struct Index {
           }, (row: Row) => String(row.id || row.video_id || row.series_id))
         }.width('100%')
       } else {
-        ForEach(this.filtered(), (row: Row) => { this.card(row) }, (row: Row) => String(row.id || row.video_id || row.series_id))
+        ForEach(this.filtered(), (row: Row) => { if (this.route.path === '/member/authorized-series') { this.ownedCourseCard(row) } else if (this.route.screen === 'offline') { this.offlineCourseCard(row) } else { this.card(row) } }, (row: Row) => String(row.id || row.video_id || row.series_id))
       }
       if (!this.busy && !this.error && this.query.trim() && this.filtered().length === 0) {
         Text('未找到匹配结果，请更换关键词').fontSize(14).fontColor(SwodTheme.muted)
@@ -1413,7 +1677,7 @@ struct Index {
     }
     if (this.route.screen === 'messages' && this.detail.hasMore) { this.action('下一页', () => this.go('messages', '学习消息', '/member/messages?limit=20&cursor=' + this.detail.nextCursor, true)) }
     if (this.busy) { Row({ space: 12 }) { LoadingProgress().width(24).height(24).color(SwodTheme.primary); Text('正在加载…').fontSize(14).fontColor(SwodTheme.muted) }.padding(20).width('100%').justifyContent(FlexAlign.Center) }
-    if (this.error && this.route.screen !== 'login') { Text(this.error).fontSize(14).fontColor(SwodTheme.primary); this.action('重新加载', () => { this.load(); }); if (!this.loggedIn && this.route.auth && !this.route.staff) { this.action('手机号登录', () => this.go('login', '手机号登录')) } }
+    if (this.error && this.route.screen !== 'login') { Text(this.error).fontSize(14).fontColor(SwodTheme.primary); this.action('重新加载', () => { this.load(); }); if (!this.loggedIn && this.route.auth) { this.action('手机号登录', () => this.go('login', '手机号登录')) } }
     if (!this.busy && !this.error && this.rows.length === 0 && ['home', 'offline', 'events', 'records', 'certificates'].includes(this.route.screen)) { Text('暂无可展示的记录，请稍后刷新').fontSize(14).fontColor(SwodTheme.muted).padding(24) }
   }
   @Builder private routeContent() {
@@ -1421,10 +1685,9 @@ struct Index {
       if (this.history.length > 0) {
       Row({ space: 8 }) {
         if (this.history.length > 0) { Button({ type: ButtonType.Normal }) { Image($r('app.media.nav_back_on')).width(24).height(24) }.width(48).height(48).backgroundColor(Color.Transparent).onClick(() => this.back()).accessibilityText('返回上一页') }
-        Blank().layoutWeight(1)
+        if (['register', 'editRegistration', 'event', 'eventGroup', 'eventPlayer', 'judge', 'myEvents'].includes(this.route.screen)) { Text(this.route.title).fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).layoutWeight(1).textAlign(TextAlign.Center) } else { Blank().layoutWeight(1) }
         if (this.route.screen === 'events') {
           Button('我的比赛', { type: ButtonType.Normal }).fontSize(12).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 48, minWidth: 48 }).onClick(() => this.go('myEvents', '我的比赛', '/member/events', true))
-          Button('赛事管理', { type: ButtonType.Normal }).fontSize(12).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minHeight: 48, minWidth: 48 }).onClick(() => this.go(this.staffLoggedIn ? 'staffHome' : 'staffLogin', '赛事管理', this.staffLoggedIn ? '/event/competitions' : '', false, 0, 0, true))
         }
         Button('刷新', { type: ButtonType.Normal }).constraintSize({ minWidth: 48, minHeight: 48 }).backgroundColor(Color.Transparent).fontColor(SwodTheme.primary).enabled(!(this.route.screen === 'login' && this.busy)).onClick(() => { if (this.route.screen === 'web') this.reloadWeb(); else this.load(); })
       }.padding({ left: 12, right: 12, top: 0, bottom: 0 }).width('100%').backgroundColor(SwodTheme.surface)
@@ -1442,7 +1705,7 @@ struct Index {
             .onLoadIntercept((event: OnLoadInterceptEvent) => {
               if (!event.data.isMainFrame()) return false;
               const url = event.data.getRequestUrl();
-              if (this.webURL.includes('/checkout/online/') && /^https:\/\/(openapi\.alipay\.com|mapi\.alipay\.com|wx\.tenpay\.com)\//.test(url)) {
+              if (/\/checkout\/(online|event)\//.test(this.webURL) && /^https:\/\/(openapi\.alipay\.com|mapi\.alipay\.com|wx\.tenpay\.com)\//.test(url)) {
                 const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
                 context.openLink(url).catch(() => { this.webError = '暂时无法打开支付收银台，请返回订单页重试'; });
                 return true;
@@ -1457,9 +1720,9 @@ struct Index {
       } else {
         Refresh({ refreshing: $$this.refreshing }) {
           Scroll(this.catalogScroller) {
-            Column({ space: 6 }) { this.content() }
-              .alignItems(this.route.screen === 'login' ? HorizontalAlign.Center : HorizontalAlign.Start)
-              .padding({ left: 16, right: 16, top: 4, bottom: 12 }).width('100%')
+            Column({ space: this.route.screen === 'account' ? 0 : 6 }) { this.content() }
+              .alignItems(this.route.screen === 'login' || this.isRegistrationPage() ? HorizontalAlign.Center : HorizontalAlign.Start)
+              .padding({ left: this.route.screen === 'account' ? 20 : 16, right: this.route.screen === 'account' ? 20 : 16, top: 4, bottom: 12 }).width('100%')
               .constraintSize({ maxWidth: this.wideWindow && this.route.screen === 'home' ? 880 : 760 })
               .onAreaChange((_old: Area, area: Area) => {
                 this.academyColumns = this.wideWindow && Number(area.width) >= 700 ? 2 : 1;
@@ -1467,11 +1730,26 @@ struct Index {
           }.align(Alignment.Top).width('100%').height('100%')
         }.pullToRefresh(['home', 'offline', 'events', 'shop', 'account'].includes(this.route.screen) && !!this.route.path && !this.busy).onRefreshing(() => { const version = this.generation; this.refreshing = true; this.load().finally(() => { if (version === this.generation) this.refreshing = false; }); }).layoutWeight(1).width('100%')
       }
+      if (this.route.screen === 'event') {
+        Row({ space: 10 }) {
+          Button('我的报名', { type: ButtonType.Normal }).fontSize(17).constraintSize({ minHeight: 50 }).layoutWeight(1).backgroundColor(SwodTheme.surface).fontColor(SwodTheme.ink).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius(12).onClick(() => this.go('myEvents', '我的比赛', '/member/events', true))
+          Button(this.publicEventStatusID === this.route.eventID && this.publicEventStatus === '报名中' ? '立即报名' : '报名已关闭', { type: ButtonType.Normal }).fontSize(17).fontWeight(FontWeight.Bold).constraintSize({ minHeight: 50 }).layoutWeight(1.3).backgroundColor(SwodTheme.primary).fontColor(SwodTheme.onPrimary).borderRadius(12).enabled(this.publicEventStatusID === this.route.eventID && this.publicEventStatus === '报名中').onClick(() => this.go('register', '赛事报名', '', true, this.route.eventID))
+        }.padding({ left: 16, right: 16, top: 10, bottom: 10 }).width('100%').backgroundColor(SwodTheme.surface)
+      }
     }.layoutWeight(1).width(this.wideWindow ? 'auto' : '100%').height(this.wideWindow ? '100%' : 'auto')
   }
+  private isRegistrationPage(): boolean { return this.route.screen === 'register' || this.route.screen === 'editRegistration'; }
   @Builder private pageContent() {
+    Stack() {
+      if (this.isRegistrationPage()) {
+        Stack() {
+          if (this.registrationPoster) { Image(this.registrationPoster).width('100%').height('100%').objectFit(ImageFit.Cover).blur(40).scale({ x: 1.15, y: 1.15 }).accessibilityLevel('no') }
+          Column().width('100%').height('100%').backgroundColor(SwodTheme.registrationTint)
+        }.width('100%').height('100%').clip(true).hitTestBehavior(HitTestMode.None).backgroundColor(SwodTheme.registrationCanvas)
+      }
     Flex({ direction: this.wideWindow ? FlexDirection.RowReverse : FlexDirection.Column }) {
       this.routeContent()
+      if (!this.isRegistrationPage() && this.route.screen !== 'event') {
       Scroll() {
       Flex({ direction: this.wideWindow ? FlexDirection.Column : FlexDirection.Row }) {
         this.navItem('线上学院', 'home', this.activeTab === 'home' ? $r('app.media.nav_learn_on') : $r('app.media.nav_learn'), '线上学院', '/public/series')
@@ -1483,8 +1761,10 @@ struct Index {
       }.scrollable(this.wideWindow ? ScrollDirection.Vertical : ScrollDirection.None)
         .scrollBar(BarState.Off).align(Alignment.Top).width(this.wideWindow ? 104 : '100%')
         .height(this.wideWindow ? '100%' : 'auto').backgroundColor(SwodTheme.surface)
-    }.backgroundColor(SwodTheme.canvas).width('100%').height('100%')
+      }
+    }.backgroundColor(this.isRegistrationPage() ? Color.Transparent : SwodTheme.canvas).width('100%').height('100%')
       .onAreaChange((_old: Area, area: Area) => { this.wideWindow = Number(area.width) >= 600; })
+    }.width('100%').height('100%')
   }
   build() {
     if (this.needsScreenProtection(this.route) && !this.sensitiveScreenReady) {

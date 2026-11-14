@@ -5107,3 +5107,9 @@ input[type='number']::-webkit-outer-spin-button {
     max-height: none !important;
   }
 }
+
+/* Shared import action appearance across administration screens. */
+.ant-btn.swod-import-button:not(:disabled) { background: #dcfce7 !important; border-color: #86efac !important; color: #166534 !important; }
+.ant-btn.swod-import-button:not(:disabled):hover { background: #bbf7d0 !important; border-color: #4ade80 !important; color: #14532d !important; }
+.ant-btn.swod-import-button:not(:disabled):active { background: #a7f3d0 !important; border-color: #22c55e !important; }
+.ant-btn.swod-import-button:focus-visible { outline: 3px solid #4ade80; outline-offset: 2px; }

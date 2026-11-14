@@ -6,6 +6,7 @@ struct LoginView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var state = LoginState()
     @State private var showPassword = false
+    @State private var showCarrierConsent = false
     @FocusState private var focused: Field?
     private enum Field { case phone, code, password }
     private enum Layout {
@@ -52,6 +53,16 @@ struct LoginView: View {
             .onChange(of: state.phone) { _ in state.phoneChanged() }
             .onChange(of: state.method) { _ in state.methodChanged(); showPassword = false; focused = nil }
             .onDisappear { state.password = "" }
+            .alert("请先阅读并同意协议", isPresented: $showCarrierConsent) {
+                Button("暂不同意", role: .cancel) {}
+                Button("同意并继续") {
+                    state.agreed = true
+                    state.method = .carrier
+                    state.submit(session: session)
+                }
+            } message: {
+                Text("请阅读登录页的《隐私政策》和《服务条款》。点击“同意并继续”将勾选协议，并进入运营商号码认证。")
+            }
         }.tint(EvaBrand.red)
     }
     private func close() { state.cancel(); dismiss() }
@@ -110,8 +121,10 @@ struct LoginView: View {
         VStack(spacing: 8) {
             Button {
                 focused = nil
-                state.method = .carrier
-                state.submit(session: session)
+                if state.agreed {
+                    state.method = .carrier
+                    state.submit(session: session)
+                } else { showCarrierConsent = true }
             } label: {
                 HStack(spacing: 8) {
                     if state.operation == .carrier { ProgressView().tint(EvaBrand.onAccent) }
@@ -137,7 +150,7 @@ struct LoginView: View {
             }
         }
     }
-    private var carrierReady: Bool { state.carrierStatus == .ready && state.agreed && !state.busy }
+    private var carrierReady: Bool { state.carrierStatus == .ready && !state.busy }
     private var phoneField: some View {
         TextField("请输入手机号", text: $state.phone).textContentType(.telephoneNumber)
             #if os(iOS)

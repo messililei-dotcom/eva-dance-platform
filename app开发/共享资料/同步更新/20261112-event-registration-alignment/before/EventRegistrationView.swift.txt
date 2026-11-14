@@ -1,0 +1,128 @@
+struct EventRegistrationView: View {
+    @EnvironmentObject var session: Session
+    let eventID: String
+    let group: SiteRow?
+    var playerID: String? = nil
+    @State private var countryCode = "+86"
+    @State private var canEdit = false
+    @State private var currentMusic = ""
+    @State private var accountID: Int?
+    @State private var name = ""
+    @State private var phone = ""
+    @State private var organization = ""
+    @State private var teacher = ""
+    @State private var performanceTitle = ""
+    @State private var remark = ""
+    @State private var musicName = ""
+    @State private var music: Data?
+    @State private var picker = false
+    @State private var busy = false
+    @State private var error: String?
+    @State private var result = ""
+    @State private var confirm = false
+    var body: some View {
+        Form {
+            Text(group?.value["name"].text ?? "修改报名 / 补交音乐").font(.headline)
+            if !currentMusic.isEmpty { Text("当前音乐：" + currentMusic) }
+            TextField("参赛姓名（支持中文、英文和空格）", text: $name)
+            TextField("国家/地区区号", text: $countryCode).keyboardType(.phonePad)
+            TextField("联系电话", text: $phone).keyboardType(.phonePad)
+            TextField("机构（选填）", text: $organization); TextField("指导老师（选填）", text: $teacher)
+            TextField("节目（音乐）名字", text: $performanceTitle)
+            TextField("备注（选填）", text: $remark)
+            Button(musicName.isEmpty ? "选择参赛音乐" : "更换音乐：" + musicName) { picker = true }.disabled(busy)
+            if music != nil { Button("移除所选音乐") { music = nil; musicName = "" }.disabled(busy) }
+            Text("音乐选填。支持 MP3、WAV、M4A、AAC、FLAC，单个文件不超过 10 MB。").font(.caption)
+            if playerID == nil {
+                Button("提交报名") { confirm = true }.disabled(!valid || busy || !result.isEmpty)
+            } else {
+                Button("保存报名资料") { Task { await submit(detailsOnly: true) } }.disabled(!valid || busy || !canEdit)
+                Button("上传音乐") { confirm = true }.disabled(music == nil || performanceTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || busy || !canEdit)
+            }
+            if busy { ProgressView("正在处理…") }
+            if !result.isEmpty { Text(result).foregroundStyle(.green) }
+            if let error { Text(error).foregroundStyle(.red) }
+        }.evaCompactLayout().evaPageChrome()
+        .task(id: session.accountID) { await loadRegistration() }
+        .fileImporter(isPresented: $picker, allowedContentTypes: [.audio, .data]) { selection in
+            do {
+                let url = try selection.get()
+                let scope = url.startAccessingSecurityScopedResource(); defer { if scope { url.stopAccessingSecurityScopedResource() } }
+                let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+                guard size > 0, size <= 10 * 1024 * 1024 else { throw APIError.service("音乐文件不能超过10MB") }
+                let bytes = try Data(contentsOf: url)
+                _ = try MultipartMusic(fields: [:], filename: url.lastPathComponent, music: bytes)
+                music = bytes; musicName = url.lastPathComponent; error = nil
+            } catch { self.error = error.localizedDescription }
+        }
+        .confirmationDialog(playerID == nil ? "确认提交报名？" : "确认上传参赛音乐？", isPresented: $confirm) {
+            Button("确认提交") { Task { await submit() } }
+        }
+    }
+    private var valid: Bool {
+        name.trimmingCharacters(in: .whitespacesAndNewlines).utf16.count <= 120 && [name, phone, performanceTitle].allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+    private var registrationPath: String? {
+        guard let playerID, let id = Int(playerID), id > 0 else { return nil }
+        return "/member/event-registrations/\(id)"
+    }
+    private func loadRegistration() async {
+        let account = session.accountID
+        if accountID != account {
+            name = ""; phone = ""; countryCode = "+86"; organization = ""; teacher = ""
+            performanceTitle = ""; remark = ""; musicName = ""; music = nil; currentMusic = ""
+            result = ""; error = nil; canEdit = false
+        }
+        accountID = account
+        guard let path = registrationPath, let token = session.token else { return }
+        busy = true; canEdit = false; defer { busy = false }
+        do {
+            let details: JSONValue = try await session.api.request(path, token: token)
+            guard account == session.accountID, !Task.isCancelled else { return }
+            let audio: JSONValue = try await session.api.request(path + "/music", token: token)
+            guard account == session.accountID, !Task.isCancelled else { return }
+            name = details["name"].text; phone = details["phone"].text
+            countryCode = details["countryCode"].text.isEmpty ? "+86" : details["countryCode"].text
+            organization = details["organization"].text; teacher = details["teacher"].text
+            performanceTitle = details["performanceTitle"].text; remark = details["remark"].text
+            currentMusic = audio["fileName"].text
+            canEdit = details["canEdit"].bool == true
+        } catch { self.error = error.localizedDescription }
+    }
+    private func submit(detailsOnly: Bool = false) async {
+        guard !busy, accountID == session.accountID, let token = session.token else { return }
+        let account = session.accountID
+        busy = true; error = nil; result = ""; defer { busy = false }
+        do {
+            let fields = ["name": name.trimmingCharacters(in: .whitespacesAndNewlines), "phone": phone, "countryCode": countryCode, "organization": organization, "teacher": teacher, "performanceTitle": performanceTitle.trimmingCharacters(in: .whitespacesAndNewlines), "remark": remark]
+            if let path = registrationPath, canEdit {
+                if detailsOnly {
+                    let _: JSONValue = try await session.api.request(path, token: token, method: "PUT", body: JSONEncoder().encode(fields))
+                    guard account == session.accountID else { return }
+                    result = "报名资料已保存。"
+                } else if let music {
+                    let form = try MultipartMusic(fields: ["performanceTitle": fields["performanceTitle"] ?? ""], filename: musicName, music: music)
+                    let updated: JSONValue = try await session.api.request(path + "/music", token: token, method: "POST", body: form.body, contentType: form.contentType)
+                    guard account == session.accountID else { return }
+                    currentMusic = updated["fileName"].text
+                    self.music = nil; musicName = ""; result = "音乐已更新。"
+                }
+            } else if let group, valid {
+                var registration = fields; registration["groupId"] = group.id
+                if let music {
+                    let form = try MultipartMusic(fields: registration, filename: musicName, music: music)
+                    let _: JSONValue = try await session.api.request("/events/\(eventID)/register", token: token, method: "POST", body: form.body, contentType: form.contentType)
+                } else {
+                    let _: JSONValue = try await session.api.request("/events/\(eventID)/register", token: token, method: "POST", body: JSONEncoder().encode(registration))
+                }
+                guard account == session.accountID else { return }
+                result = "报名已提交，可在「我的比赛」查看进度、补交或更换音乐。"
+                self.music = nil; musicName = ""
+            }
+        } catch {
+            guard account == session.accountID else { return }
+            self.error = error.localizedDescription
+            if case APIError.sessionExpired = error { session.handle(error) }
+        }
+    }
+}

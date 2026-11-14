@@ -39,7 +39,7 @@ test('number complete authorized registrations before group, search, or paging f
   const s = setup(); const response = await s.route.GET(request('competitionId=7&keyword=另一选手&groupId=3&pageSize=1'));
   const payload = await response.json();
   assert.equal(payload.data.players.length, 3); assert.equal(payload.data.contestants.length, 2);
-  assert.deepEqual(payload.data.players.map(p => [p.id, p.programNumber, p.contestantNumber]), [[2, '节目001', '选手001'], [8, '节目002', '选手002'], [9, '节目003', '选手001']]);
+  assert.deepEqual(payload.data.players.map(p => [p.id, p.programNumber, p.contestantNumber]), [[2, '报名001', '选手001'], [8, '报名002', '选手002'], [9, '报名003', '选手001']]);
   assert.equal(payload.data.contestants[0].totalRegistrationFee, 400);
   assert.equal(payload.data.players[2].groupName, '成人 · 专业东方舞独舞');
   assert.equal(new URL(s.forwarded().url).search, '?competitionId=7');

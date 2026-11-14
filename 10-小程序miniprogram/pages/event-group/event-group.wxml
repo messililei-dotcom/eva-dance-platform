@@ -5,7 +5,7 @@
   <view wx:if="{{loading}}" class="empty-card">组别数据加载中…</view>
   <block wx:else>
     <view class="group-hero">
-      <view class="event-name">🏆 {{competition.name}}</view>
+      <view class="event-name">{{competition.name}}</view>
       <view class="group-name">{{group.name}}</view>
       <view class="group-tags">
         <text wx:if="{{group.category}}">{{group.category}}</text>
@@ -27,7 +27,7 @@
       <text>{{players.length}} 位</text>
     </view>
 
-    <view class="podium" wx:if="{{podium.length}}"><view class="podium-item {{item.rankClass}}" wx:for="{{podium}}" wx:key="id" data-id="{{item.id}}" bindtap="openPlayer"><text>🏆 {{item.rankLabel}}</text><image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"/><b>{{item.name}}</b><text>{{item.scoreText}} 分</text></view></view>
+    <view class="honor-title" wx:if="{{podium.length}}">荣誉榜<text>成绩经赛事平台审核发布</text></view><view class="podium" wx:if="{{podium.length}}"><view class="podium-item {{item.rankClass}}" wx:for="{{podium}}" wx:key="id" data-id="{{item.id}}" bindtap="openPlayer"><text>🏆 {{item.rankLabel}}</text><image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"/><b>{{item.name}}</b><text>{{item.scoreText}} 分</text></view></view>
     <input class="player-search" value="{{playerQuery}}" placeholder="搜索选手、编号或机构" bindinput="onPlayerSearch"/>
     <view wx:if="{{visiblePlayers.length}}" class="player-list">
       <view class="player-row {{hasPublishedResults ? 'ranking-row' : ''}}" wx:for="{{visiblePlayers}}" wx:key="id" data-id="{{item.id}}" bindtap="openPlayer">

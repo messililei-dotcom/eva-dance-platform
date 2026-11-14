@@ -3,7 +3,7 @@
 <block wx:else>
 <view class="page">
   <view class="heading">伊娃文化艺术发展（湖南）有限公司</view>
-  <view class="notice">线下课程和伊娃甄选商城商品可使用官方收款码。付款后请将截图和订单号发给老师或客服微信 yiwa2028 / yiwa2025。管理员核实到账后开通权益或安排发货。已付款请勿重复支付。</view>
+  <view class="notice">线下活动和伊娃甄选商城商品可使用官方收款码。付款后请将截图和订单号发给老师或客服微信 yiwa2028 / yiwa2025。管理员核实到账后开通权益或安排发货。已付款请勿重复支付。</view>
   <view wx:if="{{loading}}" class="notice">正在加载…</view>
   <view wx:elif="{{error}}" class="error">{{error}}<button bindtap="reload" size="mini">重试</button></view>
   <view wx:elif="{{!orders.length}}" class="notice">暂无收费订单</view>

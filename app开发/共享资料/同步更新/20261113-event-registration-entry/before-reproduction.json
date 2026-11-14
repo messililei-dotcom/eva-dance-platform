@@ -1,0 +1,11 @@
+{
+  "reproduction": "Native CUA click at the open-registration badge of the second event tile",
+  "expected": "填写报名信息",
+  "observed": {
+    "registrationFormVisible": false,
+    "eventDetailVisible": true
+  },
+  "seam": "Actual iOS simulator, real public event and existing signed-in session. No registration submitted.",
+  "cause": "Registration status badge was inside a detail NavigationLink, so badge clicks opened event details; dedicated lower registration button worked.",
+  "privacy": "No account/profile fields retained."
+}

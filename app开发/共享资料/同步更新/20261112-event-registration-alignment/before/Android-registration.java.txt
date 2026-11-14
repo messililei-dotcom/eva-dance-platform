@@ -1,0 +1,95 @@
+    private void register(int id, JSONObject group) {
+        begin("赛事报名");
+        if (!api.loggedIn()) { action("登录后报名", () -> open(this::login)); return; }
+        info(group.optString("name"));
+        info("报名费 ¥" + group.optDouble("registrationFee"));
+        registrationForm(id, group.optInt("id"), 0, new JSONObject(), "");
+    }
+
+    private void editRegistration(long player) {
+        begin("修改报名 / 补交音乐");
+        String path = "/member/event-registrations/" + player;
+        load(path, "GET", null, true, value -> {
+            JSONObject details = object(value);
+            if (!details.optBoolean("canEdit")) { info("此报名当前不可修改"); return; }
+            load(path + "/music", "GET", null, true, audio ->
+                    registrationForm(0, 0, player, details, object(audio).optString("fileName")));
+        });
+    }
+
+    private void registrationForm(int event, int group, long player, JSONObject existing, String currentMusic) {
+        musicBytes = null; musicFilename = ""; musicReading = false;
+        EditText name = field(content, "参赛姓名（支持中文、英文和空格）", false);
+        name.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(120)});
+        EditText country = field(content, "国家/地区区号", false);
+        EditText phone = field(content, "联系电话", false);
+        EditText org = field(content, "机构（选填）", false);
+        EditText teacher = field(content, "指导老师（选填）", false);
+        EditText title = field(content, "节目（音乐）名字", false);
+        EditText remark = field(content, "备注（选填）", false);
+        name.setText(existing.optString("name"));
+        country.setText(existing.optString("countryCode", "+86"));
+        phone.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
+        country.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
+        phone.setText(existing.optString("phone"));
+        org.setText(existing.optString("organization"));
+        teacher.setText(existing.optString("teacher"));
+        title.setText(existing.optString("performanceTitle"));
+        remark.setText(existing.optString("remark"));
+        if (!currentMusic.isEmpty()) info("当前音乐：" + currentMusic);
+        String musicHint = "音乐选填，支持 MP3、WAV、M4A、AAC、FLAC，单个不超过 10 MB";
+        musicLabel = text(musicHint, 12); content.addView(musicLabel);
+        action("选择参赛音乐", () -> {
+            if (registrationBusy || musicReading) return;
+            musicPickerGeneration = generation;
+            Intent picker = new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(picker, 460);
+        });
+        action("移除所选音乐", () -> {
+            if (registrationBusy || musicReading) return;
+            musicBytes = null; musicFilename = ""; musicLabel.setText(musicHint);
+        });
+        java.util.function.Supplier<JSONObject> fields = () -> body("name", name.getText().toString().trim(),
+                "phone", phone.getText().toString().trim(), "countryCode", country.getText().toString().trim(),
+                "organization", org.getText().toString(), "teacher", teacher.getText().toString(),
+                "performanceTitle", title.getText().toString().trim(), "remark", remark.getText().toString());
+        if (player > 0) action("保存报名资料", () -> {
+            if (registrationBusy || musicReading) return;
+            memberWrite("/member/event-registrations/" + player, "PUT", fields.get(), () -> editRegistration(player));
+        });
+        action(player > 0 ? "上传音乐" : "提交报名", () -> {
+            if (registrationBusy || memberWriteBusy || musicReading) return;
+            JSONObject values = fields.get();
+            if (values.optString("performanceTitle").isEmpty()
+                    || (player == 0 && (values.optString("name").isEmpty() || values.optString("phone").isEmpty()))
+                    || (player > 0 && musicBytes == null)) {
+                info(player > 0 ? "请填写节目名称并选择音乐" : "请填写姓名、联系电话和节目名称");
+                return;
+            }
+            confirm(player > 0 ? "确认上传参赛音乐？" : "确认提交本组报名？", () -> {
+                if (registrationBusy || memberWriteBusy || musicReading) return;
+                registrationBusy = true;
+                int version = generation;
+                byte[] bytes = musicBytes;
+                String filename = musicFilename;
+                io.execute(() -> {
+                    Exception failure = null;
+                    try {
+                        if (player > 0) api.replaceEventMusic(player, values.optString("performanceTitle"), filename, bytes);
+                        else api.registerWithMusic(event, values.put("groupId", group), filename, bytes);
+                    } catch (Exception e) { failure = e; }
+                    Exception error = failure;
+                    runOnUiThread(() -> {
+                        registrationBusy = false;
+                        if (version != generation || isFinishing()) return;
+                        if (error != null) { info(error.getMessage()); return; }
+                        musicBytes = null;
+                        if (player > 0) { editRegistration(player); return; }
+                        begin("报名已提交");
+                        info("可在「我的比赛」查看进度、补交或更换音乐。");
+                        action("查看报名记录", () -> open(this::myEvents));
+                    });
+                });
+            });
+        });
+    }

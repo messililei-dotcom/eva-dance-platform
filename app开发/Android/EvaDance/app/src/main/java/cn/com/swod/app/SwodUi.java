@@ -65,6 +65,7 @@ final class SwodUi {
                 case "download": path(c,12,3,12,16,7,11);path(c,12,16,17,11);path(c,4,16,4,21,20,21,20,16);break;
                 case "back": path(c,15,5,8,12,15,19);break;
                 case "next": path(c,9,6,15,12,9,18);break;
+                case "settings": c.drawCircle(12,12,4,paint);c.drawCircle(12,12,8,paint);for(int n=0;n<8;n++){double angle=n*Math.PI/4;path(c,12+(float)Math.cos(angle)*8,12+(float)Math.sin(angle)*8,12+(float)Math.cos(angle)*10,12+(float)Math.sin(angle)*10);}break;
                 case "refresh": c.drawArc(4,4,20,20,45,285,false,paint);path(c,20,4,20,10,14,10);break;
                 default: c.drawCircle(12,12,8,paint);path(c,10,8,16,12,10,16,10,8);
             }

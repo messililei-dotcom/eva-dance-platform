@@ -1,0 +1,22 @@
+{
+  "panels": {
+    "overview": true,
+    "groups": true,
+    "players": true,
+    "judges": true,
+    "results": true
+  },
+  "compactHeader": true,
+  "privacySQLFixture": true,
+  "list": true,
+  "registeringCards": [
+    "K5-GBA湾区舞蹈节",
+    "凰之翎第六届国际舞蹈艺术节"
+  ],
+  "endedFilter": true,
+  "detail": "/events/event-2026-100060",
+  "group": "/events/event-2026-100060/groups/204276",
+  "unpublishedGroupHasNoPodium": true,
+  "coverStyles": true,
+  "workerVersion": "swod-pwa-v17-event-detail-20261113"
+}

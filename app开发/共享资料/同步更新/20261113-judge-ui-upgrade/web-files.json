@@ -1,0 +1,11 @@
+[
+  "src/app/events-news/[slug]/page.tsx",
+  "src/app/events-news/[slug]/groups/[groupId]/players/[playerId]/page.tsx",
+  "src/components/events/JudgeGroupsClient.tsx",
+  "src/components/events/JudgePlayersClient.tsx",
+  "src/components/events/JudgeScoreClient.tsx",
+  "src/lib/public-event-data.ts",
+  "src/lib/score-allocation.ts",
+  "src/components/events/PublicJudges.tsx",
+  "src/components/events/judging.module.css"
+]

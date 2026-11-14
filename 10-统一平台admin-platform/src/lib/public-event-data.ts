@@ -199,6 +199,7 @@ export function loadPublicPlayerDetail(competitionId: number, groupId: number, p
     const scores = db.prepare(`
       SELECT
         s.judge_id AS id,
+        MAX(c.judge_scores_public) AS judge_scores_public,
         COALESCE(j.name, '评委') AS judge_name,
         COALESCE(j.title, '') AS judge_title,
         COALESCE(NULLIF(jm.wx_avatar_url, ''), NULLIF(jm.avatar, ''), '') AS avatar_url,
@@ -208,6 +209,7 @@ export function loadPublicPlayerDetail(competitionId: number, groupId: number, p
       LEFT JOIN event_judges j ON j.id = s.judge_id
       LEFT JOIN Member jm ON jm.id = j.member_id
       WHERE s.competition_id = ? AND s.group_id = ? AND s.player_id = ?
+        AND EXISTS (SELECT 1 FROM event_group_judges gj WHERE gj.group_id=s.group_id AND gj.judge_id=s.judge_id AND gj.status='active')
         AND s.score_status = 'published' AND EXISTS (SELECT 1 FROM event_rankings visible WHERE visible.group_id=s.group_id AND visible.player_id=s.player_id AND visible.status='published')
         AND NOT EXISTS (
           SELECT 1 FROM event_scores newer
@@ -220,11 +222,18 @@ export function loadPublicPlayerDetail(competitionId: number, groupId: number, p
         )
       GROUP BY s.judge_id, j.name, j.title
       ORDER BY j.id ASC
-    `).all<PublicJudgeScore>(competitionId, groupId, playerId);
+    `).all<PublicJudgeScore & { judge_scores_public: number }>(competitionId, groupId, playerId);
 
     player.avatar_url ||= (legacyAvatars.players as Record<string, string>)[String(player.id)] || '';
-    scores.forEach(score => { score.avatar_url ||= (legacyAvatars.judges as Record<string, string>)[String(score.id)] || ''; });
-    return { player, scores };
+    const visibleScores: PublicJudgeScore[] = scores.map((score, index) => {
+      if (Number(score.judge_scores_public) !== 1) return {
+        id: index + 1, judge_name: `评委 ${index + 1}`, judge_title: '', avatar_url: '', score: score.score,
+      };
+      const { judge_scores_public, ...visible } = score;
+      visible.avatar_url ||= (legacyAvatars.judges as Record<string, string>)[String(visible.id)] || '';
+      return visible;
+    });
+    return { player, scores: visibleScores };
   } finally {
     db.close();
   }

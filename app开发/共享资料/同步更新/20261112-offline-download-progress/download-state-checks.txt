@@ -1,0 +1,13 @@
+✔ closed release gate never starts a download or invents a percentage (25.747208ms)
+✔ denied authorization never creates a progress or completed item (11.779917ms)
+✔ real SDK callbacks notify the list and completion alone persists 100 percent (10.424667ms)
+✔ late SDK callbacks cannot restore media after account purge (13.819417ms)
+✔ a switched account cannot receive download progress or a playable item (7.505083ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 189.725125

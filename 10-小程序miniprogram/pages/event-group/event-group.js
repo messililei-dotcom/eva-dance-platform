@@ -62,7 +62,7 @@ Page(share.withShare("event-group", {
         hasPublishedResults,
         loading: false
       });
-      this.setData({podium:players.filter(p=>p.rankNo>0&&p.rankNo<=3).sort((a,b)=>a.rankNo-b.rankNo)});
+      this.setData({podium:players.filter(p=>p.rankNo>0&&p.rankNo<=3).sort((a,b)=>[2,1,3].indexOf(a.rankNo)-[2,1,3].indexOf(b.rankNo))});
       this.applyPlayerPage(1);
       wx.setNavigationBarTitle({ title: group.name || "赛事组别" });
     } catch (err) {

@@ -6,7 +6,8 @@ struct AccountHeaderView: View {
     @ObservedObject var notifications: AppNotifications
     let profile: JSONValue
     let ready: Bool
-    @ScaledMetric(relativeTo: .title) private var avatarSize = 64
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @ScaledMetric(relativeTo: .title) private var avatarSize = 56
 
     var body: some View {
         HStack(spacing: 14) {
@@ -17,16 +18,19 @@ struct AccountHeaderView: View {
                     .font(.title3.bold()).lineLimit(2).foregroundStyle(.primary)
                 Text(session.token == nil ? "登录后同步课程与个人资料" : ready ? identity : "资料与学习账号同步")
                     .font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                if session.token != nil && typeSize.isAccessibilitySize { profileLink }
             }.frame(maxWidth: .infinity, alignment: .leading)
-            if session.token != nil {
-                NavigationLink { MessagesView() } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: "bell").font(.title3).accessibilityHidden(true)
-                        Text(notifications.unread > 0 ? "\(min(notifications.unread, 99))\(notifications.unread > 99 ? "+" : "") 未读" : "通知").font(.footnote)
-                    }.foregroundStyle(EvaBrand.red).frame(minWidth: 48, minHeight: 48)
-                }.accessibilityLabel("通知，\(notifications.unread)条未读")
-            }
-        }.padding(.vertical, 16)
+            if session.token != nil && !typeSize.isAccessibilitySize { profileLink }
+        }.padding(.vertical, 20)
+    }
+
+    private var profileLink: some View {
+        NavigationLink { ProfileEditor() } label: {
+            HStack(spacing: 4) {
+                Text("个人资料").font(.subheadline)
+                Image(systemName: "chevron.right").font(.caption).accessibilityHidden(true)
+            }.foregroundStyle(.secondary).frame(minHeight: 44)
+        }
     }
 
     private var displayName: String {

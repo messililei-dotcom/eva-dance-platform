@@ -20,3 +20,20 @@
 @media(min-width:1800px){.container{max-width:1740px}}
 @media(max-width:600px){.page{padding:72px 14px 24px}.hero{padding:24px 3px 30px}.hero h1{font-size:24px;line-height:1.6}.summary{gap:10px;font-size:11px}.grid{gap:18px}.cardHeading{padding:18px 16px;min-height:76px}.podium{padding:26px 14px 0;gap:7px}.winner h3{font-size:13px}.score{font-size:19px}.rankList{margin:0 14px}.headingRule span{width:42px}.headingRule{gap:14px}.footer{letter-spacing:.05em}}
 @media(prefers-reduced-motion:reduce){.page *{scroll-behavior:auto}}
+
+/* Compact, bounded cards for both one group and a full results wall. */
+.grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),440px));gap:20px;justify-content:center;align-items:start}
+.card{display:flex;flex-direction:column;min-width:0;border-radius:16px}
+.pendingCard{height:300px}.rankedCard{height:500px}
+.cardHeading{flex:0 0 auto;min-height:68px;padding:16px 20px;gap:10px}
+.cardHeading h2{margin:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:16px;line-height:1.5}
+.cardHeading>span{padding:4px 8px;background:#f5efe2;border-radius:6px;color:#806b45;font-size:11px}
+.pendingNotice{margin:0;padding:14px 20px;color:#987437;font-size:12px;line-height:1.6;flex:0 0 auto}
+.podium{flex:0 0 auto;min-height:270px;padding-top:18px}
+.rankList{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-top:0}
+.rankList:focus-visible{outline:2px solid #b48a35;outline-offset:2px}
+.rankList li{gap:10px;padding:12px 0;min-height:60px}
+.listName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rankList strong{flex-shrink:0;font-size:19px;white-space:nowrap}
+.cardFooter{margin-top:auto;flex:0 0 auto;padding:12px 20px}
+@media(max-width:600px){.grid{grid-template-columns:minmax(0,1fr);gap:16px}.cardHeading{min-height:64px;padding:14px 16px}.cardHeading h2{font-size:15px}.pendingNotice{padding:12px 16px}.pendingCard{height:280px}.rankedCard{height:490px}}

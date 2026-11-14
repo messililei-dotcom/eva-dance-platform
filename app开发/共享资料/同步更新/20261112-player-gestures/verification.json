@@ -1,0 +1,56 @@
+{
+  "checkedAt": "2026-11-12T12:01:54.591651+08:00",
+  "scope": "播放器布局与左右亮度/音量手势；投屏及缓存能力检查",
+  "sources": {
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/PlaybackAdjustments.swift": "98540c28cf1341f318027cac24cb592e750bf86945d2badad754388ca612c248",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/LessonVideoSurface.swift": "3184f1a89827226977f5eff944f9bdb8eaf4e23b83f4f71a33e173ef1d22e101",
+    "app开发/iOS/EvaDance/Sources/EvaCore/PlaybackGesturePolicy.swift": "581103282db8e788902dd578d13aed607c052b025e4baf4559d24869808ac1b1",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java": "77c3df0c2b67f502b8094fea979f1ba74485fdd3bfb9a6e15614f0a3ea98509f",
+    "app开发/Android/EvaDance/app/src/main/AndroidManifest.xml": "67bc8c0ebd861e2569a33c188d4f94af0b431bb2fef6337aed9663e07d599b8e",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "dda28479bc0acc9bad65e7f9bd1a89a27c1758fac4aaa32b7ae9cf9db9ebef4a"
+  },
+  "builds": {
+    "iOS": "Debug simulator succeeded, original application identity; no new release candidate",
+    "Android": "Debug assemble and 32 unit tests passed",
+    "HarmonyOS": "Debug unsigned HAP compiled; no release upload"
+  },
+  "checks": {
+    "iOSCore": "22 check groups, zero failures, includes gesture direction/clamp and cache policy",
+    "serverCache": "6 tests passed on isolated in-memory SQLite; production DB unchanged",
+    "harmonyCache": "8 tests passed for lease/clock/renewal"
+  },
+  "runtime": {
+    "iOS": "Installed preserving login. Settings sheet, paused lesson and bottom controls read; left swipe HUD brightness82%, right swipe HUD volume100%. Real receiver/sound/physical brightness not verified. Final Slider width modifier compiled, not visually rechecked.",
+    "Android": "Player gesture runtime not yet verified",
+    "HarmonyOS": "Player gesture runtime not yet verified; public MEDIA volume API may be rejected by system policy; UI then instructs device volume keys rather than claiming success"
+  },
+  "casting": {
+    "nativeEntry": "No dedicated AirPlay/route picker, MediaRouter, DLNA or Cast integration found",
+    "protection": "iOS captured-screen pauses player; Android FLAG_SECURE; Harmony sensitive window privacy. Protection retained.",
+    "receiverTest": "Not performed; no confirmed usable casting"
+  },
+  "cache": {
+    "localReleaseSwitches": {
+      "iOS": false,
+      "Android": false,
+      "HarmonyOS": false
+    },
+    "publicProductionConfig": {
+      "url": "https://admin.swod.com.cn/api/app/v1/config",
+      "offlineDownload": false,
+      "push.enabled": false,
+      "oneTapLogin": false
+    },
+    "usableOfflinePlayback": "Not enabled and no download/disconnect playback acceptance performed",
+    "securityCoverage": [
+      "authenticated course entitlement",
+      "account/session/device isolation",
+      "24h maximum lease",
+      "revocation",
+      "clock rollback/reboot",
+      "online renewal after outage"
+    ],
+    "changes": "No production feature flags changed"
+  },
+  "release": "Existing submitted/published 1.0.4 artifacts and registry remain untouched; no new package submitted"
+}

@@ -9,7 +9,6 @@ struct CoursePriceLine: View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             if online && session.isCourseUnlocked(row["id"].text) {
                 Text("✓ 已解锁").font(.headline).foregroundStyle(.green)
-                Text("继续学习").font(.subheadline).foregroundStyle(.green)
             } else if online && session.token != nil && !session.courseAccessReady {
                 Text("学习权益确认中").font(.caption).foregroundStyle(.secondary)
             } else {

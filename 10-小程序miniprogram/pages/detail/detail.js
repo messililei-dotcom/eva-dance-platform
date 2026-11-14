@@ -21,6 +21,7 @@ Page(share.withShare("detail", videoFeature.withVideoFeature({
     id: null, loadError: "",
     series: {},
     courses: [],
+    expandedLessonIndex: -1,
     authorized: false
   },
 
@@ -48,11 +49,12 @@ Page(share.withShare("detail", videoFeature.withVideoFeature({
       const meta = seriesMeta || {};
       const authorized = !!auth.authorized || !!meta.is_free;
       const normalizedCourses = (courses || []).map(course => {
-        const videos = course.videos || [];
+        const videos = (course.videos || []).map(video => ({ ...video, name: contentText(video.name) }));
         return {
           ...course,
           name: contentText(course.name, "内容"),
           videos,
+          lessonDescription: contentText(course.description).replace(/<[^>]*>/g, "").trim(),
           durationText: formatDuration(course.duration || (videos[0] && videos[0].duration)),
           canPlay: videos.length > 0,
           authorized
@@ -72,7 +74,7 @@ Page(share.withShare("detail", videoFeature.withVideoFeature({
         authorized
       });
     } catch (err) {
-      this.setData({ series: {}, courses: [], authorized: false, loadError: Number(err.statusCode) === 404 ? "课程已隐藏或下架" : "课程加载失败，请稍后重试" });
+      this.setData({ series: {}, courses: [], authorized: false, loadError: Number(err.statusCode) === 404 ? "内容已隐藏或下架" : "内容加载失败，请稍后重试" });
       wx.showToast({ title: err.message || "加载失败", icon: "none" });
     } finally {
       wx.hideLoading();
@@ -80,16 +82,17 @@ Page(share.withShare("detail", videoFeature.withVideoFeature({
   },
 
   openCourse(event) {
-    if (!this.data.videoPlaybackEnabled) return;
-    const course = this.data.courses[event.currentTarget.dataset.index];
+    const index = Number(event.currentTarget.dataset.index);
+    const course = this.data.courses[index];
     if (!course) return;
-    const video = (course.videos || [])[0];
-    if (!video) {
-      wx.showToast({ title: "内容正在整理中", icon: "none" });
-      return;
-    }
-    videoFeature.navigateTo({
-      url: `/pages/player/player?videoId=${video.id}&seriesId=${this.data.id}&courseId=${course.id}`
+    const toggleDetails = () => this.setData({
+      expandedLessonIndex: this.data.expandedLessonIndex === index ? -1 : index
+    });
+    const video = course.videos?.[0];
+    if (!this.data.videoPlaybackEnabled || !video) return toggleDetails();
+    return videoFeature.navigateTo({
+      url: `/pages/player/player?videoId=${video.id}&seriesId=${this.data.id}&courseId=${course.id}`,
+      onUnavailable: toggleDetails,
     });
   },
 

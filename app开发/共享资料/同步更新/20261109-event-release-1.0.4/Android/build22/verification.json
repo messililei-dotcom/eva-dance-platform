@@ -6,16 +6,6 @@
   "buildSource": "Current Android checkout, copied into an isolated Gradle build",
   "artifacts": [
     {
-      "path": "installers/._SWOD-1.0.4-22-release.aab",
-      "sha256": "d2e613b8fd3421be5f3116df43e1266e4e5ecb23536437d537b8824d1c518966",
-      "size": 4096
-    },
-    {
-      "path": "installers/._SWOD-1.0.4-22-release.apk",
-      "sha256": "d2e613b8fd3421be5f3116df43e1266e4e5ecb23536437d537b8824d1c518966",
-      "size": 4096
-    },
-    {
       "path": "installers/SWOD-1.0.4-22-release.aab",
       "sha256": "deb7ffd90acfba10256de666a4d8722b7988c5c91e1b54d82c8faa0119412d76",
       "size": 15456605
@@ -64,5 +54,18 @@
   "copyright": {
     "lastVerifiedDate": "2026-11-09",
     "status": "待受理"
-  }
+  },
+  "excludedMetadataEntries": [
+    {
+      "path": "installers/._SWOD-1.0.4-22-release.aab",
+      "sha256": "d2e613b8fd3421be5f3116df43e1266e4e5ecb23536437d537b8824d1c518966",
+      "size": 4096
+    },
+    {
+      "path": "installers/._SWOD-1.0.4-22-release.apk",
+      "sha256": "d2e613b8fd3421be5f3116df43e1266e4e5ecb23536437d537b8824d1c518966",
+      "size": 4096
+    }
+  ],
+  "artifactLedgerCorrection": "AppleDouble entries are filesystem metadata, not release candidates; retained only in excludedMetadataEntries for audit."
 }

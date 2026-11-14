@@ -1,17 +1,36 @@
 import XCTest
 import SwiftUI
 import UIKit
+import AVKit
 @testable import EvaDance
 
 final class PlaybackSurfaceTests: XCTestCase {
+    @MainActor
+    func testFullscreenKeepsThePlaybackItemAndModelState() {
+        let model = LessonPlayer()
+        let item = AVPlayerItem(url: URL(string: "https://example.com/fixture.m3u8")!)
+        model.player.replaceCurrentItem(with: item)
+        model.position = 42; model.speed = 1.5; model.playing = true
+        let orientation = PlaybackOrientation()
+        orientation.enter(landscape: true)
+        XCTAssertTrue(orientation.fullscreen)
+        orientation.enter(landscape: false)
+        XCTAssertTrue(orientation.fullscreen)
+        orientation.exit()
+        XCTAssertFalse(orientation.fullscreen)
+        XCTAssertTrue(model.player.currentItem === item)
+        XCTAssertEqual(model.position, 42)
+        XCTAssertEqual(model.speed, 1.5)
+        XCTAssertTrue(model.playing)
+    }
     @MainActor
     func testActualSurfaceVisibleHiddenAndRevealed() async throws {
         let model = LessonPlayer()
         model.loading = false
         let controls = PlaybackControls(hideDelay: 80_000_000)
         let surface = LessonVideoSurface(model: model, controls: controls, mirror: false,
-            watermark: "SWOD · 界面测试水印", blockedMessage: nil, canPlay: true,
-            onSettings: {}, onSave: {}, previous: { EmptyView() }, next: { EmptyView() })
+            blockedMessage: nil, canPlay: true,
+            onSettings: {}, orientation: PlaybackOrientation(), onSave: {}, previous: { EmptyView() }, next: { EmptyView() })
         let host = UIHostingController(rootView: VStack(spacing: 16) {
             Text("播放控制界面测试 · 非课程内容").font(.caption)
             surface

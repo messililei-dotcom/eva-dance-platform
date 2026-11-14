@@ -57,7 +57,7 @@ function fixture() {
   const api = new module.exports.PlatformApi();
   api.vault = new FakeVault();
   api.credentials = { token: 'fixture-a', refreshToken: 'fixture-refresh', memberId: 1, sessionId: 'fixture-session', expiresAt: 0 };
-  return { api, vault, calls, replies, sessions, redirects, coverImageURL: module.exports.coverImageURL,
+  return { api, vault, calls, replies, sessions, redirects, publicRead:module.exports.publicRead, coverImageURL: module.exports.coverImageURL,
     externalURLAllowed: module.exports.externalURLAllowed };
 }
 
@@ -174,11 +174,11 @@ test('logout during PATCH prevents credential refresh and replay', async () => {
   assert.equal(f.calls.length, 1); assert.equal(f.api.credentials, undefined);
 });
 
-test('PATCH staff credentials remain separate from member credentials', async () => {
-  const f = fixture(); f.api.staff = { token: 'fixture-staff', user: { role: 'event_admin' } };
-  await f.api.staffRequest('/event/players/1', 'PATCH', { name: 'fixture' });
-  assert.equal(f.calls[0].headers.Authorization, 'Bearer fixture-staff');
-  await assert.rejects(f.api.staffRequest('/member/profile', 'PATCH', {}), e => e.status === 401);
+test('native client has no administrator login or request transport', () => {
+  const f = fixture();
+  assert.equal(typeof f.api.loginStaff, 'undefined');
+  assert.equal(typeof f.api.staffRequest, 'undefined');
+  assert.equal(f.calls.length, 0);
 });
 
 test('invalid PATCH paths are rejected before starting a network session', async () => {
@@ -216,3 +216,5 @@ for (const method of ['sms', 'password', 'carrier']) {
     });
   }
 }
+
+test('only public group and player GETs use public transport; judge, malformed routes and writes remain private',()=>{const f=fixture();for(const path of ['/events/7/groups/2','/events/7/groups/2/players/9']){assert.equal(f.publicRead(path,'GET'),true);assert.equal(f.publicRead(path,'POST'),false);}for(const path of ['/events/7/judge','/events/7/groups/0','/events/7/groups/2/players/9/edit','/member/events'])assert.equal(f.publicRead(path,'GET'),false);});

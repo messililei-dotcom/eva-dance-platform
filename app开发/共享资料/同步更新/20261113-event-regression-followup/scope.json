@@ -1,0 +1,11 @@
+{
+  "files": [
+    "10-小程序miniprogram/pages/event-judge-profile/event-judge-profile.js",
+    "10-小程序miniprogram/pages/event-judge-profile/event-judge-profile.wxml",
+    "10-小程序miniprogram/shared/share.js",
+    "10-小程序miniprogram/scripts/november-sync.test.cjs",
+    "10-小程序miniprogram/scripts/sharing.test.cjs"
+  ],
+  "miniUploaded": false,
+  "appsUploaded": false
+}

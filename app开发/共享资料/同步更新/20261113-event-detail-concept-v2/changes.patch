@@ -1,0 +1,1016 @@
+--- a/production/website/src/app/events-news/[slug]/page.tsx
++++ b/production/website/src/app/events-news/[slug]/page.tsx
+@@ -3,95 +3,78 @@
+ import Image from 'next/image';
+ import Link from 'next/link';
+ import { notFound } from 'next/navigation';
+-import { ArrowLeft, CalendarDays, ChevronRight, Gavel, MapPin, Trophy } from 'lucide-react';
++import { ArrowLeft, CalendarDays, Gavel, MapPin, Trophy } from 'lucide-react';
+ import StudentProtectedLink from '@/components/StudentProtectedLink';
+ import PublicJudges from '@/components/events/PublicJudges';
+ import EventGroupSearch from '@/components/events/EventGroupSearch';
++import EventPeopleSearch from '@/components/events/EventPeopleSearch';
+ import { getEventCompetitionId, getEventNewsBySlug, getEventStatus } from '@/lib/events-news';
+-import { loadPublicEventJudges, loadPublicEventGroups, type PublicEventGroup } from '@/lib/public-event-data';
++import { loadPublicEventJudges, loadPublicEventGroups, loadPublicEventPlayers, type PublicEventGroup, type PublicEventPlayer } from '@/lib/public-event-data';
+ 
+ export const dynamic = 'force-dynamic';
++const panels = [['overview', '概览'], ['groups', '组别'], ['players', '选手'], ['judges', '评委'], ['results', '成绩']] as const;
+ 
+-export default async function EventDetailPage({ params }: {
++export default async function EventDetailPage({ params, searchParams }: {
+   params: Promise<{ slug: string }>;
++  searchParams?: Promise<{ panel?: string }>;
+ }) {
+   const { slug } = await params;
+   const item = getEventNewsBySlug(slug);
+   if (!item || item.reportType === 'course') notFound();
+-
++  const requestedPanel = (await searchParams)?.panel;
++  const panel = panels.some(([key]) => key === requestedPanel) ? requestedPanel! : 'groups';
+   const competitionId = getEventCompetitionId(item);
+-  const status = getEventStatus(item);
+-  let groups: PublicEventGroup[] = [];
+-  if (competitionId) {
+-    try {
++  const registrationOpen = getEventStatus(item) === 'registering';
++  let groups: PublicEventGroup[] = [], players: PublicEventPlayer[] = [];
++  let judges: ReturnType<typeof loadPublicEventJudges> = [];
++  let loadError = false;
++  try {
++    if (competitionId) {
+       groups = loadPublicEventGroups(competitionId);
+-    } catch (error) {
+-      console.error('赛事组别加载失败:', error);
++      if (panel === 'judges') judges = loadPublicEventJudges(competitionId);
++      if (panel === 'players' || panel === 'results') players = loadPublicEventPlayers(competitionId);
+     }
++  } catch (error) {
++    console.error('赛事公开信息加载失败:', error);
++    loadError = true;
+   }
+-
+-  const judges=competitionId ? loadPublicEventJudges(competitionId) : [];
+-
+-  return (
+-    <div className={`min-h-screen pb-16 pt-20 md:pb-24 md:pt-28 ${styles.detail}`}>
+-      <LiveEventResultsRefresh />
+-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+-        <Link href="/events" className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-text-muted hover:text-crimson">
+-          <ArrowLeft className="h-4 w-4" /> 返回赛事平台
+-        </Link>
+-
+-        <section className={styles.detailHero}>
+-            <div className={styles.cover}>
+-              {item.coverImage ? (
+-                <Image src={`/api/events-news/media/${item.slug}?w=960`} alt={item.title} fill unoptimized priority className="object-cover" />
+-              ) : (
+-                <div className="flex h-full items-center justify-center bg-gradient-to-br from-crimson-dark to-gold-dark">
+-                  <Trophy className="h-12 w-12 text-gold md:h-16 md:w-16" />
+-                </div>
+-              )}
+-            </div>
+-            <div className={styles.detailBody}>
+-              {status === 'registering' ? (
+-                <span className="inline-flex rounded-full bg-crimson px-2.5 py-0.5 text-[11px] font-semibold text-white">正在报名</span>
+-              ) : (
+-                <Link href={`/dance-circle/${item.slug}`} className="inline-flex items-center gap-1 rounded-full bg-sand/30 px-3 py-1 text-sm font-semibold text-gold-dark">
+-                  赛事报道 <ChevronRight className="h-3 w-3" />
+-                </Link>
+-              )}
+-              <h1 className="mt-2">{item.title}</h1>
+-              <div className={styles.meta}>
+-                <div className="flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5 text-gold-dark" />{item.dateRange}</div>
+-                <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-gold-dark" />{item.location}</div>
+-              </div>
+-              <p className="mt-3 line-clamp-2 text-sm leading-6 text-text-muted">{item.summary}</p>
+-              <div className={styles.summary}>
+-                <div><strong >{groups.length || item.stats.groups}</strong><span >组别</span></div>
+-                <div><strong >{item.registrationPublic === false ? '暂未公开' : item.stats.players}</strong><span >选手</span></div>
+-                <div><strong >{item.stats.judges}</strong><span >评委</span></div>
+-              </div>
+-              <div className={styles.actions}>
+-                {status === 'registering' ? (
+-                  <StudentProtectedLink documentNavigation prefetch={false} href={`/events/${item.slug}/register`} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-crimson px-3 text-sm font-semibold text-white">立即报名 <ChevronRight className="h-4 w-4" /></StudentProtectedLink>
+-                ) : (
+-                  <span className="inline-flex h-10 cursor-not-allowed items-center justify-center rounded-lg border border-sand bg-sand/20 px-3 text-sm font-semibold text-text-muted" aria-disabled="true">报名结束</span>
+-                )}
+-                <StudentProtectedLink href={`/events/${item.slug}/judge`} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-sand bg-white px-3 text-sm font-semibold text-text">
+-                  <Gavel className="h-4 w-4 text-gold-dark" />评委入口
+-                </StudentProtectedLink>
+-              </div>
+-            </div>
+-        </section>
+-
+-        <PublicJudges judges={judges} eventName={item.title}/>
+-        <section id="event-groups" className="mt-6 scroll-mt-24 md:mt-10">
+-          {groups.length ? (
+-            <EventGroupSearch groups={groups} slug={item.slug} />
+-          ) : (
+-            <div className="rounded-xl border border-sand/50 bg-white p-8 text-center text-sm text-text-muted">组别信息暂未发布</div>
+-          )}
+-        </section>
+-
+-      </div>
++  const baseHref = `/events/${item.slug}`;
++  return <div data-event-detail="true" className={`min-h-screen pt-20 md:pt-28 ${styles.detail} ${styles.conceptDetail}`}>
++    <LiveEventResultsRefresh />
++    <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
++      <Link href="/events" className="mb-4 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-text-muted hover:text-crimson"><ArrowLeft size={18} />赛事详情</Link>
++      <section className={styles.conceptHero}>
++        <div className={styles.cover}>
++          {item.coverImage ? <Image src={`/api/events-news/media/${item.slug}?w=960`} alt={item.title} fill unoptimized priority className="object-cover" /> : <div className="flex h-full items-center justify-center"><Trophy className="text-gold-dark" size={42} /></div>}
++          <span className={styles.coverStatus}>{registrationOpen ? '报名中' : '已结束'}</span>
++        </div>
++        <div className={styles.eventHeading}>
++          <h1>{item.title}</h1>
++          <div className={styles.inlineSummary}>
++            <div><strong>{groups.length || item.stats.groups}</strong><span>组别</span></div>
++            <div aria-label={item.registrationPublic === false ? '选手人数尚未公开' : undefined}><strong>{item.registrationPublic === false ? '—' : item.stats.players}</strong><span>选手</span></div>
++            <div><strong>{item.stats.judges}</strong><span>评委</span></div>
++          </div>
++        </div>
++        <div className={styles.meta}><div><CalendarDays size={16} />{item.dateRange}</div><div><MapPin size={16} />{item.location}</div></div>
++        <p className={styles.organizer}>主办方：{item.organizer || '待公布'}</p>
++      </section>
++      <nav className={styles.panelNav} aria-label="赛事内容">
++        {panels.map(([key, label]) => <Link key={key} prefetch={false} href={`${baseHref}?panel=${key}`} aria-current={panel === key ? 'page' : undefined}>{label}</Link>)}
++      </nav>
++      <section className={styles.detailPanel}>
++        {loadError ? <div role="alert" className="rounded-xl bg-white p-6 text-center"><p>赛事信息暂时加载失败，请重试。</p><Link href={`${baseHref}?panel=${panel}`} className="mt-3 inline-flex min-h-11 items-center font-semibold text-crimson">重新加载</Link></div> : <>
++          {panel === 'groups' && <EventGroupSearch groups={groups} slug={item.slug} registrationOpen={registrationOpen} />}
++          {panel === 'overview' && <div className="rounded-xl bg-white p-5"><h2 className="text-xl font-bold text-text">赛事信息</h2><dl className="mt-4 space-y-3 text-sm text-text-muted"><div className="flex justify-between gap-4"><dt>主办方</dt><dd>{item.organizer || '待公布'}</dd></div><div className="flex justify-between gap-4"><dt>比赛时间</dt><dd>{item.dateRange}</dd></div><div className="flex justify-between gap-4"><dt>比赛地点</dt><dd>{item.location}</dd></div></dl><p className="mt-5 leading-7 text-text-muted">{item.summary}</p><Link className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-crimson" href={`/dance-circle/${item.slug}`}>查看赛事介绍</Link><StudentProtectedLink href={`${baseHref}/judge`} className="ml-5 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-crimson"><Gavel size={16} />评委入口</StudentProtectedLink></div>}
++          {panel === 'players' && <EventPeopleSearch players={players} slug={item.slug} />}
++          {panel === 'judges' && <PublicJudges judges={judges} eventName={item.title} />}
++          {panel === 'results' && <EventPeopleSearch players={players} slug={item.slug} results />}
++        </>}
++      </section>
+     </div>
+-  );
++    <div className={styles.registrationBar}><div>
++      <StudentProtectedLink prefetch={false} href="/dashboard/events">我的报名</StudentProtectedLink>
++      {registrationOpen ? <StudentProtectedLink documentNavigation prefetch={false} href={`${baseHref}/register`}>立即报名</StudentProtectedLink> : <span aria-disabled="true">报名已关闭</span>}
++    </div></div>
++  </div>;
+ }
+--- a/production/website/src/app/events-news/events.module.css
++++ b/production/website/src/app/events-news/events.module.css
+@@ -35,3 +35,49 @@
+ .podium :global(img) { border: 2px solid #fff; }
+ .platform a:focus-visible,.detail a:focus-visible { outline: 2px solid #9f1d20; outline-offset: 3px; }
+ @media (min-width:768px) { .detailHero { display: grid; grid-template-columns: 0.9fr 1.1fr; align-items: start; } .cover { aspect-ratio: 4 / 3; max-height: 360px; } .detailBody { padding: 24px; } }
++
++/* Detail concept v2: content-first hero, underlined panels and a persistent action bar. */
++.conceptDetail { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
++.conceptHero { padding-top: 4px; }
++.conceptHero .cover { overflow: hidden; border-radius: 14px; }
++.coverStatus { position: absolute; top: 12px; left: 12px; padding: 5px 12px; border-radius: 8px; color: #fff; background: #9f1d20; font-size: 13px; }
++.eventHeading { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); align-items: center; gap: 14px; margin-top: 18px; }
++.eventHeading h1 { min-width: 0; margin: 0; color: #202124; font-size: clamp(22px,3vw,32px); font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; text-wrap: balance; }
++.inlineSummary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); text-align: center; }
++.inlineSummary > div + div { border-left: 1px solid #ddd9d1; }
++.inlineSummary strong,.inlineSummary span { display: block; }
++.inlineSummary strong { color: #202124; font-size: clamp(21px,3vw,30px); font-variant-numeric: tabular-nums; }
++.inlineSummary span { margin-top: 4px; color: #616773; font-size: 13px; }
++.organizer { margin-top: 10px; color: #616773; font-size: 14px; }
++.panelNav { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); margin: 22px 0; border-bottom: 1px solid #e5e1da; }
++.panelNav a { position: relative; display: flex; justify-content: center; align-items: center; min-height: 48px; padding: 10px 4px; color: #616773; font-size: 16px; }
++.panelNav a[aria-current="page"] { color: #9f1d20; font-weight: 700; }
++.panelNav a[aria-current="page"]::after { position: absolute; bottom: -1px; width: 52%; max-width: 60px; height: 3px; border-radius: 3px; background: #9f1d20; content: ''; }
++.detailPanel { min-height: 180px; }
++.groupSearchHeading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
++.groupSearchHeading h2 { color: #202124; font-size: 21px; font-weight: 700; }
++.groupSearchHeading > span { color: #616773; font-size: 14px; }
++.groupSearch { display: flex; align-items: center; gap: 10px; min-height: 48px; margin-top: 16px; padding: 0 14px; border: 1px solid #e0ded8; border-radius: 14px; color: #616773; background: #f5f4f2; }
++.groupSearch:focus-within { outline: 2px solid #9f1d20; outline-offset: 2px; }
++.groupSearch input { min-width: 0; width: 100%; height: 48px; color: #202124; font-size: 16px; background: transparent; outline: none; }
++.groupSearch input::placeholder { color: #616773; }
++.ageFilters { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 20px; }
++.ageFilters button { display: inline-flex; justify-content: center; align-items: center; min-width: 60px; min-height: 44px; padding: 6px 16px; border: 1px solid #d9dde3; border-radius: 999px; color: #616773; background: #fff; font-size: 14px; }
++.ageFilters button[aria-pressed="true"] { border-color: #9f1d20; color: #fff; background: #9f1d20; }
++.ageFilters button:focus-visible { outline: 2px solid #9f1d20; outline-offset: 3px; }
++.groupCards { display: grid; gap: 12px; }
++.groupCard { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px 12px; border: 1px solid #e9e6e1; border-radius: 14px; background: #fff; }
++.groupCard:focus-visible { outline: 2px solid #9f1d20; outline-offset: 3px; }
++.groupIcon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 42px; height: 48px; border-radius: 10px; color: #987131; background: #f5efe5; }
++.groupCardText { min-width: 0; flex: 1; }
++.groupCardText strong { display: block; color: #202124; font-size: 16px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
++.groupCardText > span { display: block; margin-top: 5px; color: #616773; font-size: 13px; line-height: 1.5; }
++.groupBadge { flex-shrink: 0; max-width: 90px; padding: 4px 9px; border: 1px solid transparent; border-radius: 999px; color: #9f1d20; background: #f7e9e7; font-size: 12px; text-align: center; }
++.groupBadge[data-published="true"] { border-color: #b38b42; border-radius: 8px; color: #816020; background: #fffdf8; }
++.registrationBar { position: fixed; bottom: 0; right: 0; left: 0; z-index: 45; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid #e5e1da; background: #faf9f6; }
++.registrationBar > div { display: grid; grid-template-columns: 1fr 1.3fr; gap: 10px; max-width: 1088px; margin: auto; }
++.registrationBar a,.registrationBar span { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 16px; border: 1px solid #aeb0b4; border-radius: 12px; color: #202124; background: #fff; font-size: 16px; font-weight: 600; }
++.registrationBar a:last-child { border-color: #9f1d20; color: #fff; background: #9f1d20; }
++.registrationBar span[aria-disabled="true"] { color: #616773; background: #eeede9; border-color: #d9dde3; }
++@media (min-width:768px) { .conceptHero { display: grid; grid-template-columns: 1fr 1.1fr; column-gap: 28px; align-items: start; } .conceptHero .cover { grid-row: 1 / 5; aspect-ratio: 4 / 3; max-height: 320px; } .conceptHero .eventHeading { grid-template-columns: 1fr; margin-top: 8px; } .inlineSummary { margin-top: 6px; } .groupCards { grid-template-columns: repeat(2,minmax(0,1fr)); } }
++@media (max-width:359px) { .eventHeading { grid-template-columns: 1fr; } .inlineSummary { max-width: 240px; } .groupCard { gap: 8px; } .groupIcon { width: 32px; } .groupBadge { max-width: 66px; padding: 4px 6px; } .ageFilters { gap: 7px; } .ageFilters button { padding: 6px 13px; } }
+--- a/production/website/src/components/events/EventGroupSearch.tsx
++++ b/production/website/src/components/events/EventGroupSearch.tsx
+@@ -1,26 +1,37 @@
+ 'use client';
++
+ import Link from 'next/link';
+ import { useState } from 'react';
+-import { ChevronRight, Search } from 'lucide-react';
++import { ChevronRight, Search, Trophy } from 'lucide-react';
++import { eventAgeGroup } from '@/lib/event-age';
+ import type { PublicEventGroup } from '@/lib/public-event-data';
++import styles from '@/app/events-news/events.module.css';
+ 
+-export default function EventGroupSearch({ groups, slug }: { groups: PublicEventGroup[]; slug: string }) {
++export default function EventGroupSearch({ groups, slug, registrationOpen = false }: {
++  groups: PublicEventGroup[]; slug: string; registrationOpen?: boolean;
++}) {
+   const [query, setQuery] = useState('');
++  const [ageFilter, setAgeFilter] = useState('全部');
+   const [displayLimit, setDisplayLimit] = useState(50);
+   const keyword = query.trim().toLocaleLowerCase();
+-  const visible = groups.filter(group => [group.name, group.age_range, group.dance_type, group.entry_type].join(' ').toLocaleLowerCase().includes(keyword));
++  const visible = groups.filter(group => (ageFilter === '全部' || eventAgeGroup(group.name, group.age_range) === ageFilter) &&
++    [group.name, group.age_range, group.dance_type, group.entry_type].join(' ').toLocaleLowerCase().includes(keyword));
+   return <>
+-    <div className="flex flex-wrap items-center justify-between gap-4">
+-      <div><h2 className="font-serif text-2xl font-bold text-text md:text-3xl">赛事组别</h2><p className="mt-1 text-sm text-text-muted">{groups.length} 个组别</p></div>
+-      <label className="relative block w-full sm:w-72"><span className="sr-only">搜索组别名称</span><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" /><input value={query} onChange={event => { setQuery(event.target.value); setDisplayLimit(50); }} placeholder="搜索组别、舞种或年龄" className="h-12 w-full rounded-xl border border-sand/70 bg-white pl-9 pr-3 text-sm text-text outline-none focus:border-gold-dark" /></label>
++    <div className={styles.groupSearchHeading}><h2>赛事组别</h2><span>共{groups.length}组</span></div>
++    <label className={styles.groupSearch}><span className="sr-only">搜索组别、舞种或年龄</span><Search aria-hidden="true" size={20} /><input value={query} onChange={event => { setQuery(event.target.value); setDisplayLimit(50); }} placeholder="搜索组别、舞种或年龄" /></label>
++    <div className={styles.ageFilters} role="group" aria-label="组别年龄筛选">
++      {['全部', '成人', '青少年', '少儿'].map(label => <button type="button" key={label} aria-pressed={ageFilter === label} onClick={() => { setAgeFilter(label); setDisplayLimit(50); }}>{label}</button>)}
+     </div>
+-    {keyword && <p role="status" className="mt-4 text-sm text-text-muted">找到 {visible.length} 个组别</p>}
+-    <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
+-      {visible.slice(0, displayLimit).map(group => <Link prefetch={false} key={group.id} href={`/events/${slug}/groups/${group.id}`} className="group flex min-w-0 items-center justify-between gap-3 rounded-xl border border-sand/50 bg-white px-4 py-4 text-text transition hover:border-gold-dark hover:bg-warm-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold-dark">
+-        <div className="min-w-0"><div className="break-words text-base font-semibold leading-snug">{group.name}</div><div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-muted"><span>{group.registration_public === 1 ? `${group.player_count} 位选手` : '报名信息暂未公开'}</span><span className={group.ranked_count ? 'text-gold-dark' : ''}>{group.ranking_complete === 1 ? '排名已公示' : group.ranked_count ? `已公示 ${group.ranked_count} 项得分` : '成绩待公布'}</span></div></div><ChevronRight className="h-4 w-4 shrink-0 text-gold-dark transition group-hover:translate-x-0.5" />
++    {(keyword || ageFilter !== '全部') && <p role="status" className="mb-3 text-sm text-text-muted">找到 {visible.length} 个组别</p>}
++    <div className={styles.groupCards}>
++      {visible.slice(0, displayLimit).map(group => <Link prefetch={false} key={group.id} href={`/events/${slug}/groups/${group.id}`} className={styles.groupCard}>
++        <span className={styles.groupIcon} aria-hidden="true"><Trophy size={23} strokeWidth={1.5} /></span>
++        <span className={styles.groupCardText}><strong>{group.name}</strong><span>{[group.age_range, group.registration_public === 1 ? `${group.player_count}位选手` : '报名信息暂未公开'].filter(Boolean).join(' · ')}</span></span>
++        <span className={styles.groupBadge} data-published={Boolean(group.ranked_count)}>{group.ranking_complete === 1 ? '成绩已公布' : group.ranked_count ? `已公示${group.ranked_count}项得分` : registrationOpen ? '报名中' : '成绩待公布'}</span>
++        <ChevronRight aria-hidden="true" size={18} className="shrink-0 text-text-muted" />
+       </Link>)}
+     </div>
+-    {visible.length > displayLimit && <div className="mt-5 text-center"><button type="button" onClick={() => setDisplayLimit(limit => limit + 50)} className="rounded-lg border border-gold-dark/40 bg-white px-5 py-2 text-sm font-semibold text-gold-dark">显示更多组别（还有 {visible.length - displayLimit} 个）</button></div>}
+-    {!visible.length && <div className="mt-5 rounded-2xl border border-sand/50 bg-white p-7 text-center text-sm text-text-muted">{groups.length ? '未找到相关组别' : '暂无赛事组别'}</div>}
++    {visible.length > displayLimit && <div className="mt-5 text-center"><button type="button" onClick={() => setDisplayLimit(limit => limit + 50)} className="min-h-11 rounded-xl border border-sand bg-white px-5 text-sm font-semibold text-crimson">显示更多组别（还有 {visible.length - displayLimit} 个）</button></div>}
++    {!visible.length && <div className="rounded-xl bg-white p-7 text-center text-sm text-text-muted">{groups.length ? '未找到相关组别' : '组别信息暂未发布'}</div>}
+   </>;
+ }
+--- a/production/website/src/lib/public-event-data.ts
++++ b/production/website/src/lib/public-event-data.ts
+@@ -118,12 +118,19 @@
+   return loadPublicEventGroups(competitionId).find((group) => group.id === groupId) || null;
+ }
+ 
++export type PublicEventPlayer = PublicGroupPlayer & { group_id: number; group_name: string };
++
+ export function loadPublicGroupPlayers(competitionId: number, groupId: number) {
++  return loadPublicEventPlayers(competitionId, groupId);
++}
++
++// The event-level list reuses exactly the group-level publication/privacy predicate.
++export function loadPublicEventPlayers(competitionId: number, groupId: number | null = null) {
+   const db = openAdminDb({ readonly: true });
+   try {
+     const players = db.prepare(`
+       SELECT
+-        p.id,
++        p.id, p.group_id, g.name AS group_name,
+         COALESCE(p.player_no, '') AS player_no,
+         p.name,
+         COALESCE(NULLIF(m.wx_avatar_url, ''), NULLIF(m.avatar, ''), '') AS avatar_url,
+@@ -134,6 +141,7 @@
+         COUNT(DISTINCT CASE WHEN s.score_status = 'published' AND EXISTS (SELECT 1 FROM event_rankings visible WHERE visible.group_id=s.group_id AND visible.player_id=s.player_id AND visible.status='published') THEN s.judge_id END) AS score_count
+       FROM event_players p
+       JOIN event_competitions c ON c.id=p.competition_id
++      JOIN event_groups g ON g.id=p.group_id AND g.status='active'
+       LEFT JOIN Member m ON m.id = p.member_id
+       LEFT JOIN event_rankings r
+         ON r.group_id = p.group_id AND r.player_id = p.id AND r.status = 'published'
+@@ -147,17 +155,17 @@
+             AND newer.version > s.version
+             AND newer.score_status = 'published'
+         )
+-      WHERE p.competition_id = ? AND p.group_id = ?
++      WHERE p.competition_id = ? AND (? IS NULL OR p.group_id = ?)
+         AND p.audit_status != 'rejected'
+         AND p.status NOT IN ('withdrawn', 'cancelled')
+         AND (c.registration_public = 1 OR r.status = 'published')
+       GROUP BY p.id
+-      ORDER BY
++      ORDER BY g.sort_order ASC, g.id ASC,
+         CASE WHEN r.rank_no IS NULL OR r.rank_no = 0 THEN 1 ELSE 0 END,
+         r.rank_no ASC,
+         p.player_no ASC,
+         p.id ASC
+-    `).all<PublicGroupPlayer>(competitionId, groupId);
++    `).all<PublicEventPlayer>(competitionId, groupId, groupId);
+     return players.map(player => ({ ...player, avatar_url: player.avatar_url || (legacyAvatars.players as Record<string, string>)[String(player.id)] || '' }));
+   } finally {
+     db.close();
+--- a/production/website/src/lib/events-news.ts
++++ b/production/website/src/lib/events-news.ts
+@@ -33,6 +33,7 @@
+   start_date: string;
+   end_date: string;
+   location: string;
++  organizer: string;
+   description: string;
+   cover_url: string;
+   group_count: number;
+@@ -78,6 +79,7 @@
+     date: startDate || `${year}-01-01`,
+     dateRange,
+     location,
++    organizer: row.organizer || '',
+     categoryLabel: '东方舞赛事',
+     reportType: 'event',
+     registrationPublic: Number(row.registration_public) === 1,
+@@ -107,6 +109,7 @@
+         COALESCE(c.start_date, '') AS start_date,
+         COALESCE(c.end_date, '') AS end_date,
+         COALESCE(c.location, '') AS location,
++        COALESCE(c.organizer, '') AS organizer,
+         COALESCE(c.description, '') AS description,
+         COALESCE(c.cover_url, '') AS cover_url,
+         (SELECT COUNT(*) FROM event_groups g WHERE g.competition_id = c.id) AS group_count,
+--- a/production/website/src/types/events-news.ts
++++ b/production/website/src/types/events-news.ts
+@@ -7,6 +7,7 @@
+   date: string;
+   dateRange: string;
+   location: string;
++  organizer?: string;
+   categoryLabel?: string;
+   reportType?: 'event' | 'course';
+   registrationPublic?: boolean;
+--- a/production/website/public/sw.js
++++ b/production/website/public/sw.js
+@@ -1,7 +1,7 @@
+ /* 伊娃东方舞 PWA Service Worker
+  * 原则：只缓存公开页面与静态资源；登录、学习进度、视频和 API 始终走网络。
+  */
+-const VERSION = 'swod-pwa-v16-judge-scoring-20261113';
++const VERSION = 'swod-pwa-v17-event-detail-20261113';
+ const STATIC_CACHE = `${VERSION}-static`;
+ const PAGE_CACHE = `${VERSION}-pages`;
+ const OFFLINE_URL = '/offline.html';
+--- a/10-小程序miniprogram/pages/event-detail/event-detail.js
++++ b/10-小程序miniprogram/pages/event-detail/event-detail.js
+@@ -1,4 +1,5 @@
+ const eventView=require('../../shared/event-view');
++const { eventAgeGroup } = require('../../shared/event-age');
+ const share = require("../../shared/share");
+ const api = require("../../utils/api");
+ 
+@@ -22,7 +23,7 @@
+ 
+ Page(share.withShare("event-detail", {
+   data: {
+-    id: null, loading: true, competition: {}, groups: [], visibleGroups: [], groupPage:1, groupPageCount:1, groupTotal:0, groupKeyword: "", players: [], judges: [],
++    id: null, loading: true, competition: {}, groups: [], visibleGroups: [], groupPage:1, groupPageCount:1, groupTotal:0, groupKeyword: "", groupAgeFilter: "全部", groupAgeFilters: ["全部", "成人", "青少年", "少儿"], registrationsLoading: false, registrationError: "", players: [], judges: [],
+     rankings: [], sessions: [], awards: [], registrations: [], activePanel: "groups",
+     panels: [
+       { key: "overview", label: "概览" }, { key: "groups", label: "组别" },
+@@ -46,7 +47,7 @@
+       const data = await api.getEventDetail(this.data.id);
+       const competition = data.competition || {};
+       const { registrationOpen, statusText } = require('../../shared/event-state').eventState(competition);
+-      const groups=(data.groups||[]).map((g,i)=>({...g,ordinal:i+1,playerCountText:g.playerCount==null?'报名信息未公开':g.playerCount+'位'}));
++      const groups=(data.groups||[]).map((g,i)=>({...g,ordinal:i+1,ageCategory:eventAgeGroup(g.name,g.ageRange,g.category),playerCountText:g.playerCount==null?'报名信息未公开':g.playerCount+'位选手',groupStatusText:Number(g.rankingCount)>0?'已公示'+g.rankingCount+'项得分':registrationOpen?'报名中':'成绩待公布'}));
+       this.setData({
+         competition: {
+           ...competition,
+@@ -64,14 +65,21 @@
+         loading: false
+       });
+       this.applyGroupPage(1);
+-      wx.setNavigationBarTitle({ title: competition.name || "赛事详情" });
++      wx.setNavigationBarTitle({ title: "赛事详情" });
+     } catch (err) {
+       this.setData({ loading: false });
+       wx.showToast({ title: err.message || "赛事详情加载失败", icon: "none" });
+     }
+   },
+   async loadRegistrations() {
+-    const rows = await api.getMyEventRegistrations(this.data.id).catch(() => []);
++    const version = (this.registrationLoadVersion || 0) + 1;
++    this.registrationLoadVersion = version;
++    const account = wx.getStorageSync ? String(wx.getStorageSync('token') || '') : '';
++    this.setData({ registrationsLoading: true, registrationError: '' });
++    try {
++    const rows = await api.getMyEventRegistrations(this.data.id);
++    if (version !== this.registrationLoadVersion) return;
++    if (wx.getStorageSync && String(wx.getStorageSync('token') || '') !== account) { this.setData({ registrations: [], registrationsLoading: false, registrationError: '登录状态已更新，请重新加载报名信息' }); return; }
+     const auditLabels = { pending: '已报名', approved: '已报名', rejected: '未通过' };
+     const paidLabels = { unpaid: "待缴费", paid: "已缴费", refunded: "已退款" };
+     this.setData({ registrations: (rows || []).map(item => ({
+@@ -81,14 +89,18 @@
+       resultText: item.resultPublished
+         ? `${item.awardName || (item.rankNo ? `第${item.rankNo}名` : "成绩已公示")} · ${item.totalScore == null ? "-" : item.totalScore}分`
+         : "成绩待公示"
+-    })) });
++    })), registrationsLoading: false });
++    } catch (error) { if (version === this.registrationLoadVersion) this.setData({ registrations: [], registrationsLoading: false, registrationError: error.message || '报名信息加载失败，请重试' }); }
+   },
++  goMyRegistrations() { this.setData({ activePanel: 'registrations' }); this.loadRegistrations(); },
++
+   payRegistration(event) { wx.navigateTo({url:'/pages/course-checkout/course-checkout?kind=event&id='+encodeURIComponent(event.currentTarget.dataset.id)}); },
+   switchPanel(event) { this.setData({ activePanel: event.currentTarget.dataset.key }); },
++  onGroupAgeFilter(event) { this.setData({ groupAgeFilter: event.currentTarget.dataset.age }); this.applyGroupPage(1); },
+   onGroupSearch(event) { this.setData({ groupKeyword:String(event.detail.value||'') });this.applyGroupPage(1); },
+   applyGroupPage(number) {
+     const query=this.data.groupKeyword.trim().toLowerCase();
+-    const rows=this.data.groups.filter(g=>!query||`${g.name} ${g.category||''} ${g.danceType||''} ${g.ageRange||''}`.toLowerCase().includes(query));
++    const rows=this.data.groups.filter(g=>(this.data.groupAgeFilter==='全部'||g.ageCategory===this.data.groupAgeFilter)&&(!query||`${g.name} ${g.category||''} ${g.danceType||''} ${g.ageRange||''}`.toLowerCase().includes(query)));
+     const p=eventView.page(rows,number);
+     this.setData({visibleGroups:p.rows,groupPage:p.number,groupPageCount:p.pages,groupTotal:p.total});
+   },
+--- a/10-小程序miniprogram/pages/event-detail/event-detail.wxml
++++ b/10-小程序miniprogram/pages/event-detail/event-detail.wxml
+@@ -8,20 +8,31 @@
+       <image wx:if="{{competition.coverUrl}}" src="{{competition.coverUrl}}" mode="aspectFill"></image><view wx:else class="cover-fallback">赛事</view>
+       <view class="cover-status">{{competition.registrationText}}</view>
+     </view>
+-    <view class="detail-heading"><view class="event-title">{{competition.name}}</view><view class="event-date">{{competition.dateText}} · {{competition.location || '地点待定'}}</view></view>
+-    <button class="judge-entry" bindtap="goJudge">评委入口</button>
+-    <view class="summary-card card"><view><text>{{competition.groupCount || groups.length || 0}}</text><text class="summary-label">组别</text></view><view><text>{{competition.registrationPublic ? (competition.approvedPlayerCount || players.length || 0) : '—'}}</text><text class="summary-label">选手</text></view><view><text>{{competition.judgeCount || judges.length || 0}}</text><text class="summary-label">评委</text></view></view>
++    <view class="detail-heading"><view class="heading-main"><view class="event-title">{{competition.name}}</view></view><view class="summary-card"><view><text>{{competition.groupCount || groups.length || 0}}</text><text class="summary-label">组别</text></view><view><text>{{competition.registrationPublic ? (competition.approvedPlayerCount || players.length || 0) : '—'}}</text><text class="summary-label">选手</text></view><view><text>{{competition.judgeCount || judges.length || 0}}</text><text class="summary-label">评委</text></view></view></view>
++    <view class="event-date">{{competition.dateText}} · {{competition.location || '地点待定'}}</view><view class="event-organizer">主办方：{{competition.organizer || '待公布'}}</view>
+     <scroll-view class="panel-tabs" scroll-x enable-flex><view class="panel-tab {{activePanel === item.key ? 'active' : ''}}" wx:for="{{panels}}" wx:key="key" data-key="{{item.key}}" bindtap="switchPanel">{{item.label}}</view></scroll-view>
+     <view wx:if="{{activePanel === 'overview'}}">
+-      <view class="section-card card"><view class="section-title">赛事信息</view><view class="info-row"><text>主办方</text><span>{{competition.organizer || '伊娃东方舞'}}</span></view><view class="info-row"><text>比赛地点</text><span>{{competition.location || '待定'}}</span></view><view class="info-row"><text>报名状态</text><span class="highlight">{{competition.registrationText}}</span></view><view class="info-row"><text>报名费用</text><span>{{competition.feeText}}</span></view><view class="description">{{competition.description || '赛事介绍正在完善中。'}}</view></view>
++      <view class="section-card card"><view class="section-title">赛事信息</view><view class="info-row"><text>主办方</text><span>{{competition.organizer || '待公布'}}</span></view><view class="info-row"><text>比赛地点</text><span>{{competition.location || '待定'}}</span></view><view class="info-row"><text>报名状态</text><span class="highlight">{{competition.registrationText}}</span></view><view class="info-row"><text>报名费用</text><span>{{competition.feeText}}</span></view><view class="description">{{competition.description || '赛事介绍正在完善中。'}}</view><button class="judge-entry" bindtap="goJudge">评委入口</button></view>
+       <view class="section-card card" wx:if="{{sessions.length}}"><view class="section-title">赛事日程</view><view class="list-row" wx:for="{{sessions}}" wx:key="id"><view><b>{{item.name}}</b><small>{{item.timeText}} · {{item.venue || '场地待定'}}</small></view></view></view>
+-      <view class="section-card card" wx:if="{{registrations.length}}"><view class="section-title">我的报名</view><view class="list-row" wx:for="{{registrations}}" wx:key="id"><view><b>{{item.name}} · {{item.groupName}}</b><small>审核：{{item.auditStatusText}} · 缴费：{{item.paidStatusText}}</small><small>{{item.performanceTitle ? '作品：' + item.performanceTitle + ' · ' : ''}}{{item.resultText}}</small></view></view></view>
+     </view>
+-    <view wx:if="{{activePanel === 'groups'}}" class="section-card card"><view class="section-title">赛事组别 <text class="group-total">共{{groups.length}}组</text></view><view class="group-search"><input value="{{groupKeyword}}" placeholder="搜索组别、舞种或年龄" bindinput="onGroupSearch" /></view><view class="list-row group-row" wx:for="{{visibleGroups}}" wx:key="id" data-id="{{item.id}}" bindtap="openGroup"><view><b>{{item.ordinal}}. {{item.name}}</b><small>{{item.rankingCount ? item.rankingCount + ' 项成绩' : '成绩待公布'}}</small></view><text>{{item.playerCountText}} ›</text></view><view class="pagination" wx:if="{{groupPageCount > 1}}"><button data-offset="-1" disabled="{{groupPage <= 1}}" bindtap="changeGroupPage">上一页</button><text>{{groupPage}} / {{groupPageCount}} · {{groupTotal}} 组</text><button data-offset="1" disabled="{{groupPage >= groupPageCount}}" bindtap="changeGroupPage">下一页</button></view><view wx:if="{{!visibleGroups.length}}" class="panel-empty">没有找到符合条件的组别</view></view>
++    <view wx:if="{{activePanel === 'groups'}}" class="section-card card groups-panel">
++      <view class="section-title">赛事组别 <text class="group-total">共{{groups.length}}组</text></view>
++      <view class="group-search"><input value="{{groupKeyword}}" placeholder="搜索组别、舞种或年龄" bindinput="onGroupSearch" /></view>
++      <view class="age-filters"><button wx:for="{{groupAgeFilters}}" wx:key="*this" class="age-chip {{groupAgeFilter === item ? 'active' : ''}}" aria-pressed="{{groupAgeFilter === item}}" data-age="{{item}}" bindtap="onGroupAgeFilter">{{item}}</button></view>
++      <view class="group-concept-card" wx:for="{{visibleGroups}}" wx:key="id" data-id="{{item.id}}" bindtap="openGroup" role="button" aria-label="{{item.name}}，{{item.groupStatusText}}">
++        <view class="group-icon"><image src="/images/tab-practice-active.png" mode="aspectFit" /></view>
++        <view class="group-main"><view class="group-name">{{item.name}}</view><view class="group-meta">{{item.ageRange ? item.ageRange + ' · ' : ''}}{{item.playerCountText}}</view></view>
++        <view class="group-status {{item.rankingCount ? 'published' : ''}}">{{item.groupStatusText}}</view><text class="group-chevron">›</text>
++      </view>
++      <view class="pagination" wx:if="{{groupPageCount > 1}}"><button data-offset="-1" disabled="{{groupPage <= 1}}" bindtap="changeGroupPage">上一页</button><text>{{groupPage}} / {{groupPageCount}} · {{groupTotal}} 组</text><button data-offset="1" disabled="{{groupPage >= groupPageCount}}" bindtap="changeGroupPage">下一页</button></view>
++      <view wx:if="{{!visibleGroups.length}}" class="panel-empty">没有找到符合条件的组别</view>
++    </view>
+     <view wx:if="{{activePanel === 'players'}}" class="section-card card"><view class="list-row" wx:for="{{players}}" wx:key="id" data-id="{{item.id}}" data-group="{{item.groupId}}" bindtap="openPlayer"><image class="row-avatar" wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"/><view wx:else class="number">{{item.displayInitial}}</view><view><b>{{item.name}}</b><small>{{item.groupName}} · {{item.organization || item.teacher || '个人参赛'}}</small></view></view><view wx:if="{{!players.length}}" class="panel-empty">{{competition.registrationPublic ? '暂无报名信息' : '报名信息尚未公开'}}</view></view>
+     <view wx:if="{{activePanel === 'judges'}}" class="section-card card"><view class="list-row" wx:for="{{judges}}" wx:key="id" data-id="{{item.id}}" bindtap="openJudge"><image wx:if="{{item.avatarUrl}}" class="row-avatar" src="{{item.avatarUrl}}" mode="aspectFill"/><view wx:else class="number">{{item.initial}}</view><view><b>{{item.name}}</b><small>{{item.title || '赛事评委'}} · {{item.organization}}</small><small>查看评委详情 ›</small></view></view><view wx:if="{{!judges.length}}" class="panel-empty">评委阵容暂未公布</view></view>
+     <view wx:if="{{activePanel === 'results'}}" class="results-panel"><view class="results-head"><view class="section-title">公示结果</view><text>成绩由赛事平台审核发布</text></view><view class="result-card" wx:for="{{rankings}}" wx:key="id" data-id="{{item.playerId}}" data-group="{{item.groupId}}" bindtap="openPlayer"><view class="result-trophy {{item.rankClass}}"><view wx:if="{{item.rankNo}}">🏆</view><text>{{item.rankLabel}}</text></view><image class="row-avatar" wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"/><view class="result-main"><b>{{item.playerName}}</b><small>{{item.groupName}} · {{item.playerNo ? '编号 ' + item.playerNo : '未编号'}}</small></view><view class="result-score"><view>{{item.scoreText}}</view><text>最终得分</text></view><text class="result-arrow">›</text></view><view wx:if="{{!rankings.length}}" class="section-card card panel-empty">成绩经统一平台审核发布后在这里公示</view></view>
+-    <view class="section-card card" wx:if="{{registrations.length}}"><view class="section-title">我的报名</view><view class="list-row" wx:for="{{registrations}}" wx:key="id"><view><b>{{item.entrantName}} · {{item.groupName}}</b><small>{{item.performanceTitle}} · {{item.paidStatusText}}</small></view><button wx:if="{{item.canPay}}" data-id="{{item.id}}" bindtap="payRegistration">继续缴费</button></view></view><button class="register-btn {{competition.registrationOpen ? '' : 'disabled'}}" bindtap="goRegister">{{competition.registrationOpen ? '立即报名' : '报名已关闭'}}</button>
++      <view wx:if="{{activePanel === 'registrations'}}" class="section-card card"><view class="section-title">我的报名</view><view wx:if="{{registrationsLoading}}" class="panel-empty">报名信息加载中…</view><view wx:elif="{{registrationError}}" class="panel-empty"><text>{{registrationError}}</text><button bindtap="loadRegistrations">重新加载</button></view><view wx:else><view class="list-row" wx:for="{{registrations}}" wx:key="id"><view><b>{{item.name || item.entrantName}} · {{item.groupName}}</b><small>审核：{{item.auditStatusText}} · 缴费：{{item.paidStatusText}}</small><small>{{item.performanceTitle ? item.performanceTitle + ' · ' : ''}}{{item.resultText}}</small></view><button wx:if="{{item.canPay}}" data-id="{{item.id}}" bindtap="payRegistration">继续缴费</button></view><view wx:if="{{!registrations.length}}" class="panel-empty">暂无本赛事报名记录</view></view></view>
++    <view class="registration-bar"><button class="mine-btn" bindtap="goMyRegistrations">我的报名</button><button class="register-btn {{competition.registrationOpen ? '' : 'disabled'}}" disabled="{{!competition.registrationOpen}}" bindtap="goRegister">{{competition.registrationOpen ? '立即报名' : '报名已关闭'}}</button></view>
++
+   </block>
+ </view>
+ 
+--- a/10-小程序miniprogram/pages/event-detail/event-detail.wxss
++++ b/10-小程序miniprogram/pages/event-detail/event-detail.wxss
+@@ -10,3 +10,7 @@
+ @media(min-width:768px){.detail-page{max-width:1440rpx;margin:auto}.event-cover{max-height:480rpx}.register-btn{max-width:1384rpx;margin:auto}}
+ 
+ .register-btn{width:calc(100% - 56rpx);margin:0 auto;z-index:10}
++
++/* Exact detail concept layout; all dynamic values remain server-owned. */
++.detail-heading{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24rpx;align-items:center;padding:28rpx 0 0}.heading-main{min-width:0}.event-title{font-size:40rpx;line-height:1.4}.summary-card{margin:0;padding:0;gap:0;border-radius:0;background:transparent}.summary-card view{border-color:#ddd9d1}.summary-card text{color:#202124;font-size:36rpx;font-weight:700}.summary-card .summary-label{color:#616773;font-size:24rpx;font-weight:400}.event-organizer{margin-top:12rpx;color:#616773;font-size:26rpx}.panel-tabs{width:100%;margin:26rpx 0 28rpx}.panel-tab{min-width:0;width:20%;margin:0;padding:22rpx 0;box-sizing:border-box;line-height:1.5}.groups-panel{padding:0;background:transparent}.section-title{font-weight:700}.age-filters{display:flex;align-items:center;gap:16rpx;margin:24rpx 0 28rpx}.age-filters .age-chip{display:inline-flex;justify-content:center;align-items:center;flex:1;width:auto;min-width:0;min-height:88rpx;margin:0;padding:8rpx 12rpx;border:1rpx solid #d9dde3;border-radius:999rpx;background:#fff;color:#616773;font-size:26rpx;line-height:1.4}.age-filters .age-chip.active{background:#9f1d20;border-color:#9f1d20;color:#fff}.group-concept-card{display:flex;align-items:center;gap:16rpx;min-height:150rpx;margin-bottom:18rpx;padding:22rpx 20rpx;border:1rpx solid #e9e6e1;border-radius:24rpx;background:#fff}.group-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:76rpx;height:88rpx;border-radius:16rpx;background:#f5efe5}.group-icon image{width:44rpx;height:44rpx}.group-main{min-width:0;flex:1}.group-name{font-size:28rpx;font-weight:600;color:#202124;line-height:1.45;overflow-wrap:anywhere}.group-meta{margin-top:8rpx;font-size:24rpx;line-height:1.5;color:#616773}.group-status{max-width:144rpx;flex-shrink:0;padding:8rpx 14rpx;border:1rpx solid transparent;border-radius:999rpx;background:#f7e9e7;color:#9f1d20;font-size:22rpx;text-align:center}.group-status.published{border-color:#b38b42;border-radius:12rpx;color:#816020;background:#fffdf8}.group-chevron{font-size:38rpx;color:#616773}.registration-bar{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;gap:20rpx;padding:22rpx 28rpx calc(22rpx + env(safe-area-inset-bottom));border-top:1rpx solid #e5e1da;background:#faf9f6}.registration-bar .mine-btn,.registration-bar .register-btn{position:static;display:flex;align-items:center;justify-content:center;flex:1;min-width:0;width:auto;max-width:none;height:96rpx;margin:0;padding:12rpx;border:1rpx solid #aeb0b4;border-radius:22rpx;background:#fff;color:#202124;font-size:30rpx;font-weight:600;line-height:1.4;box-shadow:none}.registration-bar .register-btn{flex:1.3;background:#9f1d20;color:#fff;border-color:#9f1d20}.registration-bar .register-btn.disabled{background:#eeede9;color:#616773;border-color:#d9dde3}
++@media(max-width:359px){.detail-heading{grid-template-columns:1fr}.summary-card{max-width:480rpx}.group-icon{width:58rpx}.group-concept-card{gap:12rpx}.group-status{max-width:120rpx;padding:6rpx 10rpx}}
+--- a/app开发/iOS/EvaDance/Sources/EvaDanceApp/EventDetailView.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaDanceApp/EventDetailView.swift
+@@ -7,25 +7,34 @@
+     let id: String
+     @State private var panel = 1
+     @State private var query = ""
++    @State private var ageFilter = "全部"
++    @Environment(\.dynamicTypeSize) private var typeSize
+     @State private var page = 1
+     private let panels = ["概览","组别","选手","评委","成绩"]
+     private var event: JSONValue { store.data["competition"] }
+-    private var rows: [JSONValue] { (panel == 3 && !event["judgeScoresPublic"].bool ? [] : store.data[panel == 1 ? "groups" : panel == 2 ? "players" : panel == 3 ? "judges" : "rankings"].list).filter { EventUI.matches($0, query: query) } }
++    private var rows: [JSONValue] { (panel == 3 && !event["judgeScoresPublic"].bool ? [] : store.data[panel == 1 ? "groups" : panel == 2 ? "players" : panel == 3 ? "judges" : "rankings"].list).filter { EventUI.matches($0, query: query) && (panel != 1 || ageFilter == "全部" || EventUI.ageGroup($0) == ageFilter) } }
+     var body: some View {
+         ScrollView {
+             VStack(alignment: .leading, spacing: 14) {
+                 LoadState(store: store) { Task { await load() } }
+                 if event != .null {
+                     hero
+-                    NavigationLink { JudgeWorkspaceView(eventID: id) } label: { Text("评委入口").font(.headline).frame(maxWidth: .infinity, minHeight: 44) }.buttonStyle(.bordered).tint(EvaBrand.red)
+-                    EventSection { HStack { metric(EventUI.count(event, key: "groupCount", fallback: store.data["groups"].list.count),"组别"); Divider(); metric(event["registrationPublic"].bool ? EventUI.count(event,key: "approvedPlayerCount",fallback:store.data["players"].list.count) : "—","选手"); Divider(); metric(EventUI.count(event,key: "judgeCount",fallback:store.data["judges"].list.count),"评委") }.frame(minHeight: 48) }
+-                    ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: 8) { ForEach(panels.indices, id: \.self) { index in Button { panel = index; page = 1; query = "" } label: { Text(panels[index]).font(.headline).padding(.horizontal,18).frame(minHeight:44).foregroundStyle(panel == index ? EvaBrand.onAccent : Color.primary).background(panel == index ? EvaBrand.red : EvaBrand.surface,in:Capsule()) }.buttonStyle(.plain).accessibilityAddTraits(panel == index ? .isSelected : []) } } }
+-                    if panel == 0 { overview } else { publicPanel }
+-                    if EventPresentation.state(event) == "报名中" { NavigationLink { AuthGate { EventRegistrationView(eventID: id, group: nil) } } label: { Text("立即报名").font(.headline).frame(maxWidth:.infinity,minHeight:48) }.buttonStyle(.borderedProminent).tint(EvaBrand.red) }
+-                    else { Text(EventPresentation.state(event)).foregroundStyle(.secondary).frame(maxWidth:.infinity,minHeight:48) }
++                    HStack(spacing: 0) {
++                        ForEach(panels.indices, id: \.self) { index in
++                            Button { panel = index; page = 1; query = "" } label: {
++                                VStack(spacing: 10) { Text(panels[index]).font(.headline).fixedSize(horizontal: false, vertical: true); Capsule().fill(panel == index ? EvaBrand.red : .clear).frame(height: 3).padding(.horizontal, 12) }.padding(.top, 12).frame(maxWidth: .infinity, minHeight: 48).foregroundStyle(panel == index ? EvaBrand.red : Color.secondary)
++                            }.buttonStyle(.plain).accessibilityAddTraits(panel == index ? .isSelected : [])
++                        }
++                    }.overlay(alignment: .bottom) { Divider().offset(y: 1) }
++                    if panel == 0 { overview } else if panel == 1 { groupPanel } else { publicPanel }
++
+                 }
+             }.frame(maxWidth:760).padding(12).frame(maxWidth:.infinity)
+-        }.eventPage().evaPageChrome().navigationTitle(event["name"].text).task { await load() }.refreshable { await load() }.onChange(of:query) { _ in page=1 }
++        }.safeAreaInset(edge: .bottom) { if event != .null { registrationBar } }
++        #if os(iOS)
++        .toolbar(.hidden, for: .tabBar)
++        #endif
++        .eventPage().evaPageChrome().navigationTitle("赛事详情").task { await load() }.refreshable { await load() }.onChange(of:query) { _ in page=1 }
+     }
+     private var hero: some View {
+         VStack(alignment: .leading, spacing: 14) {
+@@ -40,14 +49,64 @@
+                     Text(EventPresentation.state(event)).font(.caption.bold()).padding(8).foregroundStyle(EvaBrand.onAccent).background(EvaBrand.red, in: Capsule()).padding(10)
+                 }.frame(width: g.size.width, height: g.size.height).clipShape(RoundedRectangle(cornerRadius: 14))
+             }.aspectRatio(2.4, contentMode: .fit).accessibilityHidden(true)
+-            Text(event["name"].text).font(.title2.bold()).fixedSize(horizontal: false, vertical: true)
++            if typeSize.isAccessibilitySize {
++                VStack(alignment: .leading, spacing: 12) { eventTitle; eventMetrics }
++            } else {
++                HStack(alignment: .center, spacing: 12) { eventTitle.frame(maxWidth: .infinity, alignment: .leading); eventMetrics.frame(maxWidth: .infinity) }
++            }
+             Text(EventPresentation.dateRange(event) + " · " + (event.firstText("location", "venue", "city").isEmpty ? "地点待定" : event.firstText("location", "venue", "city"))).font(.subheadline).foregroundStyle(.secondary)
++            Text("主办方：" + (event["organizer"].text.isEmpty ? "待公布" : event["organizer"].text)).font(.subheadline).foregroundStyle(.secondary)
+         }
+     }
+-    private func metric(_ value:String,_ label:String)->some View { VStack(spacing:5) { Text(value).font(.title2.bold());Text(label).font(.subheadline).foregroundStyle(.secondary) }.frame(maxWidth:.infinity) }
++    private var eventTitle: some View { Text(event["name"].text).font(.title2.bold()).fixedSize(horizontal: false, vertical: true) }
++    private var eventMetrics: some View {
++        HStack(spacing: 4) {
++            metric(EventUI.count(event, key: "groupCount", fallback: store.data["groups"].list.count), "组别")
++            Divider().frame(height: 32)
++            metric(event["registrationPublic"].bool ? EventUI.count(event, key: "approvedPlayerCount", fallback: store.data["players"].list.count) : "—", "选手")
++            Divider().frame(height: 32)
++            metric(EventUI.count(event, key: "judgeCount", fallback: store.data["judges"].list.count), "评委")
++        }
++    }
++    private func metric(_ value: String, _ label: String) -> some View {
++        VStack(spacing: 5) { Text(value).font(.title3.bold()).monospacedDigit().lineLimit(1).minimumScaleFactor(0.75); Text(label).font(.caption).foregroundStyle(.secondary) }.frame(maxWidth: .infinity)
++    }
++    private var registrationBar: some View {
++        HStack(spacing: 10) {
++            NavigationLink { AuthGate { MyCompetitionsView() } } label: { Text("我的报名").font(.headline).frame(maxWidth: .infinity, minHeight: 48).foregroundStyle(.primary).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 12)).overlay { RoundedRectangle(cornerRadius: 12).stroke(Color.secondary.opacity(0.5), lineWidth: 1) } }.buttonStyle(.plain)
++            if EventPresentation.state(event) == "报名中" {
++                NavigationLink { AuthGate { EventRegistrationView(eventID: id, group: nil) } } label: { Text("立即报名").font(.headline).frame(maxWidth: .infinity, minHeight: 48).foregroundStyle(EvaBrand.onAccent).background(EvaBrand.red, in: RoundedRectangle(cornerRadius: 12)) }.buttonStyle(.plain)
++            } else { Text("报名已关闭").font(.headline).foregroundStyle(.secondary).frame(maxWidth: .infinity, minHeight: 48).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 12)) }
++        }.padding(.horizontal, 16).padding(.vertical, 10).background(EvaBrand.canvas).overlay(alignment: .top) { Divider() }
++    }
++    private var groupPanel: some View {
++        VStack(alignment: .leading, spacing: 14) {
++            HStack { Text("赛事组别").font(.title3.bold()); Spacer(); Text("共\(store.data["groups"].list.count)组").font(.subheadline).foregroundStyle(.secondary) }
++            TextField("搜索组别、舞种或年龄", text: $query).registrationInput(border: Color.gray.opacity(0.25))
++            HStack(spacing: 8) { ForEach(["全部", "成人", "青少年", "少儿"], id: \.self) { label in
++                Button { ageFilter = label; page = 1 } label: { Text(label).font(.subheadline).frame(maxWidth: .infinity, minHeight: 44).foregroundStyle(ageFilter == label ? EvaBrand.onAccent : Color.secondary).background(ageFilter == label ? EvaBrand.red : EvaBrand.surface, in: Capsule()) }.buttonStyle(.plain).accessibilityAddTraits(ageFilter == label ? .isSelected : [])
++            } }
++            ForEach(JSONValue.array(Array(rows.dropFirst((min(page,max(1,Int(ceil(Double(rows.count)/20))))-1)*20).prefix(20))).rows) { row in
++                NavigationLink { EventGroupView(eventID: id, groupID: row.id) } label: {
++                    HStack(spacing: 10) {
++                        Image(systemName: "trophy").font(.title3).foregroundStyle(EvaBrand.gold).frame(width: 36, height: 46).background(EvaBrand.softAccent, in: RoundedRectangle(cornerRadius: 9))
++                        VStack(alignment: .leading, spacing: 6) {
++                            Text(row.value["name"].text).font(.headline).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
++                            Text([row.value["ageRange"].text, row.value["playerCount"] == .null ? "报名信息未公开" : row.value["playerCount"].text + "位选手"].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++                        }.frame(maxWidth: .infinity, alignment: .leading)
++                        Text(row.value["rankingCount"].number > 0 ? "已公示" + row.value["rankingCount"].text + "项得分" : EventPresentation.state(event) == "报名中" ? "报名中" : "成绩待公布").font(.caption).foregroundStyle(row.value["rankingCount"].number > 0 ? EvaBrand.gold : EvaBrand.red).padding(6).background(EvaBrand.softAccent, in: RoundedRectangle(cornerRadius: 8)).fixedSize(horizontal: false, vertical: true).frame(maxWidth: 72)
++                        Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
++                    }.padding(12).frame(minHeight: 76).background(EvaBrand.surface, in: RoundedRectangle(cornerRadius: 14))
++                }.buttonStyle(.plain)
++            }
++            if rows.isEmpty { Text("没有找到符合条件的组别").font(.subheadline).foregroundStyle(.secondary).frame(maxWidth: .infinity, minHeight: 80) }
++            EventPages(page: $page, total: rows.count)
++        }
++    }
+     private var overview: some View {
+         VStack(spacing:14) {
+-            EventSection(title:"赛事信息") { EventInfoRow(label:"主办方",value:event["organizer"].text.isEmpty ? "伊娃东方舞" : event["organizer"].text);EventInfoRow(label:"比赛地点",value:event.firstText("location","venue","city").isEmpty ? "地点待定" : event.firstText("location","venue","city"));EventInfoRow(label:"报名状态",value:EventPresentation.state(event),highlight:true);EventInfoRow(label:"报名费用",value:event["registrationFee"].number>0 ? "¥"+event["registrationFee"].text : "免费");Text(plain(event["description"].text.isEmpty ? "赛事介绍正在完善中。" : event["description"].text)).font(.body).foregroundStyle(.secondary).textSelection(.enabled) }
++            EventSection { NavigationLink { JudgeWorkspaceView(eventID: id) } label: { Label("评委入口", systemImage: "person.badge.key").frame(minHeight: 44) } }
++            EventSection(title:"赛事信息") { EventInfoRow(label:"主办方",value:event["organizer"].text.isEmpty ? "待公布" : event["organizer"].text);EventInfoRow(label:"比赛地点",value:event.firstText("location","venue","city").isEmpty ? "地点待定" : event.firstText("location","venue","city"));EventInfoRow(label:"报名状态",value:EventPresentation.state(event),highlight:true);EventInfoRow(label:"报名费用",value:event["registrationFee"].number>0 ? "¥"+event["registrationFee"].text : "免费");Text(plain(event["description"].text.isEmpty ? "赛事介绍正在完善中。" : event["description"].text)).font(.body).foregroundStyle(.secondary).textSelection(.enabled) }
+             if !store.data["sessions"].list.isEmpty { EventSection(title:"赛事日程") { ForEach(store.data["sessions"].rows) { row in VStack(alignment:.leading,spacing:6) { Text(row.value["name"].text).font(.headline);Text([row.value["startsAt"].text,row.value["venue"].text].filter{ !$0.isEmpty }.joined(separator:" · ")).font(.subheadline).foregroundStyle(.secondary);Divider() } } } }
+             if session.token != nil { EventSection { NavigationLink("我的报名、音乐与缴费") { MyCompetitionsView() }.frame(minHeight:44) } }
+         }
+--- a/app开发/iOS/EvaDance/Sources/EvaDanceApp/EventUI.swift
++++ b/app开发/iOS/EvaDance/Sources/EvaDanceApp/EventUI.swift
+@@ -2,6 +2,22 @@
+ import EvaCore
+ 
+ enum EventUI {
++    static func ageGroup(_ row: JSONValue) -> String {
++        let text = ["name", "ageRange", "category"].map { row[$0].text }.joined(separator: " ").lowercased()
++        if text.range(of: #"青少年|少年|\bteen(?:ager)?s?\b|\byouth\b"#, options: .regularExpression) != nil { return "青少年" }
++        if text.range(of: #"少儿|幼儿|儿童|\bchildren\b|\bchild\b|\bkids?\b"#, options: .regularExpression) != nil { return "少儿" }
++        if text.range(of: #"成人|成年|\badults?\b"#, options: .regularExpression) != nil { return "成人" }
++        let age = row["ageRange"].text.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "岁", with: "")
++        let normalized = ["—", "–", "~", "～", "至"].reduce(age) { $0.replacingOccurrences(of: $1, with: "-") }
++        let parts = normalized.split(separator: "-", omittingEmptySubsequences: false)
++        if parts.count == 2, let low = Int(parts[0]), let high = Int(parts[1]), high >= low {
++            if low >= 18 { return "成人" }
++            if low >= 12 && high < 18 { return "青少年" }
++            if high < 12 { return "少儿" }
++        }
++        if (age.hasSuffix("+") || age.hasSuffix("以上")), let low = Int(age.prefix(while: { $0.isNumber })), low >= 18 { return "成人" }
++        return ""
++    }
+     static func score(_ value: JSONValue) -> String {
+         guard value != .null, !value.text.isEmpty, let score = Double(value.text), score.isFinite else { return "—" }
+         return String(format: "%.3f", locale: Locale(identifier: "en_US_POSIX"), score).replacingOccurrences(of: "\\.?0+$", with: "", options: .regularExpression)
+--- a/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ b/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -24,7 +24,8 @@
+     private final ExecutorService imageIO = Executors.newFixedThreadPool(2);
+     private final ArrayDeque<Runnable> history = new ArrayDeque<>();
+     private Api api;
+-    private LinearLayout root, content, pageActions, chromeBar;
++    private LinearLayout root, content, pageActions, chromeBar, eventRegistrationBar;
++    private String eventRegistrationState = "";
+     private android.widget.FrameLayout pageStage;
+     private ImageView registrationBackdrop;
+     private View registrationTint, appNavigation;
+@@ -93,6 +94,8 @@
+         registrationTint=new View(this);registrationTint.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+         pageStage.addView(registrationBackdrop,new android.widget.FrameLayout.LayoutParams(-1,-1));pageStage.addView(registrationTint,new android.widget.FrameLayout.LayoutParams(-1,-1));pageStage.addView(refreshLayout,new android.widget.FrameLayout.LayoutParams(-1,-1));
+         registrationBackdrop.setVisibility(View.GONE);registrationTint.setVisibility(View.GONE);
++        eventRegistrationBar=column();eventRegistrationBar.setVisibility(View.GONE);pageStage.addView(eventRegistrationBar,new android.widget.FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM));
++        eventRegistrationBar.addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->{if(eventRegistrationBar.getVisibility()==View.VISIBLE){android.widget.FrameLayout.LayoutParams params=(android.widget.FrameLayout.LayoutParams)refreshLayout.getLayoutParams();int height=b-t;if(params.bottomMargin!=height){params.bottomMargin=height;refreshLayout.setLayoutParams(params);}}});
+         LinearLayout tabs = row(); String[] names={"线上学院","线下课","赛事","商城","个人中心"};
+         if(expanded){tabs.setOrientation(LinearLayout.VERTICAL);tabs.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL);}
+         String[] icons={"learn","calendar","trophy","bag","person"};
+@@ -111,7 +114,7 @@
+     private void selectTab(int selected){String[] icons={"learn","calendar","trophy","bag","person"};for(int i=0;i<tabButtons.length;i++){Button b=tabButtons[i];if(b!=null){boolean active=i==selected;b.setSelected(active);b.setTextColor(active?red:SwodUi.muted(this));b.setTypeface(null,active?android.graphics.Typeface.BOLD:android.graphics.Typeface.NORMAL);b.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],active?red:SwodUi.muted(this)),null,null);b.setBackground(SwodUi.touch(this,active?SwodUi.tonal(this):SwodUi.surface(this),14));}}}
+     private void hero(String name,String description){LinearLayout box=column();box.setPadding(0,dp(4),0,dp(8));TextView heading=text(name,22);heading.setTypeface(null,android.graphics.Typeface.BOLD);box.addView(heading);TextView summary=text(description,14);summary.setTextColor(SwodUi.muted(this));box.addView(summary);content.addView(box);}
+     private void section(String name){TextView label=text(name,18);label.setTypeface(null,android.graphics.Typeface.BOLD);label.setPadding(0,dp(12),0,dp(4));content.addView(label);}
+-    private void begin(String name) {if(appNavigation!=null)appNavigation.setVisibility(View.VISIBLE);if(registrationBackdrop!=null){registrationBackdrop.setImageDrawable(null);registrationBackdrop.setVisibility(View.GONE);registrationTint.setVisibility(View.GONE);}pageScroll.setBackgroundColor(SwodUi.canvas(this));accountNotice=null;if(refreshLayout!=null){refreshLayout.setEnabled(history.isEmpty());refreshLayout.setRefreshing(refreshRequested);}refreshRequested=false;pendingLoads=0;loginPageVisible=false;courseEntryRequest++;courseEntryBusy=false; if(pageActions!=null)pageActions.removeAllViews();loginFeedback=null;courseAccessVisible=false; generation++; content.removeAllViews(); title.setText("");title.setContentDescription(name);chromeBar.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
++    private void begin(String name) {eventRegistrationState="";if(eventRegistrationBar!=null){eventRegistrationBar.setVisibility(View.GONE);android.widget.FrameLayout.LayoutParams footerParams=(android.widget.FrameLayout.LayoutParams)refreshLayout.getLayoutParams();footerParams.bottomMargin=0;refreshLayout.setLayoutParams(footerParams);}if(appNavigation!=null)appNavigation.setVisibility(View.VISIBLE);if(registrationBackdrop!=null){registrationBackdrop.setImageDrawable(null);registrationBackdrop.setVisibility(View.GONE);registrationTint.setVisibility(View.GONE);}pageScroll.setBackgroundColor(SwodUi.canvas(this));accountNotice=null;if(refreshLayout!=null){refreshLayout.setEnabled(history.isEmpty());refreshLayout.setRefreshing(refreshRequested);}refreshRequested=false;pendingLoads=0;loginPageVisible=false;courseEntryRequest++;courseEntryBusy=false; if(pageActions!=null)pageActions.removeAllViews();loginFeedback=null;courseAccessVisible=false; generation++; content.removeAllViews(); title.setText("");title.setContentDescription(name);chromeBar.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);backButton.setVisibility(history.isEmpty()?View.GONE:View.VISIBLE);pageScroll.scrollTo(0,0); }
+     private int dp(int x) {return Math.round(x*getResources().getDisplayMetrics().density);}
+     private LinearLayout column(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.VERTICAL);return v;}
+     private LinearLayout row(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.HORIZONTAL);v.setGravity(Gravity.CENTER_VERTICAL);return v;}
+@@ -427,29 +430,43 @@
+     private String publicScore(Object value){if(value==null||value==JSONObject.NULL||String.valueOf(value).isEmpty())return "—";try{double n=Double.parseDouble(String.valueOf(value));return Double.isFinite(n)?String.format(Locale.ROOT,"%.3f",n).replaceAll("\\.?0+$",""):"—";}catch(Exception ignored){return "—";}}
+     private String publicRank(JSONObject row){int rank=row.optInt("rankNo");return rank==1?"冠军":rank==2?"亚军":rank==3?"季军":rank>0?"第"+rank+"名":"成绩待公示";}
+     private ImageView eventAvatar(JSONObject row){ImageView image=new ImageView(this);image.setScaleType(ImageView.ScaleType.CENTER_CROP);image.setImageDrawable(SwodUi.icon(this,"person",red));image.setBackground(SwodUi.shape(this,SwodUi.tonal(this),24));image.setClipToOutline(true);String url=first(row,"avatarUrl");int version=generation;if(Policy.secureURL(url))imageIO.execute(()->{try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(version==generation&&!isFinishing()&&bitmap!=null)image.setImageBitmap(bitmap);});}catch(Exception ignored){}});image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);return image;}
+-    private void eventHero(JSONObject event){
++    private void eventHero(JSONObject event,JSONObject data){
+         android.widget.FrameLayout hero=new android.widget.FrameLayout(this);hero.setBackground(SwodUi.shape(this,SwodUi.tonal(this),14));hero.setClipToOutline(true);content.addView(hero,new LinearLayout.LayoutParams(-1,dp(150)));
+         hero.addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->{int height=Math.round((r-l)/2.4f);if(height>0&&hero.getLayoutParams().height!=height){android.view.ViewGroup.LayoutParams params=hero.getLayoutParams();params.height=height;hero.setLayoutParams(params);}});
+         ImageView cover=new ImageView(this);cover.setScaleType(ImageView.ScaleType.CENTER_CROP);cover.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);hero.addView(cover,new android.widget.FrameLayout.LayoutParams(-1,-1));String raw=first(event,"coverUrl","cover_url"),url=raw.startsWith("/")?"https://admin.swod.com.cn"+raw:raw;int version=generation;if(Policy.secureURL(url))imageIO.execute(()->{try{android.graphics.Bitmap image=Images.read(url);runOnUiThread(()->{if(version==generation&&!isFinishing()&&image!=null)cover.setImageBitmap(image);});}catch(Exception ignored){}});
+         TextView status=text(EventPresentation.state(event),12);status.setTextColor(SwodUi.dark(this)?android.graphics.Color.BLACK:android.graphics.Color.WHITE);status.setBackground(SwodUi.shape(this,red,12));android.widget.FrameLayout.LayoutParams badge=new android.widget.FrameLayout.LayoutParams(-2,-2,Gravity.TOP|Gravity.START);badge.setMargins(dp(10),dp(10),dp(10),dp(10));hero.addView(status,badge);
+-        TextView name=text(first(event,"name"),24);name.setTypeface(null,android.graphics.Typeface.BOLD);content.addView(name);
+-        TextView date=text(EventPresentation.dates(event)+" · "+(first(event,"location","venue","city").isEmpty()?"地点待定":first(event,"location","venue","city")),14);date.setTextColor(SwodUi.muted(this));content.addView(date);
+-    }
++        LinearLayout heading=row();TextView name=text(first(event,"name"),24);name.setTypeface(null,android.graphics.Typeface.BOLD);LinearLayout counters=row();String[] keys={"groupCount","approvedPlayerCount","judgeCount"},labels={"组别","选手","评委"},collections={"groups","players","judges"};
++        for(int i=0;i<3;i++){Long n=EventPresentation.count(event,keys[i]);String number=i==1&&!event.optBoolean("registrationPublic")?"—":n==null?String.valueOf(array(data.opt(collections[i])).length()):n.toString();LinearLayout metric=column();metric.setGravity(Gravity.CENTER);TextView value=text(number,21);value.setTypeface(null,android.graphics.Typeface.BOLD);value.setGravity(Gravity.CENTER);metric.addView(value);TextView label=text(labels[i],12);label.setTextColor(SwodUi.muted(this));label.setGravity(Gravity.CENTER);metric.addView(label);counters.addView(metric,new LinearLayout.LayoutParams(0,-2,1));}
++        if(getResources().getConfiguration().screenWidthDp<360||getResources().getConfiguration().fontScale>1.3f){content.addView(name);content.addView(counters,new LinearLayout.LayoutParams(-1,-2));}
++        else{heading.addView(name,new LinearLayout.LayoutParams(0,-2,1));heading.addView(counters,new LinearLayout.LayoutParams(dp(150),-2));content.addView(heading);}
++        TextView date=text(EventPresentation.dates(event)+" · "+(first(event,"location","venue","city").isEmpty()?"地点待定":first(event,"location","venue","city")),14);date.setTextColor(SwodUi.muted(this));content.addView(date);TextView organizer=text("主办方："+(first(event,"organizer").isEmpty()?"待公布":first(event,"organizer")),14);organizer.setTextColor(SwodUi.muted(this));content.addView(organizer);
++    }
++    private void eventFooter(int id,JSONObject event){
++        eventRegistrationBar.removeAllViews();eventRegistrationBar.setPadding(dp(16),dp(10),dp(16),dp(10));eventRegistrationBar.setBackgroundColor(SwodUi.surface(this));LinearLayout buttons=row();eventRegistrationBar.addView(buttons);
++        Button mine=button("我的报名",()->open(this::myEvents));mine.setBackground(SwodUi.touch(this,SwodUi.field(this),12));LinearLayout.LayoutParams first=new LinearLayout.LayoutParams(0,-2,1);first.rightMargin=dp(10);buttons.addView(mine,first);
++        Button register=button("报名中".equals(EventPresentation.state(event))?"立即报名":"报名已关闭",()->open(()->register(id,new JSONObject())));registrationPrimary(register);register.setEnabled("报名中".equals(EventPresentation.state(event)));buttons.addView(register,new LinearLayout.LayoutParams(0,-2,1.3f));eventRegistrationBar.setVisibility(View.VISIBLE);if(appNavigation!=null)appNavigation.setVisibility(View.GONE);
++    }
++
+     private void event(int id){begin("赛事详情");pageScroll.setBackgroundColor(eventCanvas());load("/events/"+id,"GET",null,false,value->renderEventDetail(id,object(value),1));}
+     private void renderEventDetail(int id,JSONObject data,int panel){
+-        content.removeAllViews();JSONObject event=object(data.opt("competition"));title.setText(first(event,"name"));eventHero(event);Button judge=button("评委入口",()->open(()->judgeWorkspace(id,0,0)));content.addView(judge);
+-        LinearLayout metrics=eventSurface(content,"");LinearLayout counts=row();String[] keys={"groupCount","approvedPlayerCount","judgeCount"},labels={"组别","选手","评委"},collections={"groups","players","judges"};for(int i=0;i<3;i++){Long n=EventPresentation.count(event,keys[i]);String number=i==1&&!event.optBoolean("registrationPublic")?"—":n==null?String.valueOf(array(data.opt(collections[i])).length()):n.toString();counts.addView(eventMetric(number,labels[i],false),new LinearLayout.LayoutParams(0,-2,1));}metrics.addView(counts);
+-        HorizontalScrollView strip=new HorizontalScrollView(this);strip.setHorizontalScrollBarEnabled(false);LinearLayout tabs=row();String[] panels={"概览","组别","选手","评委","成绩"};for(int i=0;i<panels.length;i++){final int index=i;Button tab=button(panels[i],()->renderEventDetail(id,data,index));tab.setBackground(SwodUi.touch(this,index==panel?red:SwodUi.surface(this),24));tab.setTextColor(index==panel?SwodUi.dark(this)?android.graphics.Color.BLACK:android.graphics.Color.WHITE:SwodUi.ink(this));LinearLayout.LayoutParams param=new LinearLayout.LayoutParams(-2,dp(48));param.rightMargin=dp(6);tabs.addView(tab,param);}strip.addView(tabs);content.addView(strip);
+-        if(panel==0){LinearLayout info=eventSurface(content,"赛事信息");eventInfo(info,"主办方",first(event,"organizer").isEmpty()?"伊娃东方舞":first(event,"organizer"));eventInfo(info,"比赛地点",first(event,"location","venue","city").isEmpty()?"地点待定":first(event,"location","venue","city"));eventInfo(info,"报名状态",EventPresentation.state(event));eventInfo(info,"报名费用",event.optDouble("registrationFee")>0?"¥"+event.optString("registrationFee"):"免费");info.addView(text(strip(first(event,"description")).isEmpty()?"赛事介绍正在完善中。":strip(first(event,"description")),15));JSONArray sessions=array(data.opt("sessions"));if(sessions.length()>0){LinearLayout schedule=eventSurface(content,"赛事日程");for(int i=0;i<sessions.length();i++){JSONObject session=sessions.optJSONObject(i);card(schedule,first(session,"name"),first(session,"startsAt")+" · "+first(session,"venue"),null);}}if(api.loggedIn())action("我的报名、音乐与缴费",()->open(this::myEvents));}
+-        else {JSONArray rows=array(data.opt(panel==1?"groups":panel==2?"players":panel==3?"judges":"rankings"));String empty=panel==1?"没有找到符合条件的组别":panel==2?(event.optBoolean("registrationPublic")?"暂无报名信息":"报名信息尚未公开"):panel==3?"评委阵容暂未公布":"成绩经统一平台审核发布后在这里公示";eventRows(eventSurface(content,panels[panel]),(panel==3&&!event.optBoolean("judgeScoresPublic")?new JSONArray():rows),panel==1?"groups":panel==3?"judges":panel==4?"results":"players",empty,row->{if(panel==3)open(()->eventJudgeProfile(row,event.optString("name")));else if(panel==1)open(()->eventGroup(id,row.optInt("id")));else if(panel!=3)open(()->eventPlayer(id,row.optInt("groupId"),row.optInt("playerId",row.optInt("id"))));});}
+-        Button register=button("报名中".equals(EventPresentation.state(event))?"立即报名":EventPresentation.state(event),()->open(()->register(id,new JSONObject())));registrationPrimary(register);register.setEnabled("报名中".equals(EventPresentation.state(event)));content.addView(register);
++        content.removeAllViews();JSONObject event=object(data.opt("competition"));title.setText("赛事详情");eventRegistrationState=EventPresentation.state(event);eventHero(event,data);
++        LinearLayout tabs=row();String[] panels={"概览","组别","选手","评委","成绩"};for(int i=0;i<panels.length;i++){final int index=i;LinearLayout cell=column();Button tab=button(panels[i],()->renderEventDetail(id,data,index));tab.setPadding(0,dp(8),0,dp(8));tab.setTextSize(16);tab.setMinWidth(0);tab.setMinimumWidth(0);tab.setSelected(index==panel);tab.setTextColor(index==panel?red:SwodUi.muted(this));cell.addView(tab,new LinearLayout.LayoutParams(-1,-2));View underline=new View(this);underline.setBackgroundColor(index==panel?red:android.graphics.Color.TRANSPARENT);LinearLayout.LayoutParams rule=new LinearLayout.LayoutParams(-1,dp(3));rule.setMargins(dp(12),0,dp(12),0);cell.addView(underline,rule);tabs.addView(cell,new LinearLayout.LayoutParams(0,-2,1));}content.addView(tabs);
++        if(panel==0){Button judge=button("评委入口",()->open(()->judgeWorkspace(id,0,0)));content.addView(judge);LinearLayout info=eventSurface(content,"赛事信息");eventInfo(info,"主办方",first(event,"organizer").isEmpty()?"待公布":first(event,"organizer"));eventInfo(info,"比赛地点",first(event,"location","venue","city").isEmpty()?"地点待定":first(event,"location","venue","city"));eventInfo(info,"报名状态",EventPresentation.state(event));eventInfo(info,"报名费用",event.optDouble("registrationFee")>0?"¥"+event.optString("registrationFee"):"免费");info.addView(text(strip(first(event,"description")).isEmpty()?"赛事介绍正在完善中。":strip(first(event,"description")),15));JSONArray sessions=array(data.opt("sessions"));if(sessions.length()>0){LinearLayout schedule=eventSurface(content,"赛事日程");for(int i=0;i<sessions.length();i++){JSONObject session=sessions.optJSONObject(i);card(schedule,first(session,"name"),first(session,"startsAt")+" · "+first(session,"venue"),null);}}if(api.loggedIn())action("我的报名、音乐与缴费",()->open(this::myEvents));}
++        else {JSONArray rows=array(data.opt(panel==1?"groups":panel==2?"players":panel==3?"judges":"rankings"));String empty=panel==1?"没有找到符合条件的组别":panel==2?(event.optBoolean("registrationPublic")?"暂无报名信息":"报名信息尚未公开"):panel==3?"评委阵容暂未公布":"成绩经统一平台审核发布后在这里公示";eventRows(eventSurface(content,panel==1?"赛事组别 · 共"+rows.length()+"组":panels[panel]),(panel==3&&!event.optBoolean("judgeScoresPublic")?new JSONArray():rows),panel==1?"groups":panel==3?"judges":panel==4?"results":"players",empty,row->{if(panel==3)open(()->eventJudgeProfile(row,event.optString("name")));else if(panel==1)open(()->eventGroup(id,row.optInt("id")));else if(panel!=3)open(()->eventPlayer(id,row.optInt("groupId"),row.optInt("playerId",row.optInt("id"))));});}
++        eventFooter(id,event);
++    }
++    private void eventGroupCard(LinearLayout parent,JSONObject group,RowTap tap){
++        LinearLayout card=row();card.setPadding(dp(10),dp(12),dp(10),dp(12));card.setBackground(SwodUi.touch(this,SwodUi.surface(this),14));LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,-2);params.bottomMargin=dp(10);parent.addView(card,params);
++        ImageView icon=new ImageView(this);icon.setImageDrawable(SwodUi.icon(this,"trophy",android.graphics.Color.parseColor("#987131")));icon.setBackground(SwodUi.shape(this,SwodUi.tonal(this),10));icon.setPadding(dp(6),dp(6),dp(6),dp(6));icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);card.addView(icon,new LinearLayout.LayoutParams(dp(36),dp(46)));
++        LinearLayout words=column();words.setPadding(dp(8),0,dp(6),0);TextView name=text(first(group,"name"),16);name.setTypeface(null,android.graphics.Typeface.BOLD);words.addView(name);TextView meta=text((first(group,"ageRange").isEmpty()?"":first(group,"ageRange")+" · ")+(group.isNull("playerCount")?"报名信息未公开":group.optInt("playerCount")+"位选手"),13);meta.setTextColor(SwodUi.muted(this));words.addView(meta);card.addView(words,new LinearLayout.LayoutParams(0,-2,1));
++        boolean published=group.optInt("rankingCount")>0;TextView state=text(published?"已公示"+group.optInt("rankingCount")+"项得分":eventRegistrationState.equals("报名中")?"报名中":"成绩待公布",12);state.setMaxWidth(dp(80));state.setGravity(Gravity.CENTER);state.setTextColor(published?android.graphics.Color.parseColor(SwodUi.dark(this)?"#DFC080":"#816020"):red);state.setBackground(SwodUi.shape(this,SwodUi.tonal(this),12));card.addView(state);TextView chevron=text("›",24);chevron.setTextColor(SwodUi.muted(this));card.addView(chevron);card.setMinimumHeight(dp(76));card.setFocusable(true);card.setOnClickListener(v->tap.tap(group));
+     }
+     private void eventRows(LinearLayout parent,JSONArray rows,String kind,String empty,RowTap tap){
+-        EditText query=registrationInput(parent,kind.equals("groups")?"搜索组别、舞种或年龄":kind.equals("judges")?"搜索评委":"搜索选手、编号或机构");LinearLayout results=column();parent.addView(results);int[] page={1};Runnable[] render={null};render[0]=()->{results.removeAllViews();java.util.List<JSONObject> matches=new java.util.ArrayList<>();String needle=query.getText().toString().trim().toLowerCase(Locale.ROOT);for(int i=0;i<rows.length();i++){JSONObject item=rows.optJSONObject(i);String corpus="";for(String field:new String[]{"name","playerName","groupName","category","ageRange","danceType","playerNo","organization","teacher","player_no","subtitle"})corpus+=item.optString(field)+" ";if(corpus.toLowerCase(Locale.ROOT).contains(needle))matches.add(item);}int pages=Math.max(1,(matches.size()+19)/20);page[0]=Math.min(page[0],pages);
+-            for(int i=(page[0]-1)*20;i<Math.min(page[0]*20,matches.size());i++){JSONObject item=matches.get(i);if(kind.equals("assignments")){card(results,first(item,"name"),first(item,"subtitle"),()->tap.tap(item));continue;}if(kind.equals("groups")){card(results,first(item,"name"),(item.isNull("playerCount")?"报名信息未公开":item.optInt("playerCount")+" 位选手")+" · "+(item.optInt("rankingCount")>0?item.optInt("rankingCount")+" 项成绩":"成绩待公布"),()->tap.tap(item));continue;}
++        EditText query=registrationInput(parent,kind.equals("groups")?"搜索组别、舞种或年龄":kind.equals("judges")?"搜索评委":"搜索选手、编号或机构");LinearLayout filters=row();if(kind.equals("groups"))parent.addView(filters);String[] ageFilter={"全部"},ageLabels={"全部","成人","青少年","少儿"};Button[] ageButtons=new Button[4];LinearLayout results=column();parent.addView(results);int[] page={1};Runnable[] render={null};render[0]=()->{for(int j=0;j<ageButtons.length;j++){if(ageButtons[j]!=null){boolean selected=ageFilter[0].equals(ageLabels[j]);ageButtons[j].setSelected(selected);ageButtons[j].setTextColor(selected?(SwodUi.dark(this)?android.graphics.Color.BLACK:android.graphics.Color.WHITE):SwodUi.muted(this));ageButtons[j].setBackground(SwodUi.touch(this,selected?red:SwodUi.surface(this),24));}}results.removeAllViews();java.util.List<JSONObject> matches=new java.util.ArrayList<>();String needle=query.getText().toString().trim().toLowerCase(Locale.ROOT);for(int i=0;i<rows.length();i++){JSONObject item=rows.optJSONObject(i);if(kind.equals("groups")&&!ageFilter[0].equals("全部")&&!ageFilter[0].equals(EventPresentation.ageGroup(item)))continue;String corpus="";for(String field:new String[]{"name","playerName","groupName","category","ageRange","danceType","playerNo","organization","teacher","player_no","subtitle"})corpus+=item.optString(field)+" ";if(corpus.toLowerCase(Locale.ROOT).contains(needle))matches.add(item);}int pages=Math.max(1,(matches.size()+19)/20);page[0]=Math.min(page[0],pages);
++            for(int i=(page[0]-1)*20;i<Math.min(page[0]*20,matches.size());i++){JSONObject item=matches.get(i);if(kind.equals("assignments")){card(results,first(item,"name"),first(item,"subtitle"),()->tap.tap(item));continue;}if(kind.equals("groups")){eventGroupCard(results,item,tap);continue;}
+                 LinearLayout line=row();line.setPadding(0,dp(10),0,dp(10));line.addView(eventAvatar(item),new LinearLayout.LayoutParams(dp(44),dp(44)));LinearLayout body=column();body.setPadding(dp(10),0,dp(6),0);TextView name=text(first(item,"name","playerName"),16);name.setTypeface(null,android.graphics.Typeface.BOLD);body.addView(name);body.addView(text(kind.equals("judges")?first(item,"title")+" · "+first(item,"organization")+"\n"+strip(first(item,"bio")):first(item,"groupName")+" · "+first(item,"playerNo")+" · "+first(item,"organization","teacher"),13));line.addView(body,new LinearLayout.LayoutParams(0,-2,1));if(kind.equals("results")){TextView score=text(publicRank(item)+"\n"+publicScore(item.opt("publishedTotal"))+"\n最终得分",13);score.setGravity(Gravity.END);score.setTextColor(red);line.addView(score);}{line.setMinimumHeight(dp(64));line.setOnClickListener(view->tap.tap(item));line.setFocusable(true);}results.addView(line);View rule=new View(this);rule.setBackgroundColor(registrationLine());results.addView(rule,new LinearLayout.LayoutParams(-1,dp(1)));}
+             if(matches.isEmpty())results.addView(text(query.getText().length()>0?"未找到匹配记录":empty,14));if(pages>1){LinearLayout pager=row();Button before=button("上一页",()->{page[0]--;render[0].run();});before.setEnabled(page[0]>1);pager.addView(before,new LinearLayout.LayoutParams(0,-2,1));pager.addView(text(page[0]+" / "+pages+" · "+matches.size()+" 条",12));Button next=button("下一页",()->{page[0]++;render[0].run();});next.setEnabled(page[0]<pages);pager.addView(next,new LinearLayout.LayoutParams(0,-2,1));results.addView(pager);}
+-        };query.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence v,int a,int c,int f){}public void onTextChanged(CharSequence v,int a,int b,int c){page[0]=1;render[0].run();}public void afterTextChanged(Editable e){}});render[0].run();
++        };if(kind.equals("groups")){for(int j=0;j<ageLabels.length;j++){final int index=j;ageButtons[j]=button(ageLabels[j],()->{ageFilter[0]=ageLabels[index];page[0]=1;render[0].run();});ageButtons[j].setPadding(dp(4),dp(6),dp(4),dp(6));ageButtons[j].setMinWidth(0);ageButtons[j].setMinimumWidth(0);ageButtons[j].setTextSize(14);LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(0,dp(44),1);params.setMargins(dp(3),dp(6),dp(3),dp(12));filters.addView(ageButtons[j],params);}}query.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence v,int a,int c,int f){}public void onTextChanged(CharSequence v,int a,int b,int c){page[0]=1;render[0].run();}public void afterTextChanged(Editable e){}});render[0].run();
+     }
+     private void eventPodium(JSONArray players,int eventId,int groupId){
+         boolean hasPodium=false;for(int i=0;i<players.length();i++){int rank=players.optJSONObject(i).optInt("rankNo");if(rank>0&&rank<=3)hasPodium=true;}if(!hasPodium)return;
+--- a/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/EventPresentation.java
++++ b/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/EventPresentation.java
+@@ -41,4 +41,16 @@
+         if(start!=null&&start.isAfter(now))return "报名未开始";if(end!=null&&end.isBefore(now))return "报名已截止";
+         return registration.equals("open")?"报名中":"报名未开放";
+     }
++    static String ageGroup(JSONObject row){
++        String text=(value(row,"name")+" "+value(row,"ageRange")+" "+value(row,"category")).toLowerCase(java.util.Locale.ROOT);
++        if(java.util.regex.Pattern.compile("青少年|少年|\\bteen(?:ager)?s?\\b|\\byouth\\b").matcher(text).find())return "青少年";
++        if(java.util.regex.Pattern.compile("少儿|幼儿|儿童|\\bchildren\\b|\\bchild\\b|\\bkids?\\b").matcher(text).find())return "少儿";
++        if(java.util.regex.Pattern.compile("成人|成年|\\badults?\\b").matcher(text).find())return "成人";
++        String age=value(row,"ageRange").trim();
++        java.util.regex.Matcher range=java.util.regex.Pattern.compile("^(\\d{1,2})\\s*(?:岁\\s*)?[-—–~～至]\\s*(\\d{1,2})\\s*岁?$").matcher(age);
++        if(range.matches()){int low=Integer.parseInt(range.group(1)),high=Integer.parseInt(range.group(2));if(high<low)return "";if(low>=18)return "成人";if(low>=12&&high<18)return "青少年";if(high<12)return "少儿";}
++        java.util.regex.Matcher over=java.util.regex.Pattern.compile("^(\\d{1,2})\\s*(?:岁及以上|岁以上|\\+)$").matcher(age);
++        return over.matches()&&Integer.parseInt(over.group(1))>=18?"成人":"";
++    }
++
+ }
+--- a/app开发/HarmonyOS/EvaDance/entry/src/main/ets/components/PublicEventView.ets
++++ b/app开发/HarmonyOS/EvaDance/entry/src/main/ets/components/PublicEventView.ets
+@@ -1,6 +1,6 @@
+ import { platform, coverImageURL } from '../services/PlatformApi';
+ import { SwodTheme } from '../services/SwodTheme';
+-import { eventState, eventDates } from '../services/EventPresentation';
++import { eventState, eventDates, eventAgeGroup } from '../services/EventPresentation';
+ import { Row as ModelRow } from '../services/Models';
+ interface EventRecord {
+   id?: number | string; name?: string; code?: string; coverUrl?: string; cover_url?: string; avatarUrl?: string;
+@@ -24,22 +24,25 @@
+   onRegister: (groupID: number) => void = () => {};
+   onJudge: () => void = () => {};
+   onMine: () => void = () => {};
++  onStateChange: (eventID: number, state: string) => void = () => {};
+   @State private data: EventData = {};
+   @State private busy: boolean = false;
+   @State private error: string = '';
+   @State private panel: number = 1;
+   @State private selectedJudge: EventRecord | undefined = undefined;
+   @State private query: string = '';
++  @State private ageFilter: string = '全部';
++  @State private headerWidth: number = 0;
+   @State private page: number = 1;
+   private version: number = 0;
+   aboutToAppear(): void { this.reload(); }
+   aboutToDisappear(): void { this.version++; }
+-  private routeChanged(): void { this.page = 1; this.query = ''; this.reload(); }
++  private routeChanged(): void { this.page = 1; this.query = ''; this.ageFilter = '全部'; this.reload(); }
+   private mode(): string { return this.playerID > 0 ? 'player' : this.groupID > 0 ? 'group' : 'event'; }
+   private async reload(): Promise<void> {
+-    const version = ++this.version; this.busy = true; this.error = ''; this.data = {};
++    const version = ++this.version; this.busy = true; this.error = ''; this.data = {}; this.onStateChange(this.eventID, '');
+     const path = '/events/' + this.eventID + (this.groupID > 0 ? '/groups/' + this.groupID : '') + (this.playerID > 0 ? '/players/' + this.playerID : '');
+-    try { const data = await platform.request<EventData>(path); if (version === this.version) this.data = data; }
++    try { const data = await platform.request<EventData>(path); if (version === this.version) { this.data = data; this.onStateChange(this.eventID, this.state()); } }
+     catch (failure) { if (version === this.version) this.error = failure instanceof Error ? failure.message : '赛事加载失败，请重试'; }
+     finally { if (version === this.version) this.busy = false; }
+   }
+@@ -52,7 +55,7 @@
+     const rows = this.mode() === 'group' ? this.data.players || [] : this.panel === 1 ? this.data.groups || [] : this.panel === 2 ? this.data.players || [] : this.panel === 3 ? this.data.judges || [] : this.data.rankings || [];
+     if(this.mode()==='event' && this.panel===3 && !this.data.competition?.judgeScoresPublic)return [];
+     const query = this.query.trim().toLowerCase();
+-    return rows.filter((row: EventRecord) => !query || [row.name, row.playerName, row.groupName, row.playerNo, row.organization, row.teacher, row.category, row.danceType, row.ageRange].join(' ').toLowerCase().includes(query));
++    return rows.filter((row: EventRecord) => (this.mode() !== 'event' || this.panel !== 1 || this.ageFilter === '全部' || eventAgeGroup(row.name || '', row.ageRange || '', row.category || '') === this.ageFilter) && (!query || [row.name, row.playerName, row.groupName, row.playerNo, row.organization, row.teacher, row.category, row.danceType, row.ageRange].join(' ').toLowerCase().includes(query)));
+   }
+   private visible(): EventRecord[] { const rows = this.rows(); const page = Math.min(this.page, Math.max(1, Math.ceil(rows.length / 20))); return rows.slice((page - 1) * 20, page * 20); }
+   private published(): boolean { return Number(this.data.group?.rankingCount) > 0 || (this.data.players || []).some((row: EventRecord) => row.resultPublished === true); }
+@@ -65,21 +68,31 @@
+     if (coverImageURL(row.avatarUrl || '')) { Image(coverImageURL(row.avatarUrl || '')).width(44).height(44).borderRadius(22).objectFit(ImageFit.Cover).accessibilityLevel('no') }
+     else { Text((row.name || row.playerName || '选').slice(0, 1)).width(44).height(44).textAlign(TextAlign.Center).fontSize(18).fontColor(SwodTheme.primary).backgroundColor(SwodTheme.tonal).borderRadius(22).accessibilityLevel('no') }
+   }
+-  @Builder private metric(value: string, label: string) { Column({ space: 5 }) { Text(value).fontSize(24).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink); Text(label).fontSize(14).fontColor(SwodTheme.muted) }.layoutWeight(1) }
++  @Builder private metric(value: string, label: string) { Column({ space: 5 }) { Text(value).fontSize(21).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink); Text(label).fontSize(14).fontColor(SwodTheme.muted) }.layoutWeight(1) }
+   @Builder private hero() {
+     Column({ space: 14 }) {
+       Stack({ alignContent: Alignment.TopStart }) {
+         if (coverImageURL(this.data.competition?.coverUrl || this.data.competition?.cover_url || '')) { Image(coverImageURL(this.data.competition?.coverUrl || this.data.competition?.cover_url || '')).width('100%').height('100%').objectFit(ImageFit.Cover).accessibilityLevel('no') }
+         Text(this.state()).fontSize(12).fontWeight(FontWeight.Bold).padding(8).borderRadius(10).fontColor(SwodTheme.onPrimary).backgroundColor(SwodTheme.primary).margin(10)
+       }.width('100%').aspectRatio(2.4).backgroundColor(SwodTheme.tonal).borderRadius(14).clip(true)
+-      Text(this.data.competition?.name || '').fontSize(24).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
++      if (this.headerWidth > 0 && this.headerWidth < 320) {
++        Text(this.data.competition?.name || '').fontSize(24).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
++        this.headerMetrics()
++      } else {
++        Row({ space: 12 }) { Text(this.data.competition?.name || '').fontSize(24).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).layoutWeight(1); Row({ space: 2 }) { this.headerMetrics() }.layoutWeight(1) }.width('100%')
++      }
+       Text(this.dates() + ' · ' + (this.data.competition?.location || this.data.competition?.venue || '地点待定')).fontSize(14).fontColor(SwodTheme.muted).width('100%')
+-    }.width('100%').alignItems(HorizontalAlign.Start)
++      Text('主办方：' + (this.data.competition?.organizer || '待公布')).fontSize(14).fontColor(SwodTheme.muted).width('100%')
++    }.width('100%').alignItems(HorizontalAlign.Start).onAreaChange((_old: Area, area: Area) => { this.headerWidth = Number(area.width); })
++  }
++  @Builder private headerMetrics() {
++    Row({ space: 2 }) { this.metric(this.count(this.data.competition?.groupCount, (this.data.groups || []).length), '组别'); Divider().vertical(true).height(30).color(SwodTheme.registrationLine); this.metric(this.data.competition?.registrationPublic ? this.count(this.data.competition?.approvedPlayerCount, (this.data.players || []).length) : '—', '选手'); Divider().vertical(true).height(30).color(SwodTheme.registrationLine); this.metric(this.count(this.data.competition?.judgeCount, (this.data.judges || []).length), '评委') }.width('100%')
+   }
+   @Builder private overview() {
+     Column({ space: 14 }) {
++      Button('评委入口').constraintSize({ minHeight: 44 }).fontSize(16).backgroundColor(SwodTheme.surface).fontColor(SwodTheme.primary).onClick(this.onJudge)
+       Text('赛事信息').fontSize(21).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+-      this.info('主办方', this.data.competition?.organizer || '伊娃东方舞')
++      this.info('主办方', this.data.competition?.organizer || '待公布')
+       this.info('比赛地点', this.data.competition?.location || this.data.competition?.venue || '地点待定')
+       this.info('报名状态', this.state())
+       this.info('报名费用', Number(this.data.competition?.registrationFee) > 0 ? '¥' + this.data.competition?.registrationFee : '免费')
+@@ -103,21 +116,31 @@
+   }
+   @Builder private rowPanel() {
+     Column({ space: 12 }) {
+-      Text(this.mode() === 'group' ? this.published() ? '成绩排名' : '参赛选手' : ['概览', '组别', '选手', '评委', '成绩'][this.panel]).fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
++      Text(this.mode() === 'group' ? this.published() ? '成绩排名' : '参赛选手' : this.panel === 1 ? '赛事组别 · 共' + (this.data.groups || []).length + '组' : ['概览', '组别', '选手', '评委', '成绩'][this.panel]).fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+       TextInput({ placeholder: this.mode() === 'event' && this.panel === 1 ? '搜索组别、舞种或年龄' : this.panel === 3 && this.mode() === 'event' ? '搜索评委' : '搜索选手、编号或机构', text: this.query }).height(48).fontSize(16).backgroundColor(SwodTheme.field).borderRadius(10).onChange((value: string) => { this.query = value; this.page = 1; })
++      if (this.mode() === 'event' && this.panel === 1) {
++        Row({ space: 8 }) { ForEach(['全部', '成人', '青少年', '少儿'], (label: string) => { Button(label).fontSize(14).constraintSize({ minHeight: 44 }).layoutWeight(1).borderRadius(24).backgroundColor(this.ageFilter === label ? SwodTheme.primary : SwodTheme.surface).fontColor(this.ageFilter === label ? SwodTheme.onPrimary : SwodTheme.muted).onClick(() => { this.ageFilter = label; this.page = 1; }) }) }.width('100%')
++      }
+       ForEach(this.visible(), (row: EventRecord) => {
+         if (this.mode() === 'event' && this.panel === 1) {
+-          Button({ type: ButtonType.Normal }) { Row({ space: 12 }) { Column({ space: 6 }) { Text(row.name || '').fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%'); Text((row.playerCount == null ? '报名信息未公开' : row.playerCount + ' 位选手') + ' · ' + (Number(row.rankingCount) > 0 ? row.rankingCount + ' 项成绩' : '成绩待公布')).fontSize(14).fontColor(SwodTheme.muted).width('100%') }.layoutWeight(1); Text('›').fontSize(20).fontColor(SwodTheme.muted) }.width('100%').padding({ top: 10, bottom: 10 }) }.width('100%').padding(0).backgroundColor(Color.Transparent).onClick(() => this.onOpenGroup(Number(row.id)))
++          Button({ type: ButtonType.Normal }) {
++            Row({ space: 10 }) {
++              Image($r('app.media.nav_trophy_on')).width(34).height(44).padding(6).backgroundColor(SwodTheme.tonal).borderRadius(10).accessibilityLevel('no')
++              Column({ space: 6 }) { Text(row.name || '').fontSize(16).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%'); Text((row.ageRange ? row.ageRange + ' · ' : '') + (row.playerCount == null ? '报名信息未公开' : row.playerCount + '位选手')).fontSize(13).fontColor(SwodTheme.muted).width('100%') }.layoutWeight(1).alignItems(HorizontalAlign.Start)
++              Text(Number(row.rankingCount) > 0 ? '已公示' + row.rankingCount + '项得分' : this.state() === '报名中' ? '报名中' : '成绩待公布').fontSize(12).fontColor(SwodTheme.primary).padding(6).backgroundColor(SwodTheme.tonal).borderRadius(10).constraintSize({ maxWidth: 80 })
++              Text('›').fontSize(22).fontColor(SwodTheme.muted)
++            }.width('100%').padding(12)
++          }.width('100%').padding(0).borderRadius(14).backgroundColor(SwodTheme.surface).onClick(() => this.onOpenGroup(Number(row.id)))
+         } else if (this.mode() === 'event' && this.panel === 3) {
+           Button({ type: ButtonType.Normal }) { Row({ space: 12 }) { this.avatar(row);Column({ space: 6 }) { Text(row.name || '').fontSize(18).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink);Text(row.title || '赛事评委').fontSize(14).fontColor(SwodTheme.muted);Text('查看评委详情 ›').fontSize(14).fontColor(SwodTheme.primary) }.layoutWeight(1).alignItems(HorizontalAlign.Start) }.width('100%').padding(8) }.width('100%').backgroundColor(SwodTheme.surface).onClick(() => { this.selectedJudge=row; })
+         } else { this.participant(row, this.mode() === 'group' ? this.published() : this.panel === 4) }
+-        Divider().color(SwodTheme.registrationLine)
++        if (!(this.mode() === 'event' && this.panel === 1)) { Divider().color(SwodTheme.registrationLine) }
+       }, (row: EventRecord) => String(row.id || row.playerId))
+       if (!this.rows().length) { Text(this.empty()).fontSize(15).fontColor(SwodTheme.muted).width('100%').padding({ top: 30, bottom: 30 }).textAlign(TextAlign.Center) }
+       if (this.rows().length > 20) {
+         Row({ space: 8 }) { Button('上一页').constraintSize({ minHeight: 44 }).enabled(this.page > 1).onClick(() => { this.page--; }); Text(this.page + ' / ' + Math.ceil(this.rows().length / 20) + ' · ' + this.rows().length + ' 条').fontSize(13).fontColor(SwodTheme.muted).layoutWeight(1).textAlign(TextAlign.Center); Button('下一页').constraintSize({ minHeight: 44 }).enabled(this.page * 20 < this.rows().length).onClick(() => { this.page++; }) }.width('100%')
+       }
+-    }.padding(16).backgroundColor(SwodTheme.surface).borderRadius(14).width('100%').alignItems(HorizontalAlign.Start)
++    }.padding(this.mode() === 'event' && this.panel === 1 ? 0 : 16).backgroundColor(this.mode() === 'event' && this.panel === 1 ? Color.Transparent : SwodTheme.surface).borderRadius(14).width('100%').alignItems(HorizontalAlign.Start)
+   }
+   @Builder private groupPage() {
+     Column({ space: 14 }) {
+@@ -156,11 +179,11 @@
+         else if (this.mode() === 'group') { this.groupPage() }
+         else {
+           this.hero()
+-          Button('评委入口').constraintSize({ minHeight: 44 }).fontSize(16).borderRadius(10).backgroundColor(SwodTheme.surface).fontColor(SwodTheme.primary).onClick(this.onJudge)
+-          Row({ space: 6 }) { this.metric(this.count(this.data.competition.groupCount, (this.data.groups || []).length), '组别'); this.metric(this.data.competition.registrationPublic ? this.count(this.data.competition.approvedPlayerCount, (this.data.players || []).length) : '—', '选手'); this.metric(this.count(this.data.competition.judgeCount, (this.data.judges || []).length), '评委') }.padding(16).backgroundColor(SwodTheme.surface).borderRadius(14).width('100%')
+-          Scroll() { Row({ space: 8 }) { ForEach(['概览', '组别', '选手', '评委', '成绩'], (label: string, index: number) => { Button(label).fontSize(16).constraintSize({ minHeight: 44 }).borderRadius(24).backgroundColor(index === this.panel ? SwodTheme.primary : SwodTheme.surface).fontColor(index === this.panel ? SwodTheme.onPrimary : SwodTheme.ink).onClick(() => { this.panel = index; this.page = 1; this.query = ''; }) }) } }.scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off).width('100%')
++          Row({ space: 0 }) { ForEach(['概览', '组别', '选手', '评委', '成绩'], (label: string, index: number) => {
++            Button({ type: ButtonType.Normal }) { Column({ space: 8 }) { Text(label).fontSize(16).fontWeight(index === this.panel ? FontWeight.Bold : FontWeight.Normal).fontColor(index === this.panel ? SwodTheme.primary : SwodTheme.muted); Divider().strokeWidth(3).color(index === this.panel ? SwodTheme.primary : Color.Transparent).width('60%') }.width('100%').padding({ top: 12, bottom: 0 }) }.padding(0).layoutWeight(1).constraintSize({ minHeight: 48 }).backgroundColor(Color.Transparent).onClick(() => { this.panel = index; this.page = 1; this.query = ''; })
++          }) }.width('100%')
+           if (this.panel === 0) { this.overview() } else { this.rowPanel() }
+-          Button(this.state() === '报名中' ? '立即报名' : this.state()).constraintSize({ minHeight: 48 }).width('100%').fontSize(18).fontWeight(FontWeight.Bold).borderRadius(10).backgroundColor(SwodTheme.primary).fontColor(SwodTheme.onPrimary).enabled(this.state() === '报名中').onClick(() => this.onRegister(0))
++
+         }
+       }
+     }.padding(10).width('100%').constraintSize({ maxWidth: 760 }).backgroundColor(SwodTheme.registrationCanvas).alignItems(HorizontalAlign.Start)
+--- a/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ b/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -71,6 +71,8 @@
+   @State private detail: Row = {};
+   @State private query: string = '';
+   @State private eventStatusFilter: string = '全部赛事';
++  @State private publicEventStatus: string = '';
++  @State private publicEventStatusID: number = 0;
+   @State private refreshing: boolean = false;
+   @State private onlyUnlocked: boolean = false;
+   @State private courseCategory: string = '';
+@@ -1411,7 +1413,7 @@
+         onOpenPlayer: (groupID: number, playerID: number) => this.go('eventPlayer', '参赛详情', '', false, this.route.eventID, groupID, playerID),
+         onRegister: (groupID: number) => this.go('register', '赛事报名', '', true, this.route.eventID, groupID),
+         onJudge: () => { if (!platform.credentials) this.go('login', '手机号登录'); else this.go('judge', '评委工作台', '', true, this.route.eventID); },
+-        onMine: () => this.go('myEvents', '我的比赛', '/member/events', true) })
++        onMine: () => this.go('myEvents', '我的比赛', '/member/events', true), onStateChange: (eventID: number, state: string) => { this.publicEventStatusID = eventID; this.publicEventStatus = state; } })
+     }
+     if (this.route.screen === 'register' || this.route.screen === 'editRegistration') { this.eventRegistrationForm() }
+     if (this.route.screen === 'cache' && this.courseCache) { CachedCourses({ cache: this.courseCache }) }
+@@ -1728,6 +1730,12 @@
+           }.align(Alignment.Top).width('100%').height('100%')
+         }.pullToRefresh(['home', 'offline', 'events', 'shop', 'account'].includes(this.route.screen) && !!this.route.path && !this.busy).onRefreshing(() => { const version = this.generation; this.refreshing = true; this.load().finally(() => { if (version === this.generation) this.refreshing = false; }); }).layoutWeight(1).width('100%')
+       }
++      if (this.route.screen === 'event') {
++        Row({ space: 10 }) {
++          Button('我的报名', { type: ButtonType.Normal }).fontSize(17).constraintSize({ minHeight: 50 }).layoutWeight(1).backgroundColor(SwodTheme.surface).fontColor(SwodTheme.ink).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius(12).onClick(() => this.go('myEvents', '我的比赛', '/member/events', true))
++          Button(this.publicEventStatusID === this.route.eventID && this.publicEventStatus === '报名中' ? '立即报名' : '报名已关闭', { type: ButtonType.Normal }).fontSize(17).fontWeight(FontWeight.Bold).constraintSize({ minHeight: 50 }).layoutWeight(1.3).backgroundColor(SwodTheme.primary).fontColor(SwodTheme.onPrimary).borderRadius(12).enabled(this.publicEventStatusID === this.route.eventID && this.publicEventStatus === '报名中').onClick(() => this.go('register', '赛事报名', '', true, this.route.eventID))
++        }.padding({ left: 16, right: 16, top: 10, bottom: 10 }).width('100%').backgroundColor(SwodTheme.surface)
++      }
+     }.layoutWeight(1).width(this.wideWindow ? 'auto' : '100%').height(this.wideWindow ? '100%' : 'auto')
+   }
+   private isRegistrationPage(): boolean { return this.route.screen === 'register' || this.route.screen === 'editRegistration'; }
+@@ -1741,7 +1749,7 @@
+       }
+     Flex({ direction: this.wideWindow ? FlexDirection.RowReverse : FlexDirection.Column }) {
+       this.routeContent()
+-      if (!this.isRegistrationPage()) {
++      if (!this.isRegistrationPage() && this.route.screen !== 'event') {
+       Scroll() {
+       Flex({ direction: this.wideWindow ? FlexDirection.Column : FlexDirection.Row }) {
+         this.navItem('线上学院', 'home', this.activeTab === 'home' ? $r('app.media.nav_learn_on') : $r('app.media.nav_learn'), '线上学院', '/public/series')
+--- a/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/EventPresentation.ets
++++ b/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/EventPresentation.ets
+@@ -31,3 +31,22 @@
+   if (end !== undefined && end < now) return '报名已截止';
+   return row.registrationStatus === 'open' ? '报名中' : '报名未开放';
+ }
++
++// Keep unknown or mixed ranges under All rather than assigning an invented category.
++export function eventAgeGroup(name: string, ageRange: string = '', category: string = ''): string {
++  const text = [name, ageRange, category].filter((value: string) => value.length > 0).join(' ').toLowerCase();
++  if (/青少年|少年|\bteen(?:ager)?s?\b|\byouth\b/.test(text)) return '青少年';
++  if (/少儿|幼儿|儿童|\bchildren\b|\bchild\b|\bkids?\b/.test(text)) return '少儿';
++  if (/成人|成年|\badults?\b/.test(text)) return '成人';
++  const age = ageRange.trim();
++  const range = age.match(/^(\d{1,2})\s*(?:岁\s*)?[-—–~～至]\s*(\d{1,2})\s*岁?$/);
++  if (range) {
++    const low = Number(range[1]), high = Number(range[2]);
++    if (high < low) return '';
++    if (low >= 18) return '成人';
++    if (low >= 12 && high < 18) return '青少年';
++    if (high < 12) return '少儿';
++  }
++  const over = age.match(/^(\d{1,2})\s*(?:岁及以上|岁以上|\+)$/);
++  return over && Number(over[1]) >= 18 ? '成人' : '';
++}
+--- a/production/website/src/components/BottomNav.tsx
++++ b/production/website/src/components/BottomNav.tsx
+@@ -13,6 +13,7 @@
+ export default function BottomNav(){
+   const pathname=usePathname() || '/';
+   if (/^\/courses\/[^/]+\/videos(?:\/|$)/.test(pathname)) return null;
++  if (/^\/(?:events|events-news)\/[^/]+\/?$/.test(pathname)) return null;
+   const active=activeMobileTab(pathname);
+   return <nav className="mobile-app-tabbar" aria-label="主要功能导航">
+     {items.map(item=><Link key={item.key} href={item.href} aria-current={active===item.key?'page':undefined} className={active===item.key?'is-active':''}>
+--- /dev/null
++++ b/production/website/src/components/events/EventPeopleSearch.tsx
+@@ -0,0 +1,32 @@
++'use client';
++
++import Link from 'next/link';
++import { useState } from 'react';
++import { ChevronRight, Search } from 'lucide-react';
++import PlayerAvatar from './PlayerAvatar';
++import type { PublicEventPlayer } from '@/lib/public-event-data';
++
++export default function EventPeopleSearch({ players, slug, results = false }: {
++  players: PublicEventPlayer[]; slug: string; results?: boolean;
++}) {
++  const [query, setQuery] = useState('');
++  const [limit, setLimit] = useState(50);
++  const needle = query.trim().toLocaleLowerCase();
++  const visible = players.filter(player => (!results || player.published_total !== null) &&
++    [player.name, player.player_no, player.group_name, player.organization, player.teacher].join(' ').toLocaleLowerCase().includes(needle));
++  return <section>
++    <h2 className="text-xl font-bold text-text">{results ? '公示成绩' : '参赛选手'}</h2>
++    <label className="relative mt-4 block"><span className="sr-only">搜索选手、编号或机构</span><Search aria-hidden="true" className="absolute left-3 top-4 h-5 w-5 text-text-muted" /><input value={query} onChange={event => { setQuery(event.target.value); setLimit(50); }} placeholder="搜索选手、编号或机构" className="h-12 w-full rounded-xl border border-sand bg-white pl-10 pr-3 text-base text-text" /></label>
++    <p role="status" className="my-3 text-sm text-text-muted">{visible.length} 位{results ? '已公示成绩选手' : '已公开选手'}</p>
++    <div className="divide-y divide-sand/50">
++      {visible.slice(0, limit).map(player => <Link key={player.id} prefetch={false} href={`/events/${slug}/groups/${player.group_id}/players/${player.id}`} className="flex min-h-20 items-center gap-3 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-crimson">
++        <PlayerAvatar name={player.name} src={player.avatar_url} />
++        <span className="min-w-0 flex-1"><strong className="block text-base text-text">{player.name}</strong><span className="mt-1 block text-sm text-text-muted">{[player.group_name, player.player_no && `编号 ${player.player_no}`, player.organization].filter(Boolean).join(' · ')}</span></span>
++        {results && <span className="text-right"><strong className="block font-semibold tabular-nums text-crimson">{player.published_total === null ? '—' : player.published_total.toFixed(3).replace(/\.?0+$/, '')}</strong><span className="text-xs text-text-muted">最终得分</span></span>}
++        <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-text-muted" />
++      </Link>)}
++    </div>
++    {!visible.length && <p className="py-10 text-center text-sm text-text-muted">{needle ? '未找到匹配选手' : results ? '成绩经赛事平台审核发布后在这里展示' : '暂无已公开选手'}</p>}
++    {visible.length > limit && <button type="button" onClick={() => setLimit(value => value + 50)} className="mt-4 min-h-11 rounded-xl border border-sand bg-white px-5 text-sm font-semibold text-crimson">显示更多选手</button>}
++  </section>;
++}
+--- /dev/null
++++ b/production/website/src/lib/event-age.ts
+@@ -0,0 +1,18 @@
++// Keep unknown or mixed ranges under All rather than assigning an invented category.
++export function eventAgeGroup(name: string, ageRange = '', category = ''): string {
++  const text = [name, ageRange, category].filter(Boolean).join(' ').toLowerCase();
++  if (/青少年|少年|\bteen(?:ager)?s?\b|\byouth\b/.test(text)) return '青少年';
++  if (/少儿|幼儿|儿童|\bchildren\b|\bchild\b|\bkids?\b/.test(text)) return '少儿';
++  if (/成人|成年|\badults?\b/.test(text)) return '成人';
++  const age = ageRange.trim();
++  const range = age.match(/^(\d{1,2})\s*(?:岁\s*)?[-—–~～至]\s*(\d{1,2})\s*岁?$/);
++  if (range) {
++    const low = Number(range[1]), high = Number(range[2]);
++    if (high < low) return '';
++    if (low >= 18) return '成人';
++    if (low >= 12 && high < 18) return '青少年';
++    if (high < 12) return '少儿';
++  }
++  const over = age.match(/^(\d{1,2})\s*(?:岁及以上|岁以上|\+)$/);
++  return over && Number(over[1]) >= 18 ? '成人' : '';
++}
+--- /dev/null
++++ b/10-小程序miniprogram/shared/event-age.js
+@@ -0,0 +1,20 @@
++// Unknown or mixed age ranges remain visible under 全部; never guess an age category.
++function eventAgeGroup(name, ageRange, category) {
++  const text = [name, ageRange, category].filter(Boolean).join(' ').toLowerCase();
++  if (/青少年|少年|\bteen(?:ager)?s?\b|\byouth\b/.test(text)) return '青少年';
++  if (/少儿|幼儿|儿童|\bchildren\b|\bchild\b|\bkids?\b/.test(text)) return '少儿';
++  if (/成人|成年|\badults?\b/.test(text)) return '成人';
++  const age = String(ageRange || '').trim();
++  const range = age.match(/^(\d{1,2})\s*(?:岁\s*)?[-—–~～至]\s*(\d{1,2})\s*岁?$/);
++  if (range) {
++    const low = Number(range[1]), high = Number(range[2]);
++    if (high < low) return '';
++    if (low >= 18) return '成人';
++    if (low >= 12 && high < 18) return '青少年';
++    if (high < 12) return '少儿';
++  }
++  const over = age.match(/^(\d{1,2})\s*(?:岁及以上|岁以上|\+)$/);
++  if (over && Number(over[1]) >= 18) return '成人';
++  return '';
++}
++module.exports = { eventAgeGroup };

@@ -47,17 +47,18 @@ export default async function EventResults({ params, searchParams }: { params: P
           <div className={styles.eyebrow}><span>✦</span> 荣耀时刻 <span>✦</span></div>
           <h1>{event.name}</h1>
           <div className={styles.headingRule}><span /> <p>赛事成绩公示</p> <span /></div>
-          <div className={styles.summary}><span>{groups.length} 个公示组别</span><i /><span>{rows.length} 项公示成绩</span><i /><span>每30秒自动更新</span></div>
+          <div className={styles.summary}><span>{groups.length} 个公示组别</span><i /><span>{rows.length} 项公示成绩</span><i /><span>每5秒自动更新</span></div>
         </header>
         <form role="search" style={{display:'flex',gap:8,marginBottom:24}}><input name="q" aria-label="搜索公示组别或选手" defaultValue={query} placeholder="搜索组别名称或选手姓名" style={{flex:1,minWidth:0,border:'1px solid #ddd0b6',borderRadius:8,padding:'12px 16px',background:'#fff'}}/><button style={{borderRadius:8,border:'1px solid #b48a35',background:'#fff',padding:'0 24px',color:'#8b6828'}}>搜索</button></form>
         {!visibleGroups.length ? <section className={styles.empty}><h2>{query ? '未找到相关组别或选手' : '静候荣耀揭晓'}</h2>{!query && <p>成绩尚未公示，请稍后查看。</p>}</section> : <div className={styles.grid}>
           {visibleGroups.map(groupId => {
             const entries = rows.filter(r => r.group_id === groupId);
+            const ranked = entries.every(r => r.rank_no > 0);
             const winners = entries.filter(r => r.rank_no >= 1 && r.rank_no <= 3);
             const remaining = entries.filter(r => r.rank_no < 1 || r.rank_no > 3);
-            return <section key={groupId} className={styles.card} aria-label={entries[0].group_name}>
-              <div className={styles.cardHeading}><div className={styles.cardMark}>✦</div><h2>{entries[0].group_name}</h2><span>{entries.length} 位选手</span></div>
-              <div className={styles.podium}>
+            return <section key={groupId} className={`${styles.card} ${ranked ? styles.rankedCard : styles.pendingCard}`} aria-label={entries[0].group_name}>
+              <div className={styles.cardHeading}><div className={styles.cardMark}>✦</div><h2 title={entries[0].group_name}>{entries[0].group_name}</h2><span>已出分 {entries.length} 位</span></div>
+              {ranked ? <div className={styles.podium}>
                 {[2,1,3].map(rank => {
                   const champions = winners.filter(r => r.rank_no === rank);
                   const medal = medals[rank as keyof typeof medals];
@@ -71,8 +72,8 @@ export default async function EventResults({ params, searchParams }: { params: P
                     </>}
                   </div>;
                 })}
-              </div>
-              {remaining.length > 0 && <ol className={styles.rankList} aria-label="其他选手成绩">{remaining.map(r => <li key={r.player_id}><span className={styles.listRank}>{r.rank_no || '—'}</span><PlayerAvatar name={r.name} src={r.avatar_url}/><span className={styles.listName}>{r.name}</span><strong>{score(r,entries)}<small>分</small></strong></li>)}</ol>}
+              </div> : <p className={styles.pendingNotice}>得分陆续公示中 · 全组完成后统一排名</p>}
+              {remaining.length > 0 && <ol className={styles.rankList} tabIndex={0} aria-label={ranked ? "其他选手成绩" : "已出分节目"}>{remaining.map(r => <li key={r.player_id}><span className={styles.listRank}>{r.rank_no || '—'}</span><PlayerAvatar name={r.name} src={r.avatar_url}/><span className={styles.listName}>{r.name}</span><strong>{score(r,entries)}<small>分</small></strong></li>)}</ol>}
               <div className={styles.cardFooter}><span /> 已公示成绩 <span /></div>
             </section>;
           })}

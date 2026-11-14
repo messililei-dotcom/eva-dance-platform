@@ -1,3 +1,4 @@
+const { contentText } = require('./review-text');
 const DAY = 86400000;
 function dateValue(value) {
   const text = String(value || '').slice(0, 10);
@@ -26,7 +27,7 @@ function buildCalendar(rows, year, month) {
     const segments=items.filter(item=>item.start<=weekEnd && item.end>=weekStart).map(item=>{
       const left=Math.max(0,Math.round((item.start-weekStart)/DAY)),right=Math.min(6,Math.round((item.end-weekStart)/DAY));
       let lane=lanes.findIndex(until=>until<left);if(lane<0)lane=lanes.length;lanes[lane]=right;
-      return { key:item.index, id:item.row.id, name:item.row.name || '线下课程', label:`${item.row.name || '线下课程'}，${item.row.start_date}至${item.row.end_date || item.row.start_date}`, tone:color(item.row), left:left/7*100, width:(right-left+1)/7*100, top:44+lane*36 };
+      return { key:item.index, id:item.row.id, name:contentText(item.row.name, '线下活动'), label:`${contentText(item.row.name, '线下活动')}，${item.row.start_date}至${item.row.end_date || item.row.start_date}`, tone:color(item.row), left:left/7*100, width:(right-left+1)/7*100, top:44+lane*36 };
     });
     weeks.push({key:week,height:Math.max(116,52+lanes.length*36),segments,days:Array.from({length:7},(_,i)=>{const date=new Date(weekStart+i*DAY);return {key:date.toISOString().slice(0,10),day:date.getUTCDate(),outside:date.getUTCMonth()!==month-1,today:date.toISOString().slice(0,10)===today};})});
   }

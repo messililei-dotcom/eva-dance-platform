@@ -1,6 +1,26 @@
 import Foundation
 
 public enum CoursePresentation {
+    /// Match the mini-program's configured public display count, not concurrent viewers.
+    public static func learnerText(_ row: JSONValue) -> String? {
+        guard row["student_display_base"] != .null, row["total_students"] != .null else { return nil }
+        let base = row["student_display_base"].number, students = row["total_students"].number
+        guard base.isFinite, base >= 500, base <= 1000, base.rounded() == base,
+              students.isFinite, students >= 0, students.rounded() == students, students < Double(Int.max) - 1000 else { return nil }
+        return "\(Int(students + base))名学员"
+    }
+
+    public static func learningPercent(_ records: JSONValue) -> Int {
+        guard !records.list.isEmpty else { return 0 }
+        let total = records.list.reduce(0.0) { sum, row in
+            let duration = row["duration"].number
+            let watched = row["progress"].number
+            let fraction = row["completed"].bool ? 1 : duration > 0 && watched.isFinite ? min(1, max(0, watched / duration)) : 0
+            return sum + fraction
+        }
+        return Int((total / Double(records.list.count) * 100).rounded(.down))
+    }
+
     /// Resume only a lesson in this catalog using the current member's server history.
     public static func startingLessonID(_ lessons: [JSONValue], progress: JSONValue) -> Int? {
         let ids = lessons.compactMap { Int($0["id"].text) }.filter { $0 > 0 }
@@ -38,12 +58,10 @@ public enum CoursePresentation {
         return (intro.isEmpty ? row["description"].text : intro).replacingOccurrences(of: "开课时间：[^｜\\n]+", with: "开课时间：以所选期次安排为准", options: .regularExpression)
     }
     public static func periods(_ rows: [JSONValue], for row: JSONValue) -> [JSONValue] {
-        let key = row.firstText("group_key", "name")
-        return rows.filter { $0.firstText("group_key", "name") == key }
+        OfflineCatalog.periods(rows, for: row)
     }
     public static func grouped(_ rows: [JSONValue]) -> [JSONValue] {
-        var seen = Set<String>()
-        return rows.filter { seen.insert($0.firstText("group_key", "name")).inserted }
+        OfflineCatalog.grouped(rows)
     }
     public static func canPurchase(_ row: JSONValue, now: Date = Date()) -> Bool {
         guard ["active", "planned"].contains(row["period_status"].text), row["price"].number > 0, row["source_id"].number > 0 else { return false }

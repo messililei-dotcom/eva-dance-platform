@@ -1,3 +1,4 @@
+import { deleteEventRegistrations } from '@/lib/server/event-registration-deletion';
 import { eventPaymentOrder } from '@/lib/server/event-online';
 import { cleanText, readEventBody, hasAuth, jsonError, nowIso, toNumber, unauthorized, withRequestEventDb } from '../../_db';
 import { syncEventPlayerToMember } from '@/lib/server/event-member-sync';
@@ -37,8 +38,8 @@ export async function POST(request: Request) {
     db.transaction(() => {
       rows.forEach((row: any, index: number) => {
         const name = cleanText(row?.name ?? row?.姓名);
-        if (!name) {
-          errors.push({ row: index + 1, message: '选手姓名不能为空' });
+        if (!name || name.length > 120) {
+          errors.push({ row: index + 1, message: '请填写1至120个字符的选手姓名' });
           return;
         }
         const phone = cleanText(row?.phone ?? row?.手机号);
@@ -187,21 +188,17 @@ export async function DELETE(request: Request) {
 
   const body = await readEventBody(request);
   const competitionId = toNumber(body.competitionId ?? body.competition_id);
-  const groupId = toNumber(body.groupId ?? body.group_id);
+  const groupId = body.groupId === null ? null : toNumber(body.groupId ?? body.group_id);
   const ids = normalizeIds(body.ids);
-  if (!competitionId || !groupId || !ids.length) return jsonError('缺少赛事、组别或选手ID');
+  if (!competitionId || groupId === 0 || !ids.length) return jsonError('缺少赛事、组别或选手ID');
 
   return withRequestEventDb(request, (db) => db.transaction(() => {
     const placeholders = ids.map(() => '?').join(', ');
-    if (db.prepare(`SELECT id FROM event_players WHERE competition_id=? AND group_id=? AND id IN (${placeholders})`)
-      .all(competitionId, groupId, ...ids).some((row: { id: number }) => eventPaymentOrder(db, row.id, ['pending', 'refund_requested', 'refunding']))) {
-      return jsonError('部分报名有待处理在线订单，请先处理订单', 409);
-    }
-    if (db.prepare(`SELECT id FROM event_registration_payments WHERE player_id IN (${placeholders}) LIMIT 1`).get(...ids)) return jsonError('报名已有缴费记录，请保留记录并使用取消报名状态');
-    const result = db.prepare(`
-      DELETE FROM event_players
-      WHERE competition_id = ? AND group_id = ? AND id IN (${placeholders})
-    `).run(competitionId, groupId, ...ids);
-    return Response.json({ success: true, data: { deleted: result.changes } });
+    const players = db.prepare(`
+      SELECT id FROM event_players WHERE competition_id = ? AND group_id IS ? AND id IN (${placeholders})
+    `).all(competitionId, groupId, ...ids) as Array<{ id: number }>;
+    if (players.length !== ids.length) return jsonError('报名信息已变化，请刷新后再删除', 409);
+    const result = deleteEventRegistrations(db, ids);
+    return Response.json({ success: true, data: result });
   }).immediate());
 }

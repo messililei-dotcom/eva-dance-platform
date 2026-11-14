@@ -1,0 +1,20 @@
+{
+  "status": "waiting-for-physical-device",
+  "deviceCheck": "paired iPhones unavailable; adb has no attached device; WeChat DevTools simulator only",
+  "uploaded": false,
+  "submittedForReview": false,
+  "sourceSHA256": {
+    "10-小程序miniprogram/pages/events/events.js": "b37edcd388f35ca0230522676698a7d3de6c9d8866fbf6eeca43ff1d84103292",
+    "10-小程序miniprogram/pages/events/events.wxml": "097af3a55ce954a7425062cdc77290208a016a661b056e80eeec419bda63a99a",
+    "10-小程序miniprogram/pages/events/events.wxss": "3c4b4e7a32b6367dbe4cf441b92524c3c8840f4bb0cc95597333319f06beaeb6",
+    "10-小程序miniprogram/pages/event-detail/event-detail.js": "e74b83bb934a8578ba9c11f8976080c636d251c6370d3565fb84c88661e9062f",
+    "10-小程序miniprogram/pages/event-detail/event-detail.wxml": "423f2e207b53b74e4320d50273376486b8a2e263cc397e295abebe3a8df24d24",
+    "10-小程序miniprogram/pages/event-detail/event-detail.wxss": "a05dd2386279e434135f0d7deb190ee4d2db600f154347eb52a211365b495426",
+    "10-小程序miniprogram/pages/event-group/event-group.js": "8084a60bad35a7418712766f938c0e0b305811d49e4ba16532c189b340268140",
+    "10-小程序miniprogram/pages/event-group/event-group.wxml": "dd36395f41bc9b97da1e4964138808478361623bc4fe393c0a8075efbcd1726a",
+    "10-小程序miniprogram/pages/event-group/event-group.wxss": "c53040040d324259abd1860a46b54fd4b0cc5c35d3a0bbc2bf68cd7491d2c3da",
+    "10-小程序miniprogram/pages/event-register/event-register.js": "b932c5dd8d10019844b29010bc3b9c40b879fb8163bcd61421ad321092fc2077",
+    "10-小程序miniprogram/pages/event-register/event-register.wxml": "6497f482f2eb72b1da9659076b5c9c55cc7a2c118fdb3e0e8854f4a13538b408",
+    "10-小程序miniprogram/pages/event-register/event-register.wxss": "8c9019b9d3f507b793341ec85202c1756b18af879e5c1e59e57863c7555b5ca0"
+  }
+}

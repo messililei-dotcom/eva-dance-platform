@@ -41,3 +41,33 @@ test('a disabled shared player link never requests course or playback data',asyn
  page.setData=v=>Object.assign(page.data,v);
  await page.onLoad({seriesId:9,videoId:2});assert.equal(requests,0);assert.equal(page.data.loading,false);
 });
+
+test('a course card opens details immediately while the playback setting is unavailable', async () => {
+ const calls = [];
+ const module = { exports: {} };
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../shared/video-feature.js'), 'utf8'), {
+  module,
+  require: () => ({ getFeatures: () => new Promise(() => {}) }),
+  wx: { navigateTo: options => calls.push(options.url) },
+ });
+ module.exports.navigateTo({ url: '/pages/player/player?seriesId=21', videoAvailable: false });
+ assert.deepEqual(calls, ['/pages/detail/detail?id=21']);
+});
+
+test('tapping a lesson with playback disabled opens and closes its text details', () => {
+ let page;
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../pages/detail/detail.js'), 'utf8'), {
+  Page: value => { page = value; },
+  require: name => name.endsWith('/share') ? { withShare: (_, value) => value }
+   : name.endsWith('/video-feature') ? { withVideoFeature: value => value, navigateTo() { throw Error('player must stay closed'); } }
+   : {},
+ });
+ page.setData = value => Object.assign(page.data, value);
+ page.data.courses = [{ id: 8, name: '基础节奏', videos: [{ id: 11 }] }];
+ page.data.videoPlaybackEnabled = false;
+ const tap = { currentTarget: { dataset: { index: 0 } } };
+ page.openCourse(tap);
+ assert.equal(page.data.expandedLessonIndex, 0);
+ page.openCourse(tap);
+ assert.equal(page.data.expandedLessonIndex, -1);
+});

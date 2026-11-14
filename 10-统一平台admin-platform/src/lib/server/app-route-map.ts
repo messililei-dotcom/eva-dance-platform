@@ -1,6 +1,7 @@
 // Explicit student-facing API allowlist. No arbitrary forwarding or admin route access.
 type Entry = { pattern: RegExp; methods: string[]; public: boolean; load: () => Promise<unknown> };
 const routes: Entry[] = [
+  {pattern:/^events\/([1-9]\d*)\/judge$/,methods:["GET", "POST"],public:false,load:()=>import("@/app/api/mini/events/[id]/judge/route")},
   {pattern:/^public\/series$/,methods:["GET"],public:true,load:()=>import("@/app/api/mini/public/series/route")},
   {pattern:/^public\/series\/([1-9]\d*)$/,methods:["GET"],public:true,load:()=>import("@/app/api/mini/public/series/[id]/route")},
   {pattern:/^public\/series\/([1-9]\d*)\/courses$/,methods:["GET"],public:true,load:()=>import("@/app/api/mini/public/series/[id]/courses/route")},

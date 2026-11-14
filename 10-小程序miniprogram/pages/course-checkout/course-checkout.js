@@ -1,3 +1,4 @@
+const { contentText } = require("../../shared/review-text");
 const api = require('../../utils/api');
 const shop = require('../../shared/shop');
 const share = require('../../shared/share');
@@ -30,14 +31,14 @@ Page(share.withShare('course-checkout', videoFeature.withVideoFeature({
           }
         }
         const { offer } = await virtualPayment.quote(id);
-        this.setData({ offer: { ...offer, priceText: shop.money(offer.priceFen) }, paymentEnabled: virtualPayment.supportsPayment() });
+        this.setData({ offer: { ...offer, name: contentText(offer.name), priceText: shop.money(offer.priceFen) }, paymentEnabled: virtualPayment.supportsPayment() });
         return;
       }
       const { offer, payment } = await api.request(
         '/shop/courses/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id),
         { auth: kind === 'event' }
       );
-      this.setData({ offer: { ...offer, priceText: shop.money(offer.priceFen), eventItems: (offer.eventItems || []).map(item => ({ ...item, priceText: shop.money(item.priceFen) })) }, paymentEnabled: !!payment.miniprogram });
+      this.setData({ offer: { ...offer, name: contentText(offer.name), priceText: shop.money(offer.priceFen), eventItems: (offer.eventItems || []).map(item => ({ ...item, priceText: shop.money(item.priceFen) })) }, paymentEnabled: !!payment.miniprogram });
     } catch (error) {
       this.setData({ offer: null, error: error.message, loginRequired: error.statusCode === 401 });
     } finally {
@@ -55,13 +56,13 @@ Page(share.withShare('course-checkout', videoFeature.withVideoFeature({
         if (offer.sandbox === false) {
           await virtualPayment.pay(id, offer.priceFen, true);
           this.setData({ offer: null, paymentEnabled: false, unlocked: true });
-          wx.showToast({ title: '课程已解锁', icon: 'success' });
+          wx.showToast({ title: '内容已解锁', icon: 'success' });
           return;
         }
         await virtualPayment.pay(id, offer.priceFen);
         wx.showModal({
           title: '沙箱订单已核验',
-          content: '微信已确认沙箱订单，正式课程权益不受影响。',
+          content: '微信已确认沙箱订单，正式内容权益不受影响。',
           showCancel: false,
         });
         return;

@@ -24,7 +24,8 @@
     "pages/shop-orders/shop-orders",
     "pages/course-checkout/course-checkout",
     "pages/event-judge/event-judge",
-    "pages/event-player/event-player"
+    "pages/event-player/event-player",
+    "pages/event-judge-profile/event-judge-profile"
   ],
   "window": {
     "navigationBarTitleText": "伊娃东方舞·东方舞圈",
@@ -40,13 +41,13 @@
     "list": [
       {
         "pagePath": "pages/home/home",
-        "text": "线上学院",
+        "text": "视频专区",
         "iconPath": "images/tab-courses.png",
         "selectedIconPath": "images/tab-courses-active.png"
       },
       {
         "pagePath": "pages/offline/offline",
-        "text": "线下课",
+        "text": "线下活动",
         "iconPath": "images/tab-home.png",
         "selectedIconPath": "images/tab-home-active.png"
       },

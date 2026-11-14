@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-11-12T13:13:32.615655+08:00",
+  "request": "Unchecked one-tap login opens consent prompt; explicit confirm automatically checks and continues",
+  "platforms": [
+    "iOS",
+    "Android",
+    "HarmonyOS"
+  ],
+  "behavior": {
+    "initial": "unchecked",
+    "tapWhenUnchecked": "show agreement confirmation, no SDK call",
+    "cancel": "remain unchecked, no SDK call",
+    "confirm": "mark checked then call existing guarded carrier login",
+    "operatorPage": "original separate operator consent unchanged"
+  },
+  "validation": {
+    "builds": "iOS physical Debug, Android Debug, Harmony unsigned Debug all passed",
+    "device": "Updated physical iPhone test build installed; existing signed store artifacts unchanged",
+    "popupRuntime": "Not yet verified on physical device because current successful login was preserved"
+  },
+  "store": "No new signed release candidate or store submission"
+}

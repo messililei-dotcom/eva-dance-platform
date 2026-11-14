@@ -1,0 +1,1004 @@
+--- before/production/website/src/components/events/JudgeGroupsClient.tsx
++++ after/production/website/src/components/events/JudgeGroupsClient.tsx
+@@ -3,7 +3,7 @@
+ import Link from 'next/link';
+ import { useEffect, useState } from 'react';
+ import { ChevronRight, ClipboardCheck, ShieldAlert } from 'lucide-react';
+-import { getStudentSession } from '@/lib/student-auth';
++import { getStudentSession, STUDENT_AUTH_CHANGED_EVENT } from '@/lib/student-auth';
+ 
+ type Group = { id: number; name: string; player_count: number; scored_count: number };
+ 
+@@ -13,24 +13,26 @@
+   const [error, setError] = useState('');
+ 
+   useEffect(() => {
++    let active=true;const invalidate=()=>{active=false;setData(null);setError("账号已变化，请重新打开评委入口");};window.addEventListener(STUDENT_AUTH_CHANGED_EVENT,invalidate);window.addEventListener("storage",invalidate);
+     const session = getStudentSession();
+-    if (!session) { setError('请先登录'); return; }
+-    fetch(`/api/events-news/${slug}/judge`, { headers: { Authorization: `Bearer ${session.token}` } })
++    if (!session) { setError('请先登录'); return()=>{window.removeEventListener(STUDENT_AUTH_CHANGED_EVENT,invalidate);window.removeEventListener('storage',invalidate);}; }
++    fetch(`/api/events-news/${slug}/judge`, { cache:'no-store', headers: { Authorization: `Bearer ${session.token}` } })
+       .then(async (response) => {
+         const payload = await response.json();
+         if (!response.ok || !payload.success) throw new Error(payload.error || '加载失败');
+-        setData(payload.data);
++        if(active&&getStudentSession()?.token===session.token)setData(payload.data);
+       })
+-      .catch((reason) => setError(reason instanceof Error ? reason.message : '加载失败'));
++      .catch((reason) => {if(active)setError(reason instanceof Error ? reason.message : '加载失败');});
++    return()=>{active=false;window.removeEventListener(STUDENT_AUTH_CHANGED_EVENT,invalidate);window.removeEventListener('storage',invalidate);};
+   }, [slug]);
+ 
+   if (error) return <PermissionState message={error} />;
+   if (!data) return <div className="rounded-2xl border border-sand/60 bg-white p-10 text-center text-sm text-text-muted">正在加载评委任务…</div>;
+   return (
+     <>
+-      <div className="mb-4 flex items-center justify-between rounded-xl bg-[#1A1A1A] px-4 py-3 text-white">
+-        <div><div className="text-[11px] text-gold">当前评委</div><div className="mt-0.5 font-semibold">{data.judge.name}</div></div>
+-        <ClipboardCheck className="h-6 w-6 text-gold" />
++      <div className="mb-4 flex items-center justify-between rounded-xl border border-sand bg-white px-4 py-3 text-text">
++        <div><div className="text-[11px] text-crimson">当前评委</div><div className="mt-0.5 font-semibold">{data.judge.name}</div></div>
++        <ClipboardCheck className="h-6 w-6 text-crimson" />
+       </div>
+       <input aria-label="搜索负责组别名称" placeholder="输入组别名称模糊搜索" value={query} onChange={e => setQuery(e.target.value)} className="mb-4 w-full rounded-lg border border-sand bg-white px-4 py-3 text-sm outline-none focus:border-gold-dark" />
+       {query.trim() && !data.groups.some(group => group.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) && <p role="status" className="mb-4 text-sm text-text-muted">未找到相关组别</p>}
+@@ -42,7 +44,7 @@
+                 <div className="truncate font-semibold text-text">{group.name}</div>
+                 <div className="mt-1 text-xs text-text-muted">{group.scored_count}/{group.player_count} 位选手已评分</div>
+               </div>
+-              <ChevronRight className="h-5 w-5 shrink-0 text-gold-dark" />
++              <ChevronRight className="h-5 w-5 shrink-0 text-crimson-dark" />
+             </Link>
+           ))}
+         </div>
+@@ -52,5 +54,5 @@
+ }
+ 
+ function PermissionState({ message }: { message: string }) {
+-  return <div className="rounded-2xl border border-sand/60 bg-white px-5 py-12 text-center"><ShieldAlert className="mx-auto h-8 w-8 text-gold-dark" /><div className="mt-3 font-semibold text-text">{message}</div></div>;
++  return <div className="rounded-2xl border border-sand/60 bg-white px-5 py-12 text-center"><ShieldAlert className="mx-auto h-8 w-8 text-crimson-dark" /><div className="mt-3 font-semibold text-text">{message}</div></div>;
+ }
+--- before/production/website/src/components/events/JudgePlayersClient.tsx
++++ after/production/website/src/components/events/JudgePlayersClient.tsx
+@@ -3,7 +3,7 @@
+ import Link from 'next/link';
+ import { useEffect, useState } from 'react';
+ import { CheckCircle2, ChevronRight, ShieldAlert } from 'lucide-react';
+-import { getStudentSession } from '@/lib/student-auth';
++import { getStudentSession, STUDENT_AUTH_CHANGED_EVENT } from '@/lib/student-auth';
+ 
+ type Player = { id: number; player_no: string; name: string; organization: string; teacher: string; performance_title: string; my_score: number | null; my_score_status: string };
+ 
+@@ -11,29 +11,34 @@
+   const [data, setData] = useState<{ group: { name: string }; players: Player[] } | null>(null);
+   const [query, setQuery] = useState('');
+   const [error, setError] = useState('');
++  const [filter,setFilter]=useState('all');
+   useEffect(() => {
++    let active=true;const invalidate=()=>{active=false;setData(null);setError("账号已变化，请重新打开评委入口");};window.addEventListener(STUDENT_AUTH_CHANGED_EVENT,invalidate);window.addEventListener("storage",invalidate);
+     const session = getStudentSession();
+-    if (!session) { setError('请先登录'); return; }
+-    fetch(`/api/events-news/${slug}/judge/groups/${groupId}`, { headers: { Authorization: `Bearer ${session.token}` } })
+-      .then(async (response) => { const payload = await response.json(); if (!response.ok || !payload.success) throw new Error(payload.error || '加载失败'); setData(payload.data); })
+-      .catch((reason) => setError(reason instanceof Error ? reason.message : '加载失败'));
++    if (!session) { setError('请先登录'); return()=>{window.removeEventListener(STUDENT_AUTH_CHANGED_EVENT,invalidate);window.removeEventListener('storage',invalidate);}; }
++    fetch(`/api/events-news/${slug}/judge/groups/${groupId}`, { cache:'no-store', headers: { Authorization: `Bearer ${session.token}` } })
++      .then(async (response) => { const payload = await response.json(); if (!response.ok || !payload.success) throw new Error(payload.error || '加载失败'); if(active&&getStudentSession()?.token===session.token)setData(payload.data); })
++      .catch((reason) => {if(active)setError(reason instanceof Error ? reason.message : '加载失败');});
++    return()=>{active=false;window.removeEventListener(STUDENT_AUTH_CHANGED_EVENT,invalidate);window.removeEventListener('storage',invalidate);};
+   }, [slug, groupId]);
+   if (error) return <State message={error} />;
+   if (!data) return <State message="正在加载选手…" />;
+-  const visible = data.players.filter(player => [data.group.name, player.name, player.player_no, player.performance_title, player.organization].join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
++  const scoredCount=data.players.filter(p=>p.my_score!==null).length;
++  const visible = data.players.filter(p=>filter==='all'||(filter==='scored'?p.my_score!==null:p.my_score===null)).filter(player => [data.group.name, player.name, player.player_no, player.performance_title, player.organization].join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+   return (
+     <>
+-      <div className="mb-4 rounded-xl bg-[#1A1A1A] p-4 text-white"><div className="text-[11px] text-gold">评分组别</div><h1 className="mt-1 font-serif text-xl font-bold">{data.group.name}</h1></div>
++      <div className="mb-4 rounded-xl border border-sand bg-white p-4 text-text"><div className="text-[11px] text-crimson">评分组别</div><h1 className="mt-1 font-serif text-xl font-bold">{data.group.name}</h1></div>
++      <section className="mb-4 rounded-xl border border-sand bg-white p-4"><p className="mb-3 font-semibold text-text">评分进度 {scoredCount} / {data.players.length}</p><progress aria-label="本人评分进度" max={Math.max(1,data.players.length)} value={scoredCount} className="h-2 w-full accent-[#9e1726]"/><div className="mt-4 flex gap-2">{[['all','全部'],['unscored','未评分'],['scored','已评分']].map(([key,label])=><button type="button" key={key} aria-pressed={key===filter} onClick={()=>setFilter(key)} className={`min-h-11 flex-1 rounded-lg text-sm font-semibold ${key===filter?'bg-crimson text-white':'bg-warm-white text-text'}`}>{label}</button>)}</div></section>
+       <input aria-label="搜索组别或选手" placeholder="搜索组别、选手姓名、编号或曲目" value={query} onChange={e => setQuery(e.target.value)} className="mb-4 w-full rounded-lg border border-sand bg-white px-4 py-3 text-sm outline-none focus:border-gold-dark" />
+       {visible.length ? <div className="space-y-2.5">{visible.map((player) => {
+         const scored = ['submitted', 'reviewed', 'published'].includes(player.my_score_status);
+         return <Link prefetch={false} key={player.id} href={`/events/${slug}/judge/groups/${groupId}/players/${player.id}`} className="flex items-center justify-between gap-3 rounded-xl border border-sand/60 bg-white p-4 shadow-sm transition hover:border-gold-dark">
+           <div className="min-w-0"><div className="flex items-center gap-2"><span className="truncate font-semibold text-text">{player.name}</span>{scored && <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />}</div><div className="mt-1 truncate text-xs text-text-muted">{[player.player_no && `编号 ${player.player_no}`, player.performance_title, player.organization].filter(Boolean).join(' · ') || '选手信息'}</div></div>
+-          <div className="flex shrink-0 items-center gap-2"><div className="text-right"><div className={`font-bold ${scored ? 'text-crimson' : 'text-text-muted'}`}>{scored ? Number(player.my_score).toLocaleString('zh-CN', { maximumFractionDigits: 2 }) : '待评分'}</div>{scored && <div className="text-[10px] text-text-muted">我的评分</div>}</div><ChevronRight className="h-4 w-4 text-gold-dark" /></div>
++          <div className="flex shrink-0 items-center gap-2"><div className="text-right"><div className={`font-bold ${scored ? 'text-crimson' : 'text-text-muted'}`}>{scored ? Number(player.my_score).toLocaleString('zh-CN', { maximumFractionDigits: 2 }) : '待评分'}</div>{scored && <div className="text-[10px] text-text-muted">我的评分</div>}</div><ChevronRight className="h-4 w-4 text-crimson-dark" /></div>
+         </Link>;
+       })}</div> : <State message={query.trim() ? "未找到相关选手" : "该组别暂无可评分选手"} />}
+     </>
+   );
+ }
+ 
+-function State({ message }: { message: string }) { return <div className="rounded-2xl border border-sand/60 bg-white p-10 text-center text-sm text-text-muted"><ShieldAlert className="mx-auto mb-3 h-7 w-7 text-gold-dark" />{message}</div>; }
++function State({ message }: { message: string }) { return <div className="rounded-2xl border border-sand/60 bg-white p-10 text-center text-sm text-text-muted"><ShieldAlert className="mx-auto mb-3 h-7 w-7 text-crimson-dark" />{message}<button className="mt-4 block min-h-11 w-full font-semibold text-crimson" onClick={()=>window.location.reload()}>重新加载</button></div>; }
+--- before/production/website/src/components/events/JudgeScoreClient.tsx
++++ after/production/website/src/components/events/JudgeScoreClient.tsx
+@@ -1,58 +1,34 @@
+ 'use client';
+-
+ import Link from 'next/link';
+-import { FormEvent, useEffect, useMemo, useState } from 'react';
++import { FormEvent, useEffect, useRef, useState } from 'react';
+ import { CheckCircle2, Send, ShieldAlert } from 'lucide-react';
+-import { getStudentSession } from '@/lib/student-auth';
+-
++import { getStudentSession, STUDENT_AUTH_CHANGED_EVENT } from '@/lib/student-auth';
++import { distributeScores } from '@/lib/score-allocation';
++import styles from './judging.module.css';
+ type Criterion = { key: string; name: string; maxScore: number };
+-type Payload = { group: { name: string; scoring_status: string }; player: { name: string; player_no: string; organization: string; teacher: string; performance_title: string }; criteria: Criterion[]; currentScore: { values: Record<string, number>; total: number | null; status: string; needsRescore?: boolean } };
+-
++type Payload = { group: { name: string; scoring_status: string }; player: { name: string; player_no: string; organization: string; performance_title: string }; criteria: Criterion[]; currentScore: { values: Record<string, number>; total: number | null; status: string; needsRescore?: boolean } };
+ export default function JudgeScoreClient({ slug, groupId, playerId }: { slug: string; groupId: string; playerId: string }) {
+-  const [data, setData] = useState<Payload | null>(null);
+-  const [scores, setScores] = useState<Record<string, string>>({});
+-  const [error, setError] = useState('');
+-  const [message, setMessage] = useState('');
+-  const [saving, setSaving] = useState(false);
+-  const endpoint = `/api/events-news/${slug}/judge/groups/${groupId}/players/${playerId}`;
+-
+-  useEffect(() => {
+-    const session = getStudentSession();
+-    if (!session) { setError('请先登录'); return; }
+-    fetch(endpoint, { headers: { Authorization: `Bearer ${session.token}` } })
+-      .then(async (response) => { const payload = await response.json(); if (!response.ok || !payload.success) throw new Error(payload.error || '加载失败'); setData(payload.data); setScores(Object.fromEntries(payload.data.criteria.map((item: Criterion) => [item.key, payload.data.currentScore.values[item.key] ?? '']))); })
+-      .catch((reason) => setError(reason instanceof Error ? reason.message : '加载失败'));
+-  }, [endpoint]);
+-  const total = useMemo(() => Object.values(scores).reduce((sum, value) => sum + (Number(value) || 0), 0), [scores]);
+-
+-  async function submit(event: FormEvent) {
+-    event.preventDefault(); setError(''); setMessage('');
+-    const session = getStudentSession(); if (!session) { setError('请先登录'); return; }
+-    setSaving(true);
+-    try {
+-      const response = await fetch(endpoint, { method: 'POST', headers: { Authorization: `Bearer ${session.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ scores }) });
+-      const payload = await response.json(); if (!response.ok || !payload.success) throw new Error(payload.error || '评分提交失败');
+-      setMessage(`评分已提交，我的评分：${Number(payload.data.total).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`);
+-      setData((current) => current ? { ...current, currentScore: { values: Object.fromEntries(Object.entries(scores).map(([key, value]) => [key, Number(value)])), total: payload.data.total, status: 'submitted' } } : current);
+-    } catch (reason) { setError(reason instanceof Error ? reason.message : '评分提交失败'); } finally { setSaving(false); }
+-  }
+-
+-  if (!data) return <State message={error || '正在加载评分表…'} />;
+-  const submitted = !data.currentScore.needsRescore && ['submitted', 'reviewed', 'published'].includes(data.currentScore.status);
+-  return <>
+-    <section className="rounded-xl bg-[#1A1A1A] p-4 text-white"><div className="text-[11px] text-gold">{data.group.name}</div><h1 className="mt-1 font-serif text-2xl font-bold">{data.player.name}</h1><div className="mt-1 text-xs text-white/60">{[data.player.player_no && `编号 ${data.player.player_no}`, data.player.performance_title, data.player.organization].filter(Boolean).join(' · ')}</div></section>
+-    {data.currentScore.needsRescore && <p role="alert" className="mt-4 rounded-lg bg-amber-50 p-4 text-sm text-amber-900">历史评分为 {data.currentScore.total}，超出当前满分。请按当前10分制重新填写并提交评分。</p>}
+-    {submitted && <div className="mt-4 flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3 text-emerald-800"><span className="inline-flex items-center gap-2 text-sm font-semibold"><CheckCircle2 className="h-4 w-4" />我的评分结果</span><strong className="text-xl">{data.currentScore.total?.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}</strong></div>}
+-    <form onSubmit={submit} className="mt-4 rounded-2xl border border-sand/60 bg-white p-4 shadow-sm">
+-      <div className="mb-3 flex items-center justify-between"><h2 className="font-semibold text-text">评分项</h2><strong className="text-crimson">合计 {total.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}</strong></div>
+-      <div className="space-y-3">{data.criteria.map((criterion) => <label key={criterion.key} className="flex flex-col items-stretch justify-between gap-2 rounded-lg bg-warm-white px-3 py-3 sm:flex-row sm:items-center sm:gap-4"><span className="min-w-0 text-sm font-medium text-text">{criterion.name}<small className="ml-1 text-text-muted">/ {criterion.maxScore}</small></span><input required inputMode="decimal" type="number" min="0" max={criterion.maxScore} step="0.01" value={scores[criterion.key] ?? ''} onChange={(event) => setScores((current) => ({ ...current, [criterion.key]: event.target.value }))} aria-label={`${criterion.name}，满分${criterion.maxScore}分`} style={{ lineHeight: 'normal', WebkitTextFillColor: '#2C1810' }} className="h-14 w-full rounded-lg border border-sand bg-white px-3 py-0 text-right text-xl font-bold text-text outline-none focus:border-gold-dark sm:w-28" /></label>)}</div>
+-      {error && <div className="mt-3 text-sm text-crimson">{error}</div>}{message && <div className="mt-3 text-sm font-medium text-emerald-700">{message}</div>}
+-      <button disabled={saving || data.group.scoring_status === 'locked'} className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-crimson font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" />{saving ? '正在提交…' : submitted ? '修改并重新提交' : '提交评分'}</button>
+-    </form>
+-    <Link href={`/events/${slug}/judge/groups/${groupId}`} prefetch={false} aria-disabled={saving} onClick={(event) => { if (saving) event.preventDefault(); }} className="mt-4 flex min-h-11 w-full items-center justify-center rounded-lg border border-sand bg-white px-4 py-3 font-semibold text-crimson">
+-      返回选手列表，继续评分
+-    </Link>
+-  </>;
++ const [data,setData]=useState<Payload|null>(null),[scores,setScores]=useState<Record<string,string>>({}),[error,setError]=useState(''),[message,setMessage]=useState(''),[saving,setSaving]=useState(false),[retry,setRetry]=useState(0),[draft,setDraft]=useState<string|null>(null);
++ const account=useRef(''),weights=useRef<number[]>([]),inflight=useRef(false);
++ const endpoint=`/api/events-news/${slug}/judge/groups/${groupId}/players/${playerId}`;
++ useEffect(()=>{const controller=new AbortController();const session=getStudentSession();const onAuth=()=>{setData(null);setScores({});setDraft(null);setRetry(n=>n+1);};window.addEventListener(STUDENT_AUTH_CHANGED_EVENT,onAuth);window.addEventListener('storage',onAuth);setData(null);setScores({});setDraft(null);setError('');setMessage('');if(!session){setError('请先登录获授权的评委账号');return()=>{window.removeEventListener(STUDENT_AUTH_CHANGED_EVENT,onAuth);window.removeEventListener('storage',onAuth);};}account.current=session.token;
++ fetch(endpoint,{cache:'no-store',signal:controller.signal,headers:{Authorization:`Bearer ${session.token}`}}).then(async r=>{const p=await r.json();if(!r.ok||!p.success)throw Error(p.error||'加载失败');if(getStudentSession()?.token!==session.token)throw Error('账号已变化，请重新加载');setData(p.data);setScores(Object.fromEntries(p.data.criteria.map((c:Criterion)=>[c.key,String(p.data.currentScore.values[c.key]??'')])));}).catch(e=>{if(e.name!=='AbortError')setError(e.message||'加载失败');});return()=>{controller.abort();window.removeEventListener(STUDENT_AUTH_CHANGED_EVENT,onAuth);window.removeEventListener('storage',onAuth);};},[endpoint,retry]);
++ const criteria=data?.criteria||[],total=criteria.reduce((s,c)=>s+(Number(scores[c.key])||0),0),max=criteria.reduce((s,c)=>s+c.maxScore,0),locked=data?.group.scoring_status==='locked';
++ const valid=criteria.length>0&&criteria.every(c=>String(scores[c.key]??'').trim()!==''&&Number.isFinite(Number(scores[c.key]))&&Number(scores[c.key])>=0&&Number(scores[c.key])<=c.maxScore)&& (draft===null||(draft.trim()!==''&&Number.isFinite(Number(draft))&&Number(draft)>=0&&Number(draft)<=max));
++ function editTotal(raw:string){setDraft(raw);if(raw.trim()===''||!Number.isFinite(Number(raw))||Number(raw)<0||Number(raw)>max)return;const next=distributeScores(criteria.map(c=>c.maxScore),weights.current,Number(raw));setScores(Object.fromEntries(criteria.map((c,i)=>[c.key,next[i].toFixed(2)])));setMessage('');}
++ async function submit(e:FormEvent){e.preventDefault();if(inflight.current||locked||!valid)return;setError('');setMessage('');const session=getStudentSession();if(!session||session.token!==account.current){setError('账号已变化，请重新加载');return;}if(!window.confirm(`确认提交 ${data?.player.name} 的本人评分？合计 ${total.toFixed(2)} 分`))return;inflight.current=true;setSaving(true);
++ try{const r=await fetch(endpoint,{method:'POST',cache:'no-store',headers:{Authorization:`Bearer ${session.token}`,'Content-Type':'application/json'},body:JSON.stringify({scores})});const p=await r.json();if(getStudentSession()?.token!==session.token)throw Error('账号已变化，请重新加载');if(!r.ok||!p.success)throw Error(p.error||'评分提交失败');setMessage(`评分已提交，本人评分：${Number(p.data.total).toFixed(2)}`);setData(d=>d?{...d,currentScore:{values:Object.fromEntries(Object.entries(scores).map(([k,v])=>[k,Number(v)])),total:p.data.total,status:'submitted'}}:d);}catch(e){setError(e instanceof Error?e.message:'提交失败，请重试');}finally{inflight.current=false;setSaving(false);}}
++ if(!data)return <div className={styles.state}><ShieldAlert aria-hidden="true"/><p role="status">{error||'正在加载评分表…'}</p>{error&&<button onClick={()=>setRetry(n=>n+1)}>重新加载</button>}</div>;
++ const submitted=!data.currentScore.needsRescore&&['submitted','reviewed','published'].includes(data.currentScore.status);
++ return <div className={styles.workspace}>
++ <section className={styles.identity}><h1>{data.player.player_no} {data.player.name}</h1><p>{data.player.performance_title||'节目名称未填写'}</p><p>{data.group.name}</p></section>
++ {data.currentScore.needsRescore&&<p role="alert">评分规则已变化，请按当前规则重新评分。</p>}
++ {submitted&&<p className={styles.success}><CheckCircle2 size={18}/>本人已提交：{data.currentScore.total?.toFixed(2)} 分</p>}
++ {locked&&<p role="status">该组别评分已锁定，只能查看。</p>}
++ <form onSubmit={submit}><fieldset disabled={saving||locked} className={styles.fields}><legend>评分项目 <small>满分 {max} 分</small></legend><p className={styles.hint}>输入分数，或左右拖动调节</p>
++ {criteria.map(c=><div className={styles.criterion} key={c.key}><div className={styles.criterionHeading}><label htmlFor={`score-${c.key}`}>{c.name}</label><small>满分 {c.maxScore} 分</small><input id={`score-${c.key}`} required type="number" inputMode="decimal" min={0} max={c.maxScore} step="0.01" value={scores[c.key]??''} onChange={e=>{setDraft(null);setMessage('');setScores(s=>({...s,[c.key]:e.target.value}));}}/></div><div className={styles.slider}><span>0</span><input aria-label={`${c.name}，左右拖动评分`} type="range" min={0} max={c.maxScore} step="0.01" value={Math.min(c.maxScore,Math.max(0,Number(scores[c.key])||0))} onChange={e=>{setDraft(null);setMessage('');setScores(s=>({...s,[c.key]:Number(e.target.value).toFixed(2)}));}}/><span>{c.maxScore}</span></div></div>)}
++ <div className={styles.total}><label htmlFor="judge-total">总分（可修改）</label><input id="judge-total" type="number" inputMode="decimal" min={0} max={max} step="0.01" required value={draft??total.toFixed(2)} onFocus={()=>{weights.current=criteria.map(c=>Number(scores[c.key])||0);}} onChange={e=>editTotal(e.target.value)}/><span>/ {max}</span><p>修改总分，各项按比例分配</p></div>
++ </fieldset>{error&&<p role="alert" className={styles.error}>{error}</p>}{message&&<p role="status" className={styles.success}>{message}</p>}
++ <button disabled={saving||locked||!valid} className={styles.submit}><Send size={18}/>{saving?'正在提交…':submitted?'修改本人评分':'确认评分'}</button></form>
++ <Link href={`/events/${slug}/judge/groups/${groupId}`} prefetch={false} aria-disabled={saving} onClick={e=>{if(saving)e.preventDefault();}} className={styles.back}>返回选手列表，继续评分</Link></div>;
+ }
+-
+-function State({ message }: { message: string }) { return <div className="rounded-2xl border border-sand/60 bg-white p-10 text-center text-sm text-text-muted"><ShieldAlert className="mx-auto mb-3 h-7 w-7 text-gold-dark" />{message}</div>; }
+--- before/production/website/src/app/events-news/[slug]/page.tsx
++++ after/production/website/src/app/events-news/[slug]/page.tsx
+@@ -5,9 +5,10 @@
+ import { notFound } from 'next/navigation';
+ import { ArrowLeft, CalendarDays, ChevronRight, Gavel, MapPin, Trophy } from 'lucide-react';
+ import StudentProtectedLink from '@/components/StudentProtectedLink';
++import PublicJudges from '@/components/events/PublicJudges';
+ import EventGroupSearch from '@/components/events/EventGroupSearch';
+ import { getEventCompetitionId, getEventNewsBySlug, getEventStatus } from '@/lib/events-news';
+-import { loadPublicEventGroups, type PublicEventGroup } from '@/lib/public-event-data';
++import { loadPublicEventJudges, loadPublicEventGroups, type PublicEventGroup } from '@/lib/public-event-data';
+ 
+ export const dynamic = 'force-dynamic';
+ 
+@@ -28,6 +29,8 @@
+       console.error('赛事组别加载失败:', error);
+     }
+   }
++
++  const judges=competitionId ? loadPublicEventJudges(competitionId) : [];
+ 
+   return (
+     <div className={`min-h-screen pb-16 pt-20 md:pb-24 md:pt-28 ${styles.detail}`}>
+@@ -79,6 +82,7 @@
+             </div>
+         </section>
+ 
++        <PublicJudges judges={judges} eventName={item.title}/>
+         <section id="event-groups" className="mt-6 scroll-mt-24 md:mt-10">
+           {groups.length ? (
+             <EventGroupSearch groups={groups} slug={item.slug} />
+--- before/production/website/src/app/events-news/[slug]/groups/[groupId]/players/[playerId]/page.tsx
++++ after/production/website/src/app/events-news/[slug]/groups/[groupId]/players/[playerId]/page.tsx
+@@ -40,18 +40,18 @@
+           <ArrowLeft className="h-4 w-4" /> 返回选手列表
+         </Link>
+ 
+-        <section className="rounded-2xl bg-[#1A1A1A] p-4 text-white shadow-lg md:p-6">
++        <section className="rounded-2xl border border-sand/60 bg-white p-4 text-text md:p-6">
+           <div className="flex min-w-0 items-center gap-2 text-[11px] font-semibold text-gold"><Trophy className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{event.title}</span></div>
+           <div className="mt-5 flex flex-col items-center gap-3 text-center">
+             <PlayerAvatar name={player.name} src={player.avatar_url} size="large" />
+             <div className="min-w-0">
+               <h1 className="break-words font-serif text-2xl font-bold leading-tight">{player.name}</h1>
+-              <div className="mt-1 text-sm text-white/60">{player.group_name}</div>
++              <div className="mt-1 text-sm text-text-muted">{player.group_name}</div>
+             </div>
+           </div>
+-          <div className="mt-3 grid grid-cols-2 gap-3 border-t border-white/10 pt-3 text-center">
+-            <div><strong className="block text-xl leading-none text-gold">{player.rank_no || '—'}</strong><span className="mt-1 block text-[10px] text-white/55">组别排名</span></div>
+-            <div><strong className="block text-xl leading-none text-gold">{formatPublicScore(player.published_total)}</strong><span className="mt-1 block text-[10px] text-white/55">最终得分</span></div>
++          <div className="mt-3 grid grid-cols-2 gap-3 border-t border-sand/60 pt-3 text-center">
++            <div><strong className="block text-xl leading-none text-crimson">{player.rank_no || '—'}</strong><span className="mt-1 block text-[10px] text-text-muted">组别排名</span></div>
++            <div><strong className="block text-xl leading-none text-crimson">{formatPublicScore(player.published_total)}</strong><span className="mt-1 block text-[10px] text-text-muted">最终得分</span></div>
+           </div>
+         </section>
+ 
+@@ -67,8 +67,8 @@
+           </div>
+         </section>
+ 
+-        <section className="mt-5 flex items-center justify-between gap-4 rounded-2xl bg-crimson p-4 text-white shadow-md md:p-6">
+-          <div className="flex items-center gap-3"><Medal className="h-8 w-8 text-gold" /><div><div className="text-xs text-white/70">最终评分</div><div className="mt-1 text-sm">{player.rank_no ? `排名第 ${player.rank_no} 名` : '本组尚未全部完成，暂不排名'}</div></div></div>
++        <section className="mt-5 flex items-center justify-between gap-4 rounded-2xl border border-gold/60 bg-[#F8F1E7] p-4 text-crimson md:p-6">
++          <div className="flex items-center gap-3"><Medal className="h-8 w-8 text-gold" /><div><div className="text-xs text-text-muted">最终评分</div><div className="mt-1 text-sm">{player.rank_no ? `排名第 ${player.rank_no} 名` : '本组尚未全部完成，暂不排名'}</div></div></div>
+           <div className="font-serif text-3xl font-bold">{formatPublicScore(player.published_total)}</div>
+         </section>
+ 
+@@ -78,15 +78,15 @@
+             <span className="text-xs text-text-muted">{scores.length ? `${scores.length} 位评委` : '待公布'}</span>
+           </div>
+           {scores.length ? (
+-            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
++            <div className="mt-4 flex flex-col divide-y divide-sand/50">
+               {scores.map((score) => (
+-                <div key={score.id} className="flex min-w-0 flex-col items-center gap-2 rounded-xl border border-sand/40 bg-warm-white p-3 text-center">
++                <div key={score.id} className="flex min-w-0 items-center gap-4 py-4">
+                   <PlayerAvatar name={score.judge_name} src={score.avatar_url} size="medium" />
+-                  <div className="w-full min-w-0">
++                  <div className="min-w-0 flex-1">
+                     <div title={score.judge_name} className="truncate text-xs font-medium leading-tight text-text">{score.judge_name}</div>
+                     {score.judge_title && <div className="mt-0.5 truncate text-[11px] leading-tight text-text-muted">{score.judge_title}</div>}
+                   </div>
+-                  <div className="shrink-0 text-lg font-bold leading-none text-crimson">{score.score === null ? '***' : formatPublicScore(score.score)}</div>
++                  <div className="shrink-0 text-lg font-bold leading-none text-crimson">{score.score === null ? '未公开' : formatPublicScore(score.score)}</div>
+                 </div>
+               ))}
+             </div>
+--- before/production/website/src/lib/public-event-data.ts
++++ after/production/website/src/lib/public-event-data.ts
+@@ -253,3 +253,9 @@
+   if (value == null) return '待公布';
+   return Number(value).toLocaleString('zh-CN', { maximumFractionDigits: 2 });
+ }
++
++/** Public identity fields only, behind the event's judge-publication switch. */
++export function loadPublicEventJudges(competitionId: number) {
++ const db=openAdminDb({readonly:true});
++ try { return db.prepare(`SELECT DISTINCT j.id,j.name,COALESCE(j.title,'') AS title,COALESCE(j.organization,'') AS organization,COALESCE(j.bio,'') AS bio,COALESCE(NULLIF(m.wx_avatar_url,''),NULLIF(m.avatar,''),'') AS avatar_url FROM event_judges j JOIN event_group_judges gj ON gj.judge_id=j.id AND gj.status='active' JOIN event_competitions c ON c.id=gj.competition_id LEFT JOIN Member m ON m.id=j.member_id WHERE c.id=? AND c.status IN ('published','finished') AND c.judge_scores_public=1 AND j.status='active' ORDER BY j.id`).all<{id:number;name:string;title:string;organization:string;bio:string;avatar_url:string}>(competitionId).map(j=>({...j,avatar_url:j.avatar_url||(legacyAvatars.judges as Record<string,string>)[String(j.id)]||''})); }finally{db.close();}
++}
+--- before/production/website/public/sw.js
++++ after/production/website/public/sw.js
+@@ -1,7 +1,7 @@
+ /* 伊娃东方舞 PWA Service Worker
+  * 原则：只缓存公开页面与静态资源；登录、学习进度、视频和 API 始终走网络。
+  */
+-const VERSION = 'swod-pwa-v15-event-platform-20261113';
++const VERSION = 'swod-pwa-v16-judge-scoring-20261113';
+ const STATIC_CACHE = `${VERSION}-static`;
+ const PAGE_CACHE = `${VERSION}-pages`;
+ const OFFLINE_URL = '/offline.html';
+@@ -38,6 +38,7 @@
+ });
+ 
+ function isPrivate(url) {
++  if (/\/judge(?:\/|$)/.test(url.pathname)) return true;
+   return PRIVATE_PATHS.some((path) => url.pathname === path || url.pathname.startsWith(path));
+ }
+ 
+--- before/production/website/scripts/pwa.test.mjs
++++ after/production/website/scripts/pwa.test.mjs
+@@ -23,7 +23,8 @@
+   assert.match(worker, /event\.waitUntil\(updateCache\)/);
+   assert.match(worker, /await cache\.put\(request, copy\)/);
+   assert.match(worker, /key !== STATIC_CACHE && key !== PAGE_CACHE/);
+-  assert.match(worker, /client\.navigate\(client\.url\)/);
++  // The provider reloads on controllerchange; activation only claims clients.
++  assert.match(worker, /self\.clients\.claim\(\)/);
+ });
+ 
+ test('all declared local assets exist', () => {
+--- before/10-小程序miniprogram/app.json
++++ after/10-小程序miniprogram/app.json
+@@ -24,7 +24,8 @@
+     "pages/shop-orders/shop-orders",
+     "pages/course-checkout/course-checkout",
+     "pages/event-judge/event-judge",
+-    "pages/event-player/event-player"
++    "pages/event-player/event-player",
++    "pages/event-judge-profile/event-judge-profile"
+   ],
+   "window": {
+     "navigationBarTitleText": "伊娃东方舞·东方舞圈",
+--- before/10-小程序miniprogram/pages/event-judge/event-judge.js
++++ after/10-小程序miniprogram/pages/event-judge/event-judge.js
+@@ -1,8 +1,9 @@
++const {distributeScores}=require("../../shared/score-allocation");
+ const api = require("../../utils/api");
+ const view=require("../../shared/event-view");
+ const share=require("../../shared/share");
+ Page(share.withShare("event-judge",{
+- data: { id: "", groupId: "", playerId: "", loading: true, submitting: false, error: "", groups: [], players: [], visibleRows:[], query:'', pageNo:1, pageCount:1, criteria: [], total: "", locked: false },
++ data: { id: "", groupId: "", playerId: "", loading: true, submitting: false, error: "", groups: [], players: [], visibleRows:[], query:'', pageNo:1, pageCount:1, criteria: [], total: "", filter: "all", scoredCount:0, maxTotal:10, locked: false },
+  onLoad(options) { this.setData({ id: options.id || "", groupId: options.groupId || "", playerId: options.playerId || "" }); this.load(); },
+  onShow() { if (this.hasShown && !this.data.playerId) this.load(); this.hasShown = true; },
+  async load() {
+@@ -15,11 +16,11 @@
+    const result = await api.request(path);
+    if(requestId!==this.requestId)return;
+    const criteria = (result.criteria || []).map(c => ({ ...c, value: result.currentScore && result.currentScore.values[c.key] !== undefined ? String(result.currentScore.values[c.key]) : "" }));
+-   this.setData({ ...result, criteria, loading: false, locked: !!(result.group && result.group.scoring_status === "locked") }); this.updateTotal();this.applyPage(this.data.pageNo);
++   this.setData({ ...result, criteria, scoredCount:(result.players||[]).filter(p=>p.my_score!=null).length, maxTotal:criteria.reduce((n,c)=>n+Number(c.maxScore),0)||10, loading: false, locked: !!(result.group && result.group.scoring_status === "locked") }); this.updateTotal();this.applyPage(this.data.pageNo);
+   } catch (err) { if(requestId!==this.requestId)return;this.setData({ loading: false, error: err.message || "加载失败" }); }
+  },
+  onSearch(event){this.setData({query:String(event.detail.value||'')});this.applyPage(1);},
+- applyPage(number){const q=this.data.query.trim().toLowerCase();const source=this.data.groupId?this.data.players:this.data.groups;const rows=source.map((r,i)=>({...r,ordinal:i+1})).filter(r=>!q||`${r.name} ${r.player_no||''}`.toLowerCase().includes(q));const page=view.page(rows,number);this.setData({visibleRows:page.rows,pageNo:page.number,pageCount:page.pages});},
++ applyPage(number){const q=this.data.query.trim().toLowerCase();const source=this.data.groupId?this.data.players:this.data.groups;const rows=source.filter(r=>!this.data.groupId||this.data.filter==="all"||(this.data.filter==="scored"?r.my_score!=null:r.my_score==null)).map((r,i)=>({...r,ordinal:i+1})).filter(r=>!q||`${r.name} ${r.player_no||''}`.toLowerCase().includes(q));const page=view.page(rows,number);this.setData({visibleRows:page.rows,pageNo:page.number,pageCount:page.pages});},
+  changePage(event){this.applyPage(this.data.pageNo+Number(event.currentTarget.dataset.offset));},
+  openGroup(event) { wx.navigateTo({ url: `/pages/event-judge/event-judge?id=${encodeURIComponent(this.data.id)}&groupId=${encodeURIComponent(event.currentTarget.dataset.id)}` }); },
+  openPlayer(event) { wx.navigateTo({ url: `/pages/event-judge/event-judge?id=${encodeURIComponent(this.data.id)}&groupId=${encodeURIComponent(this.data.groupId)}&playerId=${encodeURIComponent(event.currentTarget.dataset.id)}` }); },
+@@ -30,7 +31,12 @@
+    wx.navigateBack(); return;
+   }
+   this.setData(this.data.playerId ? { playerId: "",query:"" } : { groupId: "",query:"" }); this.load(); },
++ setFilter(event){this.setData({filter:event.currentTarget.dataset.filter});this.applyPage(1);},
++ onSlider(event){this.onScore({currentTarget:event.currentTarget,detail:{value:(Number(event.detail.value)/100).toFixed(2)}});},
++ beginTotal(){this.totalWeights=this.data.criteria.map(c=>Number(c.value)||0);},
++ onTotal(event){if(this.data.locked||this.data.submitting)return;const raw=String(event.detail.value);this.setData({total:raw});if(!raw.trim()||!Number.isFinite(Number(raw))||Number(raw)<0||Number(raw)>this.data.maxTotal)return;const next=distributeScores(this.data.criteria.map(c=>c.maxScore),this.totalWeights||this.data.criteria.map(c=>Number(c.value)||0),Number(raw));this.setData({criteria:this.data.criteria.map((c,i)=>({...c,value:next[i].toFixed(2),slider:Math.round(next[i]*100),sliderMax:Math.round(c.maxScore*100)}))});},
+  onScore(event) {
++  if(this.data.locked||this.data.submitting)return;
+   const index = Number(event.currentTarget.dataset.index);
+   if (!Number.isInteger(index) || !this.data.criteria[index]) return;
+   const criteria = this.data.criteria.map((criterion, position) =>
+@@ -39,15 +45,19 @@
+   this.setData({ criteria });
+   this.updateTotal();
+  },
+- updateTotal() { const total = this.data.criteria.reduce((sum,c) => sum + (Number(c.value) || 0),0); this.setData({ total: total.toFixed(2) }); },
++ updateTotal() { const total = this.data.criteria.reduce((sum,c) => sum + (Number(c.value) || 0),0); this.setData({ total: total.toFixed(2),criteria:this.data.criteria.map(c=>({...c,slider:Math.min(Math.round(c.maxScore*100),Math.max(0,Math.round((Number(c.value)||0)*100))),sliderMax:Math.round(c.maxScore*100)})) }); },
+  async submit() {
+-  if (this.data.submitting || this.data.locked) return;
++  if (this.data.submitting || this.data.locked || !this.data.criteria.length) return;
++  if(!String(this.data.total).trim()||!Number.isFinite(Number(this.data.total))||Number(this.data.total)<0||Number(this.data.total)>this.data.maxTotal){wx.showToast({title:"请填写有效总分",icon:"none"});return;}
+   const scores = {};
+   for (const c of this.data.criteria) {
+    if (String(c.value).trim() === "" || !Number.isFinite(Number(c.value)) || Number(c.value)<0 || Number(c.value)>c.maxScore) { wx.showToast({ title: `请填写${c.name}（0–${c.maxScore}分）`, icon: "none" }); return; }
+    scores[c.key] = Number(c.value);
+   }
++  this.updateTotal();
+   this.setData({ submitting: true });
++  const confirmed=await new Promise(resolve=>wx.showModal({title:"确认提交本人评分？",content:`${this.data.player.name} · 合计 ${this.data.total} 分`,success:r=>resolve(r.confirm),fail:()=>resolve(false)}));
++  if(!confirmed){this.setData({submitting:false});return;}
+   try {
+    await api.request(`/events/${this.data.id}/judge?groupId=${this.data.groupId}&playerId=${this.data.playerId}`, { method: "POST", data: { scores } });
+    wx.showToast({ title: "评分已提交", icon: "success" }); await this.load();
+--- before/10-小程序miniprogram/pages/event-judge/event-judge.wxml
++++ after/10-小程序miniprogram/pages/event-judge/event-judge.wxml
+@@ -4,8 +4,8 @@
+  <block wx:else>
+   <view class="card"><view class="title">{{competition.name}}</view><view class="muted">评委：{{judge.name}}</view><button wx:if="{{groupId}}" bindtap="goBack" disabled="{{submitting}}">{{playerId ? '返回选手列表' : '返回评分组别'}}</button></view>
+   <input wx:if="{{!playerId}}" class="search" value="{{query}}" placeholder="搜索组别或选手" bindinput="onSearch"/><block wx:if="{{!groupId}}"><view class="card row" wx:for="{{visibleRows}}" wx:key="id" data-id="{{item.id}}" bindtap="openGroup"><text>{{item.ordinal}}. {{item.name}}</text><text class="muted">{{item.scored_count}} / {{item.player_count}} 已评分 ›</text></view><view wx:if="{{!groups.length}}" class="card">暂无授权组别</view></block>
+-  <block wx:elif="{{!playerId}}"><view class="card row" wx:for="{{visibleRows}}" wx:key="id" data-id="{{item.id}}" bindtap="openPlayer"><view>{{item.name}}<view class="muted">{{item.player_no}} {{item.organization}}</view></view><text>{{item.my_score_status ? item.my_score : '未评分'}} ›</text></view><view wx:if="{{!players.length}}" class="card">暂无审核通过的选手</view></block>
+-  <view wx:else class="card"><view class="title">{{player.name}}</view><view class="muted">{{group.name}} · {{player.performance_title}}</view><view wx:if="{{currentScore.needsRescore}}" class="muted">历史评分为 {{currentScore.total}}，超出当前满分。请按当前10分制重新填写并提交评分。</view><view class="criterion" wx:for="{{criteria}}" wx:key="key"><text>{{item.name}}（满分 {{item.maxScore}}）</text><input type="digit" cursor-spacing="120" adjust-position="{{true}}" value="{{item.value}}" data-index="{{index}}" bindinput="onScore" disabled="{{locked || submitting}}" placeholder="请输入分数" /></view><view class="total">总分 {{total}}</view><view wx:if="{{locked}}" class="muted">该组别评分已锁定</view><button class="submit" bindtap="submit" loading="{{submitting}}" disabled="{{locked || submitting}}">{{currentScore.status ? '修改并提交评分' : '提交评分'}}</button></view>
++  <block wx:elif="{{!playerId}}"><view class="card"><view class="title">{{group.name}}</view><view class="progress-text">评分进度 {{scoredCount}} / {{players.length}}</view><progress percent="{{players.length ? scoredCount / players.length * 100 : 0}}" activeColor="#9e1726" stroke-width="6"/><view class="filters"><button data-filter="all" bindtap="setFilter">全部</button><button data-filter="unscored" bindtap="setFilter">未评分</button><button data-filter="scored" bindtap="setFilter">已评分</button></view></view><view class="card row" wx:for="{{visibleRows}}" wx:key="id" data-id="{{item.id}}" bindtap="openPlayer"><view>{{item.name}}<view class="muted">{{item.player_no}} {{item.organization}}</view></view><text>{{item.my_score_status ? item.my_score : '未评分'}} ›</text></view><view wx:if="{{!players.length}}" class="card">暂无审核通过的选手</view></block>
++  <view wx:else class="card"><view class="title">{{player.name}}</view><view class="muted">{{group.name}} · {{player.performance_title}}</view><view wx:if="{{currentScore.needsRescore}}" class="muted">历史评分为 {{currentScore.total}}，超出当前满分。请按当前10分制重新填写并提交评分。</view><view class="muted">输入分数，或左右拖动调节</view><view class="criterion" wx:for="{{criteria}}" wx:key="key"><view class="criterion-head"><text>{{item.name}}</text><text class="muted">满分 {{item.maxScore}} 分</text><input type="digit" cursor-spacing="120" value="{{item.value}}" data-index="{{index}}" bindinput="onScore" disabled="{{locked || submitting}}" placeholder="分数" /></view><view class="slider-row"><text>0</text><slider min="0" max="{{item.sliderMax}}" step="1" value="{{item.slider}}" data-index="{{index}}" bindchanging="onSlider" bindchange="onSlider" activeColor="#9e1726" block-size="24" disabled="{{locked || submitting}}"/><text>{{item.maxScore}}</text></view></view><view class="total"><view class="total-head"><text>总分（可修改）</text><input type="digit" value="{{total}}" bindfocus="beginTotal" bindinput="onTotal" disabled="{{locked || submitting}}"/><text>/ {{maxTotal}}</text></view><view class="muted">修改总分，各项按比例分配</view></view><view wx:if="{{locked}}" class="muted">该组别评分已锁定</view><button class="submit" bindtap="submit" loading="{{submitting}}" disabled="{{locked || submitting}}">{{currentScore.status ? '修改并提交评分' : '确认评分'}}</button></view>
+ <view wx:if="{{!playerId && pageCount > 1}}" class="pagination"><button data-offset="-1" disabled="{{pageNo <= 1}}" bindtap="changePage">上一页</button><text>{{pageNo}} / {{pageCount}}</text><button data-offset="1" disabled="{{pageNo >= pageCount}}" bindtap="changePage">下一页</button></view>
+  </block>
+ </view>--- before/10-小程序miniprogram/pages/event-judge/event-judge.wxss
++++ after/10-小程序miniprogram/pages/event-judge/event-judge.wxss
+@@ -1,2 +1,4 @@
+ .page{padding:24rpx;background:#f8f5f0;min-height:100vh}.card{background:#fff;border-radius:20rpx;padding:28rpx;margin-bottom:20rpx}.title{font-size:34rpx;font-weight:600;margin-bottom:16rpx}.muted{font-size:24rpx;color:#888;margin-top:10rpx}.row{display:flex;align-items:center;justify-content:space-between;gap:20rpx}.criterion{margin-top:28rpx}.criterion input{box-sizing:border-box;width:100%;height:100rpx;min-height:100rpx;border:1rpx solid #c9bba7;border-radius:12rpx;padding:0 20rpx;margin-top:12rpx;background:#fff;color:#2c1810;font-size:36rpx;font-weight:600;line-height:normal;text-align:left}.total{font-size:40rpx;color:#9f1d20;text-align:center;margin:32rpx 0}.submit{background:#9f1d20;color:#fff}
+ .search{height:76rpx;padding:0 20rpx;background:#fff;border-radius:12rpx;font-size:24rpx}.pagination{display:flex;align-items:center;gap:16rpx;font-size:24rpx}.pagination button{font-size:24rpx}
++
++.page{background:#faf8f5}.title{color:#2c1810}.muted{color:#6b5c52}.criterion{padding:20rpx 0;border-bottom:1rpx solid #e8ddd0}.criterion-head,.slider-row,.total-head{display:flex;align-items:center;gap:16rpx}.criterion-head>text:first-child{flex:1;font-weight:600}.criterion-head .muted{font-size:22rpx}.criterion-head input{width:150rpx;height:88rpx;min-height:88rpx;margin:0;text-align:center;font-size:38rpx;color:#9e1726}.slider-row slider{flex:1;min-width:0;margin:8rpx 0}.slider-row{font-size:24rpx;color:#6b5c52}.total{padding:28rpx 16rpx;background:#f4ece1;border-radius:24rpx}.total-head{justify-content:center;font-size:28rpx}.total input{width:170rpx;height:88rpx;background:#fff;border:1rpx solid #bda27c;border-radius:16rpx;font-size:40rpx}.submit{min-height:96rpx;background:#9e1726;border-radius:18rpx}.filters{display:flex;gap:12rpx;margin-top:20rpx}.filters button{flex:1;font-size:26rpx;color:#9e1726;background:#f8f2eb}.progress-text{font-size:28rpx;margin-bottom:16rpx}
+--- before/10-小程序miniprogram/pages/event-detail/event-detail.wxml
++++ after/10-小程序miniprogram/pages/event-detail/event-detail.wxml
+@@ -8,20 +8,15 @@
+       <image wx:if="{{competition.coverUrl}}" src="{{competition.coverUrl}}" mode="aspectFill"></image><view wx:else class="cover-fallback">赛事</view>
+       <view class="cover-status">{{competition.registrationText}}</view>
+     </view>
+-    <view class="detail-heading"><view class="event-title">{{competition.name}}</view><view class="event-date">{{competition.dateText}} · {{competition.location || '地点待定'}}</view></view>
+-    <button class="judge-entry" bindtap="goJudge">评委入口</button>
+-    <view class="summary-card card"><view><text>{{competition.groupCount || groups.length || 0}}</text><text class="summary-label">组别</text></view><view><text>{{competition.registrationPublic ? (competition.approvedPlayerCount || players.length || 0) : '—'}}</text><text class="summary-label">选手</text></view><view><text>{{competition.judgeCount || judges.length || 0}}</text><text class="summary-label">评委</text></view></view>
++    <view class="detail-heading"><view class="heading-main"><view class="event-title">{{competition.name}}</view></view><view class="summary-card"><view><text>{{competition.groupCount || groups.length || 0}}</text><text class="summary-label">组别</text></view><view><text>{{competition.registrationPublic ? (competition.approvedPlayerCount || players.length || 0) : '—'}}</text><text class="summary-label">选手</text></view><view><text>{{competition.judgeCount || judges.length || 0}}</text><text class="summary-label">评委</text></view></view></view>
++    <view class="event-date">{{competition.dateText}} · {{competition.location || '地点待定'}}</view><view class="event-organizer">主办方：{{competition.organizer || '待公布'}}</view>
+     <scroll-view class="panel-tabs" scroll-x enable-flex><view class="panel-tab {{activePanel === item.key ? 'active' : ''}}" wx:for="{{panels}}" wx:key="key" data-key="{{item.key}}" bindtap="switchPanel">{{item.label}}</view></scroll-view>
+     <view wx:if="{{activePanel === 'overview'}}">
+-      <view class="section-card card"><view class="section-title">赛事信息</view><view class="info-row"><text>主办方</text><span>{{competition.organizer || '伊娃东方舞'}}</span></view><view class="info-row"><text>比赛地点</text><span>{{competition.location || '待定'}}</span></view><view class="info-row"><text>报名状态</text><span class="highlight">{{competition.registrationText}}</span></view><view class="info-row"><text>报名费用</text><span>{{competition.feeText}}</span></view><view class="description">{{competition.description || '赛事介绍正在完善中。'}}</view></view>
++      <view class="section-card card"><view class="section-title">赛事信息</view><view class="info-row"><text>主办方</text><span>{{competition.organizer || '伊娃东方舞'}}</span></view><view class="info-row"><text>比赛地点</text><span>{{competition.location || '待定'}}</span></view><view class="info-row"><text>报名状态</text><span class="highlight">{{competition.registrationText}}</span></view><view class="info-row"><text>报名费用</text><span>{{competition.feeText}}</span></view><view class="description">{{competition.description || '赛事介绍正在完善中。'}}</view><button class="judge-entry" bindtap="goJudge">评委入口</button></view>
+       <view class="section-card card" wx:if="{{sessions.length}}"><view class="section-title">赛事日程</view><view class="list-row" wx:for="{{sessions}}" wx:key="id"><view><b>{{item.name}}</b><small>{{item.timeText}} · {{item.venue || '场地待定'}}</small></view></view></view>
+-      <view class="section-card card" wx:if="{{registrations.length}}"><view class="section-title">我的报名</view><view class="list-row" wx:for="{{registrations}}" wx:key="id"><view><b>{{item.name}} · {{item.groupName}}</b><small>审核：{{item.auditStatusText}} · 缴费：{{item.paidStatusText}}</small><small>{{item.performanceTitle ? '作品：' + item.performanceTitle + ' · ' : ''}}{{item.resultText}}</small></view></view></view>
+-    </view>
+-    <view wx:if="{{activePanel === 'groups'}}" class="section-card card"><view class="section-title">赛事组别 <text class="group-total">共{{groups.length}}组</text></view><view class="group-search"><input value="{{groupKeyword}}" placeholder="搜索组别、舞种或年龄" bindinput="onGroupSearch" /></view><view class="list-row group-row" wx:for="{{visibleGroups}}" wx:key="id" data-id="{{item.id}}" bindtap="openGroup"><view><b>{{item.ordinal}}. {{item.name}}</b><small>{{item.rankingCount ? item.rankingCount + ' 项成绩' : '成绩待公布'}}</small></view><text>{{item.playerCountText}} ›</text></view><view class="pagination" wx:if="{{groupPageCount > 1}}"><button data-offset="-1" disabled="{{groupPage <= 1}}" bindtap="changeGroupPage">上一页</button><text>{{groupPage}} / {{groupPageCount}} · {{groupTotal}} 组</text><button data-offset="1" disabled="{{groupPage >= groupPageCount}}" bindtap="changeGroupPage">下一页</button></view><view wx:if="{{!visibleGroups.length}}" class="panel-empty">没有找到符合条件的组别</view></view>
+-    <view wx:if="{{activePanel === 'players'}}" class="section-card card"><view class="list-row" wx:for="{{players}}" wx:key="id" data-id="{{item.id}}" data-group="{{item.groupId}}" bindtap="openPlayer"><image class="row-avatar" wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"/><view wx:else class="number">{{item.displayInitial}}</view><view><b>{{item.name}}</b><small>{{item.groupName}} · {{item.organization || item.teacher || '个人参赛'}}</small></view></view><view wx:if="{{!players.length}}" class="panel-empty">{{competition.registrationPublic ? '暂无报名信息' : '报名信息尚未公开'}}</view></view>
+-    <view wx:if="{{activePanel === 'judges'}}" class="section-card card"><view class="list-row" wx:for="{{judges}}" wx:key="id"><view><b>{{item.name}}</b><small>{{item.title || '赛事评委'}} · {{item.organization || '伊娃东方舞'}}</small></view></view><view wx:if="{{!judges.length}}" class="panel-empty">评委阵容暂未公布</view></view>
+-    <view wx:if="{{activePanel === 'results'}}" class="results-panel"><view class="results-head"><view class="section-title">公示结果</view><text>成绩由赛事平台审核发布</text></view><view class="result-card" wx:for="{{rankings}}" wx:key="id" data-id="{{item.playerId}}" data-group="{{item.groupId}}" bindtap="openPlayer"><view class="result-trophy {{item.rankClass}}"><view wx:if="{{item.rankNo}}">🏆</view><text>{{item.rankLabel}}</text></view><image class="row-avatar" wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"/><view class="result-main"><b>{{item.playerName}}</b><small>{{item.groupName}} · {{item.playerNo ? '编号 ' + item.playerNo : '未编号'}}</small></view><view class="result-score"><view>{{item.scoreText}}</view><text>最终得分</text></view><text class="result-arrow">›</text></view><view wx:if="{{!rankings.length}}" class="section-card card panel-empty">成绩经统一平台审核发布后在这里公示</view></view>
+-    <view class="section-card card" wx:if="{{registrations.length}}"><view class="section-title">我的报名</view><view class="list-row" wx:for="{{registrations}}" wx:key="id"><view><b>{{item.entrantName}} · {{item.groupName}}</b><small>{{item.performanceTitle}} · {{item.paidStatusText}}</small></view><button wx:if="{{item.canPay}}" data-id="{{item.id}}" bindtap="payRegistration">继续缴费</button></view></view><button class="register-btn {{competition.registrationOpen ? '' : 'disabled'}}" bindtap="goRegister">{{competition.registrationOpen ? '立即报名' : '报名已关闭'}}</button>
++      <view wx:if="{{activePanel === 'registrations'}}" class="section-card card"><view class="section-title">我的报名</view><view wx:if="{{registrationsLoading}}" class="panel-empty">报名信息加载中…</view><view wx:elif="{{registrationError}}" class="panel-empty"><text>{{registrationError}}</text><button bindtap="loadRegistrations">重新加载</button></view><view wx:else><view class="list-row" wx:for="{{registrations}}" wx:key="id"><view><b>{{item.entrantName}} · {{item.groupName}}</b><small>{{item.performanceTitle}} · {{item.paidStatusText}}</small></view><button wx:if="{{item.canPay}}" data-id="{{item.id}}" bindtap="payRegistration">继续缴费</button></view><view wx:if="{{!registrations.length}}" class="panel-empty">暂无本赛事报名记录</view></view></view>
++    <view class="registration-bar"><button class="mine-btn" bindtap="goMyRegistrations">我的报名</button><button class="register-btn {{competition.registrationOpen ? '' : 'disabled'}}" disabled="{{!competition.registrationOpen}}" bindtap="goRegister">{{competition.registrationOpen ? '立即报名' : '报名已关闭'}}</button></view>
++
+   </block>
+ </view>
+ 
+--- before/10-小程序miniprogram/pages/event-detail/event-detail.js
++++ after/10-小程序miniprogram/pages/event-detail/event-detail.js
+@@ -1,4 +1,5 @@
+ const eventView=require('../../shared/event-view');
++const { eventAgeGroup } = require('../../shared/event-age');
+ const share = require("../../shared/share");
+ const api = require("../../utils/api");
+ 
+@@ -22,7 +23,7 @@
+ 
+ Page(share.withShare("event-detail", {
+   data: {
+-    id: null, loading: true, competition: {}, groups: [], visibleGroups: [], groupPage:1, groupPageCount:1, groupTotal:0, groupKeyword: "", players: [], judges: [],
++    id: null, loading: true, competition: {}, groups: [], visibleGroups: [], groupPage:1, groupPageCount:1, groupTotal:0, groupKeyword: "", groupAgeFilter: "全部", groupAgeFilters: ["全部", "成人", "青少年", "少儿"], registrationsLoading: false, registrationError: "", players: [], judges: [],
+     rankings: [], sessions: [], awards: [], registrations: [], activePanel: "groups",
+     panels: [
+       { key: "overview", label: "概览" }, { key: "groups", label: "组别" },
+@@ -46,7 +47,7 @@
+       const data = await api.getEventDetail(this.data.id);
+       const competition = data.competition || {};
+       const { registrationOpen, statusText } = require('../../shared/event-state').eventState(competition);
+-      const groups=(data.groups||[]).map((g,i)=>({...g,ordinal:i+1,playerCountText:g.playerCount==null?'报名信息未公开':g.playerCount+'位'}));
++      const groups=(data.groups||[]).map((g,i)=>({...g,ordinal:i+1,ageCategory:eventAgeGroup(g.name,g.ageRange,g.category),playerCountText:g.playerCount==null?'报名信息未公开':g.playerCount+'位选手',groupStatusText:Number(g.rankingCount)>0?'已公示'+g.rankingCount+'项得分':registrationOpen?'报名中':'成绩待公布'}));
+       this.setData({
+         competition: {
+           ...competition,
+@@ -58,20 +59,26 @@
+           registrationOpen,
+           feeText: Number(competition.registrationFee || 0) > 0 ? `¥${Number(competition.registrationFee).toFixed(2)}` : "免费"
+         },
+-        groups, players: (data.players || []).map(eventView.player), judges: (data.judges || []).map(j=>({...j,initial:String(j.name||'评').slice(0,1)})),
++        groups, players: (data.players || []).map(eventView.player), judges: (competition.judgeScoresPublic ? data.judges || [] : []).map(j=>({...j,initial:String(j.name||'评').slice(0,1)})),
+         rankings: (data.rankings || []).map(normalizeRanking), awards: data.awards || [],
+         sessions: (data.sessions || []).map(item => ({ ...item, timeText: shortDate(item.startsAt) })),
+         loading: false
+       });
+       this.applyGroupPage(1);
+-      wx.setNavigationBarTitle({ title: competition.name || "赛事详情" });
++      wx.setNavigationBarTitle({ title: "赛事详情" });
+     } catch (err) {
+       this.setData({ loading: false });
+       wx.showToast({ title: err.message || "赛事详情加载失败", icon: "none" });
+     }
+   },
+   async loadRegistrations() {
+-    const rows = await api.getMyEventRegistrations(this.data.id).catch(() => []);
++    const version = (this.registrationLoadVersion || 0) + 1;
++    this.registrationLoadVersion = version;
++    const account = wx.getStorageSync ? String(wx.getStorageSync('token') || '') : '';
++    this.setData({ registrationsLoading: true, registrationError: '' });
++    try {
++    const rows = await api.getMyEventRegistrations(this.data.id);
++    if (version !== this.registrationLoadVersion || (wx.getStorageSync && String(wx.getStorageSync('token') || '') !== account)) { this.setData({ registrations: [], registrationsLoading: false }); return; }
+     const auditLabels = { pending: '已报名', approved: '已报名', rejected: '未通过' };
+     const paidLabels = { unpaid: "待缴费", paid: "已缴费", refunded: "已退款" };
+     this.setData({ registrations: (rows || []).map(item => ({
+@@ -81,18 +88,23 @@
+       resultText: item.resultPublished
+         ? `${item.awardName || (item.rankNo ? `第${item.rankNo}名` : "成绩已公示")} · ${item.totalScore == null ? "-" : item.totalScore}分`
+         : "成绩待公示"
+-    })) });
++    })), registrationsLoading: false });
++    } catch (error) { if (version === this.registrationLoadVersion) this.setData({ registrations: [], registrationsLoading: false, registrationError: error.message || '报名信息加载失败，请重试' }); }
+   },
++  goMyRegistrations() { this.setData({ activePanel: 'registrations' }); this.loadRegistrations(); },
++
+   payRegistration(event) { wx.navigateTo({url:'/pages/course-checkout/course-checkout?kind=event&id='+encodeURIComponent(event.currentTarget.dataset.id)}); },
+   switchPanel(event) { this.setData({ activePanel: event.currentTarget.dataset.key }); },
++  onGroupAgeFilter(event) { this.setData({ groupAgeFilter: event.currentTarget.dataset.age }); this.applyGroupPage(1); },
+   onGroupSearch(event) { this.setData({ groupKeyword:String(event.detail.value||'') });this.applyGroupPage(1); },
+   applyGroupPage(number) {
+     const query=this.data.groupKeyword.trim().toLowerCase();
+-    const rows=this.data.groups.filter(g=>!query||`${g.name} ${g.category||''} ${g.danceType||''} ${g.ageRange||''}`.toLowerCase().includes(query));
++    const rows=this.data.groups.filter(g=>(this.data.groupAgeFilter==='全部'||g.ageCategory===this.data.groupAgeFilter)&&(!query||`${g.name} ${g.category||''} ${g.danceType||''} ${g.ageRange||''}`.toLowerCase().includes(query)));
+     const p=eventView.page(rows,number);
+     this.setData({visibleGroups:p.rows,groupPage:p.number,groupPageCount:p.pages,groupTotal:p.total});
+   },
+   changeGroupPage(event) { this.applyGroupPage(this.data.groupPage+Number(event.currentTarget.dataset.offset)); },
++  openJudge(event){wx.navigateTo({url:`/pages/event-judge-profile/event-judge-profile?id=${encodeURIComponent(this.data.id)}&judgeId=${encodeURIComponent(event.currentTarget.dataset.id)}`});},
+   openPlayer(event) { const {group,id}=event.currentTarget.dataset;wx.navigateTo({url:`/pages/event-player/event-player?id=${this.data.id}&groupId=${group}&playerId=${id}`}); },
+   openGroup(event) {
+     const groupId = event.currentTarget.dataset.id;
+--- before/10-小程序miniprogram/pages/event-player/event-player.wxss
++++ after/10-小程序miniprogram/pages/event-player/event-player.wxss
+@@ -1 +1,3 @@
+ .page{padding:24rpx;background:#f8f3ea;min-height:100vh}.hero{padding:38rpx;text-align:center;background:#17283d;border-radius:24rpx;color:#dfbf81}.avatar{width:130rpx;height:130rpx;margin:0 auto 20rpx;border-radius:50%;overflow:hidden;background:#dfbf81;color:#17283d;display:flex;align-items:center;justify-content:center;font-size:46rpx}.avatar image{width:100%;height:100%}.small{width:70rpx;height:70rpx;margin:0 16rpx 0 0;font-size:28rpx;flex-shrink:0}.title{font-size:32rpx;font-weight:800;margin-bottom:12rpx}.hero button{background:transparent;color:#dfbf81;font-size:24rpx;margin-top:18rpx}.card{margin-top:20rpx;padding:28rpx;line-height:1.8}.programme{margin-top:12rpx}.result{text-align:center;color:#a77c37}.score{font-size:56rpx;font-weight:800}.judge{display:flex;align-items:center;padding:20rpx 0;border-bottom:1rpx solid #eee}.name{flex:1}.muted{font-size:22rpx;color:#918575}
++
++.page{background:#faf8f5;color:#2c1810}.hero{background:#fff;color:#2c1810;border:1rpx solid #e5d9c9}.hero button{color:#9e1726}.result{background:#f8f1e7;border:1rpx solid #c5a36b;border-radius:24rpx}.score{font-size:80rpx;color:#9e1726}.muted{color:#6b5c52}.judge>text{font-size:34rpx;font-weight:700;color:#9e1726}
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/JudgeWorkspaceView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/JudgeWorkspaceView.swift
+@@ -14,6 +14,10 @@
+     @State private var confirmation = false
+     @State private var query = ""
+     @State private var page = 1
++    @State private var scoreFilter = 0
++    @State private var totalDraft = ""
++    @FocusState private var totalFocused: Bool
++    @State private var totalWeights: [Double] = []
+     private var path: String { "/events/\(eventID)/judge" + (groupID.isEmpty ? "" : "?groupId=\(groupID)") + (playerID.isEmpty ? "" : "&playerId=\(playerID)") }
+     private var locked: Bool { data["group"]["scoring_status"].text == "locked" }
+     private var criteria: [JSONValue] { data["criteria"].list }
+@@ -36,7 +40,7 @@
+                     if playerID.isEmpty { assignmentList }
+                     else { scoreForm }
+                 }
+-            }.listStyle(.insetGrouped).scrollContentBackground(.hidden).eventPage().evaPageChrome().navigationTitle("评委工作台").onChange(of:query) { _ in page=1 }
++            }.listStyle(.insetGrouped).scrollContentBackground(.hidden).eventPage().evaPageChrome().navigationTitle("评委工作台").onChange(of:query) { _ in page=1 }.onChange(of:scoreFilter) { _ in page=1 }.onChange(of:totalFocused) { focused in if focused { totalWeights=criteria.map { Double(values[$0["key"].text] ?? "") ?? 0 };totalDraft=String(format:"%.2f",total) } }.onChange(of:totalDraft) { raw in if totalFocused { applyTotal(raw) } }
+                 .task(id: session.accountID) { await load() }
+                 .refreshable { if !saving { await load() } }
+                 .navigationBarBackButtonHidden(saving)
+@@ -49,7 +53,14 @@
+     private var assignmentList: some View {
+         Section(groupID.isEmpty ? "获授权的评分组别" : "选手与本人评分") {
+             TextField("搜索名称或选手号", text: $query)
+-            let rows = data[groupID.isEmpty ? "groups" : "players"].list.filter { query.isEmpty || ($0["name"].text + " " + $0["player_no"].text).localizedCaseInsensitiveContains(query) }
++            if !groupID.isEmpty {
++                let all = data["players"].list
++                let scored = all.filter { $0["my_score"] != .null }.count
++                Text("评分进度 \(scored) / \(all.count)").font(.headline)
++                ProgressView(value:Double(scored),total:Double(max(1,all.count))).tint(EvaBrand.red)
++                Picker("评分状态",selection:$scoreFilter) { Text("全部").tag(0);Text("未评分").tag(1);Text("已评分").tag(2) }.pickerStyle(.segmented)
++            }
++            let rows = data[groupID.isEmpty ? "groups" : "players"].list.filter { groupID.isEmpty || scoreFilter == 0 || (scoreFilter == 1 ? $0["my_score"] == .null : $0["my_score"] != .null) }.filter { query.isEmpty || ($0["name"].text + " " + $0["player_no"].text).localizedCaseInsensitiveContains(query) }
+             ForEach(Array(rows.dropFirst((min(page,max(1,Int(ceil(Double(rows.count)/20))))-1)*20).prefix(20).enumerated()), id: \.offset) { entry in
+                 let row = entry.element
+                 NavigationLink {
+@@ -71,26 +82,55 @@
+             Text(data["player"]["performance_title"].text)
+             if locked { Text("该组别评分已锁定，只能查看").foregroundStyle(.secondary) }
+             if data["currentScore"]["needsRescore"].bool { Text("评分规则已变化，请按当前规则重新评分").foregroundStyle(.red) }
++            Text("输入分数，或左右拖动调节").font(.subheadline).foregroundStyle(.secondary)
+             ForEach(Array(criteria.enumerated()), id: \.offset) { entry in
+                 let row = entry.element
+                 VStack(alignment: .leading, spacing: 6) {
+                     Text(row["name"].text + "（0–" + row["maxScore"].text + "分）")
+-                    TextField("请输入分数", text: Binding(get: { values[row["key"].text] ?? "" }, set: { values[row["key"].text] = $0 }))
++                    TextField("请输入分数", text: Binding(get: { values[row["key"].text] ?? "" }, set: { totalFocused=false; values[row["key"].text] = $0 }))
+                         #if os(iOS)
+                         .keyboardType(.decimalPad)
+                         #endif
+                         .registrationInput(border:Color.gray.opacity(0.25)).disabled(locked || saving)
++                    Slider(value:Binding(get:{ min(row["maxScore"].number,max(0,Double(values[row["key"].text] ?? "") ?? 0)) },set:{ totalFocused=false;values[row["key"].text]=String(format:"%.2f",$0) }),in:0...max(0.01,row["maxScore"].number),step:0.01).tint(EvaBrand.red).disabled(locked || saving).accessibilityLabel(row["name"].text + "，拖动评分")
+                 }
+             }
+-            Text("合计：" + String(format: "%.2f", total) + " 分").font(.headline)
++            VStack(alignment:.leading,spacing:10) {
++                HStack { Text("总分（可修改）").font(.headline);TextField("总分",text:Binding(get:{ totalFocused ? totalDraft : String(format:"%.2f",total) },set:{ totalDraft=$0 }))
++                    #if os(iOS)
++                    .keyboardType(.decimalPad)
++                    #endif
++                    .focused($totalFocused).multilineTextAlignment(.trailing).font(.title2.bold()).foregroundStyle(EvaBrand.red).disabled(locked || saving);Text("/ \(criteria.reduce(0) { $0 + $1["maxScore"].number },specifier:"%.0f")") }
++                Text("修改总分，各项按比例分配").font(.subheadline).foregroundStyle(.secondary)
++            }.padding(.vertical,12)
+             Button(saving ? "正在提交…" : data["currentScore"]["status"].text.isEmpty ? "提交评分" : "修改本人评分") { confirmation = true }
+-                .buttonStyle(.borderedProminent).tint(EvaBrand.red).frame(minHeight:48).disabled(locked || busy || saving || !valid)
++                .buttonStyle(.borderedProminent).tint(EvaBrand.red).frame(minHeight:48).disabled(locked || busy || saving || !valid || (totalFocused && (Double(totalDraft) == nil || (Double(totalDraft) ?? -1) < 0 || (Double(totalDraft) ?? 11) > criteria.reduce(0) { $0 + $1["maxScore"].number })))
+         }
++    }
++    private func applyTotal(_ raw:String) {
++        let caps=criteria.map { Int(($0["maxScore"].number * 100).rounded()) }
++        guard let n=Double(raw),n.isFinite,n>=0,n<=Double(caps.reduce(0,+))/100 else { return }
++        let goal=Int((n*100).rounded())
++        var weights=totalWeights.enumerated().map { i,v in min(Double(caps[i]),max(0,v*100)) }
++        if !weights.contains(where: { $0>0 }) { weights=caps.map(Double.init) }
++        var exact=Array(repeating:0.0,count:caps.count),remaining=Double(goal),active=caps.indices.filter { caps[$0]>0 }
++        while !active.isEmpty && remaining>0.00000001 {
++            var sum=active.reduce(0.0) { $0+weights[$1] }
++            if sum<=0 { for i in active { weights[i]=Double(caps[i]) };sum=active.reduce(0.0) { $0+weights[$1] } }
++            let saturated=active.filter { remaining*weights[$0]/sum>=Double(caps[$0]) }
++            if saturated.isEmpty { for i in active { exact[i]=remaining*weights[i]/sum };break }
++            for i in saturated { exact[i]=Double(caps[i]);remaining-=Double(caps[i]) }
++            active.removeAll { saturated.contains($0) }
++        }
++        var cents=exact.map { Int(floor($0+0.00000001)) },left=goal-exact.map { Int(floor($0+0.00000001)) }.reduce(0,+)
++        let order=caps.indices.filter { cents[$0]<caps[$0] }.sorted { a,b in let x=exact[a]-Double(cents[a]),y=exact[b]-Double(cents[b]);return x==y ? a<b : x>y }
++        for i in order where left>0 { cents[i]+=1;left-=1 }
++        for i in criteria.indices { values[criteria[i]["key"].text]=String(format:"%.2f",Double(cents[i])/100) }
+     }
+     @MainActor private func load() async {
+         guard !busy, !saving, let token = session.token else { return }
+         let account = session.credentials?.sessionId
+-        busy = true; error = nil; data = .null; values = [:]
++        busy = true; error = nil; data = .null; values = [:]; totalFocused = false; totalDraft = ""; totalWeights = []
+         defer { busy = false }
+         do {
+             let result: JSONValue = try await session.api.request(path, token: token)
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/EventDetailView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/EventDetailView.swift
+@@ -10,7 +10,7 @@
+     @State private var page = 1
+     private let panels = ["概览","组别","选手","评委","成绩"]
+     private var event: JSONValue { store.data["competition"] }
+-    private var rows: [JSONValue] { store.data[panel == 1 ? "groups" : panel == 2 ? "players" : panel == 3 ? "judges" : "rankings"].list.filter { EventUI.matches($0, query: query) } }
++    private var rows: [JSONValue] { (panel == 3 && !event["judgeScoresPublic"].bool ? [] : store.data[panel == 1 ? "groups" : panel == 2 ? "players" : panel == 3 ? "judges" : "rankings"].list).filter { EventUI.matches($0, query: query) } }
+     var body: some View {
+         ScrollView {
+             VStack(alignment: .leading, spacing: 14) {
+@@ -57,7 +57,7 @@
+             TextField(panel == 1 ? "搜索组别、舞种或年龄" : panel == 3 ? "搜索评委" : "搜索选手、编号或机构",text:$query).registrationInput(border:Color.gray.opacity(0.25))
+             ForEach(JSONValue.array(Array(rows.dropFirst((min(page,max(1,Int(ceil(Double(rows.count)/20))))-1)*20).prefix(20))).rows) { row in
+                 if panel == 1 { NavigationLink { EventGroupView(eventID:id,groupID:row.id) } label: { HStack { VStack(alignment:.leading,spacing:6) { Text(row.value["name"].text).font(.headline);Text((row.value["rankingCount"].number>0 ? row.value["rankingCount"].text+" 项成绩" : "成绩待公布")+" · "+(row.value["playerCount"] == .null ? "报名信息未公开" : row.value["playerCount"].text+" 位选手")).font(.subheadline).foregroundStyle(.secondary) };Spacer();Image(systemName:"chevron.right").foregroundStyle(.secondary) }.frame(minHeight:60) }.buttonStyle(.plain) }
+-                else if panel == 3 { HStack(spacing:12) { EventAvatar(row:row.value);VStack(alignment:.leading,spacing:6) { Text(row.value["name"].text).font(.headline);Text([row.value["title"].text,row.value["organization"].text].filter{ !$0.isEmpty }.joined(separator:" · ")).font(.subheadline).foregroundStyle(.secondary);if !row.value["bio"].text.isEmpty { Text(plain(row.value["bio"].text)).font(.subheadline).foregroundStyle(.secondary) } } }.frame(maxWidth:.infinity,alignment:.leading) }
++                else if panel == 3 { NavigationLink { EventJudgeProfileView(judge:row.value,eventName:event["name"].text) } label: { HStack(spacing:12) { EventAvatar(row:row.value);VStack(alignment:.leading,spacing:6) { Text(row.value["name"].text).font(.headline);Text(row.value["title"].text.isEmpty ? "赛事评委" : row.value["title"].text).font(.subheadline).foregroundStyle(.secondary);Text("查看评委详情").font(.subheadline).foregroundStyle(EvaBrand.red) };Spacer();Image(systemName:"chevron.right").foregroundStyle(.secondary) }.frame(maxWidth:.infinity,alignment:.leading) }.buttonStyle(.plain) }
+                 else { NavigationLink { EventPlayerView(eventID:id,groupID:row.value["groupId"].text,playerID:row.value.firstText("playerId","id")) } label: { EventPersonRow(row:row.value,result:panel == 4) }.buttonStyle(.plain) }
+                 Divider()
+             }
+@@ -67,3 +67,15 @@
+     }
+     private func load() async { await store.load("/events/\(id)",session:session,publicRead:true) }
+ }
++
++struct EventJudgeProfileView: View {
++    let judge: JSONValue
++    let eventName: String
++    var body: some View {
++        ScrollView { VStack(spacing:20) {
++            EventAvatar(row:judge);Text(judge["name"].text).font(.title.bold());Text(judge["title"].text.isEmpty ? "赛事评委" : judge["title"].text).foregroundStyle(EvaBrand.gold)
++            EventSection(title:"评委介绍") { Text(judge["bio"].text.isEmpty ? "评委介绍暂未填写" : plain(judge["bio"].text)).frame(maxWidth:.infinity,alignment:.leading);if !judge["organization"].text.isEmpty { Text(judge["organization"].text).foregroundStyle(.secondary) } }
++            EventSection(title:"受邀赛事") { Text(eventName).frame(maxWidth:.infinity,alignment:.leading) }
++        }.padding(20).frame(maxWidth:680).frame(maxWidth:.infinity) }.eventPage().navigationTitle("评委详情")
++    }
++}
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/EventParticipantViews.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/EventParticipantViews.swift
+@@ -57,7 +57,7 @@
+         ScrollView { VStack(spacing:14) {
+             LoadState(store:store) { Task { await load() } }
+             if player != .null {
+-                VStack(spacing:12) { EventAvatar(row:player);Text(player["name"].text).font(.title2.bold());Text(store.data["competition"]["name"].text).font(.subheadline);NavigationLink(store.data["group"]["name"].text+" ›") { EventGroupView(eventID:eventID,groupID:groupID) }.frame(minHeight:44) }.padding(20).frame(maxWidth:.infinity).foregroundStyle(EvaBrand.gold).background(Color(red:0.09,green:0.16,blue:0.24),in:RoundedRectangle(cornerRadius:14))
++                VStack(spacing:12) { EventAvatar(row:player);Text(player["name"].text).font(.title2.bold());Text(store.data["competition"]["name"].text).font(.subheadline);NavigationLink(store.data["group"]["name"].text+" ›") { EventGroupView(eventID:eventID,groupID:groupID) }.frame(minHeight:44) }.padding(20).frame(maxWidth:.infinity).foregroundStyle(Color.primary).background(EvaBrand.surface,in:RoundedRectangle(cornerRadius:14))
+                 EventSection(title:"参赛详情") { EventInfoRow(label:"编号",value:player["playerNo"].text.isEmpty ? "未编号" : player["playerNo"].text);if !player["organization"].text.isEmpty { EventInfoRow(label:"机构 / 舞蹈室",value:player["organization"].text) };if !player["teacher"].text.isEmpty { EventInfoRow(label:"指导老师",value:player["teacher"].text) };EventInfoRow(label:"节目名称",value:player["performanceTitle"].text.isEmpty ? "未填写" : player["performanceTitle"].text) }
+                 EventSection { VStack(spacing:8) { Text(EventUI.rank(player)).foregroundStyle(EvaBrand.gold);Text(EventUI.score(player["publishedTotal"])).font(.largeTitle.bold()).foregroundStyle(EvaBrand.red);Text("最终得分").font(.subheadline).foregroundStyle(.secondary) }.frame(maxWidth:.infinity) }
+                 EventSection(title:"评委评分") { if !store.data["competition"]["judgeScoresPublic"].bool { Text("个人评分未公开，评委身份可通过评委入口查看。").font(.subheadline).foregroundStyle(.secondary) };ForEach(store.data["judgeScores"].rows) { row in HStack { EventAvatar(row:row.value);VStack(alignment:.leading) { Text(row.value["name"].text).font(.headline);Text(row.value["title"].text).font(.subheadline).foregroundStyle(.secondary) };Spacer();Text(row.value["score"] == .null ? "未公开" : EventUI.score(row.value["score"])).foregroundStyle(EvaBrand.red) };Divider() };if store.data["judgeScores"].list.isEmpty { Text("评分发布后在此展示").foregroundStyle(.secondary) } }
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/components/JudgeWorkspace.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/components/JudgeWorkspace.ets
+@@ -1,3 +1,4 @@
++import { distributeScores } from '../services/ScoreAllocation';
+ import { http } from '@kit.NetworkKit';
+ import { platform } from '../services/PlatformApi';
+ import { SwodTheme } from '../services/SwodTheme';
+@@ -15,19 +16,23 @@
+   @State private busy: boolean = false;
+   @State private saving: boolean = false;
+   @State private error: string = '';
++  @State private filter: number = 0;
+   @State private query: string = '';
+   @State private page: number = 1;
++  @State private totalDraft: string = '';
++  @State private editingTotal: boolean = false;
++  private totalWeights: number[] = [];
+   private generation: number = 0;
+   aboutToAppear(): void { this.load(); }
+   aboutToDisappear(): void { this.generation++; }
+   private path(): string { return '/events/' + this.competitionId + '/judge' + (this.groupId ? '?groupId=' + this.groupId : '') + (this.playerId ? '&playerId=' + this.playerId : ''); }
+   private locked(): boolean { return this.data.group?.scoring_status === 'locked'; }
+-  private rows(): JudgeRecord[] { return (this.groupId ? this.data.players || [] : this.data.groups || []).filter((row: JudgeRecord) => !this.query || (row.name + ' ' + (row.player_no || '')).toLowerCase().includes(this.query.toLowerCase())); }
++  private rows(): JudgeRecord[] { return (this.groupId ? this.data.players || [] : this.data.groups || []).filter((row: JudgeRecord) => !this.groupId || this.filter===0 || (this.filter===1 ? row.my_score==null : row.my_score!=null)).filter((row: JudgeRecord) => !this.query || (row.name + ' ' + (row.player_no || '')).toLowerCase().includes(this.query.toLowerCase())); }
+   private total(): string { return (this.data.criteria || []).reduce((sum: number, c: JudgeCriterion) => sum + (Number(this.values[c.key]) || 0), 0).toFixed(2); }
+   private async load(): Promise<void> {
+     if (this.saving) return;
+     const version = ++this.generation; const session = platform.credentials?.sessionId;
+-    this.busy = true; this.error = ''; this.data = {}; this.values = {};
++    this.busy = true; this.error = ''; this.data = {}; this.values = {}; this.editingTotal=false;this.totalDraft='';this.totalWeights=[];
+     try {
+       if (!session) throw new Error('请使用获授权评委的学习账号登录');
+       const data = await platform.request<JudgeData>(this.path(), http.RequestMethod.GET, undefined, true);
+@@ -41,6 +46,7 @@
+   }
+   private confirmScore(): void {
+     if (this.busy || this.saving || this.locked() || !this.data.criteria?.length) return;
++    if(this.editingTotal && (!this.totalDraft.trim() || !Number.isFinite(Number(this.totalDraft)) || Number(this.totalDraft)<0 || Number(this.totalDraft)>(this.data.criteria || []).reduce((s: number,c: JudgeCriterion) => s+c.maxScore,0))){this.error='请填写有效总分';return;}
+     const scores: Record<string, number> = {};
+     for (const c of this.data.criteria) {
+       const raw = this.values[c.key] || ''; const n = Number(raw);
+@@ -69,7 +75,12 @@
+       if (this.busy) { Text('正在加载评委工作台…') }
+       if (this.error) { Text(this.error).fontColor(SwodTheme.primary); Button('重新加载').enabled(!this.busy && !this.saving).onClick(() => this.load()) }
+       if (this.data.judge && !this.playerId) {
+-        TextInput({ placeholder: '搜索名称或选手号', text: this.query }).onChange((v: string) => { this.query = v; this.page = 1; })
++        if(this.groupId) {
++          Text('评分进度 ' + (this.data.players || []).filter((r: JudgeRecord) => r.my_score!=null).length + ' / ' + (this.data.players || []).length).fontSize(18).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink)
++          Progress({value:(this.data.players || []).filter((r: JudgeRecord) => r.my_score!=null).length,total:Math.max(1,(this.data.players || []).length),type:ProgressType.Linear}).width('100%').color(SwodTheme.primary)
++          Row({space:8}) { ForEach(['全部','未评分','已评分'],(label: string,index: number) => { Button(label).layoutWeight(1).height(44).backgroundColor(this.filter===index?SwodTheme.primary:SwodTheme.surface).fontColor(this.filter===index?SwodTheme.onPrimary:SwodTheme.ink).onClick(() => { this.filter=index;this.page=1; }) }) }.width('100%')
++        }
++        TextInput({ placeholder: '搜索名称或选手号' , text: this.query }).onChange((v: string) => { this.query = v; this.page = 1; })
+         ForEach(this.rows().slice((this.page - 1) * 50, this.page * 50), (row: JudgeRecord) => {
+           Button({ type: ButtonType.Normal }) {
+             Column({ space: 6 }) {
+@@ -90,11 +101,15 @@
+         Text(this.data.player.performance_title || '')
+         if (this.locked()) { Text('该组别评分已锁定，只能查看') }
+         if (this.data.currentScore?.needsRescore) { Text('评分规则已变化，请按当前规则重新评分') }
++        Text("输入分数，或左右拖动调节").fontSize(14).fontColor(SwodTheme.muted)
+         ForEach(this.data.criteria || [], (c: JudgeCriterion) => {
+           Text(c.name + '（0–' + c.maxScore + '分）').fontSize(15)
+-          TextInput({ placeholder: '请输入分数', text: this.values[c.key] || '' }).height(48).backgroundColor(SwodTheme.surface).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius(8).type(InputType.NUMBER_DECIMAL).enabled(!this.locked() && !this.saving).onChange((v: string) => { const values: Record<string, string> = {}; Object.keys(this.values).forEach((key: string) => { values[key] = this.values[key]; }); values[c.key] = v; this.values = values; })
++          TextInput({ placeholder: '请输入分数', text: this.values[c.key] || '' }).height(48).backgroundColor(SwodTheme.surface).border({ width: 1, color: SwodTheme.registrationLine }).borderRadius(8).type(InputType.NUMBER_DECIMAL).enabled(!this.locked() && !this.saving).onChange((v: string) => { const values: Record<string, string> = {}; Object.keys(this.values).forEach((key: string) => { values[key] = this.values[key]; }); values[c.key] = v; this.values = values; this.editingTotal = false; })
++          Slider({ value: Math.min(c.maxScore, Math.max(0, Number(this.values[c.key]) || 0)), min: 0, max: c.maxScore, step: 0.01 }).width('100%').height(44).selectedColor(SwodTheme.primary).blockColor(SwodTheme.primary).enabled(!this.locked() && !this.saving).onChange((v: number) => { const values: Record<string, string> = {};Object.keys(this.values).forEach((key: string) => { values[key] = this.values[key]; });values[c.key]=v.toFixed(2);this.values=values;this.editingTotal=false; })
+         }, (c: JudgeCriterion) => c.key)
+-        Text('合计：' + this.total() + ' 分').fontSize(18)
++        Text('总分（可修改）').fontSize(18).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink)
++        TextInput({ text: this.editingTotal ? this.totalDraft : this.total(), placeholder: '请输入总分' }).height(52).type(InputType.NUMBER_DECIMAL).fontSize(24).fontColor(SwodTheme.primary).backgroundColor(SwodTheme.surface).enabled(!this.locked() && !this.saving).onFocus(() => { this.totalWeights=(this.data.criteria || []).map((c: JudgeCriterion) => Number(this.values[c.key]) || 0);this.totalDraft=this.total();this.editingTotal=true; }).onChange((v: string) => { this.totalDraft=v;this.editingTotal=true;if(!v.trim() || !Number.isFinite(Number(v)))return;try { const criteria=this.data.criteria || [];const next=distributeScores(criteria.map((c: JudgeCriterion) => c.maxScore),this.totalWeights,Number(v));const values: Record<string,string>={};criteria.forEach((c: JudgeCriterion,i: number) => { values[c.key]=next[i].toFixed(2); });this.values=values; } catch {} })
++        Text('修改总分，各项按比例分配 · 满分 ' + (this.data.criteria || []).reduce((s: number,c: JudgeCriterion) => s+c.maxScore,0) + ' 分').fontSize(14).fontColor(SwodTheme.muted)
+         Button(this.saving ? '正在提交…' : this.data.currentScore?.status ? '修改本人评分' : '提交评分').enabled(!this.locked() && !this.saving).constraintSize({ minHeight: 48 }).width('100%').backgroundColor(SwodTheme.primary).fontColor(SwodTheme.onPrimary).borderRadius(10).onClick(() => this.confirmScore())
+       }
+     }.width('100%').padding(12).backgroundColor(SwodTheme.registrationCanvas).alignItems(HorizontalAlign.Start)
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/components/PublicEventView.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/components/PublicEventView.ets
+@@ -28,6 +28,7 @@
+   @State private busy: boolean = false;
+   @State private error: string = '';
+   @State private panel: number = 1;
++  @State private selectedJudge: EventRecord | undefined = undefined;
+   @State private query: string = '';
+   @State private page: number = 1;
+   private version: number = 0;
+@@ -49,6 +50,7 @@
+   private rank(row: EventRecord): string { const rank = row.rankNo || 0; return rank === 1 ? '冠军' : rank === 2 ? '亚军' : rank === 3 ? '季军' : rank > 0 ? '第' + rank + '名' : '成绩待公示'; }
+   private rows(): EventRecord[] {
+     const rows = this.mode() === 'group' ? this.data.players || [] : this.panel === 1 ? this.data.groups || [] : this.panel === 2 ? this.data.players || [] : this.panel === 3 ? this.data.judges || [] : this.data.rankings || [];
++    if(this.mode()==='event' && this.panel===3 && !this.data.competition?.judgeScoresPublic)return [];
+     const query = this.query.trim().toLowerCase();
+     return rows.filter((row: EventRecord) => !query || [row.name, row.playerName, row.groupName, row.playerNo, row.organization, row.teacher, row.category, row.danceType, row.ageRange].join(' ').toLowerCase().includes(query));
+   }
+@@ -107,7 +109,7 @@
+         if (this.mode() === 'event' && this.panel === 1) {
+           Button({ type: ButtonType.Normal }) { Row({ space: 12 }) { Column({ space: 6 }) { Text(row.name || '').fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%'); Text((row.playerCount == null ? '报名信息未公开' : row.playerCount + ' 位选手') + ' · ' + (Number(row.rankingCount) > 0 ? row.rankingCount + ' 项成绩' : '成绩待公布')).fontSize(14).fontColor(SwodTheme.muted).width('100%') }.layoutWeight(1); Text('›').fontSize(20).fontColor(SwodTheme.muted) }.width('100%').padding({ top: 10, bottom: 10 }) }.width('100%').padding(0).backgroundColor(Color.Transparent).onClick(() => this.onOpenGroup(Number(row.id)))
+         } else if (this.mode() === 'event' && this.panel === 3) {
+-          Row({ space: 12 }) { this.avatar(row); Column({ space: 6 }) { Text(row.name || '').fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%'); Text((row.title || '赛事评委') + ' · ' + (row.organization || '伊娃东方舞')).fontSize(14).fontColor(SwodTheme.muted).width('100%'); if (row.bio) { Text(row.bio.replace(/<[^>]*>/g, '')).fontSize(14).fontColor(SwodTheme.muted).width('100%') } }.layoutWeight(1) }.width('100%')
++          Button({ type: ButtonType.Normal }) { Row({ space: 12 }) { this.avatar(row);Column({ space: 6 }) { Text(row.name || '').fontSize(18).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink);Text(row.title || '赛事评委').fontSize(14).fontColor(SwodTheme.muted);Text('查看评委详情 ›').fontSize(14).fontColor(SwodTheme.primary) }.layoutWeight(1).alignItems(HorizontalAlign.Start) }.width('100%').padding(8) }.width('100%').backgroundColor(SwodTheme.surface).onClick(() => { this.selectedJudge=row; })
+         } else { this.participant(row, this.mode() === 'group' ? this.published() : this.panel === 4) }
+         Divider().color(SwodTheme.registrationLine)
+       }, (row: EventRecord) => String(row.id || row.playerId))
+@@ -126,7 +128,7 @@
+     this.rowPanel()
+   }
+   @Builder private playerPage() {
+-    Column({ space: 12 }) { this.avatar(this.data.player || {}); Text(this.data.player?.name || '').fontSize(25).fontWeight(FontWeight.Bold).fontColor('#DFC080'); Text(this.data.competition?.name || '').fontSize(14).fontColor('#DFC080'); Button((this.data.group?.name || '') + ' ›').constraintSize({ minHeight: 44 }).backgroundColor(Color.Transparent).fontColor('#DFC080').onClick(() => this.onOpenGroup(this.groupID)) }.padding(20).width('100%').backgroundColor('#17283D').borderRadius(14)
++    Column({ space: 12 }) { this.avatar(this.data.player || {}); Text(this.data.player?.name || '').fontSize(25).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink); Text(this.data.competition?.name || '').fontSize(14).fontColor(SwodTheme.ink); Button((this.data.group?.name || '') + ' ›').constraintSize({ minHeight: 44 }).backgroundColor(Color.Transparent).fontColor(SwodTheme.ink).onClick(() => this.onOpenGroup(this.groupID)) }.padding(20).width('100%').backgroundColor(SwodTheme.surface).borderRadius(14)
+     Column({ space: 14 }) { Text('参赛详情').fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%'); this.info('编号', this.data.player?.playerNo || '未编号'); if (this.data.player?.organization) { this.info('机构 / 舞蹈室', this.data.player.organization) }
+       if (this.data.player?.teacher) { this.info('指导老师', this.data.player.teacher) }
+       this.info('节目名称', this.data.player?.performanceTitle || '未填写') }.padding(16).width('100%').backgroundColor(SwodTheme.surface).borderRadius(14)
+@@ -139,7 +141,18 @@
+       if (this.busy) { LoadingProgress().width(28).height(28); Text('赛事加载中…').fontSize(15).fontColor(SwodTheme.muted) }
+       if (this.error) { Text(this.error).fontSize(15).fontColor(SwodTheme.primary); Button('重新加载').constraintSize({ minHeight: 48 }).onClick(() => this.reload()) }
+       if (this.data.competition) {
+-        if (this.mode() === 'player') { this.playerPage() }
++        if(this.selectedJudge) {
++          Button('返回评委列表').constraintSize({minHeight:48}).onClick(() => {this.selectedJudge=undefined;})
++          Text('评委详情').fontSize(24).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink)
++          this.avatar(this.selectedJudge)
++          Text(this.selectedJudge.name || '').fontSize(24).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink)
++          Text(this.selectedJudge.title || '赛事评委').fontSize(16).fontColor(SwodTheme.primary)
++          Text('评委介绍').fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary)
++          Text((this.selectedJudge.bio || '评委介绍暂未填写').replace(/<[^>]*>/g,'')).fontSize(16).fontColor(SwodTheme.ink)
++          Text(this.selectedJudge.organization || '').fontSize(14).fontColor(SwodTheme.muted)
++          Text('受邀赛事').fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary)
++          Text(this.data.competition.name || '').fontSize(16).fontColor(SwodTheme.ink)
++        } else if (this.mode() === 'player') { this.playerPage() }
+         else if (this.mode() === 'group') { this.groupPage() }
+         else {
+           this.hero()
+--- before/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -385,17 +385,32 @@
+             if(playerId==0){
+                 JSONArray rows=array(data.opt(groupId==0?"groups":"players"));
+                 for(int i=0;i<rows.length();i++){JSONObject r=rows.optJSONObject(i);if(r!=null)r.put("subtitle",groupId==0?"已评分 "+r.optInt("scored_count")+" / "+r.optInt("player_count"):(r.isNull("my_score")?"未评分":"本人评分 "+r.optString("my_score")));}
+-                eventRows(eventSurface(content,groupId==0?"获授权的评分组别":"选手与本人评分"),rows,"assignments","暂无可评分记录",r->open(()->judgeWorkspace(eventId,groupId==0?r.optInt("id"):groupId,groupId==0?0:r.optInt("id"))));
++                LinearLayout assignmentHost=column();
++                if(groupId>0){int scored=0;for(int i=0;i<rows.length();i++)if(!rows.optJSONObject(i).isNull("my_score"))scored++;LinearLayout progressBox=eventSurface(content,"评分进度 "+scored+" / "+rows.length());android.widget.ProgressBar progress=new android.widget.ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);progress.setMax(Math.max(1,rows.length()));progress.setProgress(scored);progress.setProgressTintList(android.content.res.ColorStateList.valueOf(red));progressBox.addView(progress,new LinearLayout.LayoutParams(-1,dp(12)));LinearLayout filters=row();String[] modes={"全部","未评分","已评分"};for(int mode=0;mode<3;mode++){final int selected=mode;Button filterButton=button(modes[mode],()->{assignmentHost.removeAllViews();JSONArray filtered=new JSONArray();for(int j=0;j<rows.length();j++){JSONObject r=rows.optJSONObject(j);if(selected==0||(selected==1?r.isNull("my_score"):!r.isNull("my_score")))filtered.put(r);}eventRows(assignmentHost,filtered,"assignments","暂无匹配选手",r->open(()->judgeWorkspace(eventId,groupId,r.optInt("id"))));});filters.addView(filterButton,new LinearLayout.LayoutParams(0,-2,1));}progressBox.addView(filters);}
++                content.addView(assignmentHost);eventRows(assignmentHost,rows,"assignments","暂无可评分记录",r->open(()->judgeWorkspace(eventId,groupId==0?r.optInt("id"):groupId,groupId==0?0:r.optInt("id"))));
+                 if(rows.length()==0)info("暂无可评分记录");return;
+             }
+             JSONObject player=object(data.opt("player")),current=object(data.opt("currentScore")),existing=object(current.opt("values"));
+             section("选手："+player.optString("name"));info(player.optString("performance_title"));
+             boolean locked="locked".equals(group.optString("scoring_status"));if(locked)info("该组别评分已锁定，只能查看");
+             if(current.optBoolean("needsRescore"))info("评分规则已变化，请按当前规则重新评分");
+-            JSONArray criteria=array(data.opt("criteria"));java.util.ArrayList<EditText> fields=new java.util.ArrayList<>();
+-            for(int i=0;i<criteria.length();i++){JSONObject c=criteria.getJSONObject(i);EditText input=registrationField(content,c.optString("name")+"（0–"+c.optString("maxScore")+"分）","请输入分数");input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);input.setEnabled(!locked);if(existing.has(c.optString("key"))&&!existing.isNull(c.optString("key")))input.setText(existing.optString(c.optString("key")));fields.add(input);}
++            JSONArray criteria=array(data.opt("criteria"));java.util.ArrayList<EditText> fields=new java.util.ArrayList<>();java.util.ArrayList<android.widget.SeekBar> sliders=new java.util.ArrayList<>();
++            double[] maxima=new double[criteria.length()];double[][] totalWeights={new double[criteria.length()]};boolean[] syncing={false};
++            LinearLayout scoring=eventSurface(content,"评分项目");scoring.addView(text("输入分数，或左右拖动调节",14));
++            EditText totalInput=new EditText(this);totalInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);totalInput.setTextColor(red);totalInput.setTextSize(24);totalInput.setEnabled(!locked);totalInput.setContentDescription("总分，可直接修改，按比例分配");
++            Runnable update=()->{if(syncing[0])return;syncing[0]=true;double sum=0;for(int j=0;j<fields.size();j++){double v=0;try{v=Double.parseDouble(fields.get(j).getText().toString());}catch(Exception ignored){}sum+=v;totalWeights[0][j]=v;sliders.get(j).setProgress((int)Math.round(Math.max(0,Math.min(maxima[j],v))*100));}totalInput.setText(String.format(Locale.ROOT,"%.2f",sum));syncing[0]=false;};
++            for(int i=0;i<criteria.length();i++){
++                JSONObject c=criteria.getJSONObject(i);maxima[i]=c.optDouble("maxScore");final int index=i;
++                EditText input=registrationField(scoring,c.optString("name")+" · 满分 "+c.optString("maxScore")+" 分","请输入分数");input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);input.setEnabled(!locked);if(existing.has(c.optString("key"))&&!existing.isNull(c.optString("key")))input.setText(existing.optString(c.optString("key")));fields.add(input);
++                android.widget.SeekBar slider=new android.widget.SeekBar(this);slider.setMax((int)Math.round(maxima[i]*100));slider.setEnabled(!locked);slider.setMinimumHeight(dp(48));slider.setProgressTintList(android.content.res.ColorStateList.valueOf(red));slider.setThumbTintList(android.content.res.ColorStateList.valueOf(red));slider.setContentDescription(c.optString("name")+"，左右拖动评分");sliders.add(slider);scoring.addView(slider,new LinearLayout.LayoutParams(-1,dp(48)));
++                input.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence v,int a,int b,int f){}public void onTextChanged(CharSequence v,int a,int b,int c){update.run();}public void afterTextChanged(Editable v){}});
++                slider.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(android.widget.SeekBar bar,int progress,boolean user){if(user&&!syncing[0])input.setText(String.format(Locale.ROOT,"%.2f",progress/100.0));}public void onStartTrackingTouch(android.widget.SeekBar bar){bar.getParent().requestDisallowInterceptTouchEvent(true);}public void onStopTrackingTouch(android.widget.SeekBar bar){bar.getParent().requestDisallowInterceptTouchEvent(false);}});
++            }
++            update.run();LinearLayout totalBox=eventSurface(content,"总分（可修改）");totalBox.addView(totalInput,new LinearLayout.LayoutParams(-1,dp(52)));totalBox.addView(text("满分 "+String.format(Locale.ROOT,"%.0f",java.util.Arrays.stream(maxima).sum())+" 分 · 修改总分，各项按比例分配",14));
++            totalInput.setOnFocusChangeListener((v,focus)->{if(focus){for(int i=0;i<fields.size();i++){try{totalWeights[0][i]=Double.parseDouble(fields.get(i).getText().toString());}catch(Exception ignored){totalWeights[0][i]=0;}}}});
++            totalInput.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence v,int a,int b,int f){}public void afterTextChanged(Editable v){}public void onTextChanged(CharSequence v,int a,int b,int c){if(syncing[0]||!totalInput.hasFocus())return;try{double target=Double.parseDouble(v.toString());double[] next=ScoreAllocation.distribute(maxima,totalWeights[0],target);syncing[0]=true;for(int i=0;i<next.length;i++){fields.get(i).setText(String.format(Locale.ROOT,"%.2f",next[i]));sliders.get(i).setProgress((int)Math.round(next[i]*100));}syncing[0]=false;totalInput.setError(null);}catch(Exception e){totalInput.setError("请填写满分范围内的总分");}}});
+             if(!locked)action(current.optString("status").isEmpty()?"提交评分":"修改本人评分",()->{
+-                if(memberWriteBusy||criteria.length()==0)return;JSONObject scores=body();double total=0;
++                if(memberWriteBusy||criteria.length()==0)return;if(totalInput.getError()!=null){info("请填写有效总分");return;}JSONObject scores=body();double total=0;
+                 for(int i=0;i<criteria.length();i++){JSONObject c=criteria.optJSONObject(i);try{double n=Double.parseDouble(fields.get(i).getText().toString().trim());if(!Double.isFinite(n)||n<0||n>c.optDouble("maxScore"))throw new Exception();scores.put(c.optString("key"),n);total+=n;}catch(Exception e){info("请填写 "+c.optString("name")+"（0–"+c.optString("maxScore")+"分）");return;}}
+                 long account=api.accountGeneration();int pageVersion=generation;
+                 confirm("确认提交 "+player.optString("name")+" 的本人评分？合计 "+String.format(java.util.Locale.ROOT,"%.2f",total)+" 分",()->{
+@@ -405,6 +420,7 @@
+             });
+         });
+     }
++    private void eventJudgeProfile(JSONObject judge,String eventName){begin("评委详情");pageScroll.setBackgroundColor(eventCanvas());LinearLayout profile=eventSurface(content,first(judge,"name"));profile.addView(eventAvatar(judge),new LinearLayout.LayoutParams(dp(88),dp(88)));profile.addView(text(first(judge,"title").isEmpty()?"赛事评委":first(judge,"title"),16));LinearLayout bio=eventSurface(content,"评委介绍");bio.addView(text(first(judge,"bio").isEmpty()?"评委介绍暂未填写":strip(first(judge,"bio")),16));if(!first(judge,"organization").isEmpty())bio.addView(text(first(judge,"organization"),14));eventSurface(content,"受邀赛事").addView(text(eventName,16));}
+     private int eventCanvas(){return android.graphics.Color.parseColor(SwodUi.dark(this)?"#141619":"#FAF9F6");}
+     private LinearLayout eventSurface(LinearLayout parent,String heading){LinearLayout box=column();box.setPadding(dp(14),dp(14),dp(14),dp(14));box.setBackground(SwodUi.shape(this,SwodUi.surface(this),14));LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,-2);params.topMargin=dp(12);parent.addView(box,params);if(!heading.isEmpty()){TextView label=text(heading,20);label.setTypeface(null,android.graphics.Typeface.BOLD);box.addView(label);}return box;}
+     private void eventInfo(LinearLayout parent,String label,String value){LinearLayout line=row();TextView key=text(label,14);key.setTextColor(SwodUi.muted(this));line.addView(key,new LinearLayout.LayoutParams(0,-2,1));TextView result=text(value,14);result.setGravity(Gravity.END);line.addView(result,new LinearLayout.LayoutParams(0,-2,1));parent.addView(line);View rule=new View(this);rule.setBackgroundColor(registrationLine());parent.addView(rule,new LinearLayout.LayoutParams(-1,dp(1)));}
+@@ -425,13 +441,13 @@
+         LinearLayout metrics=eventSurface(content,"");LinearLayout counts=row();String[] keys={"groupCount","approvedPlayerCount","judgeCount"},labels={"组别","选手","评委"},collections={"groups","players","judges"};for(int i=0;i<3;i++){Long n=EventPresentation.count(event,keys[i]);String number=i==1&&!event.optBoolean("registrationPublic")?"—":n==null?String.valueOf(array(data.opt(collections[i])).length()):n.toString();counts.addView(eventMetric(number,labels[i],false),new LinearLayout.LayoutParams(0,-2,1));}metrics.addView(counts);
+         HorizontalScrollView strip=new HorizontalScrollView(this);strip.setHorizontalScrollBarEnabled(false);LinearLayout tabs=row();String[] panels={"概览","组别","选手","评委","成绩"};for(int i=0;i<panels.length;i++){final int index=i;Button tab=button(panels[i],()->renderEventDetail(id,data,index));tab.setBackground(SwodUi.touch(this,index==panel?red:SwodUi.surface(this),24));tab.setTextColor(index==panel?SwodUi.dark(this)?android.graphics.Color.BLACK:android.graphics.Color.WHITE:SwodUi.ink(this));LinearLayout.LayoutParams param=new LinearLayout.LayoutParams(-2,dp(48));param.rightMargin=dp(6);tabs.addView(tab,param);}strip.addView(tabs);content.addView(strip);
+         if(panel==0){LinearLayout info=eventSurface(content,"赛事信息");eventInfo(info,"主办方",first(event,"organizer").isEmpty()?"伊娃东方舞":first(event,"organizer"));eventInfo(info,"比赛地点",first(event,"location","venue","city").isEmpty()?"地点待定":first(event,"location","venue","city"));eventInfo(info,"报名状态",EventPresentation.state(event));eventInfo(info,"报名费用",event.optDouble("registrationFee")>0?"¥"+event.optString("registrationFee"):"免费");info.addView(text(strip(first(event,"description")).isEmpty()?"赛事介绍正在完善中。":strip(first(event,"description")),15));JSONArray sessions=array(data.opt("sessions"));if(sessions.length()>0){LinearLayout schedule=eventSurface(content,"赛事日程");for(int i=0;i<sessions.length();i++){JSONObject session=sessions.optJSONObject(i);card(schedule,first(session,"name"),first(session,"startsAt")+" · "+first(session,"venue"),null);}}if(api.loggedIn())action("我的报名、音乐与缴费",()->open(this::myEvents));}
+-        else {JSONArray rows=array(data.opt(panel==1?"groups":panel==2?"players":panel==3?"judges":"rankings"));String empty=panel==1?"没有找到符合条件的组别":panel==2?(event.optBoolean("registrationPublic")?"暂无报名信息":"报名信息尚未公开"):panel==3?"评委阵容暂未公布":"成绩经统一平台审核发布后在这里公示";eventRows(eventSurface(content,panels[panel]),rows,panel==1?"groups":panel==3?"judges":panel==4?"results":"players",empty,row->{if(panel==1)open(()->eventGroup(id,row.optInt("id")));else if(panel!=3)open(()->eventPlayer(id,row.optInt("groupId"),row.optInt("playerId",row.optInt("id"))));});}
++        else {JSONArray rows=array(data.opt(panel==1?"groups":panel==2?"players":panel==3?"judges":"rankings"));String empty=panel==1?"没有找到符合条件的组别":panel==2?(event.optBoolean("registrationPublic")?"暂无报名信息":"报名信息尚未公开"):panel==3?"评委阵容暂未公布":"成绩经统一平台审核发布后在这里公示";eventRows(eventSurface(content,panels[panel]),(panel==3&&!event.optBoolean("judgeScoresPublic")?new JSONArray():rows),panel==1?"groups":panel==3?"judges":panel==4?"results":"players",empty,row->{if(panel==3)open(()->eventJudgeProfile(row,event.optString("name")));else if(panel==1)open(()->eventGroup(id,row.optInt("id")));else if(panel!=3)open(()->eventPlayer(id,row.optInt("groupId"),row.optInt("playerId",row.optInt("id"))));});}
+         Button register=button("报名中".equals(EventPresentation.state(event))?"立即报名":EventPresentation.state(event),()->open(()->register(id,new JSONObject())));registrationPrimary(register);register.setEnabled("报名中".equals(EventPresentation.state(event)));content.addView(register);
+     }
+     private void eventRows(LinearLayout parent,JSONArray rows,String kind,String empty,RowTap tap){
+         EditText query=registrationInput(parent,kind.equals("groups")?"搜索组别、舞种或年龄":kind.equals("judges")?"搜索评委":"搜索选手、编号或机构");LinearLayout results=column();parent.addView(results);int[] page={1};Runnable[] render={null};render[0]=()->{results.removeAllViews();java.util.List<JSONObject> matches=new java.util.ArrayList<>();String needle=query.getText().toString().trim().toLowerCase(Locale.ROOT);for(int i=0;i<rows.length();i++){JSONObject item=rows.optJSONObject(i);String corpus="";for(String field:new String[]{"name","playerName","groupName","category","ageRange","danceType","playerNo","organization","teacher","player_no","subtitle"})corpus+=item.optString(field)+" ";if(corpus.toLowerCase(Locale.ROOT).contains(needle))matches.add(item);}int pages=Math.max(1,(matches.size()+19)/20);page[0]=Math.min(page[0],pages);
+             for(int i=(page[0]-1)*20;i<Math.min(page[0]*20,matches.size());i++){JSONObject item=matches.get(i);if(kind.equals("assignments")){card(results,first(item,"name"),first(item,"subtitle"),()->tap.tap(item));continue;}if(kind.equals("groups")){card(results,first(item,"name"),(item.isNull("playerCount")?"报名信息未公开":item.optInt("playerCount")+" 位选手")+" · "+(item.optInt("rankingCount")>0?item.optInt("rankingCount")+" 项成绩":"成绩待公布"),()->tap.tap(item));continue;}
+-                LinearLayout line=row();line.setPadding(0,dp(10),0,dp(10));line.addView(eventAvatar(item),new LinearLayout.LayoutParams(dp(44),dp(44)));LinearLayout body=column();body.setPadding(dp(10),0,dp(6),0);TextView name=text(first(item,"name","playerName"),16);name.setTypeface(null,android.graphics.Typeface.BOLD);body.addView(name);body.addView(text(kind.equals("judges")?first(item,"title")+" · "+first(item,"organization")+"\n"+strip(first(item,"bio")):first(item,"groupName")+" · "+first(item,"playerNo")+" · "+first(item,"organization","teacher"),13));line.addView(body,new LinearLayout.LayoutParams(0,-2,1));if(kind.equals("results")){TextView score=text(publicRank(item)+"\n"+publicScore(item.opt("publishedTotal"))+"\n最终得分",13);score.setGravity(Gravity.END);score.setTextColor(red);line.addView(score);}if(!kind.equals("judges")){line.setMinimumHeight(dp(64));line.setOnClickListener(view->tap.tap(item));line.setFocusable(true);}results.addView(line);View rule=new View(this);rule.setBackgroundColor(registrationLine());results.addView(rule,new LinearLayout.LayoutParams(-1,dp(1)));}
++                LinearLayout line=row();line.setPadding(0,dp(10),0,dp(10));line.addView(eventAvatar(item),new LinearLayout.LayoutParams(dp(44),dp(44)));LinearLayout body=column();body.setPadding(dp(10),0,dp(6),0);TextView name=text(first(item,"name","playerName"),16);name.setTypeface(null,android.graphics.Typeface.BOLD);body.addView(name);body.addView(text(kind.equals("judges")?first(item,"title")+" · "+first(item,"organization")+"\n"+strip(first(item,"bio")):first(item,"groupName")+" · "+first(item,"playerNo")+" · "+first(item,"organization","teacher"),13));line.addView(body,new LinearLayout.LayoutParams(0,-2,1));if(kind.equals("results")){TextView score=text(publicRank(item)+"\n"+publicScore(item.opt("publishedTotal"))+"\n最终得分",13);score.setGravity(Gravity.END);score.setTextColor(red);line.addView(score);}{line.setMinimumHeight(dp(64));line.setOnClickListener(view->tap.tap(item));line.setFocusable(true);}results.addView(line);View rule=new View(this);rule.setBackgroundColor(registrationLine());results.addView(rule,new LinearLayout.LayoutParams(-1,dp(1)));}
+             if(matches.isEmpty())results.addView(text(query.getText().length()>0?"未找到匹配记录":empty,14));if(pages>1){LinearLayout pager=row();Button before=button("上一页",()->{page[0]--;render[0].run();});before.setEnabled(page[0]>1);pager.addView(before,new LinearLayout.LayoutParams(0,-2,1));pager.addView(text(page[0]+" / "+pages+" · "+matches.size()+" 条",12));Button next=button("下一页",()->{page[0]++;render[0].run();});next.setEnabled(page[0]<pages);pager.addView(next,new LinearLayout.LayoutParams(0,-2,1));results.addView(pager);}
+         };query.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence v,int a,int c,int f){}public void onTextChanged(CharSequence v,int a,int b,int c){page[0]=1;render[0].run();}public void afterTextChanged(Editable e){}});render[0].run();
+     }
+--- /dev/null
++++ after/production/website/src/components/events/PublicJudges.tsx
+@@ -0,0 +1,8 @@
++'use client';
++import {useState} from 'react';
++import PlayerAvatar from './PlayerAvatar';
++type Judge={id:number;name:string;title:string;organization:string;bio:string;avatar_url:string};
++export default function PublicJudges({judges,eventName}:{judges:Judge[];eventName:string}){
++ const [q,setQ]=useState('');
++ return <section className="mt-8"><h2 className="text-2xl font-bold text-text">赛事评委</h2>{judges.length?<><input aria-label="搜索评委" value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索评委" className="mt-4 h-12 w-full rounded-xl border border-sand bg-white px-4 text-base"/><div className="mt-4 grid gap-4 sm:grid-cols-2">{judges.filter(j=>[j.name,j.organization].join(' ').includes(q.trim())).map(j=><details key={j.id} className="rounded-xl border border-sand bg-white p-4"><summary className="flex min-h-16 cursor-pointer items-center gap-4"><PlayerAvatar name={j.name} src={j.avatar_url} size="large"/><div className="min-w-0 flex-1"><h3 className="text-lg font-semibold text-text">{j.name}</h3><p className="mt-1 text-sm text-text-muted">{j.title||'赛事评委'}</p><span className="mt-2 block text-sm font-semibold text-crimson">查看评委详情</span></div></summary><div className="mt-4 space-y-3 border-t border-sand pt-4"><h4 className="font-semibold text-crimson">评委介绍</h4><p className="whitespace-pre-wrap text-sm leading-7 text-text-muted">{j.bio.replace(/<[^>]*>/g,'')||'评委介绍暂未填写'}</p>{j.organization&&<p>{j.organization}</p>}<h4 className="font-semibold text-crimson">受邀赛事</h4><p className="text-sm text-text-muted">{eventName}</p></div></details>)}</div>{!judges.some(j=>[j.name,j.organization].join(' ').includes(q.trim()))&&<p className="py-8 text-center text-text-muted">未找到相关评委</p>}</>:<p className="mt-4 rounded-xl bg-white p-6 text-text-muted">评委资料暂未公开</p>}</section>;
++}
+--- /dev/null
++++ after/production/website/src/components/events/judging.module.css
+@@ -0,0 +1,2 @@
++.workspace{max-width:680px;margin:auto;color:#2c1810}.identity{padding:20px 0;border-bottom:1px solid #dfd2c1}.identity h1{font-size:24px;font-weight:700}.identity p{margin-top:6px;color:#6b5c52;font-size:14px}.fields{border:0;padding:0;min-width:0}.fields legend{display:flex;align-items:center;justify-content:space-between;width:100%;padding-top:24px;font-size:20px;font-weight:700}.fields legend small{font-size:14px;font-weight:400}.hint{color:#6b5c52;font-size:14px;margin:12px 0}.criterion{padding:16px 0;border-bottom:1px solid #e8ddd0}.criterionHeading{display:flex;align-items:center;gap:12px}.criterionHeading label{flex:1;font-weight:600;overflow-wrap:anywhere}.criterionHeading small{font-size:12px;color:#6b5c52}.criterionHeading input,.total input{width:100px;min-height:48px;border:1px solid #bda27c;border-radius:10px;background:#fff;color:#901b25;font-size:22px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}.slider{display:flex;align-items:center;gap:12px;color:#6b5c52;font-size:13px;margin-top:4px}.slider input{min-width:0;flex:1;height:44px;accent-color:#9e1726;touch-action:pan-y}.total{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:20px 12px;margin:20px 0;background:#f4ece1;border-radius:14px}.total label{font-weight:600}.total p{width:100%;text-align:center;font-size:14px;color:#6b5c52}.submit,.back{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;border-radius:10px;font-size:16px;font-weight:600}.submit{background:#9e1726;color:white}.submit:disabled{opacity:.5;cursor:not-allowed}.back{margin-top:16px;border:1px solid #bda27c;color:#901b25;background:#fff}.error{color:#a11224;padding:12px 0}.success{display:flex;align-items:center;gap:8px;color:#166534;padding:12px 0}.state{padding:32px;text-align:center;background:white;border-radius:14px}.state svg{margin:auto}.state button{min-height:44px;margin-top:16px;color:#901b25}.workspace :focus-visible{outline:2px solid #901b25;outline-offset:3px}.workspace ::selection{background:#ead5c0}.workspace input{caret-color:#901b25}.state p{margin-top:12px}
++@media(max-width:360px){.criterionHeading{gap:8px}.criterionHeading input{width:80px}.criterionHeading small{max-width:48px}.total{gap:8px}}
+--- /dev/null
++++ after/production/website/src/lib/score-allocation.ts
+@@ -0,0 +1,22 @@
++// Allocate integer hundredths, preserving proportions and per-item caps.
++export function distributeScores(maxima: number[], current: number[], target: number) {
++ const caps=maxima.map(n=>Math.max(0,Math.floor((Number(n)||0)*100+1e-7)));
++ const goal=Math.round(Number(target)*100);
++ if(!Number.isFinite(Number(target))||goal<0||goal>caps.reduce((a,b)=>a+b,0))throw new Error('总分超出范围');
++ let weights=current.map((n,i)=>Math.min(caps[i],Math.max(0,(Number(n)||0)*100)));
++ if(!weights.some(n=>n>0))weights=caps.slice();
++ const exact=caps.map(()=>0);let remaining=goal, active=caps.map((_,i)=>i).filter(i=>caps[i]>0);
++ while(active.length && remaining>1e-8){
++  let sum=active.reduce((s,i)=>s+weights[i],0);
++  if(sum<=0){for(const i of active)weights[i]=caps[i];sum=active.reduce((s,i)=>s+weights[i],0);}
++  const saturated=active.filter(i=>remaining*weights[i]/sum>=caps[i]);
++  if(!saturated.length){for(const i of active)exact[i]=remaining*weights[i]/sum;break;}
++  for(const i of saturated){exact[i]=caps[i];remaining-=caps[i];}
++  active=active.filter(i=>!saturated.includes(i));
++ }
++ const cents=exact.map(n=>Math.floor(n+1e-8));let left=goal-cents.reduce((s,n)=>s+n,0);
++ const order=caps.map((_,i)=>i).filter(i=>cents[i]<caps[i]).sort((a,b)=>(exact[b]-cents[b])-(exact[a]-cents[a])||a-b);
++ for(const i of order){if(left<=0)break;cents[i]++;left--;}
++ return cents.map(n=>n/100);
++}
++
+--- /dev/null
++++ after/10-小程序miniprogram/shared/score-allocation.js
+@@ -0,0 +1,22 @@
++// Allocate integer hundredths, preserving proportions and per-item caps.
++function distributeScores(maxima, current, target) {
++ const caps=maxima.map(n=>Math.max(0,Math.floor((Number(n)||0)*100+1e-7)));
++ const goal=Math.round(Number(target)*100);
++ if(!Number.isFinite(Number(target))||goal<0||goal>caps.reduce((a,b)=>a+b,0))throw new Error('总分超出范围');
++ let weights=current.map((n,i)=>Math.min(caps[i],Math.max(0,(Number(n)||0)*100)));
++ if(!weights.some(n=>n>0))weights=caps.slice();
++ const exact=caps.map(()=>0);let remaining=goal, active=caps.map((_,i)=>i).filter(i=>caps[i]>0);
++ while(active.length && remaining>1e-8){
++  let sum=active.reduce((s,i)=>s+weights[i],0);
++  if(sum<=0){for(const i of active)weights[i]=caps[i];sum=active.reduce((s,i)=>s+weights[i],0);}
++  const saturated=active.filter(i=>remaining*weights[i]/sum>=caps[i]);
++  if(!saturated.length){for(const i of active)exact[i]=remaining*weights[i]/sum;break;}
++  for(const i of saturated){exact[i]=caps[i];remaining-=caps[i];}
++  active=active.filter(i=>!saturated.includes(i));
++ }
++ const cents=exact.map(n=>Math.floor(n+1e-8));let left=goal-cents.reduce((s,n)=>s+n,0);
++ const order=caps.map((_,i)=>i).filter(i=>cents[i]<caps[i]).sort((a,b)=>(exact[b]-cents[b])-(exact[a]-cents[a])||a-b);
++ for(const i of order){if(left<=0)break;cents[i]++;left--;}
++ return cents.map(n=>n/100);
++}
++module.exports={distributeScores};
+--- /dev/null
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/ScoreAllocation.java
+@@ -0,0 +1,13 @@
++package cn.com.swod.app;
++import java.util.*;
++/** Integer hundredths; bounded proportional distribution with stable remainder. */
++final class ScoreAllocation {
++ static double[] distribute(double[] maxima,double[] current,double target){
++  int n=maxima.length,goal=(int)Math.round(target*100),capacity=0;int[] caps=new int[n];double[] w=new double[n],exact=new double[n];boolean any=false;
++  for(int i=0;i<n;i++){caps[i]=(int)Math.floor(maxima[i]*100+1e-7);capacity+=caps[i];w[i]=Math.min(caps[i],Math.max(0,current[i]*100));any|=w[i]>0;}
++  if(!Double.isFinite(target)||target<0||target>capacity/100.0)throw new IllegalArgumentException("总分超出范围");
++  List<Integer> active=new ArrayList<>();for(int i=0;i<n;i++){if(!any)w[i]=caps[i];if(caps[i]>0)active.add(i);}double remaining=goal;
++  while(!active.isEmpty()&&remaining>1e-8){double sum=0;for(int i:active)sum+=w[i];if(sum<=0){for(int i:active){w[i]=caps[i];sum+=w[i];}}List<Integer> saturated=new ArrayList<>();for(int i:active)if(remaining*w[i]/sum>=caps[i])saturated.add(i);if(saturated.isEmpty()){for(int i:active)exact[i]=remaining*w[i]/sum;break;}for(int i:saturated){exact[i]=caps[i];remaining-=caps[i];}active.removeAll(saturated);}
++  int[] cents=new int[n];int left=goal;List<Integer> order=new ArrayList<>();for(int i=0;i<n;i++){cents[i]=(int)Math.floor(exact[i]+1e-8);left-=cents[i];if(cents[i]<caps[i])order.add(i);}order.sort((a,b)->{int c=Double.compare(exact[b]-cents[b],exact[a]-cents[a]);return c==0?Integer.compare(a,b):c;});for(int i:order){if(left--<=0)break;cents[i]++;}double[] result=new double[n];for(int i=0;i<n;i++)result[i]=cents[i]/100.0;return result;
++ }
++}
+--- /dev/null
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/ScoreAllocation.ets
+@@ -0,0 +1,22 @@
++// Allocate integer hundredths, preserving proportions and per-item caps.
++export function distributeScores(maxima: number[], current: number[], target: number) {
++ const caps=maxima.map((n: number)=>Math.max(0,Math.floor((Number(n)||0)*100+1e-7)));
++ const goal=Math.round(Number(target)*100);
++ if(!Number.isFinite(Number(target))||goal<0||goal>caps.reduce((a: number,b: number)=>a+b,0))throw new Error('总分超出范围');
++ let weights=current.map((n: number,i: number)=>Math.min(caps[i],Math.max(0,(Number(n)||0)*100)));
++ if(!weights.some((n: number)=>n>0))weights=caps.slice();
++ const exact=caps.map((): number=>0);let remaining=goal, active=caps.map((_: number,i: number)=>i).filter((i: number)=>caps[i]>0);
++ while(active.length && remaining>1e-8){
++  let sum=active.reduce((s: number,i: number)=>s+weights[i],0);
++  if(sum<=0){for(const i of active)weights[i]=caps[i];sum=active.reduce((s: number,i: number)=>s+weights[i],0);}
++  const saturated=active.filter((i: number)=>remaining*weights[i]/sum>=caps[i]);
++  if(!saturated.length){for(const i of active)exact[i]=remaining*weights[i]/sum;break;}
++  for(const i of saturated){exact[i]=caps[i];remaining-=caps[i];}
++  active=active.filter((i: number)=>!saturated.includes(i));
++ }
++ const cents=exact.map((n: number)=>Math.floor(n+1e-8));let left=goal-cents.reduce((s: number,n: number)=>s+n,0);
++ const order=caps.map((_: number,i: number)=>i).filter((i: number)=>cents[i]<caps[i]).sort((a: number,b: number)=>(exact[b]-cents[b])-(exact[a]-cents[a])||a-b);
++ for(const i of order){if(left<=0)break;cents[i]++;left--;}
++ return cents.map((n: number)=>n/100);
++}
++
+--- /dev/null
++++ after/10-小程序miniprogram/pages/event-judge-profile/event-judge-profile.json
+@@ -0,0 +1 @@
++{"navigationBarTitleText":"评委详情"}--- /dev/null
++++ after/10-小程序miniprogram/pages/event-judge-profile/event-judge-profile.js
+@@ -0,0 +1,2 @@
++const api=require('../../utils/api');
++Page({data:{loading:true,error:'',judge:null,competition:{}},onLoad(o){this.id=o.id;this.judgeId=o.judgeId;this.load();},async load(){this.setData({loading:true,error:''});try{const d=await api.getEventDetail(this.id);const j=(d.competition&&d.competition.judgeScoresPublic)?(d.judges||[]).find(j=>String(j.id)===String(this.judgeId)):null;this.setData({loading:false,competition:d.competition,judge:j?{...j,initial:String(j.name||'评').slice(0,1),bio:String(j.bio||'').replace(/<[^>]*>/g,'')}:null});}catch(e){this.setData({loading:false,error:e.message||'加载失败'});}},back(){wx.navigateBack();}});
+--- /dev/null
++++ after/10-小程序miniprogram/pages/event-judge-profile/event-judge-profile.wxml
+@@ -0,0 +1 @@
++<view class="page"><view wx:if="{{loading}}">正在加载评委资料…</view><view wx:elif="{{error}}">{{error}}<button bindtap="load">重新加载</button></view><block wx:elif="{{judge}}"><view class="profile"><image wx:if="{{judge.avatarUrl}}" src="{{judge.avatarUrl}}" mode="aspectFill"/><view wx:else class="initial">{{judge.initial}}</view><view class="name">{{judge.name}}</view><text>{{judge.title || '赛事评委'}}</text></view><view class="card"><view class="heading">评委介绍</view><view class="bio">{{judge.bio || '评委介绍暂未填写'}}</view><view wx:if="{{judge.organization}}">{{judge.organization}}</view></view><view class="card"><view class="heading">受邀赛事</view>{{competition.name}}</view><button bindtap="back">返回赛事</button></block><view wx:else>评委资料暂未公开</view></view>--- /dev/null
++++ after/10-小程序miniprogram/pages/event-judge-profile/event-judge-profile.wxss
+@@ -0,0 +1 @@
++.page{min-height:100vh;padding:32rpx;background:#faf8f5;color:#2c1810;box-sizing:border-box}.profile{text-align:center;padding:40rpx 0}.profile image,.initial{width:180rpx;height:180rpx;border-radius:50%;margin:auto;border:3rpx solid #bd9d66}.initial{line-height:180rpx;font-size:64rpx;background:#f4ece1;color:#9e1726}.name{font-size:44rpx;font-weight:700;margin:24rpx 0 12rpx}.profile text{font-size:28rpx;color:#80633d}.card{padding:32rpx;background:#fff;border-radius:24rpx;margin-bottom:24rpx;font-size:28rpx;line-height:1.8}.heading{color:#9e1726;font-size:32rpx;font-weight:700;margin-bottom:20rpx}.bio{white-space:pre-wrap}button{background:#9e1726;color:white;min-height:96rpx}

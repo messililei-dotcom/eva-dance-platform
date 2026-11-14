@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-11-12T11:43:51+08:00",
+  "version": "1.0.4",
+  "ios": {
+    "build": 14,
+    "managementStatus": "可分发",
+    "automaticReleaseAfterApproval": true,
+    "freshManagementStatusVerified": true
+  },
+  "localUIUpdateEvidence": "../20261112-owned-courses-progress/verification.json",
+  "newReviewOrPublicResultVerified": false,
+  "newStoreSubmission": false,
+  "newLocalUIChangeVerified": true,
+  "newNotificationNeeded": true,
+  "existingReviewsWithdrawn": false
+}

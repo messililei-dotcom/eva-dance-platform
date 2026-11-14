@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-10T11:11:53+08:00",
+  "checkedAt": "2026-11-12T11:06:32+08:00",
   "version": "1.0.4",
   "builds": {
     "ios": 14,
@@ -26,7 +26,7 @@
   "allPlatformsUploaded": false,
   "monitoringAutomationStatus": "ACTIVE",
   "iosSubmitted": true,
-  "iosReviewStatus": "waiting-for-review",
+  "iosReviewStatus": "approved",
   "androidEmulatorInstallPassed": true,
   "androidColdLaunchPassed": true,
   "harmonyNativeRuntimeVerified": false,
@@ -46,8 +46,16 @@
   "iosChinaPublicVersion": "1.0.4",
   "iosOtherPublicStorefrontVerified": false,
   "harmonySubmitted": true,
-  "harmonyReviewStatus": "waiting-for-review",
+  "harmonyReviewStatus": "approved",
   "harmonyPasswordLoginVerified": true,
   "harmonySmsDeliveryAndRealCodeLoginVerified": false,
-  "harmonySubmissionExecutionRecord": "../20261110-harmony-window/review-candidate/verification.json"
+  "harmonySubmissionExecutionRecord": "../20261110-harmony-window/review-candidate/verification.json",
+  "huaweiAndroidChinaPublicReleaseVerified": true,
+  "huaweiAndroidChinaPublicVersion": "1.0.4",
+  "huaweiAndroidOtherPublicStorefrontVerified": false,
+  "harmonyManagementListed": true,
+  "harmonyListedAt": "2026-11-10T15:00:30+08:00",
+  "harmonyPublicRegionalVerificationPending": true,
+  "iosManagementStatus": "distributable",
+  "iosAutomaticReleaseAfterApproval": true
 }

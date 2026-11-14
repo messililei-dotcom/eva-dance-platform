@@ -39,12 +39,16 @@
   "tabletViewport": "1920×1280，API 22 宽屏模拟器",
   "uploadedAt": "2026-11-10T09:40:05+08:00",
   "submitted": true,
-  "reviewStatus": "正在等待审核",
+  "reviewStatus": "已上架",
   "releaseAfterApproval": "审核通过立即上架",
   "consoleUrl": "https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2071129556072323840?appId=6917617955633704973&projectId=101653523865196397",
   "receipt": "evidence/huawei-pre-review.jpg",
   "preReviewPassed": true,
-  "reviewCheckedAt": "2026-11-10T09:50:23+08:00",
+  "reviewCheckedAt": "2026-11-11T19:28:44+08:00",
   "reviewEvidence": "evidence/huawei-awaiting-review.jpg",
-  "previousPublicVersion": "1.0.0"
+  "previousPublicVersion": "1.0.0",
+  "managementListed": true,
+  "listedAt": "2026-11-10T15:00:30+08:00",
+  "publicRegionalVerificationPending": true,
+  "approvalEvidence": "../../20261109-event-release-1.0.4/evidence/harmony23-approved-20261111/official-verification.json"
 }

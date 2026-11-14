@@ -53,7 +53,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
   const body = await readEventBody(request);
   const name = cleanText(body.name);
-  if (!name) return jsonError('选手姓名不能为空');
+  if (!name || name.length > 120) return jsonError('请填写1至120个字符的选手姓名');
   const contact = normalizeEventMemberPhone(body.phone);
   if (!contact) return jsonError('手机号必填且格式须正确');
   const hasTitle = Object.prototype.hasOwnProperty.call(body, 'performanceTitle');

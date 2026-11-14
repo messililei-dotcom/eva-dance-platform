@@ -25,6 +25,8 @@ Page(share.withShare("events", {
     events: [],
     visibleEvents: [],
     keyword: "",
+    statusFilter: "全部赛事",
+    statusFilters: ["全部赛事", "报名中", "已结束"],
     eventCount: 0,
     playerCount: 0,
     recordCount: 0
@@ -59,12 +61,13 @@ Page(share.withShare("events", {
     this.setData({ keyword });
     this.applySearch(keyword, this.data.events);
   },
+  onStatusFilter(event) { this.setData({ statusFilter: event.currentTarget.dataset.status }); this.applySearch(this.data.keyword, this.data.events); },
   applySearch(keyword, source) {
     const query = String(keyword || "").trim().toLowerCase();
     const visibleEvents = query
       ? (source || []).filter(item => `${item.name || ""} ${item.location || ""}`.toLowerCase().includes(query))
       : (source || []);
-    this.setData({ visibleEvents });
+    this.setData({ visibleEvents: visibleEvents.filter(item => this.data.statusFilter === "全部赛事" || item.statusText === this.data.statusFilter) });
   },
   goRegister(event) {
     const id = event.currentTarget.dataset.id;

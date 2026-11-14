@@ -41,7 +41,6 @@ export function getDesktopNavbarTone(pathname: string): DesktopNavbarTone {
     '/courses',
     '/disciples',
     '/dance-circle',
-    '/events',
     '/offline',
     '/shop',
   ]);

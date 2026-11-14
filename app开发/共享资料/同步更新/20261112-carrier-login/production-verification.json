@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-11-12T13:04:25.532502+08:00",
+  "results": {
+    "ios": {
+      "oneTapLogin": true,
+      "offlineDownload": false,
+      "pushEnabled": false
+    },
+    "android": {
+      "oneTapLogin": true,
+      "offlineDownload": false,
+      "pushEnabled": false
+    },
+    "harmony": {
+      "oneTapLogin": true,
+      "offlineDownload": false,
+      "pushEnabled": false
+    },
+    "missingToken": {
+      "status": 400,
+      "body": {
+        "success": false,
+        "message": "号码认证凭据无效"
+      }
+    },
+    "selfReportedPhone": {
+      "status": 400,
+      "body": {
+        "success": false,
+        "message": "号码认证凭据无效"
+      }
+    }
+  },
+  "providerCalls": "No SIM token submitted; malformed input rejected before provider lookup. No purchase or provider plan changed."
+}

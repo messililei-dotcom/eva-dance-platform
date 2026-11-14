@@ -1,0 +1,82 @@
+{
+  "checkedAt": "2026-11-13T20:14:30.496789+08:00",
+  "scope": "评委列表与详情、评委工作台、分项评分、总分联动、成绩榜单与评分详情；官网响应式和PWA、iOS、Android、HarmonyOS、小程序",
+  "deployment": {
+    "buildId": "jz4P38jAjhC4mQU5AwCkY",
+    "backup": "/www/wwwroot/dongfangwuquan/deploy-backups/judge-ui-20261113",
+    "health": "passed",
+    "files": {
+      "src/app/events-news/[slug]/page.tsx": "1db0e696b1f567b9e4f385855c51f19ccf729d77e0d40fc160e8136b28038dd5",
+      "src/app/events-news/[slug]/groups/[groupId]/players/[playerId]/page.tsx": "3c26a7ddc1042f76731bc08a1b76badeea3caaff9fce89c19e351c760b4874f2",
+      "src/components/events/JudgeGroupsClient.tsx": "d501003ac8fe2189c7e79f1dabe6d46e19bccba50dc5580b0b5880482ae95af5",
+      "src/components/events/JudgePlayersClient.tsx": "5ae1b5d7fd0d77fb825b35b0c84955527ec830573bde580ffe37d0107b8a9c36",
+      "src/components/events/JudgeScoreClient.tsx": "1f429bd864edba8138ab28ddb4694ef4431a23f606f55eda46697ea67ca7b0b0",
+      "src/lib/public-event-data.ts": "7c156b90efb647f73f5a3d2ba9d381737d761781fdf5db7220daf720125b74ae",
+      "src/lib/score-allocation.ts": "325e3df832d3e85869ce7d14d825fe3346b975ba5f5d21aea9273fc3568a8511",
+      "src/components/events/PublicJudges.tsx": "a58369dc77c929b3e4dfea99289882ae46411869957f0ec3fba8e352be69cc41",
+      "src/components/events/judging.module.css": "688d873f80d5b4a0122d08ebb6d33ea88efe1bc5969c9d5ad94d1173b932c428",
+      "public/sw.js": "9f2174cd54c85032a59403ed30b7ac52b154e480d184821c4028f53ebd9075bc"
+    }
+  },
+  "checks": {
+    "iOSSimulatorDebug": "passed; final current source",
+    "iOSCoreContracts": 22,
+    "AndroidDebug": "passed",
+    "AndroidUnitTests": 32,
+    "HarmonyUnsignedDebug": "passed",
+    "HarmonyTests": 26,
+    "allocationIntegerTargets": "3003 JS and 3003 Java target/current combinations; exact totals and caps",
+    "featureTests": 5,
+    "PwaTests": 6,
+    "miniExistingTests": "event-sort and my-events passed",
+    "WXML": "event-related templates and new judge profile compiled with installed WeChat wcc",
+    "browser": {
+      "engine": "Chrome headless; isolated synthetic API fixtures",
+      "checks": [
+        "total redistribution",
+        "item range keyboard change",
+        "sum synchronization",
+        "Chromium synthesized touch drag",
+        "cancel performs no write",
+        "logout clears score form",
+        "320/390/1280 layout"
+      ],
+      "writes": 0
+    },
+    "webBuild": "isolated production source build, TypeScript and postbuild style checks passed",
+    "designDetector": []
+  },
+  "artifacts": [
+    {
+      "platform": "Android",
+      "path": "/Users/lilei/Library/Caches/SWOD/Android/player-20261112/app/build/outputs/apk/debug/app-debug.apk",
+      "bytes": 38544020,
+      "sha256": "6a1e2a1dada617204496b778031919f174a7850b8918091bf54fafb10e749611",
+      "storeCandidate": false
+    },
+    {
+      "platform": "HarmonyOS",
+      "path": "/Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/outputs/default/entry-default-unsigned.hap",
+      "bytes": 25163745,
+      "sha256": "eddba1512ec15f9bd4ee5b02b32f7bb15d01d62f57efb113ca40041f12aafa3c",
+      "storeCandidate": false
+    }
+  ],
+  "store": {
+    "appUploaded": false,
+    "miniProgramUploaded": false,
+    "submitted": false,
+    "signedStoreCandidateCreated": false
+  },
+  "limitations": [
+    "No physical-device touch, dark mode or tablet visual acceptance performed this task",
+    "No real authorized judge session used and no real scores submitted",
+    "Browser screenshots use clearly named synthetic fixture, not production scores",
+    "Existing obsolete PWA test assertion expected worker client.navigate; corrected to claim because PWAProvider owns controllerchange reload"
+  ],
+  "rollback": "Server backup retains previous build and touched sources; before/ is local pre-task source snapshot",
+  "concurrentLocalChangesPreserved": [
+    "src/app/events-news/[slug]/page.tsx",
+    "src/lib/public-event-data.ts"
+  ]
+}

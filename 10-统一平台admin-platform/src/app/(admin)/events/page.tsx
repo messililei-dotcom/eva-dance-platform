@@ -13,22 +13,17 @@ import {
   DatePicker,
   Form,
   Input,
-  InputNumber,
   Modal,
   Row,
   Select,
   Space,
-  Statistic,
   Switch,
-  Tabs,
   Tag,
   Upload,
 } from 'antd';
 import {
-  AuditOutlined,
   DatabaseOutlined,
   DownloadOutlined,
-  DeleteOutlined,
   PlusOutlined,
   SearchOutlined,
   SettingOutlined,
@@ -42,34 +37,6 @@ import { useAuth } from '@/lib/auth-context';
 import { isPlatformSuperAdmin } from '@/lib/admin-feature-access';
 import { sortableColumns } from '@/lib/table-sort';
 
-const statusColor: Record<string, string> = {
-  draft: 'default',
-  published: 'green',
-  offline: 'red',
-  finished: 'blue',
-  pending: 'orange',
-  approved: 'green',
-  rejected: 'red',
-  active: 'green',
-};
-
-const statusText: Record<string, string> = {
-  draft: '草稿',
-  published: '已上架',
-  offline: '已下架',
-  finished: '已结束',
-  open: '开放报名',
-  closed: '关闭报名',
-  pending: '待审核',
-  approved: '已通过',
-  rejected: '已驳回',
-  active: '启用',
-};
-
-function tag(value: string) {
-  return <Tag color={statusColor[value] || 'default'}>{statusText[value] || value}</Tag>;
-}
-
 function getCompetitionStage(row: any) {
   const eventDate = row.endDate || row.startDate;
   const hasFinished = eventDate && dayjs(eventDate).isValid() && dayjs(eventDate).endOf('day').isBefore(dayjs());
@@ -82,7 +49,7 @@ const competitionStageText: Record<string, string> = {
 };
 
 export default function EventsPage() {
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
   const { user } = useAuth();
   const canAssignAdmin = isPlatformSuperAdmin(user);
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
@@ -99,7 +66,6 @@ export default function EventsPage() {
       .finally(() => { if (active) setAdminUsersLoading(false); });
     return () => { active = false; };
   }, [canAssignAdmin]);
-  const [tab, setTab] = useState('competitions');
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(false);
   const loadVersion = useRef(0);
@@ -107,49 +73,30 @@ export default function EventsPage() {
   const [loadErrors, setLoadErrors] = useState<string[]>([]);
   const [competitions, setCompetitions] = useState<any[]>([]);
   const [competitionPageSize, setCompetitionPageSize] = useState(10);
-  const [players, setPlayers] = useState<any[]>([]);
   const [playerTotal, setPlayerTotal] = useState(0);
-  const [playerPage, setPlayerPage] = useState(1);
-  const [playerPageSize, setPlayerPageSize] = useState(20);
   const [judges, setJudges] = useState<any[]>([]);
-  const [verify, setVerify] = useState<any>(null);
-  const [verifyPage, setVerifyPage] = useState(1);
-  const [verifyPageSize, setVerifyPageSize] = useState(20);
   const [competitionModal, setCompetitionModal] = useState(false);
-  const [playerModal, setPlayerModal] = useState(false);
-  const [judgeModal, setJudgeModal] = useState(false);
   const [editingCompetition, setEditingCompetition] = useState<any>(null);
-  const [editingPlayer, setEditingPlayer] = useState<any>(null);
-  const [editingJudge, setEditingJudge] = useState<any>(null);
   const [judgePublicUpdatingId, setJudgePublicUpdatingId] = useState<number | string | null>(null);
   const [publicUpdatingId, setPublicUpdatingId] = useState<number | string | null>(null);
   const [registrationUpdatingId, setRegistrationUpdatingId] = useState<number | string | null>(null);
   const [transferLoading, setTransferLoading] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
   const [competitionForm] = Form.useForm();
-  const [playerForm] = Form.useForm();
-  const [judgeForm] = Form.useForm();
   const competitionCoverUrl = Form.useWatch('coverUrl', competitionForm);
 
-  const selectedCompetitionId = competitions[0]?.id;
-
-  const load = async (nextPlayerPage = playerPage, nextPlayerPageSize = playerPageSize) => {
+  const load = async () => {
     const version = ++loadVersion.current;
     setLoading(true);
     const results = await Promise.allSettled([
       eventApi.listCompetitions({ keyword }),
-      eventApi.listPlayersPage({ keyword, page: nextPlayerPage, pageSize: nextPlayerPageSize }),
-      eventApi.listJudges({ keyword }),
+      eventApi.listPlayersPage({ page: 1, pageSize: 1 }),
+      eventApi.listJudges(),
     ]);
     if (version !== loadVersion.current) return;
     const [competitionResult, playerResult, judgeResult] = results;
     if (competitionResult.status === 'fulfilled') setCompetitions(competitionResult.value);
-    if (playerResult.status === 'fulfilled') {
-      setPlayers(playerResult.value.data);
-      setPlayerTotal(playerResult.value.total);
-      setPlayerPage(playerResult.value.page);
-      setPlayerPageSize(playerResult.value.pageSize);
-    }
+    if (playerResult.status === 'fulfilled') setPlayerTotal(playerResult.value.total);
     if (judgeResult.status === 'fulfilled') setJudges(judgeResult.value);
     setLoaded({
       competitions: competitionResult.status === 'fulfilled',
@@ -165,25 +112,6 @@ export default function EventsPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const loadVerify = async (page = verifyPage, pageSize = verifyPageSize) => {
-    setLoading(true);
-    try {
-      const data = await eventApi.verifyData({ page, pageSize });
-      setVerify(data);
-      setVerifyPage(Number(data.page || page));
-      setVerifyPageSize(Number(data.pageSize || pageSize));
-    } catch (err: any) {
-      message.error(err?.response?.data?.error || err?.message || '数据核验失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (tab === 'verify' && !verify) void loadVerify(1, verifyPageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
 
   useEffect(() => {
     const updateCompetitionPageSize = () => {
@@ -262,31 +190,6 @@ export default function EventsPage() {
     }
   };
 
-  const savePlayer = async () => {
-    const values = await playerForm.validateFields();
-    if (editingPlayer) await eventApi.updatePlayer(editingPlayer.id, values);
-    else await eventApi.createPlayer(values);
-    message.success(editingPlayer ? '报名记录已更新' : '报名记录已创建');
-    setPlayerModal(false);
-    playerForm.resetFields();
-    load();
-  };
-
-  const saveJudge = async () => {
-    try {
-      const values = await judgeForm.validateFields();
-      if (editingJudge) await eventApi.updateJudge(editingJudge.id, values);
-      else await eventApi.createJudge(values);
-      message.success(editingJudge ? '评委已更新' : '评委已创建');
-      setJudgeModal(false);
-      judgeForm.resetFields();
-      load();
-    } catch (error: any) {
-      if (error?.errorFields) return;
-      message.error(error?.response?.data?.error || '保存评委失败，请重试');
-    }
-  };
-
   const exportAll = async () => {
     setTransferLoading(true);
     try {
@@ -348,7 +251,7 @@ export default function EventsPage() {
     try {
       await eventApi.patchCompetition(row.id, { action: next ? 'showJudgeScores' : 'hideJudgeScores' });
       setCompetitions(current => current.map(item => item.id === row.id ? { ...item, judgeScoresPublic: next } : item));
-      message.success(next ? '评委分数已公开' : '评委分数已隐藏，公众仅可查看姓名及***');
+      message.success(next ? '评委姓名和分数已向公众公开' : '公众评委姓名和分数已隐藏；选手仍可匿名查看自己的评分详情');
     } catch (err: any) {
       message.error(err?.response?.data?.error || err?.message || '评委评分公开状态更新失败');
     } finally { setJudgePublicUpdatingId(null); }
@@ -415,11 +318,11 @@ export default function EventsPage() {
       ),
     },
     {
-      title: '评委评分', dataIndex: 'judgeScoresPublic', width: 110,
+      title: '评委信息公开', dataIndex: 'judgeScoresPublic', width: 110,
       render: (value: boolean, row: any) => (
         <Switch size="small" checked={value === true} checkedChildren="公开" unCheckedChildren="关闭"
           loading={judgePublicUpdatingId === row.id} disabled={judgePublicUpdatingId !== null}
-          aria-label={`${row.name}评委评分公开开关，当前${value ? '公开' : '关闭'}`}
+          aria-label={`${row.name}评委姓名及分数公开开关，当前${value ? '公开' : '关闭'}`}
           onChange={() => toggleJudgeScoresPublic(row)} />
       ),
     },
@@ -437,76 +340,6 @@ export default function EventsPage() {
       ),
     },
   ]);
-
-  const playerColumns = sortableColumns<any>([
-    { title: '选手', dataIndex: 'name', width: 150, fixed: 'left', render: (v: string, row: any) => <Link href={`/events/players/${row.id}`}>{v}</Link> },
-    { title: '编号', dataIndex: 'playerNo', width: 100, render: (v: string) => v || '-' },
-    { title: '赛事', dataIndex: 'competitionName', width: 190 },
-    { title: '组别', dataIndex: 'groupName', width: 160, render: (v: string) => v || '-' },
-    { title: '机构/课程顾问', width: 170, render: (_: any, row: any) => row.organization || row.teacher || '-' },
-    { title: '审核', dataIndex: 'auditStatus', width: 90, render: tag },
-    { title: '缴费', dataIndex: 'paidStatus', width: 90, render: tag },
-    { title: '评分', dataIndex: 'scoreStatus', width: 110, render: tag },
-    {
-      title: '操作',
-      width: 150,
-      render: (_: any, row: any) => (
-        <Space>
-          <Button size="small" onClick={() => {
-            setEditingPlayer(row);
-            playerForm.setFieldsValue(row);
-            setPlayerModal(true);
-          }}>编辑</Button>
-          <Button size="small" onClick={async () => {
-            await eventApi.auditPlayer(row.id, 'approved');
-            message.success('报名已通过');
-            load();
-          }}>通过</Button>
-          <Link href={`/events/players/${row.id}`}>详情</Link>
-        </Space>
-      ),
-    },
-  ]);
-
-  const judgeColumns = sortableColumns<any>([
-    { title: '评委', dataIndex: 'name', width: 150, fixed: 'left', render: (v: string, row: any) => <Link href={`/events/judges/${row.id}`}>{v}</Link> },
-    { title: '头衔', dataIndex: 'title', width: 140, render: (v: string) => v || '-' },
-    { title: '机构', dataIndex: 'organization', width: 180, render: (v: string) => v || '-' },
-    { title: '授权', dataIndex: 'authEnabled', width: 90, render: (v: boolean) => v ? <Tag color="green">已授权</Tag> : <Tag>未授权</Tag> },
-    { title: '分配组别', dataIndex: 'assignedGroupCount', width: 100 },
-    { title: '评分记录', dataIndex: 'scoreCount', width: 100 },
-    {
-      title: '操作',
-      width: 150,
-      render: (_: any, row: any) => (
-        <Space>
-          <Button size="small" onClick={() => {
-            setEditingJudge(row);
-            judgeForm.setFieldsValue(row);
-            setJudgeModal(true);
-          }}>编辑</Button>
-          <Button size="small" onClick={async () => {
-            await eventApi.patchJudge(row.id, { action: row.authEnabled ? 'disableAuth' : 'enableAuth' });
-            message.success(row.authEnabled ? '已关闭授权' : '已开启授权');
-            load();
-          }}>{row.authEnabled ? '停权' : '授权'}</Button>
-          <Button size="small" danger icon={<DeleteOutlined />} onClick={() => modal.confirm({
-            title: `确认删除评委“${row.name}”？`,
-            content: '删除后停止该评委授权并移出评委列表，历史评分保留用于核查。',
-            okText: '确认删除', okButtonProps: { danger: true },
-            onOk: async () => { try { await eventApi.deleteJudge(row.id); message.success('评委已删除'); await load(); } catch (error: any) { message.error(error?.response?.data?.error || '删除失败，请重试'); throw error; } },
-          })}>删除</Button>
-          <Link href={`/events/judges/${row.id}`}>详情</Link>
-        </Space>
-      ),
-    },
-  ]);
-
-  const issueColumns = [
-    { title: '类型', dataIndex: 'type', width: 220 },
-    { title: '记录ID', dataIndex: 'id', width: 100 },
-    { title: '对象', dataIndex: 'label' },
-  ];
 
   return (
     <div className={styles.page}>
@@ -539,76 +372,27 @@ export default function EventsPage() {
         size="small"
         className={styles.list}
       >
-        <Tabs activeKey={tab} onChange={setTab} items={[
-          { key: 'competitions', label: `赛事 (${loaded.competitions ? competitions.length : '—'})` },
-          { key: 'players', label: `报名 (${loaded.players ? playerTotal : '—'})` },
-          { key: 'judges', label: `评委 (${loaded.judges ? judges.length : '—'})` },
-          { key: 'verify', label: `数据核验 (${verify?.total || 0})` },
-        ]} />
         <div className={styles.toolbar}>
           <Input
-            placeholder="搜索赛事、选手、评委"
+            placeholder="搜索赛事"
             prefix={<SearchOutlined />}
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
-            onPressEnter={() => {
-              setPlayerPage(1);
-              load(1, playerPageSize);
-            }}
+            onPressEnter={() => load()}
             allowClear
             className={styles.search}
           />
-          <Button icon={<DatabaseOutlined />} loading={loading} onClick={() => tab === 'verify' ? loadVerify() : load()}>刷新{tab === 'verify' ? '/核验' : ''}</Button>
+          <Button icon={<DatabaseOutlined />} loading={loading} onClick={() => load()}>刷新</Button>
           <Button icon={<DownloadOutlined />} loading={transferLoading} onClick={exportAll}>导出全部</Button>
-          {tab === 'competitions' && canAssignAdmin && <Button type="primary" icon={<PlusOutlined />} onClick={() => openCompetition()}>新建赛事</Button>}
-          {tab === 'players' && <Button type="primary" icon={<PlusOutlined />} onClick={() => {
-            setEditingPlayer(null);
-            playerForm.resetFields();
-            playerForm.setFieldsValue({ competitionId: selectedCompetitionId, auditStatus: 'pending', paidStatus: 'unpaid' });
-            setPlayerModal(true);
-          }}>新增报名</Button>}
-          {tab === 'judges' && <Button type="primary" icon={<PlusOutlined />} onClick={() => {
-            setEditingJudge(null);
-            judgeForm.resetFields();
-            judgeForm.setFieldsValue({ status: 'active', authEnabled: false });
-            setJudgeModal(true);
-          }}>新增评委</Button>}
+          {canAssignAdmin && <Button type="primary" icon={<PlusOutlined />} onClick={() => openCompetition()}>新建赛事</Button>}
         </div>
-        {tab === 'competitions' && <Table
+        <Table
           loading={loading}
           columns={competitionColumns}
           dataSource={displayCompetitions}
           scroll={{ x: 1200 }}
           pagination={{ pageSize: competitionPageSize, showSizeChanger: false }}
-        />}
-        {tab === 'players' && <Table
-          loading={loading}
-          columns={playerColumns}
-          dataSource={players}
-          scroll={{ x: 1200 }}
-          pagination={{
-            current: playerPage,
-            pageSize: playerPageSize,
-            total: playerTotal,
-            showSizeChanger: true,
-            pageSizeOptions: [20, 50, 100, 200],
-            showTotal: (total) => `共 ${total} 条`,
-            onChange: (page, pageSize) => load(page, pageSize),
-          }}
-        />}
-        {tab === 'judges' && <Table loading={loading} columns={judgeColumns} dataSource={judges} scroll={{ x: 1000 }} />}
-        {tab === 'verify' && (
-          <Space direction="vertical" style={{ width: '100%' }} size={16}>
-            <Row gutter={[12, 12]}>
-              {Object.entries(verify?.counts || {}).map(([key, value]) => (
-                <Col xs={12} md={6} xl={4} key={key}>
-                  <Card size="small"><Statistic title={key.replace('event_', '')} value={Number(value)} /></Card>
-                </Col>
-              ))}
-            </Row>
-            <Table rowKey={(row: any) => `${row.type}-${row.id}`} loading={loading} columns={issueColumns} dataSource={verify?.issues || []} pagination={{ current: verifyPage, pageSize: verifyPageSize, total: Number(verify?.total || 0), showSizeChanger: true, pageSizeOptions: [20, 50, 100], showTotal: total => `共 ${total} 项`, onChange: (page, pageSize) => loadVerify(page, pageSize) }} scroll={{ x: 'max-content' }} />
-          </Space>
-        )}
+        />
       </Card>
 
       <Modal title={editingCompetition ? '编辑赛事' : '新建赛事'} open={competitionModal} onCancel={() => setCompetitionModal(false)} onOk={saveCompetition} width={800} centered confirmLoading={coverUploading} styles={{body:{maxHeight:'72vh',overflowY:'auto',overflowX:'hidden',paddingRight:4}}}>
@@ -665,45 +449,6 @@ export default function EventsPage() {
         </Form>
       </Modal>
 
-      <Modal title={editingPlayer ? '编辑报名' : '新增报名'} open={playerModal} onCancel={() => setPlayerModal(false)} onOk={savePlayer} width={660}>
-        <Form form={playerForm} layout="vertical">
-          <Row gutter={16}>
-            <Col xs={12} sm={12}><Form.Item name="competitionId" label="赛事" rules={[{ required: true }]}><Select options={competitions.map((item) => ({ value: item.id, label: item.name }))} /></Form.Item></Col>
-            <Col xs={12} sm={12}><Form.Item name="playerNo" label="出场顺序"><Input /></Form.Item></Col>
-          </Row>
-          <Row gutter={16}>
-            <Col xs={12} sm={12}><Form.Item name="name" label="选手姓名" rules={[{ required: true }]}><Input /></Form.Item></Col>
-            <Col xs={12} sm={12}><Form.Item name="phone" label="手机号"><Input /></Form.Item></Col>
-          </Row>
-          <Row gutter={16}>
-            <Col xs={12} sm={12}><Form.Item name="organization" label="机构"><Input /></Form.Item></Col>
-            <Col xs={12} sm={12}><Form.Item name="teacher" label="课程顾问"><Input /></Form.Item></Col>
-          </Row>
-          <Row gutter={16}>
-            <Col xs={12} sm={12}><Form.Item name="auditStatus" label="审核状态"><Select options={[{ value: 'pending', label: '待审核' }, { value: 'approved', label: '通过' }, { value: 'rejected', label: '驳回' }]} /></Form.Item></Col>
-            <Col xs={12} sm={12}><Form.Item name="paidStatus" label="缴费状态"><Select options={[{ value: 'unpaid', label: '未缴费' }, { value: 'paid', label: '已缴费' }]} /></Form.Item></Col>
-          </Row>
-          <Form.Item name="remark" label="备注"><Input.TextArea rows={2} /></Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal title={editingJudge ? '编辑评委' : '新增评委'} open={judgeModal} onCancel={() => setJudgeModal(false)} onOk={saveJudge} width={620}>
-        <Form form={judgeForm} layout="vertical">
-          <Row gutter={16}>
-            <Col xs={12} sm={12}><Form.Item name="name" label="评委姓名" rules={[{ required: true }]}><Input /></Form.Item></Col>
-            <Col xs={12} sm={12}><Form.Item name="phone" label="手机号"><Input /></Form.Item></Col>
-          </Row>
-          <Row gutter={16}>
-            <Col xs={12} sm={12}><Form.Item name="title" label="头衔"><Input /></Form.Item></Col>
-            <Col xs={12} sm={12}><Form.Item name="organization" label="机构"><Input /></Form.Item></Col>
-          </Row>
-          <Row gutter={16}>
-            <Col xs={12} sm={12}><Form.Item name="status" label="状态"><Select options={[{ value: 'active', label: '启用' }, { value: 'disabled', label: '停用' }]} /></Form.Item></Col>
-            <Col xs={12} sm={12}><Form.Item name="authEnabled" label="评分授权"><Select options={[{ value: true, label: '开启' }, { value: false, label: '关闭' }]} /></Form.Item></Col>
-          </Row>
-          <Form.Item name="bio" label="简介"><Input.TextArea rows={3} /></Form.Item>
-        </Form>
-      </Modal>
     </div>
   );
 }

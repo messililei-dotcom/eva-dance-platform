@@ -243,9 +243,10 @@ export async function POST(request: Request, { params }: RouteContext) {
     if (!member) {
       return NextResponse.json({ success: false, error: '登录状态无效，请重新登录' }, { status: 401 });
     }
-    const name = cleanText(body.name, 30);
-    if (name.length < 2) {
-      return NextResponse.json({ success: false, error: '请填写参赛选手姓名' }, { status: 400 });
+    // Only trim outer whitespace; retain Chinese, English and internal spaces without truncation.
+    const name = String(body.name ?? '').trim();
+    if (!name || name.length > 120) {
+      return NextResponse.json({ success: false, error: '请填写1至120个字符的选手姓名' }, { status: 400 });
     }
 
     let selectedGroup: { id: number; name: string; registration_fee:number } | undefined;

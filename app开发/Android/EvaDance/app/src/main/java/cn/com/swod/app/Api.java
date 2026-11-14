@@ -61,17 +61,6 @@ public final class Api {
         JSONObject envelope = transport((publicRead ? Policy.PUBLIC_API : Policy.API), path, method, body, token, false);
         return envelope.opt("data");
     }
-    public JSONObject staffLogin(String username, String password) throws Exception {
-        JSONObject credentials = transport("https://admin.swod.com.cn/api", "/login", "POST", new JSONObject().put("username", username).put("password", password), null, true);
-        String role = credentials.getJSONObject("user").optString("role");
-        if (!role.equals("admin") && !role.equals("event_admin")) throw new Failure(403, "当前账号没有赛事管理权限");
-        if (credentials.optString("token").isEmpty()) throw new Failure(502, "管理登录返回异常");
-        return credentials;
-    }
-    public Object staffRequest(String path, String method, JSONObject body, String token) throws Exception {
-        if (!Policy.safePath(path) || !path.startsWith("/event/") || token == null || token.isEmpty()) throw new Failure(401, "请使用工作人员账号登录");
-        return transport("https://admin.swod.com.cn/api", path, method, body, token, false).opt("data");
-    }
     private JSONObject transport(String base, String path, String method, JSONObject body, String token, boolean raw) throws Exception {
         return transportBytes(base, path, method, (body == null ? "{}" : body.toString()).getBytes(StandardCharsets.UTF_8), "application/json", token, raw);
     }

@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-11-12T19:44:56.084841+08:00",
+  "version": "1.0.4",
+  "ios": {
+    "build": 14,
+    "managementURL": "https://appstoreconnect.apple.com/apps",
+    "observedOfficialAppRow": "SWOD iOS 1.0.4 可分发",
+    "freshManagementStateVerified": true,
+    "automaticReleaseLastVerified": "2026-11-12T11:06:32+08:00",
+    "publicHK": {
+      "attemptedURL": "https://apps.apple.com/hk/app/swod/id6826038106",
+      "observedURL": "https://apps.apple.com/cn/iphone/today",
+      "result": "Normal official detail navigation redirected to China Today",
+      "freshOtherRegionPublicReleaseVerified": false
+    }
+  },
+  "harmony": {
+    "build": 23,
+    "freshManagementOrPublicStatusVerified": false,
+    "lastPublicAttempt": "evidence/heartbeat-20261112-1536.json",
+    "priorApprovalEvidence": "evidence/harmony23-approved-20261111/official-verification.json"
+  },
+  "android": {
+    "build": 21,
+    "freshManagementOrPublicStatusVerified": false,
+    "knownMaterialBlockedOtherChannelsReopened": false,
+    "newMaterialsVerified": false
+  },
+  "newReviewOrPublicResultVerified": false,
+  "newStoreSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "newNotificationNeeded": false,
+  "nativeDevelopmentNotReleased": true,
+  "overseasLookupRestrictionBypassed": false
+}

@@ -7,7 +7,7 @@
     "harmony": 23
   },
   "offlineCacheEnabled": false,
-  "carrierOneTapProductionEnabled": false,
+  "carrierOneTapProductionEnabled": true,
   "wechatMobileLoginProductionEnabled": false,
   "filingChanged": false,
   "storeSubmissionAuthorized": true,
@@ -34,7 +34,7 @@
   "ramUserCreationAwaitingIdentityVerification": false,
   "huaweiPushAgreementAwaitingConfirmation": false,
   "physicalDeviceTests": "skipped-at-user-request",
-  "updatedAt": "2026-11-10T11:11:53+08:00",
+  "updatedAt": "2026-11-12T11:43:51+08:00",
   "remoteDeliveryAccepted": false,
   "iosLocalNotificationTapAndReadSyncPassed": true,
   "iosFinalIPA": "../20261030-store-update/iOS/export-11/EvaDance.ipa",
@@ -214,7 +214,7 @@
   "reviewPasswordReusedWithoutReset": true,
   "reviewCredentialLiveLoginVerified": true,
   "storeSubmissionComplete": false,
-  "lastMonitorAt": "2026-11-10T11:11:53+08:00",
+  "lastMonitorAt": "2026-11-13T07:39:33.923583+08:00",
   "childrenPrivacy": {
     "policyVersion": "2026-10-30-children-v1",
     "publicRulesDeployed": true,
@@ -253,12 +253,11 @@
   },
   "androidChannelsStatusRecord": "../../../Android/上架执行/20261105-update-1.0.3/submission-status.json",
   "monitorLatestResult": {
-    "checkedAt": "2026-11-10T11:11:53+08:00",
-    "record": "../20261109-event-release-1.0.4/evidence/heartbeat-20261110-111153.json",
-    "newReviewOrPublicResultVerified": true,
-    "newStoreSubmissionObserved": true,
-    "newStoreSubmissionPerformedByMonitor": false,
-    "newNotificationNeeded": true,
+    "checkedAt": "2026-11-13T07:39:33.923583+08:00",
+    "record": "../20261109-event-release-1.0.4/evidence/heartbeat-20261113-0738.json",
+    "newReviewOrPublicResultVerified": false,
+    "newStoreSubmission": false,
+    "newNotificationNeeded": false,
     "existingReviewsWithdrawn": false
   },
   "vendorTechnicalSupportStatusRecord": "../../../Android/上架执行/20261030/support-submission-status.json",
@@ -514,7 +513,7 @@
       "appStoreDraftAssociation": "verified",
       "appStoreConsole": "Official distribution page verified: 1.0.4 waiting for review and automatic release selected",
       "submittedAt": "2026-11-09T11:07:56+08:00",
-      "reviewStatus": "waiting-for-review",
+      "reviewStatus": "approved",
       "automaticReleaseAfterApproval": true,
       "releaseImmediatelyToAll": true,
       "buildId": "8c795100-f2d5-41c6-9502-5c598c1b3902",
@@ -537,15 +536,17 @@
         "US": "redirected to CN Today; unverified",
         "HK": "redirected to CN Today; unverified"
       },
-      "lastManagementCheckAt": "2026-11-10T03:12:22+08:00",
-      "lastManagementCheck": "sign-in required"
+      "lastManagementCheckAt": "2026-11-12T11:06:32+08:00",
+      "lastManagementCheck": "1.0.4 distributable with build14; automatic release selected",
+      "managementStatus": "distributable",
+      "releaseRecheckEvidence": "evidence/ios-release-recheck-20261112-110632.json"
     },
     "android": {
       "build": 21,
       "packageName": "cn.com.swod.app",
       "upload": "succeeded",
       "submitted": true,
-      "public": false,
+      "public": true,
       "uploaded": true,
       "emulator": "EvaRelease36",
       "installPassed": true,
@@ -562,7 +563,20 @@
       "screenshotReceipt": "evidence/screenshots-android21/receipt.json",
       "reviewReceipt": "evidence/huawei-android-review-receipt.json",
       "reviewScreenshot": "evidence/huawei-android-review-receipt.jpg",
-      "tabletViewportQaPassed": true
+      "tabletViewportQaPassed": true,
+      "chinaPublicRelease": {
+        "checkedAt": "2026-11-10T19:08:08+08:00",
+        "version": "1.0.4",
+        "region": "CN",
+        "url": "https://appgallery.huawei.com/app/C119475083",
+        "installEntryVisible": true,
+        "updateNotesMatchSubmission": true,
+        "buildLinkedBySubmissionReceipt": 21,
+        "buildNumberDisplayedPublicly": false,
+        "evidence": "evidence/huawei-android21-china-public-20261110.jpg"
+      },
+      "lastManagementCheckAt": "2026-11-10T19:08:08+08:00",
+      "lastManagementCheck": "sign-in required"
     },
     "harmony": {
       "build": 23,
@@ -635,19 +649,47 @@
         "tabletStoreIconSaved": true,
         "appInfoRequiredFieldsBannerCleared": true
       },
-      "reviewStatus": "waiting-for-review",
-      "reviewCheckedAt": "2026-11-10T11:11:53+08:00",
+      "reviewStatus": "approved",
+      "reviewCheckedAt": "2026-11-11T19:28:44+08:00",
       "reviewRecordId": "2071129556072323840",
       "reviewUrl": "https://developer.huawei.com/consumer/cn/hdc-console/#/app/v2071129556072323840?appId=6917617955633704973&projectId=101653523865196397",
       "passwordLoginVerified": true,
       "smsDeliveryAndRealCodeLoginVerified": false,
       "tabletScreenshotsUploaded": 3,
       "submissionExecutionRecord": "../20261110-harmony-window/review-candidate/verification.json",
-      "reviewScreenshot": "evidence/huawei-harmony23-review-20261110.jpg"
+      "reviewScreenshot": "evidence/huawei-harmony23-review-20261110.jpg",
+      "managementStatus": "listed",
+      "listedAt": "2026-11-10T15:00:30+08:00",
+      "lastManagementCheckAt": "2026-11-11T19:28:44+08:00",
+      "lastManagementCheck": "Official exact version page and version history verified approved/listed build23",
+      "approvalEvidence": "evidence/harmony23-approved-20261111/official-verification.json",
+      "approvalAdvisoryPresent": true,
+      "publicRegionalVerificationPending": true
     }
   },
   "pendingSourceSyncRecord": "../20261109-event-and-learning-sync/verification.json",
   "previousCandidateRegistry": "../20261105-profile-release-1.0.3/candidate-artifacts.json",
   "previousReleaseExecutionRecord": "../20261105-profile-release-1.0.3/verification.json",
-  "previousStoreSubmissionRecord": "../20261105-profile-release-1.0.3/submission-status.json"
+  "previousStoreSubmissionRecord": "../20261105-profile-release-1.0.3/submission-status.json",
+  "latestLocalUIUpdateRecord": "../20261112-owned-courses-progress/verification.json",
+  "carrierLoginDeployment20261112": {
+    "userAuthorized": true,
+    "productionOneTapLogin": true,
+    "verification": "../20261112-carrier-login/verification.json",
+    "realSIMValidated": false,
+    "clientHardening": "local only; current store packages unchanged",
+    "otherProductionFlags": "push/offline/wechat unchanged"
+  },
+  "carrierLoginProductionEvidence": "../20261112-carrier-login/verification.json",
+  "latestLocalDevelopmentRecords": [
+    "../20261113-event-registration-upgrade/verification.json",
+    "../20261113-event-registration-entry/verification.json",
+    "../20261113-bundled-artwork/verification.json"
+  ],
+  "physicalInstallationRequest": {
+    "requestedDevices": 2,
+    "status": "deferred-by-user-until-connected",
+    "checkedAt": "2026-11-13T18:32:20.018596+08:00"
+  },
+  "latestLocalRegistrationConceptUpdate": "../20261113-event-registration-upgrade/verification.json"
 }

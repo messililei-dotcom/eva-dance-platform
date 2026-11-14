@@ -17,6 +17,8 @@ privacy = put('PrivacyInfo', 'PBXFileReference', lastKnownFileType='text.xml', p
 privacy_build = put('privacy-build', 'PBXBuildFile', fileRef=privacy)
 assets = put('assets', 'PBXFileReference', lastKnownFileType='folder.assetcatalog', path='Resources/Assets.xcassets', sourceTree='<group>')
 assets_build = put('assets-build', 'PBXBuildFile', fileRef=assets)
+artwork = put('bundled-artwork', 'PBXFileReference', lastKnownFileType='folder', path='Resources/BundledArtwork', sourceTree='<group>')
+artwork_build = put('bundled-artwork-build', 'PBXBuildFile', fileRef=artwork)
 product = put('product', 'PBXFileReference', explicitFileType='wrapper.application', path='EvaDance.app', sourceTree='BUILT_PRODUCTS_DIR')
 products = put('products', 'PBXGroup', name='Products', children=[product], sourceTree='<group>')
 vendor_refs=[]; vendor_builds=[]; optional_refs=[]; optional_resources=[]
@@ -56,13 +58,13 @@ if vod_assets:
     for label, path in [('vod-license-cert', vod_assets['certificate']), ('vod-download-key', vod_assets['downloadKey'])]:
         ref=put(label,'PBXFileReference',lastKnownFileType='file',path=path,sourceTree='<absolute>')
         optional_refs.append(ref); optional_resources.append(put(label+'-build','PBXBuildFile',fileRef=ref))
-group = put('root', 'PBXGroup', children=refs+vendor_refs+[privacy, assets]+optional_refs+[products], sourceTree='<group>')
+group = put('root', 'PBXGroup', children=refs+vendor_refs+[privacy, assets, artwork]+optional_refs+[products], sourceTree='<group>')
 package = put('local-package', 'XCLocalSwiftPackageReference', relativePath='.')
 dependency = put('core-product', 'XCSwiftPackageProductDependency', package=package, productName='EvaCore')
 framework = put('core-framework', 'PBXBuildFile', productRef=dependency)
 phases = [put('sources', 'PBXSourcesBuildPhase', buildActionMask=2147483647, files=sources, runOnlyForDeploymentPostprocessing=0),
           put('frameworks', 'PBXFrameworksBuildPhase', buildActionMask=2147483647, files=[framework]+vendor_builds, runOnlyForDeploymentPostprocessing=0),
-          put('resources', 'PBXResourcesBuildPhase', buildActionMask=2147483647, files=[privacy_build,assets_build]+optional_resources, runOnlyForDeploymentPostprocessing=0)]
+          put('resources', 'PBXResourcesBuildPhase', buildActionMask=2147483647, files=[privacy_build,assets_build,artwork_build]+optional_resources, runOnlyForDeploymentPostprocessing=0)]
 # The vendor distribution contains arm64 device and x86_64 simulator slices.
 # Apple Silicon simulator builds keep the system player and never link a device-only slice.
 vod_root = root/'Vendor/AliyunPlayer'

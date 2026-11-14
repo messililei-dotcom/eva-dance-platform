@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-11-12T07:37:03+08:00",
+  "version": "1.0.4",
+  "harmony": {
+    "build": 23,
+    "managementResult": "Exact official version URL redirected to Huawei account sign-in",
+    "freshReviewStatusVerified": false,
+    "freshPublicReleaseVerified": false,
+    "previousApprovalEvidence": "evidence/harmony23-approved-20261111/official-verification.json"
+  },
+  "ios": {
+    "build": 14,
+    "region": "US",
+    "attemptedUrl": "https://apps.apple.com/us/app/swod/id6826038106",
+    "observedUrl": "https://apps.apple.com/cn/iphone/today",
+    "result": "Normal official detail navigation redirected to China Today",
+    "freshOtherRegionPublicReleaseVerified": false
+  },
+  "newReviewOrPublicResultVerified": false,
+  "newStoreSubmission": false,
+  "newNotificationNeeded": false,
+  "existingReviewsWithdrawn": false
+}

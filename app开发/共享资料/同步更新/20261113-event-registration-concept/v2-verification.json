@@ -1,0 +1,13 @@
+{
+  "createdAt": "2026-11-13T18:35:43.555211",
+  "kind": "Image concept edit only; native app UI not changed this turn",
+  "image": "SWOD-赛事报名页-概念图-v2-赛事主图虚化背景.png",
+  "sourceConcept": "SWOD-赛事报名页-概念图.png",
+  "officialPoster": "K5-GBA-赛事主图.png",
+  "changes": [
+    "Actual event poster as header reference",
+    "Gold-purple-charcoal blurred poster background",
+    "Readable light form surfaces"
+  ],
+  "originalsRetained": true
+}

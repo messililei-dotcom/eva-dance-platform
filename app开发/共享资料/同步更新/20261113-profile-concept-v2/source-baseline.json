@@ -1,0 +1,38 @@
+[
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift",
+    "beforeSHA256": "4a47ccc6313786b76d8ec849ac03af919acced2769031f60534e701dea502cf5"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountHeaderView.swift",
+    "beforeSHA256": "e1b630683e37754c78ac5120d232e9182bb17d4a87e76a3df5035c9d5ded1b9b"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountSummaryView.swift",
+    "beforeSHA256": "0bb2055c0b0fd5d6dd1f5a6fe0dc38ffcded37cadc753a79475f601d07917437"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountShortcutView.swift",
+    "beforeSHA256": "fb064902da4ae82ad4c36c72e72124905e75d680b4b90b48edc7417a506acd33"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountCourseRow.swift",
+    "beforeSHA256": "11cd6d6c82f7c5a2613f86c08165bda115c37ee57a6d1ca5c424c1badc63e249"
+  },
+  {
+    "path": "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountServiceRow.swift",
+    "beforeSHA256": "91a69a697a3f68aaf9c70606eb0c1bc20f74904adf67524bbd436706ccb8414c"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "beforeSHA256": "94750007acb09ac995bbd4649cf69cd6686436eb127266956f3c75cb08ce355b"
+  },
+  {
+    "path": "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodUi.java",
+    "beforeSHA256": "e186a5c5a1bbeeff40efcfaa28f12220325b0cebadb0580710f2728d65610586"
+  },
+  {
+    "path": "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+    "beforeSHA256": "134f861bca73095f39a0d7d2bb2ac575d61d38c4364b3078629229a067a84366"
+  }
+]

@@ -34,6 +34,7 @@ export async function GET(request: Request) {
           p.id AS player_id,p.member_id,p.status AS player_status,p.name AS entrant_name,p.registration_fee,p.paid_amount,p.paid_at,p.submitted_by_member_id,p.registration_batch_id,
           p.competition_id,
           c.name AS competition_name,
+          c.judge_scores_public,
           c.code AS competition_code,
           c.status AS competition_status,
           c.start_date,
@@ -86,7 +87,7 @@ export async function GET(request: Request) {
         const placeholders = publishedPlayerIds.map(() => '?').join(',');
         const scoreRows = db.prepare(`
           SELECT s.player_id, s.judge_id, COALESCE(j.name, '评委') AS judge_name,
-                 CASE WHEN c.judge_scores_public=1 THEN SUM(COALESCE(s.published_score, s.calculated_score, 0)) ELSE NULL END AS score
+                 SUM(COALESCE(s.published_score, s.calculated_score, 0)) AS score
           FROM event_scores s
           JOIN event_competitions c ON c.id=s.competition_id
           LEFT JOIN event_judges j ON j.id=s.judge_id
@@ -94,6 +95,7 @@ export async function GET(request: Request) {
             ON r.player_id=s.player_id AND r.group_id=s.group_id AND r.status='published'
           WHERE s.player_id IN (${placeholders})
             AND s.score_status='published'
+            AND EXISTS (SELECT 1 FROM event_group_judges gj WHERE gj.group_id=s.group_id AND gj.judge_id=s.judge_id AND gj.status='active')
             AND s.version=(
               SELECT MAX(latest.version) FROM event_scores latest
               WHERE latest.group_id=s.group_id
@@ -103,7 +105,7 @@ export async function GET(request: Request) {
                 AND latest.score_status='published'
             )
           GROUP BY s.player_id, s.judge_id, j.name, c.judge_scores_public
-          ORDER BY s.player_id, j.name, s.judge_id
+          ORDER BY s.player_id, s.judge_id
         `).all<{ player_id: number; judge_id: number; judge_name: string; score: number | null }>(...publishedPlayerIds);
 
         scoreRows.forEach((score) => {
@@ -145,7 +147,10 @@ export async function GET(request: Request) {
           rankNo: resultPublished ? Number(row.rank_no || 0) : 0,
           awardName: resultPublished ? awardName(row) : '',
           publishedAt: resultPublished ? row.published_at || '' : '',
-          judgeScores: resultPublished ? scoresByPlayer.get(Number(row.player_id)) || [] : [],
+          judgeScores: resultPublished ? (scoresByPlayer.get(Number(row.player_id)) || []).map((score, index) => ({
+            ...score, judgeId: Number(row.judge_scores_public) === 1 ? score.judgeId : index + 1,
+            judgeName: Number(row.judge_scores_public) === 1 ? score.judgeName : `评委 ${index + 1}`,
+          })) : [],
         };
       });
 

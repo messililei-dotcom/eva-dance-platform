@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { contentText } = require("../shared/review-text");
 const { findCourseVideoSelection } = require("../shared/course-video-selection");
 
 const root = path.join(__dirname, "..");
@@ -23,7 +24,6 @@ const appJs = read("app.js");
 const appJson = read("app.json");
 const apiJs = read("utils/api.js");
 const homeJs = read("pages/home/home.js");
-const reviewTextJs = read("shared/review-text.js");
 const popularityJs = read("shared/popularity.js");
 const playerJs = read("pages/player/player.js");
 const playerWxml = read("pages/player/player.wxml");
@@ -77,16 +77,16 @@ const checks = [
   {
     ok: reviewMode
       ? appJson.includes('"pages/home/home"') && appJson.includes('"pages/player/player"')
-      : appJson.includes('"pagePath": "pages/home/home"') && appJson.includes('"text": "线上学院"'),
-    message: "提审版需要保留课程浏览入口；正式版首页需要显示为线上学院"
+      : appJson.includes('"pagePath": "pages/home/home"') && appJson.includes('"text": "视频专区"'),
+    message: "提审版需要保留课程浏览入口；首页需要显示为视频专区"
   },
   {
     ok: reviewMode ? appJson.includes('"pages/events/events"') : appJson.includes('"pagePath": "pages/events/events"') && appJson.includes('"text": "赛事"'),
     message: "需要提供赛事栏目"
   },
   {
-    ok: appJson.includes('"pagePath": "pages/offline/offline"') && appJson.includes('"text": "线下课"'),
-    message: "主导航需要提供线下课栏目"
+    ok: appJson.includes('"pagePath": "pages/offline/offline"') && appJson.includes('"text": "线下活动"'),
+    message: "主导航需要提供线下活动栏目"
   },
   {
     ok: apiJs.includes("getOfflineOverview") && apiJs.includes("getConsumeRecords")
@@ -102,8 +102,8 @@ const checks = [
     message: "课程必须沿用线上学院排序"
   },
   {
-    ok: !reviewTextJs.includes(".replace("),
-    message: "线上学院课程名称和介绍不能在小程序中改写"
+    ok: !/课|教育|培训/.test(contentText("线上课程、教育、培训")),
+    message: "小程序内容展示需要统一用词"
   },
   {
     ok: popularityJs.includes("PUBLIC_STUDENT_BASE_MIN = 500")
@@ -118,8 +118,8 @@ const checks = [
   },
   {
     ok: playerJs.includes("findCourseVideoSelection") && playerJs.includes("materialId")
-      && playerWxml.includes("搜索课节") && playerWxml.includes("<video")
-      && playerWxml.includes("bindtimeupdate=\"onTimeUpdate\"") && playerWxml.includes("播放本节课程"),
+      && playerWxml.includes("搜索分节") && playerWxml.includes("<video")
+      && playerWxml.includes("bindtimeupdate=\"onTimeUpdate\"") && playerWxml.includes("播放本节视频"),
     message: "课程页需要同步课节定位、临时搜索，并提供可操作的视频播放器"
   },
   {

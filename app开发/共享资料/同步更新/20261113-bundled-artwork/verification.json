@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-11-13T18:32:20.018596+08:00",
+  "builds": {
+    "iOSDeviceDevelopmentTarget": "passed",
+    "iOSSimulator": "passed and installed",
+    "AndroidDebug": "passed",
+    "HarmonyUnsignedDebug": "passed"
+  },
+  "checks": {
+    "iOSContractGroups": 22,
+    "AndroidUnitTests": 32,
+    "HarmonyAPIAndCacheChecks": 41,
+    "bundledAssetPolicyAndIntegrityTests": 2
+  },
+  "store": {
+    "uploaded": false,
+    "submitted": false,
+    "reviewedPackagesChanged": false,
+    "filingChanged": false,
+    "releaseSignaturesChanged": false
+  },
+  "physicalInstallation": "Deferred by user: phones are not connected; do not claim installed on either phone",
+  "request": "Bundle public image resources to improve initial cover rendering",
+  "publicSources": [
+    "https://admin.swod.com.cn/api/app/v1/public/series",
+    "https://admin.swod.com.cn/api/app/v1/public/offline-courses"
+  ],
+  "bundledImages": 26,
+  "originalBytesPerApp": 8328883,
+  "policy": "Exact URL match only. Initial local public cover while the original HTTPS image loader fetches; changed URLs or queries use remote loader. No matching by numeric course ID, basename, or private entitlement.",
+  "sourceImagesTransformed": false,
+  "memory": "iOS decoded seed cache16MiB; Android8MiB; native Harmonyimage decoding",
+  "preserved": [
+    "Server-driven catalog, prices, event statuses and current-user course access",
+    "No personal avatars, member data, credentials or video media bundled",
+    "Existing HTTPS validation, screen protection, playback checks and disabled secure offline-video feature"
+  ],
+  "runtime": {
+    "iOSHomeCoversRendered": true,
+    "performanceLatencyMeasured": false,
+    "offlineModeToggled": false,
+    "actualUserSessionPreserved": true
+  },
+  "packaging": {
+    "iOSSimulator26SourceHashesMatch": true,
+    "AndroidDebugAPK26SourceHashesMatch": true,
+    "HarmonyResourcesCompilePassed": true
+  },
+  "manifest": "bundled-manifest.json"
+}

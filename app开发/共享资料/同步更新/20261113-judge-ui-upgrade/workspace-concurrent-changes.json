@@ -1,0 +1,7 @@
+{
+  "preservedNotOverwritten": [
+    "src/app/events-news/[slug]/page.tsx",
+    "src/lib/public-event-data.ts"
+  ],
+  "note": "These local files gained further event overview/detail work after this task deployment. Keep it; it is not part of this deployed build."
+}

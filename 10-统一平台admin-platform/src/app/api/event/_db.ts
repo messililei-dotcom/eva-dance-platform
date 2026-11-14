@@ -1,3 +1,4 @@
+import { ensureDeletedRegistrationTables } from '@/lib/server/event-online';
 import { openAdminDb } from '@/lib/server/admin-db';
 import { verifyLocalToken } from '../_local-auth';
 import { withRequestEventDb } from './_access';
@@ -460,6 +461,8 @@ CREATE TABLE IF NOT EXISTS event_music_archives (
       FOREIGN KEY(competition_id) REFERENCES event_competitions(id), FOREIGN KEY(player_id) REFERENCES event_players(id)
     ); CREATE INDEX IF NOT EXISTS idx_event_registration_payments_player ON event_registration_payments(player_id); CREATE UNIQUE INDEX IF NOT EXISTS idx_event_payment_request ON event_registration_payments(competition_id,request_key)`);
   })();
+
+  ensureDeletedRegistrationTables(db);
 
   const ruleColumns = new Set((db.prepare('PRAGMA table_info(event_score_rules)').all() as Array<{ name: string }>).map((row) => row.name));
   if (!ruleColumns.has('judge_anonymous')) db.exec('ALTER TABLE event_score_rules ADD COLUMN judge_anonymous INTEGER NOT NULL DEFAULT 0');

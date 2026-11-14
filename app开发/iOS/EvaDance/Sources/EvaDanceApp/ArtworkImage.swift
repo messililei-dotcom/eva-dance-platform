@@ -20,6 +20,8 @@ struct ArtworkImage: View {
                     AsyncImage(url: url) { phase in
                         if let image = phase.image {
                             image.resizable().scaledToFill()
+                        } else if let image = BundledArtwork.image(for: url) {
+                            image.resizable().scaledToFill()
                         } else {
                             Image(systemName: phase.error == nil ? symbol : "photo.badge.exclamationmark")
                                 .font(.title2).foregroundStyle(.secondary)

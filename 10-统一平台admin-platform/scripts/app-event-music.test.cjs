@@ -39,3 +39,29 @@ test('registration identifies the entrant by phone and keeps authenticated submi
  assert.equal(row.submitted_by_member_id,1);assert.notEqual(row.member_id,999);assert.notEqual(row.member_id,1);
  assert.equal(db.prepare('SELECT phone FROM Member WHERE id=?').get(row.member_id).phone,'13900000000');
 }));
+
+test('entrant names preserve Chinese, English and internal spaces through registration and storage', async () => {
+ for (const name of ['张 三', 'Connie Tse', '张三 Eva  Noor', 'Alexandria Catherine Elizabeth Montgomery', 'A'.repeat(120)]) {
+  await withFixture(false, async ({db,route}) => {
+   const r = new Request('https://admin.test/api/mini/events/7/register', {method:'POST', headers:{authorization:'Bearer fixture','content-type':'application/json'}, body:JSON.stringify({groupId:3,name:'  '+name+'  ',phone:'13800000000',performanceTitle:'测试'})});
+   const response = await route.POST(r, context);
+   assert.equal(response.status,200,JSON.stringify(await response.json()));
+   assert.equal(db.prepare('SELECT name FROM event_players').get().name,name);
+  });
+ }
+});
+test('overlong entrant names are rejected without truncating or creating records', () => withFixture(false, async ({db,route}) => {
+ const r = new Request('https://admin.test/api/mini/events/7/register', {method:'POST', headers:{authorization:'Bearer fixture','content-type':'application/json'}, body:JSON.stringify({groupId:3,name:'A'.repeat(121),phone:'13800000000',performanceTitle:'测试'})});
+ assert.equal((await route.POST(r,context)).status,400);
+ assert.equal(db.prepare('SELECT count(*) n FROM event_players').get().n,0);
+}));
+
+test('CSV import and export preserve spaced entrant names as a single field', () => {
+ const format=load('src/lib/event-import-format.ts');
+ const name='张 三 Connie  Tse';
+ const csv='组别名称,选手姓名,手机号,领队机构,领队老师,节目名称\n测试组,'+name+',13800001234,,,测试';
+ const parsed=format.parseImportRows(format.parseImportCsv(csv),'players');
+ assert.equal(parsed.rows[0]['选手姓名'],name);
+ const output=format.eventImportCsv('players',parsed.rows);
+ assert.ok(output.includes(name));
+});

@@ -1,0 +1,41 @@
+{
+  "checkedAt": "2026-11-13T18:32:20.018596+08:00",
+  "builds": {
+    "iOSDeviceDevelopmentTarget": "passed",
+    "iOSSimulator": "passed and installed",
+    "AndroidDebug": "passed",
+    "HarmonyUnsignedDebug": "passed"
+  },
+  "checks": {
+    "iOSContractGroups": 22,
+    "AndroidUnitTests": 32,
+    "HarmonyAPIAndCacheChecks": 41,
+    "bundledAssetPolicyAndIntegrityTests": 2
+  },
+  "store": {
+    "uploaded": false,
+    "submitted": false,
+    "reviewedPackagesChanged": false,
+    "filingChanged": false,
+    "releaseSignaturesChanged": false
+  },
+  "physicalInstallation": "Deferred by user: phones are not connected; do not claim installed on either phone",
+  "request": "Fix registration entry opening event details on iPhone simulator",
+  "reproduction": "before-reproduction.json",
+  "cause": "Open-registration status badge was inside the card detail NavigationLink; dedicated lower registration button was already correct",
+  "fix": "Separate clickable registration badge and card-detail hit targets; same behavior synchronized to Android and HarmonyOS",
+  "nativeRetest": {
+    "registrationBadgeOpensForm": true,
+    "correctEventTitle": true,
+    "registrationBadgeNoLongerOpensDetails": true,
+    "cardTitleStillOpensDetails": true,
+    "lowerRegistrationLinkAndDetailImmediateRegistrationPreviouslyVerified": true,
+    "existingAuthenticatedSessionRetained": true,
+    "noRegistrationOrPaymentSubmitted": true
+  },
+  "limitations": [
+    "Only iOS simulator UI was exercised; Android and HarmonyUI compiled but were not run this turn",
+    "K5 public event currently has no groups; existing no-groups response retained, no production groups invented",
+    "Guest login guard retained; existing user was not logged out to test it"
+  ]
+}

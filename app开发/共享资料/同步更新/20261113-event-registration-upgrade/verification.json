@@ -1,0 +1,72 @@
+{
+  "checkedAt": "2026-11-13T18:47:10.333119+08:00",
+  "request": "Implement approved registration concept across iOS, Android and HarmonyOS",
+  "concept": "../20261113-event-registration-concept/SWOD-赛事报名页-概念图-v2-赛事主图虚化背景.png",
+  "changes": [
+    "Current event server poster in registration header; no hardcoded K5 artwork",
+    "Enlarged static blur of the same poster behind entire page",
+    "Readable light/dark translucent form panels and deep-red primary actions",
+    "Registration-only navigation hiding; back restores existing navigation",
+    "Centered maximum 680-unit form for phones and tablets",
+    "Optional public artwork fetch for edit/music supplementation; failure does not block editing"
+  ],
+  "builds": {
+    "iOSSimulator": "passed; final build installed and process launch reported successful by simctl",
+    "iOSDeviceDevelopmentTarget": "passed; not installed on physical phone",
+    "AndroidDebug": "passed",
+    "HarmonyUnsignedDebug": "passed"
+  },
+  "checks": {
+    "iOSContractGroups": 22,
+    "AndroidUnitTests": 32,
+    "HarmonyEventAndPlatformTests": 26,
+    "failures": 0,
+    "submissionBusinessHandlersUnchangedSHA256": {
+      "iOSSubmit": "57571068d36fa32fb49e72d1698549513303f8726c0bef6c9c1b07d6988f549c",
+      "AndroidSubmit": "491aeef123534f7830804898a614bb60d618d6f161db2ef0ddc899e546c54956",
+      "HarmonyRegister": "fe8aee235b4920d037acfebd2e49b69abd85359a40db023d5ccb2c07429f0e27"
+    }
+  },
+  "runtimeVerification": {
+    "newRegistrationUI": "pending; CUA reported Mac locked; no bypass attempted",
+    "AndroidAndHarmonyUI": "not run this turn",
+    "physicalDevices": "installation deferred by user until phones connected",
+    "noRegistrationPaymentOrMusicUploadSubmitted": true
+  },
+  "preserved": [
+    "Original signatures, bundle/package IDs and filing",
+    "User data and existing signed-in sessions; no uninstall/reset",
+    "Authoritative groups and fees; no invented K5 groups",
+    "Existing authentication, ownership and music validation",
+    "Player capture protection and production feature flags"
+  ],
+  "store": {
+    "uploadedThisTask": false,
+    "submittedThisTask": false,
+    "reviewedReleasePackagesChanged": false,
+    "newReleaseCandidateRegistered": false
+  },
+  "developmentArtifacts": [
+    {
+      "platform": "Android",
+      "path": "/Users/lilei/Library/Caches/SWOD/Android/player-20261112/app/build/outputs/apk/debug/app-debug.apk",
+      "bytes": 38535315,
+      "sha256": "f50804dbf5edc061c5417e8001c08224a007cb5ebc4cf6011bddb6f77ac40e01",
+      "kind": "debug APK; not a store release candidate"
+    },
+    {
+      "platform": "HarmonyOS",
+      "path": "/Users/lilei/Library/Caches/SWOD/HarmonyOS/player-20261112/entry/build/default/outputs/default/entry-default-unsigned.hap",
+      "bytes": 25097322,
+      "sha256": "8a6749bd598ce766d6e881e1ebbd48e1daf0b3d10ac12e0c2dd3d81b1523d379",
+      "kind": "unsigned debug HAP; not a store release candidate"
+    }
+  ],
+  "sourceBackup": "before/",
+  "patch": "changes.patch",
+  "limitations": [
+    "Actual light/dark, phone/tablet visual acceptance pending Mac unlock",
+    "Debug compilation and process launch do not prove screen rendering or real device acceptance",
+    "No new formal signed release or store submission in this UI development task"
+  ]
+}

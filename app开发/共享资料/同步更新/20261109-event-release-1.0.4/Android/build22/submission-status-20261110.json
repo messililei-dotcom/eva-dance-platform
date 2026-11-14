@@ -4,9 +4,9 @@
   "versionName": "1.0.4",
   "versionCode": 22,
   "apk": {
-    "path": "installers/._SWOD-1.0.4-22-release.apk",
-    "sha256": "d2e613b8fd3421be5f3116df43e1266e4e5ecb23536437d537b8824d1c518966",
-    "size": 4096
+    "path": "installers/SWOD-1.0.4-22-release.apk",
+    "sha256": "477ffedc6769d8a86970242e3b50fe752b552d24f6d0a2f99d3909ee9482cdfe",
+    "size": 28959436
   },
   "newSubmissions": 0,
   "channels": {
@@ -246,5 +246,7 @@
       "commitmentPersisted": false,
       "copyrightMaterialRequired": true
     }
-  }
+  },
+  "artifactLedgerCorrectedAt": "2026-11-12T15:39:06.954593+08:00",
+  "artifactLedgerCorrectionEvidence": "../../evidence/heartbeat-20261112-1536.json"
 }

@@ -4,6 +4,9 @@ import { NumericDateInput } from '@/components/numeric-date-input';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import EventMusicPlayer from '@/components/event-music-player';
+import EventPlayerProfileModal from '@/components/event-player-profile-modal';
+import EventRevenueModal from '@/components/event-revenue-modal';
+import EventMusicBoard from '@/components/event-music-board';
 import { useParams, useRouter } from 'next/navigation';
 import { validateImportWorkbook } from '@/lib/event-import-workbook';
 import readXlsxFile from 'read-excel-file/browser';
@@ -40,6 +43,7 @@ import {
   ExclamationCircleOutlined,
   FileExcelOutlined,
   LockOutlined,
+  CustomerServiceOutlined,
   PlusOutlined,
   ReloadOutlined,
   SendOutlined,
@@ -51,6 +55,8 @@ import {
 } from '@ant-design/icons';
 import { Table } from '@/components/adaptive-table';
 import { api, eventApi } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
+import { isPlatformOwner } from '@/lib/admin-feature-access';
 import { sortableColumns } from '@/lib/table-sort';
 import styles from './event-detail.module.css';
 import { useLessonDragSort as useGroupDragSort } from '@/components/online-course/use-lesson-drag-sort';
@@ -112,10 +118,11 @@ function ResultAvatar({ name, src, size = 36 }: { name: string; src?: string; si
 }
 
 function ResultGroupCard({ groupName, rows }: { groupName: string; rows: any[] }) {
-  const ordered = [...rows].sort((a, b) => Number(a.rankNo || 9999) - Number(b.rankNo || 9999));
+  const ranked = rows.length > 0 && rows.every(item => Number(item.rankNo) > 0);
+  const ordered = [...rows].sort((a, b) => ranked ? Number(a.rankNo) - Number(b.rankNo) : Number(a.playerId) - Number(b.playerId));
   const scores = ordered.map((item) => item.publishedTotal ?? item.calculatedTotal);
   const podium = [2, 1, 3].map(rank => ordered.find(item => Number(item.rankNo) === rank));
-  const remaining = ordered.filter(item => Number(item.rankNo) > 3);
+  const remaining = ranked ? ordered.filter(item => Number(item.rankNo) > 3) : ordered;
   const podiumMeta = [
     { label: '亚军', icon: '🏆', trophyFilter: 'grayscale(1) brightness(1.35) contrast(.85)', height: 72, background: 'linear-gradient(180deg,#e7ebf0,#cbd3dd)' },
     { label: '冠军', icon: '🏆', trophyFilter: 'none', height: 96, background: 'linear-gradient(180deg,#ffe08a,#e7b83d)' },
@@ -124,11 +131,12 @@ function ResultGroupCard({ groupName, rows }: { groupName: string; rows: any[] }
   return (
     <Card
       size="small"
+      className={styles.resultGroupCard}
       title={<Space><TrophyOutlined style={{ color: '#d4a017' }} /><span>{groupName}</span></Space>}
       extra={<Tag color="magenta">{ordered.length} 位选手</Tag>}
       styles={{ body: { padding: 16 } }}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 8, alignItems: 'end', marginBottom: 16 }}>
+      {ranked ? <div className={styles.resultPodium}>
         {podium.map((item, index) => (
           <div key={item?.playerId || `empty-${index}`} style={{ minWidth: 0, textAlign: 'center' }}>
             {item ? <>
@@ -140,11 +148,11 @@ function ResultGroupCard({ groupName, rows }: { groupName: string; rows: any[] }
             </> : <div style={{ height: 120 }} />}
           </div>
         ))}
-      </div>
-      {remaining.length > 0 && <div style={{ border: '1px solid #f0f0f0', borderRadius: 10, overflow: 'hidden' }}>
+      </div> : <Alert type="info" showIcon message="本组节目尚未全部完成，暂不排名" style={{ marginBottom: 16 }} />}
+      {remaining.length > 0 && <div className={styles.resultRemaining} tabIndex={0} role="region" aria-label={`${groupName}其余选手名次`}>
         {remaining.map((item, index) => (
           <div key={item.playerId} style={{ display: 'grid', gridTemplateColumns: '32px 40px minmax(0,1fr) 80px', gap: 8, alignItems: 'center', padding: '9px 12px', background: index % 2 ? '#fafafa' : '#fff', borderBottom: index < remaining.length - 1 ? '1px solid #f0f0f0' : undefined }}>
-            <strong style={{ textAlign: 'center', color: '#6b7280' }}>{item.rankNo}</strong>
+            <strong style={{ textAlign: 'center', color: '#6b7280' }}>{Number(item.rankNo) > 0 ? item.rankNo : '—'}</strong>
             <ResultAvatar key={item.avatarUrl} name={item.playerName} src={item.avatarUrl} />
             <div style={{ minWidth: 0 }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>{item.playerName}</div><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#9ca3af', fontSize: 12 }}>{item.organization || item.playerNo || '-'}</div></div>
             <strong style={{ textAlign: 'right', color: '#e91e63' }}>{formatFinalScore(item.publishedTotal ?? item.calculatedTotal, scores)}</strong>
@@ -184,6 +192,10 @@ function summarizeJudgeScores(entries: any[]) {
 }
 
 export default function EventDetailPage() {
+  const { user } = useAuth();
+  const canViewRevenue = isPlatformOwner(user);
+  const [profilePlayerId,setProfilePlayerId]=useState<number|null>(null);
+  const [revenueOpen,setRevenueOpen]=useState(false);
   const params = useParams<{ id: string }>();
   const competitionId = Number(params.id);
   const router = useRouter();
@@ -194,6 +206,9 @@ export default function EventDetailPage() {
   const groupSortSavingRef = useRef(false);
   const [groupSortDrafts, setGroupSortDrafts] = useState<Record<number, number | null>>({});
   const [groupColumnSorted, setGroupColumnSorted] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ ids: Array<number | string>; groupId: number | null; entries: any[] } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [players, setPlayers] = useState<any[]>([]);
   const [judges, setJudges] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
@@ -210,6 +225,7 @@ export default function EventDetailPage() {
   const [scores, setScores] = useState<any[]>([]);
   const [rankings, setRankings] = useState<any[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [randomizing, setRandomizing] = useState(false);
   const [activeTab, setActiveTab] = useState('groups');
   const [sectionKeyword, setSectionKeyword] = useState('');
   const [noticeOpen, setNoticeOpen] = useState(false);
@@ -273,6 +289,7 @@ export default function EventDetailPage() {
   const [playerForm] = Form.useForm();
   const selectedFeeGroup = Form.useWatch('groupId', playerForm);
   const [scoreForm] = Form.useForm();
+  const scoreFormGroupId = Form.useWatch('groupId', scoreForm);
   const [manualScoreForm] = Form.useForm();
   const [batchPlayerForm] = Form.useForm();
   const [batchJudgeForm] = Form.useForm();
@@ -340,7 +357,7 @@ export default function EventDetailPage() {
     }).filter(judge => judge.assignments.length > 0).sort((a, b) => judgeDisplayName(a).localeCompare(judgeDisplayName(b), 'zh-CN'));
   }, [eventJudgeRows, selectedGroupId, sectionKeyword]);
   const switchInformation = (key: string) => { setActiveTab(key); setSectionKeyword(''); };
-  const informationLabel = (name: string, count: number, icon: React.ReactNode) => <div className={styles.informationLabel}><span>{icon}{name}</span><strong>{count}</strong></div>;
+  const informationLabel = (name: string, count: number | string, icon: React.ReactNode) => <div className={styles.informationLabel}><span>{icon}{name}</span><strong>{count}</strong></div>;
   const orderedGroupPlayers = useMemo(() => [...groupPlayers].sort((a, b) => {
     const sequenceA = Number(a.sequenceNo || 0);
     const sequenceB = Number(b.sequenceNo || 0);
@@ -362,10 +379,10 @@ export default function EventDetailPage() {
     });
     return result;
   }, [scoreManagePlayer?.id, scores]);
-  const playerJudgeScores = useMemo(() => groupJudges.map((judge) => ({
+  const playerJudgeScores = useMemo(() => competitionJudgeAssignments.filter(judge => Number(judge.groupId) === Number(scoreManagePlayer?.groupId)).map((judge) => ({
     ...judge,
     score: latestScoreByJudge.get(Number(judge.judgeId)) || null,
-  })), [groupJudges, latestScoreByJudge]);
+  })), [competitionJudgeAssignments, scoreManagePlayer?.groupId, latestScoreByJudge]);
   const abnormalScores = useMemo(() => scores.filter((item) => item.isAbnormal || item.scoreStatus === 'voided'), [scores]);
   const judgeSearchOptions = useMemo(() => {
     const memberById = new Map(members.map((member) => [Number(member.id), member]));
@@ -414,7 +431,7 @@ export default function EventDetailPage() {
         scoreCount: playerScores.length,
       };
     }).sort((a, b) => b.calculatedTotal - a.calculatedTotal || Number(a.playerId) - Number(b.playerId));
-    return totals.map((item, index) => ({ ...item, rankNo: index + 1 }));
+    return totals.map(item => ({ ...item, rankNo: 0 }));
   }, [competitionRule?.dropHighLow, orderedGroupPlayers, scores]);
   const rankingByPlayerId = useMemo(() => {
     const result = new Map(rankings.map((item) => [Number(item.playerId), item]));
@@ -444,10 +461,10 @@ export default function EventDetailPage() {
   const scopedScoreSummaries = judgeScoreSummaries.filter(item => !selectedGroupId || Number(item.groupId) === Number(selectedGroupId));
   const scopedAbnormalScores = abnormalScores.filter(item => !selectedGroupId || Number(item.groupId) === Number(selectedGroupId));
   const groupScoreSummaries = judgeScoreSummaries.filter(item => Number(item.groupId) === Number(selectedGroupId));
-  const groupRankings = rankings.filter(item => Number(item.groupId) === Number(selectedGroupId));
+  const groupRankings = rankings.filter(item => item.status === 'published' && Number(item.groupId) === Number(selectedGroupId));
   const resultGroups = useMemo(() => {
     const rowsByGroup = new Map<number, any[]>();
-    rankings.filter(item => (!selectedGroupId || Number(item.groupId) === Number(selectedGroupId)) && matchesSection(item, 'results')).forEach((item) => {
+    rankings.filter(item => item.status === 'published' && (!selectedGroupId || Number(item.groupId) === Number(selectedGroupId)) && matchesSection(item, 'results')).forEach((item) => {
       const groupId = Number(item.groupId);
       rowsByGroup.set(groupId, [...(rowsByGroup.get(groupId) || []), item]);
     });
@@ -482,7 +499,7 @@ export default function EventDetailPage() {
         eventApi.listScores({ competitionId }),
         eventApi.getResults({ competitionId }),
       ]);
-      if (version !== detailRequestVersion.current) return;
+      if (version !== detailRequestVersion.current) return false;
       setCompetition(detail);
       setGroups(groupRows);
       setPlayers(playerRows);
@@ -499,8 +516,10 @@ export default function EventDetailPage() {
         setSelectedJudgeIds([]);
         setGroupManageOpen(false);
       }
+      return true;
     } catch (err: any) {
       message.error(err?.response?.data?.error || err?.message || '加载赛事详情失败');
+      return false;
     } finally {
       if (version === detailRequestVersion.current) { setLoading(false); setBoardLoading(false); }
     }
@@ -570,8 +589,10 @@ export default function EventDetailPage() {
     await eventApi.createScoreRule({
       ...values,
       competitionId,
+      totalScore: 10,
       criteria: [],
       abnormalThreshold: competitionRule?.abnormalThreshold ?? 15,
+      judgeAnonymous: competitionRule?.judgeAnonymous ?? false,
     });
     message.success('赛事评分规则已保存，所有组别统一使用');
     setRuleModal(false);
@@ -583,14 +604,10 @@ export default function EventDetailPage() {
     ruleForm.resetFields();
     ruleForm.setFieldsValue(competitionRule ? {
       name: competitionRule.name,
-      totalScore: competitionRule.totalScore,
       dropHighLow: competitionRule.dropHighLow,
-      judgeAnonymous: competitionRule.judgeAnonymous,
     } : {
       name: `${competition?.name || '赛事'}评分规则`,
-      totalScore: 10,
       dropHighLow: true,
-      judgeAnonymous: false,
     });
     setRuleModal(true);
   };
@@ -696,11 +713,17 @@ export default function EventDetailPage() {
       content: '将分别随机排列各组所有有效报名，覆盖已有出场顺序。报名登记编号保持不变，空组别跳过。',
       okText: '确认随机排序',
       onOk: async () => {
+        setRandomizing(true);
         try {
           const result = await eventApi.randomizeEventSequence(competitionId);
+          if (!(await load())) throw new Error('出场顺序已保存，页面刷新失败，请点击刷新重试');
           message.success(`已随机编排 ${result.groups} 个组别、${result.updated} 个节目`);
-          await load();
-        } catch (error: any) { message.error(error?.response?.data?.error || '随机排序失败，请重试'); throw error; }
+        } catch (error: any) {
+          message.error(error?.response?.data?.error || error?.message || '随机排序失败，请重试');
+          throw error;
+        } finally {
+          setRandomizing(false);
+        }
       },
     });
   };
@@ -723,7 +746,7 @@ export default function EventDetailPage() {
   const openScore = (player?: any, judge?: any, existingScore?: any) => {
     scoreForm.resetFields();
     scoreForm.setFieldsValue({
-      groupId: selectedGroupId,
+      groupId: player?.groupId ?? existingScore?.groupId ?? selectedGroupId,
       playerId: player?.id,
       judgeId: judge?.judgeId ?? existingScore?.judgeId,
       rawScore: existingScore?.calculatedScore,
@@ -747,7 +770,6 @@ export default function EventDetailPage() {
 
   const openPlayerScoreManager = async (player: any) => {
     setScoreManagePlayer(player);
-    setSelectedGroupId(player.groupId);
     setScoreManageOpen(true);
     try {
       await load();
@@ -765,7 +787,7 @@ export default function EventDetailPage() {
     const ranking = nextRankings.find((item: any) => Number(item.playerId) === Number(scoreManagePlayer.id));
     const ignoredCount = playerJudgeScores.filter((item) => !item.score).length;
     message.success(ranking
-      ? `已忽略 ${ignoredCount} 名未评分评委，最终得分 ${formatFinalScore(ranking.calculatedTotal, rankings.filter((item) => Number(item.groupId) === Number(scoreManagePlayer.groupId)).map((item) => item.calculatedTotal))}，当前第 ${ranking.rankNo} 名`
+      ? `已忽略 ${ignoredCount} 名未评分评委，最终得分 ${formatFinalScore(ranking.calculatedTotal, rankings.filter((item) => Number(item.groupId) === Number(scoreManagePlayer.groupId)).map((item) => item.calculatedTotal))}${Number(ranking.rankNo) > 0 ? `，当前第 ${ranking.rankNo} 名` : `，本组尚未全部完成，暂不排名`}`
       : '已按现有有效评分重新计算');
   };
 
@@ -851,29 +873,30 @@ export default function EventDetailPage() {
     await load();
   };
 
-  const deletePlayersInBatch = (ids = selectedPlayerIds, groupId = selectedGroupId) => {
-    if (!groupId || !ids.length) return;
-    const entries = numberedPlayers.filter(row => ids.some(id => Number(id) === Number(row.id)) && Number(row.groupId) === Number(groupId));
+  const deletePlayersInBatch = (ids = selectedPlayerIds, groupId: number | null | undefined = selectedGroupId) => {
+    if (!ids.length) return;
+    const entries = numberedPlayers.filter(row => ids.some(id => Number(id) === Number(row.id)) && Number(row.groupId ?? 0) === Number(groupId ?? 0));
     if (entries.length !== ids.length) { message.warning('报名信息已变化，请刷新后再删除'); return; }
-    modal.confirm({
-      title: `确认删除 ${ids.length} 条报名？`,
-      width: 760,
-      content: <div><p>相关表演、评分和排名记录也会一并删除，此操作无法恢复。</p><div style={{ maxHeight: 360, overflow: 'auto' }}><Table size="small" pagination={false} rowKey="id" dataSource={entries} columns={[
-        { title: '编号', dataIndex: 'programNumber', width: 100 },
-        { title: '选手', dataIndex: 'name' },
-        { title: '组别', dataIndex: 'groupName' },
-        { title: '报名费', dataIndex: 'registrationFee', render: (value: number) => `¥${Number(value || 0).toFixed(2)}` },
-        { title: '音乐', dataIndex: 'musicName', render: (value: string) => value || '未上传' },
-      ]} /></div></div>,
-      okText: <DeleteOutlined aria-label="确认删除" title="确认删除" />,
-      okButtonProps: { danger: true , 'aria-label': "确认删除", title: "确认删除"},
-      onOk: async () => {
-        const result = await eventApi.batchDeletePlayers({ competitionId, groupId, ids });
-        message.success(`已删除 ${result.deleted} 条报名`);
-        setSelectedPlayerIds([]);
-        await load();
-      },
-    });
+    setDeleteError('');
+    setDeleteConfirmation({ ids, groupId: groupId || null, entries });
+  };
+
+  const confirmPlayerDeletion = async () => {
+    if (!deleteConfirmation || deleteBusy) return;
+    const { ids, groupId } = deleteConfirmation;
+    setDeleteBusy(true);
+    setDeleteError('');
+    try {
+      const result = await eventApi.batchDeletePlayers({ competitionId, groupId, ids });
+      message.success(`已删除 ${result.deleted} 条报名`);
+      setDeleteConfirmation(null);
+      setSelectedPlayerIds([]);
+      await load();
+    } catch (error: any) {
+      setDeleteError(error?.response?.data?.error || '删除报名失败，请重试');
+    } finally {
+      setDeleteBusy(false);
+    }
   };
 
   const updateJudgesInBatch = async () => {
@@ -973,28 +996,6 @@ export default function EventDetailPage() {
     finally { setGroupImportBusy(false); }
   };
 
-  const publishResults = (action: 'publish' | 'unpublish') => {
-    if (!selectedGroupId) return;
-    modal.confirm({
-      title: action === 'publish' ? '确认公示当前组别结果？' : '确认撤回当前组别公示？',
-      content: action === 'publish' ? '公示后会锁定该组评分，并打开可分享的赛事大屏；如需改分，可撤回后修正并重新公示。' : '撤回后该组评分会解锁，公示分将清空。',
-      onOk: async () => {
-        const screenWindow = action === 'publish' ? window.open('about:blank', '_blank') : null;
-        try {
-          if (action === 'publish') await eventApi.publishResults(selectedGroupId);
-          else await eventApi.unpublishResults(selectedGroupId);
-          message.success(action === 'publish' ? '结果已公示，大屏已打开' : '公示已撤回');
-          if (screenWindow) screenWindow.location.replace(`https://www.swod.com.cn/event-results/${competitionId}`);
-          else if (action === 'publish') window.open(`https://www.swod.com.cn/event-results/${competitionId}`, '_blank', 'noopener,noreferrer');
-          load();
-        } catch (error) {
-          screenWindow?.close();
-          throw error;
-        }
-      },
-    });
-  };
-
   const deleteGroup = (row: any) => {
     modal.confirm({
       title: `删除组别“${row.name}”？`,
@@ -1055,7 +1056,7 @@ export default function EventDetailPage() {
   });
   const groupColumns = sortableColumns<any>([
     { title: '组别名称', dataIndex: 'name', width: 165, fixed: 'left' },
-    { title: '序号', dataIndex: 'groupPosition', width: 120, render: (_: unknown, row: any) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+    { title: '顺序序号', dataIndex: 'groupPosition', width: 120, render: (_: unknown, row: any) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
       <button type="button" className={groupDrag.handleClassName} disabled={groupDragDisabled}
         aria-label={`拖动排序：${row.name}`}
         title={sectionKeyword.trim() || selectedGroupId || groupColumnSorted ? '清空筛选并取消列排序后可拖动' : '按住拖动排序，靠近上下边缘可持续滚动；Esc取消；上下方向键移动'}
@@ -1111,15 +1112,19 @@ export default function EventDetailPage() {
   ]);
 
   const playerColumns = sortableColumns<any>([
-    { title: '选手', dataIndex: 'name', width: 130, fixed: 'left', render: (v: string, row: any) => <Link href={`/events/players/${row.id}`}>{v}</Link> },
+    { title: '选手', dataIndex: 'name', width: 130, fixed: 'left', render: (v: string, row: any) => <Button type="link" size="small" style={{padding:0,height:"auto",whiteSpace:"normal"}} onClick={()=>setProfilePlayerId(row.id)}>{v}</Button> },
     { title: '编号', dataIndex: 'programNumber', width: 115 },
     { title: '组别', dataIndex: 'groupName', width: 150, render: (v: string) => v || '-' },
     { title: '节目（音乐）名字', dataIndex: 'performanceTitle', width: 180, render: (v: string) => v || '-' },
-    { title: '音乐', dataIndex: 'musicName', width: 310, render: (_: any, row: any) => <EventMusicPlayer player={row} onUploaded={load} /> },
+    { title: '音乐', dataIndex: 'musicName', width: 300, render: (_: any, row: any) => <EventMusicPlayer player={row} onUploaded={load} /> },
     { title: '报名费', dataIndex: 'registrationFee', width: 100, render: (v: number) => `¥${Number(v || 0).toFixed(2)}` },
     { title: '缴费状态', dataIndex: 'paidStatus', width: 100, render: (v: string) => statusTag(v) },
     { title: '缴费时间', dataIndex: 'paidAt', width: 170, render: showDate },
-    { title: '评分', dataIndex: 'scoreStatus', width: 100, render: (v: string) => statusTag(v) },
+    { title: '得分', dataIndex: 'scoreStatus', width: 130, render: (_: string, row: any) => {
+      const ranking = rankingByPlayerId.get(Number(row.id));
+      if (!ranking?.scoreCount && ranking?.manualTotal == null) return <Tag>未评分</Tag>;
+      return <strong style={{ color: '#15803d', fontVariantNumeric: 'tabular-nums' }}>{formatFinalScore(ranking.calculatedTotal, rankings.filter(item => Number(item.groupId) === Number(row.groupId)).map(item => item.calculatedTotal))}</strong>;
+    } },
     {
       title: '处理',
       width: 390,
@@ -1129,7 +1134,7 @@ export default function EventDetailPage() {
           <Button size="small" icon={<DollarOutlined />} onClick={() => void openPayment(row)}>登记缴费</Button>
 
           <Button size="small" type="primary" onClick={() => openPlayerScoreManager(row)}>评分</Button>
-          <Button size="small" danger icon={<DeleteOutlined />} onClick={() => deletePlayersInBatch([row.id], row.groupId)} aria-label="删除" title="删除"></Button>
+          <Button size="small" danger icon={<DeleteOutlined />} onClick={() => deletePlayersInBatch([row.id], row.groupId ?? null)} aria-label="删除" title="删除"></Button>
         </Space>
       ),
     },
@@ -1141,7 +1146,7 @@ export default function EventDetailPage() {
     { title: '出场顺序', dataIndex: 'sequenceNo', width: 100, render: (v: number) => Number(v) > 0 ? v : <Tag>未安排</Tag> },
     { title: '手机号', dataIndex: 'phone', width: 120, render: (v: string) => v || '-' },
     { title: '机构', dataIndex: 'organization', width: 140, render: (v: string) => v || '-' },
-    { title: '音乐', dataIndex: 'musicName', width: 310, render: (_: any, row: any) => <EventMusicPlayer player={row} onUploaded={load} /> },
+    { title: '音乐', dataIndex: 'musicName', width: 300, render: (_: any, row: any) => <EventMusicPlayer player={row} onUploaded={load} /> },
     { title: '缴费', dataIndex: 'paidStatus', width: 90, render: (v: string) => statusTag(v) },
     {
       title: '评分',
@@ -1175,7 +1180,7 @@ export default function EventDetailPage() {
           <Button size="small" icon={<EditOutlined />} onClick={() => openPlayer(row)}>修改</Button>
           <Button size="small" icon={<DollarOutlined />} onClick={() => void openPayment(row)}>登记缴费</Button>
           <Button size="small" type="primary" onClick={() => openPlayerScoreManager(row)}>评分</Button>
-          <Button size="small" danger icon={<DeleteOutlined />} onClick={() => deletePlayersInBatch([row.id])} aria-label="删除" title="删除"></Button>
+          <Button size="small" danger icon={<DeleteOutlined />} onClick={() => deletePlayersInBatch([row.id], row.groupId ?? null)} aria-label="删除" title="删除"></Button>
         </Space>
       ),
     },
@@ -1191,18 +1196,16 @@ export default function EventDetailPage() {
   ]);
 
   const contestantColumns = sortableColumns<any>([
-    { title: '选手', dataIndex: 'name', width: 140, fixed: 'left', render: (value: string, row: any) => <Link href={`/events/players/${row.id}`}>{value}</Link> },
+    { title: '选手', dataIndex: 'name', width: 140, fixed: 'left', render: (value: string, row: any) => <Button type="link" size="small" style={{padding:0,height:"auto",whiteSpace:"normal"}} onClick={()=>setProfilePlayerId(row.id)}>{value}</Button> },
     { title: '编号', dataIndex: 'contestantNumber', width: 115 },
     { title: '手机号', dataIndex: 'phone', width: 140, render: (value: string) => value || '-' },
     { title: '机构', dataIndex: 'organization', width: 170, render: (value: string) => value || '-' },
     { title: '报名数', width: 90, render: (_: any, row: any) => row.entries.length },
     { title: '报名费', dataIndex: 'totalRegistrationFee', width: 110, render: (value: number) => `¥${Number(value || 0).toFixed(2)}` },
-    { title: '参赛组别 / 逐组缴费', width: 440, render: (_: any, row: any) => <Space direction="vertical" style={{ width: '100%' }}>{row.entries.map((entry: any) => <Space key={entry.id} wrap>
-      <span>{entry.groupName || '未分组'} · ¥{Number(entry.registrationFee || 0).toFixed(2)}</span>
+    { title: '参赛组别', width: 440, render: (_: any, row: any) => <Space direction="vertical" style={{ width: '100%' }}>{row.entries.map((entry: any) => <Space key={entry.id} wrap>
+      <Button type="link" size="small" className={styles.entryEditButton} aria-label={`编辑${row.name}的${entry.groupName || '未分组'}报名`} onClick={() => openPlayer(entry)}>{entry.groupName || '未分组'} · ¥{Number(entry.registrationFee || 0).toFixed(2)}</Button>
       {statusTag(entry.paidStatus)}
-      <Button size="small" icon={<DollarOutlined />} onClick={() => void openPayment(entry)}>登记缴费 / 退款</Button>
     </Space>)}</Space> },
-    { title: '操作', width: 120, render: (_: any, row: any) => <Button size="small" icon={<EyeOutlined />} onClick={() => { switchInformation('players'); setSectionKeyword(row.phone || row.name); }}>查看报名</Button> },
   ]);
   const playerJudgeScoreColumns = sortableColumns<any>([
     { title: '评委', dataIndex: 'name', width: 140, fixed: 'left' },
@@ -1225,14 +1228,17 @@ export default function EventDetailPage() {
   const scoreColumns = sortableColumns<any>([
     { title: '组别', dataIndex: 'groupName', width: 165, fixed: 'left', render: (v: string) => v || '-' },
     { title: '选手', dataIndex: 'playerName', width: 130 },
-    { title: '编号', dataIndex: 'playerNo', width: 90, render: (v: string) => v || '-' },
     { title: '评委', dataIndex: 'judgeName', width: 120 },
     { title: '评委总分', dataIndex: 'calculatedScore', width: 100, render: (v: number) => Number(v || 0).toFixed(2) },
     { title: '状态', dataIndex: 'scoreStatus', width: 90, render: (v: string) => statusTag(v) },
-    { title: '版本/评分项', dataIndex: 'version', width: 110, render: (v: number, row: any) => row.versionLabel || v || '-' },
     { title: '异常', dataIndex: 'isAbnormal', width: 100, render: (v: boolean, row: any) => v ? statusTag('异常', true) : row.scoreStatus === 'voided' ? statusTag('voided') : <Tag>正常</Tag> },
     { title: '说明', dataIndex: 'abnormalReason', width: 240, render: (v: string) => v || '-' },
     { title: '提交时间', dataIndex: 'submittedAt', width: 190, render: (v: string) => v || '-' },
+  ]);
+  const scoreIssueColumns = sortableColumns<any>([
+    ...scoreColumns.slice(0, 2),
+    { title: '评分记录 ID', dataIndex: 'id', width: 120 },
+    ...scoreColumns.slice(2),
   ]);
 
   const addGroupJudges = (groupId: number) => {
@@ -1273,7 +1279,7 @@ export default function EventDetailPage() {
   };
   const exportSection = (kind: ImportKind) => {
     const rows = kind === 'groups' ? groups.filter(row => (!selectedGroupId || Number(row.id) === Number(selectedGroupId)) && matchesSection(row, 'groups')).map(row => ({ '序号': groupPositions.get(Number(row.id)), '组别名称': row.name, '报名费': row.registrationFee, '编码': row.code, '年龄段': row.ageRange, '舞种': row.danceType, '参赛形式': row.entryType, '人数上限': row.maxPlayers, '评分规则ID': row.scoreRuleId || '', '状态': row.status }))
-      : kind === 'players' ? visiblePlayers.map(row => ({ '节目编号': row.programNumber, '选手编号': row.contestantNumber, '组别名称': row.groupName, '选手姓名': row.name, '手机号': row.phone, '领队机构': row.organization, '领队老师': row.teacher, '节目名称': row.performanceTitle }))
+      : kind === 'players' ? visiblePlayers.map(row => ({ '报名编号': row.programNumber, '选手编号': row.contestantNumber, '组别名称': row.groupName, '选手姓名': row.name, '手机号': row.phone, '领队机构': row.organization, '领队老师': row.teacher, '节目名称': row.performanceTitle }))
       : competitionJudgeAssignments.filter(row => (!selectedGroupId || Number(row.groupId) === Number(selectedGroupId)) && matchesSection(row, 'judges')).map((row, index) => ({ '序号': index + 1, '组别名称': row.groupName, '评委姓名': row.name, '手机号': row.phone, '所属机构': row.organization, '职称': row.title }));
     if (!rows.length) { message.info('当前筛选没有可导出的数据'); return; }
     const url = URL.createObjectURL(new Blob([eventImportCsv(kind, rows, kind === 'players')], { type: 'text/csv;charset=utf-8' }));
@@ -1306,9 +1312,9 @@ export default function EventDetailPage() {
       </Space.Compact>}
       <Button icon={<ReloadOutlined />} onClick={() => void load()}>刷新</Button>
       {['groups', 'players', 'judges'].includes(section) && <Button icon={<DownloadOutlined />} onClick={() => exportSection(section as ImportKind)}>导出当前筛选</Button>}
-      {section === 'groups' && <><Button icon={<PlusOutlined />} onClick={() => openGroupEditor()}>新建组别</Button><Button icon={<FileExcelOutlined />} onClick={() => setImportModal(true)}>导入组别</Button></>}
-      {section === 'players' && <><Button icon={<PlusOutlined />} onClick={() => openPlayer()}>新建报名</Button><Button icon={<FileExcelOutlined />} onClick={() => openEntryImport('players')}>导入报名</Button></>}
-      {section === 'judges' && <><Button icon={<FileExcelOutlined />} onClick={() => openEntryImport('judges')}>导入评委</Button><Button type="primary" icon={<UserSwitchOutlined />} onClick={() => {
+      {section === 'groups' && <><Button icon={<PlusOutlined />} onClick={() => openGroupEditor()}>新建组别</Button><Button className="swod-import-button" icon={<FileExcelOutlined />} onClick={() => setImportModal(true)}>导入组别</Button></>}
+      {section === 'players' && <><Button icon={<PlusOutlined />} onClick={() => openPlayer()}>新建报名</Button><Button className="swod-import-button" icon={<FileExcelOutlined />} onClick={() => openEntryImport('players')}>导入报名</Button></>}
+      {section === 'judges' && <><Button className="swod-import-button" icon={<FileExcelOutlined />} onClick={() => openEntryImport('judges')}>导入评委</Button><Button type="primary" icon={<UserSwitchOutlined />} onClick={() => {
             setAssignGroupIds(selectedGroupId ? [selectedGroupId] : []);
             setAssignJudgeIds([]);
             setAssignGroupSearch('');
@@ -1328,17 +1334,28 @@ export default function EventDetailPage() {
         <strong>{competition?.name || '赛事详情'}</strong>
         <Button size="small" icon={<SendOutlined />} loading={noticeBusy} onClick={openNotice}>发布通知</Button>
         <Button size="small" icon={<SettingOutlined />} onClick={openRuleEditor}>赛事评分规则</Button>
-        <Button size="small" icon={<ReloadOutlined />} disabled={loading || !players.length} onClick={randomizeEventSequence}>出场随机排序</Button>
+        <Button size="small" className={styles.randomize} icon={<ReloadOutlined />} loading={randomizing} disabled={loading || randomizing || !players.length} onClick={randomizeEventSequence}>出场随机排序</Button>
         <Button danger size="small" icon={<DeleteOutlined />} onClick={deleteCompetition} aria-label="删除赛事" title="删除赛事"></Button>
       </Space>
 
       <Card size="small" className={styles.informationCard}>
-        <Tabs className={styles.informationTabs} activeKey={activeTab} onChange={switchInformation} tabBarExtraContent={undefined} items={[
+        <Tabs className={styles.informationTabs} activeKey={activeTab} onChange={switchInformation} tabBarExtraContent={canViewRevenue ? { right: <div className={styles.revenueCards}>
+          {([
+            ['总收入', competition?.revenue?.totalFen, '实际收取的报名费，已扣除退款，含管理员登记的收费。'],
+            ['平台缴费', competition?.revenue?.platformFen, '平台确认支付成功的报名费，已扣除退款。'],
+          ] as const).map(([name, fen, description]) => <div key={name} className={styles.revenueCard} title={description}>
+            {name === '总收入' ? <button type="button" className={styles.revenueButton} onClick={()=>setRevenueOpen(true)} aria-label="查看总收入明细">{informationLabel(name, typeof fen === 'number' ? new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(fen / 100) : '—', <DollarOutlined />)}<span className={styles.revenueHint}>查看明细</span></button> : informationLabel(name, typeof fen === 'number' ? new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(fen / 100) : '—', <DollarOutlined />)}
+          </div>)}
+        </div> } : undefined} items={[
           { key: 'groups', label: informationLabel('组别', groups.length, <TrophyOutlined />), children: <>{sectionToolbar('groups')}<Table rowKey="id" rowClassName={row => groupDrag.rowClassName(Number(row.id))} onChange={(_pagination, _filters, sorter) => setGroupColumnSorted((Array.isArray(sorter) ? sorter : [sorter]).some(item => Boolean(item.order)))} loading={loading || groupSortSaving} columns={groupColumns} dataSource={groups.map((row, index) => ({ ...row, groupPosition: index + 1 })).filter(row => (!selectedGroupId || Number(row.id) === Number(selectedGroupId)) && matchesSection(row, 'groups'))} size="small" pagination={{ pageSize: adaptivePageSize, showSizeChanger: true, pageSizeOptions: [10, 20, 30, 50, 100] }} scroll={{ x: 760 }} /></> },
-          { key: 'players', label: informationLabel('报名和音乐', players.length, <AuditOutlined />), children: (
-            <>{sectionToolbar('players')}<Table loading={loading} columns={playerColumns} rowKey="id" dataSource={visiblePlayers} size="small" pagination={{ pageSize: adaptivePageSize, showSizeChanger: true, pageSizeOptions: [10, 20, 30, 50, 100] }} scroll={{ x: 1725 }} /></>
+          { key: 'players', label: informationLabel('报名', players.length, <AuditOutlined />), children: (
+            <>{sectionToolbar('players')}<Table loading={loading} columns={playerColumns} rowKey="id" dataSource={visiblePlayers} size="small" pagination={{ pageSize: adaptivePageSize, showSizeChanger: true, pageSizeOptions: [10, 20, 30, 50, 100] }} scroll={{ x: 1715 }} /></>
           ) },
-          { key: 'contestants', label: informationLabel('选手', contestantRows.length, <TeamOutlined />), children: <>{sectionToolbar('contestants')}<Table loading={loading} columns={contestantColumns} dataSource={visibleContestants} rowKey="key" size="small" pagination={{ pageSize: adaptivePageSize, showSizeChanger: true }} scroll={{ x: 1325 }} /></> },
+          { key: 'music', label: informationLabel('音乐', players.filter(row => row.musicFileId > 0 && !['cancelled', 'withdrawn'].includes(row.status) && row.auditStatus !== 'rejected').length, <CustomerServiceOutlined />),
+            children: <EventMusicBoard key={competitionId} competitionId={competitionId} groups={groups} players={players}
+              active={activeTab === 'music'} busy={loading || randomizing || groupSortSaving} onRefresh={async () => { await load(); }}
+              onMoveGroup={(id, position) => saveGroupPosition({ id }, position)} /> },
+          { key: 'contestants', label: informationLabel('选手', contestantRows.length, <TeamOutlined />), children: <>{sectionToolbar('contestants')}<Table loading={loading} columns={contestantColumns} dataSource={visibleContestants} rowKey="key" size="small" pagination={{ pageSize: adaptivePageSize, showSizeChanger: true }} scroll={{ x: 1315 }} /></> },
           { key: 'judges', label: informationLabel('评委', eventJudgeRows.length, <UserSwitchOutlined />), children: <>{sectionToolbar('judges')}
             {judgeView === 'groups' ? <Table key="by-group" adaptiveFillRows adaptiveBottomGap={20} className={styles.judgeArrangementTable} loading={loading} rowKey="id" bordered size="small" dataSource={judgeGroupRows}
               pagination={{ pageSize: adaptivePageSize, showSizeChanger: true, pageSizeOptions: [10, 20, 30, 50, 100], showTotal: total => `共 ${total} 个组别` }}
@@ -1366,36 +1383,21 @@ export default function EventDetailPage() {
               <Alert type="info" showIcon message={selectedGroup
                 ? `当前组别：${selectedGroup.name}。改分会生成新版本，旧分自动作废并保留审计记录。`
                 : '当前显示全部组别、全部选手、全部评委的评分总分；可使用上方搜索框筛选具体组别。'} />
-              <Space wrap>
-                <Button type="primary" icon={<SendOutlined />} disabled={!selectedGroupId} onClick={() => openScore()}>录入/修正评分</Button>
-                <Button icon={<CheckCircleOutlined />} disabled={!selectedGroupId} onClick={async () => {
-                  await eventApi.recalculateResults(selectedGroupId!);
-                  message.success('成绩已重算');
-                  await load();
-                }}>重算当前组成绩</Button>
-              </Space>
               <Tabs activeKey={scoreView} onChange={setScoreView} items={[{ key: 'scores', label: `评分记录 (${scopedScoreSummaries.length})` }, { key: 'issues', label: `异常处理 (${scopedAbnormalScores.length})` }]} />
-              {scoreView === 'issues' && <Alert type="warning" showIcon message="异常分、作废分保留在这里；使用录入/修正评分处理，旧版本仍保留审计记录。" />}
-              <Table loading={boardLoading} columns={scoreColumns} dataSource={(scoreView === 'issues' ? scopedAbnormalScores : scopedScoreSummaries).filter(row => matchesSection(row, 'scoring'))} size="small" pagination={{ pageSize: adaptivePageSize, showSizeChanger: true, pageSizeOptions: [10, 20, 30, 50, 100] }} scroll={{ x: 1300 }} />
+              {scoreView === 'issues' && <Alert type="warning" showIcon message="异常分、作废分保留在这里；可在选手的评分管理中处理，旧版本仍保留审计记录。" />}
+              <Table loading={boardLoading} rowKey={row => row.key ?? row.id} columns={scoreView === 'issues' ? scoreIssueColumns : scoreColumns} dataSource={(scoreView === 'issues' ? scopedAbnormalScores : scopedScoreSummaries).filter(row => matchesSection(row, 'scoring'))} size="small" pagination={{ pageSize: adaptivePageSize, showSizeChanger: true, pageSizeOptions: [10, 20, 30, 50, 100] }} scroll={{ x: 1300 }} />
             </Space>
           ) },
-          { key: 'results', label: informationLabel('结果公示', rankings.length, <EyeOutlined />), children: (
+          { key: 'results', label: informationLabel('结果公示', rankings.filter(item => item.status === 'published').length, <EyeOutlined />), children: (
             <Space direction="vertical" style={{ width: '100%' }} size={12}>
               {sectionToolbar('results')}
               <Space wrap>
-                <Button icon={<CheckCircleOutlined />} disabled={!selectedGroupId} onClick={async () => {
-                  await eventApi.recalculateResults(selectedGroupId!);
-                  message.success('成绩已重算');
-                  await load();
-                }}>重算成绩</Button>
-                <Button type="primary" icon={<SendOutlined />} disabled={!selectedGroupId || !groupRankings.length} onClick={() => publishResults('publish')}>公示结果</Button>
-                <Button danger icon={<UnlockOutlined />} disabled={!selectedGroupId} onClick={() => publishResults('unpublish')}>撤回公示</Button>
                 <Button icon={<EyeOutlined />} onClick={() => window.open(`https://www.swod.com.cn/event-results/${competitionId}`, '_blank', 'noopener,noreferrer')}>打开公示大屏</Button>
               </Space>
-              <Alert type="info" showIcon message="每个组别独立成卡，前三名显示领奖台；区域会自动滚动。公示后可复制大屏链接分享给其他设备。" />
+              <Alert type="info" showIcon message="每个组别使用固定尺寸卡片，前三名显示领奖台，其余名次可在卡片内滚动；组别区域会自动滚动。每个节目完成评分后自动公示得分；本组全部节目完成后才显示排名和领奖台，可分享大屏链接。" />
               <div ref={resultsScrollRef} style={{ maxHeight: 'calc(100vh - 260px)', minHeight: 420, overflowY: 'auto', paddingRight: 4 }}>
                 {resultGroups.length ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(420px,1fr))', gap: 16 }}>
+                  <div className={styles.resultGroupGrid}>
                     {resultGroups.map((group) => <ResultGroupCard key={group.id} groupName={group.name} rows={group.rows} />)}
                   </div>
                 ) : <div style={{ padding: '72px 24px', textAlign: 'center', color: '#9ca3af' }}>暂无可展示的组别成绩</div>}
@@ -1493,15 +1495,7 @@ export default function EventDetailPage() {
               label: `评分 (${groupScoreSummaries.length})`,
               children: (
                 <Space direction="vertical" style={{ width: '100%' }} size={12}>
-                  <Alert type="info" showIcon message="选择选手和已分配评委录入评分；修正评分会保留旧版本和审计记录。" />
-                  <Space wrap>
-                    <Button type="primary" icon={<SendOutlined />} disabled={!groupPlayers.length || !groupJudges.length} onClick={() => openScore()}>录入/修正评分</Button>
-                    <Button icon={<CheckCircleOutlined />} disabled={!selectedGroupId} onClick={async () => {
-                      await eventApi.recalculateResults(selectedGroupId!);
-                      message.success('当前组成绩已重算');
-                      await load();
-                    }}>重算当前组成绩</Button>
-                  </Space>
+                  <Alert type="info" showIcon message="当前组别的评分记录；可在选手的评分管理中处理评分，旧版本和审计记录保留。" />
                   <Table size="small" loading={boardLoading} columns={scoreColumns} dataSource={groupScoreSummaries} rowKey="key" pagination={{ pageSize: 20 }} scroll={{ x: 1100 }} />
                 </Space>
               ),
@@ -1510,11 +1504,6 @@ export default function EventDetailPage() {
               key: 'results',
               label: `结果公示 (${groupRankings.length})`,
               children: <Space direction="vertical" style={{ width: '100%' }} size={12}>
-                <Space wrap>
-                  <Button icon={<CheckCircleOutlined />} onClick={async () => { await eventApi.recalculateResults(selectedGroupId!); await load(); message.success('当前组成绩已重算'); }}>重算当前组成绩</Button>
-                  <Button type="primary" icon={<SendOutlined />} disabled={!groupRankings.length} onClick={() => publishResults('publish')}>公示结果</Button>
-                  <Button danger icon={<UnlockOutlined />} onClick={() => publishResults('unpublish')}>撤回公示</Button>
-                </Space>
                 {groupRankings.length ? <ResultGroupCard groupName={selectedGroup?.name || ''} rows={groupRankings} /> : <Empty description="当前组别暂无成绩" />}
               </Space>,
             },
@@ -1576,7 +1565,7 @@ export default function EventDetailPage() {
         </Form>
       </Modal>
 
-      <Modal title="导入组别" open={importModal} onCancel={() => { if (!groupImportBusy) { setImportModal(false); clearImportFile(); } }} confirmLoading={groupImportBusy} okButtonProps={{ disabled: importReading || !importRows.length || Boolean(importFileError) || groupImportErrors.length > 0 }} onOk={importGroups} width={680}>
+      <Modal title="导入组别" open={importModal} onCancel={() => { if (!groupImportBusy) { setImportModal(false); clearImportFile(); } }} confirmLoading={groupImportBusy} okButtonProps={{ className: "swod-import-button", disabled: importReading || !importRows.length || Boolean(importFileError) || groupImportErrors.length > 0 }} onOk={importGroups} width={680}>
         <Space direction="vertical" style={{ width: '100%' }} size={12}>
           <Alert type="info" showIcon message="模板列名：序号、组别名称、报名费。同名组别会更新，赛事内组别名称不能重复；金额支持 ¥ 和千位分隔，最多两位小数，空值为 0。序号须为整数；日期误填会提示。" action={<Button className={styles.templateDownload} icon={<DownloadOutlined style={{ fontSize: 18 }} />} href="/templates/event-group-import-v3.xlsx" download="赛事组别导入模板.xlsx">下载模板</Button>} />
           <Upload.Dragger className={styles.groupImportUpload} accept=".xlsx,.csv" beforeUpload={parseGroupFile} maxCount={1} disabled={groupImportBusy} onRemove={() => { clearImportFile(); }}>
@@ -1593,7 +1582,7 @@ export default function EventDetailPage() {
         </Space>
       </Modal>
 
-      <Modal title={entryImportKind === 'players' ? '导入报名' : '导入评委'} open={Boolean(entryImportKind)} confirmLoading={entryImportBusy} okButtonProps={{ disabled: importReading || !entryImportRows.length || Boolean(importFileError) || entryImportErrors.length > 0 }} onCancel={() => { if (!entryImportBusy) { setEntryImportKind(null); clearImportFile(); } }} onOk={importEntries} width={800}>
+      <Modal title={entryImportKind === 'players' ? '导入报名' : '导入评委'} open={Boolean(entryImportKind)} confirmLoading={entryImportBusy} okButtonProps={{ className: "swod-import-button", disabled: importReading || !entryImportRows.length || Boolean(importFileError) || entryImportErrors.length > 0 }} onCancel={() => { if (!entryImportBusy) { setEntryImportKind(null); clearImportFile(); } }} onOk={importEntries} width={800}>
         <Space direction="vertical" style={{ width: '100%' }} size={12}>
           <Alert type="info" showIcon message={entryImportKind === 'players'
             ? '组别名称、选手姓名、手机号必填；同类别下组别名称须与赛事组别一致。按手机号匹配数据库人员，未匹配自动新建；同组别内手机号相同会更新，新报名直接生效，默认为未缴费。'
@@ -1616,23 +1605,18 @@ export default function EventDetailPage() {
           <Alert style={{ marginBottom: 16 }} type="info" showIcon message="每个赛事固定使用一套评分规则，保存后该赛事全部组别统一生效。" />
           <Form.Item name="name" label="规则名称" rules={[{ required: true }]}><Input /></Form.Item>
           <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item name="totalScore" label="总分" extra="评委评分范围：0～10分">
-                <InputNumber min={1} max={10} style={{ width: '100%' }} />
+            <Col span={12}>
+              <Form.Item label="总分" extra="固定为10分，不可修改">
+                <InputNumber value={10} disabled aria-label="总分，固定为10分" style={{ width: '100%' }} />
               </Form.Item>
             </Col>
-            <Col span={8}>
-              <Form.Item name="judgeAnonymous" label="评委匿名" valuePropName="checked" tooltip="开启后，官网与个人中心不公开评委头像和姓名">
-                <Switch checkedChildren="开启" unCheckedChildren="关闭" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
+            <Col span={12}>
               <Form.Item
                 name="dropHighLow"
                 label="去高低分"
                 valuePropName="checked"
-                tooltip="开启后，仅在有效评委评分不少于6份时，各去掉一个最高分和最低分，再计算平均分"
-                extra="最终得分取评委评分平均值；少于6份评分时不去高低分"
+                tooltip="仅1位评委时，其评分直接作为最终得分；2～5位直接取平均分；6位及以上开启后，各去掉一个最高分和最低分再取平均"
+                extra="1位评委直接出结果；2～5位取平均分；6位及以上开启后去掉一个最高分和最低分再取平均"
               >
                 <Switch checkedChildren="开启" unCheckedChildren="关闭" />
               </Form.Item>
@@ -1641,7 +1625,7 @@ export default function EventDetailPage() {
         </Form>
       </Modal>
 
-      <Modal title={<Space wrap><span>批量分配评委到组别</span><Button size="small" icon={<FileExcelOutlined />} disabled={assignBusy} onClick={() => openEntryImport('judges')}>导入评委</Button></Space>} open={assignModal} onCancel={() => {
+      <Modal title={<Space wrap><span>批量分配评委到组别</span><Button className="swod-import-button" size="small" icon={<FileExcelOutlined />} disabled={assignBusy} onClick={() => openEntryImport('judges')}>导入评委</Button></Space>} open={assignModal} onCancel={() => {
         if (assignBusy) return;
         setAssignModal(false); setAssignGroupIds([]); setAssignJudgeIds([]);
         setAssignGroupSearch(''); setAssignJudgeSearch('');
@@ -1709,6 +1693,32 @@ export default function EventDetailPage() {
         ]} />
       </Modal>
 
+      <Modal
+        title={`确认删除 ${deleteConfirmation?.ids.length ?? 0} 条报名？`}
+        open={Boolean(deleteConfirmation)}
+        onCancel={() => { if (!deleteBusy) setDeleteConfirmation(null); }}
+        onOk={confirmPlayerDeletion}
+        confirmLoading={deleteBusy}
+        cancelButtonProps={{ disabled: deleteBusy }}
+        okButtonProps={{ danger: true }}
+        okText="确认删除"
+        cancelText="取消"
+      >
+        <Alert type="warning" showIcon message="删除报名及关联的节目、音乐、评分、排名等赛事数据后无法恢复。" description="缴费和退款流水将完整保留在总收入明细中，并标记为「已删除报名」。删除不会自动退款，也不会删除用户账号。" style={{marginBottom:16}}/>
+        <ul style={{ maxHeight: 240, overflowY: 'auto', paddingInlineStart: 24 }}>
+          {deleteConfirmation?.entries.map(row => (
+            <li key={row.id}>
+              <div>{row.programNumber} · {row.name} · {row.groupName || '未分组'}</div>
+              <div>报名费 ¥{Number(row.registrationFee || 0).toFixed(2)} · 音乐 {row.musicName || '未上传'}</div>
+            </li>
+          ))}
+        </ul>
+        {deleteError && <Alert type="error" showIcon message={deleteError} />}
+      </Modal>
+
+      <EventPlayerProfileModal playerId={profilePlayerId} onClose={()=>setProfilePlayerId(null)} onSaved={async()=>{message.success('用户资料已更新');await load();}}/>
+      {canViewRevenue&&<EventRevenueModal competitionId={competitionId} totalFen={competition?.revenue?.totalFen||0} open={revenueOpen} onClose={()=>setRevenueOpen(false)}/>}
+
       <Modal title={editingPlayer ? '编辑报名' : '新建报名'} open={playerModal} onCancel={() => setPlayerModal(false)} onOk={savePlayer} width={680}>
         <Form form={playerForm} layout="vertical">
           <Form.Item name="memberId" label="选择已有选手（选填）">
@@ -1732,7 +1742,7 @@ export default function EventDetailPage() {
           </Form.Item>
           <Form.Item name="groupId" label="组别" rules={[{ required: true }]}><Select showSearch optionFilterProp="label" placeholder="输入组别名称搜索" options={groupSearchOptions} /></Form.Item>
           <Row gutter={16}>
-            <Col span={12}><Form.Item name="name" label="选手姓名" rules={[{ required: true, whitespace: true, message: '请填写选手姓名' }]}><Input /></Form.Item></Col>
+            <Col span={12}><Form.Item name="name" label="选手姓名" rules={[{ required: true, whitespace: true, message: '请填写选手姓名' }, { max: 120, message: '姓名最多120个字符' }]}><Input maxLength={120} placeholder="支持中文、英文和空格" /></Form.Item></Col>
             <Col span={12}><Form.Item name="phone" label="手机号" rules={[{required:true,whitespace:true,message:'请填写手机号'},{validator:(_,value) => /^\d{6,20}$/.test(String(value || '').replace(/\D/g,'')) ? Promise.resolve() : Promise.reject(new Error('请填写有效手机号'))}]}><Input /></Form.Item></Col>
           </Row>
           <Row gutter={16}>
@@ -1773,12 +1783,12 @@ export default function EventDetailPage() {
           <Alert
             type="info"
             showIcon
-            message={`出场顺序 ${scoreManagePlayer ? (scoreManagePlayer.sequenceNo || orderedGroupPlayers.findIndex((item) => item.id === scoreManagePlayer.id) + 1) : '-'} · 已评分 ${playerJudgeScores.filter((item) => item.score).length}/${playerJudgeScores.length}`}
+            message={`出场顺序 ${scoreManagePlayer ? (scoreManagePlayer.sequenceNo || numberedPlayers.filter((item) => Number(item.groupId) === Number(scoreManagePlayer.groupId)).sort((a, b) => Number(a.id) - Number(b.id)).findIndex((item) => item.id === scoreManagePlayer.id) + 1) : '-'} · 已评分 ${playerJudgeScores.filter((item) => item.score).length}/${playerJudgeScores.length}`}
             description="可逐项录入或修改评委分数。若部分评委未评分，可忽略这些评委并按现有有效评分直接计算最终得分。"
           />
           {(() => {
             const ranking = rankingByPlayerId.get(Number(scoreManagePlayer?.id));
-            return ranking && (ranking.scoreCount || ranking.manualTotal != null) ? <Tag color="magenta">当前最终得分：{formatFinalScore(ranking.calculatedTotal, rankings.filter((item) => Number(item.groupId) === Number(ranking.groupId)).map((item) => item.calculatedTotal))} · 第 {ranking.rankNo} 名{ranking.manualTotal != null ? ' · 人工修改' : ''}</Tag> : null;
+            return ranking && (ranking.scoreCount || ranking.manualTotal != null) ? <Tag color="magenta">当前最终得分：{formatFinalScore(ranking.calculatedTotal, rankings.filter((item) => Number(item.groupId) === Number(ranking.groupId)).map((item) => item.calculatedTotal))} · {Number(ranking.rankNo) > 0 ? `第 ${ranking.rankNo} 名` : '暂不排名'}{ranking.manualTotal != null ? ' · 人工修改' : ''}</Tag> : null;
           })()}
           <Table
             size="small"
@@ -1812,12 +1822,12 @@ export default function EventDetailPage() {
         <Alert
           type="warning"
           showIcon
-          message="保存后将以此分值作为该选手最终得分，并自动重新排列当前组别名次。原始评委评分不会被修改。"
+          message="最终得分范围为 1～10 分。保存后将以此分值作为该选手最终得分；本组全部节目完成后统一排名。原始评委评分不会被修改。"
           style={{ marginBottom: 16 }}
         />
         <Form form={manualScoreForm} layout="vertical">
-          <Form.Item name="finalScore" label="最终得分" rules={[{ required: true, message: '请输入最终得分' }]}>
-            <InputNumber min={0} precision={2} style={{ width: '100%' }} placeholder="请输入最终得分" />
+          <Form.Item name="finalScore" label="最终得分" rules={[{ required: true, message: '请输入最终得分' }, { type: 'number', min: 1, max: 10, message: '最终得分必须是 1～10 分之间的数字' }]}>
+            <InputNumber min={1} max={10} precision={2} style={{ width: '100%' }} placeholder="请输入 1～10 分" />
           </Form.Item>
           <Form.Item name="reason" label="修改原因" rules={[{ required: true, message: '请填写修改原因' }]}>
             <Input.TextArea rows={3} maxLength={300} showCount placeholder="请输入修改原因，便于审计追溯" />
@@ -1828,9 +1838,9 @@ export default function EventDetailPage() {
       <Modal title="录入/修正评分" open={scoreModal} onCancel={() => setScoreModal(false)} onOk={saveScore} width={680}>
         <Form form={scoreForm} layout="vertical">
           <Row gutter={16}>
-            <Col span={8}><Form.Item name="groupId" label="组别" rules={[{ required: true }]}><Select showSearch optionFilterProp="label" placeholder="输入组别名称搜索" options={groupSearchOptions} /></Form.Item></Col>
-            <Col span={8}><Form.Item name="playerId" label="选手" rules={[{ required: true }]}><Select showSearch optionFilterProp="label" options={groupPlayers.map((item) => ({ value: item.id, label: `${item.playerNo || '-'} ${item.name}` }))} /></Form.Item></Col>
-            <Col span={8}><Form.Item name="judgeId" label="评委" rules={[{ required: true }]}><Select options={groupJudges.map((item) => ({ value: item.judgeId, label: item.name }))} /></Form.Item></Col>
+            <Col span={8}><Form.Item name="groupId" label="组别" rules={[{ required: true }]}><Select showSearch optionFilterProp="label" placeholder="输入组别名称搜索" options={groupSearchOptions} onChange={() => scoreForm.setFieldsValue({ playerId: undefined, judgeId: undefined })} /></Form.Item></Col>
+            <Col span={8}><Form.Item name="playerId" label="选手" rules={[{ required: true }]}><Select showSearch optionFilterProp="label" options={numberedPlayers.filter(item => Number(item.groupId) === Number(scoreFormGroupId)).map((item) => ({ value: item.id, label: `${item.playerNo || '-'} ${item.name}` }))} /></Form.Item></Col>
+            <Col span={8}><Form.Item name="judgeId" label="评委" rules={[{ required: true }]}><Select options={competitionJudgeAssignments.filter(item => Number(item.groupId) === Number(scoreFormGroupId)).map((item) => ({ value: item.judgeId, label: item.name }))} /></Form.Item></Col>
           </Row>
           <Row gutter={16}>
             <Col span={8}>

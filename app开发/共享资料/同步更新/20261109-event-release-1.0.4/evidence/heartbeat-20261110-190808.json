@@ -1,0 +1,34 @@
+{
+  "checkedAt": "2026-11-10T19:08:08+08:00",
+  "version": "1.0.4",
+  "huaweiAndroid": {
+    "build": 21,
+    "freshReviewStatusVerified": false,
+    "managementResult": "Sign-in required",
+    "chinaPublicRelease": {
+      "checkedAt": "2026-11-10T19:08:08+08:00",
+      "version": "1.0.4",
+      "region": "CN",
+      "url": "https://appgallery.huawei.com/app/C119475083",
+      "installEntryVisible": true,
+      "updateNotesMatchSubmission": true,
+      "buildLinkedBySubmissionReceipt": 21,
+      "buildNumberDisplayedPublicly": false,
+      "evidence": "evidence/huawei-android21-china-public-20261110.jpg"
+    },
+    "otherRegionsVerified": false,
+    "automaticReleaseSettingPreviouslyVerified": true
+  },
+  "harmony": {
+    "build": 23,
+    "freshReviewStatusVerified": false,
+    "managementResult": "Sign-in required"
+  },
+  "ios": {
+    "build": 14,
+    "previousChinaPublicReleaseEvidence": "evidence/ios-1.0.4-china-public-20261110.jpg"
+  },
+  "newReviewOrPublicResultVerified": true,
+  "newStoreSubmission": false,
+  "newNotificationNeeded": true
+}

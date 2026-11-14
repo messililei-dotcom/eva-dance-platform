@@ -1,0 +1,71 @@
+{
+  "checkedAt": "2026-11-12T14:44:34.122500+08:00",
+  "request": "Align all native event surfaces to current mini-program screens and supplied event detail reference",
+  "coverage": {
+    "eventList": "Phone full-width compact banner rows; adaptive tablet columns; event names before dates/location; open-event CTA enters registration, cover enters details",
+    "eventDetail": "4:3 event cover/shade/code/title/date; judge entry; public-aware counts; five tabs赛事/组别/选手/评委/成绩; organizer/location/state/fee/description; schedule; own-record and registration navigation",
+    "groups": "Search and pagination; distinct group detail with category/age/dance/entry-type tags, public counts, top-three podium and participant/results rows",
+    "players": "Avatar, number, event/group navigation, organization/teacher/programme, published rank/total and public judge-score cards",
+    "judges": "Public roster with avatar/title/organization/bio; member-authorized scoring workspace retains server group/player grants, lock/own-score checks and explicit submission confirmation",
+    "myCompetitions": "Search, pagination, grouped status/result cards, own published judge scores, existing music edit, event navigation and user-initiated official-web checkout link when server canPay",
+    "registration": "Uses preceding20261112-event-registration-alignment implementation; no change to its single-group submission model"
+  },
+  "dataAndPermissions": {
+    "publicReads": "Existing mini public endpoints reused; exact positive-ID GET paths added to native public transport policies. Judge/register/member/write paths remain private. No additional production API or server deployment was needed.",
+    "counts": "Never replace unpublished participant count with zero; display—",
+    "scores": "Only publishedTotal from public records; hidden judge names/scores remain server-anonymized/null; no totalScore or private-score fallback",
+    "privateRecords": "Member endpoint retains authentication and no-store behavior; no real member data fetched in this task",
+    "management": "No native admin/staff management entry or transport restored",
+    "checkout": "Only a user-operated official website link; no payment or login was performed by this task"
+  },
+  "checks": {
+    "iOS": "Physical-development-target and simulator builds passed;22 core check groups passed, including expanded nested-public-read whitelist and private/write exclusions",
+    "Android": {
+      "build": "Debug assemble passed",
+      "tests": 32,
+      "failures": 0
+    },
+    "HarmonyOS": "Unsigned Debug HAP compiled;28 platform API/course-media checks passed including nested public-read exclusions",
+    "server": "18 existing public-route/judge/score/privacy/management tests passed after updating stale test harness to load actual native-management policy; production source unchanged",
+    "productionReadOnly": "Existing public event28, group1730 and player403 GET contracts read successfully; evidence stores counts/IDs/hashes, not personal fields",
+    "sourceCache": "Built Android and Harmony source copies checked against workspace",
+    "iOSSimulatorInstall": "Final development simulator package installed successfully",
+    "visualRuntime": "Not completed: Mac locked and CUA automatic unlock failed. No alternative control channel used. Physical iPhone currently unavailable; this batch not installed to physical device. Phone/tablet layouts and navigation require visual runtime acceptance."
+  },
+  "release": {
+    "newStoreUpload": false,
+    "newReviewSubmission": false,
+    "storeCandidateGenerated": false,
+    "existingReviewModified": false,
+    "productionDeployment": false,
+    "originalBundleIdsDistributionSignaturesAndFiling": "not changed"
+  },
+  "limits": [
+    "No live registration, music upload, judge-score write, login or payment performed",
+    "Current native registration remains single-group submission; this UI change does not add mini-program batch checkout",
+    "Public page size20; Harmony authorized scoring retains existing50 rows per page",
+    "No visual acceptance is claimed from compilation or API checks"
+  ],
+  "sources": {
+    "app开发/iOS/EvaDance/Sources/EvaCore/Models.swift": "f8babbf357e4fb1fe3f4d1971bc909386feba5fb3a53504c4036b3c27075b031",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventUI.swift": "9fea997bd34fc8572b44c451bdae355b297aa409074cfe0e548234d9fa8cdeca",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventDetailView.swift": "7d6b17a42b1ecaf27238682ad8a4ca7522357ae3f6dde3d8d1468943ff76ba7d",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventParticipantViews.swift": "167ff0a65aff91f49eaa57545405d66022b59523822b5a1d7db8218d7ea228c7",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/FullSiteViews.swift": "3009b844c397501589b72eaea5a4b0566ab5a614d0fb41bcc504d7fc533a2867",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventsView.swift": "bb94c8e2da644eeec316f75391576b7d0e13de042500155e3723a4a067342f4a",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/MyCompetitionsView.swift": "cb1a2520c61474aa3956c566d95cb057bdaf7f7f79b6d54aa18718b68feb1287",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/JudgeWorkspaceView.swift": "58b8fb0ab2883e8bd3aa427ad08469a53cdbfefeae36f1dbf929a65f2347538a",
+    "app开发/iOS/EvaDance/Tests/EvaCoreTests/EvaCoreTests.swift": "34995f0e4ba4c872d7b4b714f12e4e604e49cadf4b55c3561660808532790b9a",
+    "app开发/iOS/EvaDance/EvaDance.xcodeproj/project.pbxproj": "cd1214b00929acf8b88dd7ca1e08dd520fc05d8323efcc8e98dd07d4ef084668",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "cb8d128e732e6f57c8e5e044c86603c77012cfac030a9dae1f923078f3e4fc09",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/Policy.java": "42c9485b121c27314ae67b730351d68daae4b4e0f080265ded1d98b8726ff86f",
+    "app开发/Android/EvaDance/app/src/test/java/cn/com/swod/app/PolicyTest.java": "47159776d4d6ad59c5590534c36675c9ce666458e21e20810b8cc854566bd464",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/components/PublicEventView.ets": "a54b187a72cfd5e84ad5c6113d700e007f1fa29cd220d1e1d4f6363536c17f5e",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/components/JudgeWorkspace.ets": "885312bfce7189a9818784aeda3f68c902709c9a39c1bc764ecdd9f6487c8a9c",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "27e4ec2f4499ec1c3a4a79148ea41c888c7f9f69f9afeb97bb05896aee32d514",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/Models.ets": "3cae4a5a4a0a66048b4e2245fa7e565b0bf606d621ab9d9196eba345a5d937ff",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/PlatformApi.ets": "f0c0ed0be2ad077238e0d6b1881ecc17b2abfe1055e097b1b84126ae503b5138",
+    "app开发/HarmonyOS/EvaDance/scripts/platform-api.test.cjs": "cd0577a1053452b313c547ed38716e7a960d68a5a8fb1c09cb7a8437065a145c",
+    "10-统一平台admin-platform/scripts/public-event-sharing.test.cjs": "9eba306ffe34fab04d2a409aaa4c47898215d7129bf886a9b018794a5a241691"
+  }
+}

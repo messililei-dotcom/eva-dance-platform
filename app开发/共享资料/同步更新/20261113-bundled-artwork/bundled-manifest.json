@@ -1,0 +1,162 @@
+{
+  "scope": "public course covers only",
+  "totalBytes": 8328883,
+  "entries": [
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E5%85%A8%E5%8A%9B%E5%87%BA%E8%82%8C%C2%B7%E8%88%9E%E8%B9%88%E6%A0%B8%E5%BF%83%E9%A3%8E%E6%9A%B4-1792289355493.jpg",
+      "file": "cover_99413ffeb0f8cb7c78ae.jpg",
+      "bytes": 221576,
+      "sha256": "c2bf4b9007bdd4ad65552a0988940414ad2eceeb8b97eefd1349cf65c5adaf50"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E9%BB%84%E9%87%91%E9%99%80%E8%9E%BA%C2%B7%E6%97%8B%E8%BD%AC%E8%AE%AD%E7%BB%83-1792289353555.jpg",
+      "file": "cover_3922c8385abf8c75099f.jpg",
+      "bytes": 250789,
+      "sha256": "ca69b945aeb6a6f08894adbb68d2b90100644ec4a79233565e6c9e832f0fb581"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E8%88%9E%E8%B9%88%E8%BF%90%E5%8A%A8%E5%91%BC%E5%90%B8%E5%AD%A6-1792289363320.jpg",
+      "file": "cover_787d89aae29dc8cf3cef.jpg",
+      "bytes": 337083,
+      "sha256": "a2222b1798100f1a3b948933a2e15e0eab0d6cb47883abb32a0a488159d6332b"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/_7%2B1_%E5%9B%BD%E9%99%85%E6%8A%80%E5%B7%A7%E7%8F%AD-1792289349543.jpg",
+      "file": "cover_9b9cb8ed6a8b9a413152.jpg",
+      "bytes": 234861,
+      "sha256": "b46d3343935309f40ea04c70bcf6572e43070c69aa8610075d5b4dc8bb814e3f"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/S%E6%9B%B2%E7%BA%BF%C2%B7%E8%83%B8%E8%85%B0%E8%88%9E%E6%84%9F-official.jpg",
+      "file": "cover_ab056aa07778837b0176.jpg",
+      "bytes": 294359,
+      "sha256": "51a8494e44c0b0e081490c52b4a57c1e66cfab943cc5831b0a344611f5fd6fbe"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E4%B8%9C%E6%96%B9%E8%88%9E%E6%8A%80%E5%B7%A7%E5%A4%A7%E5%85%A8%C2%B7%E9%80%89%E9%85%8D128%E8%8A%82-1792289359988.jpg",
+      "file": "cover_b370e10412b8dc6a69f7.jpg",
+      "bytes": 230248,
+      "sha256": "e8f0a9c16173a4df73f1caf08d3614e106e956e005155ab256a1c0404ccb6c64"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E4%BA%91%C2%B7%E5%BC%9F%E5%AD%90%E7%8F%AD-1792289357514.jpg",
+      "file": "cover_b3430de1b2eae24e81a8.jpg",
+      "bytes": 252876,
+      "sha256": "4c04dda8f0d05b0099e1ebac79325a7dc07fb3aa5f40efa505fd3d2439a4d64c"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E4%B8%9C%E6%96%B9%E8%88%9E%E9%9B%B6%E5%9F%BA%E7%A1%80%E5%85%A5%E9%97%A8%E8%AF%BE%E7%A8%8B%C2%B7%E5%85%A8%E9%98%B6%E6%AE%B5-official.jpg",
+      "file": "cover_e5da0f041a67f9986c77.jpg",
+      "bytes": 350898,
+      "sha256": "fc223777cddd41673edf5d0077d7f7112152657e8546e1b5021daddcefbc5a09"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/14%E7%A7%8D%E5%A4%B4%E9%83%A8%E6%8A%80%E5%B7%A7%20%2B%20%E5%85%A8%E7%B1%BB%E7%94%A9%E5%8F%91%E6%8A%80%E5%B7%A7-1792289347431.jpg",
+      "file": "cover_6325e9a36ecc73467438.jpg",
+      "bytes": 296481,
+      "sha256": "07899d7c654add63de982c112b28c9237d3fc6f5dd25e2987b27df70568d55bb"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E7%96%AF%E7%8B%82%E8%A5%BF%E7%B1%B3-1792289351402.jpg",
+      "file": "cover_1f348321b6ca3bc36c31.jpg",
+      "bytes": 255178,
+      "sha256": "e3bdcb0a045a657f93ab822a072a406a230cd3b126c5a19a5921e641263f06d8"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E7%BC%96%E8%88%9E%E5%B8%88%C2%B7%E7%AC%AC1%E9%98%B6-1792289345374.jpg",
+      "file": "cover_c5f797a0a9a0d45aa0ff.jpg",
+      "bytes": 351224,
+      "sha256": "7b23520044ce434f9cb3f4967a72c2d81f3a79ce3ca1b4e0b9d05781f384e698"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E7%BC%96%E8%88%9E%E5%B8%88%C2%B7%E7%AC%AC2%E9%98%B6-1792289342673.jpg",
+      "file": "cover_eb7739c62ea63dd9da3d.jpg",
+      "bytes": 268039,
+      "sha256": "8dce467697636b8e817f97bd1d7cf53e40f3c5abba578527a1dad55d1f5fa1f2"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E8%88%9E%E8%80%85%E8%8B%B1%E8%AF%AD%C2%B7%E5%9B%BD%E9%99%85%E8%AF%BE%E5%A0%82%E5%85%A5%E9%97%A8-1792289339838.jpg",
+      "file": "cover_aeebee832d4b219b0028.jpg",
+      "bytes": 210700,
+      "sha256": "559e60c817c592191c582e44418f7f394bef4bc3809cb10ea89d9ffaee43f559"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E6%89%8B%E8%87%82%E5%85%A8%E7%BB%B4%E5%BA%A6%E7%B2%BE%E9%9B%95%E7%B3%BB%E7%BB%9F%E8%AF%BE-1792289338014.jpg",
+      "file": "cover_6ca5ce831af431ea7456.jpg",
+      "bytes": 234932,
+      "sha256": "dad2505b2b190eb1765b230a007e3d100b82b4bdaac13a05779918e09675fe2a"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E9%9B%B6%E5%9F%BA%E7%A1%80%C2%B7%E4%BA%B2%E4%BC%A0%E6%95%99%E7%BB%83%E7%B3%BB%E7%BB%9F%E8%AF%BE-official.jpg",
+      "file": "cover_0206ecda1799ec8510ac.jpg",
+      "bytes": 236209,
+      "sha256": "44613da54ec645d92244a483e6a2bbddbfe1daec5ff5ee6e64302aa5124c40c4"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E6%88%90%E5%93%81%E8%88%9E%EF%BD%9C18%E6%94%AF%E5%85%A8%E9%A3%8E%E6%A0%BC%E8%88%9E%E8%B9%88-1792289463301.jpg",
+      "file": "cover_1bcc11b7e4d60460d7a0.jpg",
+      "bytes": 241515,
+      "sha256": "32cce35a16652a36efeb2f2249eda54c23afe177714283007b0d6deae868e09f"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E6%88%90%E5%93%81%E8%88%9E%EF%BD%9CLiberTango-1792289335977.jpg",
+      "file": "cover_ab00ae49066f22e4f384.jpg",
+      "bytes": 106432,
+      "sha256": "fb7f783a9ad3bbc7a30605f5c51418b6ca573413b6b9d72284315aa8446d183f"
+    },
+    {
+      "url": "https://admin.swod.com.cn/api/course/series/cover/%E6%88%90%E5%93%81%E8%88%9E%EF%BD%9CKhaleegy%E6%B3%A2%E6%96%AF%E6%B9%BE%E7%94%A9%E5%8F%91%E8%88%9E-1780806083484.jpg",
+      "file": "cover_d6bd42d0aa300a0ff8d8.jpg",
+      "bytes": 76488,
+      "sha256": "761183fcb6950285450f0aa5d98ea2c8c8cb06719688177885ede49773332902"
+    },
+    {
+      "url": "https://www.swod.com.cn/api/platform-offline-courses/cover/tito-seif-masterclass.png",
+      "file": "cover_9ea1b07472498a7496ea.png",
+      "bytes": 750076,
+      "sha256": "7444c906a186d245a535393774a1b7a2b4ef5fd8408538e0d3d3a8c82f33076c"
+    },
+    {
+      "url": "https://www.swod.com.cn/api/platform-offline-courses/cover/ai-theme-holiday-intensive-20260813.webp",
+      "file": "cover_1e055702b85dc7d0a784.webp",
+      "bytes": 178086,
+      "sha256": "e1d7873f86b2a4adb4cf5340c074adf1fc6eeb3a63adbdb3937809c378dc043c"
+    },
+    {
+      "url": "https://www.swod.com.cn/api/platform-offline-courses/cover/ai-theme-musicality-20260813.webp",
+      "file": "cover_4865652446af8bb38414.webp",
+      "bytes": 206492,
+      "sha256": "4c73f5b33c91472e2476859897cc0e20505dc8a66ec4f77affa2d9caba63c846"
+    },
+    {
+      "url": "https://www.swod.com.cn/api/platform-offline-courses/cover/international-technique-masterclass.png",
+      "file": "cover_451aaf79edf340e5520a.png",
+      "bytes": 795309,
+      "sha256": "8dcbc0cbb9a2b135758a88eb3cc26185e60a9b592a340f0beb025598176d1d42"
+    },
+    {
+      "url": "https://www.swod.com.cn/api/platform-offline-courses/cover/international-disciple-program.jpg",
+      "file": "cover_42b313fa0830695d0e48.jpg",
+      "bytes": 127039,
+      "sha256": "01ddf4791a0d064f8e07a1e736c8c8ec56dd985f89ae50748c8c9c682335cad6"
+    },
+    {
+      "url": "https://www.swod.com.cn/api/platform-offline-courses/cover/swod-summer-dance-workshop.png",
+      "file": "cover_9f81dae7b77a412ab306.png",
+      "bytes": 513455,
+      "sha256": "3ddbb142d27d4807f8d3de4699ca20a65348df52df8166ad78c1984d8755d214"
+    },
+    {
+      "url": "https://www.swod.com.cn/api/platform-offline-courses/cover/alida-lin-masterclass.png",
+      "file": "cover_91a09e658cda76e25574.png",
+      "bytes": 795083,
+      "sha256": "bd627a2f035edd2b0696e2e35bb0371881651cb16108f6d7b604f07a3973380a"
+    },
+    {
+      "url": "https://www.swod.com.cn/api/platform-offline-courses/cover/national-day-folklore-dance.png",
+      "file": "cover_55015befd96dd72378fb.png",
+      "bytes": 513455,
+      "sha256": "6e39668dfa82d3636e6d2f493c892f66527c53bcb23f6dae8bc3ef6c4a7429a5"
+    }
+  ]
+}

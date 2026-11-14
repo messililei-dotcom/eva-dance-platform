@@ -14,11 +14,13 @@ final class CarrierLogin {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private PhoneNumberAuthHelper helper;
     private Result pending;
+    private long generation;
     private final Runnable timeout = () -> finish(null, "本机号码登录超时，请使用短信登录");
 
     void start(Activity activity, Result result) {
         if (pending != null) return;
         pending = result;
+        final long attempt = ++generation;
         try {
             JSONObject config;
             try (java.io.InputStream input = activity.getAssets().open("number-auth.json")) {
@@ -31,8 +33,8 @@ final class CarrierLogin {
                 finish(null, "本机号码登录配置未就绪，请使用短信登录"); return;
             }
             helper = PhoneNumberAuthHelper.getInstance(activity, new TokenResultListener() {
-                public void onTokenSuccess(String value) { handler.post(() -> receive(value, true)); }
-                public void onTokenFailed(String value) { handler.post(() -> receive(value, false)); }
+                public void onTokenSuccess(String value) { handler.post(() -> { if (generation == attempt) receive(value, true); }); }
+                public void onTokenFailed(String value) { handler.post(() -> { if (generation == attempt) receive(value, false); }); }
             });
             helper.getReporter().setLoggerEnable(false);
             helper.setAuthSDKInfo(config.getString("sdkSecret"));
@@ -60,6 +62,7 @@ final class CarrierLogin {
     }
     void cancel() { finish(null, null); }
     private void finish(String token, String error) {
+        generation++;
         handler.removeCallbacks(timeout);
         Result result = pending; pending = null;
         if (helper != null) { helper.setAuthListener(null); helper.quitLoginPage(); helper = null; }

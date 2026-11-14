@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-11-13T03:44:32.528969+08:00",
+  "version": "1.0.4",
+  "android": {
+    "build": 21,
+    "region": "CN",
+    "officialPublicURL": "https://appgallery.huawei.com/app/C119475083",
+    "freshPublicVersionVerified": true,
+    "observedVersion": "1.0.4",
+    "observedUpdateDate": "2026/11/10",
+    "installEntryVisible": true,
+    "updateNotes": "完善赛事报名，支持国际区号、先报名后补交音乐及修改报名资料。优化个人中心、成长档案、学习记录与课程月历。",
+    "filing": "湘ICP备2026005683号-5A",
+    "buildLinkedByPriorSubmissionReceipt": 21,
+    "buildNumberDisplayedPublicly": false,
+    "sameAsPreviouslyNotifiedPublicRelease": true,
+    "freshManagementReviewStatusVerified": false
+  },
+  "ios": {
+    "build": 14,
+    "freshStatusVerified": false,
+    "latestManagementEvidence": "evidence/heartbeat-20261112-1943.json"
+  },
+  "harmony": {
+    "build": 23,
+    "freshStatusVerified": false,
+    "latestPublicAttempt": "evidence/heartbeat-20261112-2343.json",
+    "previousApprovalEvidence": "evidence/harmony23-approved-20261111/official-verification.json"
+  },
+  "newReviewOrPublicResultVerified": false,
+  "newStoreSubmission": false,
+  "existingReviewsWithdrawn": false,
+  "newNotificationNeeded": false,
+  "newChannelMaterialsVerified": false,
+  "knownBlockedChannelsReopened": false,
+  "localDevelopmentChangesSubmitted": false,
+  "productionFeatureFlagsChanged": false
+}

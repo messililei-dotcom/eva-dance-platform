@@ -1,0 +1,14 @@
+{
+  "iOS": {
+    "adminSourceReferences": [],
+    "judgeRetained": true
+  },
+  "Android": {
+    "adminSourceReferences": [],
+    "judgeRetained": true
+  },
+  "HarmonyOS": {
+    "adminSourceReferences": [],
+    "judgeRetained": true
+  }
+}

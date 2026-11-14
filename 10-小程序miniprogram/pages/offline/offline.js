@@ -1,3 +1,4 @@
+const { contentText } = require("../../shared/review-text");
 const { buildCalendar, swipeMonth } = require("../../shared/offline-calendar");
 const share = require("../../shared/share");
 const api = require("../../utils/api");
@@ -9,7 +10,7 @@ function cleanDate(value) {
 }
 
 function courseTitle(item) {
-  return [item.course_name || "线下课程", item.course_period].filter(Boolean).join(" · ");
+  return [item.course_name || "线下活动", item.course_period].filter(Boolean).join(" · ");
 }
 
 function lessonTime(item) {
@@ -18,16 +19,16 @@ function lessonTime(item) {
 }
 
 function locationText(item) {
-  return item.classroom || item.address || "上课地点待定";
+  return item.classroom || item.address || "活动地点待定";
 }
 
 function normalizeCourse(item) {
   return {
     ...item,
     id: item.id,
-    name: item.name || "线下课程",
+    name: contentText(item.name, "线下活动"),
     coverImage: item.cover_image || "",
-    subtitle: item.subtitle || item.description || item.category || "",
+    subtitle: contentText(item.subtitle || item.description || item.category),
     teacherText: item.teacher || "伊娃东方舞导师",
     dateText: item.latestPeriodText === "期次待公布" ? "期次安排待公布" : `最新期次：${item.latestPeriodText}`,
     sessionsText: item.periodText || "1 个期次",
@@ -40,7 +41,7 @@ function normalizeCourse(item) {
 function normalizeRight(item) {
   return {
     ...item,
-    title: courseTitle(item),
+    title: contentText(courseTitle(item)),
     available: Number(item.available_sessions || 0),
     frozen: Number(item.frozen_sessions || 0),
     used: Number(item.used_sessions || 0),
@@ -70,9 +71,9 @@ Page(share.withShare("offline", {
     pendingCount: 0,
     consumedCount: 0,
     tabs: [
-      { key: "courses", label: "全部课程" },
+      { key: "courses", label: "全部内容" },
       { key: "consumes", label: "核销记录" },
-      { key: "rights", label: "我的课时" }
+      { key: "rights", label: "我的次数" }
     ]
   },
   onShow() { if (typeof getApp === 'function') { getApp().globalData.lastPublicTab = 'offline'; getApp().globalData.profileLoginCancelled = false; }
@@ -103,7 +104,7 @@ Page(share.withShare("offline", {
       const courses = groupOfflineCourses(rows || []).map(normalizeCourse);
       this.setData({ courses, visibleCourses: this.filterCourses(courses, this.data.keyword) });
     } catch (err) {
-      this.setData({ courseError: err.message || "课程加载失败，请重试" });
+      this.setData({ courseError: err.message || "内容加载失败，请重试" });
     } finally { this.setData({ loading: false }); }
   },
   async loadOverview() {
@@ -116,7 +117,7 @@ Page(share.withShare("offline", {
         availableSessions: rights.reduce((sum,item)=>sum+item.available,0),
         pendingCount: rights.length, consumedCount: rights.reduce((sum,item)=>sum+item.used,0) });
     } catch (err) {
-      this.setData({ overviewError: err.message || "个人课次加载失败，请重试" });
+      this.setData({ overviewError: err.message || "个人次加载失败，请重试" });
     } finally { this.setData({ overviewLoading: false }); }
   },
   clearSessionFilter() {

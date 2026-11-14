@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { blocksNativeManagement } from './lib/native-management-access';
 import { verifyLocalToken } from './app/api/_local-auth';
 import { adminApiFeature, adminLandingPage, canAccessAdminApi, canAccessAdminPage, isRemovedAdminPage, isRestrictedAdminPage } from './lib/admin-feature-access';
 
@@ -132,6 +133,9 @@ async function validateTokenForPath(pathname: string, token: string): Promise<'o
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (blocksNativeManagement(pathname, request.headers.get('x-client-platform'))) {
+    return NextResponse.json({ success: false, error: 'App 不提供后台管理，请使用网页后台' }, { status: 403, headers: { 'Cache-Control': 'private, no-store' } });
+  }
   const apiPath = pathname.replace(/^\/(?:local-api|legacy-student-api)(?=\/)/, '/api');
   const host = request.headers.get('host')?.split(':')[0]?.toLowerCase() || '';
 

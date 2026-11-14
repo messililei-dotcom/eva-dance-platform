@@ -13,6 +13,7 @@ export type PublicEventGroup = {
   player_count: number | null;
   registration_public: number;
   ranked_count: number;
+  ranking_complete?: number;
 };
 
 export type PublicGroupPlayer = {
@@ -94,7 +95,12 @@ export function loadPublicEventGroups(competitionId: number) {
         CASE WHEN c.registration_public = 1 THEN COUNT(DISTINCT CASE
           WHEN p.audit_status != 'rejected' AND p.status NOT IN ('withdrawn', 'cancelled') THEN p.id
         END) ELSE NULL END AS player_count,
-        COUNT(DISTINCT CASE WHEN r.status = 'published' THEN r.player_id END) AS ranked_count
+        COUNT(DISTINCT CASE WHEN r.status = 'published' THEN r.player_id END) AS ranked_count,
+        CASE WHEN COUNT(DISTINCT CASE WHEN p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled') THEN p.id END)>0
+          AND COUNT(DISTINCT CASE WHEN p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled') THEN p.id END)
+            = COUNT(DISTINCT CASE WHEN r.status='published' AND r.rank_no>0 AND r.player_id=p.id
+                AND p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled') THEN p.id END)
+          THEN 1 ELSE 0 END AS ranking_complete
       FROM event_groups g
       JOIN event_competitions c ON c.id=g.competition_id
       LEFT JOIN event_players p ON p.group_id = g.id
@@ -112,12 +118,19 @@ export function loadPublicEventGroup(competitionId: number, groupId: number) {
   return loadPublicEventGroups(competitionId).find((group) => group.id === groupId) || null;
 }
 
+export type PublicEventPlayer = PublicGroupPlayer & { group_id: number; group_name: string };
+
 export function loadPublicGroupPlayers(competitionId: number, groupId: number) {
+  return loadPublicEventPlayers(competitionId, groupId);
+}
+
+// The event-level list reuses exactly the group-level publication/privacy predicate.
+export function loadPublicEventPlayers(competitionId: number, groupId: number | null = null) {
   const db = openAdminDb({ readonly: true });
   try {
     const players = db.prepare(`
       SELECT
-        p.id,
+        p.id, p.group_id, g.name AS group_name,
         COALESCE(p.player_no, '') AS player_no,
         p.name,
         COALESCE(NULLIF(m.wx_avatar_url, ''), NULLIF(m.avatar, ''), '') AS avatar_url,
@@ -128,6 +141,7 @@ export function loadPublicGroupPlayers(competitionId: number, groupId: number) {
         COUNT(DISTINCT CASE WHEN s.score_status = 'published' AND EXISTS (SELECT 1 FROM event_rankings visible WHERE visible.group_id=s.group_id AND visible.player_id=s.player_id AND visible.status='published') THEN s.judge_id END) AS score_count
       FROM event_players p
       JOIN event_competitions c ON c.id=p.competition_id
+      JOIN event_groups g ON g.id=p.group_id AND g.status='active'
       LEFT JOIN Member m ON m.id = p.member_id
       LEFT JOIN event_rankings r
         ON r.group_id = p.group_id AND r.player_id = p.id AND r.status = 'published'
@@ -141,17 +155,17 @@ export function loadPublicGroupPlayers(competitionId: number, groupId: number) {
             AND newer.version > s.version
             AND newer.score_status = 'published'
         )
-      WHERE p.competition_id = ? AND p.group_id = ?
+      WHERE p.competition_id = ? AND (? IS NULL OR p.group_id = ?)
         AND p.audit_status != 'rejected'
         AND p.status NOT IN ('withdrawn', 'cancelled')
         AND (c.registration_public = 1 OR r.status = 'published')
       GROUP BY p.id
-      ORDER BY
+      ORDER BY g.sort_order ASC, g.id ASC,
         CASE WHEN r.rank_no IS NULL OR r.rank_no = 0 THEN 1 ELSE 0 END,
         r.rank_no ASC,
         p.player_no ASC,
         p.id ASC
-    `).all<PublicGroupPlayer>(competitionId, groupId);
+    `).all<PublicEventPlayer>(competitionId, groupId, groupId);
     return players.map(player => ({ ...player, avatar_url: player.avatar_url || (legacyAvatars.players as Record<string, string>)[String(player.id)] || '' }));
   } finally {
     db.close();
@@ -199,6 +213,7 @@ export function loadPublicPlayerDetail(competitionId: number, groupId: number, p
     const scores = db.prepare(`
       SELECT
         s.judge_id AS id,
+        MAX(c.judge_scores_public) AS judge_scores_public,
         COALESCE(j.name, '评委') AS judge_name,
         COALESCE(j.title, '') AS judge_title,
         COALESCE(NULLIF(jm.wx_avatar_url, ''), NULLIF(jm.avatar, ''), '') AS avatar_url,
@@ -208,6 +223,7 @@ export function loadPublicPlayerDetail(competitionId: number, groupId: number, p
       LEFT JOIN event_judges j ON j.id = s.judge_id
       LEFT JOIN Member jm ON jm.id = j.member_id
       WHERE s.competition_id = ? AND s.group_id = ? AND s.player_id = ?
+        AND EXISTS (SELECT 1 FROM event_group_judges gj WHERE gj.group_id=s.group_id AND gj.judge_id=s.judge_id AND gj.status='active')
         AND s.score_status = 'published' AND EXISTS (SELECT 1 FROM event_rankings visible WHERE visible.group_id=s.group_id AND visible.player_id=s.player_id AND visible.status='published')
         AND NOT EXISTS (
           SELECT 1 FROM event_scores newer
@@ -220,11 +236,18 @@ export function loadPublicPlayerDetail(competitionId: number, groupId: number, p
         )
       GROUP BY s.judge_id, j.name, j.title
       ORDER BY j.id ASC
-    `).all<PublicJudgeScore>(competitionId, groupId, playerId);
+    `).all<PublicJudgeScore & { judge_scores_public: number }>(competitionId, groupId, playerId);
 
     player.avatar_url ||= (legacyAvatars.players as Record<string, string>)[String(player.id)] || '';
-    scores.forEach(score => { score.avatar_url ||= (legacyAvatars.judges as Record<string, string>)[String(score.id)] || ''; });
-    return { player, scores };
+    const visibleScores: PublicJudgeScore[] = scores.map((score, index) => {
+      if (Number(score.judge_scores_public) !== 1) return {
+        id: index + 1, judge_name: `评委 ${index + 1}`, judge_title: '', avatar_url: '', score: score.score,
+      };
+      const { judge_scores_public, ...visible } = score;
+      visible.avatar_url ||= (legacyAvatars.judges as Record<string, string>)[String(visible.id)] || '';
+      return visible;
+    });
+    return { player, scores: visibleScores };
   } finally {
     db.close();
   }
@@ -237,4 +260,10 @@ export function formatPublicEntryType(value: string) {
 export function formatPublicScore(value: number | null) {
   if (value == null) return '待公布';
   return Number(value).toLocaleString('zh-CN', { maximumFractionDigits: 2 });
+}
+
+/** Public identity fields only, behind the event's judge-publication switch. */
+export function loadPublicEventJudges(competitionId: number) {
+ const db=openAdminDb({readonly:true});
+ try { return db.prepare(`SELECT DISTINCT j.id,j.name,COALESCE(j.title,'') AS title,COALESCE(j.organization,'') AS organization,COALESCE(j.bio,'') AS bio,COALESCE(NULLIF(m.wx_avatar_url,''),NULLIF(m.avatar,''),'') AS avatar_url FROM event_judges j JOIN event_group_judges gj ON gj.judge_id=j.id AND gj.status='active' JOIN event_competitions c ON c.id=gj.competition_id LEFT JOIN Member m ON m.id=j.member_id WHERE c.id=? AND c.status IN ('published','finished') AND c.judge_scores_public=1 AND j.status='active' ORDER BY j.id`).all<{id:number;name:string;title:string;organization:string;bio:string;avatar_url:string}>(competitionId).map(j=>({...j,avatar_url:j.avatar_url||(legacyAvatars.judges as Record<string,string>)[String(j.id)]||''})); }finally{db.close();}
 }

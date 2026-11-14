@@ -57,7 +57,7 @@ export function ensurePhoneMember(db: any, name: string, contact: string, source
 export function importEventRegistration(db: any, competitionId: number, item: Record<string, unknown>) {
   const name = text(item['选手姓名']);
   const groupName = text(item['组别名称']);
-  if (!name) throw new Error('选手姓名不能为空');
+  if (!name || name.length > 120) throw new Error('请填写1至120个字符的选手姓名');
   if (!groupName) throw new Error('组别名称不能为空');
   const groups = db.prepare('SELECT id,name,registration_fee FROM event_groups WHERE competition_id=? AND trim(name)=?').all(competitionId, groupName);
   if (!groups.length) throw new Error('当前赛事没有匹配的组别，请核对完整组别名称');

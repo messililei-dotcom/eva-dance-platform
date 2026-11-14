@@ -1,11 +1,13 @@
 export interface Credentials { token: string; refreshToken: string; expiresAt: number; memberId: number; sessionId: string; }
-export interface StaffUser { id: number; name: string; role: string; }
-export interface StaffCredentials { token: string; user: StaffUser; }
 export interface Envelope<T> { success: boolean; data?: T; error?: string; message?: string; }
 export interface CourseOffer { id?: number; name?: string; period?: string; priceFen?: number; sessions?: number; }
 export interface PaymentFlags { alipay?: boolean; wechat?: boolean; }
 export interface MediaQuality { value: string; label: string; url: string; }
 export interface Row {
+  canPay?: boolean; summary?: Row; eventCount?: number; publishedCount?: number; podiumCount?: number; judgeScores?: Row[]; judgeName?: string; score?: number | null;
+  member?: Row;
+  offline_period_count?: number; offline_latest_period?: string; offline_student_count?: number; offline_min_price?: number; offline_search_text?: string;
+  learning_percent?: number; timestamp_seconds?: number;
   birthday?: string; stats?: Row; authorized_count?: number; offline_course_count?: number;
   avatar_url?: string; wx_avatar_url?: string; wx_nickname?: string; wx_name?: string; level?: string;
   unreadCount?: number;
@@ -17,7 +19,7 @@ export interface Row {
   mediaKind?: string;
   shipping?: Row; quantity?: number; productId?: string; alipay?: boolean; wechat?: boolean;
   recipient?: string; address?: string; deliveryMethod?: string; totalFen?: number; trackingNo?: string; carrier?: string; spec?: string; size?: string; color?: string; image?: string; detailText?: string;
-  group_key?: string; promo_price?: number; is_free?: number | boolean; outline?: string[]; period_status?: string; capacity?: number; remaining?: number; total_students?: number; group_total_students?: number;
+  group_key?: string; promo_price?: number; is_free?: number | boolean; outline?: string[]; period_status?: string; capacity?: number; remaining?: number; total_students?: number; group_total_students?: number; student_display_base?: number;
   ordinal?: number; percent?: number; completed?: number; priceFen?: number; order?: Row; offer?: CourseOffer; payment?: PaymentFlags; provider?: string; url?: string; period?: string;
   id?: number | string; name?: string; title?: string; subtitle?: string; teacher?: string; category?: string;
   rich_description?: string; description?: string; cover_image?: string; total_courses?: number; source_id?: number; location?: string;
@@ -25,6 +27,7 @@ export interface Row {
   series_id?: number; series_name?: string; video_id?: number; course_name?: string; courseName?: string;
   videos?: Row[]; duration?: number; progress?: number; revision?: number; play_url?: string; authorized?: boolean; last_play_at?: string;
   entries?: Row[]; players?: Row[]; contestants?: Row[]; items?: Row[]; products?: Row[]; orders?: Row[];
+  revenue?: Row; platformFen?: number;
   competition?: Row; groups?: Row[]; sessions?: Row[]; rankings?: Row[]; entitlements?: Row[]; bookings?: Row[];
   groupId?: number; groupName?: string; competitionName?: string; performanceTitle?: string; phone?: string;
   organization?: string; contestantNumber?: string; programNumber?: string; sequenceNo?: number; playerNo?: string;
@@ -45,6 +48,7 @@ export interface Row {
 }
 export interface ShopItem { id: string; quantity: number; }
 export interface WriteBody {
+  scores?: Record<string, number>;
   installationId?: string; pushSessionId?: string; deviceId?: string; enabled?: boolean;
   device_id?: string; material_version?: string;
   accessToken?: string;

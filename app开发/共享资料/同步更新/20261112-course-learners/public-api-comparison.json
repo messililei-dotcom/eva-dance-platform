@@ -1,0 +1,707 @@
+{
+  "checkedAt": "2026-11-12T12:04:52.514973+08:00",
+  "equal": true,
+  "courses": 58,
+  "rows": {
+    "mini": [
+      {
+        "id": 6,
+        "name": "全力出肌·舞蹈核心风暴",
+        "total_students": 105,
+        "student_display_base": 698
+      },
+      {
+        "id": 7,
+        "name": "黄金陀螺·旋转训练",
+        "total_students": 64,
+        "student_display_base": 699
+      },
+      {
+        "id": 1,
+        "name": "舞蹈运动呼吸学",
+        "total_students": 220,
+        "student_display_base": 820
+      },
+      {
+        "id": 10,
+        "name": "\"7+1\"国际技巧班",
+        "total_students": 237,
+        "student_display_base": 684
+      },
+      {
+        "id": 3,
+        "name": "S曲线·胸腰舞感",
+        "total_students": 91,
+        "student_display_base": 697
+      },
+      {
+        "id": 4,
+        "name": "东方舞技巧大全·选配128节",
+        "total_students": 334,
+        "student_display_base": 911
+      },
+      {
+        "id": 5,
+        "name": "云·弟子班",
+        "total_students": 62,
+        "student_display_base": 807
+      },
+      {
+        "id": 12,
+        "name": "东方舞零基础入门课程·全阶段",
+        "total_students": 48,
+        "student_display_base": 735
+      },
+      {
+        "id": 14,
+        "name": "14种头部技巧 + 全类甩发技巧",
+        "total_students": 42,
+        "student_display_base": 620
+      },
+      {
+        "id": 8,
+        "name": "疯狂西米",
+        "total_students": 135,
+        "student_display_base": 839
+      },
+      {
+        "id": 15,
+        "name": "编舞师·第1阶",
+        "total_students": 71,
+        "student_display_base": 758
+      },
+      {
+        "id": 16,
+        "name": "编舞师·第2阶",
+        "total_students": 20,
+        "student_display_base": 836
+      },
+      {
+        "id": 17,
+        "name": "舞者英语·国际课堂入门",
+        "total_students": 3,
+        "student_display_base": 579
+      },
+      {
+        "id": 18,
+        "name": "手臂全维度精雕系统课",
+        "total_students": 131,
+        "student_display_base": 896
+      },
+      {
+        "id": 19,
+        "name": "零基础·亲传教练系统课",
+        "total_students": 136,
+        "student_display_base": 721
+      },
+      {
+        "id": 20,
+        "name": "成品舞｜18支全风格舞蹈",
+        "total_students": 142,
+        "student_display_base": 932
+      },
+      {
+        "id": 21,
+        "name": "成品舞｜LiberTango",
+        "total_students": 6,
+        "student_display_base": 583
+      },
+      {
+        "id": 22,
+        "name": "成品舞｜Khaleegy波斯湾甩发舞",
+        "total_students": 3,
+        "student_display_base": 781
+      },
+      {
+        "id": 23,
+        "name": "成品舞｜一千零一夜",
+        "total_students": 12,
+        "student_display_base": 831
+      },
+      {
+        "id": 24,
+        "name": "成品舞｜不如见一面",
+        "total_students": 4,
+        "student_display_base": 893
+      },
+      {
+        "id": 25,
+        "name": "成品舞｜人世间",
+        "total_students": 2,
+        "student_display_base": 610
+      },
+      {
+        "id": 26,
+        "name": "成品舞｜可惜没有如果（原创作品·新现代融舞·情感主题系列）",
+        "total_students": 4,
+        "student_display_base": 534
+      },
+      {
+        "id": 27,
+        "name": "成品舞｜听说你",
+        "total_students": 2,
+        "student_display_base": 830
+      },
+      {
+        "id": 28,
+        "name": "成品舞｜哪吒",
+        "total_students": 19,
+        "student_display_base": 543
+      },
+      {
+        "id": 29,
+        "name": "成品舞｜在窗下 Taht EI Shibbak",
+        "total_students": 16,
+        "student_display_base": 554
+      },
+      {
+        "id": 30,
+        "name": "成品舞｜塑料般的腰",
+        "total_students": 23,
+        "student_display_base": 798
+      },
+      {
+        "id": 31,
+        "name": "成品舞｜大花轿",
+        "total_students": 14,
+        "student_display_base": 938
+      },
+      {
+        "id": 32,
+        "name": "成品舞｜天下无双",
+        "total_students": 7,
+        "student_display_base": 641
+      },
+      {
+        "id": 33,
+        "name": "成品舞｜归去来兮",
+        "total_students": 2,
+        "student_display_base": 716
+      },
+      {
+        "id": 34,
+        "name": "成品舞｜我的中国心",
+        "total_students": 13,
+        "student_display_base": 916
+      },
+      {
+        "id": 35,
+        "name": "成品舞｜晚秋",
+        "total_students": 20,
+        "student_display_base": 555
+      },
+      {
+        "id": 36,
+        "name": "成品舞｜梦底",
+        "total_students": 2,
+        "student_display_base": 696
+      },
+      {
+        "id": 37,
+        "name": "成品舞｜珊瑚颂",
+        "total_students": 9,
+        "student_display_base": 855
+      },
+      {
+        "id": 38,
+        "name": "成品舞｜珍惜你 Batwanes Beek",
+        "total_students": 13,
+        "student_display_base": 742
+      },
+      {
+        "id": 39,
+        "name": "成品舞｜画皮",
+        "total_students": 9,
+        "student_display_base": 518
+      },
+      {
+        "id": 40,
+        "name": "成品舞｜百分百晚安",
+        "total_students": 5,
+        "student_display_base": 670
+      },
+      {
+        "id": 41,
+        "name": "成品舞｜笼",
+        "total_students": 7,
+        "student_display_base": 854
+      },
+      {
+        "id": 42,
+        "name": "成品舞｜说散就散",
+        "total_students": 5,
+        "student_display_base": 930
+      },
+      {
+        "id": 43,
+        "name": "成品舞｜遥远的思念 Baed Annak",
+        "total_students": 18,
+        "student_display_base": 879
+      },
+      {
+        "id": 44,
+        "name": "成品舞｜阿语版·我只在乎你",
+        "total_students": 15,
+        "student_display_base": 884
+      },
+      {
+        "id": 45,
+        "name": "成品舞｜青花",
+        "total_students": 10,
+        "student_display_base": 915
+      },
+      {
+        "id": 46,
+        "name": "成品舞｜Aziza纱巾舞",
+        "total_students": 24,
+        "student_display_base": 668
+      },
+      {
+        "id": 47,
+        "name": "成品舞｜桃花诺",
+        "total_students": 2,
+        "student_display_base": 954
+      },
+      {
+        "id": 48,
+        "name": "成品舞｜女人花",
+        "total_students": 2,
+        "student_display_base": 907
+      },
+      {
+        "id": 50,
+        "name": "成品舞｜如愿",
+        "total_students": 3,
+        "student_display_base": 692
+      },
+      {
+        "id": 51,
+        "name": "成品舞｜饮湖上",
+        "total_students": 2,
+        "student_display_base": 789
+      },
+      {
+        "id": 52,
+        "name": "成品舞｜万疆",
+        "total_students": 2,
+        "student_display_base": 905
+      },
+      {
+        "id": 53,
+        "name": "成品舞｜三生三世",
+        "total_students": 3,
+        "student_display_base": 736
+      },
+      {
+        "id": 54,
+        "name": "《舞蹈视频剪辑课》",
+        "total_students": 8,
+        "student_display_base": 967
+      },
+      {
+        "id": 57,
+        "name": "《全舞种道具课程》",
+        "total_students": 37,
+        "student_display_base": 526
+      },
+      {
+        "id": 58,
+        "name": "成品舞｜Mejance纱巾开场舞",
+        "total_students": 5,
+        "student_display_base": 726
+      },
+      {
+        "id": 59,
+        "name": "成品舞｜你的选择",
+        "total_students": 4,
+        "student_display_base": 655
+      },
+      {
+        "id": 60,
+        "name": "成品舞｜Yala ya Habibi",
+        "total_students": 5,
+        "student_display_base": 570
+      },
+      {
+        "id": 61,
+        "name": "成品舞｜故事就是这样开始了",
+        "total_students": 4,
+        "student_display_base": 748
+      },
+      {
+        "id": 62,
+        "name": "成品舞｜嘟嘟Ay Khedma Ya Basha",
+        "total_students": 3,
+        "student_display_base": 580
+      },
+      {
+        "id": 63,
+        "name": "成品舞｜我爱你，美丽的姑娘",
+        "total_students": 11,
+        "student_display_base": 590
+      },
+      {
+        "id": 64,
+        "name": "成品舞｜DrumSolo鼓舞",
+        "total_students": 8,
+        "student_display_base": 568
+      },
+      {
+        "id": 66,
+        "name": "成品舞｜DrumSolo拉丁鼓舞2026",
+        "total_students": 5,
+        "student_display_base": 617
+      }
+    ],
+    "app/v1": [
+      {
+        "id": 6,
+        "name": "全力出肌·舞蹈核心风暴",
+        "total_students": 105,
+        "student_display_base": 698
+      },
+      {
+        "id": 7,
+        "name": "黄金陀螺·旋转训练",
+        "total_students": 64,
+        "student_display_base": 699
+      },
+      {
+        "id": 1,
+        "name": "舞蹈运动呼吸学",
+        "total_students": 220,
+        "student_display_base": 820
+      },
+      {
+        "id": 10,
+        "name": "\"7+1\"国际技巧班",
+        "total_students": 237,
+        "student_display_base": 684
+      },
+      {
+        "id": 3,
+        "name": "S曲线·胸腰舞感",
+        "total_students": 91,
+        "student_display_base": 697
+      },
+      {
+        "id": 4,
+        "name": "东方舞技巧大全·选配128节",
+        "total_students": 334,
+        "student_display_base": 911
+      },
+      {
+        "id": 5,
+        "name": "云·弟子班",
+        "total_students": 62,
+        "student_display_base": 807
+      },
+      {
+        "id": 12,
+        "name": "东方舞零基础入门课程·全阶段",
+        "total_students": 48,
+        "student_display_base": 735
+      },
+      {
+        "id": 14,
+        "name": "14种头部技巧 + 全类甩发技巧",
+        "total_students": 42,
+        "student_display_base": 620
+      },
+      {
+        "id": 8,
+        "name": "疯狂西米",
+        "total_students": 135,
+        "student_display_base": 839
+      },
+      {
+        "id": 15,
+        "name": "编舞师·第1阶",
+        "total_students": 71,
+        "student_display_base": 758
+      },
+      {
+        "id": 16,
+        "name": "编舞师·第2阶",
+        "total_students": 20,
+        "student_display_base": 836
+      },
+      {
+        "id": 17,
+        "name": "舞者英语·国际课堂入门",
+        "total_students": 3,
+        "student_display_base": 579
+      },
+      {
+        "id": 18,
+        "name": "手臂全维度精雕系统课",
+        "total_students": 131,
+        "student_display_base": 896
+      },
+      {
+        "id": 19,
+        "name": "零基础·亲传教练系统课",
+        "total_students": 136,
+        "student_display_base": 721
+      },
+      {
+        "id": 20,
+        "name": "成品舞｜18支全风格舞蹈",
+        "total_students": 142,
+        "student_display_base": 932
+      },
+      {
+        "id": 21,
+        "name": "成品舞｜LiberTango",
+        "total_students": 6,
+        "student_display_base": 583
+      },
+      {
+        "id": 22,
+        "name": "成品舞｜Khaleegy波斯湾甩发舞",
+        "total_students": 3,
+        "student_display_base": 781
+      },
+      {
+        "id": 23,
+        "name": "成品舞｜一千零一夜",
+        "total_students": 12,
+        "student_display_base": 831
+      },
+      {
+        "id": 24,
+        "name": "成品舞｜不如见一面",
+        "total_students": 4,
+        "student_display_base": 893
+      },
+      {
+        "id": 25,
+        "name": "成品舞｜人世间",
+        "total_students": 2,
+        "student_display_base": 610
+      },
+      {
+        "id": 26,
+        "name": "成品舞｜可惜没有如果（原创作品·新现代融舞·情感主题系列）",
+        "total_students": 4,
+        "student_display_base": 534
+      },
+      {
+        "id": 27,
+        "name": "成品舞｜听说你",
+        "total_students": 2,
+        "student_display_base": 830
+      },
+      {
+        "id": 28,
+        "name": "成品舞｜哪吒",
+        "total_students": 19,
+        "student_display_base": 543
+      },
+      {
+        "id": 29,
+        "name": "成品舞｜在窗下 Taht EI Shibbak",
+        "total_students": 16,
+        "student_display_base": 554
+      },
+      {
+        "id": 30,
+        "name": "成品舞｜塑料般的腰",
+        "total_students": 23,
+        "student_display_base": 798
+      },
+      {
+        "id": 31,
+        "name": "成品舞｜大花轿",
+        "total_students": 14,
+        "student_display_base": 938
+      },
+      {
+        "id": 32,
+        "name": "成品舞｜天下无双",
+        "total_students": 7,
+        "student_display_base": 641
+      },
+      {
+        "id": 33,
+        "name": "成品舞｜归去来兮",
+        "total_students": 2,
+        "student_display_base": 716
+      },
+      {
+        "id": 34,
+        "name": "成品舞｜我的中国心",
+        "total_students": 13,
+        "student_display_base": 916
+      },
+      {
+        "id": 35,
+        "name": "成品舞｜晚秋",
+        "total_students": 20,
+        "student_display_base": 555
+      },
+      {
+        "id": 36,
+        "name": "成品舞｜梦底",
+        "total_students": 2,
+        "student_display_base": 696
+      },
+      {
+        "id": 37,
+        "name": "成品舞｜珊瑚颂",
+        "total_students": 9,
+        "student_display_base": 855
+      },
+      {
+        "id": 38,
+        "name": "成品舞｜珍惜你 Batwanes Beek",
+        "total_students": 13,
+        "student_display_base": 742
+      },
+      {
+        "id": 39,
+        "name": "成品舞｜画皮",
+        "total_students": 9,
+        "student_display_base": 518
+      },
+      {
+        "id": 40,
+        "name": "成品舞｜百分百晚安",
+        "total_students": 5,
+        "student_display_base": 670
+      },
+      {
+        "id": 41,
+        "name": "成品舞｜笼",
+        "total_students": 7,
+        "student_display_base": 854
+      },
+      {
+        "id": 42,
+        "name": "成品舞｜说散就散",
+        "total_students": 5,
+        "student_display_base": 930
+      },
+      {
+        "id": 43,
+        "name": "成品舞｜遥远的思念 Baed Annak",
+        "total_students": 18,
+        "student_display_base": 879
+      },
+      {
+        "id": 44,
+        "name": "成品舞｜阿语版·我只在乎你",
+        "total_students": 15,
+        "student_display_base": 884
+      },
+      {
+        "id": 45,
+        "name": "成品舞｜青花",
+        "total_students": 10,
+        "student_display_base": 915
+      },
+      {
+        "id": 46,
+        "name": "成品舞｜Aziza纱巾舞",
+        "total_students": 24,
+        "student_display_base": 668
+      },
+      {
+        "id": 47,
+        "name": "成品舞｜桃花诺",
+        "total_students": 2,
+        "student_display_base": 954
+      },
+      {
+        "id": 48,
+        "name": "成品舞｜女人花",
+        "total_students": 2,
+        "student_display_base": 907
+      },
+      {
+        "id": 50,
+        "name": "成品舞｜如愿",
+        "total_students": 3,
+        "student_display_base": 692
+      },
+      {
+        "id": 51,
+        "name": "成品舞｜饮湖上",
+        "total_students": 2,
+        "student_display_base": 789
+      },
+      {
+        "id": 52,
+        "name": "成品舞｜万疆",
+        "total_students": 2,
+        "student_display_base": 905
+      },
+      {
+        "id": 53,
+        "name": "成品舞｜三生三世",
+        "total_students": 3,
+        "student_display_base": 736
+      },
+      {
+        "id": 54,
+        "name": "《舞蹈视频剪辑课》",
+        "total_students": 8,
+        "student_display_base": 967
+      },
+      {
+        "id": 57,
+        "name": "《全舞种道具课程》",
+        "total_students": 37,
+        "student_display_base": 526
+      },
+      {
+        "id": 58,
+        "name": "成品舞｜Mejance纱巾开场舞",
+        "total_students": 5,
+        "student_display_base": 726
+      },
+      {
+        "id": 59,
+        "name": "成品舞｜你的选择",
+        "total_students": 4,
+        "student_display_base": 655
+      },
+      {
+        "id": 60,
+        "name": "成品舞｜Yala ya Habibi",
+        "total_students": 5,
+        "student_display_base": 570
+      },
+      {
+        "id": 61,
+        "name": "成品舞｜故事就是这样开始了",
+        "total_students": 4,
+        "student_display_base": 748
+      },
+      {
+        "id": 62,
+        "name": "成品舞｜嘟嘟Ay Khedma Ya Basha",
+        "total_students": 3,
+        "student_display_base": 580
+      },
+      {
+        "id": 63,
+        "name": "成品舞｜我爱你，美丽的姑娘",
+        "total_students": 11,
+        "student_display_base": 590
+      },
+      {
+        "id": 64,
+        "name": "成品舞｜DrumSolo鼓舞",
+        "total_students": 8,
+        "student_display_base": 568
+      },
+      {
+        "id": 66,
+        "name": "成品舞｜DrumSolo拉丁鼓舞2026",
+        "total_students": 5,
+        "student_display_base": 617
+      }
+    ]
+  }
+}

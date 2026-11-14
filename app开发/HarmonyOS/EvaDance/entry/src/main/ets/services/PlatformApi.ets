@@ -2,7 +2,7 @@ import { http } from '@kit.NetworkKit';
 import { rcp } from '@kit.RemoteCommunicationKit';
 
 import { util } from '@kit.ArkTS';
-import { Credentials, StaffCredentials, Envelope, WriteBody } from './Models';
+import { Credentials, Envelope, WriteBody } from './Models';
 import { common } from '@kit.AbilityKit';
 import { HuksVault } from './HuksVault';
 
@@ -10,7 +10,6 @@ export type ApiMethod = http.RequestMethod | 'PATCH';
 
 const API: string = 'https://admin.swod.com.cn/api/app/v1';
 const PUBLIC_API: string = 'https://admin.swod.com.cn/api/mini';
-const MANAGEMENT_API: string = 'https://admin.swod.com.cn/api';
 
 class RejectRedirect implements http.HttpInterceptor {
   interceptorType: http.InterceptorType = http.InterceptorType.REDIRECTION;
@@ -21,7 +20,7 @@ export class PlatformFailure extends Error {
   constructor(message: string, status: number) { super(message); this.status = status; }
 }
 export function publicRead(path: string, method: ApiMethod): boolean {
-  return method === http.RequestMethod.GET && /^\/(public\/(series(\/[1-9][0-9]*(\/(courses|detail))?)?|offline-courses|calendar|home-stats)|events(\/[1-9][0-9]*)?)$/.test(path.split('?')[0]);
+  return method === http.RequestMethod.GET && /^\/(public\/(series(\/[1-9][0-9]*(\/(courses|detail))?)?|offline-courses|calendar|home-stats)|events(\/[1-9][0-9]*(\/groups\/[1-9][0-9]*(\/players\/[1-9][0-9]*)?)?)?)$/.test(path.split('?')[0]);
 }
 export function safePath(path: string): boolean {
   return path.startsWith('/') && !path.startsWith('//') && !path.includes('..') && !path.includes('://') && !path.includes('\\') && !/%(2f|2e|5c)/i.test(path);
@@ -70,7 +69,6 @@ export class PlatformApi {
     this.credentialWrites = operation.catch(() => {}); return operation;
   }
   credentials?: Credentials;
-  staff?: StaffCredentials;
   private generation: number = 0;
   private refreshing?: Promise<Credentials>;
   async login(phone: string, code: string, isCurrent: () => boolean = () => true): Promise<void> {
@@ -96,17 +94,6 @@ export class PlatformApi {
   async logout(): Promise<void> {
     const token = this.credentials?.token; this.clear();
     if (token) await this.exchange<Object>(API, '/auth/logout', http.RequestMethod.POST, {}, token);
-  }
-  async loginStaff(username: string, password: string): Promise<void> {
-    const value = await this.raw<StaffCredentials>(MANAGEMENT_API, '/login', http.RequestMethod.POST, { username: username, password: password });
-    if (!value.token || !['admin', 'event_admin'].includes(value.user.role)) throw new PlatformFailure('当前账号没有赛事管理权限', 403);
-    this.staff = value;
-  }
-  async staffRequest<T>(path: string, method: ApiMethod = http.RequestMethod.GET, body?: WriteBody): Promise<T> {
-    if (!this.staff || !path.startsWith('/event/')) throw new PlatformFailure('请使用工作人员账号登录', 401);
-    const token = this.staff.token;
-    try { return await this.exchange<T>(MANAGEMENT_API, path, method, body, token); }
-    catch (error) { if (error instanceof PlatformFailure && error.status === 401 && this.staff?.token === token) this.staff = undefined; throw error instanceof Error ? error : new PlatformFailure('请求失败，请重试', 500); }
   }
   async request<T>(path: string, method: ApiMethod = http.RequestMethod.GET, body?: WriteBody, authenticated: boolean = false): Promise<T> {
     const token = authenticated ? this.credentials?.token : undefined;

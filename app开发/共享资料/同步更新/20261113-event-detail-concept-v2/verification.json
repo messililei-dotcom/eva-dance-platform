@@ -1,0 +1,169 @@
+{
+  "website": {
+    "buildId": "Ruyfvn_p1UbFlInpM4NSk",
+    "backup": "/www/wwwroot/dongfangwuquan/deploy-backups/event-detail-concept-v2-20261113",
+    "health": "passed",
+    "files": {
+      "src/app/events-news/[slug]/page.tsx": "aae32a70ba8b0b2a2ff95fa87bac9c35ace1ead4dcee24311e39a8903158e990",
+      "src/app/events-news/events.module.css": "afdc317f2c3c1ceeb1643df5348f125f8750673a33a1c13e86e4d23b5b0a3d3d",
+      "src/components/events/EventGroupSearch.tsx": "6ce8ef60becab639781a96c0d597c92fb941fd5b139a1a54383d3f9e7d40f2cc",
+      "src/components/events/EventPeopleSearch.tsx": "f38f632fd2b0e3115b10f73c5fb794700e3045731041d1ec556d936a1c57a3c0",
+      "src/lib/event-age.ts": "849def9eaf7ace64593ad88fa6e22fdf64b1f3d61428959d778271728e29c90c",
+      "src/lib/public-event-data.ts": "0c146a1a1e9863256174e7a360e85a8c69e6d6095f47d95d7a39060eba60715c",
+      "src/lib/events-news.ts": "d0d7c7147807275510e72b56ebd8ca394fdb28bb5ddda18f9235cc91511ff2f1",
+      "src/types/events-news.ts": "9535569993a0ff9e6484a994f5beb76e32e27b9f621bc1323e0f13b96e74c115",
+      "src/components/BottomNav.tsx": "94e5580b7314a7431681f19fb3861f4c59fd128b5ade310f077161c0499c7390",
+      "public/sw.js": "e04a8e48b1a6099b1c94e5b2f93f8db740872ed19d8e73aae1b657425a541b72"
+    },
+    "databaseMutation": false,
+    "miniUploaded": false,
+    "appsUploaded": false
+  },
+  "publicHTTP": {
+    "panels": {
+      "overview": true,
+      "groups": true,
+      "players": true,
+      "judges": true,
+      "results": true
+    },
+    "compactHeader": true,
+    "privacySQLFixture": true,
+    "list": true,
+    "registeringCards": [
+      "K5-GBA湾区舞蹈节",
+      "凰之翎第六届国际舞蹈艺术节"
+    ],
+    "endedFilter": true,
+    "detail": "/events/event-2026-100060",
+    "group": "/events/event-2026-100060/groups/204276",
+    "unpublishedGroupHasNoPodium": true,
+    "coverStyles": true,
+    "workerVersion": "swod-pwa-v17-event-detail-20261113"
+  },
+  "buildChecks": [
+    {
+      "name": "ios-build",
+      "returncode": 0,
+      "seconds": 10.3,
+      "command": [
+        "xcodebuild",
+        "-project",
+        "EvaDance.xcodeproj",
+        "-scheme",
+        "EvaDance",
+        "-configuration",
+        "Debug",
+        "-destination",
+        "generic/platform=iOS Simulator",
+        "-derivedDataPath",
+        "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/共享资料/同步更新/20261113-event-detail-concept-v2/build-cache/ios-derived-data",
+        "CODE_SIGN_IDENTITY=-",
+        "CODE_SIGNING_ALLOWED=YES",
+        "ARCHS=arm64",
+        "ONLY_ACTIVE_ARCH=YES",
+        "COMPILER_INDEX_STORE_ENABLE=NO",
+        "build"
+      ],
+      "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance"
+    },
+    {
+      "name": "ios-core-checks",
+      "returncode": 0,
+      "seconds": 4.0,
+      "command": [
+        "swift",
+        "run",
+        "--scratch-path",
+        "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/共享资料/同步更新/20261113-event-detail-concept-v2/build-cache/ios-core-scratch",
+        "EvaCoreChecks"
+      ],
+      "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/iOS/EvaDance"
+    },
+    {
+      "name": "android-checks",
+      "returncode": 0,
+      "seconds": 4.9,
+      "command": [
+        "./gradlew",
+        "assembleDebug",
+        "testDebugUnitTest",
+        "lintDebug",
+        "--console=plain"
+      ],
+      "cwd": "/Users/lilei/Library/Caches/SWOD/Android/event-detail-concept-v2-20261113"
+    },
+    {
+      "name": "harmony-build",
+      "returncode": 0,
+      "seconds": 8.5,
+      "command": [
+        "/Users/lilei/Library/Huawei/CommandLineTools/6.1.1.418/command-line-tools/bin/hvigorw",
+        "assembleHap",
+        "-p",
+        "product=default",
+        "-p",
+        "buildMode=debug",
+        "--no-daemon"
+      ],
+      "cwd": "/Users/lilei/Library/Caches/SWOD/HarmonyOS/event-detail-concept-v2-20261113"
+    },
+    {
+      "name": "harmony-checks",
+      "returncode": 0,
+      "seconds": 0.7,
+      "command": [
+        "node",
+        "--test",
+        "scripts/platform-api.test.cjs",
+        "scripts/course-media.test.cjs",
+        "scripts/event-presentation.test.cjs"
+      ],
+      "cwd": "/Volumes/Eva U disk/伊娃东方舞-开发工程/app开发/HarmonyOS/EvaDance"
+    }
+  ],
+  "sourceSHA256": {
+    "production/website/src/app/events-news/[slug]/page.tsx": "aae32a70ba8b0b2a2ff95fa87bac9c35ace1ead4dcee24311e39a8903158e990",
+    "production/website/src/app/events-news/events.module.css": "afdc317f2c3c1ceeb1643df5348f125f8750673a33a1c13e86e4d23b5b0a3d3d",
+    "production/website/src/components/events/EventGroupSearch.tsx": "6ce8ef60becab639781a96c0d597c92fb941fd5b139a1a54383d3f9e7d40f2cc",
+    "production/website/src/lib/public-event-data.ts": "0c146a1a1e9863256174e7a360e85a8c69e6d6095f47d95d7a39060eba60715c",
+    "production/website/src/lib/events-news.ts": "d0d7c7147807275510e72b56ebd8ca394fdb28bb5ddda18f9235cc91511ff2f1",
+    "production/website/src/types/events-news.ts": "9535569993a0ff9e6484a994f5beb76e32e27b9f621bc1323e0f13b96e74c115",
+    "production/website/public/sw.js": "e04a8e48b1a6099b1c94e5b2f93f8db740872ed19d8e73aae1b657425a541b72",
+    "10-小程序miniprogram/pages/event-detail/event-detail.js": "e74b83bb934a8578ba9c11f8976080c636d251c6370d3565fb84c88661e9062f",
+    "10-小程序miniprogram/pages/event-detail/event-detail.wxml": "423f2e207b53b74e4320d50273376486b8a2e263cc397e295abebe3a8df24d24",
+    "10-小程序miniprogram/pages/event-detail/event-detail.wxss": "a05dd2386279e434135f0d7deb190ee4d2db600f154347eb52a211365b495426",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventDetailView.swift": "2e17ac62be774685cd41fdd28720bc0f1f58d9caaff820d7d7e84bae51fdea5a",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventUI.swift": "38545f1b8d4b64287aaa5577146691ede8ace5a3634773a1d5f33b1d5697c8f8",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "6c51c9ba34f19d9036fef4f8c8efc37146f9a95184b1cccc41ca470b8b8f2f4f",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/EventPresentation.java": "4bb5546646c08a82abae0d7444ff984be5eded1d665f25103efacd2b801ee4f1",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/components/PublicEventView.ets": "89c895d46dd3508faf121781b42b45490c90d9df90a7d6770febe293b8337a42",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "49b2966426ea270ced0ceb45f68481ae4f70f7d5dec15ca4f14c62d10cd7ac09",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/EventPresentation.ets": "a3aee4e69c52424b21fffb13c966bfd6fb03e5fae69d66f11b73f5901f90309d",
+    "production/website/src/components/BottomNav.tsx": "94e5580b7314a7431681f19fb3861f4c59fd128b5ade310f077161c0499c7390",
+    "production/website/src/components/events/EventPeopleSearch.tsx": "f38f632fd2b0e3115b10f73c5fb794700e3045731041d1ec556d936a1c57a3c0",
+    "production/website/src/lib/event-age.ts": "849def9eaf7ace64593ad88fa6e22fdf64b1f3d61428959d778271728e29c90c",
+    "10-小程序miniprogram/shared/event-age.js": "43cff375bdbaa08e897091c20d0af34d4eced93b34130e5ae7e8af8f6f735942"
+  },
+  "packageSHA256": {
+    "artifacts/app-debug.apk": "0abd2b858d3171ea7bf79b3788ec02c0198c9edd2eda9d39bd20c3f87bdaacf3",
+    "artifacts/entry-default-unsigned.hap": "2a184af4dd8e0e60561e9ca9b0fb110392ef6c88d045bdedcb6dde3ba653765e"
+  },
+  "mini": {
+    "targetedTests": {
+      "passed": 5,
+      "total": 5
+    },
+    "existingTests": {
+      "passed": 156,
+      "total": 158,
+      "sameFailuresBeforeChange": true
+    },
+    "localCompilerErrors": 0,
+    "uploaded": false
+  },
+  "appsUploaded": false,
+  "realDeviceAccepted": false,
+  "installedPWAActivationAccepted": false,
+  "oneTimeResumeAutomationDeleted": "automation-7"
+}

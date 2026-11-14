@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-11",
+  "website_tests": 18,
+  "mini_tests": 22,
+  "android_unit_tests": 32,
+  "ios_surface_tests": 2,
+  "ios_simulator_build": "passed",
+  "ios_device_unsigned_build": "passed",
+  "android_debug_apk": "passed",
+  "harmony_signed_build": "passed",
+  "website_types": "passed",
+  "website_full_build": "blocked: isolated environment missing backend sqlite dependency at prerender",
+  "device_acceptance": "not completed",
+  "deployment": "not performed",
+  "store_submission": "not performed"
+}

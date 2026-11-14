@@ -20,7 +20,7 @@ enum CourseCacheVault {
             guard SecItemAdd(key.merging(fields) { _, new in new } as CFDictionary, nil) == errSecSuccess else { throw failure }
         } else if status != errSecSuccess { throw failure }
     }
-    static var failure: Error { NSError(domain: "SWODCache", code: 1, userInfo: [NSLocalizedDescriptionKey: "无法安全保存课程缓存，请重试"]) }
+    static var failure: Error { NSError(domain: "SWODCache", code: 1, userInfo: [NSLocalizedDescriptionKey: "无法安全保存离线内容，请重试"]) }
     static func bytes(_ directory: URL) -> Int64 {
         guard let walk = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: [.fileSizeKey, .isRegularFileKey]) else { return 0 }
         var total: Int64 = 0

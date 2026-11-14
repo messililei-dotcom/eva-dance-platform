@@ -340,7 +340,7 @@ export default function EventRegistrationPage() {
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   <label className="text-sm font-medium text-text">
                     姓名 <span className="text-crimson">*</span>
-                    <input required maxLength={30} value={form.name} onChange={(e)=>{setForm({...form,name:e.target.value});setSearch(e.target.value);}} className="mt-2 w-full min-w-0 rounded-lg border border-sand bg-white px-3 py-3 text-text outline-none md:px-4" />
+                    <input required maxLength={120} placeholder="支持中文、英文和空格" value={form.name} onChange={(e)=>{setForm({...form,name:e.target.value});setSearch(e.target.value);}} className="mt-2 w-full min-w-0 rounded-lg border border-sand bg-white px-3 py-3 text-text outline-none md:px-4" />
                   </label>
                   <div className="text-sm font-medium text-text">
                     <label htmlFor="event-phone">手机号 <span className="text-crimson">*</span></label>

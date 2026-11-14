@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-11-12T13:13:32.611956+08:00",
+  "device": "Connected physical iPhone14ProMax, iOS27.2; Android and Harmony physical devices not detected",
+  "installed": true,
+  "launched": true,
+  "bundleID": "cn.com.swod.app",
+  "version": "1.0.4",
+  "build": "14",
+  "testOnly": true,
+  "developmentEntitlements": "Existing local development profile did not support aps-environment. Test build uses temporary entitlements without inactive push, while original release entitlements and store candidates unchanged.",
+  "screen": "After user explicitly confirmed and clicked, physical device returned to course catalogue with unlocked badges.",
+  "userFeedback": "No operator authorization page appeared",
+  "conclusion": "Physical native carrier login and server session issuance observed. No credentials entered by agent. Current session preserved.",
+  "actualSIMLoginPassed": true,
+  "carrierEvidence": {
+    "lastAttemptMS": 1794460226480,
+    "sessionCreatedAtMS": 1794460226806,
+    "sessionRevoked": false,
+    "recent30minAttempts": 1,
+    "privacy": "No member ID, phone, token, session ID or IP retained"
+  }
+}

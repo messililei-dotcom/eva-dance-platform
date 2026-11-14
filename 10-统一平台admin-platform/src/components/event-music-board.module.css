@@ -1,0 +1,61 @@
+.board { display: grid; gap: 12px; }
+.hint { margin: 0; color: #52617a; }
+.group { --accent: #1e40af; --card: #edf6ff; --played: #adcbe8; --border: #91b5d6; }
+.group[data-tone="1"] { --accent: #166534; --card: #edf8f0; --played: #a9d3b6; --border: #86b998; }
+.group[data-tone="2"] { --accent: #92400e; --card: #fff5e8; --played: #e8c592; --border: #cea971; }
+.group[data-tone="3"] { --accent: #6b21a8; --card: #f7efff; --played: #cdb4e5; --border: #b19ac7; }
+.groupHeading, .cardHeading { display: flex; gap: 6px; align-items: center; }
+.groupHeading { min-width: 0; gap: 4px; }
+.groupName { flex: 1; min-width: 0; color: var(--accent); font-size: 14px; line-height: 20px; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(0, 320px)); gap: 8px; }
+.musicCard { display: grid; grid-template-rows: 20px 20px 32px; height: 100px; box-sizing: border-box; gap: 4px; padding: 8px; border-radius: 8px; border: 1px solid var(--border); border-left: 3px solid var(--accent); background: var(--card); color: #17233d; }
+.musicCard[data-played="true"] { background: var(--played); }
+.cardHeading { min-width: 0; gap: 4px; padding-right: 46px; }
+.sequence { flex-shrink: 0; padding: 0 5px; border-radius: 4px; color: var(--accent); background: #ffffffd9; font-size: 12px; line-height: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sequence[data-unset="true"] { color: #92400e; background: #fef3c7; }
+.musicCard[data-missing="true"] { border-top-color: #f87171; border-right-color: #f87171; border-bottom-color: #f87171; }
+.finished { flex-shrink: 0; margin: 0; padding: 0 4px; font-size: 11px; line-height: 18px; color: #14532d; background: #dcfce7; border-color: #86b998; }
+.program { display: flex; align-items: baseline; gap: 6px; flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; }
+.playerName { flex-shrink: 1; min-width: 0; max-width: 70%; overflow: hidden; text-overflow: ellipsis; color: #0f172a; font-size: 15px; line-height: 20px; font-weight: 700; }
+.programTitle { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: #475569; font-size: 12px; line-height: 20px; }
+.board [draggable="true"] { cursor: grab; }
+@media (max-width: 600px) { .cards { grid-template-columns: minmax(0, 320px); } }
+
+.musicCard:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+
+.group, .musicCard { position: relative; }
+.group[data-drop-edge]::before,
+.musicCard[data-drop-edge]::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 3px;
+  background: #2563eb;
+  box-shadow: 0 0 0 2px #dbeafe;
+}
+.group[data-drop-edge]::before,
+.musicCard[data-drop-axis="y"][data-drop-edge]::before {
+  height: 4px;
+  left: 0;
+  right: 0;
+}
+.group[data-drop-edge="before"]::before,
+.musicCard[data-drop-axis="y"][data-drop-edge="before"]::before { top: -8px; }
+.group[data-drop-edge="after"]::before,
+.musicCard[data-drop-axis="y"][data-drop-edge="after"]::before { bottom: -8px; }
+.musicCard[data-drop-axis="x"][data-drop-edge]::before { width: 4px; top: 0; bottom: 0; }
+.musicCard[data-drop-axis="x"][data-drop-edge="before"]::before { left: -6px; }
+.musicCard[data-drop-axis="x"][data-drop-edge="after"]::before { right: -6px; }
+
+.groupName { user-select: none; }
+.groupName:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 3px; }
+
+.groupOrder { display: inline-block; min-width: 18px; margin-right: 5px; padding: 0 3px; border-radius: 3px; background: #ffffffbf; color: var(--accent); text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+.downloadAll:global(.ant-btn):not(:disabled) { background: #1d4ed8 !important; border-color: #1d4ed8 !important; color: #fff !important; font-weight: 600; }
+.downloadAll:global(.ant-btn):not(:disabled):hover { background: #1e40af !important; border-color: #1e40af !important; color: #fff !important; }
+.downloadAll:global(.ant-btn):not(:disabled):active { background: #1e3a8a !important; border-color: #1e3a8a !important; }
+.downloadAll:global(.ant-btn):focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }

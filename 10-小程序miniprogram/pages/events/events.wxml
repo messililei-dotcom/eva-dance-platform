@@ -5,6 +5,7 @@
   <view class="event-hero">
 
     <view class="event-title">AiwaRaks赛事平台</view>
+    <view class="hero-subtitle">发现赛事，记录每一次闪耀</view>
     <view class="hero-stats">
       <view><text>{{eventCount}}</text><span>赛事总数</span></view>
       <view><text>{{playerCount}}</text><span>累计参与</span></view>
@@ -15,6 +16,7 @@
     <view class="list-title">全部赛事</view>
     <view class="event-search"><input value="{{keyword}}" placeholder="搜索赛事或地点" aria-label="搜索赛事或地点" confirm-type="search" bindconfirm="onSearchConfirm" bindinput="onSearchInput" /><button wx:if="{{keyword}}" aria-label="清空搜索" bindtap="onClearSearch">×</button></view>
   </view>
+  <view class="status-filters" style="display:flex;flex-direction:row;flex-wrap:nowrap"><button wx:for="{{statusFilters}}" wx:key="*this" style="flex:1;width:auto;min-width:0" class="{{statusFilter === item ? 'active' : ''}}" data-status="{{item}}" bindtap="onStatusFilter" aria-pressed="{{statusFilter === item}}">{{item}}</button></view>
   <view wx:if="{{loading}}" class="empty-card">赛事加载中…</view>
   <view wx:elif="{{error}}" class="empty-card"><text>{{error}}</text><button class="event-button" bindtap="loadEvents">重新加载</button></view>
   <view wx:elif="{{visibleEvents.length}}" class="event-list">

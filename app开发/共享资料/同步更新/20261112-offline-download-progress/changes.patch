@@ -1,0 +1,650 @@
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/iOS/EvaDance/Sources/EvaCore/APIClient.swift
++++ app开发/iOS/EvaDance/Sources/EvaCore/APIClient.swift
+@@ -6,7 +6,7 @@
+         switch self {
+         case .sessionExpired: return "登录已过期，请重新登录。"
+         case .denied: return "当前账号没有此内容的有效权限。"
+-        case .cacheInvalid: return "缓存内容或学习状态已变化，请联网重新验证。"
++        case .cacheInvalid: return "离线内容或学习状态已变化，请联网重新验证。"
+         case .progressConflict: return "其他设备已更新学习进度，将自动采用较新的记录。"
+         case .invalidResponse: return "服务返回异常，请稍后重试。"
+         case .service(let text): return text
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
++++ app开发/iOS/EvaDance/Sources/EvaDanceApp/PlayerView.swift
+@@ -293,12 +293,10 @@
+         .sheet(isPresented: $showSettings) {
+             NavigationStack {
+                 Form {
+-                    if AppPolicy.supportsOfflineDownload {
+                     Section {
+-                        Text("缓存联网时自动续期，可连续离线观看最长 24 小时。学习权益到期或撤销后停止使用。").font(.footnote).foregroundStyle(.secondary)
++                        Text("离线授权联网时自动续期，可连续离线观看最长 24 小时。学习权益到期或撤销后停止使用。").font(.footnote).foregroundStyle(.secondary)
+                         CourseCacheActions(cache: session.videoCache, lessonID: lessonID, title: title, course: courseTitle)
+-                    } header: { Text("课程缓存") }
+-                    }
++                    } header: { Text("离线观看") }
+                     Toggle("镜像翻转", isOn: $mirror)
+                     Toggle("单集循环", isOn: $model.loop)
+                     Picker("播放速度", selection: $model.speed) { ForEach([Float(0.75), 1, 1.25, 1.5, 2], id: \.self) { rate in Text("\(rate, specifier: "%.3g") 倍").tag(rate) } }
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift
++++ app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift
+@@ -48,7 +48,7 @@
+                     }
+                     NavigationLink { CoursesView() } label: { AccountServiceRow(title: "查看全部课程与学习记录", subtitle: "已解锁课程与学习进度", icon: "book") }
+                     if AppPolicy.supportsOfflineDownload {
+-                        NavigationLink { CourseCacheView(cache: session.videoCache) } label: { AccountServiceRow(title: "课程缓存", subtitle: "查看离线课程", icon: "arrow.down.circle") }
++                        NavigationLink { CourseCacheView(cache: session.videoCache) } label: { AccountServiceRow(title: "离线观看", subtitle: "查看离线课程", icon: "arrow.down.circle") }
+                     }
+                     Text("线下课与证书").font(.title3.bold()).padding(.top, 20)
+                     NavigationLink { OfflineScheduleView() } label: { AccountServiceRow(title: "我的线下课程", subtitle: "课时余额、期次与核销记录", icon: "calendar") }
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/iOS/EvaDance/Sources/EvaDanceApp/AliyunSecureCacheDriver.swift
++++ app开发/iOS/EvaDance/Sources/EvaDanceApp/AliyunSecureCacheDriver.swift
+@@ -20,10 +20,10 @@
+     func start(vodID: String, playAuth: String, directory: URL, maximumBytes: Int64,
+                allowed: @escaping () -> Bool, progress: @escaping (Int) -> Void,
+                finished: @escaping (Result<URL, Error>) -> Void) throws {
+-        guard Thread.isMainThread, Self.configured, allowed(), !playAuth.isEmpty, maximumBytes > 0 else { throw failure("课程安全缓存尚未开放") }
++        guard Thread.isMainThread, Self.configured, allowed(), !playAuth.isEmpty, maximumBytes > 0 else { throw failure("安全离线观看尚未开放") }
+         stop(); self.allowed = allowed; self.progress = progress; self.finished = finished; self.maximumBytes = maximumBytes
+         let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].standardizedFileURL.path + "/"
+-        guard directory.standardizedFileURL.path.hasPrefix(root) else { throw failure("缓存目录无效") }
++        guard directory.standardizedFileURL.path.hasPrefix(root) else { throw failure("离线目录无效") }
+         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.protectionKey: FileProtectionType.complete])
+         directoryPath = directory.resolvingSymlinksInPath().path + "/"
+         var target = directory; var values = URLResourceValues(); values.isExcludedFromBackup = true; try target.setResourceValues(values)
+@@ -31,28 +31,28 @@
+         AliPrivateService.initKey(Bundle.main.path(forResource: "encryptedApp", ofType: "dat"))
+         let worker = AliMediaDownloader()!; downloader = worker; worker.delegate = self; worker.setSaveDirectory(directory.path)
+         let source = AVPVidAuthSource(); source.vid = vodID; source.playAuth = playAuth
+-        guardTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in guard let self else { return }; if !self.allowed() { self.fail("缓存授权待联网更新") }
+-            else if CourseCacheVault.bytes(URL(fileURLWithPath: self.directoryPath)) > self.maximumBytes { self.fail("缓存超出容量限制，请删除不需要的缓存") } }
++        guardTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in guard let self else { return }; if !self.allowed() { self.fail("离线观看授权待联网更新") }
++            else if CourseCacheVault.bytes(URL(fileURLWithPath: self.directoryPath)) > self.maximumBytes { self.fail("下载超出容量限制，请删除不需要的离线内容") } }
+         worker.prepare(withPlayAuth: source)
+     }
+     func onPrepared(_ downloader: AliMediaDownloader!, mediaInfo info: AVPMediaInfo!) {
+         DispatchQueue.main.async { [weak self] in
+-            guard let self, self.downloader === downloader else { return }; guard self.allowed() else { self.fail("缓存授权已变化"); return }
++            guard let self, self.downloader === downloader else { return }; guard self.allowed() else { self.fail("离线观看授权已变化"); return }
+             let tracks = (info.tracks ?? []).filter { ["m3u8", "mp4"].contains($0.vodFormat.lowercased()) && $0.vodFileSize > 0 && $0.vodFileSize <= self.maximumBytes }
+-            guard let track = tracks.sorted(by: { $0.vodFileSize < $1.vodFileSize }).first else { self.fail("没有可安全缓存的清晰度或剩余空间不足"); return }
++            guard let track = tracks.sorted(by: { $0.vodFileSize < $1.vodFileSize }).first else { self.fail("没有可安全下载的清晰度或剩余空间不足"); return }
+             downloader.selectTrack(track.trackIndex); downloader.start()
+         }
+     }
+-    func onDownloadingProgress(_ downloader: AliMediaDownloader!, percentage percent: Int32) { DispatchQueue.main.async { [weak self] in guard let self, self.downloader === downloader else { return }; if self.allowed() { self.progress(Int(percent)) } else { self.fail("缓存授权待联网更新") } } }
++    func onDownloadingProgress(_ downloader: AliMediaDownloader!, percentage percent: Int32) { DispatchQueue.main.async { [weak self] in guard let self, self.downloader === downloader else { return }; if self.allowed() { self.progress(Int(percent)) } else { self.fail("离线观看授权待联网更新") } } }
+     func onProcessingProgress(_ downloader: AliMediaDownloader!, percentage percent: Int32) {}
+-    func onError(_ downloader: AliMediaDownloader!, errorModel: AVPErrorModel!) { DispatchQueue.main.async { [weak self] in guard let self, self.downloader === downloader else { return }; self.fail("安全缓存失败，请联网重试") } }
++    func onError(_ downloader: AliMediaDownloader!, errorModel: AVPErrorModel!) { DispatchQueue.main.async { [weak self] in guard let self, self.downloader === downloader else { return }; self.fail("安全下载失败，请联网重试") } }
+     func onCompletion(_ downloader: AliMediaDownloader!) {
+         DispatchQueue.main.async { [weak self] in
+-            guard let self, self.downloader === downloader else { return }; guard self.allowed(), let path = downloader.downloadedFilePath else { self.fail("缓存授权已变化"); return }
++            guard let self, self.downloader === downloader else { return }; guard self.allowed(), let path = downloader.downloadedFilePath else { self.fail("离线观看授权已变化"); return }
+             let file = URL(fileURLWithPath: path).resolvingSymlinksInPath()
+             let root = self.directoryPath
+-            guard file.path.hasPrefix(root), let size = try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > 0, CourseCacheVault.bytes(URL(fileURLWithPath: root)) <= self.maximumBytes else { self.fail("缓存文件无效或超出容量限制"); return }
+-            do { try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: file.path) } catch { self.fail("无法安全保存缓存"); return }
++            guard file.path.hasPrefix(root), let size = try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > 0, CourseCacheVault.bytes(URL(fileURLWithPath: root)) <= self.maximumBytes else { self.fail("离线文件无效或超出容量限制"); return }
++            do { try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: file.path) } catch { self.fail("无法安全保存离线内容"); return }
+             let callback = self.finished; self.stop(); callback(.success(file))
+         }
+     }
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheVault.swift
++++ app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheVault.swift
+@@ -20,7 +20,7 @@
+             guard SecItemAdd(key.merging(fields) { _, new in new } as CFDictionary, nil) == errSecSuccess else { throw failure }
+         } else if status != errSecSuccess { throw failure }
+     }
+-    static var failure: Error { NSError(domain: "SWODCache", code: 1, userInfo: [NSLocalizedDescriptionKey: "无法安全保存课程缓存，请重试"]) }
++    static var failure: Error { NSError(domain: "SWODCache", code: 1, userInfo: [NSLocalizedDescriptionKey: "无法安全保存离线内容，请重试"]) }
+     static func bytes(_ directory: URL) -> Int64 {
+         guard let walk = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: [.fileSizeKey, .isRegularFileKey]) else { return 0 }
+         var total: Int64 = 0
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheStore.swift
++++ app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheStore.swift
+@@ -106,11 +106,11 @@
+             body: JSONSerialization.data(withJSONObject: ["action": action, "device_id": try CourseCacheVault.device(), "material_version": version]))
+     }
+     func download(_ id: Int, title: String, course: String) async {
+-        guard AppPolicy.supportsOfflineDownload else { message = "课程安全缓存尚未开放，请先在线观看"; return }
+-        guard downloading == nil else { message = "请等待当前课节缓存完成，或先取消任务"; return }
+-        guard AliyunSecureCacheDriver.configured else { message = "安全缓存授权尚未配置完成，请先在线观看"; return }
+-        guard records.count < 12 || records.contains(where: { $0.id == id }) else { message = "最多缓存 12 节，请先删除不需要的缓存"; return }
+-        let version = generation; downloading = id; message = "正在验证缓存权限"
++        guard AppPolicy.supportsOfflineDownload else { message = "安全离线观看尚未开放，请先在线观看"; return }
++        guard downloading == nil else { message = "请等待当前课节下载完成，或先取消任务"; return }
++        guard AliyunSecureCacheDriver.configured else { message = "安全下载授权尚未配置完成，请先在线观看"; return }
++        guard records.count < 12 || records.contains(where: { $0.id == id }) else { message = "最多下载 12 节，请先删除不需要的离线内容"; return }
++        let version = generation; downloading = id; message = "正在验证离线观看权限"
+         let stamp = CourseCacheVault.elapsed()
+         do {
+             let grant = try await authorize(id, action: "download")
+@@ -144,8 +144,8 @@
+                         self.records[at].relativeFile = String(url.path.dropFirst(self.root.path.count + 1))
+                         self.records[at].bytes = CourseCacheVault.bytes(self.root.appendingPathComponent(String(id)))
+                         self.records[at].state = "ready"; self.records[at].percent = 100
+-                        do { try self.persist(); self.message = "缓存完成"; Task { await self.refresh() } }
+-                        catch { self.remove(id); self.message = "缓存无法安全保存，请重试" }
++                        do { try self.persist(); self.message = "下载完成"; Task { await self.refresh() } }
++                        catch { self.remove(id); self.message = "下载内容无法安全保存，请重试" }
+                     case .failure(let error): self.remove(id); self.message = error.localizedDescription
+                     }
+                 })
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheView.swift
++++ app开发/iOS/EvaDance/Sources/EvaDanceApp/CourseCacheView.swift
+@@ -5,9 +5,21 @@
+     let lessonID: Int
+     let title: String
+     let course: String
++    private var record: CourseCacheRecord? { cache.visible.first { $0.id == lessonID } }
+     var body: some View {
+-        NavigationLink("管理课程缓存") { CourseCacheView(cache: cache) }
+-        Button(cache.downloading == lessonID ? "正在缓存本节" : "缓存当前课节") { Task { await cache.download(lessonID, title: title, course: course) } }.disabled(cache.downloading != nil)
++        NavigationLink("管理离线内容") { CourseCacheView(cache: cache) }
++        Button(cache.downloading == lessonID ? "正在下载本节" : "离线观看") { Task { await cache.download(lessonID, title: title, course: course) } }.disabled(cache.downloading != nil)
++        if let record, record.state == "downloading" {
++            ProgressView(value: Double(record.percent), total: 100) {
++                Text("正在下载 \(record.percent)%").monospacedDigit()
++            }.accessibilityLabel("课节下载进度").accessibilityValue("\(record.percent)%")
++            Button("暂停下载") { cache.pause(lessonID) }
++        } else if cache.downloading == lessonID {
++            ProgressView("正在验证离线观看权限")
++        } else if let record, cache.usable(record) {
++            Text("下载完成 100%").font(.subheadline.monospacedDigit())
++            NavigationLink("播放已下载课节") { OfflineCoursePlayerView(cache: cache, lessonID: lessonID) }
++        }
+         if !cache.message.isEmpty { Text(cache.message).font(.subheadline).foregroundStyle(.secondary) }
+     }
+ }
+@@ -19,31 +31,31 @@
+     var body: some View {
+         List {
+             Section {
+-                Text("联网时自动验证和续期；断网可在授权有效期内学习，最长 24 小时。重启设备后需要联网验证。退出账号会删除本机课程缓存。").font(.footnote).foregroundStyle(.secondary)
++                Text("联网时自动验证和续期；断网可在授权有效期内学习，最长 24 小时。重启设备后需要联网验证。退出账号会删除本机离线内容。").font(.footnote).foregroundStyle(.secondary)
+                 if !cache.message.isEmpty { Text(cache.message).font(.subheadline).foregroundStyle(EvaBrand.red) }
+             }
+-            Section("本机缓存 · \(cache.visible.count) 节") {
+-                if cache.visible.isEmpty { Text("暂无缓存。在课程播放设置中选择“缓存当前课节”。").foregroundStyle(.secondary) }
++            Section("本机离线内容 · \(cache.visible.count) 节") {
++                if cache.visible.isEmpty { Text("暂无离线内容。在课程播放设置中选择“离线观看”。").foregroundStyle(.secondary) }
+                 ForEach(cache.visible) { record in
+                     VStack(alignment: .leading, spacing: 8) {
+                         Text(record.course).font(.caption).foregroundStyle(.secondary)
+                         Text(record.title).font(.headline)
+-                        if record.state == "downloading" { ProgressView(value: Double(record.percent), total: 100); Text("正在缓存 \(record.percent)%").font(.caption); Button("暂停缓存") { cache.pause(record.id) }.frame(minHeight: 44) }
++                        if record.state == "downloading" { ProgressView(value: Double(record.percent), total: 100); Text("正在下载 \(record.percent)%").font(.caption); Button("暂停下载") { cache.pause(record.id) }.frame(minHeight: 44) }
+                         else if cache.usable(record) {
+                             NavigationLink("离线观看") { OfflineCoursePlayerView(cache: cache, lessonID: record.id) }
+-                            Text(ByteCountFormatter.string(fromByteCount: record.bytes, countStyle: .file) + (record.pendingProgress ? " · 学习进度待自动同步" : " · 已缓存")).font(.caption).foregroundStyle(.secondary)
+-                        } else { Text(record.state == "ready" ? "待联网自动验证" : "缓存已暂停，可重新缓存").font(.subheadline).foregroundStyle(.secondary)
+-                            if record.state == "paused" { Button("重新缓存") { Task { await cache.download(record.id, title: record.title, course: record.course) } }.frame(minHeight: 44).disabled(cache.downloading != nil) }
++                            Text(ByteCountFormatter.string(fromByteCount: record.bytes, countStyle: .file) + " · 下载完成 100%" + (record.pendingProgress ? " · 学习进度待自动同步" : "")).font(.caption).foregroundStyle(.secondary)
++                        } else { Text(record.state == "ready" ? "待联网自动验证" : "下载已暂停，可重新下载").font(.subheadline).foregroundStyle(.secondary)
++                            if record.state == "paused" { Button("重新下载") { Task { await cache.download(record.id, title: record.title, course: record.course) } }.frame(minHeight: 44).disabled(cache.downloading != nil) }
+                         }
+-                        Button("删除缓存", role: .destructive) { deleting = record.id }.frame(minHeight: 44)
++                        Button("删除下载", role: .destructive) { deleting = record.id }.frame(minHeight: 44)
+                     }.padding(.vertical, 6)
+                 }
+             }
+         }.evaCompactLayout().evaPageChrome()
+             .task { await cache.refresh() }
+             .onChange(of: scenePhase) { if $0 == .active { Task { await cache.refresh() } } }
+-            .confirmationDialog("删除这节课的本机缓存？", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
+-                Button("删除缓存", role: .destructive) { if let id = deleting { cache.remove(id) }; deleting = nil }
++            .confirmationDialog("删除这节课的本机离线内容？", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
++                Button("删除下载", role: .destructive) { if let id = deleting { cache.remove(id) }; deleting = nil }
+             }
+     }
+ }
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/iOS/EvaDance/Sources/EvaDanceApp/OfflineCoursePlayerView.swift
++++ app开发/iOS/EvaDance/Sources/EvaDanceApp/OfflineCoursePlayerView.swift
+@@ -27,7 +27,7 @@
+             if eventType == AVPEventCompletion { self.playing = false }
+         }
+     }
+-    func onError(_ player: AliPlayer!, errorModel: AVPErrorModel!) { DispatchQueue.main.async { [weak self] in self?.pause(); self?.error = "安全缓存无法解密播放，请联网重新缓存" } }
++    func onError(_ player: AliPlayer!, errorModel: AVPErrorModel!) { DispatchQueue.main.async { [weak self] in self?.pause(); self?.error = "安全离线内容无法解密播放，请联网重新下载" } }
+     func onCurrentPositionUpdate(_ player: AliPlayer!, position: Int64) { DispatchQueue.main.async { [weak self] in self?.position = Double(position) / 1000 } }
+     func pause() {
+         player.pause(); playing = false; playRequest += 1
+@@ -90,13 +90,13 @@
+             }
+             if !orientation.message.isEmpty { Text(orientation.message).font(.caption) }
+             if !orientation.fullscreen {
+-            Text(record?.title ?? "课程缓存已失效").font(.headline)
++            Text(record?.title ?? "离线观看已失效").font(.headline)
+             Text(model.error).foregroundStyle(EvaBrand.red)
+             if let record, record.recordID == loadedRecordID, cache.usable(record), !captured {
+                 Button(model.playing ? "暂停" : "播放") { model.toggle() }.frame(minHeight: 44).disabled(!model.ready)
+                 Slider(value: $model.position, in: 0...max(model.duration,1), onEditingChanged: { editing in if !editing { model.player.seek(toTime: Int64(model.position*1000), seekMode: AVP_SEEKMODE_INACCURATE) } }).accessibilityLabel("离线播放进度")
+                 Text("\(Int(model.position)) / \(Int(model.duration)) 秒").font(.caption.monospacedDigit())
+-            } else { Text("缓存授权待联网自动验证").foregroundStyle(.secondary) }
++            } else { Text("离线观看授权待联网自动验证").foregroundStyle(.secondary) }
+             Spacer()
+             }
+         }.padding(orientation.fullscreen ? 0 : 12).evaPageChrome()
+@@ -111,8 +111,8 @@
+                 var ticks = 0
+                 while !Task.isCancelled {
+                     do { try await Task.sleep(nanoseconds: 1_000_000_000) } catch { return }
+-                    guard let live = self.record, live.recordID == loadedRecordID, cache.usable(live) else { model.pause(); model.error = "缓存授权待联网自动验证"; continue }
+-                    if model.error == "缓存授权待联网自动验证" { model.error = "" }
++                    guard let live = self.record, live.recordID == loadedRecordID, cache.usable(live) else { model.pause(); model.error = "离线观看授权待联网自动验证"; continue }
++                    if model.error == "离线观看授权待联网自动验证" { model.error = "" }
+                     ticks += 1
+                     if ticks % 15 == 0 { cache.checkpoint(lessonID, position: model.position, duration: model.duration) }
+                     if ticks % 60 == 0 { await cache.refresh() }
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -583,7 +583,7 @@
+             coursesHeading.addView(coursesTitle,new LinearLayout.LayoutParams(0,-2,1));
+             Button courseToggle=button("收起 ⌃",()->{});courseToggle.setContentDescription("收起我的课程，已展开");
+             courseToggle.setMinHeight(dp(44));coursesHeading.addView(courseToggle);content.addView(coursesHeading);
+-            if(Policy.SUPPORTS_OFFLINE_DOWNLOAD)accountService("download","课程缓存","查看离线课程",()->startActivity(new Intent(this,CourseCacheActivity.class)));
++            if(Policy.SUPPORTS_OFFLINE_DOWNLOAD)accountService("download","离线观看","查看离线课程",()->startActivity(new Intent(this,CourseCacheActivity.class)));
+             LinearLayout courseRows=column();content.addView(courseRows);
+             courseToggle.setOnClickListener(view->{boolean expand=courseRows.getVisibility()!=android.view.View.VISIBLE;courseRows.setVisibility(expand?android.view.View.VISIBLE:android.view.View.GONE);courseToggle.setText(expand?"收起 ⌃":"展开 ⌄");courseToggle.setContentDescription(expand?"收起我的课程，已展开":"展开我的课程，已收起");});
+             load("/member/authorized-series","GET",null,true,v->{
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java
++++ app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/PlayerActivity.java
+@@ -186,11 +186,9 @@
+         CheckBox loop=new CheckBox(this);loop.setText("单集循环");actions.addView(loop);
+         Spinner speed=new Spinner(this);speed.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"0.75×","1.0×","1.25×","1.5×","2.0×"}));speed.setSelection(1);actions.addView(speed);settings.addView(label("播放设置",18,false));settings.addView(actions);
+         Spinner quality=new Spinner(this);quality.setContentDescription("视频清晰度");settings.addView(quality);
+-        if(Policy.SUPPORTS_OFFLINE_DOWNLOAD){
+-        settings.addView(label("课程缓存联网时自动续期，可连续离线观看最长 24 小时；学习权益到期或撤销后停止使用。",14,true));
+-        Button downloadCache=new Button(this);downloadCache.setText("缓存当前课节");downloadCache.setOnClickListener(v->{CourseCacheManager cache=CourseCacheManager.get(this);cache.download(lesson,getIntent().getStringExtra("title"),getIntent().getStringExtra("seriesTitle"));android.widget.Toast.makeText(this,cache.message,android.widget.Toast.LENGTH_LONG).show();});settings.addView(downloadCache);
+-        Button manageCache=new Button(this);manageCache.setText("管理课程缓存");manageCache.setOnClickListener(v->startActivity(new Intent(this,CourseCacheActivity.class)));settings.addView(manageCache);
+-        }
++        settings.addView(label("离线授权联网时自动续期，可连续离线观看最长 24 小时；学习权益到期或撤销后停止使用。",14,true));
++        Button downloadCache=new Button(this);downloadCache.setText("离线观看");downloadCache.setOnClickListener(v->startActivity(new Intent(this,CourseCacheActivity.class).putExtra("downloadLesson",lesson).putExtra("title",getIntent().getStringExtra("title")).putExtra("course",getIntent().getStringExtra("seriesTitle"))));settings.addView(downloadCache);
++        Button manageCache=new Button(this);manageCache.setText("管理离线内容");manageCache.setOnClickListener(v->startActivity(new Intent(this,CourseCacheActivity.class)));settings.addView(manageCache);
+         LinearLayout tabBar=new LinearLayout(this);tabBar.setBackgroundColor(android.graphics.Color.TRANSPARENT);content.addView(tabBar);
+         String[] labels={"目录("+(playlistIds==null?0:playlistIds.length)+"节)","笔记","简介"};
+         for(int i=0;i<labels.length;i++){final int at=i;Button button=new Button(this);button.setText(labels[i]);button.setTextSize(15);button.setAllCaps(false);button.setMinHeight(dp(48));button.setOnClickListener(v->selectTab(at));tabs.add(button);tabBar.addView(button,new LinearLayout.LayoutParams(0,-2,1));}
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/Android/EvaDance/app/src/main/java/cn/com/swod/app/AliyunSecureCacheDriver.java
++++ app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/AliyunSecureCacheDriver.java
+@@ -25,7 +25,7 @@
+     private File directory;
+     static long directoryBytes(File folder){try{return countCanonical(folder.getCanonicalFile());}catch(Exception e){return Long.MAX_VALUE;}}
+     private static long countCanonical(File folder)throws Exception{if(!folder.exists())return 0;if(!folder.getAbsolutePath().equals(folder.getCanonicalPath()))return Long.MAX_VALUE;if(folder.isFile())return folder.length();long sum=0;File[] children=folder.listFiles();if(children==null)return Long.MAX_VALUE;for(File child:children)sum=Math.addExact(sum,countCanonical(child));return sum;}
+-    private final Runnable guard=new Runnable(){public void run(){if(worker==null)return;if(!allowed.getAsBoolean()){fail("缓存授权待联网更新");return;}if(directoryBytes(directory)>maximumBytes){fail("缓存超出容量限制，请删除不需要的缓存");return;}main.postDelayed(this,1000);}};
++    private final Runnable guard=new Runnable(){public void run(){if(worker==null)return;if(!allowed.getAsBoolean()){fail("离线观看授权待联网更新");return;}if(directoryBytes(directory)>maximumBytes){fail("下载超出容量限制，请删除不需要的离线内容");return;}main.postDelayed(this,1000);}};
+     AliyunSecureCacheDriver(Context context){this.context=context.getApplicationContext();}
+     boolean configured(){
+         try { android.os.Bundle meta=context.getPackageManager().getApplicationInfo(context.getPackageName(),android.content.pm.PackageManager.GET_META_DATA).metaData;
+@@ -35,18 +35,18 @@
+         }catch(Exception e){return false;}
+     }
+     void start(String vod,String playAuth,File directory,long maxBytes,BooleanSupplier allowed,Listener listener)throws Exception{
+-        if(Looper.myLooper()!=Looper.getMainLooper()||!configured()||!allowed.getAsBoolean()||playAuth.isEmpty()||maxBytes<=0)throw new Exception("课程安全缓存尚未开放");
++        if(Looper.myLooper()!=Looper.getMainLooper()||!configured()||!allowed.getAsBoolean()||playAuth.isEmpty()||maxBytes<=0)throw new Exception("安全离线观看尚未开放");
+         stop();String root=context.getNoBackupFilesDir().getCanonicalPath()+File.separator;
+-        if(!directory.getCanonicalPath().startsWith(root))throw new Exception("缓存目录无效");
+-        if(!directory.isDirectory()&&!directory.mkdirs())throw new Exception("无法创建缓存目录");
++        if(!directory.getCanonicalPath().startsWith(root))throw new Exception("离线目录无效");
++        if(!directory.isDirectory()&&!directory.mkdirs())throw new Exception("无法创建离线目录");
+         File key=new File(context.getNoBackupFilesDir(),"vod-encryptedApp.dat");try(InputStream in=context.getAssets().open("encryptedApp.dat");FileOutputStream out=new FileOutputStream(key)){byte[] bytes=new byte[4096];int size;while((size=in.read(bytes))!=-1)out.write(bytes,0,size);}
+         com.cicada.player.utils.Logger.getInstance(context).enableConsoleLog(false);
+         PrivateService.initService(context,key.getAbsolutePath());this.allowed=allowed;this.listener=listener;maximumBytes=maxBytes;this.directory=directory;
+         AliMediaDownloader active=AliDownloaderFactory.create(context);worker=active;active.setSaveDir(directory.getAbsolutePath());
+-        active.setOnPreparedListener(info->main.post(()->{if(worker!=active)return;if(!this.allowed.getAsBoolean()){fail("缓存授权已变化");return;}TrackInfo selected=null;for(TrackInfo track:info.getTrackInfos())if(track.getVodFileSize()>0&&track.getVodFileSize()<=maximumBytes&&("m3u8".equals(track.getVodFormat())||"mp4".equals(track.getVodFormat())))if(selected==null||track.getVodFileSize()<selected.getVodFileSize())selected=track;if(selected==null){fail("没有可安全缓存的清晰度或空间不足");return;}active.selectItem(selected.getIndex());active.start();}));
+-        active.setOnProgressListener(new AliMediaDownloader.OnProgressListener(){public void onDownloadingProgress(int percent){main.post(()->{if(worker!=active)return;if(AliyunSecureCacheDriver.this.allowed.getAsBoolean())listener.progress(percent);else fail("缓存授权待联网更新");});}public void onProcessingProgress(int percent){}});
+-        active.setOnErrorListener(error->main.post(()->{if(worker==active)fail("安全缓存失败，请联网重试");}));
+-        active.setOnCompletionListener(()->main.post(()->{if(worker!=active)return;try{File file=new File(active.getFilePath()).getCanonicalFile();if(!this.allowed.getAsBoolean()||!file.getPath().startsWith(directory.getCanonicalPath()+File.separator)||file.length()<=0||directoryBytes(directory)>maximumBytes){fail("缓存文件或授权无效");return;}Listener callback=this.listener;stop();callback.complete(file);}catch(Exception e){fail("无法安全保存缓存");}}));
++        active.setOnPreparedListener(info->main.post(()->{if(worker!=active)return;if(!this.allowed.getAsBoolean()){fail("离线观看授权已变化");return;}TrackInfo selected=null;for(TrackInfo track:info.getTrackInfos())if(track.getVodFileSize()>0&&track.getVodFileSize()<=maximumBytes&&("m3u8".equals(track.getVodFormat())||"mp4".equals(track.getVodFormat())))if(selected==null||track.getVodFileSize()<selected.getVodFileSize())selected=track;if(selected==null){fail("没有可安全下载的清晰度或空间不足");return;}active.selectItem(selected.getIndex());active.start();}));
++        active.setOnProgressListener(new AliMediaDownloader.OnProgressListener(){public void onDownloadingProgress(int percent){main.post(()->{if(worker!=active)return;if(AliyunSecureCacheDriver.this.allowed.getAsBoolean())listener.progress(percent);else fail("离线观看授权待联网更新");});}public void onProcessingProgress(int percent){}});
++        active.setOnErrorListener(error->main.post(()->{if(worker==active)fail("安全下载失败，请联网重试");}));
++        active.setOnCompletionListener(()->main.post(()->{if(worker!=active)return;try{File file=new File(active.getFilePath()).getCanonicalFile();if(!this.allowed.getAsBoolean()||!file.getPath().startsWith(directory.getCanonicalPath()+File.separator)||file.length()<=0||directoryBytes(directory)>maximumBytes){fail("离线文件或授权无效");return;}Listener callback=this.listener;stop();callback.complete(file);}catch(Exception e){fail("无法安全保存离线内容");}}));
+         VidAuth source=new VidAuth();source.setVid(vod);source.setPlayAuth(playAuth);active.prepare(source);main.post(guard);
+     }
+     void stop(){main.removeCallbacks(guard);if(worker!=null){worker.stop();worker.release();worker=null;}allowed=()->false;listener=null;}
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/Android/EvaDance/app/src/main/java/cn/com/swod/app/CourseCacheManager.java
++++ app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CourseCacheManager.java
+@@ -33,7 +33,7 @@
+         context=c.getApplicationContext();vault=new TokenVault(context,"course-cache");driver=new AliyunSecureCacheDriver(context);root=new File(context.getNoBackupFilesDir(),"course-cache");
+         try{String saved=vault.read();inventory=saved==null?new JSONObject():new JSONObject(saved);if(!inventory.has("device"))inventory.put("device",UUID.randomUUID().toString().replace("-","")+UUID.randomUUID().toString().replace("-",""));
+             if(!inventory.has("items"))inventory.put("items",new JSONArray());for(JSONObject row:all())if(!"ready".equals(row.optString("state"))){row.put("state","paused");row.put("file","");}persist();
+-        }catch(Exception e){inventory=new JSONObject();message="安全缓存索引不可用，请联网后重试";}
++        }catch(Exception e){inventory=new JSONObject();message="安全离线内容索引不可用，请联网后重试";}
+         io.scheduleWithFixedDelay(this::refreshNow,0,60,TimeUnit.SECONDS);
+     }
+     void listen(Runnable r){listeners.add(r);}void unlisten(Runnable r){listeners.remove(r);}
+@@ -54,10 +54,10 @@
+     synchronized boolean usable(JSONObject r){try{return Policy.SUPPORTS_OFFLINE_DOWNLOAD&&current(r)&&"ready".equals(r.optString("state"))&&file(r)!=null&&device().equals(r.getJSONObject("lease").getString("device_id"))&&lease(r.getJSONObject("lease")).permits(now(r));}catch(Exception e){return false;}}
+     synchronized JSONObject get(int id){for(JSONObject r:visible())if(r.optInt("id")==id)return r;return null;}
+     synchronized void purge(){generation++;downloading=0;main.post(driver::stop);renewals.values().forEach(AutomaticVideoCacheRenewal::close);renewals.clear();try{inventory.put("items",new JSONArray());persist();}catch(Exception e){vault.clear();}deleteTree(root);changed();}
+-    synchronized void remove(int id){if(downloading==id){generation++;downloading=0;main.post(driver::stop);}AutomaticVideoCacheRenewal old=renewals.remove(id);if(old!=null)old.close();JSONArray next=new JSONArray();for(JSONObject r:all())if(r.optInt("id")!=id)next.put(r);try{inventory.put("items",next);persist();}catch(Exception e){message="缓存索引保存失败";}deleteTree(new File(root,String.valueOf(id)));changed();}
+-    private void deleteTree(File f){try{if(!f.getCanonicalPath().startsWith(context.getNoBackupFilesDir().getCanonicalPath()+File.separator))return;File[] children=f.listFiles();if(children!=null)for(File child:children)deleteTree(child);if(f.exists()&&!f.delete())message="部分缓存待下次清理";}catch(Exception ignored){}}
++    synchronized void remove(int id){if(downloading==id){generation++;downloading=0;main.post(driver::stop);}AutomaticVideoCacheRenewal old=renewals.remove(id);if(old!=null)old.close();JSONArray next=new JSONArray();for(JSONObject r:all())if(r.optInt("id")!=id)next.put(r);try{inventory.put("items",next);persist();}catch(Exception e){message="离线索引保存失败";}deleteTree(new File(root,String.valueOf(id)));changed();}
++    private void deleteTree(File f){try{if(!f.getCanonicalPath().startsWith(context.getNoBackupFilesDir().getCanonicalPath()+File.separator))return;File[] children=f.listFiles();if(children!=null)for(File child:children)deleteTree(child);if(f.exists()&&!f.delete())message="部分离线内容待下次清理";}catch(Exception ignored){}}
+     void refresh(){io.execute(this::refreshNow);}
+-    synchronized void pause(int id){if(downloading!=id)return;generation++;downloading=0;main.post(driver::stop);try{JSONObject live=row(id);if(live!=null)live.put("state","paused");persist();}catch(Exception e){message="缓存索引保存失败";}changed();}
++    synchronized void pause(int id){if(downloading!=id)return;generation++;downloading=0;main.post(driver::stop);try{JSONObject live=row(id);if(live!=null)live.put("state","paused");persist();}catch(Exception e){message="离线索引保存失败";}changed();}
+     private void refreshNow(){
+         if(!api().loggedIn())return;
+         for(JSONObject stale:all())if(!current(stale))remove(stale.optInt("id"));
+@@ -77,21 +77,21 @@
+     }
+     private JSONObject authorize(int id,String action,String material)throws Exception{return (JSONObject)api().request("/video/"+id+"/cache-authorization","POST",new JSONObject().put("action",action).put("device_id",device()).put("material_version",material),true);}
+     void download(int id,String title,String course){
+-        if(!Policy.SUPPORTS_OFFLINE_DOWNLOAD){message="课程安全缓存尚未开放，请先在线观看";changed();return;}
++        if(!Policy.SUPPORTS_OFFLINE_DOWNLOAD){message="安全离线观看尚未开放，请先在线观看";changed();return;}
+         final long active;
+-        synchronized(this){if(downloading!=0){message="请等待当前课节缓存完成，或先取消任务";changed();return;}if(!driver.configured()){message="安全缓存授权尚未配置完成，请先在线观看";changed();return;}if(all().size()>=12&&row(id)==null){message="最多缓存12节，请先删除不需要的缓存";changed();return;}downloading=id;active=generation;}
+-        message="正在验证缓存权限";changed();io.execute(()->{long stamp=SystemClock.elapsedRealtime();try{
++        synchronized(this){if(downloading!=0){message="请等待当前课节下载完成，或先取消任务";changed();return;}if(!driver.configured()){message="安全下载授权尚未配置完成，请先在线观看";changed();return;}if(all().size()>=12&&row(id)==null){message="最多下载12节，请先删除不需要的离线内容";changed();return;}downloading=id;active=generation;}
++        message="正在验证离线观看权限";changed();io.execute(()->{long stamp=SystemClock.elapsedRealtime();try{
+             JSONObject grant=authorize(id,"download","");String auth=grant.getJSONObject("credential").getString("play_auth");JSONObject clean=new JSONObject(grant.toString());clean.remove("credential");
+             final JSONObject entry=new JSONObject().put("id",id).put("nonce",UUID.randomUUID().toString()).put("title",title).put("course",course).put("lease",clean).put("server",grant.getLong("issued_at")).put("elapsed",stamp).put("boot",boot()).put("state","downloading").put("percent",0);
+             try{JSONObject progress=(JSONObject)api().request("/video/"+id+"/progress","GET",null,true);entry.put("position",progress.optDouble("progress")).put("revision",progress.optInt("revision"));}catch(Exception ignored){}
+             final long limit;
+-            synchronized(this){if(active!=generation||!current(entry))return;downloading=0;remove(id);downloading=id;long used=AliyunSecureCacheDriver.directoryBytes(root);limit=Math.min(grant.getLong("max_bytes"),Math.min(2147483648L-used,context.getNoBackupFilesDir().getUsableSpace()-104857600));inventory.getJSONArray("items").put(entry);persist();}
++            synchronized(this){if(active!=generation||!current(entry))return;downloading=0;remove(id);downloading=id;long used=AliyunSecureCacheDriver.directoryBytes(root);limit=Math.min(grant.getLong("max_bytes"),Math.min(2147483648L-used,context.getNoBackupFilesDir().getUsableSpace()-104857600));inventory.getJSONArray("items").put(entry);persist();}changed();
+             main.post(()->{synchronized(this){if(active!=generation||!current(entry))return;}try{driver.start(grant.getString("vod_video_id"),auth,new File(root,String.valueOf(id)),limit,
+                 ()->{synchronized(this){JSONObject live=row(id);try{return active==generation&&live!=null&&entry.getString("nonce").equals(live.optString("nonce"))&&current(live)&&lease(live.getJSONObject("lease")).permits(now(live));}catch(Exception e){return false;}}},
+                 new AliyunSecureCacheDriver.Listener(){public void progress(int percent){synchronized(CourseCacheManager.this){JSONObject live=row(id);if(live!=null&&active==generation)try{live.put("percent",Math.max(0,Math.min(99,percent)));}catch(Exception ignored){}}changed();}
+-                    public void complete(File f){synchronized(CourseCacheManager.this){if(active!=generation||!current(entry))return;try{entry.put("file",f.getCanonicalPath().substring(root.getCanonicalPath().length()+1)).put("bytes",AliyunSecureCacheDriver.directoryBytes(new File(root,String.valueOf(id)))).put("percent",100).put("state","ready");persist();downloading=0;message="缓存完成";}catch(Exception e){remove(id);message="缓存无法安全保存，请重试";}}changed();refresh();}
++                    public void complete(File f){synchronized(CourseCacheManager.this){if(active!=generation||!current(entry))return;try{entry.put("file",f.getCanonicalPath().substring(root.getCanonicalPath().length()+1)).put("bytes",AliyunSecureCacheDriver.directoryBytes(new File(root,String.valueOf(id)))).put("percent",100).put("state","ready");persist();downloading=0;message="下载完成";}catch(Exception e){remove(id);message="下载内容无法安全保存，请重试";}}changed();refresh();}
+                     public void failure(String text){synchronized(CourseCacheManager.this){if(active!=generation)return;remove(id);message=text;}changed();}});
+-            }catch(Exception e){synchronized(this){if(active==generation){remove(id);message="安全缓存失败，请联网重试";}}changed();}});
++            }catch(Exception e){synchronized(this){if(active==generation){remove(id);message="安全下载失败，请联网重试";}}changed();}});
+         }catch(Exception e){synchronized(this){if(active==generation){downloading=0;message=e.getMessage();}}changed();}});
+     }
+     synchronized void checkpoint(int id,double position,double duration){JSONObject r=row(id);if(r==null||!usable(r)||!Double.isFinite(position)||!Double.isFinite(duration)||duration<=0||position<0||position>duration+1)return;try{r.put("position",Math.min(position,duration)).put("duration",duration).put("pending",true);persist();}catch(Exception e){message="本机学习进度保存失败";}}
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/Android/EvaDance/app/src/main/java/cn/com/swod/app/CourseCacheActivity.java
++++ app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/CourseCacheActivity.java
+@@ -13,16 +13,19 @@
+     private final Runnable renderTask=this::render;
+     public void onCreate(Bundle state){super.onCreate(state);getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);cache=CourseCacheManager.get(this);
+         ScrollView scroll=new ScrollView(this);list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);list.setPadding(24,12,24,24);scroll.addView(list);scroll.setBackgroundColor(SwodUi.canvas(this));
+-        scroll.setOnApplyWindowInsetsListener((v,i)->{if(android.os.Build.VERSION.SDK_INT>=30){android.graphics.Insets s=i.getInsets(WindowInsets.Type.systemBars());scroll.setPadding(s.left,s.top,s.right,s.bottom);}else scroll.setPadding(i.getSystemWindowInsetLeft(),i.getSystemWindowInsetTop(),i.getSystemWindowInsetRight(),i.getSystemWindowInsetBottom());return i;});setContentView(scroll);render();}
++        scroll.setOnApplyWindowInsetsListener((v,i)->{if(android.os.Build.VERSION.SDK_INT>=30){android.graphics.Insets s=i.getInsets(WindowInsets.Type.systemBars());scroll.setPadding(s.left,s.top,s.right,s.bottom);}else scroll.setPadding(i.getSystemWindowInsetLeft(),i.getSystemWindowInsetTop(),i.getSystemWindowInsetRight(),i.getSystemWindowInsetBottom());return i;});setContentView(scroll);render();
++        if(state==null){int lesson=getIntent().getIntExtra("downloadLesson",0);if(lesson>0)cache.download(lesson,getIntent().getStringExtra("title"),getIntent().getStringExtra("course"));}}
+     private void text(String value,int size){TextView t=new TextView(this);t.setText(value);t.setTextSize(size);t.setTextColor(SwodUi.ink(this));t.setPadding(0,12,0,12);list.addView(t);}
+     private void button(String title,Runnable r){Button b=new Button(this);b.setText(title);b.setAllCaps(false);b.setMinHeight(48);b.setOnClickListener(v->r.run());list.addView(b);}
+-    private void render(){if(list==null||isFinishing())return;list.removeAllViews();button("返回",this::finish);text("课程缓存",22);text("联网时自动续期，授权有效期内可离线观看，最长24小时。设备重启后需联网验证；退出账号会删除本机缓存。",14);if(!cache.message.isEmpty())text(cache.message,14);
+-        java.util.List<JSONObject> records=cache.visible();if(records.isEmpty())text("暂无缓存，请从课程播放设置中缓存课节。",16);
++    private void render(){if(list==null||isFinishing())return;list.removeAllViews();button("返回",this::finish);text("离线观看",22);text("联网时自动续期，授权有效期内可离线观看，最长24小时。设备重启后需联网验证；退出账号会删除本机离线内容。",14);if(!cache.message.isEmpty())text(cache.message,14);
++        java.util.List<JSONObject> records=cache.visible();int active=cache.downloading();
++        if(active>0&&cache.get(active)==null){ProgressBar waiting=new ProgressBar(this);waiting.setContentDescription("正在验证离线观看权限");list.addView(waiting);}
++        if(records.isEmpty()&&active==0)text("暂无离线内容，请从课程播放设置中下载课节。",16);
+         for(JSONObject r:records){int id=r.optInt("id");text(r.optString("course")+"\n"+r.optString("title"),17);String status=r.optString("state");
+-            if(status.equals("downloading")){ProgressBar p=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);p.setProgress(r.optInt("percent"));list.addView(p);text("正在缓存 "+r.optInt("percent")+"%",14);button("暂停缓存",()->cache.pause(id));}
+-            else if(cache.usable(r)){text(android.text.format.Formatter.formatFileSize(this,r.optLong("bytes"))+(r.optBoolean("pending")?" · 学习进度待自动同步":" · 已缓存"),13);button("离线观看",()->startActivity(new Intent(this,OfflineCourseActivity.class).putExtra("lesson",id)));}
+-            else {text(status.equals("ready")?"待联网自动验证":"缓存已暂停，可重新缓存",14);if(status.equals("paused"))button("重新缓存",()->cache.download(id,r.optString("title"),r.optString("course")));}
+-            button("删除缓存",()->new AlertDialog.Builder(this).setMessage("删除这节课的本机缓存？").setNegativeButton("取消",null).setPositiveButton("删除",(d,w)->cache.remove(id)).show());
++            if(status.equals("downloading")){ProgressBar p=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);p.setMax(100);p.setProgress(r.optInt("percent"));p.setContentDescription("课节下载进度 "+r.optInt("percent")+"%");list.addView(p);text("正在下载 "+r.optInt("percent")+"%",14);button("暂停下载",()->cache.pause(id));}
++            else if(cache.usable(r)){text(android.text.format.Formatter.formatFileSize(this,r.optLong("bytes"))+" · 下载完成 100%"+(r.optBoolean("pending")?" · 学习进度待自动同步":""),13);button("离线观看",()->startActivity(new Intent(this,OfflineCourseActivity.class).putExtra("lesson",id)));}
++            else {text(status.equals("ready")?"待联网自动验证":"下载已暂停，可重新下载",14);if(status.equals("paused"))button("重新下载",()->cache.download(id,r.optString("title"),r.optString("course")));}
++            button("删除下载",()->new AlertDialog.Builder(this).setMessage("删除这节课的本机离线内容？").setNegativeButton("取消",null).setPositiveButton("删除",(d,w)->cache.remove(id)).show());
+         }
+     }
+     protected void onResume(){super.onResume();cache.listen(renderTask);cache.refresh();render();}
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/Android/EvaDance/app/src/main/java/cn/com/swod/app/OfflineCourseActivity.java
++++ app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/OfflineCourseActivity.java
+@@ -14,20 +14,20 @@
+     private CourseCacheManager cache;private AliPlayer player;private int lesson;private boolean playing,ready,active;
+     private final Handler main=new Handler(Looper.getMainLooper());private TextView status;private Button play;private SeekBar seek;
+     private int ticks;private String recordNonce="";
+-    private final Runnable tick=new Runnable(){public void run(){if(!active||player==null)return;JSONObject record=cache.get(lesson);if(record==null||!recordNonce.equals(record.optString("nonce"))||!cache.usable(record)){stopPlayback();status.setText("缓存授权待联网自动验证");main.postDelayed(this,1000);return;}if(ready)play.setEnabled(true);long position=player.getCurrentPosition(),duration=player.getDuration();seek.setMax((int)Math.max(1,duration/1000));seek.setProgress((int)(position/1000));if(++ticks%15==0)cache.checkpoint(lesson,position/1000d,duration/1000d);main.postDelayed(this,1000);}};
++    private final Runnable tick=new Runnable(){public void run(){if(!active||player==null)return;JSONObject record=cache.get(lesson);if(record==null||!recordNonce.equals(record.optString("nonce"))||!cache.usable(record)){stopPlayback();status.setText("离线观看授权待联网自动验证");main.postDelayed(this,1000);return;}if(ready)play.setEnabled(true);long position=player.getCurrentPosition(),duration=player.getDuration();seek.setMax((int)Math.max(1,duration/1000));seek.setProgress((int)(position/1000));if(++ticks%15==0)cache.checkpoint(lesson,position/1000d,duration/1000d);main.postDelayed(this,1000);}};
+     public void onCreate(Bundle state){super.onCreate(state);getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);cache=CourseCacheManager.get(this);lesson=getIntent().getIntExtra("lesson",0);
+         LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(16,16,16,16);root.setBackgroundColor(SwodUi.canvas(this));root.setOnApplyWindowInsetsListener((v,i)->{if(Build.VERSION.SDK_INT>=30){android.graphics.Insets s=i.getInsets(WindowInsets.Type.systemBars());root.setPadding(s.left+16,s.top+16,s.right+16,s.bottom+16);}return i;});setContentView(root);
+-        Button back=new Button(this);back.setText("返回缓存列表");back.setOnClickListener(v->finish());root.addView(back);
++        Button back=new Button(this);back.setText("返回离线内容");back.setOnClickListener(v->finish());root.addView(back);
+         FrameLayout stage=new FrameLayout(this);SurfaceView surface=new SurfaceView(this);stage.addView(surface,new FrameLayout.LayoutParams(-1,-1));root.addView(stage,new LinearLayout.LayoutParams(-1,(int)(getResources().getDisplayMetrics().widthPixels*9f/16f)));
+         status=new TextView(this);status.setTextColor(SwodUi.ink(this));status.setTextSize(17);root.addView(status);play=new Button(this);play.setText("播放");play.setEnabled(false);root.addView(play);seek=new SeekBar(this);seek.setContentDescription("离线播放进度");root.addView(seek);
+-        JSONObject record=cache.get(lesson);if(record==null||!cache.usable(record)||!new AliyunSecureCacheDriver(this).configured()){status.setText("缓存授权待联网自动验证");return;}
++        JSONObject record=cache.get(lesson);if(record==null||!cache.usable(record)||!new AliyunSecureCacheDriver(this).configured()){status.setText("离线观看授权待联网自动验证");return;}
+         recordNonce=record.optString("nonce");
+         try{
+             File key=new File(getNoBackupFilesDir(),"vod-encryptedApp.dat");try(InputStream in=getAssets().open("encryptedApp.dat");FileOutputStream out=new FileOutputStream(key)){byte[] b=new byte[4096];int n;while((n=in.read(b))!=-1)out.write(b,0,n);}
+             com.aliyun.private_service.PrivateService.initService(this,key.getAbsolutePath());com.cicada.player.utils.Logger.getInstance(this).enableConsoleLog(false);
+             player=AliPlayerFactory.createAliPlayer(this);status.setText(record.optString("title"));
+             player.setOnPreparedListener(()->{JSONObject live=cache.get(lesson);if(live==null||!recordNonce.equals(live.optString("nonce"))||!cache.usable(live)){stopPlayback();return;}ready=true;play.setEnabled(true);player.seekTo((long)(record.optDouble("position")*1000));});
+-            player.setOnCompletionListener(()->{playing=false;play.setText("播放");checkpoint();});player.setOnErrorListener(e->{stopPlayback();status.setText("安全缓存无法解密，请联网重新缓存");});
++            player.setOnCompletionListener(()->{playing=false;play.setText("播放");checkpoint();});player.setOnErrorListener(e->{stopPlayback();status.setText("安全离线内容无法解密，请联网重新下载");});
+             surface.getHolder().addCallback(new SurfaceHolder.Callback(){public void surfaceCreated(SurfaceHolder h){if(player!=null)player.setDisplay(h);}public void surfaceChanged(SurfaceHolder h,int f,int w,int v){}public void surfaceDestroyed(SurfaceHolder h){if(player!=null){player.pause();playing=false;player.setDisplay(null);}}});
+             UrlSource source=new UrlSource();source.setUri(cache.file(record).getAbsolutePath());player.setDataSource(source);player.prepare();
+             play.setOnClickListener(v->{JSONObject live=cache.get(lesson);if(!ready||live==null||!recordNonce.equals(live.optString("nonce"))||!cache.usable(live)){stopPlayback();return;}if(playing)player.pause();else player.start();playing=!playing;play.setText(playing?"暂停":"播放");});
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -229,10 +229,16 @@
+     Scroll() {
+       Column({ space: 20 }) {
+         Text('播放设置').fontSize(20).fontWeight(FontWeight.Bold)
++        Text('离线授权联网时自动续期，可连续离线观看最长 24 小时；学习权益到期或撤销后停止使用。').fontSize(14).fontColor(SwodTheme.muted)
++        this.action('离线观看', () => {
++          if (!COURSE_CACHE_RELEASE_ENABLED || !this.courseCache) { this.offlineAvailabilityMessage = '安全离线观看尚未开放，请先在线观看'; return; }
++          const lesson = Number(this.currentLessonID); const title = this.route.title; const course = this.videoCourseTitle;
++          this.videoSettings = false; this.go('cache', '离线观看', '', true);
++          this.courseCache.download(lesson, title, course);
++        })
++        if (this.offlineAvailabilityMessage) { Text(this.offlineAvailabilityMessage).fontSize(14).fontColor(SwodTheme.muted) }
+         if (COURSE_CACHE_RELEASE_ENABLED) {
+-        Text('课程缓存联网时自动续期，可连续离线观看最长 24 小时；学习权益到期或撤销后停止使用。').fontSize(14).fontColor(SwodTheme.muted)
+-        this.action('缓存当前课节', () => { this.courseCache?.download(Number(this.currentLessonID), this.route.title, this.videoCourseTitle).then(() => { this.go('cache', '课程缓存', '', true); }); })
+-        this.action('管理课程缓存', () => this.go('cache', '课程缓存', '', true))
++        this.action('管理离线内容', () => this.go('cache', '离线观看', '', true))
+         }
+         if (this.videoQualities.length > 1) {
+           Select(this.videoQualities.map((quality: MediaQuality): SelectOption => ({ value: quality.label }))).selected(this.videoQuality).value(this.videoQualities[this.videoQuality]?.label || '自动').onSelect((index: number) => {
+@@ -320,6 +326,7 @@
+   private checkpointPending: boolean = false;
+   private cacheDriver?: AliyunSecureCacheDriver;
+   private courseCache?: CourseCacheStore;
++  @State private offlineAvailabilityMessage: string = '';
+ 
+   aboutToAppear(): void {
+     try { this.videoScreenReader = accessibility.isScreenReaderOpenSync(); accessibility.on('screenReaderStateChange', this.screenReaderChanged); } catch { this.videoScreenReader = true; }
+@@ -1250,7 +1257,7 @@
+       ForEach(this.accountCourses, (course: Row) => { this.ownedCourseCard(course) }, (course: Row) => String(course.series_id))
+       }
+       this.accountService('查看全部课程与学习记录', '已解锁课程与学习进度', $r('app.media.nav_learn_on'), () => this.go('records', '我的课程', '/member/authorized-series', true))
+-      if (COURSE_CACHE_RELEASE_ENABLED) { this.accountService('课程缓存', '查看离线课程', $r('app.media.nav_learn_on'), () => this.go('cache', '课程缓存', '', true)) }
++      if (COURSE_CACHE_RELEASE_ENABLED) { this.accountService('离线观看', '查看离线课程', $r('app.media.nav_learn_on'), () => this.go('cache', '离线观看', '', true)) }
+       this.accountHeading('线下课与证书')
+       this.accountService('我的线下课程', '课时余额、期次与核销记录', $r('app.media.nav_calendar_on'), () => this.go('schedule', '期次课时', '/offline/overview', true))
+       this.accountService('我的证书', '查看已颁发的学习证书', $r('app.media.profile_certificate'), () => this.go('certificates', '我的证书', '/certificates', true))
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/HarmonyOS/EvaDance/entry/src/main/ets/pages/CachedCourses.ets
++++ app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/CachedCourses.ets
+@@ -11,33 +11,35 @@
+   @State private rows: CachedCourse[] = [];
+   @State private message: string = '';
+   @State private selected: number = 0;
++  @State private authorizing: boolean = false;
+   aboutToAppear(): void {
+     if (this.cache) { this.cache.changed = () => this.reload(); this.reload(); this.cache.refresh(); }
+   }
+   aboutToDisappear(): void { if (this.cache) this.cache.changed = () => {}; }
+-  private reload(): void { if (this.cache) { this.rows = JSON.parse(JSON.stringify(this.cache.visible())) as CachedCourse[]; this.message = this.cache.message; } }
++  private reload(): void { if (this.cache) { this.rows = JSON.parse(JSON.stringify(this.cache.visible())) as CachedCourse[]; this.message = this.cache.message; this.authorizing = this.cache.downloading > 0 && !this.cache.get(this.cache.downloading); } }
+   build() {
+     Column({ space: 12 }) {
+       if (this.cache && this.selected > 0) {
+         CachedOfflinePlayer({ cache: this.cache, lessonID: this.selected, back: () => { this.selected = 0; this.reload(); } })
+       } else {
+-        Text('课程缓存').fontSize(22).fontWeight(FontWeight.Bold).width('100%')
+-        Text('联网时自动验证和续期；断网可在授权有效期内学习，最长24小时。设备重启后需要联网验证；退出账号会删除本机缓存。').fontSize(14).fontColor(SwodTheme.muted)
++        Text('离线观看').fontSize(22).fontWeight(FontWeight.Bold).width('100%')
++        Text('联网时自动验证和续期；断网可在授权有效期内学习，最长24小时。设备重启后需要联网验证；退出账号会删除本机离线内容。').fontSize(14).fontColor(SwodTheme.muted)
+         if (this.message) { Text(this.message).fontSize(14).fontColor(SwodTheme.primary) }
+-        if (!this.rows.length) { Text('暂无缓存，请从课程播放设置中缓存课节。').fontSize(16).fontColor(SwodTheme.muted).padding(24) }
++        if (this.authorizing) { LoadingProgress().width(32).height(32).accessibilityText('正在验证离线观看权限') }
++        if (!this.rows.length && !this.authorizing) { Text('暂无离线内容，请从课程播放设置中下载课节。').fontSize(16).fontColor(SwodTheme.muted).padding(24) }
+         ForEach(this.rows, (item: CachedCourse) => {
+           Column({ space: 10 }) {
+             Text(item.course).fontSize(12).fontColor(SwodTheme.muted).width('100%')
+             Text(item.title).fontSize(17).fontWeight(FontWeight.Medium).width('100%')
+-            if (item.state === 'downloading') { Progress({ value: item.percent, total: 100 }); Text('正在缓存 ' + item.percent + '%').fontSize(13); Button('暂停缓存').constraintSize({ minHeight: 44 }).onClick(() => this.cache?.pause(item.id)) }
++            if (item.state === 'downloading') { Progress({ value: item.percent, total: 100 }).accessibilityText('课节下载进度 ' + item.percent + '%'); Text('正在下载 ' + item.percent + '%').fontSize(13); Button('暂停下载').constraintSize({ minHeight: 44 }).onClick(() => this.cache?.pause(item.id)) }
+             else if (this.cache?.usable(item)) {
+-              Text((item.bytes / 1048576).toFixed(1) + ' MB' + (item.pending ? ' · 学习进度待自动同步' : ' · 已缓存')).fontSize(13).fontColor(SwodTheme.muted)
++              Text((item.bytes / 1048576).toFixed(1) + ' MB · 下载完成 100%' + (item.pending ? ' · 学习进度待自动同步' : '')).fontSize(13).fontColor(SwodTheme.muted)
+               Button('离线观看').constraintSize({ minHeight: 44 }).onClick(() => { this.selected = item.id; })
+-            } else { Text(item.state === 'ready' ? '待联网自动验证' : '缓存已暂停，可重新缓存').fontSize(14).fontColor(SwodTheme.muted)
+-              if (item.state === 'paused') { Button('重新缓存').constraintSize({ minHeight: 44 }).onClick(() => { this.cache?.download(item.id, item.title, item.course); }) }
++            } else { Text(item.state === 'ready' ? '待联网自动验证' : '下载已暂停，可重新下载').fontSize(14).fontColor(SwodTheme.muted)
++              if (item.state === 'paused') { Button('重新下载').constraintSize({ minHeight: 44 }).onClick(() => { this.cache?.download(item.id, item.title, item.course); }) }
+             }
+-            Button('删除缓存').fontColor(SwodTheme.primary).backgroundColor(SwodTheme.tonal).constraintSize({ minHeight: 44 }).onClick(() => {
+-              this.getUIContext().getPromptAction().showDialog({ message: '删除这节课的本机缓存？', buttons: [{ text: '取消', color: '#777777' }, { text: '删除', color: '#8A2233' }] }).then((result) => { if (result.index === 1) this.cache?.remove(item.id); });
++            Button('删除下载').fontColor(SwodTheme.primary).backgroundColor(SwodTheme.tonal).constraintSize({ minHeight: 44 }).onClick(() => {
++              this.getUIContext().getPromptAction().showDialog({ message: '删除这节课的本机离线内容？', buttons: [{ text: '取消', color: '#777777' }, { text: '删除', color: '#8A2233' }] }).then((result) => { if (result.index === 1) this.cache?.remove(item.id); });
+             })
+           }.alignItems(HorizontalAlign.Start).padding(16).width('100%').backgroundColor(SwodTheme.surface).borderRadius(12)
+         }, (item: CachedCourse) => item.nonce)
+@@ -64,7 +66,7 @@
+   @State private duration: number = 1;
+   private permits(): boolean { const item = this.cache?.get(this.lessonID); return item !== undefined && (!this.recordNonce || this.recordNonce === item.nonce) && this.cache?.usable(item) === true && platform.applicationActive && platform.screenProtected; }
+   private async open(): Promise<void> {
+-    const item = this.cache?.get(this.lessonID); if (!item || !this.permits()) { this.message = '缓存授权或安全窗口待验证'; return; }
++    const item = this.cache?.get(this.lessonID); if (!item || !this.permits()) { this.message = '离线观看授权或安全窗口待验证'; return; }
+     this.recordNonce = item.nonce;
+     const version = this.generation;
+     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
+@@ -74,14 +76,14 @@
+       Logger.getInstance(context).enableConsoleLog(false);
+       const player = AliPlayerFactory.createAliPlayer(context); this.player = player; player.setSurfaceId(this.surface.getXComponentSurfaceId());
+       player.setOnPreparedListener({ onPrepared: () => { if (!this.permits()) { player.pause(); return; } this.duration = player.getDuration() / 1000; this.ready = true; player.seekTo(item.position * 1000, 1); } });
+-      player.setOnErrorListener({ onError: (_error: ErrorInfo) => { this.playing = false; this.ready = false; this.message = '安全缓存无法解密，请联网重新缓存'; } });
++      player.setOnErrorListener({ onError: (_error: ErrorInfo) => { this.playing = false; this.ready = false; this.message = '安全离线内容无法解密，请联网重新下载'; } });
+       player.setOnCompletionListener({ onCompletion: () => { this.playing = false; this.checkpoint(); } });
+       const source = new UrlSource(); source.setUri(this.cache?.file(item) || ''); player.setUrlDataSource(source); player.prepare();
+       this.timer = setInterval(() => {
+-        if (!this.permits()) { this.player?.pause(); this.playing = false; this.message = '缓存授权待联网自动验证'; return; }
++        if (!this.permits()) { this.player?.pause(); this.playing = false; this.message = '离线观看授权待联网自动验证'; return; }
+         this.playbackPosition = (this.player?.getCurrentPosition() || 0) / 1000;
+         if (++this.ticks % 15 === 0) this.checkpoint();
+-        if (this.message === '缓存授权待联网自动验证') this.message = '';
++        if (this.message === '离线观看授权待联网自动验证') this.message = '';
+       }, 1000);
+     } catch { this.message = '安全离线播放器尚未就绪'; }
+   }
+@@ -89,11 +91,11 @@
+   aboutToDisappear(): void { this.generation++; this.checkpoint(); if (this.timer >= 0) clearInterval(this.timer); this.player?.stop(); this.player?.release(); this.player = undefined; }
+   build() {
+     Column({ space: 14 }) {
+-      Button('返回缓存列表').constraintSize({ minHeight: 44 }).onClick(() => this.back())
++      Button('返回离线内容').constraintSize({ minHeight: 44 }).onClick(() => this.back())
+       Stack({ alignContent: Alignment.TopStart }) {
+         XComponent({ id: 'secure-course-offline', type: XComponentType.SURFACE, controller: this.surface }).width('100%').aspectRatio(16 / 9).onLoad(() => { this.open(); })
+       }.width('100%')
+-      Text(this.cache?.get(this.lessonID)?.title || '课程缓存').fontSize(18)
++      Text(this.cache?.get(this.lessonID)?.title || '离线观看').fontSize(18)
+       if (this.message) { Text(this.message).fontSize(14).fontColor(SwodTheme.primary) }
+       Button(this.playing ? '暂停' : '播放').constraintSize({ minHeight: 44 }).enabled(this.ready && this.permits()).onClick(() => {
+         if (!this.permits()) return; if (this.playing) this.player?.pause(); else this.player?.start(); this.playing = !this.playing;
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/HarmonyOS/EvaDance/entry/src/main/ets/services/AliyunSecureCacheDriver.ets
++++ app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/AliyunSecureCacheDriver.ets
+@@ -37,34 +37,34 @@
+     } catch { return false; }
+   }
+   async start(vod: string, playAuth: string, directory: string, maximumBytes: number, allowed: () => boolean, callbacks: CacheDownloadCallbacks): Promise<void> {
+-    if (!await this.configured() || !allowed() || !playAuth || maximumBytes <= 0) throw new Error('课程安全缓存尚未开放');
+-    if (!directory.startsWith(this.context.filesDir + '/course-cache/') || directory.includes('..')) throw new Error('缓存目录无效');
++    if (!await this.configured() || !allowed() || !playAuth || maximumBytes <= 0) throw new Error('安全离线观看尚未开放');
++    if (!directory.startsWith(this.context.filesDir + '/course-cache/') || directory.includes('..')) throw new Error('离线目录无效');
+     this.stop(); fileIo.mkdirSync(directory, true);
+     await AliyunSecureCacheDriver.initializeKey(this.context);
+-    if (!allowed()) throw new Error('缓存授权已变化');
++    if (!allowed()) throw new Error('离线观看授权已变化');
+     Logger.getInstance(this.context).enableConsoleLog(false);
+     this.allowed = allowed; this.callbacks = callbacks;
+     const active = AliDownloaderFactory.create(this.context); this.worker = active; active.setSaveDir(directory);
+     active.setOnPreparedListener({ onPrepared: (info: MediaInfo) => {
+       if (this.worker !== active) return;
+-      if (!this.allowed()) { this.fail('缓存授权已变化'); return; }
++      if (!this.allowed()) { this.fail('离线观看授权已变化'); return; }
+       const tracks = info.getTrackInfos().filter((track: TrackInfo) => ['m3u8', 'mp4'].includes(track.getVodFormat()) && track.getVodFileSize() > 0 && track.getVodFileSize() <= maximumBytes).sort((a: TrackInfo, b: TrackInfo) => a.getVodFileSize() - b.getVodFileSize());
+-      if (!tracks.length) { this.fail('没有可安全缓存的清晰度或空间不足'); return; }
++      if (!tracks.length) { this.fail('没有可安全下载的清晰度或空间不足'); return; }
+       active.selectItem(tracks[0].getIndex()); active.start();
+     } });
+-    active.setOnProgressListener({ onDownloadingProgress: (percent: number) => { if (this.worker !== active) return; if (this.allowed()) callbacks.progress(percent); else this.fail('缓存授权待联网更新'); }, onProcessingProgress: (_percent: number) => {} });
+-    active.setOnErrorListener({ onError: (_error: ErrorInfo) => { if (this.worker === active) this.fail('安全缓存失败，请联网重试'); } });
++    active.setOnProgressListener({ onDownloadingProgress: (percent: number) => { if (this.worker !== active) return; if (this.allowed()) callbacks.progress(percent); else this.fail('离线观看授权待联网更新'); }, onProcessingProgress: (_percent: number) => {} });
++    active.setOnErrorListener({ onError: (_error: ErrorInfo) => { if (this.worker === active) this.fail('安全下载失败，请联网重试'); } });
+     active.setOnCompletionListener({ onCompletion: () => {
+       if (this.worker !== active) return;
+       const path = active.getFilePath();
+       try {
+         const stat = fileIo.statSync(path);
+-        if (!this.allowed() || !path.startsWith(directory + '/') || path.includes('..') || !stat.isFile() || stat.size <= 0 || AliyunSecureCacheDriver.directoryBytes(directory) > maximumBytes) { this.fail('缓存文件或授权无效'); return; }
++        if (!this.allowed() || !path.startsWith(directory + '/') || path.includes('..') || !stat.isFile() || stat.size <= 0 || AliyunSecureCacheDriver.directoryBytes(directory) > maximumBytes) { this.fail('离线文件或授权无效'); return; }
+         this.stop(); callbacks.complete(path);
+-      } catch { this.fail('无法安全保存缓存'); }
++      } catch { this.fail('无法安全保存离线内容'); }
+     } });
+     const source = new VidAuth(); source.setVid(vod); source.setPlayAuth(playAuth); active.prepareVidAuth(source);
+-    this.guardTimer = setInterval(() => { if (this.worker && !this.allowed()) this.fail('缓存授权待联网更新'); else if (this.worker && AliyunSecureCacheDriver.directoryBytes(directory) > maximumBytes) this.fail('缓存超出容量限制，请删除不需要的缓存'); }, 1000);
++    this.guardTimer = setInterval(() => { if (this.worker && !this.allowed()) this.fail('离线观看授权待联网更新'); else if (this.worker && AliyunSecureCacheDriver.directoryBytes(directory) > maximumBytes) this.fail('下载超出容量限制，请删除不需要的离线内容'); }, 1000);
+   }
+   stop(): void { if (this.guardTimer >= 0) clearInterval(this.guardTimer); this.guardTimer = -1; this.worker?.stop(); this.worker?.release(); this.worker = undefined; this.allowed = () => false; this.callbacks = undefined; }
+   private fail(message: string): void { const callbacks = this.callbacks; this.worker?.deleteFile(); this.stop(); callbacks?.failure(message); }
+--- app开发/共享资料/同步更新/20261112-offline-download-progress/before/HarmonyOS/EvaDance/entry/src/main/ets/services/CourseCacheStore.ets
++++ app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/CourseCacheStore.ets
+@@ -55,7 +55,7 @@
+       await this.persist();
+       this.api.cacheInvalidation = () => { this.purge(); };
+       this.timer = setInterval(() => { this.refresh(); }, 60000); await this.refresh();
+-    } catch { this.inventory.items = []; this.message = '安全缓存索引不可用，请联网后重试'; }
++    } catch { this.inventory.items = []; this.message = '安全离线内容索引不可用，请联网后重试'; }
+     this.changed();
+   }
+   private elapsed(): number { return systemDateTime.getUptime(systemDateTime.TimeType.STARTUP, false); }
+@@ -88,7 +88,7 @@
+   remove(id: number): void {
+     if (this.downloading === id) { this.generation++; this.driver.stop(); this.downloading = 0; }
+     this.renewals.get(id)?.stop(); this.renewals.delete(id); this.inventory.items = this.inventory.items.filter((item: CachedCourse) => item.id !== id);
+-    this.persist().catch(() => { this.message = '缓存索引保存失败'; }); this.deleteFiles(id); this.changed();
++    this.persist().catch(() => { this.message = '离线索引保存失败'; }); this.deleteFiles(id); this.changed();
+   }
+   pause(id: number): void {
+     if (this.downloading !== id) return; this.generation++; this.driver.stop(); this.downloading = 0;
+@@ -127,21 +127,21 @@
+     } finally { this.busy = false; this.changed(); }
+   }
+   async download(id: number, title: string, course: string): Promise<void> {
+-    if (!COURSE_CACHE_RELEASE_ENABLED) { this.message = '课程安全缓存尚未开放，请先在线观看'; this.changed(); return; }
+-    if (this.downloading) { this.message = '请等待当前课节缓存完成，或先取消任务'; this.changed(); return; }
+-    if (!await this.driver.configured()) { this.message = '安全缓存授权尚未配置完成，请先在线观看'; this.changed(); return; }
+-    if (this.inventory.items.length >= 12 && !this.get(id)) { this.message = '最多缓存12节，请先删除不需要的缓存'; this.changed(); return; }
+-    const version = this.generation; this.downloading = id; this.message = '正在验证缓存权限'; this.changed();
++    if (!COURSE_CACHE_RELEASE_ENABLED) { this.message = '安全离线观看尚未开放，请先在线观看'; this.changed(); return; }
++    if (this.downloading) { this.message = '请等待当前课节下载完成，或先取消任务'; this.changed(); return; }
++    if (!await this.driver.configured()) { this.message = '安全下载授权尚未配置完成，请先在线观看'; this.changed(); return; }
++    if (this.inventory.items.length >= 12 && !this.get(id)) { this.message = '最多下载12节，请先删除不需要的离线内容'; this.changed(); return; }
++    const version = this.generation; this.downloading = id; this.message = '正在验证离线观看权限'; this.changed();
+     const stamp = this.elapsed();
+     try {
+       const grant = await this.authorize(id, 'download');
+-      if (version !== this.generation || !this.current(grant) || !grant.credential?.play_auth) throw new Error('账号或缓存权限已变化');
++      if (version !== this.generation || !this.current(grant) || !grant.credential?.play_auth) throw new Error('账号或离线观看权限已变化');
+       this.downloading = 0; this.remove(id); this.downloading = id;
+       const item: CachedCourse = { id: id, nonce: util.generateRandomUUID(), title: title, course: course, lease: this.lease(grant),
+         anchor: { server: grant.issued_at, elapsed: stamp, boot: this.boot() }, file: '', state: 'downloading', percent: 0, bytes: 0, position: 0, duration: 0, revision: 0, pending: false };
+       try { const progress = await this.api.request<Row>('/video/' + id + '/progress', http.RequestMethod.GET, undefined, true); item.position = progress.progress || 0; item.revision = progress.revision || 0; } catch {}
+       if (version !== this.generation || !this.current(grant)) return;
+-      this.inventory.items.push(item); await this.persist();
++      this.inventory.items.push(item); await this.persist(); this.changed();
+       const used = AliyunSecureCacheDriver.directoryBytes(this.root);
+       const allowed = (): boolean => version === this.generation && this.get(id)?.nonce === item.nonce && this.current(item.lease) && permitsCachedVideo(item.lease, item.lease.member_id, item.lease.session_id, this.inventory.device, id, trustedCacheTime(item.anchor, this.elapsed(), this.boot()));
+       await this.driver.start(grant.vod_video_id, grant.credential.play_auth, this.root + '/' + id, Math.min(grant.max_bytes, 2147483648 - used, statfs.getFreeSizeSync(this.context.filesDir) - 104857600), allowed, {
+@@ -149,10 +149,10 @@
+         complete: (path: string) => {
+           if (!allowed()) { this.remove(id); return; }
+           item.file = path.slice(this.root.length + 1); item.state = 'ready'; item.percent = 100; item.bytes = AliyunSecureCacheDriver.directoryBytes(this.root + '/' + id); this.downloading = 0;
+-          this.persist().then(() => { this.message = '缓存完成'; this.changed(); this.refresh(); }).catch(() => { this.remove(id); this.message = '缓存无法安全保存，请重试'; this.changed(); });
++          this.persist().then(() => { this.message = '下载完成'; this.changed(); this.refresh(); }).catch(() => { this.remove(id); this.message = '下载内容无法安全保存，请重试'; this.changed(); });
+         }, failure: (message: string) => { if (version === this.generation) { this.remove(id); this.message = message; this.changed(); } }
+       });
+-    } catch { if (version === this.generation) { this.downloading = 0; this.remove(id); this.message = '安全缓存失败，请联网重试'; this.changed(); } }
++    } catch { if (version === this.generation) { this.downloading = 0; this.remove(id); this.message = '安全下载失败，请联网重试'; this.changed(); } }
+   }
+   checkpoint(id: number, position: number, duration: number): void {
+     const item = this.get(id); if (!item || !this.usable(item) || !Number.isFinite(position) || !Number.isFinite(duration) || duration <= 0 || position < 0 || position > duration + 1) return;

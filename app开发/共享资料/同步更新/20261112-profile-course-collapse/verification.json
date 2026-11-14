@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-11-12T13:17:28.926821+08:00",
+  "request": "个人中心线上课程默认展开，可收起/展开",
+  "implementation": {
+    "label": "保留统一栏目名我的课程",
+    "initial": "expanded on entry",
+    "toggle": "收起 hides inline course rows; 展开 restores them without changing course authorization",
+    "shortcut": "查看全部课程与学习记录 remains available while collapsed",
+    "persistence": "No cross-launch preference; default expanded on next profile entry"
+  },
+  "builds": {
+    "iOS": "Physical-device development build passed",
+    "Android": "Debug assemble passed",
+    "HarmonyOS": "Unsigned Debug HAP compiled"
+  },
+  "runtime": {
+    "iOS": "Updated installed and launched on connected iPhone14ProMax, login retained. Profile observed default-expanded rows and 收起 button. Toggle completion not established: after a coordinate click the device showed a lesson, later another application; UI testing stopped to avoid interfering. No private contact/message screenshots retained.",
+    "Android": "No current physical runtime check",
+    "HarmonyOS": "No current physical runtime check"
+  },
+  "sources": {
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift": "ac150dca17d33d7f193a20f69d018976fd9c0182684f32dc686e20a9d86932e9",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java": "2ff7a6b300f30be111cdf7858e707a8b9d191dc1c7b713c16b19abccdd6761fd",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets": "30845d844d7a945e656305ea7ac8393259c49762d3b318125eceb2d6b2592e0a"
+  },
+  "release": "No store upload/submission; original release packages, filing and production flags unchanged"
+}

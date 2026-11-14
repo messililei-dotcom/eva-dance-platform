@@ -1,0 +1,29 @@
+{
+  "files": [
+    "production/website/src/app/events-news/[slug]/page.tsx",
+    "production/website/src/app/events-news/events.module.css",
+    "production/website/src/components/events/EventGroupSearch.tsx",
+    "production/website/src/lib/public-event-data.ts",
+    "production/website/src/lib/events-news.ts",
+    "production/website/src/types/events-news.ts",
+    "production/website/public/sw.js",
+    "10-小程序miniprogram/pages/event-detail/event-detail.js",
+    "10-小程序miniprogram/pages/event-detail/event-detail.wxml",
+    "10-小程序miniprogram/pages/event-detail/event-detail.wxss",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventDetailView.swift",
+    "app开发/iOS/EvaDance/Sources/EvaDanceApp/EventUI.swift",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java",
+    "app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/EventPresentation.java",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/components/PublicEventView.ets",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets",
+    "app开发/HarmonyOS/EvaDance/entry/src/main/ets/services/EventPresentation.ets",
+    "production/website/src/components/BottomNav.tsx",
+    "production/website/src/components/events/EventPeopleSearch.tsx",
+    "production/website/src/lib/event-age.ts",
+    "10-小程序miniprogram/shared/event-age.js"
+  ],
+  "reference": "/var/folders/fz/dwyl8b_x0kz23d73mfcxz5yh0000gn/T/codex-clipboard-601e5f54-b054-4314-b728-11becb0d50aa.png",
+  "miniUpload": false,
+  "appUpload": false,
+  "websiteDeploy": true
+}

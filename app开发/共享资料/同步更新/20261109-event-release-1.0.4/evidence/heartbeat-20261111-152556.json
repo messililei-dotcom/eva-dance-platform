@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-11-11T15:25:56+08:00",
+  "version": "1.0.4",
+  "harmony": {
+    "build": 23,
+    "reviewRecordId": "2071129556072323840",
+    "managementResult": "Exact review link redirected to Huawei account sign-in",
+    "observedPath": "https://id1.cloud.huawei.com/CAS/portal/loginAuth.html",
+    "freshReviewStatusVerified": false,
+    "freshPublicReleaseVerified": false
+  },
+  "newReviewOrPublicResultVerified": false,
+  "newStoreSubmission": false,
+  "newNotificationNeeded": false,
+  "existingReviewsWithdrawn": false
+}

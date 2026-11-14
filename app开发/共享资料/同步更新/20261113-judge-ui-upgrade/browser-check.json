@@ -1,0 +1,13 @@
+{
+  "engine": "Chrome headless; isolated synthetic API fixtures",
+  "checks": [
+    "total redistribution",
+    "item range keyboard change",
+    "sum synchronization",
+    "Chromium synthesized touch drag",
+    "cancel performs no write",
+    "logout clears score form",
+    "320/390/1280 layout"
+  ],
+  "writes": 0
+}

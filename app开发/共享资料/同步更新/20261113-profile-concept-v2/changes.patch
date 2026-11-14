@@ -1,0 +1,720 @@
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountViews.swift
+@@ -3,87 +3,160 @@
+ 
+ struct AccountView: View {
+     @EnvironmentObject var session: Session
++    @Environment(\.dynamicTypeSize) private var typeSize
+     @StateObject private var store = SiteStore()
+     @StateObject private var courses = SiteStore()
+     @State private var logout = false
+     @State private var coursesExpanded = true
+-    var body: some View {
+-        ScrollView {
+-            VStack(alignment: .leading, spacing: 0) {
+-                AccountHeaderView(notifications: session.notifications, profile: session.token == nil ? .null : store.data, ready: !store.busy && store.error == nil && store.data != .null)
+-                if session.token == nil {
+-                    Button("登录 / 注册") { session.showLogin = true }.buttonStyle(.borderedProminent)
+-                        .foregroundStyle(EvaBrand.onAccent).controlSize(.large).frame(maxWidth: .infinity, minHeight: 48)
+-                } else {
+-                    AccountSummaryView(profile: store.data, ready: !store.busy && store.error == nil)
+-                    Divider()
+-                    LoadState(store: store) { Task { await load() } }
+-                    NavigationLink { ProfileEditor() } label: { AccountServiceRow(title: "个人资料", subtitle: "姓名、手机号、生日和地址", icon: "person.crop.circle") }
+-                    Divider()
+-                    NavigationLink { MyCompetitionsView() } label: { AccountServiceRow(title: "我的比赛", subtitle: "报名、缴费与比赛结果", icon: "trophy") }
+-                    Divider()
+-                    NavigationLink { ShopOrdersView() } label: { AccountServiceRow(title: "我的订单", subtitle: "订单、到账与退款记录", icon: "bag") }
+-                    Divider()
+-                    HStack {
+-                        Text("我的课程").font(.title3.bold())
+-                        Spacer()
+-                        Button { coursesExpanded.toggle() } label: {
+-                            Label(coursesExpanded ? "收起" : "展开", systemImage: coursesExpanded ? "chevron.up" : "chevron.down")
+-                                .font(.subheadline).frame(minWidth: 64, minHeight: 44)
+-                        }.accessibilityLabel(coursesExpanded ? "收起我的课程" : "展开我的课程")
+-                            .accessibilityValue(coursesExpanded ? "已展开" : "已收起")
+-                            .accessibilityIdentifier("account.courses.toggle")
+-                    }.padding(.top, 12)
+-                    if coursesExpanded {
+-                    LoadState(store: courses) { Task { await load() } }
+-                    ForEach(courses.data.rows) { item in
+-                        if let id = Int(item.value["series_id"].text), id > 0 {
+-                            NavigationLink { CatalogByIDView(id: id, title: item.value["series_name"].text) } label: { AccountCourseRow(course: item.value) }
+-                            Divider()
++
++    var body: some View {
++        VStack(spacing: 0) {
++            pageHeader
++            ScrollView {
++                VStack(alignment: .leading, spacing: 0) {
++                    AccountHeaderView(notifications: session.notifications, profile: session.token == nil ? .null : store.data, ready: !store.busy && store.error == nil && store.data != .null)
++                    if session.token == nil {
++                        Button("登录 / 注册") { session.showLogin = true }
++                            .buttonStyle(.borderedProminent).foregroundStyle(EvaBrand.onAccent)
++                            .controlSize(.large).frame(maxWidth: .infinity, minHeight: 48)
++                        sectionBreak
++                        NavigationLink { CourseSupportView() } label: { serviceRow("客服与售后", icon: "bubble.left.and.bubble.right") }
++                        NavigationLink { settings } label: { serviceRow("账号与隐私", icon: "gearshape") }
++                    } else {
++                        Divider()
++                        AccountSummaryView(profile: store.data, ready: !store.busy && store.error == nil)
++                        LoadState(store: store) { Task { await load() } }
++                        sectionBreak
++                        courseSection
++                        sectionBreak
++                        commonServices
++                    }
++                }.padding(.horizontal, 20).padding(.bottom, 16).frame(maxWidth: 760)
++                    .frame(maxWidth: .infinity)
++            }.refreshable { await load() }
++        }.background(EvaBrand.surface).buttonStyle(EvaPressStyle()).evaPageChrome(root: true)
++            .onAppear { coursesExpanded = true }.task(id: session.accountID) { await load() }
++    }
++
++    private var pageHeader: some View {
++        HStack(spacing: 12) {
++            Text("SWOD").font(.headline.bold()).foregroundStyle(EvaBrand.red).accessibilityHidden(true)
++            Text("个人中心").font(.title2.bold()).frame(maxWidth: .infinity, alignment: .leading)
++            if session.token != nil {
++                NavigationLink { MessagesView() } label: {
++                    Image(systemName: "bell").font(.title3).frame(width: 44, height: 44)
++                        .overlay(alignment: .topTrailing) {
++                            if session.notifications.unread > 0 { Circle().fill(EvaBrand.red).frame(width: 6, height: 6).padding(8) }
+                         }
++                }.accessibilityLabel("通知，\(session.notifications.unread)条未读")
++            }
++            NavigationLink { settings } label: { Image(systemName: "gearshape").font(.title3).frame(width: 44, height: 44) }
++                .accessibilityLabel("账号与隐私设置")
++        }.foregroundStyle(.primary).padding(.leading, 20).padding(.trailing, 8)
++            .padding(.vertical, 4).frame(maxWidth: 760).frame(maxWidth: .infinity)
++    }
++
++    private var sectionBreak: some View {
++        EvaBrand.field.frame(height: 8).padding(.horizontal, -20).padding(.vertical, 8)
++    }
++
++    private var courseSection: some View {
++        VStack(alignment: .leading, spacing: 0) {
++            HStack {
++                Text("我的课程").font(.title3.bold())
++                Spacer(minLength: 8)
++                Button { coursesExpanded.toggle() } label: {
++                    HStack(spacing: 6) {
++                        Text(coursesExpanded ? "收起" : "展开")
++                        Image(systemName: coursesExpanded ? "chevron.up" : "chevron.down").font(.caption)
++                    }.font(.subheadline).foregroundStyle(.secondary).frame(minWidth: 64, minHeight: 44)
++                }.accessibilityLabel(coursesExpanded ? "收起我的课程" : "展开我的课程")
++                    .accessibilityValue(coursesExpanded ? "已展开" : "已收起")
++                    .accessibilityIdentifier("account.courses.toggle")
++            }
++            if coursesExpanded {
++                LoadState(store: courses) { Task { await load() } }
++                ForEach(courses.data.rows) { item in
++                    if let id = Int(item.value["series_id"].text), id > 0 {
++                        NavigationLink { CatalogByIDView(id: id, title: item.value["series_name"].text) } label: {
++                            AccountCourseRow(course: item.value, showsLearningAction: true)
++                        }
++                        Divider()
+                     }
+-                    if !courses.busy && courses.error == nil && courses.data.list.isEmpty {
+-                        Text("暂无已解锁课程").font(.subheadline).foregroundStyle(.secondary).padding(.vertical, 16)
++                }
++                if !courses.busy && courses.error == nil && courses.data.list.isEmpty {
++                    Text("暂无课程").font(.subheadline).foregroundStyle(.secondary).padding(.vertical, 20)
++                }
++            }
++            NavigationLink { CoursesView() } label: { serviceRow("查看全部课程与学习记录") }
++        }
++    }
++
++    private var commonServices: some View {
++        VStack(alignment: .leading, spacing: 8) {
++            Text("常用服务").font(.title3.bold()).padding(.vertical, 8)
++            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: typeSize.isAccessibilitySize ? 1 : 2), alignment: .leading, spacing: 0) {
++                NavigationLink { ShopOrdersView() } label: { serviceTile("我的订单", icon: "bag") }
++                if AppPolicy.supportsOfflineDownload {
++                    NavigationLink { CourseCacheView(cache: session.videoCache) } label: { serviceTile("离线观看", icon: "arrow.down.to.line") }
++                }
++                NavigationLink { StudyItemsView(kind: "notes") } label: { serviceTile("学习笔记", icon: "square.and.pencil") }
++                NavigationLink { CourseSupportView() } label: { serviceTile("客服与售后", icon: "bubble.left.and.bubble.right") }
++            }
++            Divider()
++            NavigationLink { settings } label: { serviceRow("账号与隐私") }
++        }
++    }
++
++    private func serviceTile(_ title: String, icon: String) -> some View {
++        HStack(spacing: 10) {
++            Image(systemName: icon).font(.title3).foregroundStyle(EvaBrand.red)
++                .frame(width: 34, height: 34).background(EvaBrand.softAccent, in: RoundedRectangle(cornerRadius: 8)).accessibilityHidden(true)
++            Text(title).font(.body).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
++            Spacer(minLength: 0)
++        }.frame(maxWidth: .infinity, minHeight: 64, alignment: .leading).contentShape(Rectangle())
++    }
++
++    private func serviceRow(_ title: String, icon: String = "") -> some View {
++        AccountServiceRow(title: title, subtitle: "", icon: icon)
++    }
++
++    private var settings: some View {
++        Form {
++            if session.token != nil {
++                Section("学习与服务") {
++                    NavigationLink { ProfileEditor() } label: { Label("个人资料", systemImage: "person.crop.circle") }
++                    NavigationLink { OfflineScheduleView() } label: { Label("我的线下课程", systemImage: "calendar") }
++                    NavigationLink { CertificatesView() } label: { Label("我的证书", systemImage: "rosette") }
++                    NavigationLink { StudyAssistantView() } label: { Label("今日练习", systemImage: "figure.dance") }
++                    NavigationLink { GrowthView() } label: { Label("成长与每日打卡", systemImage: "chart.line.uptrend.xyaxis") }
++                    NavigationLink { StudyItemsView(kind: "bookmarks") } label: { Label("学习书签", systemImage: "bookmark") }
++                    NavigationLink { ShippingView() } label: { Label("收货地址", systemImage: "shippingbox") }
++                    NavigationLink { RecordListView(title: "课程缴费记录", path: "/member/payments", fields: [("课程","courseName"),("金额","amount"),("剩余课次","remainingSessions"),("日期","date")]) } label: { Label("课程缴费记录", systemImage: "doc.text") }
++                    NavigationLink { RecordListView(title: "课次消耗记录", path: "/member/consume-records", fields: [("课程","courseName"),("课次","count"),("时间","consumeDate")]) } label: { Label("课次消耗记录", systemImage: "checkmark.circle") }
++                }
++                Section("账号与隐私") {
++                    NavigationLink { DevicesView() } label: { Label("登录设备", systemImage: "iphone") }
++                    NavigationLink { DeletionView() } label: { Label("注销账号", systemImage: "person.crop.circle.badge.minus") }
++                    Button("退出登录", role: .destructive) { logout = true }
++                }
++            }
++            if !session.deletionReceipts.isEmpty {
++                Section("注销进度与结果") {
++                    ForEach(session.deletionReceipts) { receipt in
++                        NavigationLink { DeletionReceiptView(receipt: receipt) } label: { Text("查看注销回执 · " + receipt.createdAt.formatted(date: .abbreviated, time: .shortened)) }
+                     }
+-                    }
+-                    NavigationLink { CoursesView() } label: { AccountServiceRow(title: "查看全部课程与学习记录", subtitle: "已解锁课程与学习进度", icon: "book") }
+-                    if AppPolicy.supportsOfflineDownload {
+-                        NavigationLink { CourseCacheView(cache: session.videoCache) } label: { AccountServiceRow(title: "离线观看", subtitle: "查看离线课程", icon: "arrow.down.circle") }
+-                    }
+-                    Text("线下课与证书").font(.title3.bold()).padding(.top, 20)
+-                    NavigationLink { OfflineScheduleView() } label: { AccountServiceRow(title: "我的线下课程", subtitle: "课时余额、期次与核销记录", icon: "calendar") }
+-                    Divider()
+-                    NavigationLink { CertificatesView() } label: { AccountServiceRow(title: "我的证书", subtitle: "查看已颁发的学习证书", icon: "rosette") }
+-                    Text("学习服务").font(.title3.bold()).padding(.top, 20)
+-                    NavigationLink { StudyAssistantView() } label: { AccountServiceRow(title: "今日练习", subtitle: "学习计划与练习建议", icon: "figure.dance") }
+-                    NavigationLink { GrowthView() } label: { AccountServiceRow(title: "成长与每日打卡", subtitle: "记录每一次练习", icon: "chart.line.uptrend.xyaxis") }
+-                    NavigationLink { StudyItemsView(kind: "notes") } label: { AccountServiceRow(title: "学习笔记", subtitle: "回顾课程中的学习心得", icon: "square.and.pencil") }
+-                    NavigationLink { StudyItemsView(kind: "bookmarks") } label: { AccountServiceRow(title: "学习书签", subtitle: "快速找到标记过的课节", icon: "bookmark") }
+-                    Text("我的服务").font(.title3.bold()).padding(.top, 20)
+-                    NavigationLink { ShippingView() } label: { AccountServiceRow(title: "收货地址", subtitle: "管理商城收货信息", icon: "shippingbox") }
+-                    NavigationLink { RecordListView(title: "课程缴费记录", path: "/member/payments", fields: [("课程","courseName"),("金额","amount"),("剩余课次","remainingSessions"),("日期","date")]) } label: { AccountServiceRow(title: "课程缴费记录", subtitle: "查看已登记的缴费流水", icon: "doc.text") }
+-                    NavigationLink { RecordListView(title: "课次消耗记录", path: "/member/consume-records", fields: [("课程","courseName"),("课次","count"),("时间","consumeDate")]) } label: { AccountServiceRow(title: "课次消耗记录", subtitle: "查看上课与核销明细", icon: "checkmark.circle") }
+-                    Text("账号与隐私").font(.title3.bold()).padding(.top, 20)
+-                    NavigationLink { DevicesView() } label: { AccountServiceRow(title: "登录设备", subtitle: "查看与管理账号登录设备", icon: "iphone") }
+-                    NavigationLink { DeletionView() } label: { AccountServiceRow(title: "注销账号", subtitle: "申请注销与查看处理说明", icon: "person.crop.circle.badge.minus") }
+-                    Button("退出登录", role: .destructive) { logout = true }.frame(maxWidth: .infinity, minHeight: 48)
+-                }
+-                if !session.deletionReceipts.isEmpty {
+-                    Text("注销进度与结果").font(.title3.bold()).padding(.top, 20)
+-                    ForEach(session.deletionReceipts) { receipt in
+-                        NavigationLink { DeletionReceiptView(receipt: receipt) } label: { AccountServiceRow(title: "查看注销回执", subtitle: receipt.createdAt.formatted(date: .abbreviated, time: .shortened), icon: "doc.text.magnifyingglass") }
+-                    }
+-                }
+-                Text("客服与帮助").font(.title3.bold()).padding(.top, 20)
+-                NavigationLink { CourseSupportView() } label: { AccountServiceRow(title: "客服与售后", subtitle: "学习权限、课程与订单问题", icon: "bubble.left.and.bubble.right") }
+-                NavigationLink { InformationView() } label: { AccountServiceRow(title: "关于 SWOD", subtitle: "帮助、品牌与隐私政策", icon: "info.circle") }
+-                Text("SWOD \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""))")
+-                    .font(.footnote).foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.vertical, 20)
+-            }.buttonStyle(EvaPressStyle()).padding(.horizontal, 16).frame(maxWidth: 760)
+-                .frame(maxWidth: .infinity)
+-        }.evaHomeLayout().evaPageChrome(root: true).onAppear { coursesExpanded = true }.task(id: session.accountID) { await load() }.refreshable { await load() }
+-        .confirmationDialog("确认退出当前账号？", isPresented: $logout) { Button("退出登录", role: .destructive) { session.logout() } }
+-    }
++                }
++            }
++            Section("客服与帮助") {
++                NavigationLink { CourseSupportView() } label: { Label("客服与售后", systemImage: "bubble.left.and.bubble.right") }
++                NavigationLink { InformationView() } label: { Label("关于 SWOD", systemImage: "info.circle") }
++                Text("SWOD \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""))").font(.footnote).foregroundStyle(.secondary)
++            }
++        }.evaPageChrome().navigationTitle("账号与隐私")
++            .confirmationDialog("确认退出当前账号？", isPresented: $logout) { Button("退出登录", role: .destructive) { session.logout() } }
++    }
++
+     private func load() async {
+         courses.data = .null
+         store.data = .null
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountHeaderView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountHeaderView.swift
+@@ -6,7 +6,8 @@
+     @ObservedObject var notifications: AppNotifications
+     let profile: JSONValue
+     let ready: Bool
+-    @ScaledMetric(relativeTo: .title) private var avatarSize = 64
++    @Environment(\.dynamicTypeSize) private var typeSize
++    @ScaledMetric(relativeTo: .title) private var avatarSize = 56
+ 
+     var body: some View {
+         HStack(spacing: 14) {
+@@ -17,16 +18,19 @@
+                     .font(.title3.bold()).lineLimit(2).foregroundStyle(.primary)
+                 Text(session.token == nil ? "登录后同步课程与个人资料" : ready ? identity : "资料与学习账号同步")
+                     .font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++                if session.token != nil && typeSize.isAccessibilitySize { profileLink }
+             }.frame(maxWidth: .infinity, alignment: .leading)
+-            if session.token != nil {
+-                NavigationLink { MessagesView() } label: {
+-                    VStack(spacing: 4) {
+-                        Image(systemName: "bell").font(.title3).accessibilityHidden(true)
+-                        Text(notifications.unread > 0 ? "\(min(notifications.unread, 99))\(notifications.unread > 99 ? "+" : "") 未读" : "通知").font(.footnote)
+-                    }.foregroundStyle(EvaBrand.red).frame(minWidth: 48, minHeight: 48)
+-                }.accessibilityLabel("通知，\(notifications.unread)条未读")
+-            }
+-        }.padding(.vertical, 16)
++            if session.token != nil && !typeSize.isAccessibilitySize { profileLink }
++        }.padding(.vertical, 20)
++    }
++
++    private var profileLink: some View {
++        NavigationLink { ProfileEditor() } label: {
++            HStack(spacing: 4) {
++                Text("个人资料").font(.subheadline)
++                Image(systemName: "chevron.right").font(.caption).accessibilityHidden(true)
++            }.foregroundStyle(.secondary).frame(minHeight: 44)
++        }
+     }
+ 
+     private var displayName: String {
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountSummaryView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountSummaryView.swift
+@@ -8,15 +8,11 @@
+ 
+     var body: some View {
+         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: typeSize.isAccessibilitySize ? 2 : 4), spacing: 8) {
+-            NavigationLink { CoursesView() } label: { AccountShortcutView(title: "线上课", value: metric("authorized_count"), icon: "book.closed") }
+-            NavigationLink { OfflineScheduleView() } label: { AccountShortcutView(title: "线下课", value: metric("offline_course_count"), icon: "calendar") }
+-            NavigationLink { MyCompetitionsView() } label: { AccountShortcutView(title: "我的比赛", value: "报名与成绩", icon: "trophy") }
+-            NavigationLink { CertificatesView() } label: { AccountShortcutView(title: "我的证书", value: "查看证书", icon: "rosette") }
++            NavigationLink { CoursesView() } label: { AccountShortcutView(title: "线上课", icon: "book.closed") }
++            NavigationLink { OfflineScheduleView() } label: { AccountShortcutView(title: "线下课", icon: "calendar") }
++            NavigationLink { MyCompetitionsView() } label: { AccountShortcutView(title: "我的比赛", icon: "trophy") }
++            NavigationLink { CertificatesView() } label: { AccountShortcutView(title: "我的证书", icon: "rosette") }
+         }
+     }
+ 
+-    private func metric(_ key: String) -> String {
+-        guard ready, profile["stats"][key] != .null else { return "—" }
+-        return profile["stats"][key].text
+-    }
+ }
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountShortcutView.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountShortcutView.swift
+@@ -2,15 +2,13 @@
+ 
+ struct AccountShortcutView: View {
+     let title: String
+-    let value: String
+     let icon: String
+ 
+     var body: some View {
+         VStack(spacing: 6) {
+             Image(systemName: icon).font(.title2).foregroundStyle(EvaBrand.red).accessibilityHidden(true)
+-            Text(value).font(.subheadline.bold()).monospacedDigit().foregroundStyle(.primary)
+-            Text(title).font(.subheadline).foregroundStyle(.secondary)
+-        }.padding(.vertical, 12).frame(maxWidth: .infinity, minHeight: 88)
++            Text(title).font(.subheadline).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
++        }.padding(.vertical, 12).frame(maxWidth: .infinity, minHeight: 76)
+             .contentShape(Rectangle()).accessibilityElement(children: .combine)
+     }
+ }
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountCourseRow.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountCourseRow.swift
+@@ -4,11 +4,15 @@
+ struct AccountCourseRow: View {
+     let course: JSONValue
+     var cover = ""
++    var showsLearningAction = false
++    @Environment(\.dynamicTypeSize) private var typeSize
+ 
+     var body: some View {
+-        HStack(alignment: .center, spacing: 12) {
++        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
++        layout {
+             ArtworkImage(url: AppPolicy.secureMediaURL(course["cover_image"].text.isEmpty ? cover : course["cover_image"].text), symbol: "book.closed", label: "课程主图", ratio: nil)
+-                .frame(width: 96, height: 96)
++                .frame(width: typeSize.isAccessibilitySize ? nil : 112, height: typeSize.isAccessibilitySize ? 156 : 84)
++                .clipShape(RoundedRectangle(cornerRadius: 8))
+             VStack(alignment: .leading, spacing: 8) {
+                 Text(course.firstText("series_name", "name")).font(.headline).foregroundStyle(.primary).lineLimit(2)
+                 if let learners = CoursePresentation.learnerText(course) { Text(learners).font(.caption).foregroundStyle(.secondary) }
+@@ -18,6 +22,10 @@
+                 } else {
+                     Text("进度待同步").font(.subheadline).foregroundStyle(.secondary)
+                 }
++                if showsLearningAction {
++                    HStack(spacing: 4) { Text("继续学习"); Image(systemName: "chevron.right").font(.caption) }
++                        .font(.subheadline.weight(.medium)).foregroundStyle(EvaBrand.red)
++                }
+             }.frame(maxWidth: .infinity, alignment: .leading)
+         }.padding(.vertical, 12).frame(maxWidth: .infinity, alignment: .leading)
+             .contentShape(Rectangle()).accessibilityElement(children: .combine)
+--- before/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountServiceRow.swift
++++ after/app开发/iOS/EvaDance/Sources/EvaDanceApp/AccountServiceRow.swift
+@@ -7,12 +7,14 @@
+ 
+     var body: some View {
+         HStack(spacing: 12) {
++            if !icon.isEmpty {
+             Image(systemName: icon).font(.title3).foregroundStyle(EvaBrand.red)
+                 .frame(width: 36, height: 36).background(EvaBrand.softAccent, in: RoundedRectangle(cornerRadius: 8))
+                 .accessibilityHidden(true)
++            }
+             VStack(alignment: .leading, spacing: 4) {
+                 Text(title).font(.body.weight(.medium)).foregroundStyle(.primary)
+-                Text(subtitle).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++                if !subtitle.isEmpty { Text(subtitle).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+             }
+             Spacer(minLength: 4)
+             Image(systemName: "chevron.right").font(.footnote).foregroundStyle(.secondary).accessibilityHidden(true)
+--- before/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/MainActivity.java
+@@ -58,7 +58,7 @@
+     private final android.os.Handler messageHandler=new android.os.Handler(android.os.Looper.getMainLooper());
+     private final Runnable messagePoll=new Runnable(){public void run(){refreshUnread();messageHandler.postDelayed(this,30000);}};
+     private void refreshUnread(){if(api==null)return;AppPush.flushRevocations(this);if(!api.loggedIn()){unreadMessages=0;unreadLoaded=false;updateMessageBadge();return;}long account=api.accountGeneration();io.execute(()->{try{JSONObject value=(JSONObject)api.request("/member/messages/unread-count","GET",null,true);int count=Math.max(0,value.optInt("count"));runOnUiThread(()->{if(api.accountGeneration()!=account||isFinishing())return;if(unreadLoaded&&count>unreadMessages)Toast.makeText(this,"你有新的学习消息",Toast.LENGTH_SHORT).show();unreadMessages=count;unreadLoaded=true;updateMessageBadge();});}catch(Exception ignored){}});AppPush.register(getApplication(),null);}
+-    private void updateMessageBadge(){if(tabButtons[4]!=null){tabButtons[4].setText("个人中心"+(unreadMessages>0?" · "+(unreadMessages>99?"99+":unreadMessages):""));tabButtons[4].setContentDescription("个人中心"+(unreadMessages>0?"，"+unreadMessages+" 条未读消息":""));}if(accountNotice!=null){accountNotice.setText(unreadMessages>0?(unreadMessages>99?"99+":String.valueOf(unreadMessages))+" 未读":"通知");accountNotice.setContentDescription("通知，"+unreadMessages+"条未读");}}
++    private void updateMessageBadge(){if(tabButtons[4]!=null){tabButtons[4].setText("个人中心"+(unreadMessages>0?" · "+(unreadMessages>99?"99+":unreadMessages):""));tabButtons[4].setContentDescription("个人中心"+(unreadMessages>0?"，"+unreadMessages+" 条未读消息":""));}if(accountNotice!=null){accountNotice.setText("");accountNotice.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,"bell",unreadMessages>0?red:SwodUi.ink(this)),null,null,null);accountNotice.setContentDescription("通知，"+unreadMessages+"条未读");}}
+     private void notificationIntent(Intent intent){String id=intent.getStringExtra("pushRecipientId");intent.removeExtra("pushRecipientId");if(id!=null&&id.matches("[1-9][0-9]{0,15}")&&api!=null&&api.loggedIn())open(()->messageDetail(id));}
+     @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);notificationIntent(intent);}
+     @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] grants){super.onRequestPermissionsResult(request,permissions,grants);if(request==701&&grants.length>0&&grants[0]==android.content.pm.PackageManager.PERMISSION_GRANTED)AppPush.enable(this,this::refreshUnread);}
+@@ -598,30 +598,66 @@
+     private void profileEditor(){begin("个人资料");load("/member/profile","GET",null,true,v->{JSONObject r=object(v);info("手机号 "+mask(r.optString("phone"))+" · 资料与官网同步");String[] keys={"name","gender","birthday","country","province","city","address"},labels={"姓名","性别（男/女/其他，选填）","生日（YYYY-MM-DD，选填）","国家/地区","省份/地区","城市","详细地址"};EditText[] inputs=new EditText[keys.length];for(int i=0;i<keys.length;i++){inputs[i]=field(content,labels[i],false);inputs[i].setText(first(r,keys[i]));}action("保存个人资料",()->{JSONObject draft=body();for(int i=0;i<keys.length;i++){String value=inputs[i].getText().toString().trim();if(value.length()>300||(i==0&&(value.isEmpty()||value.length()>60))){info("请填写姓名，单项资料不能超过300字");return;}try{draft.put(keys[i],value);}catch(Exception ignored){}}String birthday=inputs[2].getText().toString().trim();if(!birthday.isEmpty()){try{java.time.LocalDate date=java.time.LocalDate.parse(birthday);if(date.isAfter(java.time.LocalDate.now()))throw new Exception();}catch(Exception e){info("请填写有效生日 YYYY-MM-DD");return;}}memberWrite("/member/profile","PUT",draft,this::account);});});}
+     private void account(){
+         begin("个人中心");
++        LinearLayout toolbar=row();toolbar.setPadding(0,dp(4),0,dp(4));
++        TextView brand=text("SWOD",17);brand.setTextColor(red);brand.setTypeface(null,android.graphics.Typeface.BOLD);toolbar.addView(brand);
++        TextView heading=text("个人中心",22);heading.setTypeface(null,android.graphics.Typeface.BOLD);heading.setPadding(dp(12),0,0,0);toolbar.addView(heading,new LinearLayout.LayoutParams(0,-2,1));
++        if(api.loggedIn()){
++            accountNotice=accountIconButton("bell","通知",()->open(()->messages(0)));toolbar.addView(accountNotice,new LinearLayout.LayoutParams(dp(48),dp(48)));updateMessageBadge();
++        }
++        toolbar.addView(accountIconButton("settings","账号与隐私设置",()->open(this::accountSettings)),new LinearLayout.LayoutParams(dp(48),dp(48)));content.addView(toolbar);
+         if(!api.loggedIn()){
+             accountHeader(content,new JSONObject(),false);
+             action("手机号登录",()->open(this::login));
++            accountService("help","客服与售后","学习权限、课程与订单问题",()->open(this::support));
++            accountService("shield","账号与隐私","平台服务与隐私政策",()->open(this::accountSettings));
+         }else{
+             LinearLayout summary=column();content.addView(summary);
+             accountHeader(summary,new JSONObject(),false);accountShortcuts(summary,null);
+             load("/member/profile","GET",null,true,v->{JSONObject profile=object(v);summary.removeAllViews();accountHeader(summary,profile,true);accountShortcuts(summary,profile.optJSONObject("stats"));});
+-            accountService("person","个人资料","姓名、手机号、生日和地址",()->open(this::profileEditor));
+-            accountService("trophy","我的比赛","报名、缴费与比赛结果",()->open(this::myEvents));
+-            accountService("bag","我的订单","订单、到账与退款记录",()->open(this::orders));
+-            LinearLayout coursesHeading=row();coursesHeading.setGravity(Gravity.CENTER_VERTICAL);
+-            TextView coursesTitle=text("我的课程",18);coursesTitle.setTypeface(null,android.graphics.Typeface.BOLD);
++            accountSectionBreak();
++            LinearLayout coursesHeading=row();
++            TextView coursesTitle=text("我的课程",20);coursesTitle.setTypeface(null,android.graphics.Typeface.BOLD);
+             coursesHeading.addView(coursesTitle,new LinearLayout.LayoutParams(0,-2,1));
+-            Button courseToggle=button("收起 ⌃",()->{});courseToggle.setContentDescription("收起我的课程，已展开");
+-            courseToggle.setMinHeight(dp(44));coursesHeading.addView(courseToggle);content.addView(coursesHeading);
+-            if(Policy.SUPPORTS_OFFLINE_DOWNLOAD)accountService("download","离线观看","查看离线课程",()->startActivity(new Intent(this,CourseCacheActivity.class)));
+-            LinearLayout courseRows=column();content.addView(courseRows);
+-            courseToggle.setOnClickListener(view->{boolean expand=courseRows.getVisibility()!=android.view.View.VISIBLE;courseRows.setVisibility(expand?android.view.View.VISIBLE:android.view.View.GONE);courseToggle.setText(expand?"收起 ⌃":"展开 ⌄");courseToggle.setContentDescription(expand?"收起我的课程，已展开":"展开我的课程，已收起");});
++            Button courseToggle=button("收起 ⌃",()->{});courseToggle.setTextColor(SwodUi.muted(this));courseToggle.setContentDescription("收起我的课程，已展开");
++            coursesHeading.addView(courseToggle);content.addView(coursesHeading);
++            LinearLayout courseRows=column();courseRows.setTag(Boolean.TRUE);content.addView(courseRows);
++            courseToggle.setOnClickListener(view->{boolean expand=courseRows.getVisibility()!=View.VISIBLE;courseRows.setVisibility(expand?View.VISIBLE:View.GONE);courseToggle.setText(expand?"收起 ⌃":"展开 ⌄");courseToggle.setContentDescription(expand?"收起我的课程，已展开":"展开我的课程，已收起");});
+             load("/member/authorized-series","GET",null,true,v->{
+                 if(!(v instanceof JSONArray))throw new Exception();JSONArray owned=(JSONArray)v;
+-                renderAccountCourses(courseRows,owned,new JSONArray());
++                renderAccountCourses(courseRows,owned,new JSONArray(),true);
+                 loadOwnedCourseDetails(courseRows,owned);
+             });
+-            accountService("learn","查看全部课程与学习记录","已解锁课程与学习进度",()->open(this::myCourses));
++            accountPlainRow("查看全部课程与学习记录",()->open(this::myCourses));
++            accountSectionBreak();section("常用服务");
++            java.util.ArrayList<View> services=new java.util.ArrayList<>();
++            services.add(accountServiceTile("bag","我的订单",()->open(this::orders)));
++            if(Policy.SUPPORTS_OFFLINE_DOWNLOAD)services.add(accountServiceTile("download","离线观看",()->startActivity(new Intent(this,CourseCacheActivity.class))));
++            services.add(accountServiceTile("notes","学习笔记",()->open(()->learningRecords(false))));
++            services.add(accountServiceTile("help","客服与售后",()->open(this::support)));
++            int columns=getResources().getConfiguration().fontScale>1.3f?1:2;
++            for(int i=0;i<services.size();i+=columns){LinearLayout line=row();for(int j=i;j<Math.min(i+columns,services.size());j++)line.addView(services.get(j),new LinearLayout.LayoutParams(0,-2,1));if(columns==2&&i+1==services.size())line.addView(new View(this),new LinearLayout.LayoutParams(0,1,1));content.addView(line);}
++            accountPlainRow("账号与隐私",()->open(this::accountSettings));
++        }
++    }
++    private Button accountIconButton(String icon,String label,Runnable tap){
++        Button item=button("",tap);item.setPadding(dp(12),dp(12),dp(12),dp(12));item.setCompoundDrawablesWithIntrinsicBounds(SwodUi.icon(this,icon,SwodUi.ink(this)),null,null,null);item.setContentDescription(label);return item;
++    }
++    private void accountSectionBreak(){
++        View gutter=new View(this);gutter.setBackgroundColor(SwodUi.field(this));LinearLayout.LayoutParams space=new LinearLayout.LayoutParams(-1,dp(8));space.topMargin=dp(8);space.bottomMargin=dp(8);content.addView(gutter,space);
++    }
++    private void accountPlainRow(String label,Runnable tap){
++        Button link=button(label,tap);link.setTextColor(SwodUi.ink(this));link.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);link.setPadding(0,dp(12),0,dp(12));link.setBackground(SwodUi.row(this));link.setCompoundDrawablesWithIntrinsicBounds(null,null,SwodUi.icon(this,"next",SwodUi.muted(this)),null);content.addView(link,new LinearLayout.LayoutParams(-1,-2));
++    }
++    private View accountServiceTile(String icon,String label,Runnable tap){
++        LinearLayout item=row();item.setPadding(0,dp(12),dp(8),dp(12));item.setMinimumHeight(dp(64));item.setBackground(SwodUi.row(this));
++        ImageView image=new ImageView(this);image.setImageDrawable(SwodUi.icon(this,icon,red));image.setPadding(dp(6),dp(6),dp(6),dp(6));image.setBackground(SwodUi.shape(this,SwodUi.tonal(this),8));image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);LinearLayout.LayoutParams ip=new LinearLayout.LayoutParams(dp(34),dp(34));ip.rightMargin=dp(10);item.addView(image,ip);
++        TextView title=text(label,16);item.addView(title,new LinearLayout.LayoutParams(0,-2,1));item.setFocusable(true);item.setContentDescription(label);item.setOnClickListener(v->tap.run());return item;
++    }
++    private void accountSettings(){
++        begin("账号与隐私");title.setText("账号与隐私");
++        if(api.loggedIn()){
++            accountService("person","个人资料","姓名、手机号、生日和地址",()->open(this::profileEditor));
++            accountService("bag","我的订单","订单、到账与退款记录",()->open(this::orders));
+             section("线下课与证书");
+             accountService("calendar","我的线下课程","课时余额、期次与核销记录",()->open(this::schedule));
+             accountService("certificate","我的证书","查看已颁发的学习证书",()->open(this::certificates));
+@@ -667,11 +703,12 @@
+                     }catch(Exception error){/* Keep progress unknown when its request fails. */}
+                 }
+                 JSONArray pictures=catalogue;
+-                runOnUiThread(()->{if(pageVersion==generation&&account==api.accountGeneration()&&!isFinishing())renderAccountCourses(box,courses,pictures);});
++                runOnUiThread(()->{if(pageVersion==generation&&account==api.accountGeneration()&&!isFinishing())renderAccountCourses(box,courses,pictures,Boolean.TRUE.equals(box.getTag()));});
+             }catch(Exception error){/* The verified course list remains available. */}
+         });
+     }
+-    private void renderAccountCourses(LinearLayout box,JSONArray owned,JSONArray catalogue){
++    private void renderAccountCourses(LinearLayout box,JSONArray owned,JSONArray catalogue){renderAccountCourses(box,owned,catalogue,false);}
++    private void renderAccountCourses(LinearLayout box,JSONArray owned,JSONArray catalogue,boolean showAction){
+         box.removeAllViews();
+         for(int n=0;n<owned.length();n++){
+             JSONObject course=owned.optJSONObject(n);if(course==null)continue;int id=CourseAccessPolicy.canonicalId(course.opt("series_id"));if(id<=0)continue;
+@@ -682,24 +719,33 @@
+             String progress=course.has("learning_percent")?"学习进度 "+course.optInt("learning_percent")+"%":"进度待同步";
+             TextView label=text(progress,14);label.setTextColor(SwodUi.muted(this));item.addView(label);
+             if(course.has("learning_percent")){ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(100);bar.setProgress(course.optInt("learning_percent"));item.addView(bar,new LinearLayout.LayoutParams(-1,dp(4)));}
+-            cover(item,picture,false);item.setContentDescription(first(course,"series_name","name")+"，"+learners+"，"+progress);
++            if(showAction){TextView learnLabel=text("继续学习 ›",15);learnLabel.setTextColor(red);learnLabel.setPadding(0,dp(6),0,0);item.addView(learnLabel);}
++            accountCourseCover(item,picture);item.setContentDescription(first(course,"series_name","name")+"，"+learners+"，"+progress);
+         }
+-        if(owned.length()==0){TextView empty=text("暂无已解锁课程",14);empty.setTextColor(SwodUi.muted(this));empty.setPadding(0,dp(16),0,dp(16));box.addView(empty);}
++        if(owned.length()==0){TextView empty=text("暂无课程",14);empty.setTextColor(SwodUi.muted(this));empty.setPadding(0,dp(16),0,dp(16));box.addView(empty);}
++    }
++    private void accountCourseCover(LinearLayout item,String source){
++        String url=source.startsWith("/")?"https://admin.swod.com.cn"+source:source;
++        ImageView image=new ImageView(this);image.setScaleType(ImageView.ScaleType.CENTER);image.setImageDrawable(SwodUi.icon(this,"learn",red));image.setBackground(SwodUi.shape(this,SwodUi.tonal(this),8));image.setClipToOutline(true);image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
++        boolean stacked=getResources().getConfiguration().fontScale>1.3f||getResources().getConfiguration().screenWidthDp<360;
++        if(stacked){LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(-1,dp(156));picture.bottomMargin=dp(12);item.addView(image,0,picture);}
++        else{LinearLayout copy=column();while(item.getChildCount()>0){View child=item.getChildAt(0);item.removeViewAt(0);copy.addView(child);}item.setOrientation(LinearLayout.HORIZONTAL);item.setGravity(Gravity.CENTER_VERTICAL);LinearLayout.LayoutParams picture=new LinearLayout.LayoutParams(dp(112),dp(84));picture.rightMargin=dp(12);item.addView(image,picture);item.addView(copy,new LinearLayout.LayoutParams(0,-2,1));}
++        if(!Policy.secureURL(url))return;int version=generation;long account=api.accountGeneration();imageIO.execute(()->{try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(version==generation&&account==api.accountGeneration()&&!isFinishing()&&bitmap!=null){image.setScaleType(ImageView.ScaleType.CENTER_CROP);image.setImageBitmap(bitmap);}});}catch(Exception ignored){}});
+     }
+     private void accountHeader(LinearLayout box,JSONObject profile,boolean ready){
+-        LinearLayout header=row();header.setPadding(0,dp(16),0,dp(16));
++        LinearLayout header=row();header.setPadding(0,dp(20),0,dp(20));
+         ImageView avatar=new ImageView(this);avatar.setImageDrawable(SwodUi.icon(this,"person",red));avatar.setScaleType(ImageView.ScaleType.CENTER);avatar.setBackground(SwodUi.shape(this,SwodUi.tonal(this),32));avatar.setClipToOutline(true);avatar.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+-        LinearLayout.LayoutParams avatarParams=new LinearLayout.LayoutParams(dp(64),dp(64));avatarParams.rightMargin=dp(14);header.addView(avatar,avatarParams);
++        LinearLayout.LayoutParams avatarParams=new LinearLayout.LayoutParams(dp(56),dp(56));avatarParams.rightMargin=dp(14);header.addView(avatar,avatarParams);
+         LinearLayout identity=column();String name=first(profile,"wx_nickname","wx_name","name");TextView heading=text(!api.loggedIn()?"欢迎来到伊娃东方舞":name.isEmpty()?"我的学习空间":name,20);heading.setTypeface(null,android.graphics.Typeface.BOLD);identity.addView(heading);
+         String phone=mask(profile.optString("phone"));String level=first(profile,"level");TextView caption=text(!api.loggedIn()?"登录后同步课程与个人资料":!ready?"资料与学习账号同步":(level.isEmpty()?"":level+" · ")+phone,14);caption.setTextColor(SwodUi.muted(this));identity.addView(caption);header.addView(identity,new LinearLayout.LayoutParams(0,-2,1));
+-        if(api.loggedIn()){Button notice=button(unreadMessages>0?(unreadMessages>99?"99+":String.valueOf(unreadMessages))+" 未读":"通知",()->open(()->messages(0)));notice.setTextSize(12);notice.setPadding(dp(6),dp(4),dp(6),dp(4));notice.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,"bell",red),null,null);notice.setCompoundDrawablePadding(dp(4));header.addView(notice);accountNotice=notice;}
++        if(api.loggedIn()){Button profileLink=button("个人资料 ›",()->open(this::profileEditor));profileLink.setTextSize(14);profileLink.setTextColor(SwodUi.muted(this));profileLink.setPadding(dp(4),0,0,0);if(getResources().getConfiguration().fontScale>1.3f)identity.addView(profileLink);else header.addView(profileLink);}
+         box.addView(header,new LinearLayout.LayoutParams(-1,-2));
+         String url=first(profile,"avatar_url","wx_avatar_url");if(Policy.secureURL(url)){int version=generation;long account=api.accountGeneration();imageIO.execute(()->{try{android.graphics.Bitmap bitmap=Images.read(url);runOnUiThread(()->{if(version==generation&&account==api.accountGeneration()&&!isFinishing()&&bitmap!=null){avatar.setScaleType(ImageView.ScaleType.CENTER_CROP);avatar.setImageBitmap(bitmap);}});}catch(Exception ignored){}});}
+     }
+     private void accountShortcuts(LinearLayout box,JSONObject stats){
+         String[] labels={"线上课","线下课","我的比赛","我的证书"};String[] values={stats!=null&&stats.has("authorized_count")?stats.optString("authorized_count"):"—",stats!=null&&stats.has("offline_course_count")?stats.optString("offline_course_count"):"—","报名与成绩","查看证书"};String[] icons={"learn","calendar","trophy","certificate"};Runnable[] targets={()->open(this::myCourses),()->open(this::schedule),()->open(this::myEvents),()->open(this::certificates)};
+         boolean large=getResources().getConfiguration().fontScale>1.3f||getResources().getConfiguration().screenWidthDp<360;LinearLayout line=null;
+-        for(int i=0;i<labels.length;i++){if(i%(large?2:4)==0){line=row();box.addView(line,new LinearLayout.LayoutParams(-1,-2));}Button item=button(values[i]+"\n"+labels[i],targets[i]);item.setTextSize(14);item.setGravity(Gravity.CENTER);item.setPadding(dp(2),dp(12),dp(2),dp(12));item.setMinimumHeight(dp(96));item.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);item.setCompoundDrawablePadding(dp(6));item.setContentDescription(labels[i]+"，"+values[i]);line.addView(item,new LinearLayout.LayoutParams(0,-2,1));}
++        for(int i=0;i<labels.length;i++){if(i%(large?2:4)==0){line=row();box.addView(line,new LinearLayout.LayoutParams(-1,-2));}Button item=button(labels[i],targets[i]);item.setTextSize(14);item.setGravity(Gravity.CENTER);item.setPadding(dp(2),dp(12),dp(2),dp(12));item.setMinimumHeight(dp(76));item.setCompoundDrawablesWithIntrinsicBounds(null,SwodUi.icon(this,icons[i],red),null,null);item.setCompoundDrawablePadding(dp(6));item.setContentDescription(labels[i]);line.addView(item,new LinearLayout.LayoutParams(0,-2,1));}
+     }
+     private void accountService(String icon,String name,String summary,Runnable tap){
+         LinearLayout item=row();item.setPadding(0,dp(12),0,dp(12));item.setMinimumHeight(dp(64));item.setBackground(SwodUi.row(this));
+--- before/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodUi.java
++++ after/app开发/Android/EvaDance/app/src/main/java/cn/com/swod/app/SwodUi.java
+@@ -65,6 +65,7 @@
+                 case "download": path(c,12,3,12,16,7,11);path(c,12,16,17,11);path(c,4,16,4,21,20,21,20,16);break;
+                 case "back": path(c,15,5,8,12,15,19);break;
+                 case "next": path(c,9,6,15,12,9,18);break;
++                case "settings": c.drawCircle(12,12,4,paint);c.drawCircle(12,12,8,paint);for(int n=0;n<8;n++){double angle=n*Math.PI/4;path(c,12+(float)Math.cos(angle)*8,12+(float)Math.sin(angle)*8,12+(float)Math.cos(angle)*10,12+(float)Math.sin(angle)*10);}break;
+                 case "refresh": c.drawArc(4,4,20,20,45,285,false,paint);path(c,20,4,20,10,14,10);break;
+                 default: c.drawCircle(12,12,8,paint);path(c,10,8,16,12,10,16,10,8);
+             }
+--- before/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/ets/pages/Index.ets
+@@ -1165,13 +1165,14 @@
+   private ownedCourseCard(course: Row) {
+     Button({ type: ButtonType.Normal }) {
+           Row({ space: 12 }) {
+-            if (coverImageURL(this.accountCourseCover(course))) { CourseArtwork({ url: coverImageURL(this.accountCourseCover(course)) }).width(96).height(96).borderRadius(8).accessibilityLevel('no') }
+-            else { Image($r('app.media.nav_learn_on')).width(96).height(96).padding(28).backgroundColor(SwodTheme.tonal).borderRadius(8).accessibilityLevel('no') }
++            if (coverImageURL(this.accountCourseCover(course))) { CourseArtwork({ url: coverImageURL(this.accountCourseCover(course)) }).width(112).height(84).borderRadius(8).accessibilityLevel('no') }
++            else { Image($r('app.media.nav_learn_on')).width(112).height(84).padding(28).backgroundColor(SwodTheme.tonal).borderRadius(8).accessibilityLevel('no') }
+             Column({ space: 8 }) {
+               Text(course.series_name || course.name || '线上课程').fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+             if (this.accountCourseLearners(course)) { Text(this.accountCourseLearners(course)).fontSize(12).fontColor(SwodTheme.muted) }
+               Text(course.learning_percent !== undefined ? '学习进度 ' + course.learning_percent + '%' : '进度待同步').fontSize(14).fontColor(SwodTheme.muted).width('100%')
+               if (course.learning_percent !== undefined) { Progress({ value: course.learning_percent, total: 100, type: ProgressType.Linear }).color(SwodTheme.primary).width('100%') }
++              if (this.route.screen === 'account') { Text('继续学习 ›').fontSize(15).fontWeight(FontWeight.Medium).fontColor(SwodTheme.primary) }
+             }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+           }.width('100%').padding({ top: 12, bottom: 12 })
+         }.width('100%').backgroundColor(Color.Transparent).borderRadius(0).onClick(() => this.go('study', course.series_name || course.name || '课程学习', '/public/series/' + course.series_id + '/courses', true)).accessibilityText((course.series_name || course.name || '线上课程') + '，' + this.accountCourseLearners(course) + '，' + (course.learning_percent !== undefined ? '学习进度 ' + course.learning_percent + '%' : '进度待同步'))
+@@ -1193,10 +1194,9 @@
+       Button({ type: ButtonType.Normal }) {
+         Column({ space: 6 }) {
+           Image(icon).width(24).height(24).fillColor(SwodTheme.primary).accessibilityLevel('no')
+-          Text(value).fontSize(14).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).textAlign(TextAlign.Center)
+-          Text(label).fontSize(14).fontColor(SwodTheme.muted).textAlign(TextAlign.Center)
++          Text(label).fontSize(14).fontColor(SwodTheme.ink).textAlign(TextAlign.Center)
+         }.padding({ top: 12, bottom: 12, left: 2, right: 2 }).width('100%')
+-      }.width(this.accountColumns === 4 ? '25%' : '50%').constraintSize({ minHeight: 92 }).backgroundColor(Color.Transparent).borderRadius(0).onClick(submit).accessibilityText(label + '，' + value)
++      }.width(this.accountColumns === 4 ? '25%' : '50%').constraintSize({ minHeight: 76 }).backgroundColor(Color.Transparent).borderRadius(0).onClick(submit).accessibilityText(label)
+   }
+   @Builder
+   private accountService(label: string, caption: string, icon: Resource, submit: () => void) {
+@@ -1225,55 +1225,106 @@
+     Text(label).fontSize(19).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).padding({ top: 16, bottom: 4 }).width('100%')
+   }
+   @Builder
++  private accountSectionBreak() {
++    Row().width('100%').height(8).backgroundColor(SwodTheme.field).margin({ top: 8, bottom: 8 })
++  }
++  @Builder
++  private accountPlainRow(label: string, submit: () => void) {
++    Button({ type: ButtonType.Normal }) {
++      Row({ space: 8 }) {
++        Text(label).fontSize(16).fontColor(SwodTheme.ink).layoutWeight(1)
++        Image($r('app.media.nav_back')).width(18).height(18).rotate({ angle: 180 }).accessibilityLevel('no')
++      }.width('100%').padding({ top: 14, bottom: 14 })
++    }.width('100%').constraintSize({ minHeight: 48 }).borderRadius(0).backgroundColor(Color.Transparent).onClick(submit).accessibilityText(label)
++  }
++  @Builder
++  private accountServiceTile(label: string, icon: Resource, submit: () => void) {
++    Button({ type: ButtonType.Normal }) {
++      Row({ space: 10 }) {
++        Image(icon).width(34).height(34).padding(6).fillColor(SwodTheme.primary).backgroundColor(SwodTheme.tonal).borderRadius(8).accessibilityLevel('no')
++        Text(label).fontSize(16).fontColor(SwodTheme.ink).layoutWeight(1)
++      }.width('100%').padding({ top: 12, bottom: 12, right: 8 })
++    }.width('50%').constraintSize({ minHeight: 64 }).backgroundColor(Color.Transparent).borderRadius(0).onClick(submit).accessibilityText(label)
++  }
++  @Builder
+   private accountPage() {
++    Row({ space: 12 }) {
++      Text('SWOD').fontSize(17).fontWeight(FontWeight.Bold).fontColor(SwodTheme.primary)
++      Text('个人中心').fontSize(22).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).layoutWeight(1)
++      if (this.loggedIn) {
++        Button({ type: ButtonType.Normal }) {
++          Stack({ alignContent: Alignment.TopEnd }) {
++            Image($r('app.media.profile_bell')).width(22).height(22).fillColor(SwodTheme.ink)
++            if (this.unreadMessages > 0) { Circle().width(6).height(6).fill(SwodTheme.primary) }
++          }
++        }.width(44).height(48).backgroundColor(Color.Transparent).onClick(() => this.go('messages', '学习消息', '/member/messages?limit=20&cursor=0', true)).accessibilityText('通知，' + this.unreadMessages + '条未读')
++      }
++      Button({ type: ButtonType.Normal }) { Image($r('app.media.profile_settings')).width(22).height(22).fillColor(SwodTheme.ink) }
++        .width(44).height(48).backgroundColor(Color.Transparent).onClick(() => this.go('accountSettings', '账号与隐私')).accessibilityText('账号与隐私设置')
++    }.width('100%')
+     Row({ space: 14 }) {
+       if (this.loggedIn && coverImageURL(this.detail.avatar_url || this.detail.wx_avatar_url || '')) {
+-        Image(coverImageURL(this.detail.avatar_url || this.detail.wx_avatar_url || '')).alt($r('app.media.nav_person_on')).width(64).height(64).objectFit(ImageFit.Cover).borderRadius(32).accessibilityText('个人头像')
++        Image(coverImageURL(this.detail.avatar_url || this.detail.wx_avatar_url || '')).alt($r('app.media.nav_person_on')).width(56).height(56).objectFit(ImageFit.Cover).borderRadius(28).accessibilityText('个人头像')
+       } else {
+-        Image($r('app.media.nav_person_on')).width(64).height(64).padding(14).fillColor(SwodTheme.primary).backgroundColor(SwodTheme.tonal).borderRadius(32).accessibilityLevel('no')
++        Image($r('app.media.nav_person_on')).width(56).height(56).padding(14).fillColor(SwodTheme.primary).backgroundColor(SwodTheme.tonal).borderRadius(28).accessibilityLevel('no')
+       }
+       Column({ space: 6 }) {
+         Text(this.loggedIn ? this.detail.wx_nickname || this.detail.wx_name || this.detail.name || '我的学习空间' : '欢迎来到伊娃东方舞').fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).width('100%')
+         Text(!this.loggedIn ? '登录后同步课程与个人资料' : !this.detail.phone ? '资料与学习账号同步' : (this.detail.level ? this.detail.level + ' · ' : '') + this.detail.phone.replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2')).fontSize(14).fontColor(SwodTheme.muted).width('100%')
+       }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+       if (this.loggedIn) {
+-        Button({ type: ButtonType.Normal }) {
+-          Column({ space: 4 }) {
+-            Image($r('app.media.profile_bell')).width(24).height(24).fillColor(SwodTheme.primary).accessibilityLevel('no')
+-            Text(this.unreadMessages > 0 ? (this.unreadMessages > 99 ? '99+' : String(this.unreadMessages)) + ' 未读' : '通知').fontSize(12).fontColor(SwodTheme.primary)
+-          }
+-        }.constraintSize({ minWidth: 48, minHeight: 48 }).backgroundColor(Color.Transparent).onClick(() => this.go('messages', '学习消息', '/member/messages?limit=20&cursor=0', true)).accessibilityText('通知，' + this.unreadMessages + '条未读')
++        Button('个人资料 ›', { type: ButtonType.Normal }).fontSize(14).fontColor(SwodTheme.muted)
++          .backgroundColor(Color.Transparent).constraintSize({ minHeight: 48 })
++          .onClick(() => this.go('profile', '个人资料', '/member/profile', true))
+       }
+     }.width('100%').padding({ top: 16, bottom: 16 })
+-    if (!this.loggedIn) { this.action('手机号登录', () => this.go('login', '手机号登录')) }
+-    else {
++    if (!this.loggedIn) {
++      this.action('手机号登录', () => this.go('login', '手机号登录'))
++      this.accountService('客服与售后', '学习权限、课程与订单问题', $r('app.media.profile_help'), () => this.go('support', '客服与售后'))
++      this.accountPlainRow('账号与隐私', () => this.go('accountSettings', '账号与隐私'))
++    } else {
++      Divider().color(SwodTheme.field)
+       Flex({ wrap: FlexWrap.Wrap, alignItems: ItemAlign.Start }) {
+-        this.accountShortcut('线上课', this.accountCount('authorized_count'), $r('app.media.nav_learn_on'), () => this.go('records', '我的课程', '/member/authorized-series', true))
+-        this.accountShortcut('线下课', this.accountCount('offline_course_count'), $r('app.media.nav_calendar_on'), () => this.go('schedule', '期次课时', '/offline/overview', true))
+-        this.accountShortcut('我的比赛', '报名与成绩', $r('app.media.nav_trophy_on'), () => this.go('myEvents', '我的比赛', '/member/events', true))
+-        this.accountShortcut('我的证书', '查看证书', $r('app.media.profile_certificate'), () => this.go('certificates', '我的证书', '/certificates', true))
++        this.accountShortcut('线上课', '', $r('app.media.nav_learn_on'), () => this.go('records', '我的课程', '/member/authorized-series', true))
++        this.accountShortcut('线下课', '', $r('app.media.nav_calendar_on'), () => this.go('schedule', '期次课时', '/offline/overview', true))
++        this.accountShortcut('我的比赛', '', $r('app.media.nav_trophy_on'), () => this.go('myEvents', '我的比赛', '/member/events', true))
++        this.accountShortcut('我的证书', '', $r('app.media.profile_certificate'), () => this.go('certificates', '我的证书', '/certificates', true))
+       }.width('100%').onAreaChange((_old: Area, area: Area) => { this.accountColumns = Number(area.width) >= 328 ? 4 : 2; })
+-      Divider().color(SwodTheme.field)
+-      this.accountService('个人资料', '姓名、手机号、生日和地址', $r('app.media.nav_person_on'), () => this.go('profile', '个人资料', '/member/profile', true))
+-      this.accountService('我的比赛', '报名、缴费与比赛结果', $r('app.media.nav_trophy_on'), () => this.go('myEvents', '我的比赛', '/member/events', true))
+-      this.accountService('我的订单', '订单、到账与退款记录', $r('app.media.nav_bag_on'), () => this.go('shopOrders', '我的订单', '/shop/orders', true))
++      this.accountSectionBreak()
+       Row() {
+         Text('我的课程').fontSize(20).fontWeight(FontWeight.Bold).fontColor(SwodTheme.ink).layoutWeight(1)
+         Button(this.accountCoursesExpanded ? '收起 ⌃' : '展开 ⌄', { type: ButtonType.Normal })
+-          .fontSize(14).fontColor(SwodTheme.primary).backgroundColor(Color.Transparent).constraintSize({ minWidth: 64, minHeight: 44 })
++          .fontSize(14).fontColor(SwodTheme.muted).backgroundColor(Color.Transparent).constraintSize({ minWidth: 64, minHeight: 44 })
+           .onClick(() => { this.accountCoursesExpanded = !this.accountCoursesExpanded; })
+           .accessibilityText(this.accountCoursesExpanded ? '收起我的课程，已展开' : '展开我的课程，已收起')
+-      }.width('100%').padding({ top: 12 })
++      }.width('100%')
+       if (this.accountCoursesExpanded) {
+-      if (this.accountCoursesError) {
+-        Text(this.accountCoursesError).fontSize(14).fontColor(SwodTheme.primary)
+-        this.action('重新加载我的课程', () => { this.loadAccountCourses(); })
+-      } else if (!this.busy && !this.error && !this.accountCoursesLoading && this.accountCourses.length === 0) { Text('暂无已解锁课程').fontSize(14).fontColor(SwodTheme.muted).padding({ top: 12, bottom: 12 }) }
+-      if (this.accountCoursesLoading && !this.busy) { Text('正在加载我的课程…').fontSize(14).fontColor(SwodTheme.muted) }
+-      ForEach(this.accountCourses, (course: Row) => { this.ownedCourseCard(course) }, (course: Row) => String(course.series_id))
+-      }
+-      this.accountService('查看全部课程与学习记录', '已解锁课程与学习进度', $r('app.media.nav_learn_on'), () => this.go('records', '我的课程', '/member/authorized-series', true))
+-      if (COURSE_CACHE_RELEASE_ENABLED) { this.accountService('离线观看', '查看离线课程', $r('app.media.nav_learn_on'), () => this.go('cache', '离线观看', '', true)) }
++        if (this.accountCoursesError) {
++          Text(this.accountCoursesError).fontSize(14).fontColor(SwodTheme.primary)
++          this.action('重新加载我的课程', () => { this.loadAccountCourses(); })
++        } else if (!this.busy && !this.error && !this.accountCoursesLoading && this.accountCourses.length === 0) { Text('暂无课程').fontSize(14).fontColor(SwodTheme.muted).padding({ top: 16, bottom: 16 }) }
++        if (this.accountCoursesLoading && !this.busy) { Text('正在加载我的课程…').fontSize(14).fontColor(SwodTheme.muted) }
++        ForEach(this.accountCourses, (course: Row) => { this.ownedCourseCard(course) }, (course: Row) => String(course.series_id))
++      }
++      this.accountPlainRow('查看全部课程与学习记录', () => this.go('records', '我的课程', '/member/authorized-series', true))
++      this.accountSectionBreak()
++      this.accountHeading('常用服务')
++      Flex({ wrap: FlexWrap.Wrap }) {
++        this.accountServiceTile('我的订单', $r('app.media.nav_bag_on'), () => this.go('shopOrders', '我的订单', '/shop/orders', true))
++        if (COURSE_CACHE_RELEASE_ENABLED) { this.accountServiceTile('离线观看', $r('app.media.profile_download'), () => this.go('cache', '离线观看', '', true)) }
++        this.accountServiceTile('学习笔记', $r('app.media.profile_notes'), () => this.go('records', '学习笔记', '/notes/all', true))
++        this.accountServiceTile('客服与售后', $r('app.media.profile_help'), () => this.go('support', '客服与售后'))
++      }.width('100%')
++      Divider().color(SwodTheme.field)
++      this.accountPlainRow('账号与隐私', () => this.go('accountSettings', '账号与隐私'))
++    }
++  }
++  @Builder
++  private accountSettingsPage() {
++    this.accountHeading('账号与隐私')
++    if (this.loggedIn) {
++      this.accountService('个人资料', '姓名、手机号、生日和地址', $r('app.media.nav_person_on'), () => this.go('profile', '个人资料', '/member/profile', true))
++      this.accountService('我的订单', '订单、到账与退款记录', $r('app.media.nav_bag_on'), () => this.go('shopOrders', '我的订单', '/shop/orders', true))
+       this.accountHeading('线下课与证书')
+       this.accountService('我的线下课程', '课时余额、期次与核销记录', $r('app.media.nav_calendar_on'), () => this.go('schedule', '期次课时', '/offline/overview', true))
+       this.accountService('我的证书', '查看已颁发的学习证书', $r('app.media.profile_certificate'), () => this.go('certificates', '我的证书', '/certificates', true))
+@@ -1335,6 +1386,7 @@
+ 
+ 
+     if (this.route.screen === 'account') { this.accountPage() }
++    if (this.route.screen === 'accountSettings') { this.accountSettingsPage() }
+     if (this.route.screen === 'profile') {
+       this.intro('个人资料', '与平台学习账号同步')
+       this.profileDetail('姓名', this.detail.name || '')
+@@ -1662,9 +1714,9 @@
+       } else {
+         Refresh({ refreshing: $$this.refreshing }) {
+           Scroll(this.catalogScroller) {
+-            Column({ space: 6 }) { this.content() }
++            Column({ space: this.route.screen === 'account' ? 0 : 6 }) { this.content() }
+               .alignItems(this.route.screen === 'login' || this.isRegistrationPage() ? HorizontalAlign.Center : HorizontalAlign.Start)
+-              .padding({ left: 16, right: 16, top: 4, bottom: 12 }).width('100%')
++              .padding({ left: this.route.screen === 'account' ? 20 : 16, right: this.route.screen === 'account' ? 20 : 16, top: 4, bottom: 12 }).width('100%')
+               .constraintSize({ maxWidth: this.wideWindow && this.route.screen === 'home' ? 880 : 760 })
+               .onAreaChange((_old: Area, area: Area) => {
+                 this.academyColumns = this.wideWindow && Number(area.width) >= 700 ? 2 : 1;
+--- /dev/null
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/profile_settings.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#9f1d20" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="8"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+--- /dev/null
++++ after/app开发/HarmonyOS/EvaDance/entry/src/main/resources/base/media/profile_download.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#9f1d20" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m-5-5 5 5 5-5M4 16v5h16v-5"/></svg>

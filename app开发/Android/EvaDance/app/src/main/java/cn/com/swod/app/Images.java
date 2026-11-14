@@ -30,17 +30,20 @@ final class Images {
                 }
             }
             byte[] data = bytes.toByteArray();
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            BitmapFactory.decodeByteArray(data, 0, data.length, options);
-            if (options.outWidth <= 0 || options.outHeight <= 0) return null;
-            options.inSampleSize = 1;
-            while (options.outWidth / options.inSampleSize > 1024 || options.outHeight / options.inSampleSize > 1024) options.inSampleSize *= 2;
-            options.inJustDecodeBounds = false;
-            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+            Bitmap bitmap = decode(data);
             if (bitmap != null) cache.put(url, bitmap);
             return bitmap;
         } finally { connection.disconnect(); }
+    }
+    static Bitmap decode(byte[] data) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(data, 0, data.length, options);
+        if (options.outWidth <= 0 || options.outHeight <= 0) return null;
+        options.inSampleSize = 1;
+        while (options.outWidth / options.inSampleSize > 1024 || options.outHeight / options.inSampleSize > 1024) options.inSampleSize *= 2;
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeByteArray(data, 0, data.length, options);
     }
     private Images() {}
 }

@@ -71,7 +71,7 @@ export default function EventPlatformSearch({ events }: { events: EventOption[] 
   const showResults = Boolean(term);
 
   return (
-    <div className="relative ml-auto w-44 shrink-0 md:w-48">
+    <div className="relative w-full sm:ml-auto sm:w-80">
       <form onSubmit={submit} role="search" className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gold-dark" />
         <input
@@ -79,7 +79,7 @@ export default function EventPlatformSearch({ events }: { events: EventOption[] 
           onChange={(event) => setQuery(event.target.value)}
           placeholder="搜索赛事或选手"
           aria-label="搜索赛事或选手"
-          className="h-10 w-full rounded-full border border-sand bg-white pl-9 pr-9 text-sm text-text shadow-sm outline-none transition focus:border-gold-dark focus:ring-2 focus:ring-gold/20 md:h-11"
+          className="h-12 w-full rounded-xl border border-sand bg-white pl-9 pr-9 text-sm text-text shadow-sm outline-none transition focus:border-gold-dark focus:ring-2 focus:ring-gold/20 md:h-11"
         />
         {query && (
           <button type="button" onClick={() => setQuery('')} aria-label="清空搜索" className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-text-muted hover:bg-sand/40">
