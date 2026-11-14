@@ -21,7 +21,7 @@ test('gesture intent keeps taps and horizontal movement separate from vertical c
 });
 
 test('player keeps the default playback source and renders its label without a select box', async () => {
-  const source = await readFile(new URL('../src/app/courses/[id]/videos/video-client.tsx', import.meta.url), 'utf8');
+  const source = await readFile(new URL('../src/app/courses/[id]/videos/page.tsx', import.meta.url), 'utf8');
   assert.match(source, /const initialUrl = normalizeVodPlaybackUrl\(playData\.video_url \|\| options\[0\]\?\.url \|\| ''\)/);
   assert.match(source, /setQualityLabel\(initialQuality\?\.label \|\| '标清'\)/);
   assert.match(source, /当前清晰度：\$\{qualityLabel\}/);
@@ -30,7 +30,7 @@ test('player keeps the default playback source and renders its label without a s
   assert.match(source, /onClick=\{\(\) => changeQuality\(option\.value\)\}/);
   assert.match(source, /pendingQualitySwitchRef\.current/);
   assert.match(source, /onPointerDown=\{startPlaybackGesture\}/);
-  assert.match(source, /touchAction: isCourseFullscreen \? 'none' : 'pan-y pinch-zoom'/);
+  assert.match(source, /touchAction: 'pan-x'/);
   assert.doesNotMatch(source, /className="absolute bottom-\[18%\]/);
   assert.match(source, /<span>进度 \{completionPercent\}%<\/span>/);
   assert.match(source, />\s*续播\s*<\/button>/);
@@ -38,7 +38,7 @@ test('player keeps the default playback source and renders its label without a s
 });
 
 test('mobile toolbar stays on one row and search receives remaining width', async () => {
-  const source = await readFile(new URL('../src/app/courses/[id]/videos/video-client.tsx', import.meta.url), 'utf8');
+  const source = await readFile(new URL('../src/app/courses/[id]/videos/page.tsx', import.meta.url), 'utf8');
   const css = await readFile(new URL('../src/app/globals.css', import.meta.url), 'utf8');
   assert.match(css, /grid-template-columns: 2\.5rem max-content minmax\(0, 1fr\)/);
   assert.match(css, /\.course-video-toolbar-actions \{[\s\S]*?flex-wrap: nowrap !important/);
@@ -49,56 +49,56 @@ test('mobile toolbar stays on one row and search receives remaining width', asyn
 });
 
 test('lesson switching stays local and the active catalogue position is preserved', async () => {
-  const source = await readFile(new URL('../src/app/courses/[id]/videos/video-client.tsx', import.meta.url), 'utf8');
+  const source = await readFile(new URL('../src/app/courses/[id]/videos/page.tsx', import.meta.url), 'utf8');
   assert.match(source, /window\.history\.replaceState\(window\.history\.state, '', nextHref\)/);
   assert.doesNotMatch(source, /scrollToLearningTop/);
   assert.match(source, /aria-current=\{active \? 'true' : undefined\}/);
   assert.match(source, /const active = \(chapter\.videos \|\| \[\]\)\.some/);
 });
 
-test('player provides previous, next, autoplay countdown and cancellation', async () => {
-  const source = await readFile(new URL('../src/app/courses/[id]/videos/video-client.tsx', import.meta.url), 'utf8');
+test('player provides previous, next, autoplay countdown, cancellation and loop modes', async () => {
+  const source = await readFile(new URL('../src/app/courses/[id]/videos/page.tsx', import.meta.url), 'utf8');
   assert.match(source, /aria-label="播放上一节"/);
   assert.match(source, /aria-label="播放下一节"/);
   assert.match(source, />\s*取消连播\s*<\/button>/);
-  assert.match(source, /useLessonCompletion/);
-  const completion = await readFile(new URL('../src/lib/use-lesson-completion.ts', import.meta.url), 'utf8');
-  assert.match(completion, /seconds: 5/);
-  assert.match(completion, /document.hidden/);
-  assert.match(source, /onEnded=\{\(event\) => \{[\s\S]*?handlePlaybackEnded\(event\.currentTarget, activeVideoId\)/);
+  assert.match(source, /type PlaybackMode = 'sequential' \| 'single-loop' \| 'course-loop'/);
+  assert.match(source, /PLAYBACK_MODE_STORAGE_KEY/);
+  assert.match(source, /onEnded=\{\(event\) => handlePlaybackEnded\(event\.currentTarget, activeVideoId\)\}/);
   assert.match(source, /saveProgress\(true, true, \{/);
   assert.match(source, /videoId: activeVideoId,[\s\S]*?currentTime: event\.currentTarget\.currentTime/);
   assert.match(source, /showVideoActions \|\| autoplayCountdown/);
 });
 
 test('custom controls toggle with the native player and button clicks do not hide the layer', async () => {
-  const source = await readFile(new URL('../src/app/courses/[id]/videos/video-client.tsx', import.meta.url), 'utf8');
+  const source = await readFile(new URL('../src/app/courses/[id]/videos/page.tsx', import.meta.url), 'utf8');
   assert.match(source, /const toggleVideoActions = useCallback/);
   assert.match(source, /if \(visible\) return false/);
-  assert.match(source, /event\.target\.closest\('button, input, select, option'\)\) return/);
+  assert.match(source, /event\.target\.closest\('button'\)\) return/);
   assert.match(source, /toggleVideoActions\(\)/);
   assert.doesNotMatch(source, /onPointerDown=\{revealVideoActions\}/);
   assert.doesNotMatch(source, /onPointerMove=\{revealVideoActions\}/);
   assert.doesNotMatch(source, /group-hover:pointer-events-auto/);
 });
 
-test('fullscreen keeps the stage and exposes both directions with an explicit exit', async () => {
-  const source = await readFile(new URL('../src/app/courses/[id]/videos/video-client.tsx', import.meta.url), 'utf8');
-  assert.match(source, /const PLAYBACK_RATE_OPTIONS = \[0\.75, 1, 1\.25, 1\.5\] as const/);
-  assert.match(source, /enterCourseStageFullscreen\(stage/);
-  assert.match(source, /courseFullscreenElement\(document\) === stage/);
-  assert.match(source, /await exitCourseStageFullscreen\(document\)/);
-  assert.match(source, /aria-label="全屏方向"/);
-  assert.match(source, /<option value="landscape">/);
-  assert.match(source, /<option value="portrait">/);
-  assert.match(source, /orientCourseFullscreen\(fullscreenDirection\)/);
-  assert.match(source, /isCourseFullscreen \? '退出全屏播放' : '全屏播放'/);
+test('fullscreen keeps native controls and speed choices stay within the approved set', async () => {
+  const source = await readFile(new URL('../src/app/courses/[id]/videos/page.tsx', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../src/app/globals.css', import.meta.url), 'utf8');
+  assert.match(source, /const PLAYBACK_RATE_OPTIONS = \[0\.75, 1, 1\.25, 2\] as const/);
+  assert.match(source, /video\.controls = true/);
+  assert.match(source, /if \(document\.fullscreenElement === stage && document\.exitFullscreen\)[\s\S]*?await document\.exitFullscreen\(\)[\s\S]*?return;/);
+  assert.match(source, /Never turn an exit failure into a second fullscreen/);
+  assert.match(source, /if \(stage\.requestFullscreen\)/);
+  assert.match(source, /else if \(video\.requestFullscreen\)/);
+  assert.ok(source.indexOf('if (stage.requestFullscreen)') < source.indexOf('else if (video.requestFullscreen)'));
+  assert.match(source, /isCourseFullscreen \? '退出全屏播放' : '横屏全屏播放'/);
   assert.match(source, /video\.defaultPlaybackRate = playbackRate/);
   assert.match(source, /video\.playbackRate = playbackRate/);
+  assert.match(source, /aria-label="调整播放速度"/);
+  assert.match(css, /\.course-video-player-card video:fullscreen,[\s\S]*?height: 100dvh;[\s\S]*?object-fit: contain/);
 });
 
 test('player switches between front-facing and mirrored playback without replacing the source', async () => {
-  const source = await readFile(new URL('../src/app/courses/[id]/videos/video-client.tsx', import.meta.url), 'utf8');
+  const source = await readFile(new URL('../src/app/courses/[id]/videos/page.tsx', import.meta.url), 'utf8');
   const css = await readFile(new URL('../src/app/globals.css', import.meta.url), 'utf8');
   assert.match(source, /const \[isMirrored, setIsMirrored\] = useState\(false\)/);
   assert.match(source, /const toggleMirrorPlayback = \(\) =>/);
@@ -107,5 +107,5 @@ test('player switches between front-facing and mirrored playback without replaci
   assert.match(source, /\{isMirrored \? '镜面' : '正面'\}/);
   assert.match(source, /transform: isMirrored \? 'scaleX\(-1\)' : undefined/);
   assert.match(source, /isMirrored \? 'course-video-mirrored' : ''/);
-  assert.match(css, /\.course-video-mirrored \{[\s\S]*?transform-origin: center/);
+  assert.match(css, /\.course-video-mirrored::\-webkit-media-controls-panel \{[\s\S]*?transform: scaleX\(-1\)/);
 });

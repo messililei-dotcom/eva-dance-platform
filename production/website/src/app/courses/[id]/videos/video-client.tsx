@@ -43,7 +43,7 @@ import { courseKnowledgeById, courses } from '@/config/courses';
 import { studentApi } from '@/lib/student-api';
 import { useLessonCompletion } from '@/lib/use-lesson-completion';
 import { toggleCoursePictureInPicture } from '@/lib/course-picture-in-picture';
-import { enterCourseStageFullscreen, courseFullscreenElement, exitCourseStageFullscreen, orientCourseFullscreen, unlockCourseOrientation } from '@/lib/course-stage-fullscreen';
+import { enterCourseStageFullscreen } from '@/lib/course-stage-fullscreen';
 import StudentLoginModal from '@/components/StudentLoginModal';
 import { openCourseCastPicker } from '@/lib/course-cast-picker';
 import AdaptiveCourseVideo from '@/components/media/AdaptiveCourseVideo';
@@ -316,7 +316,6 @@ export default function WebsiteCourseVideoPage() {
   const [speedMenuOpen, setSpeedMenuOpen] = useState(false);
   const [isMirrored, setIsMirrored] = useState(false);
   const [isCourseFullscreen, setIsCourseFullscreen] = useState(false);
-  const [fullscreenDirection, setFullscreenDirection] = useState<'landscape' | 'portrait'>('landscape');
   const [isFallbackFullscreen, setIsFallbackFullscreen] = useState(false);
   const [isHuaweiHonorBrowser, setIsHuaweiHonorBrowser] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -422,9 +421,7 @@ export default function WebsiteCourseVideoPage() {
 
   useEffect(() => {
     const syncFullscreenState = () => {
-      const active = courseFullscreenElement(document) === playerStageRef.current || isFallbackFullscreen;
-      setIsCourseFullscreen(active);
-      if (!active) unlockCourseOrientation();
+      setIsCourseFullscreen(document.fullscreenElement === playerStageRef.current || isFallbackFullscreen);
     };
     syncFullscreenState();
     document.addEventListener('fullscreenchange', syncFullscreenState);
@@ -435,15 +432,10 @@ export default function WebsiteCourseVideoPage() {
     };
   }, [isFallbackFullscreen]);
 
-  useEffect(() => () => {
-    unlockCourseOrientation();
-    if (courseFullscreenElement(document)) void exitCourseStageFullscreen(document).catch(() => undefined);
-  }, []);
-
   useEffect(() => {
     document.body.classList.toggle('course-video-fallback-fullscreen-open', isFallbackFullscreen);
     const exitOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { setIsFallbackFullscreen(false); unlockCourseOrientation(); }
+      if (event.key === 'Escape') setIsFallbackFullscreen(false);
     };
     window.addEventListener('keydown', exitOnEscape);
     return () => {
@@ -1360,21 +1352,33 @@ export default function WebsiteCourseVideoPage() {
     // the unmirrored custom controls remain in the same layer.
     if (isFallbackFullscreen) {
       setIsFallbackFullscreen(false);
-      unlockCourseOrientation();
+      try {
+        screen.orientation?.unlock?.();
+      } catch {
+        // Orientation unlock is optional across Android WebViews.
+      }
       return;
     }
-    if (courseFullscreenElement(document) === stage) {
-      try { await exitCourseStageFullscreen(document); } catch { /* Keep exit controls available. */ }
-      unlockCourseOrientation();
+    if (document.fullscreenElement === stage && document.exitFullscreen) {
+      try {
+        await document.exitFullscreen();
+      } catch {
+        // The browser keeps its own escape/close affordance if script-driven
+        // exit is denied. Never turn an exit failure into a second fullscreen.
+      }
+      try {
+        screen.orientation?.unlock?.();
+      } catch {
+        // Orientation unlock is optional across Android WebViews.
+      }
       return;
     }
     const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent)
       || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
     const mode = await enterCourseStageFullscreen(stage, appleMobile || isHuaweiHonorBrowser);
     if (mode === 'page') setIsFallbackFullscreen(true);
-    if (!await orientCourseFullscreen(fullscreenDirection)) {
-      showRemotePlaybackMessage('已打开全屏，请旋转设备选择横屏或竖屏');
-    }
+    const orientation = screen.orientation as ScreenOrientation & { lock?: (value: 'landscape') => Promise<void> };
+    await orientation?.lock?.('landscape').catch(() => undefined);
   };
 
   const showRemotePlaybackMessage = useCallback((message: string, durationMs = 5200) => {
@@ -1601,12 +1605,12 @@ export default function WebsiteCourseVideoPage() {
                   ref={playerStageRef}
                   className={`group relative bg-black ${isFallbackFullscreen ? 'course-video-fallback-fullscreen' : ''}`}
                   onClick={(event) => {
-                    if (event.target instanceof Element && event.target.closest('button, input, select, option')) return;
+                    if (event.target instanceof Element && event.target.closest('button, input')) return;
                     if (holdSpeedRef.current?.suppressClick()) return;
                     toggleVideoActions();
                   }}
                   onFocusCapture={(event) => {
-                    if (event.target instanceof Element && event.target.closest('button, input, select, option')) revealVideoActions();
+                    if (event.target instanceof Element && event.target.closest('button, input')) revealVideoActions();
                   }}
                   onMouseLeave={() => setShowVideoActions(false)}
                 >
@@ -1616,7 +1620,7 @@ export default function WebsiteCourseVideoPage() {
                       {remotePlaybackMessage}
                     </div>
                   ) : null}
-                  <div role="toolbar" aria-label="视频操作" className="absolute right-2 top-2 z-10 flex max-w-[calc(100%-1rem)] flex-wrap items-center justify-end gap-1 rounded-xl bg-black/70 px-1.5 py-1 text-white">
+                  <div role="toolbar" aria-label="视频操作" className="absolute right-2 top-2 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-xl bg-black/70 px-1.5 py-1 text-white">
                       <button
                         type="button"
                         onClick={startRemotePlayback}
@@ -1735,24 +1739,11 @@ export default function WebsiteCourseVideoPage() {
                     >
                       <PictureInPicture2 className="h-4 w-4" />
                     </button>
-                    <select
-                      aria-label="全屏方向"
-                      value={fullscreenDirection}
-                      className="h-10 w-16 rounded bg-black/60 p-1 text-xs text-white"
-                      onChange={async event => {
-                        const direction = event.target.value === 'portrait' ? 'portrait' : 'landscape';
-                        setFullscreenDirection(direction);
-                        if (isCourseFullscreen && !await orientCourseFullscreen(direction)) showRemotePlaybackMessage('请旋转设备切换横屏或竖屏');
-                      }}
-                    >
-                      <option value="landscape">横屏</option>
-                      <option value="portrait">竖屏</option>
-                    </select>
                     <button
                       type="button"
                       onClick={enterCourseFullscreen}
                       className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-black/75"
-                      aria-label={isCourseFullscreen ? '退出全屏播放' : '全屏播放'}
+                      aria-label={isCourseFullscreen ? '退出全屏播放' : '横屏全屏播放'}
                     >
                       {isCourseFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
                     </button>
