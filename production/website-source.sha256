@@ -814,7 +814,7 @@ cebfbb0a60a477997ac2a13895b14c221f409e5284da74a7fe2161aff5485330  website/src/ap
 0b57f0badda427dea3e8c97c456e984d229d84a21766813ffdffc4db443c81d5  website/src/app/courses/[id]/page.tsx
 cc37e5ed8d0567176087646c4c7bf917d002ca6dc7cf15925111715a1353010d  website/src/app/courses/[id]/videos/layout.tsx
 a9cafa8e124c50ee171126c9789c45220e2b3aabffc6d806a11b36f533956e1b  website/src/app/courses/[id]/videos/page.tsx
-aff3c89196921b5a48c4eb3c7a5209aa9186ce9f2a970a888d28b3d363a791da  website/src/app/courses/[id]/videos/video-client.tsx
+99f4ade7e5aac80e9329e1f6d80927c3603eb425d89b71b13cb2723257205796  website/src/app/courses/[id]/videos/video-client.tsx
 f6a62d91776e1a612324589f58fd68542c52f50e6a2c1822cee2501bad3edb7f  website/src/app/courses/layout.tsx
 8a929d56bb6ccb02202cfd9fda8d4ac3130cb435ce375c050419d1cefdd59cf1  website/src/app/courses/page.tsx
 a852e1b3831d2112a5d504a972debaee399d3be7454a84b1106f5acdcbcf8cbd  website/src/app/dance-circle/[slug]/page.tsx
@@ -826,7 +826,7 @@ d6af6810efd52de13183958124317f7d87fcdd30ed268e81bcb6c3192d097387  website/src/ap
 6932742339fee7adff94215feb43352ed7f5e9bf2bf82dc57dd38df898f2f0b1  website/src/app/dashboard/courses/[id]/watch/layout.tsx
 1fc3b7380533cf78ab28d7c64b3c43baf65cb7d11fa47d947f82b3b7706f5a28  website/src/app/dashboard/courses/[id]/watch/page.tsx
 a17ce784177f8eb9cdc3e008700d30824bb16c14f6c2531480ee1b331c5a8f8d  website/src/app/dashboard/courses/layout.tsx
-0f41baedbbcc6bab769db4d0becf5f1e1e7a361169159b4df53dcdc4ccf6386d  website/src/app/dashboard/courses/page.tsx
+18ed334eab72759f9cfd693e4f7d190c2c83ac9a98b722efa14c8954347f908c  website/src/app/dashboard/courses/page.tsx
 946ed4f28d82c7812a7e03ca0e44c34495ce18fdfd5f0055a73e073c5740b05f  website/src/app/dashboard/events/layout.tsx
 8b8998667aba2a84ae341667771bd6baa87d9a9b95fa3bf8027cde994b0932ce  website/src/app/dashboard/events/page.tsx
 512f6726c46bada00fb778f6c3fd13b768847a252f04495c8dfd2c2882c7415c  website/src/app/dashboard/layout.tsx
@@ -1085,3 +1085,6 @@ caa918cbed0b96b6a56e1dafb0f1f2e94424e828366f998ee7454d24920dd692  website/src/li
 5e1050f6c9eee8e36e84e12f2c22e5dfe9353a133b8b42c9ccc6ad00c2b6e639  website/src/types/framework.d.ts
 7b3fbfdf815799f31f82790619cf8adac4b6e2595a9e480663c73dea662ba5b1  website/tailwind.config.ts
 a42dac18b172316666c01cc2ac123d1010ef8f3e99b6700cb5a43c86f4b6924f  website/tsconfig.json
+5d4da5a9654dee19c848e3be80bdc73a353ebed3f8ab7cf7f1f8ea68ecd32740  website/src/lib/course-progress-duration.ts
+c7008b73c99ff345f313c85d739bd3466c86c5b6f43d380d5f21b7d49f09ee30  website/scripts/course-progress-duration.test.mjs
+e75e8c842f05eccca9a880cbca85631deaa943240da61001a1bcaaa02b98264b  website/scripts/legacy-courses-route.test.mjs

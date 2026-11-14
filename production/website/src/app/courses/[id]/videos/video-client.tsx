@@ -44,6 +44,7 @@ import { studentApi } from '@/lib/student-api';
 import { useLessonCompletion } from '@/lib/use-lesson-completion';
 import { toggleCoursePictureInPicture } from '@/lib/course-picture-in-picture';
 import { enterCourseStageFullscreen } from '@/lib/course-stage-fullscreen';
+import { courseProgressDuration } from '@/lib/course-progress-duration';
 import StudentLoginModal from '@/components/StudentLoginModal';
 import { openCourseCastPicker } from '@/lib/course-cast-picker';
 import AdaptiveCourseVideo from '@/components/media/AdaptiveCourseVideo';
@@ -421,7 +422,7 @@ export default function WebsiteCourseVideoPage() {
 
   useEffect(() => {
     const syncFullscreenState = () => {
-      setIsCourseFullscreen(document.fullscreenElement === playerStageRef.current || isFallbackFullscreen);
+      setIsCourseFullscreen(Boolean(playerStageRef.current && document.fullscreenElement === playerStageRef.current) || isFallbackFullscreen);
     };
     syncFullscreenState();
     document.addEventListener('fullscreenchange', syncFullscreenState);
@@ -589,10 +590,10 @@ export default function WebsiteCourseVideoPage() {
   const videoProgressPercent = useCallback((video: CourseVideo | null | undefined) => {
     if (!video) return 0;
     const row = progressByVideo.get(String(video.id));
-    const videoDuration = Math.max(
-      Number(row?.duration || 0),
-      Number(video.duration || 0),
+    const videoDuration = courseProgressDuration(
       String(video.id) === activeVideoId ? Number(duration || playInfo?.duration || 0) : 0,
+      Number(video.duration || 0),
+      Number(row?.duration || 0),
     );
     if (row?.completed) return 100;
     const watched = Math.max(
@@ -608,10 +609,10 @@ export default function WebsiteCourseVideoPage() {
     let durationTotal = 0;
     allVideos.forEach(video => {
       const row = progressByVideo.get(String(video.id));
-      const videoDuration = Math.max(
-        Number(row?.duration || 0),
-        Number(video.duration || 0),
+      const videoDuration = courseProgressDuration(
         String(video.id) === activeVideoId ? Number(duration || playInfo?.duration || 0) : 0,
+        Number(video.duration || 0),
+        Number(row?.duration || 0),
       );
       if (!Number.isFinite(videoDuration) || videoDuration <= 0) return;
       durationTotal += videoDuration;
@@ -639,18 +640,17 @@ export default function WebsiteCourseVideoPage() {
     const activeId = sample?.videoId || activeVideoIdRef.current;
     if ((!video && !sample) || !memberId || !activeId) return;
     const previous = progressByVideoRef.current.get(activeId);
-    const sampledDuration = Number(sample?.duration || video?.duration || 0);
-    const sampledProgress = Number(sample?.currentTime || video?.currentTime || 0);
+    const sampledDuration = Number(sample?.duration ?? video?.duration ?? 0);
+    const sampledProgress = Number(sample?.currentTime ?? video?.currentTime ?? 0);
     const nextProgress = Math.max(
       completed ? Math.floor(sampledDuration || durationRef.current || playInfoDurationRef.current || 0) : 0,
       Math.floor(sampledProgress),
       Number(previous?.progress || 0),
     );
-    const nextDuration = Math.max(
-      Math.floor(sampledDuration),
-      durationRef.current,
-      playInfoDurationRef.current,
+    const nextDuration = courseProgressDuration(
+      sampledDuration,
       Number(previous?.duration || 0),
+      activeId === activeVideoIdRef.current ? durationRef.current || playInfoDurationRef.current : 0,
     );
     if (nextProgress <= 0 && nextDuration <= 0) return;
     const saveKey = `${memberId}:${activeId}:${nextProgress}:${nextDuration}`;
@@ -1978,10 +1978,10 @@ export default function WebsiteCourseVideoPage() {
                       const active = (chapter.videos || []).some(video => String(video.id) === activeVideoId);
                       const percent = videoProgressPercent(primaryVideo);
                       const progressRow = primaryVideo?.id ? progressByVideo.get(String(primaryVideo.id)) : undefined;
-                      const videoDuration = Math.max(
+                      const videoDuration = courseProgressDuration(
+                        primaryVideo && String(primaryVideo.id) === activeVideoId ? Number(duration || playInfo?.duration || 0) : 0,
                         Number(primaryVideo?.duration || 0),
                         Number(progressRow?.duration || 0),
-                        primaryVideo && String(primaryVideo.id) === activeVideoId ? Number(duration || playInfo?.duration || 0) : 0,
                       );
 
                       return (
