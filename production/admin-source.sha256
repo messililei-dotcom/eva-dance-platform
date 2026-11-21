@@ -278,6 +278,7 @@ b82dcaac41fb80bd03108d7d213ad537d6d2d7793480e0a698f6a2bcd864ab42  ../10-统一�
 742dda5a893da6720f72e1f46b4caeeb83e6f5d9508e343268cf4d5aea495e41  ../10-统一平台admin-platform/src/app/api/inbox/jobs/run/route.ts
 fa91ddb0206f5bdd76da7681fcf21e1643e13c8937a7ec3067d5f7532ffe1e7e  ../10-统一平台admin-platform/src/app/api/inbox/staff/route.ts
 943493678b9b58d6f2d5eb9669c559826c578e8c77b67735aaa2f6a797fec2ce  ../10-统一平台admin-platform/src/app/api/login/route.ts
+1c6b93bd6ea0dc419d2e7de2fdd09c27ba7799c067d626a38a61066bea6425e8  ../10-统一平台admin-platform/src/app/api/logout/route.ts
 ca2613037e8e63fb65632f35cb469bbb3d47c88a457ee7b8d15af25a209424e6  ../10-统一平台admin-platform/src/app/api/members/[id]/profile360/route.ts
 ba69579fea0e81b88df1da388c3bcf4d44e1ff8f17ab304691104dab902bb7bc  ../10-统一平台admin-platform/src/app/api/members/[id]/route.ts
 6b19a5cabd90eaa759ae04dc41a47268e8e3702e8e8fdc932bc68c7fc3ad9fd0  ../10-统一平台admin-platform/src/app/api/members/_avatar-files.ts
@@ -399,7 +400,7 @@ fca5801d9638078a290a8dee15e6cc0075eab9e468ba193560a0f5695b9ac626  ../10-统一�
 3037eeef0eb7b88b0f2cb02aa8193d0b6205eb812cea064d01ba148fd5285eb3  ../10-统一平台admin-platform/src/app/local-api/finance/expenses/route.ts
 eba7328926de0de2e6c017b67ae628845fc06a251b8db655010090bb582d9c3f  ../10-统一平台admin-platform/src/app/local-api/finance/summary/route.ts
 520a5697369e6ce702af791535a1f08cf0cdc4b10f72eb84aa51b88821877934  ../10-统一平台admin-platform/src/app/local-api/payments/[id]/route.ts
-0b9a7d4aed924b2a44603470f6be915677bb331b1cce0d255bc51a6fe5a44286  ../10-统一平台admin-platform/src/app/login/page.tsx
+30afb9539e50aae9bbbcdde30074a9c04309150b75006ae858ed3cced0e62105  ../10-统一平台admin-platform/src/app/login/page.tsx
 3567de7289ab4fc75737f0d24c1fd773bce13c4fab2a5f1fdad09a580558387e  ../10-统一平台admin-platform/src/app/manifest.ts
 8689fa2b07866da28047abc79357e99cda95814c52a4df3af9a197a9db2f3f37  ../10-统一平台admin-platform/src/app/page.tsx
 7f37dd2f92f44f5b31b57ab2e81d563ba6f6c7f5ea3a3e8229edf1ccaf48815b  ../10-统一平台admin-platform/src/app/robots.ts
@@ -429,15 +430,15 @@ e075aa9bef09b4900a3f00196b03b11ebb37a56694bb402b16c8dfd348313a23  ../10-统一�
 297e27ac2aed1002a0970dcde8dc2718dbd8c1a2c05e57e50dd7d8fd2984dc8d  ../10-统一平台admin-platform/src/data/event-player-avatars.json
 556019f81190a3290d9bcf035d9e8c59890777c6653742831a52a5e95dca0086  ../10-统一平台admin-platform/src/lib/adapters/platform.ts
 9cdbe5bd1611e6fb4099142d9aa39ca4513fd48387d20d2046ae43124b67b8d7  ../10-统一平台admin-platform/src/lib/admin-audit-rules.ts
-64341b141493631be96f40e8eecd4e2e2b7a1e6fe71a6af78eda3d724df57134  ../10-统一平台admin-platform/src/lib/admin-feature-access.ts
-a529c8ce39967c568e6e36d4068579bc32475bd385e1aa6abd4e021c83c3205f  ../10-统一平台admin-platform/src/lib/api.ts
+d69fcebbea21437144d5cd828ecff75488c777b6f0380f33230fe3532b980bec  ../10-统一平台admin-platform/src/lib/admin-feature-access.ts
+b5c0b18e3af51e9ff0b6f567b5bcbe6526747d4b0c0893fcfdcbd3cedcdadc99  ../10-统一平台admin-platform/src/lib/api.ts
 6905c3794a4e6ab476daa8c12e7fd649fcb2400c867bdcd7c46d411fdacbbf6c  ../10-统一平台admin-platform/src/lib/auth-context.tsx
 317e69ac99120e4240008726477f5c6ebcf2d5493080910d2e79d99e9ee6f76a  ../10-统一平台admin-platform/src/lib/authorization-record-financials.ts
 796acd0c29cbab0db207d508e2f1a0bd49a7548469c11b2d6e8cbc725db415cc  ../10-统一平台admin-platform/src/lib/batch-authorization-financials.ts
 77ff37b2420301ed988141a86ed68b0c0b73c52b99fa019c4b24ab927cf44c1f  ../10-统一平台admin-platform/src/lib/bonus-export.ts
 1f22abe7ec7d92c03588c4c10dd52ceb8f6746b6e1e867d2a60dae0416c8810e  ../10-统一平台admin-platform/src/lib/certificate-brand.ts
 eea4c413ce30b3f743e54eeafae00e6d5caada23b1821e2290616733ba8ad5e8  ../10-统一平台admin-platform/src/lib/commission-export.ts
-cd1be28c5dc0209a4ddb4f5312a71e544a5c2706e2a8849682cbab977601bde7  ../10-统一平台admin-platform/src/lib/course-advisors.ts
+9bd23bd8cf7b70886c71286730ea7d0c49b46a585328af3684442891cbdc6e40  ../10-统一平台admin-platform/src/lib/course-advisors.ts
 4b6feb8ef95052bb00c62d0f2fbd4da46abfbbf6bf51bbddf086e06f98e3120c  ../10-统一平台admin-platform/src/lib/course-category.ts
 96ba8a6aa9e104fe0deb8d545278e161d8f67cc24a20c399748be3e5bf748bb8  ../10-统一平台admin-platform/src/lib/data-shape.ts
 ef3b70bad4bddefbf75ef0b3f79b6b143a8a9696458563f437d75833fbb2b7f0  ../10-统一平台admin-platform/src/lib/date-locale.ts
@@ -492,7 +493,7 @@ cdbbffd82f28d3b873d9f2915dbcc993c1245d7435687582247a7db9ccd35acf  ../10-统一�
 e952183a949a45970938fb044afa0755d68a754fb57e1485a9eac4041020592e  ../10-统一平台admin-platform/src/lib/server/event-entry-import.ts
 6cca1c2848562996caaa6c2625bcb1bc34c8e47fd8ced0e22eeb12bc382cd205  ../10-统一平台admin-platform/src/lib/server/event-import-confirmation.ts
 a2ebd8dc233bac91f747fe8bf362929b972562def1313e3f39d06874ff36166b  ../10-统一平台admin-platform/src/lib/server/event-judge-duplicates.ts
-75648e654d3b5a655cd53eca3f7ab2f1ee18496ca113b22c3baae675c9d3913a  ../10-统一平台admin-platform/src/lib/server/event-judge-member-sync.ts
+e91bd8a52bc4976a06b12dfd02369f071659dde12dcd4c6ae670414acbdb301a  ../10-统一平台admin-platform/src/lib/server/event-judge-member-sync.ts
 2a98b854de66912cec7339ed23a31881448843e919060604f817f5c6562b9a62  ../10-统一平台admin-platform/src/lib/server/event-judge.ts
 71317e466b07a1d0abce210ae82741e408ba4d6244364688a33797d252557563  ../10-统一平台admin-platform/src/lib/server/event-member-sync.ts
 00e8a8ef3254e38a36963284427e6b5df8c665425b66efd0198505667dce3805  ../10-统一平台admin-platform/src/lib/server/event-music-filename.ts
@@ -534,7 +535,7 @@ fa925e7b32e4ad21d054fb0b7ec237d4a965a3146608ae07f59e7210055a77df  ../10-统一�
 5f8ed04538fb36f8c69a5abf3e44655b93829690d848a284c71bbe89da0d130a  ../10-统一平台admin-platform/src/lib/server/wechat-identity.ts
 5892c941c2736598bf856ff1715845c7c9397c36f9791a4ac80be875d5ccec46  ../10-统一平台admin-platform/src/lib/student-api.ts
 03aeab5e34f01c65e7e2e744bc739dc9e2acdf42cef4ba787393c869c08c65c9  ../10-统一平台admin-platform/src/lib/table-sort.ts
-a6326485aa93fb04b03deb90ad7c8b16f1f40b0f6b8684381eda648233519c93  ../10-统一平台admin-platform/src/middleware.ts
+b6f293d0408751eda8059315eb89a35d89a552186dfcd8ca2c2c53ab8381c0ea  ../10-统一平台admin-platform/src/middleware.ts
 0f33252ec66147788cbd1906390541bd102c81e29cd50eaa071e6f70d83c2cd5  ../10-统一平台admin-platform/src/styles/admin-mobile.css
 1b3eac4caca34c0fedd6606543ab1b733f07e51b136a60a29faab3e8744e74be  ../10-统一平台admin-platform/src/styles/globals.css
 2d241a4e29b9611b6c12c7fd1cd4c304fb97497d225ee6de30d9f437c6676a79  ../10-统一平台admin-platform/src/types/domain.ts

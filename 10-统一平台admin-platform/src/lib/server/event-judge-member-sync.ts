@@ -60,12 +60,15 @@ function markMemberAsJudge(db: AdminDb, member: Record<string, any>) {
   db.prepare(`UPDATE Member SET ${sets.join(', ')} WHERE id=?`).run(...values);
 }
 
-function createMember(db: AdminDb, judge: Record<string, any>) {
+function judgeMemberPhone(value: unknown) {
+  return normalizeEventMemberPhone(value) ? formatMemberPhoneForDisplay(value) : null;
+}
+
+function createMember(db: AdminDb, judge: Record<string, any>, phone = judgeMemberPhone(judge.phone)) {
   const columns = memberColumns(db);
-  const phone = normalizeEventMemberPhone(judge.phone);
   const values: Record<string, unknown> = {
     name: text(judge.name, '赛事评委'),
-    phone: phone ? formatMemberPhoneForDisplay(judge.phone) : null,
+    phone,
     gender: '女',
     level: '体验学员',
     register_date: String(judge.created_at || new Date().toISOString()).slice(0, 10),
@@ -121,10 +124,15 @@ export function syncAllEventJudgesToMembers(db: AdminDb) {
   let linked = 0;
   let created = 0;
   db.transaction(() => {
-    judges.forEach((judge) => {
+    const phoneIsReserved = db.prepare('SELECT 1 FROM Member WHERE phone=?');
+    for (const judge of judges) {
       let member = findMember(db, judge);
       if (!member) {
-        const memberId = createMember(db, judge);
+        const phone = judgeMemberPhone(judge.phone);
+        // Deleted members may still hold a unique phone. Leave this judge unlinked
+        // and continue syncing the other judges.
+        if (phone && phoneIsReserved.get(phone)) continue;
+        const memberId = createMember(db, judge, phone);
         member = db.prepare('SELECT * FROM Member WHERE id=?').get(memberId) as Record<string, any>;
         created += 1;
       }
@@ -133,7 +141,7 @@ export function syncAllEventJudgesToMembers(db: AdminDb) {
         db.prepare('UPDATE event_judges SET member_id=?, updated_at=? WHERE id=?').run(member.id, new Date().toISOString(), judge.id);
         linked += 1;
       }
-    });
-  })();
+    }
+  }).immediate();
   return { total: judges.length, linked, created };
 }

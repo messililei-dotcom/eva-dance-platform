@@ -32,6 +32,23 @@ export function adminLandingPage(user: AdminIdentity) {
   if (isPlatformSuperAdmin(user)) return '/dashboard';
   return user?.role === 'event_admin' ? '/events' : '/online-course/auth';
 }
+
+export function adminLoginDestination(user: AdminIdentity, returnTo: string | null) {
+  const fallback = adminLandingPage(user);
+  if (!returnTo?.startsWith('/')) return fallback;
+
+  const origin = 'https://admin.swod.com.cn';
+  try {
+    const target = new URL(returnTo, origin);
+    if (target.origin === origin && isRestrictedAdminPage(target.pathname) && canAccessAdminPage(user, target.pathname)) {
+      return target.pathname + target.search + target.hash;
+    }
+  } catch {
+    // Ignore invalid return paths.
+  }
+  return fallback;
+}
+
 export function isRestrictedAdminPage(path: string) {
   const value = canonicalPath(path);
   return [...SUPER_ADMIN_PAGES, ...OWNER_ONLY_PAGES, '/events'].some(root => within(value, root));

@@ -9,7 +9,7 @@ import PublicJudges from '@/components/events/PublicJudges';
 import EventGroupSearch from '@/components/events/EventGroupSearch';
 import EventPeopleSearch from '@/components/events/EventPeopleSearch';
 import { getEventCompetitionId, getEventNewsBySlug, getEventStatus } from '@/lib/events-news';
-import { loadPublicEventJudges, loadPublicEventGroups, loadPublicEventPlayers, type PublicEventGroup, type PublicEventPlayer } from '@/lib/public-event-data';
+import { loadConfiguredEventGroupCount, loadPublicEventJudges, loadPublicEventGroups, loadPublicEventPlayers, type PublicEventGroup, type PublicEventPlayer } from '@/lib/public-event-data';
 
 export const dynamic = 'force-dynamic';
 const panels = [['overview', '概览'], ['groups', '组别'], ['players', '选手'], ['judges', '评委'], ['results', '成绩']] as const;
@@ -25,12 +25,14 @@ export default async function EventDetailPage({ params, searchParams }: {
   const panel = panels.some(([key]) => key === requestedPanel) ? requestedPanel! : 'groups';
   const competitionId = getEventCompetitionId(item);
   const registrationOpen = getEventStatus(item) === 'registering';
+  let groupCount = item.stats.groups;
   let groups: PublicEventGroup[] = [], players: PublicEventPlayer[] = [];
   let judges: ReturnType<typeof loadPublicEventJudges> = [];
   let loadError = false;
   try {
     if (competitionId) {
-      groups = loadPublicEventGroups(competitionId);
+      groupCount = loadConfiguredEventGroupCount(competitionId);
+      if (panel === 'groups') groups = loadPublicEventGroups(competitionId);
       if (panel === 'judges') judges = loadPublicEventJudges(competitionId);
       if (panel === 'players' || panel === 'results') players = loadPublicEventPlayers(competitionId);
     }
@@ -51,7 +53,7 @@ export default async function EventDetailPage({ params, searchParams }: {
         <div className={styles.eventHeading}>
           <h1>{item.title}</h1>
           <div className={styles.inlineSummary}>
-            <div><strong>{loadError ? '—' : competitionId ? groups.length : item.stats.groups}</strong><span>组别</span></div>
+            <div><strong>{loadError ? '—' : groupCount}</strong><span>组别</span></div>
             <div aria-label={item.registrationPublic === false ? '选手人数尚未公开' : undefined}><strong>{item.registrationPublic === false ? '—' : item.stats.players}</strong><span>选手</span></div>
             <div><strong>{item.stats.judges}</strong><span>评委</span></div>
           </div>

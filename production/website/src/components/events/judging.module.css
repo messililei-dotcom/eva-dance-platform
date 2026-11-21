@@ -55,6 +55,12 @@
 .search input:focus-visible { outline: 0; }
 .search:focus-within { outline: 2px solid var(--red); outline-offset: 2px; }
 .search input::placeholder { color: var(--muted); }
+.groupListBar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; color: var(--muted); font-size: 14px; }
+.pageNumber { display: block; font-variant-numeric: tabular-nums; }
+.groupPager { display: flex; gap: 6px; }
+.groupPager button { min-height: 44px; padding: 0 9px; border: 1px solid var(--edge); border-radius: 8px; background: var(--field); color: var(--red); font-weight: 650; }
+.groupPager button:disabled { color: var(--muted); background: transparent; }
+.groupList { margin: 0; padding: 0; list-style: none; }
 .listRow { display: flex; align-items: center; gap: 10px; min-height: 68px; border-bottom: 1px solid var(--edge); padding: 7px 0; }
 .listRow:focus-visible, .listRow:hover { background-color: #f3eae6; }
 .avatar { position: relative; display: grid; place-items: center; flex: none; width: 53px; aspect-ratio: 1; border: 1px solid #cc995c; border-radius: 50%; overflow: hidden; background: #f5e6d5; color: var(--red); font-size: 22px; font-weight: 750; }

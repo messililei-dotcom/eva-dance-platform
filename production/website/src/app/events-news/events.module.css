@@ -65,22 +65,23 @@
 .ageFilters button { display: inline-flex; justify-content: center; align-items: center; min-width: 60px; min-height: 44px; padding: 6px 16px; border: 1px solid #d9dde3; border-radius: 999px; color: #616773; background: #fff; font-size: 14px; }
 .ageFilters button[aria-pressed="true"] { border-color: #9f1d20; color: #fff; background: #9f1d20; }
 .ageFilters button:focus-visible { outline: 2px solid #9f1d20; outline-offset: 3px; }
-.groupCards { display: grid; gap: 12px; }
-.groupCard { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px 12px; border: 1px solid #e9e6e1; border-radius: 14px; background: #fff; }
+.groupCards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); gap: 10px; }
+.groupCard { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; min-width: 0; min-height: 60px; padding: 8px 10px; border: 1px solid #e9e6e1; border-radius: 12px; background: #fff; }
 .groupCard:focus-visible { outline: 2px solid #9f1d20; outline-offset: 3px; }
-.groupIcon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 42px; height: 48px; border-radius: 10px; color: #987131; background: #f5efe5; }
-.groupCardText { min-width: 0; flex: 1; }
-.groupCardText strong { display: block; color: #202124; font-size: 16px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
-.groupCardText > span { display: block; margin-top: 5px; color: #616773; font-size: 13px; line-height: 1.5; }
-.groupBadge { flex-shrink: 0; max-width: 90px; padding: 4px 9px; border: 1px solid transparent; border-radius: 999px; color: #9f1d20; background: #f7e9e7; font-size: 12px; text-align: center; }
+.groupIcon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; color: #987131; background: #f5efe5; }
+.groupCardText { display: grid; gap: 4px; min-width: 0; }
+.groupCardTitle { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 4px; }
+.groupCardTitle strong { color: #202124; font-size: 14px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.groupCardMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: #616773; font-size: 12px; font-variant-numeric: tabular-nums; line-height: 1.35; overflow-wrap: anywhere; }
+.groupBadge { margin-inline-start: auto; max-width: 100%; padding: 1px 6px; border: 1px solid transparent; border-radius: 999px; color: #9f1d20; background: #f7e9e7; font-size: 11px; text-align: center; }
 .groupBadge[data-published="true"] { border-color: #b38b42; border-radius: 8px; color: #816020; background: #fffdf8; }
 .registrationBar { position: fixed; bottom: 0; right: 0; left: 0; z-index: 45; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid #e5e1da; background: #faf9f6; }
 .registrationBar > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-width: 1088px; margin: auto; }
 .registrationBar a,.registrationBar span { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 6px; border: 1px solid #aeb0b4; border-radius: 12px; color: #202124; background: #fff; font-size: 16px; font-weight: 600; }
 .registrationBar a:nth-child(2) { border-color: #9f1d20; color: #fff; background: #9f1d20; }
 .registrationBar span[aria-disabled="true"] { color: #616773; background: #eeede9; border-color: #d9dde3; }
-@media (min-width:768px) { .conceptHero { display: grid; grid-template-columns: 1fr 1.1fr; column-gap: 28px; align-items: start; } .conceptHero .cover { grid-row: 1 / 5; aspect-ratio: 4 / 3; max-height: 320px; } .conceptHero .eventHeading { grid-template-columns: 1fr; margin-top: 8px; } .inlineSummary { margin-top: 6px; } .groupCards { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-@media (max-width:359px) { .eventHeading { grid-template-columns: 1fr; } .inlineSummary { max-width: 240px; } .groupCard { gap: 8px; } .groupIcon { width: 32px; } .groupBadge { max-width: 66px; padding: 4px 6px; } .ageFilters { gap: 7px; } .ageFilters button { padding: 6px 13px; } }
+@media (min-width:768px) { .conceptHero { display: grid; grid-template-columns: 1fr 1.1fr; column-gap: 28px; align-items: start; } .conceptHero .cover { grid-row: 1 / 5; aspect-ratio: 4 / 3; max-height: 320px; } .conceptHero .eventHeading { grid-template-columns: 1fr; margin-top: 8px; } .inlineSummary { margin-top: 6px; } }
+@media (max-width:359px) { .eventHeading { grid-template-columns: 1fr; } .inlineSummary { max-width: 240px; } .ageFilters { gap: 7px; } .ageFilters button { padding: 6px 13px; } }
 
 /* Supplied 20261114 concept, preserving statistics and public data. */
 .conceptBrand{font-family:Georgia,serif;font-style:italic;font-size:25px;color:#9f1d20!important}.conceptBrand span{font-family:inherit;font-size:16px;color:#202124}.conceptCards h3{order:-1;font-size:clamp(19px,2vw,26px)}.conceptCards article>a>div:last-child{padding:14px 16px 0}.conceptCards article>a>div:last-child>p{display:none}.conceptCards article>a>div:last-child>div:last-child{display:flex;justify-content:space-between;border-bottom:0;margin-top:10px}.conceptCards article>a>div:last-child>div:last-child>div{display:flex;align-items:baseline;gap:5px}.conceptCards article>a>div:last-child>div:first-child{flex-direction:row;flex-wrap:wrap}.groupSegments{display:flex;border:1px solid #ddd9d1;border-radius:12px;overflow:hidden;margin-bottom:18px}.groupSegments a{flex:1;text-align:center;padding:12px;color:#616773;font-weight:600}.groupSegments a[aria-current]{background:#9f1d20;color:#fff}.groupRankingRows>a{border:0;border-bottom:1px solid #ddd9d1;border-radius:0;box-shadow:none;background:transparent;padding:12px 0}.podium{gap:6px;flex-wrap:nowrap}.podium>a{border-radius:50% 50% 0 0;padding:14px 6px 18px;gap:6px}.podium>a>span:first-child{width:clamp(64px,18vw,145px);height:clamp(64px,18vw,145px)}.podium>a[data-rank="1"]>span:first-child{width:clamp(76px,21vw,170px);height:clamp(76px,21vw,170px)}.podium strong{font-size:clamp(20px,3vw,30px)}.backEvent{display:flex;align-items:center;justify-content:center;min-height:48px;border:1px solid #9f1d20;border-radius:12px;margin-top:28px;color:#9f1d20;font-size:18px;font-weight:600}@media(min-width:1024px){.hero>div{grid-template-columns:1fr;max-width:1152px;padding-bottom:24px}.metrics{max-width:100%}}

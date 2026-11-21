@@ -83,6 +83,16 @@ export function searchPublicEventPlayers(query: string, limit = 12) {
   }
 }
 
+export function loadConfiguredEventGroupCount(competitionId: number) {
+  const db = openAdminDb({ readonly: true });
+  try {
+    return db.prepare('SELECT COUNT(*) AS total FROM event_groups WHERE competition_id = ?')
+      .get<{ total: number }>(competitionId)?.total ?? 0;
+  } finally {
+    db.close();
+  }
+}
+
 export function loadPublicEventGroups(competitionId: number) {
   const db = openAdminDb({ readonly: true });
   try {
@@ -220,7 +230,7 @@ export function loadPublicPlayerDetail(competitionId: number, groupId: number, p
         COALESCE(j.name, '评委') AS judge_name,
         COALESCE(j.title, '') AS judge_title,
         COALESCE(NULLIF(jm.wx_avatar_url, ''), NULLIF(jm.avatar, ''), '') AS avatar_url,
-        CASE WHEN c.judge_scores_public = 1 THEN SUM(COALESCE(s.published_score, s.calculated_score, 0)) ELSE NULL END AS score
+        SUM(COALESCE(s.published_score, s.calculated_score, 0)) AS score
       FROM event_scores s
       JOIN event_competitions c ON c.id=s.competition_id
       LEFT JOIN event_judges j ON j.id = s.judge_id
@@ -242,6 +252,7 @@ export function loadPublicPlayerDetail(competitionId: number, groupId: number, p
 
     player.avatar_url ||= (legacyAvatars.players as Record<string, string>)[String(player.id)] || '';
     const visibleScores: PublicJudgeScore[] = scores.map((score, index) => {
+      // Publication filters govern the score. This switch governs judge identity on the website.
       if (Number(score.judge_scores_public) !== 1) return {
         id: index + 1, judge_name: `评委 ${index + 1}`, judge_title: '', avatar_url: '', score: score.score,
       };

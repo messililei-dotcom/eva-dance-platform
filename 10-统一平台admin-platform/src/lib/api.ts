@@ -98,7 +98,7 @@ export const api: AxiosInstance = axios.create({ baseURL: API_BASE, timeout: 150
 const legacyStudentApi: AxiosInstance = axios.create({ baseURL: LEGACY_STUDENT_API_BASE, timeout: 20000 });
 const cloudCourseApi: AxiosInstance = axios.create({ baseURL: CLOUD_COURSE_API_BASE, timeout: 20000 });
 
-const AUDIT_EXCLUDED_PATHS = ['/access-records', '/login', '/validate-token'];
+const AUDIT_EXCLUDED_PATHS = ['/access-records', '/login', '/logout', '/validate-token'];
 
 function normalizedClientAuditPath(value: unknown) {
   const raw = String(value || '').trim();
@@ -139,7 +139,7 @@ export function reportAdminAudit(input: { kind: 'access' | 'operation'; path: st
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = getToken();
-  if (token && config.headers) {
+  if (token && !config.headers.has('Authorization')) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -182,11 +182,16 @@ api.interceptors.response.use(
         status: error.response?.status || 599,
       });
     }
-    if (error.response?.status === 401) {
+    if (
+      error.response?.status === 401 &&
+      error.config?.url !== '/login' &&
+      typeof window !== 'undefined' &&
+      window.location.pathname !== '/login'
+    ) {
       clearAuth();
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
+      const loginUrl = new URL('/login', window.location.origin);
+      loginUrl.searchParams.set('next', window.location.pathname + window.location.search);
+      window.location.replace(loginUrl.href);
     }
     return Promise.reject(error);
   }
@@ -225,19 +230,32 @@ export const authApi = {
   login: async (username: string, password: string): Promise<AuthUser> => {
     const res = await api.post('/login', { username, password });
     const { token, user } = res.data;
+    localStorage.removeItem('legacy_student_token');
     setToken(token);
     setUser(user);
+    if (user?.role === 'event_admin') return user;
+
     legacyStudentApi.post('/login', { username, password })
       .then((legacyRes) => {
-        if (legacyRes.data?.token) setLegacyStudentToken(legacyRes.data.token);
+        if (legacyRes.data?.token && getToken() === token) setLegacyStudentToken(legacyRes.data.token);
       })
       .catch((err) => {
         devWarn('原学员系统登录失败，线下课程真实数据可能不可用', err);
       });
     return user;
   },
+  loginWithSsoToken: async (token: string): Promise<AuthUser> => {
+    const { data } = await api.post('/validate-token', null, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!data?.user?.username) throw new Error('无法验证登录账号');
+    await authApi.logout();
+    setToken(token);
+    setUser(data.user);
+    return data.user;
+  },
   logout: async (): Promise<void> => {
-    try { await api.post('/logout'); } catch {}
+    await api.post('/logout');
     clearAuth();
   },
   validateToken: async (): Promise<UnknownRecord> => {

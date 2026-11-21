@@ -1,4 +1,4 @@
-export const DEFAULT_COURSE_ADVISORS = ['海艳', '七七', '伊琳', '伊娃老师'];
+export const DEFAULT_COURSE_ADVISORS = ['海艳', '七七', '伊琳', '伊娃老师', '媛媛'];
 
 export function buildCourseAdvisorOptions(values: Array<unknown> = []) {
   const seen = new Set<string>();

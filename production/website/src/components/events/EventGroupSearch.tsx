@@ -25,10 +25,17 @@ export default function EventGroupSearch({ groups, slug, registrationOpen = fals
     {(keyword || ageFilter !== '全部') && <p role="status" className="mb-3 text-sm text-text-muted">找到 {visible.length} 个组别</p>}
     <div className={styles.groupCards}>
       {visible.slice(0, displayLimit).map(group => <Link prefetch={false} key={group.id} href={`/events/${slug}/groups/${group.id}`} className={styles.groupCard}>
-        <span className={styles.groupIcon} aria-hidden="true"><Trophy size={23} strokeWidth={1.5} /></span>
-        <span className={styles.groupCardText}><strong>{group.name}</strong><span>{[group.age_range, group.registration_public === 1 ? `${group.player_count}位选手` : '报名信息暂未公开'].filter(Boolean).join(' · ')}</span></span>
-        <span className={styles.groupBadge} data-published={Boolean(group.ranked_count)}>{group.ranking_complete === 1 ? '成绩已公布' : group.ranked_count ? `已公示${group.ranked_count}项得分` : registrationOpen ? '报名中' : '成绩待公布'}</span>
-        <ChevronRight aria-hidden="true" size={18} className="shrink-0 text-text-muted" />
+        <span className={styles.groupIcon} aria-hidden="true"><Trophy size={18} strokeWidth={1.5} /></span>
+        <span className={styles.groupCardText}>
+          <span className={styles.groupCardTitle}>
+            <strong>{group.name}</strong>
+            <ChevronRight aria-hidden="true" size={15} className="text-text-muted" />
+          </span>
+          <span className={styles.groupCardMeta}>
+            <span>{[group.age_range, group.registration_public === 1 ? `${group.player_count}位选手` : '报名信息暂未公开'].filter(Boolean).join(' · ')}</span>
+            <span className={styles.groupBadge} data-published={Boolean(group.ranked_count)}>{group.ranking_complete === 1 ? '成绩已公布' : group.ranked_count ? `已公示${group.ranked_count}项得分` : registrationOpen ? '报名中' : '成绩待公布'}</span>
+          </span>
+        </span>
       </Link>)}
     </div>
     {visible.length > displayLimit && <div className="mt-5 text-center"><button type="button" onClick={() => setDisplayLimit(limit => limit + 50)} className="min-h-11 rounded-xl border border-sand bg-white px-5 text-sm font-semibold text-crimson">显示更多组别（还有 {visible.length - displayLimit} 个）</button></div>}

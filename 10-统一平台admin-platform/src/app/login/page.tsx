@@ -2,22 +2,16 @@
 import { useState, useEffect } from 'react';
 import { Alert, App, Input, Button, Checkbox, Typography } from 'antd';
 import { UserOutlined, LockOutlined, EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { authApi } from '@/lib/api';
-import { adminLandingPage } from '@/lib/admin-feature-access';
+import { adminLoginDestination } from '@/lib/admin-feature-access';
 import { apiErrorMessage, isRecord } from '@/lib/data-shape';
 
 const { Title, Text } = Typography;
 
 const REMEMBER_USER_KEY = 'remembered_username';
 
-function mobileHomePath() {
-  return adminLandingPage(authApi.getUser());
-}
-
 export default function LoginPage() {
-  const router = useRouter();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [rememberAccount, setRememberAccount] = useState(false);
@@ -37,32 +31,23 @@ export default function LoginPage() {
     }
 
     // SSO: 从URL参数检测token，自动登录
-    const params = new URLSearchParams(window.location.search);
-    const ssoToken = params.get('ssoToken');
+    const url = new URL(window.location.href);
+    const ssoToken = url.searchParams.get('ssoToken');
     if (ssoToken) {
+      url.searchParams.delete('ssoToken');
+      window.history.replaceState(null, '', url.href);
       setLoading(true);
       setLoginError('');
-      // 先仅存储admin_token用于验证，不写入userData
-      localStorage.setItem('admin_token', ssoToken);
-      localStorage.setItem('token', ssoToken);
-      authApi.ensureMediaAuthCookie();
-      // 验证token有效性，验证成功后才存储用户信息
-      authApi.validateToken().then(result => {
-        const user = result.user || { username: '管理员', name: '管理员', role: 'admin' };
-        localStorage.setItem('admin_user', JSON.stringify(user));
-        localStorage.setItem('userData', JSON.stringify(user));
+      authApi.loginWithSsoToken(ssoToken).then(user => {
         message.success('登录成功');
-        router.push(mobileHomePath());
+        window.location.replace(adminLoginDestination(user, url.searchParams.get('next')));
       }).catch(() => {
-        // 验证失败则清除所有已存储的token
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('token');
         setLoading(false);
         setLoginError('令牌已过期，请重新登录');
         message.warning('令牌已过期，请重新登录');
       });
     }
-  }, [router]);
+  }, [message]);
 
   // 详细的错误消息映射
   const getErrorMessage = (err: unknown): string => {
@@ -109,7 +94,7 @@ export default function LoginPage() {
     setLoading(true);
     setLoginError('');
     try {
-      await authApi.login(loginUsername, password);
+      const user = await authApi.login(loginUsername, password);
 
       if (rememberAccount) {
         localStorage.setItem(REMEMBER_USER_KEY, JSON.stringify({ username: loginUsername }));
@@ -121,7 +106,8 @@ export default function LoginPage() {
         content: '登录成功，欢迎回来！',
         duration: 2,
       });
-      window.location.href = mobileHomePath();
+      const returnTo = new URLSearchParams(window.location.search).get('next');
+      window.location.replace(adminLoginDestination(user, returnTo));
     } catch (err: unknown) {
       const errMsg = getErrorMessage(err);
       setLoginError(errMsg);

@@ -177,11 +177,19 @@ export async function middleware(request: NextRequest) {
     if (isRestrictedAdminPage(pathname)) {
       const token = getTokenFromRequest(request);
       const actor = token ? verifyLocalToken(token) : null;
-      if (!actor) return withRobotsHeader(NextResponse.redirect(new URL('/login', request.url)));
+      if (!actor) {
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('next', pathname + request.nextUrl.search);
+        return withRobotsHeader(NextResponse.redirect(loginUrl));
+      }
       if (!canAccessAdminPage(actor, pathname)) {
         return withRobotsHeader(NextResponse.redirect(new URL(adminLandingPage(actor), request.url)));
       }
     }
+    return withRobotsHeader(NextResponse.next());
+  }
+
+  if (pathname === '/api/logout' && request.method === 'POST') {
     return withRobotsHeader(NextResponse.next());
   }
 
