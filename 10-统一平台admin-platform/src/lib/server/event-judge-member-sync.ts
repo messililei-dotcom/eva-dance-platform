@@ -1,3 +1,4 @@
+import { formatMemberPhoneForDisplay } from '../member-phone-display';
 import type { AdminDb } from './admin-db';
 import { normalizeEventMemberPhone } from './event-member-sync';
 
@@ -64,7 +65,7 @@ function createMember(db: AdminDb, judge: Record<string, any>) {
   const phone = normalizeEventMemberPhone(judge.phone);
   const values: Record<string, unknown> = {
     name: text(judge.name, '赛事评委'),
-    phone: phone || null,
+    phone: phone ? formatMemberPhoneForDisplay(judge.phone) : null,
     gender: '女',
     level: '体验学员',
     register_date: String(judge.created_at || new Date().toISOString()).slice(0, 10),
@@ -88,22 +89,27 @@ export function ensureImportedJudgeMember(db: AdminDb, judge: Record<string, any
 export function ensureJudgeForMember(db: AdminDb, memberId: number) {
   const member = db.prepare("SELECT * FROM Member WHERE id=? AND COALESCE(status, 'active')!='deleted'").get(memberId) as Record<string, any> | undefined;
   if (!member) throw new Error('所选学员不存在');
-  let judge = db.prepare('SELECT * FROM event_judges WHERE member_id=? ORDER BY id LIMIT 1').get(memberId) as Record<string, any> | undefined;
-  if (!judge) {
-    const phone = normalizeEventMemberPhone(member.phone);
-    if (phone) judge = db.prepare(`SELECT * FROM event_judges WHERE ${normalizedPhoneSql('phone')}=? ORDER BY id LIMIT 1`).get(phone) as Record<string, any> | undefined;
+  const linked = db.prepare("SELECT * FROM event_judges WHERE member_id=? AND COALESCE(status,'active')!='deleted' ORDER BY id LIMIT 1").get(memberId) as Record<string, any> | undefined;
+  if (linked) return linked;
+
+  const phone = normalizeEventMemberPhone(member.phone);
+  const unbound = phone ? db.prepare(`
+    SELECT * FROM event_judges
+    WHERE COALESCE(member_id,0)=0 AND COALESCE(status,'active')!='deleted'
+      AND ${normalizedPhoneSql('phone')}=?
+    ORDER BY id LIMIT 1
+  `).get(phone) as Record<string, any> | undefined : undefined;
+  if (unbound) {
+    db.prepare('UPDATE event_judges SET member_id=?, updated_at=? WHERE id=?')
+      .run(memberId, new Date().toISOString(), unbound.id);
+    return { ...unbound, member_id: memberId };
   }
-  if (!judge) {
-    const result = db.prepare(`
-      INSERT INTO event_judges (member_id, name, phone, status, auth_enabled, owner_user_id, updated_at)
-      VALUES (?, ?, ?, 'active', 1, ?, ?)
-    `).run(memberId, text(member.name, '评委'), text(member.phone), (db as any).eventActorId || 0, new Date().toISOString());
-    judge = db.prepare('SELECT * FROM event_judges WHERE id=?').get(Number(result.lastInsertRowid)) as Record<string, any>;
-  } else {
-    db.prepare(`UPDATE event_judges SET member_id=?, name=?, phone=?, status='active', auth_enabled=1, updated_at=? WHERE id=?`)
-      .run(memberId, text(member.name, judge.name), text(member.phone, judge.phone), new Date().toISOString(), judge.id);
-    judge = { ...judge, member_id: memberId, name: text(member.name, judge.name), phone: text(member.phone, judge.phone) };
-  }
+
+  const result = db.prepare(`
+    INSERT INTO event_judges (member_id, name, phone, status, auth_enabled, owner_user_id, updated_at)
+    VALUES (?, ?, ?, 'active', 1, ?, ?)
+  `).run(memberId, text(member.name, '评委'), text(member.phone), (db as any).eventActorId || 0, new Date().toISOString());
+  const judge = { id: Number(result.lastInsertRowid) };
   return judge;
 }
 

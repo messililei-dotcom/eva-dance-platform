@@ -1,3 +1,4 @@
+import { memberPhoneKeySql } from './member-phone-sql';
 import { getCoursePromotion, courseSalePrice } from './course-promotion';
 import {ensureEventOnline,eventPaymentOffer,eventPaymentOrder,settleEventPayment} from "./event-online";
 import { randomBytes, createHash } from "node:crypto";
@@ -471,7 +472,7 @@ export function createCourseOrder(db: AdminDb, memberId: number, body: any) {
         throw new ShopError('报名费用或缴费组别已更新，请刷新后确认', 409);
       }
     } else if (body.expectedTotalFen !== offer.priceFen) throw new ShopError('课程价格已更新，请刷新后确认',409);
-    if(offer.kind==='online' && db.prepare("SELECT id FROM CourseAuthorization WHERE (member_id=? OR (phone=? AND ?<>'')) AND series_id=? AND status='active' AND (expire_at IS NULL OR expire_at='' OR datetime(expire_at)>datetime('now','localtime'))").get(memberId,member.phone || '',member.phone || '',offer.id))throw new ShopError('你已拥有该课程，请直接学习',409);
+    if(offer.kind==='online' && db.prepare(`SELECT id FROM CourseAuthorization WHERE (member_id=? OR (${memberPhoneKeySql('phone')}=(SELECT ${memberPhoneKeySql('bound.input')} FROM (SELECT ? AS input) bound) AND ?<>'')) AND series_id=? AND status='active' AND (expire_at IS NULL OR expire_at='' OR datetime(expire_at)>datetime('now','localtime'))`).get(memberId,member.phone || '',member.phone || '',offer.id))throw new ShopError('你已拥有该课程，请直接学习',409);
     if(offer.kind==='offline' && db.prepare("SELECT id FROM Payment WHERE memberId=? AND courseId=? AND paymentStatus IN ('paid','completed')").get(memberId,offer.id))throw new ShopError('你已购买本期课程，请查看课时余额',409);
     if (offer.eventItems) {
       const existing = offer.eventItems.map(item => eventPaymentOrder(db, item.id, ['pending', 'refund_requested', 'refunding']));

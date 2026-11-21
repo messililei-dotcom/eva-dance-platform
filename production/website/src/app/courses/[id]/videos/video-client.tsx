@@ -293,6 +293,7 @@ export default function WebsiteCourseVideoPage() {
   const pendingQualitySwitchRef = useRef<{ seconds: number; shouldPlay: boolean } | null>(null);
   const resumeAfterSeekRef = useRef(false);
   const playbackGestureRef = useRef<PlaybackGesture | null>(null);
+  const playbackDragRef = useRef(false);
   const pendingScrollToPlayerRef = useRef(false);
   const platformSyncControllerRef = useRef<AbortController | null>(null);
   const requestedEntryVideoRef = useRef(selectedVideoParam);
@@ -1217,19 +1218,18 @@ export default function WebsiteCourseVideoPage() {
   }, []);
 
   const toggleVideoActions = useCallback(() => {
-    setShowVideoActions(visible => {
+    if (showVideoActions) {
       if (videoActionsTimerRef.current !== null) {
         window.clearTimeout(videoActionsTimerRef.current);
         videoActionsTimerRef.current = null;
       }
-      if (visible) return false;
-      videoActionsTimerRef.current = window.setTimeout(() => {
-        setShowVideoActions(false);
-        videoActionsTimerRef.current = null;
-      }, 3200);
-      return true;
-    });
-  }, []);
+      setShowVideoActions(false);
+      setQualityMenuOpen(false);
+      setSpeedMenuOpen(false);
+      return;
+    }
+    revealVideoActions();
+  }, [showVideoActions, revealVideoActions]);
 
   useEffect(() => {
     const video = videoRef.current as PlayerVideoElement | null;
@@ -1251,8 +1251,9 @@ export default function WebsiteCourseVideoPage() {
     }, 800);
   }, []);
 
-  const startPlaybackGesture = (event: ReactPointerEvent<HTMLVideoElement>) => {
+  const startPlaybackGesture = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!event.isPrimary || event.button !== 0) { holdSpeedRef.current?.end(); return; }
+    playbackDragRef.current = false;
     const video = videoRef.current;
     const stage = playerStageRef.current;
     if (!video || !stage) return;
@@ -1281,7 +1282,7 @@ export default function WebsiteCourseVideoPage() {
     };
   };
 
-  const updatePlaybackGesture = (event: ReactPointerEvent<HTMLVideoElement>) => {
+  const updatePlaybackGesture = (event: ReactPointerEvent<HTMLDivElement>) => {
     holdSpeedRef.current?.move(event.clientX, event.clientY);
     const gesture = playbackGestureRef.current;
     const video = videoRef.current;
@@ -1291,6 +1292,7 @@ export default function WebsiteCourseVideoPage() {
       const horizontalDelta = event.clientX - gesture.startX;
       const verticalDelta = event.clientY - gesture.startY;
       if (Math.max(Math.abs(horizontalDelta), Math.abs(verticalDelta)) < 12) return;
+      playbackDragRef.current = true;
       if (!isIntentionalVerticalPlaybackGesture(horizontalDelta, verticalDelta)) {
         playbackGestureRef.current = null;
         return;
@@ -1319,7 +1321,7 @@ export default function WebsiteCourseVideoPage() {
     showGestureIndicator(gesture.side, value);
   };
 
-  const endPlaybackGesture = (event: ReactPointerEvent<HTMLVideoElement>) => {
+  const endPlaybackGesture = (event: ReactPointerEvent<HTMLDivElement>) => {
     holdSpeedRef.current?.end();
     const gesture = playbackGestureRef.current;
     if (!gesture || gesture.pointerId !== event.pointerId) return;
@@ -1604,15 +1606,18 @@ export default function WebsiteCourseVideoPage() {
                 <div
                   ref={playerStageRef}
                   className={`group relative bg-black ${isFallbackFullscreen ? 'course-video-fallback-fullscreen' : ''}`}
+                  data-course-expanded={isCourseFullscreen}
                   onClick={(event) => {
                     if (event.target instanceof Element && event.target.closest('button, input')) return;
-                    if (holdSpeedRef.current?.suppressClick()) return;
+                    if (playbackDragRef.current || holdSpeedRef.current?.suppressClick()) return;
                     toggleVideoActions();
                   }}
                   onFocusCapture={(event) => {
                     if (event.target instanceof Element && event.target.closest('button, input')) revealVideoActions();
                   }}
-                  onMouseLeave={() => setShowVideoActions(false)}
+                  onPointerLeave={(event) => {
+                    if (event.pointerType === 'mouse') setShowVideoActions(false);
+                  }}
                 >
                   {holdingSpeed && <div className="pointer-events-none absolute inset-x-0 top-14 z-20 text-center text-sm text-white" role="status">2 倍播放 · 松手恢复</div>}
                   {remotePlaybackMessage ? (
@@ -1620,7 +1625,11 @@ export default function WebsiteCourseVideoPage() {
                       {remotePlaybackMessage}
                     </div>
                   ) : null}
-                  <div role="toolbar" aria-label="视频操作" className="absolute right-2 top-2 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-xl bg-black/70 px-1.5 py-1 text-white">
+                  <div
+                    role="toolbar"
+                    aria-label="视频操作"
+                    className={`absolute right-2 top-2 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-xl bg-black/70 px-1.5 py-1 text-white transition-opacity duration-200 ${!showVideoActions && !qualityMenuOpen && !speedMenuOpen ? 'course-video-action-toolbar-idle' : ''}`}
+                  >
                       <button
                         type="button"
                         onClick={startRemotePlayback}
@@ -1836,18 +1845,9 @@ export default function WebsiteCourseVideoPage() {
                     muted={false}
                     className={`block aspect-video w-full bg-black ${isMirrored ? 'course-video-mirrored' : ''}`}
                     style={{
-                      WebkitTouchCallout: 'none',
-                      userSelect: 'none',
                       filter: `brightness(${videoBrightness})`,
-                      touchAction: isCourseFullscreen ? 'none' : 'pan-y pinch-zoom',
                       transform: isMirrored ? 'scaleX(-1)' : undefined,
                     }}
-                    onPointerDown={startPlaybackGesture}
-                    onPointerMove={updatePlaybackGesture}
-                    onPointerUp={endPlaybackGesture}
-                    onPointerCancel={endPlaybackGesture}
-                    onPointerLeave={endPlaybackGesture}
-                    onContextMenu={(event) => event.preventDefault()}
                     onError={() => holdSpeedRef.current?.end()}
                     onLoadedMetadata={(event) => {
                       const video = event.currentTarget;
@@ -1906,6 +1906,22 @@ export default function WebsiteCourseVideoPage() {
                       setIsVideoPlaying(false);
                       handlePlaybackEnded(event.currentTarget, activeVideoId);
                     }}
+                  />
+                  {/* Keep taps on an HTML surface above the browser's media layer. */}
+                  <div
+                    className="course-video-touch-surface absolute inset-0 z-0"
+                    aria-hidden="true"
+                    style={{
+                      WebkitTouchCallout: 'none',
+                      userSelect: 'none',
+                      touchAction: isCourseFullscreen ? 'none' : 'pan-y pinch-zoom',
+                    }}
+                    onPointerDown={startPlaybackGesture}
+                    onPointerMove={updatePlaybackGesture}
+                    onPointerUp={endPlaybackGesture}
+                    onPointerCancel={endPlaybackGesture}
+                    onPointerLeave={endPlaybackGesture}
+                    onContextMenu={(event) => event.preventDefault()}
                   />
                 </div>
               ) : (

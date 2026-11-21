@@ -14,6 +14,7 @@ test('student route allowlist rejects admin, traversal and wrong verbs',()=>{con
 dbtest('App handler validates sessions, strips self-reported identity and blocks unconfigured checkout',async db=>{
  const cred=api.createAppSession(db,1,'a');let forwarded;
  const route=load('src/app/api/app/v1/[...path]/route.ts',name=>{
+ if(name==='@/lib/event-phone')return load('src/lib/event-phone.ts');
  if(name.endsWith('event-music-upload'))return load('src/lib/server/event-music-upload.ts');
  if(name.endsWith('app-push'))return {pushCapability:()=>({enabled:false})};
  if(name.endsWith('app-session'))return api;
@@ -68,6 +69,7 @@ dbtest('Android and Harmony login keep shared accounts with their own source and
  let sources=[];
  const platform=load('src/lib/server/app-platform.ts',name=>name==='./app-session'?api:require(name));
  const route=load('src/app/api/app/v1/[...path]/route.ts',name=>{
+ if(name==='@/lib/event-phone')return load('src/lib/event-phone.ts');
  if(name.endsWith('event-music-upload'))return load('src/lib/server/event-music-upload.ts');
  if(name.endsWith('app-push'))return {pushCapability:()=>({enabled:false})};
  if(name.endsWith('app-session'))return api;
@@ -116,6 +118,7 @@ dbtest('password refuses revocation, disabled, merged, deletion-pending and ambi
 dbtest('password HTTP login ignores client identity and returns a normal revocable AppSession',async db=>{
  const password='test-only-strong-password-123!';api.setAppPassword(db,1,password,Date.now()+86400000);
  const route=load('src/app/api/app/v1/[...path]/route.ts',n=>{
+  if(n==='@/lib/event-phone')return load('src/lib/event-phone.ts');
   if(n.endsWith('app-push'))return {pushCapability:()=>({enabled:false})};
   if(n.endsWith('app-session'))return api;
   if(n.endsWith('mini/_helpers'))return {withDb:f=>f(db)};
@@ -133,4 +136,46 @@ dbtest('password HTTP login ignores client identity and returns a normal revocab
 dbtest('revoking password immediately invalidates its login and all existing App sessions',db=>{
  const password='test-only-strong-password-123!';api.setAppPassword(db,1,password,1000000,1000);const session=api.createAppSession(db,1,'phone',1001);
  api.revokeAppPassword(db,1,1002);assert.throws(()=>api.verifyAppPassword(db,'13800000000',password,'ip',1003),e=>e.status===401);assert.throws(()=>api.authenticateApp(db,session.token,1003));
+});
+
+dbtest('international SMS uses the canonical phone, remains one-use and throttles failures',db=>{
+ const phone='+60124627663';
+ db.prepare("INSERT INTO MiniSmsCode VALUES(1,?,'123456',0,datetime('now','localtime','+5 minute'))").run(phone);
+ assert.throws(()=>api.verifyAppSMS(db,'+600124627663','123456',1000));
+ api.verifyAppSMS(db,phone,'123456',1000);
+ assert.equal(db.prepare('SELECT used FROM MiniSmsCode').get().used,1);
+ assert.throws(()=>api.verifyAppSMS(db,phone,'123456',1001));
+ for(let i=0;i<4;i++)assert.throws(()=>api.verifyAppSMS(db,phone,'000000',1002+i));
+ assert.throws(()=>api.verifyAppSMS(db,phone,'000000',1010),e=>e.status===429);
+});
+
+dbtest('App HTTP send and login preserve country code and use one canonical Malaysian identity',async db=>{
+ let forwarded,identity;
+ const route=load('src/app/api/app/v1/[...path]/route.ts',n=>{
+  if(n==='@/lib/event-phone')return load('src/lib/event-phone.ts');
+  if(n.endsWith('mini/send-code/route'))return {POST:async r=>{forwarded=await r.json();return Response.json({success:true})}};
+  if(n.endsWith('app-session'))return api;
+  if(n.endsWith('mini/_helpers'))return {withDb:f=>f(db)};
+  if(n.endsWith('mini/_auth'))return {upsertPhoneMember:(_db,phone)=>{identity=phone;return {id:1}}};
+  if(n.endsWith('app-platform'))return load('src/lib/server/app-platform.ts',()=>api);
+  return {};
+ });
+ const call=(path,body)=>route.POST(new Request('https://test/api/app/v1/'+path,{method:'POST',body:JSON.stringify(body)}),{params:Promise.resolve({path:path.split('/')})});
+ assert.equal((await call('send-code',{phone:'0124627663',countryCode:'+60'})).status,200);
+ assert.deepEqual(forwarded,{phone:'0124627663',countryCode:'+60'});
+ for(const phone of ['0124627663','60124627663','+60124627663']){
+  db.prepare("INSERT INTO MiniSmsCode(phone,code,used,expires_at) VALUES(?,'123456',0,datetime('now','localtime','+5 minute'))").run('+60124627663');
+  assert.equal((await call('auth/login',{phone,countryCode:'+60',code:'123456',memberId:2})).status,200);
+  assert.equal(identity,'+60124627663');
+  assert.equal((await call('auth/login',{phone,countryCode:'+60',code:'123456'})).status,400);
+ }
+});
+
+dbtest('App password login resolves a mainland E.164 number from the legacy login key', db => {
+ const password = 'test-only-strong-password-123!';
+ api.setAppPassword(db, 1, password, 1000000, 1000);
+ db.prepare('UPDATE Member SET phone=? WHERE id=1').run('+8613800000000');
+ assert.equal(api.verifyAppPassword(db, '13800000000', password, 'fixture', 1001), 1);
+ db.prepare("UPDATE Member SET phone='13800000000' WHERE id=2").run();
+ assert.throws(() => api.verifyAppPassword(db, '13800000000', password, 'fixture', 1002), error => error.status === 401);
 });

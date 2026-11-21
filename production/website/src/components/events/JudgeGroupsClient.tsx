@@ -2,57 +2,76 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ChevronRight, ClipboardCheck, ShieldAlert } from 'lucide-react';
-import { getStudentSession, STUDENT_AUTH_CHANGED_EVENT } from '@/lib/student-auth';
+import { ArrowRight, Search, ShieldAlert } from 'lucide-react';
+import type { StudentSession } from '@/lib/student-auth';
+import JudgeSession, { isCurrentJudgeSession } from './JudgeSession';
+
+import { JudgeIdentity } from './JudgePresentation';
+import styles from './judging.module.css';
 
 type Group = { id: number; name: string; player_count: number; scored_count: number };
 
-export default function JudgeGroupsClient({ slug }: { slug: string }) {
+type WorkspaceProps = { slug: string; eventTitle: string; previousGroup?: string };
+
+export default function JudgeGroupsClient(props: WorkspaceProps) {
+  const { slug } = props;
+  return <JudgeSession>{session => <Workspace key={slug} {...props} session={session} />}</JudgeSession>;
+}
+
+function Workspace({ slug, eventTitle, previousGroup, session }: WorkspaceProps & { session: StudentSession }) {
   const [data, setData] = useState<{ judge: { name: string }; groups: Group[] } | null>(null);
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
 
+  const [retry, setRetry] = useState(0);
+  const endpoint = `/api/events-news/${slug}/judge`;
   useEffect(() => {
-    let active=true;const invalidate=()=>{active=false;setData(null);setError("账号已变化，请重新打开评委入口");};window.addEventListener(STUDENT_AUTH_CHANGED_EVENT,invalidate);window.addEventListener("storage",invalidate);
-    const session = getStudentSession();
-    if (!session) { setError('请先登录'); return()=>{window.removeEventListener(STUDENT_AUTH_CHANGED_EVENT,invalidate);window.removeEventListener('storage',invalidate);}; }
-    fetch(`/api/events-news/${slug}/judge`, { cache:'no-store', headers: { Authorization: `Bearer ${session.token}` } })
-      .then(async (response) => {
+    const controller = new AbortController();
+    setError('');
+    fetch(endpoint, {
+      cache: 'no-store',
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${session.token}` },
+    })
+      .then(async response => {
         const payload = await response.json();
         if (!response.ok || !payload.success) throw new Error(payload.error || '加载失败');
-        if(active&&getStudentSession()?.token===session.token)setData(payload.data);
+        if (!controller.signal.aborted && isCurrentJudgeSession(session)) setData(payload.data);
       })
-      .catch((reason) => {if(active)setError(reason instanceof Error ? reason.message : '加载失败');});
-    return()=>{active=false;window.removeEventListener(STUDENT_AUTH_CHANGED_EVENT,invalidate);window.removeEventListener('storage',invalidate);};
-  }, [slug]);
+      .catch(reason => {
+        if (!controller.signal.aborted && isCurrentJudgeSession(session)) {
+          setError(reason instanceof Error ? reason.message : '加载失败');
+        }
+      });
+    return () => controller.abort();
+  }, [endpoint, retry, session]);
 
-  if (error) return <PermissionState message={error} />;
-  if (!data) return <div className="rounded-2xl border border-sand/60 bg-white p-10 text-center text-sm text-text-muted">正在加载评委任务…</div>;
-  return (
-    <>
-      <div className="mb-4 flex items-center justify-between rounded-xl border border-sand bg-white px-4 py-3 text-text">
-        <div><div className="text-[11px] text-crimson">当前评委</div><div className="mt-0.5 font-semibold">{data.judge.name}</div></div>
-        <ClipboardCheck className="h-6 w-6 text-crimson" />
-      </div>
-      <input aria-label="搜索负责组别名称" placeholder="输入组别名称模糊搜索" value={query} onChange={e => setQuery(e.target.value)} className="mb-4 w-full rounded-lg border border-sand bg-white px-4 py-3 text-sm outline-none focus:border-gold-dark" />
-      {query.trim() && !data.groups.some(group => group.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) && <p role="status" className="mb-4 text-sm text-text-muted">未找到相关组别</p>}
-      {data.groups.length ? (
-        <div className="space-y-2.5">
-          {data.groups.filter(group => group.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).map((group) => (
-            <Link prefetch={false} key={group.id} href={`/events/${slug}/judge/groups/${group.id}`} className="flex items-center justify-between gap-3 rounded-xl border border-sand/60 bg-white p-4 shadow-sm transition hover:border-gold-dark">
-              <div className="min-w-0">
-                <div className="truncate font-semibold text-text">{group.name}</div>
-                <div className="mt-1 text-xs text-text-muted">{group.scored_count}/{group.player_count} 位选手已评分</div>
-              </div>
-              <ChevronRight className="h-5 w-5 shrink-0 text-crimson-dark" />
-            </Link>
-          ))}
-        </div>
-      ) : <PermissionState message="无评委权限" />}
-    </>
-  );
+  if (error) return <PermissionState message={error} retry={() => setRetry(n => n + 1)} />;
+  if (!data) return <p role="status" className={styles.state}>正在加载评委任务…</p>;
+  const current = data.groups.find(group => String(group.id) === previousGroup) ?? data.groups[0];
+  const visible = data.groups.filter(group => group.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  return <>
+    <JudgeIdentity event={eventTitle} name={data.judge.name} />
+    <nav className={styles.tabs} aria-label="评分组别">
+      <span className={styles.active} aria-current="page">我的组别</span>
+      {current
+        ? <Link prefetch={false} href={`/events/${slug}/judge/groups/${current.id}`}>当前组别</Link>
+        : <span aria-disabled="true">当前组别</span>}
+    </nav>
+    <label className={styles.search}>
+      <Search size={18} aria-hidden="true" />
+      <input type="search" aria-label="搜索组别" placeholder="搜索组别" value={query} onChange={e => setQuery(e.target.value)} />
+    </label>
+    {visible.length ? <div>
+      {visible.map(group => <Link prefetch={false} key={group.id} href={`/events/${slug}/judge/groups/${group.id}`} className={styles.listRow}>
+        <div className={styles.rowCopy}><strong>{group.name}</strong><p>已评分 {group.scored_count} / {group.player_count}</p></div>
+        <span className={styles.groupEntry}>进入<ArrowRight size={16} aria-hidden="true" /></span>
+      </Link>)}
+    </div> : <p role="status" className={styles.state}>{query.trim() ? '未找到相关组别' : '暂无获授权的评分组别'}</p>}
+    <p className={styles.note}>仅显示本人获授权的组别与选手</p>
+  </>;
 }
 
-function PermissionState({ message }: { message: string }) {
-  return <div className="rounded-2xl border border-sand/60 bg-white px-5 py-12 text-center"><ShieldAlert className="mx-auto h-8 w-8 text-crimson-dark" /><div className="mt-3 font-semibold text-text">{message}</div></div>;
+function PermissionState({ message, retry }: { message: string; retry: () => void }) {
+  return <div className={styles.state}><ShieldAlert size={24} aria-hidden="true" /><p role="status">{message}</p><button type="button" onClick={retry}>重试</button></div>;
 }

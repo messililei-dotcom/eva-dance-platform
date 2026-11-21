@@ -10,7 +10,7 @@ async function handle(request: Request, context: Context) {
   if (!memberId) return Response.json({ success: false, error: '请先登录' }, { status: 401 });
   try {
     const { id } = await context.params;
-    const body = request.method === 'PUT' ? await request.json() : null;
+    const body = request.method === 'PUT' ? await request.json().catch(() => null) : null;
     if (request.method === 'PUT' && (!body || typeof body !== 'object' || Array.isArray(body))) throw new MusicUploadError('报名信息格式不正确');
     const data = withEventDb(db => request.method === 'PUT' ? updateRegistrationDetails(db, id, memberId, body) : registrationDetails(db, id, memberId));
     return Response.json({ success: true, data }, { headers: { 'Cache-Control': 'private, no-store', Vary: 'Authorization, Cookie' } });

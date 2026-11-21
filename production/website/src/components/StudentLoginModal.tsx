@@ -59,11 +59,6 @@ export default function StudentLoginModal({ open, onClose, onSuccess, nextPath, 
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [phoneOnlyPwa, setPhoneOnlyPwa] = useState(() => (
-    forcePhone || (typeof window !== 'undefined'
-    && isStandalonePwa()
-    && !window.matchMedia('(min-width: 768px)').matches)
-  ));
   const [wechatLabel, setWechatLabel] = useState('微信一键登录');
   const [wechatPending, setWechatPending] = useState(false);
   const [wechatAuthorizeUrl, setWechatAuthorizeUrl] = useState('');
@@ -92,7 +87,6 @@ export default function StudentLoginModal({ open, onClose, onSuccess, nextPath, 
 
     const isDesktop = window.matchMedia('(min-width: 768px)').matches;
     const standalone = isStandalonePwa();
-    setPhoneOnlyPwa(forcePhone || (standalone && !isDesktop));
     setWechatLabel(chooseWechatLogin({
       userAgent: window.navigator.userAgent,
       isDesktop,
@@ -184,7 +178,7 @@ export default function StudentLoginModal({ open, onClose, onSuccess, nextPath, 
     resetMessage();
     const isDesktop = window.matchMedia('(min-width: 768px)').matches;
     const standalone = isStandalonePwa();
-    if (standalone && !isDesktop) return;
+    if (forcePhone) return;
     const choice = chooseWechatLogin({
       userAgent: window.navigator.userAgent,
       isDesktop,
@@ -324,12 +318,12 @@ export default function StudentLoginModal({ open, onClose, onSuccess, nextPath, 
             />
           </div>
           <h2 id="student-login-title" className="font-serif text-2xl font-bold text-text">
-            {phoneOnlyPwa ? '手机号登录' : '学员登录'}
+            {forcePhone ? '手机号登录' : '学员登录'}
           </h2>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
-          {!phoneOnlyPwa && (
+          {!forcePhone && (
             <>
               <button
                 type="button"

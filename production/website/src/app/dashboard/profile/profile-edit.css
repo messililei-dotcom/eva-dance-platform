@@ -1,0 +1,35 @@
+.profile-edit-heading {
+  border-inline-start: 4px solid #9f1d20;
+  padding-inline-start: 10px;
+  margin-block: 4px;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.profile-edit-row {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #e2e5e9;
+}
+
+.profile-edit-row:last-child { border-bottom: 0; }
+
+.profile-edit-row input,
+.profile-edit-row select {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  text-align: right;
+  color: inherit;
+  background: transparent;
+}
+
+.profile-edit-row input:focus-visible,
+.profile-edit-row select:focus-visible {
+  outline: 2px solid #9f1d20;
+  outline-offset: -2px;
+  border-radius: 6px;
+}

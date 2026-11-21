@@ -1,4 +1,5 @@
 import { noStoreJson } from '@/lib/http-cache';
+import { PUBLIC_EVENT_GROUP_COUNT_SQL } from '@/lib/server/public-event-groups';
 
 import {
   competitionSelectSql,
@@ -13,7 +14,7 @@ export async function GET() {
   try {
     return withEventDb((db) => {
       const rows = db.prepare(`
-        ${competitionSelectSql()}
+        ${competitionSelectSql(PUBLIC_EVENT_GROUP_COUNT_SQL)}
         WHERE c.status IN ('published', 'finished')
         GROUP BY c.id
         ORDER BY

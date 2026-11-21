@@ -5,6 +5,7 @@ import { persistEventMusic, discardEventMusic } from '@/lib/server/event-music-a
 import path from 'path';
 import { getEventCompetitionId, getEventNewsBySlug } from '@/lib/events-news';
 import { openAdminDb } from '@/lib/server/admin-db';
+import { PUBLIC_EVENT_GROUP_WHERE_SQL } from '@/lib/server/public-event-groups';
 import { getAuthenticatedMemberId } from '@/app/api/mini/_helpers';
 
 import { saveRegistrationMusic, readRegistrationMusic, removeRegistrationMusic } from '@/lib/server/event-registration-music';
@@ -79,13 +80,13 @@ function loadCompetition(competitionId: number, memberId: number) {
     const competition = db.prepare(`
       SELECT id, name, registration_status, start_date, end_date, location
       FROM event_competitions
-      WHERE id = ?
+      WHERE id = ? AND status = 'published'
     `).get<CompetitionRow>(competitionId);
     const groups = competition ? db.prepare(`
-      SELECT id, name, age_range, dance_type, entry_type, registration_fee
-      FROM event_groups
-      WHERE competition_id = ? AND status = 'active'
-      ORDER BY sort_order ASC, id ASC
+      SELECT g.id, g.name, g.age_range, g.dance_type, g.entry_type, g.registration_fee
+      FROM event_groups g JOIN event_competitions c ON c.id=g.competition_id
+      WHERE g.competition_id = ? AND ${PUBLIC_EVENT_GROUP_WHERE_SQL}
+      ORDER BY g.sort_order ASC, g.id ASC
     `).all<Record<string, unknown>>(competitionId) : [];
     const member = db.prepare(`
       SELECT COALESCE(name, '') AS name,
@@ -230,7 +231,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   let uploadedMusic: Awaited<ReturnType<typeof persistEventMusic>> | null = null;
   try {
     const competition = db.prepare(`
-      SELECT id, name, registration_status FROM event_competitions WHERE id = ?
+      SELECT id, name, registration_status FROM event_competitions WHERE id = ? AND status = 'published'
     `).get<{ id: number; name: string; registration_status: string }>(event.competitionId);
 
     if (!competition || competition.registration_status !== 'open') {
@@ -283,19 +284,15 @@ export async function POST(request: Request, { params }: RouteContext) {
     const notes = [uploadedMusic ? musicSourceLabel : '', remark].filter(Boolean).join('\n');
     const now = new Date().toISOString();
     const created = db.transaction(() => {
-      // Recheck limits inside the write transaction, including concurrent registrations.
+      // Recheck the registration switch inside the write transaction.
       const live = db.prepare('SELECT * FROM event_competitions WHERE id=?').get<any>(event.competitionId);
-      if (!live || live.registration_status !== 'open') throw new Error('该赛事当前未开放报名');
+      if (!live || live.status !== 'published' || live.registration_status !== 'open') throw new Error('该赛事当前未开放报名');
       
       if (!groupId) throw new Error('请选择有效的参赛组别');
       const liveGroup = db.prepare("SELECT * FROM event_groups WHERE id=? AND competition_id=? AND status='active'").get<any>(groupId,event.competitionId);
       if (!liveGroup) throw new Error('请选择有效的参赛组别');
       const entrantId=ensurePhoneMember(db,name,phone,'event_competition');
       if (db.prepare(`SELECT id,member_id,phone FROM event_players WHERE competition_id=? AND group_id=? AND (member_id=? OR ${phoneIdentitySql}=?) AND audit_status<>'rejected' AND status NOT IN ('cancelled','withdrawn')`).all<any>(event.competitionId,groupId,entrantId,phone.replace(/\D/g, '')).some(row => Number(row.member_id) === entrantId || samePhoneIdentity(row.phone, phone))) throw new Error('您已报名本组别');
-      const groupCount = db.prepare("SELECT COUNT(*) n FROM event_players WHERE group_id=? AND status NOT IN ('cancelled','withdrawn') AND audit_status<>'rejected'").get<any>(groupId).n;
-
-      if (liveGroup.max_players > 0 && groupCount >= liveGroup.max_players) throw new Error('该组别报名人数已满');
-
       const playerResult = db.prepare(`
         INSERT INTO event_players (
           competition_id, group_id, member_id, name, phone, organization, teacher,
@@ -335,7 +332,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     if (uploadedMusic) await discardEventMusic(uploadedMusic);
     console.error('赛事报名提交失败:', error);
     const message = error instanceof Error ? error.message : '';
-    const expected = ['该赛事当前未开放报名','赛事报名尚未开始','赛事报名已经结束','请选择有效的参赛组别','您已报名本组别','该组别报名人数已满','赛事报名人数已满','音乐文件无法读取，请上传有效的 MP3、WAV、M4A、AAC 或 FLAC 音频'].includes(message);
+    const expected = ['该赛事当前未开放报名','请选择有效的参赛组别','您已报名本组别','音乐文件无法读取，请上传有效的 MP3、WAV、M4A、AAC 或 FLAC 音频'].includes(message);
     return NextResponse.json({ success: false, error: expected ? message : '报名提交失败，请稍后重试' }, { status: expected ? 409 : 500 });
   } finally {
     db.close();

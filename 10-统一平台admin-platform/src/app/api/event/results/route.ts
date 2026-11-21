@@ -147,12 +147,18 @@ export async function PATCH(request: Request) {
 
     const publish = db.transaction(() => {
       if (action === 'publish') {
+        recalculateGroupRankings(db, groupId);
+        const incomplete = db.prepare(`SELECT COUNT(*) AS count FROM event_players p
+          LEFT JOIN event_rankings r ON r.group_id=p.group_id AND r.player_id=p.id
+          WHERE p.group_id=? AND p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled')
+            AND (r.id IS NULL OR r.status!='published' OR r.rank_no<=0 OR r.published_total IS NULL
+              OR r.published_total<0 OR r.published_total>10)`).get(groupId);
+        if (incomplete.count > 0) throw new Error('该组别评分尚未全部完成，不能公布或锁定');
         db.prepare(`
           UPDATE event_rankings
           SET status = 'published', published_total = calculated_total, published_at = ?, updated_at = ?
           WHERE group_id = ? AND player_id IN (SELECT id FROM event_players WHERE group_id=event_rankings.group_id AND audit_status!='rejected' AND status NOT IN ('withdrawn','cancelled'))
         `).run(now, now, groupId);
-        db.prepare(`UPDATE event_scores SET score_status='published', published_score=calculated_score, updated_at=? WHERE group_id=? AND score_status IN ('submitted','reviewed','published')`).run(now, groupId);
         db.prepare('UPDATE event_groups SET scoring_status = ?, updated_at = ? WHERE id = ?').run('locked', now, groupId);
       } else {
         db.prepare(`
@@ -169,7 +175,12 @@ export async function PATCH(request: Request) {
       `).run(group.competition_id, groupId, action, JSON.stringify(rankings), cleanText(body.operator, 'admin'));
     });
 
-    publish();
+    try {
+      publish.immediate();
+    } catch (error) {
+      if (error instanceof Error && error.message === '该组别评分尚未全部完成，不能公布或锁定') return jsonError(error.message, 409);
+      throw error;
+    }
     if (action === 'publish') {
       const competition = db.prepare('SELECT name FROM event_competitions WHERE id = ?')
         .get(group.competition_id) as { name?: string } | undefined;

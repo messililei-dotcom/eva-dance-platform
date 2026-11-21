@@ -1,10 +1,10 @@
 import { removeUnusedAvatars } from '@/lib/server/member-avatar';
-import { mergeMemberAccounts, serializeMember } from '@/app/api/mini/_auth';
+import { mergeMemberAccounts, mergeVerifiedWechatPhoneAccounts, serializeMember } from '@/app/api/mini/_auth';
 import {
   attachMemberSessionCookies,
   cleanText,
   createMemberDeviceSession,
-  getAuthenticatedMemberId,
+  getAuthenticatedMemberIdentity,
   withDb,
 } from '@/app/api/mini/_helpers';
 import {
@@ -14,6 +14,7 @@ import {
   type WechatIdentityChannel,
 } from '@/lib/server/wechat-identity';
 import { readWechatOAuthState, type WechatOAuthPurpose } from '@/lib/server/wechat-oauth-state';
+import { createWechatMergeChallenge, takeWechatMergeChallenge, verifiedWechatMergePhone } from '@/lib/server/wechat-account-merge';
 import {
   completeWechatLoginHandoff,
   failWechatLoginHandoff,
@@ -85,7 +86,7 @@ function getSiteOrigin(request: Request) {
 
 function normalizeNext(value: string) {
   if (!value || !value.startsWith('/')) return '/';
-  if (value.startsWith('//')) return '/';
+  if (value.startsWith('//') || /[\\\t\r\n]/.test(value)) return '/';
   return value;
 }
 
@@ -169,9 +170,10 @@ function generatedName(openid: string) {
 }
 
 function loginHtml(payload: { token: string; member: Record<string, any>; next: string }) {
-  const token = JSON.stringify(payload.token);
-  const member = JSON.stringify(JSON.stringify(payload.member));
-  const next = JSON.stringify(payload.next);
+  const scriptValue = (value: string) => JSON.stringify(value).replaceAll('<', '\\u003c');
+  const token = scriptValue(payload.token);
+  const member = scriptValue(JSON.stringify(payload.member));
+  const next = scriptValue(payload.next);
   const expiresAt = Date.now() + 3 * 86400 * 1000;
   return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>微信登录中</title></head><body><script>
 try {
@@ -191,15 +193,35 @@ function handoffSuccessHtml() {
   return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>微信登录成功</title><style>body{margin:0;background:#f8f3ea;color:#281516;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.card{max-width:420px;margin:18vh auto 0;padding:36px 24px;text-align:center}.icon{display:grid;width:64px;height:64px;margin:0 auto 22px;place-items:center;border-radius:50%;background:#1aad19;color:white;font-size:34px}h1{font-size:24px}p{line-height:1.8;color:#735e50}</style></head><body><main class="card"><div class="icon">✓</div><h1>微信登录成功</h1><p>请返回“伊娃东方舞网课系统App”，课程页面会自动完成登录。</p></main><script>setTimeout(function(){try{window.close()}catch(err){}},800)</script></body></html>`;
 }
 
-function errorRedirect(request: Request, next: string, message: string, purpose: WechatOAuthPurpose = 'login') {
-  const url = new URL(next, getSiteOrigin(request));
+function errorRedirect(request: Request, next: string, message: string, purpose: WechatOAuthPurpose = 'login', status = 302) {
+  const url = new URL(normalizeNext(next), getSiteOrigin(request));
   if (purpose === 'bind') {
     url.searchParams.set('wechat_bind_error', message);
   } else {
     url.searchParams.set('login', '1');
     url.searchParams.set('wechat_error', message);
   }
-  return Response.redirect(url, 302);
+  return new Response(null, { status, headers: { Location: url.href, 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer' } });
+}
+
+function mergeConfirmation(token: string, phone: string) {
+  const suffix = phone.replace(/\D/g, '').slice(-4);
+  return new Response(`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>确认合并账号 · 伊娃东方舞</title>
+<style>
+body{margin:0;padding:24px;min-height:100dvh;box-sizing:border-box;display:grid;place-items:center;background:#faf6f0;color:#2b1919;font:16px/1.6 system-ui,sans-serif}
+main{box-sizing:border-box;width:100%;max-width:460px;padding:24px;background:white;border:1px solid #e4d6c8;border-radius:16px}h1{margin:0;font-size:24px}
+form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px}button{min-height:48px;padding:8px;border:1px solid #9f1d20;border-radius:8px;background:white;color:#8c1a20;font:inherit;font-weight:600}button[value="confirm"]{background:#8c1a20;color:white}button:focus-visible{outline:3px solid #624600;outline-offset:3px}
+</style></head><body><main><h1>确认合并账号</h1>
+<p>刚授权的微信已有一个伊娃东方舞账号。合并后会保留当前尾号 <strong>${suffix}</strong> 的手机号账号，合并两边的课程、订单和学习记录。以后可以用微信或手机号登录。</p>
+<form action="/api/wechat/oauth/callback" method="post"><input type="hidden" name="token" value="${token}">
+<button name="decision" value="cancel">取消</button><button name="decision" value="confirm">确认合并</button></form>
+</main></body></html>`, { headers: {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'private, no-store',
+    'Referrer-Policy': 'no-referrer',
+    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+  } });
 }
 
 export async function GET(request: Request) {
@@ -214,8 +236,8 @@ export async function GET(request: Request) {
     mode = state.mode;
     purpose = state.purpose;
     handoffId = state.handoffId || '';
-    const currentMemberId = getAuthenticatedMemberId(request);
-    if (purpose === 'bind' && (!currentMemberId || currentMemberId !== state.memberId)) {
+    const bindingSession = purpose === 'bind' ? getAuthenticatedMemberIdentity(request) : null;
+    if (purpose === 'bind' && (!bindingSession?.sid || bindingSession.id !== state.memberId || bindingSession.sid !== state.sessionId)) {
       throw new WechatOAuthError('登录状态已变化，请重新登录后绑定微信', 401);
     }
     const exchange = await exchangeCode(cleanText(url.searchParams.get('code')), mode);
@@ -236,7 +258,10 @@ export async function GET(request: Request) {
       metadata: { loginMode: mode },
     };
 
-    const data = withDb((db) => {
+    const data = withDb((db) => db.transaction(() => {
+      if (bindingSession && getAuthenticatedMemberIdentity(request)?.sid !== bindingSession.sid) {
+        throw new WechatOAuthError('登录状态已变化，请重新登录后绑定微信', 401);
+      }
       const resolved = resolveWechatMember(db, identity);
       let wechatMember = resolved.member;
       if (purpose !== 'bind' && wechatMember && unionid && resolved.candidateIds.length > 1) {
@@ -246,16 +271,19 @@ export async function GET(request: Request) {
           }
         }
       }
-      let currentMember = currentMemberId
-        ? db.prepare("SELECT * FROM Member WHERE id=? AND status='active'").get<any>(currentMemberId) || null
+      const currentMember = bindingSession
+        ? db.prepare("SELECT * FROM Member WHERE id=? AND status='active'").get<any>(bindingSession.id) || null
         : null;
       let member = wechatMember;
 
       if (purpose === 'bind' && !currentMember) {
         throw new WechatOAuthError('登录状态已失效，请重新登录后绑定微信', 401);
       }
-      if (purpose === 'bind' && resolved.candidateIds.some(id => id !== Number(currentMember.id))) {
-        throw new WechatIdentityConflictError('该微信已绑定其他会员，请联系客服核对');
+      if (bindingSession?.sid && resolved.candidateIds.some(id => id !== bindingSession.id)) {
+        const sourceId = Number(wechatMember?.id);
+        const phone = verifiedWechatMergePhone(db, bindingSession.id, sourceId, identity);
+        const token = createWechatMergeChallenge(db, bindingSession.id, bindingSession.sid, { sourceId, phone, identity, mode, next });
+        return { kind: 'merge' as const, token, phone };
       }
       const anotherIdentityForApp = purpose === 'bind'
         ? db.prepare(
@@ -268,11 +296,6 @@ export async function GET(request: Request) {
         throw new WechatIdentityConflictError('当前会员已绑定另一微信身份，请联系客服核对');
       }
       if (purpose === 'bind') {
-        member = currentMember;
-      } else if (currentMember && wechatMember && Number(currentMember.id) !== Number(wechatMember.id)) {
-        member = mergeMemberAccounts(db, currentMember.id, wechatMember.id) || currentMember;
-        currentMember = member;
-      } else if (!member && currentMember) {
         member = currentMember;
       }
 
@@ -303,13 +326,15 @@ export async function GET(request: Request) {
       if (handoffId && !completeWechatLoginHandoff(db, handoffId, session, serializedMember)) {
         throw new WechatOAuthError('微信授权接力已超时，请返回网课系统App重新登录');
       }
-      return { token: session.token, member: serializedMember, session };
-    });
+      return { kind: 'session' as const, token: session.token, member: serializedMember, session };
+    }).immediate());
+
+    if (data.kind === 'merge') return mergeConfirmation(data.token, data.phone);
 
     return attachMemberSessionCookies(new Response(handoffId
       ? handoffSuccessHtml()
       : loginHtml({ ...data, next: successNext(next, purpose) }), {
-      headers: { 'content-type': 'text/html; charset=utf-8' },
+      headers: { 'content-type': 'text/html; charset=utf-8', 'Referrer-Policy': 'no-referrer' },
     }), data.session);
   } catch (err: any) {
     const message = err instanceof WechatOAuthError || err instanceof WechatIdentityConflictError
@@ -321,5 +346,50 @@ export async function GET(request: Request) {
       } catch {}
     }
     return errorRedirect(request, next, message, purpose);
+  }
+}
+
+export async function POST(request: Request) {
+  let next = '/dashboard/profile/edit';
+  try {
+    const origin = request.headers.get('origin');
+    const formType = request.headers.get('content-type')?.split(';')[0];
+    if ((origin && origin !== new URL(getSiteOrigin(request)).origin) || formType !== 'application/x-www-form-urlencoded'
+      || Number(request.headers.get('content-length')) > 2048) {
+      return new Response(null, { status: 400, headers: { 'Cache-Control': 'private, no-store' } });
+    }
+    const form = await request.formData();
+    const decision = form.get('decision');
+    if (decision !== 'confirm' && decision !== 'cancel') {
+      return new Response(null, { status: 400, headers: { 'Cache-Control': 'private, no-store' } });
+    }
+    const bindingSession = getAuthenticatedMemberIdentity(request);
+    if (!bindingSession?.sid) return errorRedirect(request, next, '合并确认已失效，请重新绑定微信', 'bind', 303);
+
+    return withDb(db => db.transaction(() => {
+      const auth = getAuthenticatedMemberIdentity(request);
+      const challenge = auth?.sid && takeWechatMergeChallenge(db, auth.id, auth.sid, cleanText(form.get('token')));
+      if (!auth || !challenge) {
+        return errorRedirect(request, next, '合并确认已失效，请重新绑定微信', 'bind', 303);
+      }
+      next = challenge.next;
+      if (decision === 'cancel') {
+        return errorRedirect(request, next, '已取消微信账号合并', 'bind', 303);
+      }
+      if (verifiedWechatMergePhone(db, auth.id, challenge.sourceId, challenge.identity) !== challenge.phone) {
+        throw new WechatIdentityConflictError('手机号已变化，请重新绑定微信');
+      }
+      mergeVerifiedWechatPhoneAccounts(db, auth.id, challenge.sourceId);
+      const member = bindWechatIdentity(db, auth.id, challenge.identity);
+      const session = createMemberDeviceSession(db, member, request, challenge.mode === 'qr' ? 'qr' : 'wechat');
+      return attachMemberSessionCookies(new Response(loginHtml({
+        token: session.token, member: serializeMember(member), next: successNext(next, 'bind'),
+      }), { headers: { 'content-type': 'text/html; charset=utf-8', 'Referrer-Policy': 'no-referrer' } }), session);
+    }).immediate());
+  } catch (error) {
+    const message = error instanceof WechatIdentityConflictError ? error.message
+      : (error as { code?: string } | null)?.code?.startsWith('SQLITE_CONSTRAINT')
+        ? '账号记录存在冲突，请联系客服核对后合并' : '账号合并失败，请重新绑定微信';
+    return errorRedirect(request, next, message, 'bind', 303);
   }
 }

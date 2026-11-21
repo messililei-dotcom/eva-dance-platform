@@ -1,3 +1,4 @@
+import { formatMemberPhoneForDisplay } from '@/lib/member-phone-display';
 import { findPhoneMembers } from '@/lib/server/event-phone-member';
 import type { AdminDb } from '@/lib/server/admin-db';
 import { cleanText, memberToken } from './_helpers';
@@ -248,12 +249,33 @@ export function mergeMemberAccounts(db: AdminDb, targetIdValue: unknown, sourceI
   return getMember(db, targetId);
 }
 
+// The caller owns the transaction and verifies both login identities first.
+export function mergeVerifiedWechatPhoneAccounts(db: AdminDb, targetId: number, sourceId: number) {
+  mergeMemberAccounts(db, targetId, sourceId);
+  for (const [table, column] of [
+    ['shop_online_orders', 'member_id'],
+    ['event_registration_batches', 'member_id'],
+    ['event_players', 'submitted_by_member_id'],
+    ['Payment', 'memberId'],
+    ['OfflineEnrollment', 'member_id'],
+    ['OfflineEntitlement', 'member_id'],
+    ['OfflineBooking', 'member_id'],
+    ['OfflineAttendance', 'member_id'],
+    ['exclusive_orders', 'bound_member_id'],
+    ['exclusive_claims', 'member_id'],
+  ]) {
+    if (db.prepare(`PRAGMA table_info(${table})`).all<{ name: string }>().some(row => row.name === column)) {
+      db.prepare(`UPDATE ${table} SET ${column}=? WHERE ${column}=?`).run(targetId, sourceId);
+    }
+  }
+}
+
 export function serializeMember(member: MemberRow) {
   const wxName = cleanText(member.wx_name || member.wx_nickname);
   return {
     id: member.id,
     name: member.name,
-    phone: member.phone || '',
+    phone: formatMemberPhoneForDisplay(member.phone, member.phone_country_code),
     avatar_url: member.wx_avatar_url || member.avatar || member.avatar_url || '',
     wx_avatar_url: member.wx_avatar_url || member.avatar || member.avatar_url || '',
     wx_nickname: wxName,
@@ -290,8 +312,11 @@ export function loginData(member: MemberRow) {
 }
 
 export function upsertPhoneMember(db: AdminDb, phone: string, options: { sourceMemberId?: unknown; source?: string } = {}) {
+  const storedPhone = formatMemberPhoneForDisplay(phone);
   const sourceMember = getMember(db, options.sourceMemberId);
-  let phoneMember = (findPhoneMembers(db, phone)[0] as MemberRow | undefined) || null;
+  const matches = findPhoneMembers(db, phone);
+  if (matches.length > 1) throw new Error('手机号关联多位学员，请联系客服核实');
+  const phoneMember = (matches[0] as MemberRow | undefined) || null;
 
   if (phoneMember) {
     if (sourceMember && Number(phoneMember.id) !== Number(sourceMember.id)) {
@@ -308,14 +333,14 @@ export function upsertPhoneMember(db: AdminDb, phone: string, options: { sourceM
       `UPDATE Member
        SET phone=?, name=?, source=?, status='active'
        WHERE id=?`
-    ).run(phone, nextName, options.source || 'website_phone', sourceMember.id);
+    ).run(storedPhone, nextName, options.source || 'website_phone', sourceMember.id);
     return getMember(db, sourceMember.id) || sourceMember;
   }
 
   const result = db.prepare(
     `INSERT INTO Member (name, phone, source, status, register_date, created_at)
      VALUES (?, ?, ?, 'active', date('now','localtime'), datetime('now','localtime'))`
-  ).run(fallbackPhoneName(phone), phone, options.source || 'website_phone');
+  ).run(fallbackPhoneName(phone), storedPhone, options.source || 'website_phone');
 
   return getMember(db, result.lastInsertRowid) as MemberRow;
 }

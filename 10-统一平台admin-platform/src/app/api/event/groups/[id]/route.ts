@@ -19,7 +19,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     db.prepare(`
       UPDATE event_groups
       SET name = ?, code = ?, age_range = ?, dance_type = ?,
-          entry_type = ?, sort_order = ?, max_players = ?, registration_fee = ?, score_rule_id = ?,
+          entry_type = ?, sort_order = ?, registration_fee = ?, score_rule_id = ?,
           scoring_status = ?, status = ?, updated_at = ?
       WHERE id = ?
     `).run(
@@ -29,7 +29,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       cleanText(body.danceType ?? body.dance_type),
       cleanText(body.entryType ?? body.entry_type, 'solo'),
       toNumber(body.sortOrder ?? body.sort_order),
-      toNumber(body.maxPlayers ?? body.max_players),
       toNumber(body.registrationFee ?? body.registration_fee),
       toNumber(body.scoreRuleId ?? body.score_rule_id) || null,
       cleanText(body.scoringStatus ?? body.scoring_status, 'unlocked'),

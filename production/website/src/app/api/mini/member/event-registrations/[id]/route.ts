@@ -11,7 +11,7 @@ async function forward(request: Request, context: Context) {
     const response = await fetch(`${base}/mini/member/event-registrations/${id}`, {
       method: request.method,
       headers: { Authorization: request.headers.get('authorization') || '', 'Content-Type': 'application/json' },
-      body: request.method === 'PUT' ? JSON.stringify(await request.json()) : undefined,
+      body: request.method === 'PUT' ? await request.text() : undefined,
       cache: 'no-store', signal: AbortSignal.timeout(15000),
     });
     return new Response(await response.text(), { status: response.status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', Vary: 'Authorization, Cookie' } });

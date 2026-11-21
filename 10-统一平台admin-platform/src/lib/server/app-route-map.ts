@@ -1,6 +1,7 @@
 // Explicit student-facing API allowlist. No arbitrary forwarding or admin route access.
 type Entry = { pattern: RegExp; methods: string[]; public: boolean; load: () => Promise<unknown> };
 const routes: Entry[] = [
+  {pattern:/^events\/summary$/,methods:["GET"],public:true,load:()=>import("@/app/api/mini/events/summary/route")},
   {pattern:/^events\/([1-9]\d*)\/judge$/,methods:["GET", "POST"],public:false,load:()=>import("@/app/api/mini/events/[id]/judge/route")},
   {pattern:/^public\/series$/,methods:["GET"],public:true,load:()=>import("@/app/api/mini/public/series/route")},
   {pattern:/^public\/series\/([1-9]\d*)$/,methods:["GET"],public:true,load:()=>import("@/app/api/mini/public/series/[id]/route")},
@@ -13,6 +14,9 @@ const routes: Entry[] = [
   {pattern:/^events$/,methods:["GET"],public:true,load:()=>import("@/app/api/mini/events/route")},
   {pattern:/^events\/([1-9]\d*)$/,methods:["GET"],public:true,load:()=>import("@/app/api/mini/events/[id]/route")},
   {pattern:/^events\/([1-9]\d*)\/register$/,methods:["GET", "POST"],public:false,load:()=>import("@/app/api/mini/events/[id]/register/route")},
+  {pattern:/^member\/wechat-avatar$/,methods:["POST"],public:false,load:()=>import("@/app/api/mini/member/wechat-avatar/route")},
+  {pattern:/^member\/wechat-profile$/,methods:["POST"],public:false,load:()=>import("@/app/api/mini/member/wechat-profile/route")},
+  {pattern:/^member\/phone$/,methods:["POST"],public:false,load:()=>import("@/app/api/mini/member/phone/route")},
   {pattern:/^member\/profile$/,methods:["GET", "PUT"],public:false,load:()=>import("@/app/api/mini/member/profile/route")},
   {pattern:/^member\/authorized-series$/,methods:["GET"],public:false,load:()=>import("@/app/api/mini/member/authorized-series/route")},
   {pattern:/^member\/recent-courses$/,methods:["GET"],public:false,load:()=>import("@/app/api/mini/member/recent-courses/route")},

@@ -4,7 +4,7 @@ export function samePhoneIdentity(value: unknown, expected: string, countryCode:
   const raw = String(value ?? '').trim().replace(/[\s()\-]/g, '').replace(/^00/, '+');
   if (raw === expected) return true;
   try {
-    return normalizeEventPhone(value, countryCode).phone === expected;
+    return normalizeEventPhone(raw, countryCode).phone === expected;
   } catch {
     return false;
   }

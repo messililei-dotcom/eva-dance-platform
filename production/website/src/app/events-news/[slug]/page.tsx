@@ -51,7 +51,7 @@ export default async function EventDetailPage({ params, searchParams }: {
         <div className={styles.eventHeading}>
           <h1>{item.title}</h1>
           <div className={styles.inlineSummary}>
-            <div><strong>{groups.length || item.stats.groups}</strong><span>组别</span></div>
+            <div><strong>{loadError ? '—' : competitionId ? groups.length : item.stats.groups}</strong><span>组别</span></div>
             <div aria-label={item.registrationPublic === false ? '选手人数尚未公开' : undefined}><strong>{item.registrationPublic === false ? '—' : item.stats.players}</strong><span>选手</span></div>
             <div><strong>{item.stats.judges}</strong><span>评委</span></div>
           </div>
@@ -75,6 +75,7 @@ export default async function EventDetailPage({ params, searchParams }: {
     <div className={styles.registrationBar}><div>
       <StudentProtectedLink prefetch={false} href="/dashboard/events">我的报名</StudentProtectedLink>
       {registrationOpen ? <StudentProtectedLink documentNavigation prefetch={false} href={`${baseHref}/register`}>立即报名</StudentProtectedLink> : <span aria-disabled="true">报名已关闭</span>}
+      <StudentProtectedLink prefetch={false} href={`${baseHref}/judge`}>评委入口</StudentProtectedLink>
     </div></div>
   </div>;
 }

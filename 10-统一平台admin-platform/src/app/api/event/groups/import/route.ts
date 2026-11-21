@@ -29,7 +29,7 @@ export async function POST(request: Request) {
         const sourceRow = importSourceRow(rawItem, index + 2);
         let item: Record<string, unknown>;
         try {
-          item = normalizeImportRecord({ ...rawItem, '组别名称': rawItem.name ?? rawItem['组别名称'] ?? rawItem['组别'], '序号': rawItem.sortOrder ?? rawItem.sort_order ?? rawItem['序号'] ?? rawItem['排序'] ?? '', '报名费': rawItem.registrationFee ?? rawItem.registration_fee ?? rawItem['报名费'] ?? '', '人数上限': rawItem.maxPlayers ?? rawItem.max_players ?? rawItem['人数上限'] ?? '', '评分规则ID': rawItem.scoreRuleId ?? rawItem.score_rule_id ?? rawItem['评分规则ID'] ?? '', '编码': rawItem.code ?? rawItem['编码'] ?? '', '年龄段': rawItem.ageRange ?? rawItem.age_range ?? rawItem['年龄段'] ?? '', '舞种': rawItem.danceType ?? rawItem.dance_type ?? rawItem['舞种'] ?? '', '参赛形式': rawItem.entryType ?? rawItem.entry_type ?? rawItem['参赛形式'] ?? 'solo', '状态': rawItem.status ?? rawItem['状态'] ?? 'active' }, 'groups');
+          item = normalizeImportRecord({ ...rawItem, '组别名称': rawItem.name ?? rawItem['组别名称'] ?? rawItem['组别'], '序号': rawItem.sortOrder ?? rawItem.sort_order ?? rawItem['序号'] ?? rawItem['排序'] ?? '', '报名费': rawItem.registrationFee ?? rawItem.registration_fee ?? rawItem['报名费'] ?? '', '评分规则ID': rawItem.scoreRuleId ?? rawItem.score_rule_id ?? rawItem['评分规则ID'] ?? '', '编码': rawItem.code ?? rawItem['编码'] ?? '', '年龄段': rawItem.ageRange ?? rawItem.age_range ?? rawItem['年龄段'] ?? '', '舞种': rawItem.danceType ?? rawItem.dance_type ?? rawItem['舞种'] ?? '', '参赛形式': rawItem.entryType ?? rawItem.entry_type ?? rawItem['参赛形式'] ?? 'solo', '状态': rawItem.status ?? rawItem['状态'] ?? 'active' }, 'groups');
         } catch (error: any) { errors.push({ row: sourceRow, message: error?.message || '数据格式不正确' }); return; }
         const name = cleanText(item.name ?? item['组别名称'] ?? item['组别']);
         if (!name) {
@@ -48,7 +48,6 @@ export async function POST(request: Request) {
           danceType: cleanText(item.danceType ?? item.dance_type ?? item['舞种']),
           entryType: cleanText(item.entryType ?? item.entry_type ?? item['参赛形式'], 'solo'),
           sortOrder: item['序号'] === '' ? ++nextSort : toNumber(item['序号']),
-          maxPlayers: toNumber(item.maxPlayers ?? item.max_players ?? item['人数上限']),
           registrationFee: toNumber(item.registrationFee ?? item.registration_fee ?? item['报名费']),
           scoreRuleId: toNumber(item.scoreRuleId ?? item.score_rule_id ?? item['评分规则ID']) || null,
           status: cleanText(item.status ?? item['状态'], 'active'),
@@ -60,7 +59,6 @@ export async function POST(request: Request) {
           if (!supplied('舞种', 'danceType', 'dance_type')) payload.danceType = existing.dance_type || '';
           if (!supplied('参赛形式', 'entryType', 'entry_type')) payload.entryType = existing.entry_type || 'solo';
           if (!supplied('序号', '排序', 'sortOrder', 'sort_order')) payload.sortOrder = existing.sort_order;
-          if (!supplied('人数上限', 'maxPlayers', 'max_players')) payload.maxPlayers = existing.max_players;
           if (!supplied('评分规则ID', 'scoreRuleId', 'score_rule_id')) payload.scoreRuleId = existing.score_rule_id;
           if (!supplied('状态', 'status')) payload.status = existing.status;
         }
@@ -69,7 +67,7 @@ export async function POST(request: Request) {
           db.prepare(`
             UPDATE event_groups
             SET name = ?, code = ?, age_range = ?, dance_type = ?,
-                entry_type = ?, sort_order = ?, max_players = ?, registration_fee = ?, score_rule_id = ?,
+                entry_type = ?, sort_order = ?, registration_fee = ?, score_rule_id = ?,
                 status = ?, updated_at = ?
             WHERE id = ?
           `).run(
@@ -79,7 +77,6 @@ export async function POST(request: Request) {
             payload.danceType,
             payload.entryType,
             payload.sortOrder,
-            payload.maxPlayers,
             payload.registrationFee,
             payload.scoreRuleId,
             payload.status,
@@ -92,9 +89,9 @@ export async function POST(request: Request) {
         db.prepare(`
           INSERT INTO event_groups (
             competition_id, name, code, category, age_range, dance_type, entry_type,
-            sort_order, max_players, registration_fee, score_rule_id, scoring_status, status, updated_at
+            sort_order, registration_fee, score_rule_id, scoring_status, status, updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unlocked', ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unlocked', ?, ?)
         `).run(
           competitionId,
           payload.name,
@@ -104,7 +101,6 @@ export async function POST(request: Request) {
           payload.danceType,
           payload.entryType,
           payload.sortOrder,
-          payload.maxPlayers,
           payload.registrationFee,
           payload.scoreRuleId,
           payload.status,

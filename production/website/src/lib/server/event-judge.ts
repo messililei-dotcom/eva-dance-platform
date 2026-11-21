@@ -1,3 +1,4 @@
+import legacyAvatars from '@/data/event-avatars.json';
 import { recalculateGroupRankings } from './event-ranking';
 import type { AdminDb } from '@/lib/server/admin-db';
 
@@ -22,7 +23,8 @@ export function resolveJudge(db: AdminDb, memberId: number, competitionId: numbe
       AND (
         (j.member_id = ? AND j.member_id > 0)
         
-        OR (${phoneSql('j.phone')} <> '' AND ${phoneSql('j.phone')} = ${phoneSql('m.phone')})
+        OR (COALESCE(j.member_id, 0) = 0 AND ${phoneSql('j.phone')} <> ''
+          AND ${phoneSql('j.phone')} = ${phoneSql('m.phone')})
       )
     ORDER BY j.id ASC
     LIMIT 1
@@ -45,7 +47,7 @@ export function loadJudgeGroups(db: AdminDb, competitionId: number, judgeId: num
   return db.prepare(`
     SELECT g.id, g.name,
       COUNT(DISTINCT CASE WHEN p.audit_status != 'rejected' AND p.status NOT IN ('withdrawn','cancelled') THEN p.id END) AS player_count,
-      COUNT(DISTINCT CASE WHEN p.audit_status != 'rejected' AND EXISTS (
+      COUNT(DISTINCT CASE WHEN p.audit_status != 'rejected' AND p.status NOT IN ('withdrawn','cancelled') AND EXISTS (
         SELECT 1 FROM event_scores s
         WHERE s.group_id = g.id AND s.player_id = p.id AND s.judge_id = ?
           AND s.score_status IN ('submitted','reviewed','published')
@@ -66,25 +68,29 @@ export function loadJudgeGroups(db: AdminDb, competitionId: number, judgeId: num
   `).all<Record<string, any>>(judgeId, judgeId, competitionId);
 }
 
-export function loadJudgePlayers(db: AdminDb, competitionId: number, groupId: number, judgeId: number) {
+export function loadJudgePlayers(db: AdminDb, competitionId: number, groupId: number, judgeId: number, playerId?: number) {
   return db.prepare(`
     SELECT p.id, COALESCE(p.player_no, '') AS player_no, p.name,
       COALESCE(p.organization, '') AS organization,
       COALESCE(p.teacher, '') AS teacher,
+      COALESCE(NULLIF(m.wx_avatar_url,''), NULLIF(m.avatar,''), '') AS avatarUrl,
       COALESCE((SELECT ep.title FROM event_performances ep WHERE ep.player_id=p.id ORDER BY ep.id LIMIT 1), '') AS performance_title,
-      (SELECT s.calculated_score FROM event_scores s
+      (SELECT CASE WHEN s.score_status IN ('submitted','reviewed','published') THEN s.calculated_score END FROM event_scores s
         WHERE s.group_id=p.group_id AND s.player_id=p.id AND s.judge_id=?
-          AND s.score_status IN ('submitted','reviewed','published')
+          AND s.score_status!='voided'
         ORDER BY s.version DESC LIMIT 1) AS my_score,
       (SELECT s.score_status FROM event_scores s
         WHERE s.group_id=p.group_id AND s.player_id=p.id AND s.judge_id=?
           AND s.score_status!='voided'
         ORDER BY s.version DESC LIMIT 1) AS my_score_status
     FROM event_players p
+    LEFT JOIN Member m ON m.id=p.member_id
     WHERE p.competition_id=? AND p.group_id=? AND p.audit_status!='rejected'
       AND p.status NOT IN ('withdrawn','cancelled')
+      ${playerId === undefined ? '' : 'AND p.id=?'}
     ORDER BY p.player_no ASC, p.id ASC
-  `).all<Record<string, any>>(judgeId, judgeId, competitionId, groupId);
+  `).all<Record<string, any>>(judgeId, judgeId, competitionId, groupId, ...(playerId === undefined ? [] : [playerId]))
+    .map(player => ({ ...player, id: Number(player.id), avatarUrl: player.avatarUrl || (legacyAvatars.players as Record<string, string>)[String(player.id)] || '' }));
 }
 
 function parseCriteria(raw: string, ruleId: number | null, ruleName: string, totalScore: number): JudgeCriterion[] {
@@ -104,8 +110,15 @@ function parseCriteria(raw: string, ruleId: number | null, ruleName: string, tot
 
 export function loadJudgeCriteria(db: AdminDb, competitionId: number, group: Record<string, any>) {
   const rules = group.score_rule_id
-    ? db.prepare(`SELECT * FROM event_score_rules WHERE id=? AND status='active'`).all<Record<string, any>>(group.score_rule_id)
-    : db.prepare(`SELECT * FROM event_score_rules WHERE competition_id=? AND status='active' ORDER BY id ASC`).all<Record<string, any>>(competitionId);
+    ? db.prepare(`
+        SELECT * FROM event_score_rules WHERE id=? AND (competition_id=? OR competition_id IS NULL)
+          AND (status='active' OR (status='archived' AND ?='locked'))
+      `).all<Record<string, any>>(group.score_rule_id, competitionId, group.scoring_status)
+    : [];
+  if (!rules.length) {
+    rules.push(...db.prepare(`SELECT * FROM event_score_rules WHERE competition_id=? AND status='active' ORDER BY id ASC`)
+      .all<Record<string, any>>(competitionId));
+  }
   const criteria = rules.flatMap((rule) => parseCriteria(rule.criteria_json, Number(rule.id), String(rule.name || ''), Number(rule.total_score || 0)));
   return criteria.length ? criteria : [{ key: 'total', name: '评分总分', maxScore: 10, ruleId: null }];
 }
@@ -122,8 +135,13 @@ export function loadCurrentJudgeScore(db: AdminDb, groupId: number, playerId: nu
     const value = JSON.parse(String(latest.criteria_scores_json || '{}'));
     if (value && typeof value === 'object') parsed = value;
   } catch {}
-  if (!Object.keys(parsed).length && criteria.length === 1) parsed[criteria[0].key] = Number(latest.calculated_score || 0);
-  const needsRescore = criteria.some(item => Number(parsed[item.key] || 0) > item.maxScore);
+  if (criteria.length === 1 && parsed[criteria[0].key] == null) {
+    parsed = { [criteria[0].key]: Number(latest.calculated_score || 0) };
+  }
+  const needsRescore = criteria.some(item => {
+    const value = parsed[item.key];
+    return typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > item.maxScore;
+  });
   return { values: needsRescore ? {} : parsed, total: Number(latest.calculated_score || 0), status: String(latest.score_status || ''), needsRescore };
 }
 
@@ -141,21 +159,33 @@ export function saveJudgeScore(db: AdminDb, options: {
     .get(playerId, group.id, competitionId);
   if (!player) throw new Error('选手不存在或报名已失效');
 
+  const keys = new Set(criteria.map(item => item.key));
+  const maximum = criteria.reduce((sum, item) => sum + item.maxScore, 0);
+  if (!criteria.length || keys.size !== criteria.length || criteria.some(item => !Number.isFinite(item.maxScore) || item.maxScore <= 0) || Math.abs(maximum - 10) > 1e-8) {
+    throw new Error('评分规则无效，分项总分必须为10分，请联系赛事管理员');
+  }
+  if (Object.keys(values).some(key => !keys.has(key))) throw new Error('评分规则已变化，请重新加载评分页面');
   const normalized: Record<string, number> = {};
   let total = 0;
   for (const criterion of criteria) {
     const raw = values[criterion.key];
-    if (raw === null || raw === undefined || String(raw).trim() === '') throw new Error(`请填写${criterion.name}`);
+    if ((typeof raw !== 'number' && typeof raw !== 'string') || String(raw).trim() === '') throw new Error(`请填写${criterion.name}`);
     const score = Number(raw);
     if (!Number.isFinite(score)) throw new Error(`请填写${criterion.name}`);
     if (score < 0 || score > criterion.maxScore) throw new Error(`${criterion.name}应在 0–${criterion.maxScore} 分之间`);
     normalized[criterion.key] = score;
     total += score;
   }
+  if (!Number.isFinite(total) || total < 0 || total > 10 + 1e-8) throw new Error('赛事评分合计必须在0至10分之间');
   total = Number(total.toFixed(2));
   const now = new Date().toISOString();
 
   const result = db.transaction(() => {
+    const currentGroup = verifyJudgeGroup(db, competitionId, Number(group.id), judge.id);
+    if (!currentGroup) throw new Error('无此组别评委权限');
+    if (currentGroup.scoring_status === 'locked') throw new Error('该组别评分已锁定');
+    const currentCriteria = loadJudgeCriteria(db, competitionId, currentGroup);
+    if (JSON.stringify(currentCriteria) !== JSON.stringify(criteria)) throw new Error('评分规则已变化，请重新加载评分页面');
     const previous = db.prepare(`SELECT * FROM event_scores WHERE group_id=? AND player_id=? AND judge_id=? AND score_status!='voided' ORDER BY version DESC LIMIT 1`)
       .get<Record<string, any>>(group.id, playerId, judge.id);
     db.prepare(`UPDATE event_scores SET score_status='voided', updated_at=? WHERE group_id=? AND player_id=? AND judge_id=? AND score_status!='voided'`)
@@ -169,7 +199,7 @@ export function saveJudgeScore(db: AdminDb, options: {
         raw_score, criteria_scores_json, calculated_score, score_status,
         submitted_at, version, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'submitted', ?, ?, ?)
-    `).run(competitionId, group.id, playerId, judge.id, group.score_rule_id || null, total, JSON.stringify(normalized), total, now, version, now);
+    `).run(competitionId, group.id, playerId, judge.id, criteria[0].ruleId, total, JSON.stringify(normalized), total, now, version, now);
     db.prepare(`
       INSERT INTO event_score_audit_logs (
         competition_id, group_id, player_id, judge_id, score_id,

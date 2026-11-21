@@ -152,6 +152,12 @@ html.course-video-scroll-page body:not(.course-video-landscape-playback) {
   }
 }
 
+body.course-video-landscape-playback .course-video-action-toolbar-idle:not(:has(:focus-visible)),
+[data-course-expanded="true"] .course-video-action-toolbar-idle:not(:has(:focus-visible)) {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .course-video-player-card .group:fullscreen,
 .course-video-player-card .group:-webkit-full-screen {
   display: flex;

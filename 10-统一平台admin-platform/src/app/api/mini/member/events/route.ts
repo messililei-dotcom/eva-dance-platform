@@ -1,3 +1,4 @@
+import { registrationPhoneAliases, registrationPhoneSql } from '@/lib/server/event-registration-phone';
 import { ensureEventOnline } from '@/lib/server/event-online';
 import { getMemberId, jsonError, withDb } from '../../_helpers';
 
@@ -27,7 +28,8 @@ export async function GET(request: Request) {
       ).get<{ id: number; name?: string; phone?: string }>(memberId);
       if (!member) return jsonError('学员不存在', 404);
 
-      const phone = String(member.phone || '').trim();
+      const phoneAliases = registrationPhoneAliases(member.phone);
+      const contactMatch = phoneAliases.length ? `${registrationPhoneSql('p.phone')} IN (${phoneAliases.map(() => '?').join(',')})` : '0';
       ensureEventOnline(db);
       const rows = db.prepare(`
         SELECT
@@ -67,15 +69,14 @@ export async function GET(request: Request) {
           ON r.player_id=p.id AND r.group_id=p.group_id AND r.status='published'
         LEFT JOIN event_awards a ON a.id=r.award_id
         WHERE p.member_id=? OR p.submitted_by_member_id=?
-          OR (?<>'' AND REPLACE(REPLACE(REPLACE(COALESCE(p.phone,''), ' ', ''), '-', ''), '+86', '')
-              = REPLACE(REPLACE(REPLACE(?, ' ', ''), '-', ''), '+86', ''))
+          OR (${contactMatch})
         ORDER BY
           CASE WHEN COALESCE(c.start_date,'')='' THEN 1 ELSE 0 END,
           c.start_date DESC,
           c.id DESC,
           g.sort_order ASC,
           p.id DESC
-      `).all<EventEntryRow>(memberId, memberId, phone, phone);
+      `).all<EventEntryRow>(memberId, memberId, ...phoneAliases);
 
       const publishedPlayerIds = rows
         .filter((row) => row.ranking_status === 'published')
@@ -95,7 +96,7 @@ export async function GET(request: Request) {
             ON r.player_id=s.player_id AND r.group_id=s.group_id AND r.status='published'
           WHERE s.player_id IN (${placeholders})
             AND s.score_status='published'
-            AND EXISTS (SELECT 1 FROM event_group_judges gj WHERE gj.group_id=s.group_id AND gj.judge_id=s.judge_id AND gj.status='active')
+            AND EXISTS (SELECT 1 FROM event_group_judges gj WHERE gj.group_id=s.group_id AND gj.judge_id=s.judge_id AND gj.status='active' AND gj.auth_enabled=1 AND EXISTS (SELECT 1 FROM event_judges active_j WHERE active_j.id=gj.judge_id AND active_j.status='active' AND active_j.auth_enabled=1))
             AND s.version=(
               SELECT MAX(latest.version) FROM event_scores latest
               WHERE latest.group_id=s.group_id

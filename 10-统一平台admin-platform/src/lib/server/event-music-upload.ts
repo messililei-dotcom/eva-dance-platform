@@ -77,8 +77,8 @@ export function persistEventMusic(name: string, bytes: Buffer) {
 
 // Validate actual decoded samples, not just a spoofable file signature. Successful
 // identical uploads share validation, with bounded CPU, queue and cache usage.
-const decodedMusic = new Map<string, number>();
-const decodingMusic = new Map<string, Promise<void>>();
+const decodedMusic = new Map<string, { expiresAt: number; duration: number }>();
+const decodingMusic = new Map<string, Promise<number>>();
 let activeDecoders = 0;
 const decoderWaiters: Array<() => void> = [];
 async function acquireDecoder() {
@@ -90,10 +90,11 @@ function releaseDecoder() {
   const next = decoderWaiters.shift();
   if (next) next(); else activeDecoders--;
 }
-export async function validatePlayableMusic(name: string, bytes: Buffer): Promise<void> {
+export async function validatePlayableMusic(name: string, bytes: Buffer): Promise<number> {
   const extension = validateMusicBytes(name, bytes);
   const key = extension + ':' + crypto.createHash('sha256').update(bytes).digest('hex');
-  if ((decodedMusic.get(key) || 0) > Date.now()) return;
+  const cached = decodedMusic.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.duration;
   const existing = decodingMusic.get(key);
   if (existing) return existing;
   const task = (async () => {
@@ -103,7 +104,7 @@ export async function validatePlayableMusic(name: string, bytes: Buffer): Promis
       directory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'swod-audio-'));
       const input = path.join(directory, 'input' + extension);
       await fs.promises.writeFile(input, bytes, { mode: 0o600 });
-      await new Promise<void>((resolve, reject) => {
+      const duration = await new Promise<number>((resolve, reject) => {
         const child = spawn(process.env.EVENT_FFMPEG_PATH || '/usr/bin/ffmpeg',
           ['-nostdin', '-v', 'error', '-xerror', '-err_detect', 'explode', '-i', input,
            '-map', '0:a:0', '-vn', '-ac', '1', '-ar', '8000', '-f', 's16le', 'pipe:1'],
@@ -114,17 +115,18 @@ export async function validatePlayableMusic(name: string, bytes: Buffer): Promis
         child.once('error', () => { clearTimeout(timer); reject(new MusicUploadError('音乐校验暂时不可用，请稍后重试', 503)); });
         child.once('close', code => {
           clearTimeout(timer);
-          if (code === 0 && sampleBytes > 0) resolve();
+          if (code === 0 && sampleBytes > 0) resolve(sampleBytes / (8000 * 2));
           else reject(new MusicUploadError('音乐无法完整播放，请重新导出有效音频后上传'));
         });
       });
       if (decodedMusic.size >= 32) decodedMusic.delete(decodedMusic.keys().next().value!);
-      decodedMusic.set(key, Date.now() + 10 * 60 * 1000);
+      decodedMusic.set(key, { expiresAt: Date.now() + 10 * 60 * 1000, duration });
+      return duration;
     } finally {
       try { if (directory) await fs.promises.rm(directory, { recursive: true, force: true }); }
       finally { releaseDecoder(); }
     }
   })();
   decodingMusic.set(key, task);
-  try { await task; } finally { decodingMusic.delete(key); }
+  try { return await task; } finally { decodingMusic.delete(key); }
 }

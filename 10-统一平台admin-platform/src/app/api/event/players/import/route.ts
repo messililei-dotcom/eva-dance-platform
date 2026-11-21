@@ -1,5 +1,5 @@
 import { hasAuth, unauthorized, readEventBody, toNumber, jsonError, withRequestEventDb } from '../../_db';
-import { importEventEntries } from '@/lib/server/event-entry-import';
+import { importPlayersWithConfirmation } from '@/lib/server/event-import-confirmation';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export async function POST(request: Request) {
@@ -11,6 +11,6 @@ export async function POST(request: Request) {
   if (!Array.isArray(rows) || !rows.length || rows.length > 2000 || rows.some(row => !row || typeof row !== 'object' || Array.isArray(row))) return jsonError('请提供 1～2000 行有效数据');
   return withRequestEventDb(request, (db) => {
     if (!db.prepare('SELECT id FROM event_competitions WHERE id=?').get(competitionId)) return jsonError('赛事不存在',404);
-    return Response.json({ success:true, data:importEventEntries(db,competitionId,rows,'players') });
+    return Response.json({ success:true, data:importPlayersWithConfirmation(db,competitionId,rows,body.decisions) }, { headers: { 'Cache-Control': 'private, no-store' } });
   });
 }

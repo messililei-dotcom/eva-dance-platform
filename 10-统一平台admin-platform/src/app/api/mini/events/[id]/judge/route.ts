@@ -10,6 +10,7 @@ async function handle(request: Request, params: Promise<{ id: string }>, write: 
   const competitionId = Number((await params).id);
   if (!Number.isSafeInteger(competitionId) || competitionId <= 0) return reply({ success: false, error: '赛事不存在' }, 404);
   const url = new URL(request.url), groupId = Number(url.searchParams.get('groupId')), playerId = Number(url.searchParams.get('playerId'));
+  const body = write ? await request.json().catch(() => ({})) : null;
   const db = openAdminDb({ readonly: !write });
   try {
     const competition = db.prepare("SELECT id, name FROM event_competitions WHERE id=? AND status='published'").get(competitionId);
@@ -20,13 +21,14 @@ async function handle(request: Request, params: Promise<{ id: string }>, write: 
     if (!Number.isSafeInteger(groupId) || groupId <= 0) return reply({ success: false, error: '组别不存在' }, 404);
     const group = verifyJudgeGroup(db, competitionId, groupId, judge.id);
     if (!group) return reply({ success: false, error: '无此组别评委权限' }, 403);
-    const players = loadJudgePlayers(db, competitionId, groupId, judge.id);
-    if (!url.searchParams.has('playerId') && !write) return reply({ success: true, data: { competition, judge, group, players } });
-    const player = players.find(p => p.id === playerId);
+    if (!url.searchParams.has('playerId') && !write) {
+      const players = loadJudgePlayers(db, competitionId, groupId, judge.id);
+      return reply({ success: true, data: { competition, judge, group, players } });
+    }
+    const [player] = loadJudgePlayers(db, competitionId, groupId, judge.id, playerId);
     if (!player) return reply({ success: false, error: '选手不存在或未审核通过' }, 404);
     const criteria = loadJudgeCriteria(db, competitionId, group);
     if (write) {
-      const body = await request.json().catch(() => ({}));
       const result = saveJudgeScore(db, { competitionId, group, playerId, judge, criteria, values: body.scores || {} });
       return reply({ success: true, data: result, message: '评分已提交' });
     }

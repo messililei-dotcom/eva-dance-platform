@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAuthenticatedMemberId, withDb } from '@/app/api/mini/_helpers';
+import { getAuthenticatedMemberIdentity, withDb } from '@/app/api/mini/_helpers';
 import { createWechatLoginHandoff } from '@/lib/server/wechat-login-handoff';
 import { createWechatOAuthState, type WechatOAuthPurpose } from '@/lib/server/wechat-oauth-state';
 
@@ -49,7 +49,7 @@ function getQrRedirectOrigin(siteOrigin: string) {
 
 function normalizeNext(value: string) {
   if (!value || !value.startsWith('/')) return '/';
-  if (value.startsWith('//')) return '/';
+  if (value.startsWith('//') || /[\\\t\r\n]/.test(value)) return '/';
   return value;
 }
 
@@ -64,8 +64,8 @@ export async function GET(request: Request) {
   const purpose = normalizePurpose(current.searchParams.get('purpose') || '');
   const handoffRequested = current.searchParams.get('handoff') === '1';
   const origin = getSiteOrigin(request);
-  const memberId = getAuthenticatedMemberId(request);
-  if (purpose === 'bind' && !memberId) {
+  const member = purpose === 'bind' ? getAuthenticatedMemberIdentity(request) : null;
+  if (purpose === 'bind' && !member?.sid) {
     const fallback = new URL(next, origin);
     fallback.searchParams.set('wechat_bind_error', '登录状态已失效，请重新登录后绑定微信');
     return NextResponse.redirect(fallback);
@@ -113,7 +113,8 @@ export async function GET(request: Request) {
     next,
     mode,
     purpose,
-    memberId,
+    memberId: member?.id,
+    sessionId: member?.sid,
     handoffId: handoff?.id,
   }));
   if (mode === 'qr') authorize.searchParams.set('style', 'black');

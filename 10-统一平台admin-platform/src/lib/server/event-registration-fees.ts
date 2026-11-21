@@ -1,1 +1,1 @@
-export { recordRegistrationPayment } from "./event-online";
+export { recordRegistrationPayment, registrationPaymentState } from "./event-online";

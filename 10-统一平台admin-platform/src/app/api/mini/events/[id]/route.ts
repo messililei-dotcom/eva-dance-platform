@@ -1,4 +1,5 @@
 import avatars from '@/data/event-avatars.json';
+import { PUBLIC_EVENT_GROUP_WHERE_SQL } from '@/lib/server/public-event-groups';
 import {
   competitionSelectSql,
   mapPublicCompetition,
@@ -30,13 +31,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
           COUNT(DISTINCT CASE WHEN p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled') THEN p.id END) AS player_count,
           COUNT(DISTINCT CASE WHEN gj.status='active' THEN gj.judge_id END) AS judge_count
         FROM event_groups g
+        JOIN event_competitions c ON c.id=g.competition_id
         LEFT JOIN event_score_rules sr ON sr.id=g.score_rule_id
-        LEFT JOIN event_players p ON p.group_id=g.id
+        LEFT JOIN event_players p ON p.group_id=g.id AND p.competition_id=g.competition_id
         LEFT JOIN event_group_judges gj ON gj.group_id=g.id
-        WHERE g.competition_id=? AND g.status='active'
+        WHERE g.competition_id=? AND ${PUBLIC_EVENT_GROUP_WHERE_SQL}
         GROUP BY g.id
         ORDER BY g.sort_order, g.id
       `).all(routeParams.id).map((row: any) => ({ ...mapGroup(row), playerCount: registrationPublic ? Number(row.player_count || 0) : null, registrationPublic }));
+      const visibleGroupIds = new Set<number>(groups.map((group: { id: number }) => group.id));
 
       const players = db.prepare(`
         SELECT p.id, p.group_id, p.player_no, p.name, p.organization, p.teacher,
@@ -84,6 +87,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         JOIN event_players p ON p.id=r.player_id
         LEFT JOIN Member m ON m.id=p.member_id
         WHERE r.competition_id=? AND r.status='published'
+          AND p.group_id=r.group_id AND p.competition_id=r.competition_id
+          AND p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled')
         ORDER BY g.sort_order, r.rank_no, r.published_total DESC
       `).all(routeParams.id).map((row:any) => ({ id:row.id,groupId:row.group_id,groupName:row.group_name,playerId:row.player_id,playerName:row.player_name,playerNo:row.player_no||'',avatarUrl:row.avatar_url||(avatars.players as Record<string,string>)[String(row.player_id)]||'',organization:row.organization||'',rankNo:row.rank_no||0,publishedTotal:row.published_total==null?null:Number(row.published_total),status:'published' }));
 
@@ -92,7 +97,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         FROM event_sessions
         WHERE competition_id=? AND status!='cancelled'
         ORDER BY starts_at, sort_order, id
-      `).all(routeParams.id).map((row: any) => ({
+      `).all(routeParams.id).filter((row: { group_id: number | null }) => !row.group_id || visibleGroupIds.has(row.group_id)).map((row: any) => ({
         id: row.id,
         groupId: row.group_id || null,
         name: row.name,
@@ -107,7 +112,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         FROM event_awards
         WHERE competition_id=? AND status='active'
         ORDER BY sort_order, id
-      `).all(routeParams.id).map((row: any) => ({
+      `).all(routeParams.id).filter((row: { group_id: number | null }) => !row.group_id || visibleGroupIds.has(row.group_id)).map((row: any) => ({
         id: row.id,
         groupId: row.group_id || null,
         name: row.name,
@@ -120,7 +125,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return Response.json({
         success: true,
         data: {
-          competition: mapPublicCompetition(competition),
+          competition: { ...mapPublicCompetition(competition), groupCount: groups.length },
           groups: groups.map((group: any) => ({ ...group, rankingCount: rankings.filter((rank: any) => rank.groupId === group.id).length })),
           players,
           judges,

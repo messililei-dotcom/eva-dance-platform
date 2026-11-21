@@ -1,3 +1,4 @@
+import { memberPhoneKeySql } from '@/lib/server/member-phone-sql';
 import crypto from 'crypto';
 import { normalizeEventPhone } from '@/lib/event-phone';
 import { openAdminDb, type AdminDb } from '@/lib/server/admin-db';
@@ -362,7 +363,7 @@ export function getActiveAuthorization(db: AdminDb, seriesId: number, memberId: 
     `SELECT id, type, granted_at, granted_by, expire_at
      FROM CourseAuthorization
      WHERE series_id=? AND status='active'
-       AND (member_id=? OR (COALESCE(phone,'')<>'' AND phone=?))
+       AND (member_id=? OR (COALESCE(phone,'')<>'' AND ${memberPhoneKeySql('phone')}=(SELECT ${memberPhoneKeySql('bound.input')} FROM (SELECT ? AS input) bound)))
        AND (expire_at IS NULL OR expire_at > datetime('now','localtime'))
      ORDER BY CASE WHEN member_id=? THEN 0 ELSE 1 END, id DESC
      LIMIT 1`
@@ -522,6 +523,13 @@ export function ensureMiniTables(db: AdminDb) {
     remark TEXT DEFAULT ''
   )`).run();
   addColumn(db, 'PracticeCheckin', 'series_id', 'series_id INTEGER DEFAULT 0');
+  db.exec(`CREATE TABLE IF NOT EXISTS MiniProfilePhoneCode (
+    member_id INTEGER PRIMARY KEY,
+    phone TEXT NOT NULL,
+    code TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0
+  )`);
   db.prepare(`CREATE TABLE IF NOT EXISTS MiniSmsCode (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     phone TEXT NOT NULL,
@@ -640,7 +648,7 @@ export function isMiniAdmin(db: AdminDb, memberId: unknown) {
   const id = toPositiveInt(memberId, 0);
   if (!id) return false;
   const phone = db.prepare('SELECT phone FROM Member WHERE id=?').get<{ phone?: string }>(id)?.phone;
-  return !!(phone && db.prepare("SELECT id FROM AdminUser WHERE phone=? AND status='active'").get(phone));
+  return !!(phone && db.prepare("SELECT id FROM AdminUser WHERE phone IN (?,?) AND status='active'").get(phone, phone.replace(/^\+86(?=1[3-9]\d{9}$)/, '')));
 }
 
 export function shanghaiDateKey(date = new Date()) {

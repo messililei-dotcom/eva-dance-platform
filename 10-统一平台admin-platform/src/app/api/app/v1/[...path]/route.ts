@@ -1,3 +1,4 @@
+import { normalizeEventPhone } from '@/lib/event-phone';
 import { revokePushInstallation, reservePushPermit, bindPushDevice, unbindPushDevice, ownedInboxMessage, pushCapability } from '@/lib/server/app-push';
 import { normalizedMusicForm, MusicUploadError } from '@/lib/server/event-music-upload';
 import { appPlatform, appMemberSource, appDeviceName } from '@/lib/server/app-platform';
@@ -14,7 +15,7 @@ export const runtime = 'nodejs';
 type Context = { params: Promise<{ path: string[] }> };
 const json = (data: unknown, status = 200) => Response.json({ success: true, data }, { status, headers: { 'Cache-Control': 'private, no-store' } });
 const bearer = (r: Request) => r.headers.get('authorization')?.match(/^Bearer (.+)$/)?.[1] || '';
-async function readBody(request: Request) {
+async function readBody(request: Request, maxBytes = 32_768) {
   if (['GET', 'HEAD'].includes(request.method)) return {};
   const reader = request.body?.getReader();
   if (!reader) return {};
@@ -22,7 +23,7 @@ async function readBody(request: Request) {
   while (true) {
     const {done, value} = await reader.read(); if (done) break;
     total += value.byteLength;
-    if (total > 32_768) { await reader.cancel(); throw new AppError('提交内容过长', 413); }
+    if (total > maxBytes) { await reader.cancel(); throw new AppError('提交内容过长', 413); }
     chunks.push(value);
   }
   try {
@@ -31,6 +32,24 @@ async function readBody(request: Request) {
     return body;
   } catch { throw new AppError('提交格式不正确'); }
 }
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+
+function appAvatarForm(encoded: unknown): FormData {
+  if (typeof encoded !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) {
+    throw new AppError('请选择头像文件');
+  }
+  const bytes = Buffer.from(encoded, 'base64');
+  if (bytes.length > MAX_AVATAR_BYTES) throw new AppError('头像文件不能超过 2MB', 413);
+  const type = bytes.subarray(0, 3).toString('hex') === 'ffd8ff' ? 'image/jpeg'
+    : bytes.subarray(0, 8).toString('hex') === '89504e470d0a1a0a' ? 'image/png'
+    : bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP' ? 'image/webp'
+    : '';
+  if (!type) throw new AppError('仅支持 JPG、PNG 或 WebP 头像');
+  const form = new FormData();
+  form.set('avatar', new Blob([new Uint8Array(bytes)], { type }), 'avatar');
+  return form;
+}
+
 async function handle(request: Request, context: Context) {
   try {
     const parts = (await context.params).path;
@@ -40,7 +59,8 @@ async function handle(request: Request, context: Context) {
     const registration = /^events\/[1-9]\d*\/register$/.test(path);
     const registrationMusic = /^member\/event-registrations\/[1-9]\d*\/music$/.test(path);
     const multipart = method === "POST" && (registration || registrationMusic) && request.headers.get("content-type")?.startsWith("multipart/form-data;");
-    const body = multipart ? {} : await readBody(request);
+    const avatarUpload = path === 'member/wechat-avatar' && method === 'POST';
+    let body = multipart || avatarUpload ? {} : await readBody(request);
     if (path === 'config' && method === 'GET') return json({
       version: 1, push: pushCapability(platform), oneTapLogin: carrierLoginEnabled(), offlineDownload: false, digitalPurchase: false, physicalCheckout: Object.values(appShopPayment()).some(Boolean),
       privacyURL: 'https://www.swod.com.cn/privacy', termsURL: 'https://www.swod.com.cn/terms',
@@ -48,15 +68,17 @@ async function handle(request: Request, context: Context) {
     });
     if (path === 'send-code' && method === 'POST') {
       const { POST } = await import('../../../mini/send-code/route');
-      return POST(new Request(request.url, { method, headers: request.headers, body: JSON.stringify({phone: body.phone}) }));
+      return POST(new Request(request.url, { method, headers: request.headers, body: JSON.stringify({phone: body.phone, countryCode: body.countryCode}) }));
     }
     if (path === 'auth/login' && method === 'POST') {
+      let phone: string;
+      try { phone = normalizeEventPhone(body.phone, body.countryCode).phone; } catch { throw new AppError('请输入正确的手机号及国家区号'); }
       return withDb(db => {
         ensureAppSchema(db);
         // Invalid attempts must persist; do not wrap verification in a rollback-on-error transaction.
-        verifyAppSMS(db, String(body.phone || ''), String(body.code || ''));
+        verifyAppSMS(db, phone, String(body.code || ''));
         return db.transaction(() => {
-          const member = upsertPhoneMember(db, String(body.phone), { source: appMemberSource(platform) });
+          const member = upsertPhoneMember(db, phone, { source: appMemberSource(platform) });
           return json(createAppSession(db, Number(member.id), String(body.deviceName || appDeviceName(platform))));
         })();
       });
@@ -65,7 +87,9 @@ async function handle(request: Request, context: Context) {
       if (typeof body.phone !== 'string' || typeof body.password !== 'string') throw new AppError('手机号或密码不正确', 401);
       return withDb(db => {
         ensureAppSchema(db);
-        const memberId = verifyAppPassword(db, body.phone, body.password, request.headers.get('x-real-ip') || 'unknown');
+        let phone: string;
+        try { phone = normalizeEventPhone(body.phone, body.countryCode).phone; } catch { throw new AppError('手机号或密码不正确', 401); }
+        const memberId = verifyAppPassword(db, phone, body.password, request.headers.get('x-real-ip') || 'unknown');
         return json(createAppSession(db, memberId, String(body.deviceName || appDeviceName(platform))));
       });
     }
@@ -117,6 +141,7 @@ async function handle(request: Request, context: Context) {
     });
     // The legacy member token never leaves the server. Session revocation is checked on every request above.
     const headers = new Headers({'Content-Type':'application/json', 'x-client-platform':platform});
+    if (path === 'member/phone') headers.set('x-real-ip', request.headers.get('x-real-ip') || '127.0.0.1');
     if (session) headers.set('authorization', `Bearer ${memberToken({id:session.member_id,phone:session.member.phone})}`);
     if (parts[0] === 'shop') {
       const shopPath = parts.slice(1).join('/');
@@ -169,7 +194,16 @@ async function handle(request: Request, context: Context) {
       const merged = mergeAppProfile(old.data.member, body);
       Object.keys(body).forEach(key => delete body[key]); Object.assign(body, merged);
     }
-    const upload = multipart ? await normalizedMusicForm(request, { musicOptional: registration }) : undefined;
+    if (path === 'member/wechat-profile' && session) {
+      const nickname = typeof body.nickname === 'string' ? body.nickname.trim() : '';
+      if (!nickname || nickname.length > 30) throw new AppError('请输入 1 至 30 字的微信昵称');
+      Object.keys(body).forEach(key => delete body[key]);
+      body.nickname = nickname;
+      body.avatar_url = session.member.wx_avatar_url || session.member.avatar_url || '';
+    }
+    if (avatarUpload) body = await readBody(request, Math.ceil(MAX_AVATAR_BYTES / 3) * 4 + 256);
+    const upload = avatarUpload ? appAvatarForm(body.image_base64)
+      : multipart ? await normalizedMusicForm(request, { musicOptional: registration }) : undefined;
     if (upload) headers.delete('Content-Type');
     const module = await route.load();
     const handler = (module as any)[method];
@@ -188,8 +222,13 @@ async function handle(request: Request, context: Context) {
     if (path === 'member/profile' && result.ok) {
       const payload = await result.json();
       const raw = payload.data || {}; const member = raw.member || raw;
-      const safe = Object.fromEntries(['id','name','phone','gender','birthday','country','province','city','address','avatar_url','level'].map(k => [k,member[k]]));
+      const safe = Object.fromEntries(['id','name','phone','phone_country_code','gender','birthday','country','province','city','address','avatar_url','wx_avatar_url','wx_nickname','wx_account','level'].map(k => [k,member[k]]));
       return json({...safe,stats:raw.stats,growth:raw.growth});
+    }
+    if (path === 'member/wechat-profile' && result.ok) {
+      const payload = await result.json();
+      const member = payload.data || {};
+      return json({ wx_nickname: member.wx_nickname, wx_avatar_url: member.wx_avatar_url });
     }
     const responseHeaders = new Headers(result.headers); responseHeaders.set('Cache-Control','private, no-store');
     return new Response(result.body, {status:result.status,headers:responseHeaders});

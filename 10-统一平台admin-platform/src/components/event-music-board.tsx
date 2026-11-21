@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
-import { App, Button, Empty, Tag } from 'antd';
+import { Alert, App, Button, Empty, Tag } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import EventMusicPlayer from './event-music-player';
 import { lessonDropPosition, type DropTarget } from '@/lib/lesson-drag-sort';
-import { api } from '@/lib/api';
+import { api, ensureMediaAuthCookie } from '@/lib/api';
 import styles from './event-music-board.module.css';
 
 type Group = { id: number; name: string; sortOrder?: number };
@@ -31,6 +31,9 @@ export default function EventMusicBoard({ competitionId, groups, players, active
   const saving = useRef(false);
   const dragBlocked = useRef(false);
   const [downloading, setDownloading] = useState(false);
+  const downloadPending = useRef(false);
+  const [downloadNotice, setDownloadNotice] = useState<{ type: 'info' | 'error' | 'success'; text: string } | null>(null);
+  const [downloadReady, setDownloadReady] = useState(false);
   const [pending, setPending] = useState(false);
   const [played, setPlayed] = useState<Record<number, number>>({});
   const [target, setTarget] = useState<(DropTarget & { axis: 'x' | 'y' }) | null>(null);
@@ -78,31 +81,36 @@ export default function EventMusicBoard({ competitionId, groups, players, active
     }
   };
 
+  const downloadUrl = '/api/event/competitions/' + competitionId + '/music-download';
   const downloadMusic = async () => {
-    if (downloading) return;
+    if (downloadPending.current) return;
+    downloadPending.current = true;
     setDownloading(true);
+    setDownloadReady(false);
+    setDownloadNotice({ type: 'info', text: '正在检查并准备音乐包，请稍候…' });
     try {
-      const response = await api.get('/event/competitions/' + competitionId + '/music-download', {
-        responseType: 'blob', timeout: 300000,
-      });
-      const url = URL.createObjectURL(response.data);
+      if (!ensureMediaAuthCookie()) throw new Error('登录已失效，请重新登录后下载');
+      // Validate all audio before handing the large transfer to the browser.
+      // A blob request hides download progress and can time out before saving.
+      const response = await api.get('/event/competitions/' + competitionId + '/music-download', { params: { check: 1 }, timeout: 60000 });
+      if (!response.data?.success) throw new Error(response.data?.error || '音乐包准备失败，请重试');
+      const { fileName, count, size } = response.data.data;
       const link = document.createElement('a');
-      const disposition = response.headers['content-disposition'] || '';
-      const encoded = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1];
-      link.href = url;
-      link.download = encoded ? decodeURIComponent(encoded) : '赛事全部音乐.zip';
+      link.href = downloadUrl;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
-      message.success('音乐包已生成，已开始下载');
+      setDownloadReady(true);
+      setDownloadNotice({ type: 'success', text: `已准备 ${count} 首音乐（${(size / 1024 / 1024).toFixed(1)} MB），已交给浏览器下载。请在浏览器下载列表查看进度和结果；若未开始，可点击“保存音乐包”。` });
     } catch (error: any) {
-      let detail = error?.response?.data?.error || error?.message || '音乐下载失败，请重试';
-      if (error?.response?.data instanceof Blob) {
-        try { detail = JSON.parse(await error.response.data.text()).error || detail; } catch { /* Keep the transport error. */ }
-      }
+      const detail = error?.code === 'ECONNABORTED'
+        ? '音乐包准备超时，请检查网络后重试'
+        : error?.response?.data?.error || error?.message || '音乐下载失败，请重试';
+      setDownloadNotice({ type: 'error', text: detail });
       message.error(detail);
     } finally {
+      downloadPending.current = false;
       setDownloading(false);
     }
   };
@@ -136,8 +144,10 @@ export default function EventMusicBoard({ competitionId, groups, players, active
     <div className={styles.toolbar}>
       <p className={styles.hint}>按住卡片空白处拖动节目，按住组别名称拖动整组。</p>
       <Button className={styles.downloadAll} icon={<DownloadOutlined />} loading={downloading} disabled={busy || pending || !players.some(player => player.musicFileId > 0)}
-        onClick={() => void downloadMusic()}>下载全部音乐</Button>
+        onClick={downloadMusic}>{downloading ? '正在准备音乐包' : '下载全部音乐'}</Button>
     </div>
+    {downloadNotice && <Alert type={downloadNotice.type} showIcon message={downloadNotice.text}
+      action={downloadReady ? <Button href={downloadUrl} download onClick={() => { ensureMediaAuthCookie(); }}>保存音乐包</Button> : undefined} />}
     {!sections.length && <Empty description="暂无可编排的报名" />}
     {sections.map(({ group, rows, position }, groupIndex) => (
       <section key={group.id} className={styles.group} data-tone={groupIndex % 4}

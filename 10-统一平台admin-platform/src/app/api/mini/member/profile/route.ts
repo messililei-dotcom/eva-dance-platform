@@ -1,3 +1,4 @@
+import { formatMemberPhoneForDisplay } from '@/lib/member-phone-display';
 import { cleanText, getMemberId, jsonError, linkedMemberIds, sqlIn, withDb } from '../../_helpers';
 import { listAuthorizedSeriesForMember } from '../../../course/series/[id]/_authorization';
 import { getGrowthSummary, listGrowthLedger } from '@/lib/server/student-growth';
@@ -77,6 +78,7 @@ function profilePayload(db: any, memberId: number, member: Record<string, any>) 
   const growth = getGrowthSummary(db, memberId);
   return {
     ...member,
+    phone: formatMemberPhoneForDisplay(member.phone, member.phone_country_code),
     member,
     stats,
     growth,
@@ -92,7 +94,7 @@ export async function GET(request: Request) {
       const memberId = getMemberId(new URL(request.url).searchParams, request);
       if (!memberId) return jsonError('未登录', 401);
       const member = db.prepare(
-        `SELECT id, name, phone, gender, birthday, country, province, city, address, remark,
+        `SELECT id, name, phone, phone_country_code, gender, birthday, country, province, city, address, remark,
                 register_date, created_at, COALESCE(wx_avatar_url, '') as avatar_url,
                 wx_avatar_url, wx_nickname, wx_name, wx_account, wx_openid, wx_unionid, wx_profile_synced_at, level
          FROM Member WHERE id=?`
@@ -135,7 +137,7 @@ export async function PUT(request: Request) {
       );
 
       const member = db.prepare(
-        `SELECT id, name, phone, gender, birthday, country, province, city, address, remark,
+        `SELECT id, name, phone, phone_country_code, gender, birthday, country, province, city, address, remark,
                 register_date, created_at, COALESCE(wx_avatar_url, '') as avatar_url,
                 wx_avatar_url, wx_nickname, wx_name, wx_account, wx_openid, wx_unionid, wx_profile_synced_at, level
          FROM Member WHERE id=?`

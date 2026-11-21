@@ -1,3 +1,4 @@
+import { formatMemberPhoneForDisplay } from '@/lib/member-phone-display';
 import { cleanText, hasAuth, openTrainingDb, syncMemberDenormalizedFields, today, unauthorized } from '../../training-db';
 import { upsertPhoneMember } from '../../mini/_auth';
 import { deleteMemberAvatarFile } from '../_avatar-files';
@@ -16,7 +17,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (!current) return { changes: 0 };
       const name = cleanText(body.name, current.name);
       if (!name) throw new Error('请填写学员姓名');
-      const phone = cleanText(body.phone ?? current.phone);
+      const phone = body.phone == null ? current.phone : formatMemberPhoneForDisplay(body.phone, body.countryCode || current.phone_country_code);
       const target = phone
         ? upsertPhoneMember(db, phone, { sourceMemberId: current.id, source: 'admin_member_edit' })
         : current;

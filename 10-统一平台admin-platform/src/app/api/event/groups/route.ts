@@ -45,9 +45,9 @@ export async function POST(request: Request) {
     const result = db.prepare(`
       INSERT INTO event_groups (
         competition_id, name, code, category, age_range, dance_type, entry_type,
-        sort_order, max_players, registration_fee, score_rule_id, scoring_status, status, updated_at
+        sort_order, registration_fee, score_rule_id, scoring_status, status, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       competitionId,
       name,
@@ -57,7 +57,6 @@ export async function POST(request: Request) {
       cleanText(body.danceType ?? body.dance_type),
       cleanText(body.entryType ?? body.entry_type, 'solo'),
       toNumber(body.sortOrder ?? body.sort_order, maxSort + 1),
-      toNumber(body.maxPlayers ?? body.max_players),
       toNumber(body.registrationFee ?? body.registration_fee),
       toNumber(body.scoreRuleId ?? body.score_rule_id) || null,
       cleanText(body.scoringStatus ?? body.scoring_status, 'unlocked'),

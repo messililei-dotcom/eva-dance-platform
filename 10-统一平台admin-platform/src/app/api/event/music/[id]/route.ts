@@ -1,3 +1,4 @@
+import { resolveEventMusicFile } from '@/lib/server/event-music-path';
 import fs from 'fs';
 import path from 'path';
 import { hasAuth, unauthorized, withRequestEventDb, jsonError } from '../../_db';
@@ -9,14 +10,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!/^\d+$/.test(id)) return jsonError('音乐不存在', 404);
   return withRequestEventDb(request, db => {
     const music = db.prepare('SELECT * FROM event_music_files WHERE id=?').get(id);
-    if (!music || !String(music.file_url).startsWith('/uploads/event-music/')) return jsonError('音乐不存在', 404);
-    const privateRoot = path.resolve(process.cwd(), 'private/event-music');
-    const suffix = String(music.file_url).slice('/uploads/event-music/'.length);
-    const root = path.resolve(process.env.EVENT_MUSIC_UPLOAD_ROOT || (fs.existsSync(path.join(privateRoot, suffix)) ? privateRoot : path.join(process.cwd(), 'public/uploads/event-music')));
-    const file = path.resolve(root, String(music.file_url).slice('/uploads/event-music/'.length));
-    if (!file.startsWith(root + path.sep)) return jsonError('音乐路径无效', 404);
+    if (!music) return jsonError('音乐不存在', 404);
     try {
-      if (!fs.realpathSync(file).startsWith(fs.realpathSync(root) + path.sep)) return jsonError('音乐路径无效', 404);
+      const file = resolveEventMusicFile(music.file_url);
       const stat = fs.statSync(file); if (!stat.isFile()) return jsonError('音乐不存在', 404);
       const size = stat.size, range = request.headers.get('range'); let start = 0, end = size - 1;
       if (range) {

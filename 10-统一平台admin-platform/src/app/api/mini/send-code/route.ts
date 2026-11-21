@@ -1,5 +1,6 @@
 import { normalizeEventPhone } from '@/lib/event-phone';
-import { cleanText, jsonError, withDb } from '../_helpers';
+import { randomInt } from 'node:crypto';
+import { getMemberId, jsonError, withDb } from '../_helpers';
 import { apiErrorMessage } from '@/lib/data-shape';
 import { devWarn } from '@/lib/logger';
 
@@ -38,8 +39,8 @@ function checkRateLimit(phone: string, ip: string): { allowed: boolean; error?: 
 }
 
 function codeForEnv() {
-  if (process.env.MINI_LOGIN_DEV_CODE) return process.env.MINI_LOGIN_DEV_CODE;
-  return String(Math.floor(100000 + Math.random() * 900000));
+  if (process.env.NODE_ENV !== 'production' && process.env.MINI_LOGIN_DEV_CODE) return process.env.MINI_LOGIN_DEV_CODE;
+  return String(randomInt(100000, 1000000));
 }
 
 async function sendSms(phone: string, code: string): Promise<boolean> {
@@ -143,6 +144,9 @@ async function sendSms(phone: string, code: string): Promise<boolean> {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const forProfile = body.purpose === 'profile-phone';
+    const memberId = forProfile ? getMemberId(new URL(request.url).searchParams, request) : 0;
+    if (forProfile && !memberId) return jsonError('未登录', 401);
     let phone;
     try { phone = normalizeEventPhone(body.phone, body.countryCode).phone; } catch (error) { return jsonError(error instanceof Error ? error.message : '手机号格式错误', 400); }
     const rateLimit = checkRateLimit(phone, clientIp(request));
@@ -154,11 +158,20 @@ export async function POST(request: Request) {
     }
 
     return withDb((db) => {
-      db.prepare("UPDATE MiniSmsCode SET used=1 WHERE phone=? AND used=0").run(phone);
-      db.prepare(
-        `INSERT INTO MiniSmsCode (phone, code, expires_at, used, created_at)
-         VALUES (?, ?, datetime('now','localtime','+5 minutes'), 0, datetime('now','localtime'))`
-      ).run(phone, code);
+      if (forProfile) {
+        db.prepare(`INSERT INTO MiniProfilePhoneCode (member_id, phone, code, expires_at)
+          VALUES (?, ?, ?, datetime('now','localtime','+5 minutes'))
+          ON CONFLICT(member_id) DO UPDATE SET phone=excluded.phone, code=excluded.code,
+            expires_at=excluded.expires_at, attempts=0`).run(memberId, phone, code);
+      } else {
+        db.transaction(() => {
+          db.prepare("UPDATE MiniSmsCode SET used=1 WHERE phone=? AND used=0").run(phone);
+          db.prepare(
+            `INSERT INTO MiniSmsCode (phone, code, expires_at, used, created_at)
+             VALUES (?, ?, datetime('now','localtime','+5 minutes'), 0, datetime('now','localtime'))`
+          ).run(phone, code);
+        }).immediate();
+      }
       return Response.json({
         success: true,
         message: smsSent ? '验证码已发送' : '本地预览验证码已生成',

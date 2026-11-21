@@ -1,9 +1,10 @@
-import { jsonError, normalizeInternationalPhone, withDb } from '../_helpers';
+import { randomInt } from 'node:crypto';
+import { getAuthenticatedMemberId, jsonError, normalizeInternationalPhone, withDb } from '../_helpers';
 import { apiErrorMessage } from '@/lib/data-shape';
 import { isSmsProviderRateLimitCode, SmsRateLimiter } from '@/lib/sms-verification';
 
 type SmsDeliveryResult =
-  | { ok: true }
+  | { ok: true; messageId: string | null; providerRequestId: string | null }
   | { ok: false; providerCode: string; providerMessage: string };
 
 const globalSmsState = globalThis as typeof globalThis & {
@@ -12,13 +13,18 @@ const globalSmsState = globalThis as typeof globalThis & {
 const smsRateLimiter = globalSmsState.__websiteSmsRateLimiter ||= new SmsRateLimiter();
 
 function codeForEnv() {
-  if (process.env.MINI_LOGIN_DEV_CODE) return process.env.MINI_LOGIN_DEV_CODE;
-  return String(Math.floor(100000 + Math.random() * 900000));
+  if (process.env.NODE_ENV !== 'production' && process.env.MINI_LOGIN_DEV_CODE) return process.env.MINI_LOGIN_DEV_CODE;
+  return String(randomInt(100000, 1000000));
 }
 
 function maskedPhone(phone: string) {
   if (phone.length < 7) return '***';
   return `${phone.slice(0, 3)}****${phone.slice(-4)}`;
+}
+
+function providerId(value: unknown): string | null {
+  if (typeof value === 'string') return value.trim() || null;
+  return typeof value === 'number' && Number.isSafeInteger(value) ? String(value) : null;
 }
 
 function logSmsFailure(requestId: string, phone: string, providerCode: string, providerMessage: string) {
@@ -112,7 +118,11 @@ async function sendSms(phone: string, code: string): Promise<SmsDeliveryResult> 
           try {
             const result = JSON.parse(data);
             if ((international ? result.ResponseCode : result.Code) === 'OK') {
-              resolve({ ok: true });
+              resolve({
+                ok: true,
+                messageId: providerId(international ? result.MessageId : result.BizId),
+                providerRequestId: providerId(result.RequestId),
+              });
             } else {
               resolve({
                 ok: false,
@@ -151,6 +161,9 @@ async function sendSms(phone: string, code: string): Promise<SmsDeliveryResult> 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const forProfile = body.purpose === 'profile-phone';
+    const memberId = forProfile ? getAuthenticatedMemberId(request) : 0;
+    if (forProfile && !memberId) return jsonError('未登录', 401);
     let normalized;
     try {
       normalized = normalizeInternationalPhone(body.phone, body.countryCode);
@@ -158,7 +171,7 @@ export async function POST(request: Request) {
       return jsonError(err instanceof Error ? err.message : '请输入正确的手机号', 400);
     }
     const phone = normalized.phone;
-    const requestId = request.headers.get('x-client-request-id') || crypto.randomUUID();
+    const requestId = crypto.randomUUID();
     const persistedRetryAfter = withDb((db) => {
       const recent = db.prepare(
         `SELECT CAST(MAX(0, 60 - (julianday('now','localtime') - julianday(created_at)) * 86400) AS INTEGER) AS retry_after
@@ -177,6 +190,16 @@ export async function POST(request: Request) {
 
     const code = codeForEnv();
     const delivery = await sendSms(phone, code);
+    if (delivery.ok) {
+      console.info(JSON.stringify({
+        event: 'sms_provider_accepted',
+        requestId,
+        phone: maskedPhone(phone),
+        international: normalized.phone.startsWith('+'),
+        messageId: delivery.messageId,
+        providerRequestId: delivery.providerRequestId,
+      }));
+    }
     if (!delivery.ok) {
       logSmsFailure(requestId, phone, delivery.providerCode, delivery.providerMessage);
       if (isSmsProviderRateLimitCode(delivery.providerCode)) {
@@ -189,11 +212,18 @@ export async function POST(request: Request) {
     }
 
     return withDb((db) => {
-      db.prepare("UPDATE MiniSmsCode SET used=1 WHERE phone=? AND used=0").run(phone);
-      db.prepare(
-        `INSERT INTO MiniSmsCode (phone, code, expires_at, used, created_at)
-         VALUES (?, ?, datetime('now','localtime','+5 minutes'), 0, datetime('now','localtime'))`
-      ).run(phone, code);
+      if (forProfile) {
+        db.prepare(`INSERT INTO MiniProfilePhoneCode (member_id, phone, code, expires_at)
+          VALUES (?, ?, ?, datetime('now','localtime','+5 minutes'))
+          ON CONFLICT(member_id) DO UPDATE SET phone=excluded.phone, code=excluded.code,
+            expires_at=excluded.expires_at, attempts=0`).run(memberId, phone, code);
+      } else {
+        db.prepare("UPDATE MiniSmsCode SET used=1 WHERE phone=? AND used=0").run(phone);
+        db.prepare(
+          `INSERT INTO MiniSmsCode (phone, code, expires_at, used, created_at)
+           VALUES (?, ?, datetime('now','localtime','+5 minutes'), 0, datetime('now','localtime'))`
+        ).run(phone, code);
+      }
       return Response.json({
         success: true,
         message: delivery.ok ? '验证码已发送' : '本地预览验证码已生成',

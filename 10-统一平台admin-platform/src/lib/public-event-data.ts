@@ -16,6 +16,7 @@ export type PublicEventGroup = {
 };
 
 export type PublicGroupPlayer = {
+  performance_title?: string;
   id: number;
   player_no: string;
   name: string;
@@ -123,16 +124,17 @@ export function loadPublicGroupPlayers(competitionId: number, groupId: number) {
         COALESCE(NULLIF(m.wx_avatar_url, ''), NULLIF(m.avatar, ''), '') AS avatar_url,
         COALESCE(p.organization, '') AS organization,
         COALESCE(p.teacher, '') AS teacher,
+        COALESCE((SELECT ep.title FROM event_performances ep WHERE ep.player_id=p.id ORDER BY ep.id LIMIT 1),'') AS performance_title,
         r.rank_no,
         r.published_total,
-        COUNT(DISTINCT CASE WHEN s.score_status = 'published' AND EXISTS (SELECT 1 FROM event_rankings visible WHERE visible.group_id=s.group_id AND visible.player_id=s.player_id AND visible.status='published') THEN s.judge_id END) AS score_count
+        COUNT(DISTINCT CASE WHEN s.score_status = 'published' AND EXISTS (SELECT 1 FROM event_group_judges gj JOIN event_judges active_j ON active_j.id=gj.judge_id WHERE gj.group_id=s.group_id AND gj.judge_id=s.judge_id AND gj.status='active' AND gj.auth_enabled=1 AND active_j.status='active' AND active_j.auth_enabled=1) AND EXISTS (SELECT 1 FROM event_rankings visible WHERE visible.group_id=s.group_id AND visible.player_id=s.player_id AND visible.status='published') THEN s.judge_id END) AS score_count
       FROM event_players p
       JOIN event_competitions c ON c.id=p.competition_id
       LEFT JOIN Member m ON m.id = p.member_id
       LEFT JOIN event_rankings r
         ON r.group_id = p.group_id AND r.player_id = p.id AND r.status = 'published'
       LEFT JOIN event_scores s
-        ON s.group_id = p.group_id AND s.player_id = p.id AND s.score_status = 'published' AND EXISTS (SELECT 1 FROM event_rankings visible WHERE visible.group_id=s.group_id AND visible.player_id=s.player_id AND visible.status='published')
+        ON s.group_id = p.group_id AND s.player_id = p.id AND s.score_status = 'published' AND EXISTS (SELECT 1 FROM event_group_judges gj JOIN event_judges active_j ON active_j.id=gj.judge_id WHERE gj.group_id=s.group_id AND gj.judge_id=s.judge_id AND gj.status='active' AND gj.auth_enabled=1 AND active_j.status='active' AND active_j.auth_enabled=1) AND EXISTS (SELECT 1 FROM event_rankings visible WHERE visible.group_id=s.group_id AND visible.player_id=s.player_id AND visible.status='published')
         AND NOT EXISTS (
           SELECT 1 FROM event_scores newer
           WHERE newer.group_id = s.group_id
@@ -179,7 +181,7 @@ export function loadPublicPlayerDetail(competitionId: number, groupId: number, p
         r.rank_no,
         r.published_total,
         (SELECT COUNT(DISTINCT s.judge_id) FROM event_scores s
-          WHERE s.group_id = p.group_id AND s.player_id = p.id AND s.score_status = 'published' AND EXISTS (SELECT 1 FROM event_rankings visible WHERE visible.group_id=s.group_id AND visible.player_id=s.player_id AND visible.status='published')
+          WHERE s.group_id = p.group_id AND s.player_id = p.id AND s.score_status = 'published' AND EXISTS (SELECT 1 FROM event_group_judges gj JOIN event_judges active_j ON active_j.id=gj.judge_id WHERE gj.group_id=s.group_id AND gj.judge_id=s.judge_id AND gj.status='active' AND gj.auth_enabled=1 AND active_j.status='active' AND active_j.auth_enabled=1) AND EXISTS (SELECT 1 FROM event_rankings visible WHERE visible.group_id=s.group_id AND visible.player_id=s.player_id AND visible.status='published')
         ) AS score_count
       FROM event_players p
       JOIN event_groups g ON g.id = p.group_id
@@ -209,8 +211,7 @@ export function loadPublicPlayerDetail(competitionId: number, groupId: number, p
       LEFT JOIN event_judges j ON j.id = s.judge_id
       LEFT JOIN Member jm ON jm.id = j.member_id
       WHERE s.competition_id = ? AND s.group_id = ? AND s.player_id = ?
-        AND EXISTS (SELECT 1 FROM event_group_judges gj WHERE gj.group_id=s.group_id AND gj.judge_id=s.judge_id AND gj.status='active')
-        AND s.score_status = 'published' AND EXISTS (SELECT 1 FROM event_rankings visible WHERE visible.group_id=s.group_id AND visible.player_id=s.player_id AND visible.status='published')
+        AND s.score_status = 'published' AND EXISTS (SELECT 1 FROM event_group_judges gj JOIN event_judges active_j ON active_j.id=gj.judge_id WHERE gj.group_id=s.group_id AND gj.judge_id=s.judge_id AND gj.status='active' AND gj.auth_enabled=1 AND active_j.status='active' AND active_j.auth_enabled=1) AND EXISTS (SELECT 1 FROM event_rankings visible WHERE visible.group_id=s.group_id AND visible.player_id=s.player_id AND visible.status='published')
         AND NOT EXISTS (
           SELECT 1 FROM event_scores newer
           WHERE newer.group_id = s.group_id

@@ -4,7 +4,7 @@ const ts = require("typescript");
 const dir = path.resolve(".shop-worker");
 fs.mkdirSync(dir, { recursive: true });
 fs.writeFileSync(path.join(dir, "package.json"), '{"type":"commonjs"}');
-for (const name of ["event-online", "event-phone-member", "../event-phone", "course-promotion", "admin-db", "shop-core", "shop-payments", "shop-service", "exclusive-orders", "exclusive-refunds"]) {
+for (const name of ["event-online", "event-phone-member", "member-phone-sql", "../event-phone", "course-promotion", "admin-db", "shop-core", "shop-payments", "shop-service", "exclusive-orders", "exclusive-refunds"]) {
   const source = fs.readFileSync(`src/lib/server/${name}.ts`, "utf8").replace(
     /(['"])@\/lib\/event-phone\1/g, "$1./event-phone$1",
   );

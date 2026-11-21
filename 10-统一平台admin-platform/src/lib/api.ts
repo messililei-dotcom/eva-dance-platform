@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, type AxiosRequestConfig } from 'axios';
 import { devWarn } from '@/lib/logger';
 import type { UnknownRecord } from '@/lib/data-shape';
+import type { registrationPaymentState } from '@/lib/server/event-registration-fees';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
 const LEGACY_STUDENT_API_BASE = process.env.NEXT_PUBLIC_LEGACY_STUDENT_API_URL || '/legacy-student-api';
@@ -319,8 +320,14 @@ export const certApi = {
 };
 
 // ========== 赛事运营 API ==========
+export type RegistrationPaymentDetails = {
+  data: Array<{ id: number; kind: string; amount: number; method: string; paid_at: string; remark: string }>;
+  paymentState: ReturnType<typeof registrationPaymentState>;
+};
+
 export const eventApi = {
-  listRegistrationPayments: async (id: number): Promise<any[]> => (await api.get(`/event/players/${id}/payments`)).data?.data || [],
+  getRegistrationPayments: async (id: number): Promise<RegistrationPaymentDetails> =>
+    (await api.get<RegistrationPaymentDetails>(`/event/players/${id}/payments`)).data,
   recordRegistrationPayment: async (id: number, data: any) => (await api.post(`/event/players/${id}/payments`, data)).data,
 
   listGroupJudges: async (params?: QueryParams): Promise<any[]> => {
@@ -442,6 +449,10 @@ export const eventApi = {
   },
   importPlayers: async (payload: any): Promise<any> => {
     const res = await api.post('/event/players/import', payload); return res.data?.data;
+  },
+  exportPlayers: async (payload: { competitionId: number; ids: number[] }): Promise<Blob> => {
+    const res = await api.post('/event/players/export', payload, { responseType: 'blob', timeout: 120000 });
+    return res.data;
   },
   importJudges: async (payload: any): Promise<any> => {
     const res = await api.post('/event/judges/import', payload); return res.data?.data;

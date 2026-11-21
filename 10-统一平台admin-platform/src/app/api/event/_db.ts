@@ -478,13 +478,13 @@ export function generateCode(prefix: string) {
   return `${prefix}${Date.now().toString(36).toUpperCase()}`;
 }
 
-export function competitionSelectSql() {
+export function competitionSelectSql(groupCountSql = '(SELECT COUNT(*) FROM event_groups g WHERE g.competition_id = c.id)') {
   return `
     SELECT
       c.*,
       (SELECT json_group_array(user_id) FROM event_competition_admins ca WHERE ca.competition_id=c.id) AS admin_user_ids,
       (SELECT COUNT(*) FROM event_players p WHERE p.competition_id=c.id AND p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled')) AS active_player_count,
-      (SELECT COUNT(*) FROM event_groups g WHERE g.competition_id = c.id) AS group_count,
+      ${groupCountSql} AS group_count,
       (SELECT COUNT(*) FROM event_players p WHERE p.competition_id = c.id) AS player_count,
       (SELECT COUNT(DISTINCT gj.judge_id) FROM event_group_judges gj WHERE gj.competition_id = c.id) AS judge_count,
       (SELECT COUNT(*) FROM event_players p WHERE p.competition_id = c.id AND p.audit_status != 'rejected') AS approved_player_count
@@ -506,13 +506,13 @@ export function mapCompetition(row: any) {
     judgeScoresPublic: Number(row.judge_scores_public) === 1,
     startDate: row.start_date || '',
     endDate: row.end_date || '',
-    registrationStart: row.registration_start || '',
-    registrationEnd: row.registration_end || '',
+    registrationStart: '',
+    registrationEnd: '',
     location: row.location || '',
     organizer: row.organizer || '',
     description: row.description || '',
     coverUrl: row.cover_url || '',
-    maxPlayers: row.max_players || 0,
+    maxPlayers: 0,
     registrationFee: row.registration_fee || 0,
     groupCount: row.group_count || 0,
     playerCount: row.player_count || 0,
@@ -540,7 +540,7 @@ export function mapGroup(row: any) {
     danceType: row.dance_type || '',
     entryType: row.entry_type || 'solo',
     sortOrder: row.sort_order || 0,
-    maxPlayers: row.max_players || 0,
+    maxPlayers: 0,
     registrationFee: Number(row.registration_fee || 0),
     scoreRuleId: row.score_rule_id || null,
     scoreRuleName: row.score_rule_name || '',
@@ -709,7 +709,7 @@ export function getRuleForGroup(db: any, groupId: number, ruleId?: number | null
   const explicitRuleId = Number(ruleId || group?.score_rule_id || 0);
   let row = explicitRuleId ? db.prepare('SELECT * FROM event_score_rules WHERE id = ?').get(explicitRuleId) : null;
   if (!row && group?.competition_id) {
-    const competitionRules = db.prepare('SELECT * FROM event_score_rules WHERE competition_id = ? ORDER BY id ASC').all(group.competition_id);
+    const competitionRules = db.prepare("SELECT * FROM event_score_rules WHERE competition_id = ? AND status != 'archived' ORDER BY id ASC").all(group.competition_id);
     if (competitionRules.length === 1) row = competitionRules[0];
     else if (competitionRules.length > 1) {
       row = {
@@ -746,7 +746,7 @@ export function calculateScore(rule: any, criteriaScores: Record<string, unknown
     .filter((value) => Number.isFinite(value));
   const criteriaSum = values.length ? values.reduce((sum, value) => sum + value, 0) : 0;
   const score = values.length ? criteriaSum : rawScore;
-  const totalScore = Number(rule.total_score || criteriaTotal || 10);
+  const totalScore = 10; // All new submissions use the fixed total, including legacy rule records.
   const decimalPlaces = Math.max(0, Math.min(4, Number(rule.decimal_places ?? 2)));
   if (score < 0) throw new Error('评分不能小于 0');
   if (score > totalScore) throw new Error(`评分不能超过总分 ${totalScore}`);

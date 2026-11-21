@@ -3,6 +3,7 @@ import { cache } from 'react';
 import path from 'path';
 import type { EventNews } from '@/types/events-news';
 import { openAdminDb } from '@/lib/server/admin-db';
+import { PUBLIC_EVENT_GROUP_COUNT_SQL } from '@/lib/server/public-event-groups';
 
 const DATA_PATH = path.join(process.cwd(), 'public/data/events-news.json');
 let cachedEvents: EventNews[] | null = null;
@@ -112,7 +113,7 @@ function getPlatformEvents(competitionId?: number): EventNews[] {
         COALESCE(c.organizer, '') AS organizer,
         COALESCE(c.description, '') AS description,
         COALESCE(c.cover_url, '') AS cover_url,
-        (SELECT COUNT(*) FROM event_groups g WHERE g.competition_id = c.id) AS group_count,
+        ${PUBLIC_EVENT_GROUP_COUNT_SQL} AS group_count,
         (SELECT COUNT(*) FROM event_players p WHERE p.competition_id = c.id AND p.audit_status != 'rejected' AND p.status NOT IN ('withdrawn', 'cancelled')) AS player_count,
         COALESCE(scores.score_count, 0) AS score_count,
         (SELECT COUNT(DISTINCT gj.judge_id) FROM event_group_judges gj WHERE gj.competition_id = c.id) AS judge_count
@@ -158,7 +159,7 @@ export function getEventsNews(): EventNews[] {
         location: platform.location,
         registrationStatus: platform.registrationStatus,
         registrationPublic: platform.registrationPublic,
-        coverImage: item.coverImage || platform.coverImage,
+        coverImage: platform.coverImage || item.coverImage,
         stats: platform.stats,
         summary: platform.summary,
         content: platform.registrationPublic ? item.content : platform.content,
@@ -190,11 +191,11 @@ export const getEventNewsBySlug = cache((slug: string): EventNews | undefined =>
   let platform: EventNews | undefined;
   try { platform = getPlatformEvents(Number(match[1]))[0]; } catch (error) { console.warn('赛事数据暂不可用', error); }
   if (!archived) return platform && (platform.slug === slug || platform.id === slug) && isPublicEvent(platform) ? platform : undefined;
-  if (!platform) return { ...archived, registrationPublic: false, summary: '报名信息暂未公开', content: '', facts: undefined, champions: [], stats: { ...archived.stats, players: 0 } };
+  if (!platform) return { ...archived, registrationStatus: 'closed', registrationPublic: false, summary: '报名信息暂未公开', content: '', facts: undefined, champions: [], stats: { ...archived.stats, players: 0 } };
   return {
     ...archived, title: platform.title, date: platform.date, dateRange: platform.dateRange,
     location: platform.location, registrationStatus: platform.registrationStatus,
-    registrationPublic: platform.registrationPublic, coverImage: archived.coverImage || platform.coverImage,
+    registrationPublic: platform.registrationPublic, coverImage: platform.coverImage || archived.coverImage,
     stats: platform.stats, summary: platform.summary,
     content: platform.registrationPublic ? archived.content : platform.content,
     facts: platform.registrationPublic ? archived.facts : undefined,
@@ -202,15 +203,8 @@ export const getEventNewsBySlug = cache((slug: string): EventNews | undefined =>
   };
 });
 
-export function getEventStatus(item: EventNews, now = Date.now()): 'ended' | 'registering' {
-  if (item.registrationStatus === 'closed') return 'ended';
-
-  const dateMatches = item.dateRange.match(/\d{4}-\d{2}-\d{2}/g);
-  const endDate = dateMatches?.at(-1) || item.date;
-  const endOfEvent = new Date(`${endDate}T23:59:59+08:00`).getTime();
-
-  if (Number.isFinite(endOfEvent) && endOfEvent < now) return 'ended';
-  return item.registrationStatus === 'open' || Number.isFinite(endOfEvent) ? 'registering' : 'ended';
+export function getEventStatus(item: EventNews): 'ended' | 'registering' {
+  return item.registrationStatus === 'open' ? 'registering' : 'ended';
 }
 
 export function getEventCompetitionId(item: EventNews): number | null {

@@ -11,13 +11,17 @@ async function forward(request: NextRequest, id: string) {
     const base = (process.env.MANAGEMENT_API_BASE || 'https://admin.swod.com.cn/api').replace(/\/$/, '');
     const options: RequestInit & { duplex?: 'half' } = {
       method: request.method,
-      headers: { Authorization: request.headers.get('authorization') || '', 'Content-Type': request.headers.get('content-type') || 'application/json' },
+      headers: { Authorization: request.headers.get('authorization') || '', 'Content-Type': request.headers.get('content-type') || 'application/json', ...(request.headers.get('range') ? { Range: request.headers.get('range')! } : {}) },
       body: request.method === 'POST' ? request.body : undefined,
       duplex: 'half',
       cache: 'no-store', signal: AbortSignal.timeout(120000),
     };
-    const response = await fetch(`${base}/mini/member/event-registrations/${id}/music`, options);
-    return new Response(await response.text(), { status: response.status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', Vary: 'Authorization, Cookie' } });
+    const response = await fetch(`${base}/mini/member/event-registrations/${id}/music${request.method === 'GET' && request.nextUrl.searchParams.get('preview') === '1' ? '?preview=1' : ''}`, options);
+    const headers = new Headers({ 'Cache-Control': 'private, no-store', Vary: 'Authorization, Cookie', 'X-Content-Type-Options': 'nosniff' });
+    for (const key of ['Content-Type', 'Content-Length', 'Content-Range', 'Accept-Ranges', 'Content-Disposition']) {
+      const value = response.headers.get(key); if (value) headers.set(key, value);
+    }
+    return new Response(response.body, { status: response.status, headers });
   } catch { return Response.json({ success: false, error: '音乐上传连接中断，请重新查看当前音乐后重试' }, { status: 502 }); }
 }
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) { return forward(request, (await params).id); }

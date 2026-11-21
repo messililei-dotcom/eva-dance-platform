@@ -3,7 +3,8 @@
 import { ChangeEvent, FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import './profile-edit.css';
 import {
   AlertTriangle,
   Award,
@@ -18,9 +19,7 @@ import {
   LogIn,
   LogOut,
   MapPin,
-  Phone,
   RefreshCw,
-  Save,
   UserRound,
 } from 'lucide-react';
 import {
@@ -45,6 +44,7 @@ import {
   STUDENT_CONNECTION_TIMEOUT_MS,
   type StudentConnectionFailure,
 } from '@/lib/student-connection';
+import { PHONE_COUNTRIES } from '@/lib/event-phone';
 import { getCourseVideoHref } from '@/lib/course-series-ids';
 import { SmsSendGuard, smsRetryAfterSeconds, smsSendErrorMessage } from '@/lib/sms-verification';
 
@@ -70,23 +70,6 @@ const emptyMember: StudentMember = {
   address: '',
   remark: '',
 };
-
-const COUNTRY_CODES = [
-  { label: '中国', code: '+86' },
-  { label: '中国香港', code: '+852' },
-  { label: '中国澳门', code: '+853' },
-  { label: '中国台湾', code: '+886' },
-  { label: '美国/加拿大', code: '+1' },
-  { label: '英国', code: '+44' },
-  { label: '澳大利亚', code: '+61' },
-  { label: '新加坡', code: '+65' },
-  { label: '马来西亚', code: '+60' },
-  { label: '日本', code: '+81' },
-  { label: '韩国', code: '+82' },
-  { label: '泰国', code: '+66' },
-  { label: '法国', code: '+33' },
-  { label: '德国', code: '+49' },
-];
 
 const DEFAULT_REGION_OPTIONS: StudentRegionOptions = {
   countries: ['中国', '中国香港', '中国澳门', '中国台湾', '海外'],
@@ -128,6 +111,7 @@ function normalizeLocalPhoneInput(value: string, countryCode: string) {
 }
 
 function validPhoneInput(phone: string, countryCode: string) {
+  if (!/^\+[1-9]\d{0,2}$/.test(countryCode)) return false;
   const digits = phone.replace(/\D/g, '');
   if (phone.trim().startsWith('+')) return /^\+\d{6,15}$/.test(phone);
   if (countryCode === '+86') return /^1[3-9]\d{9}$/.test(digits);
@@ -146,6 +130,8 @@ function StatPill({ icon, value, label }: { icon: ReactNode; value: number | str
 
 export default function ProfilePage() {
   const router = useRouter();
+  const editPath = "/dashboard/profile/edit";
+  const editing = usePathname() === editPath;
   const [member, setMember] = useState<StudentMember>(emptyMember);
   const [courses, setCourses] = useState<StudentCourse[]>([]);
   const [payments, setPayments] = useState<StudentPayment[]>([]);
@@ -159,8 +145,10 @@ export default function ProfilePage() {
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [customDialCode, setCustomDialCode] = useState(false);
   const [bindCountryCode, setBindCountryCode] = useState('+86');
+  const [phoneEditorOpen, setPhoneEditorOpen] = useState(false);
+  const [phoneFeedback, setPhoneFeedback] = useState('');
   const [bindPhone, setBindPhone] = useState('');
   const [bindCode, setBindCode] = useState('');
   const [bindCodeSending, setBindCodeSending] = useState(false);
@@ -218,7 +206,6 @@ export default function ProfilePage() {
     const bindError = params.get('wechat_bind_error') || '';
     const bindSucceeded = params.get('wechat_bound') === '1';
     if (!bindError && !bindSucceeded) return;
-    setProfileOpen(true);
     setMessage(bindError || '微信绑定成功');
     params.delete('wechat_bind_error');
     params.delete('wechat_bound');
@@ -303,24 +290,25 @@ export default function ProfilePage() {
 
         // Returning students can enter the personal center immediately. Fresh
         // data continues syncing in the background instead of blocking the UI.
-        if (cached?.id) applyCachedProfile(cached, storedPhone);
+        if (cached?.id && !editing) applyCachedProfile(cached, storedPhone);
 
         const [profile, homeData, certRows, competitionRows, regions] = await Promise.all([
           studentApi.getMember(memberId),
-          studentApi.getHomeData(memberId),
-          studentApi.getCertificates(memberId).catch(() => []),
-          studentApi.getCompetitions(memberId).catch(() => []),
+          editing ? Promise.resolve({ courses: [], payments: [] }) : studentApi.getHomeData(memberId),
+          editing ? Promise.resolve([]) : studentApi.getCertificates(memberId).catch(() => []),
+          editing ? Promise.resolve([]) : studentApi.getCompetitions(memberId).catch(() => []),
           studentApi.getRegionOptions(memberId).catch(() => DEFAULT_REGION_OPTIONS),
         ]);
         if (!mounted) return;
-        const mergedProfile = { ...emptyMember, ...profile, phone: profile.phone || storedPhone };
+        const mergedProfile = { ...emptyMember, ...profile };
+        setLoginPhone(profile.phone || '');
         setRegionOptions(regions);
         setMember(mergedProfile);
         if (profile.id) updateStudentSessionId(profile.id);
         if (displayNameOf(mergedProfile)) updateStudentSessionName(displayNameOf(mergedProfile));
         setCourses(homeData.courses || []);
         setPayments(homeData.payments || []);
-        studentApi.storeMemberSnapshot({
+        if (!editing) studentApi.storeMemberSnapshot({
           ...mergedProfile,
           authorizedCourses: homeData.courses || [],
           payments: homeData.payments || [],
@@ -345,7 +333,7 @@ export default function ProfilePage() {
       mounted = false;
       if (watchdog) clearTimeout(watchdog);
     };
-  }, [router, loadAttempt]);
+  }, [router, loadAttempt, editing]);
 
   const copyDiagnostics = async () => {
     if (!loadFailure) return;
@@ -407,7 +395,7 @@ export default function ProfilePage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nextName = displayNameOf(member).trim();
+    const nextName = (member.wxName || member.wxNickname || member.name || '').trim();
     if (!member.id || !nextName) {
       setMessage('请填写姓名');
       return;
@@ -440,12 +428,11 @@ export default function ProfilePage() {
     const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
     if (!isWechat && !isDesktop) {
       setMessage('请在微信内打开官网后点击“绑定微信”。');
-      setProfileOpen(true);
       return;
     }
     setMessage('正在跳转微信授权...');
     const mode = isWechat ? 'wechat' : 'qr';
-    window.location.assign(`/api/wechat/oauth/start?purpose=bind&mode=${mode}&next=${encodeURIComponent('/dashboard/profile')}`);
+    window.location.assign(`/api/wechat/oauth/start?purpose=bind&mode=${mode}&next=${encodeURIComponent(editPath)}`);
   };
 
   const handleSyncWechatProfile = async () => {
@@ -454,15 +441,25 @@ export default function ProfilePage() {
     setSaving(true);
     setMessage('');
     try {
-      const updated = await studentApi.syncWechatProfile({
+      await studentApi.syncWechatProfile({
         memberId: member.id,
         nickname: nextName,
         wxName: nextName,
         wxAccount: member.wxAccount || '',
         avatarUrl: avatarOf(member),
       });
-      const merged = { ...emptyMember, ...updated };
-      setMember(merged);
+      const updated = await studentApi.getMember(member.id);
+      const merged = { ...member, ...updated };
+      setMember({
+        ...merged,
+        gender: member.gender,
+        birthday: member.birthday,
+        country: member.country,
+        province: member.province,
+        city: member.city,
+        address: member.address,
+        wxAccount: member.wxAccount,
+      });
       if (merged.id) updateStudentSessionId(merged.id);
       updateStudentSessionName(displayNameOf(merged));
       setMessage('个人资料已同步');
@@ -478,69 +475,66 @@ export default function ProfilePage() {
     router.replace('/');
   };
 
-  const refreshMemberData = async (memberId: string) => {
-    const [homeData, certRows, competitionRows] = await Promise.all([
-      studentApi.getHomeData(memberId),
-      studentApi.getCertificates(memberId).catch(() => []),
-      studentApi.getCompetitions(memberId).catch(() => []),
-    ]);
-    setCourses(homeData.courses || []);
-    setPayments(homeData.payments || []);
-    setCertificates(certRows || []);
-    setCompetitions(competitionRows || []);
-  };
-
-  const handleBindPhone = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!member.id) return;
+  const handleBindPhone = async () => {
+    const session = getStudentSession();
+    if (!session || session.id !== member.id || saving || bindCodeSending) return;
     if (!validPhoneInput(bindPhone, bindCountryCode)) {
-      setMessage('请输入正确的手机号');
+      setPhoneFeedback('请输入正确的手机号');
       return;
     }
-    if (!bindCode) {
-      setMessage('请输入短信验证码');
+    if (!/^\d{6}$/.test(bindCode)) {
+      setPhoneFeedback('请输入短信验证码');
       return;
     }
     setSaving(true);
-    setMessage('');
+    setPhoneFeedback('');
     try {
-      const updated = await studentApi.bindPhone(bindPhone, bindCode, bindCountryCode);
-      const merged = { ...emptyMember, ...updated };
-      setMember(merged);
-      if (merged.id) {
-        updateStudentSessionId(merged.id);
-        await refreshMemberData(String(merged.id));
+      const updated = await studentApi.updateProfilePhone(bindPhone, bindCode, bindCountryCode);
+      if (getStudentSession()?.id !== (updated.mergedMember?.id || session.id)) return;
+      if (updated.mergedMember) {
+        setMember(updated.mergedMember);
+        setCourses([]);
+        setPayments([]);
+        setCertificates([]);
+        setCompetitions([]);
+        setLoadAttempt((attempt) => attempt + 1);
+      } else {
+        setMember((previous) => ({ ...previous, phone: updated.phone }));
+        const cached = studentApi.getStoredMember(session.id);
+        if (cached) studentApi.storeMemberSnapshot({ ...cached, phone: updated.phone });
       }
-      updateStudentSessionName(displayNameOf(merged));
+      setLoginPhone(updated.phone);
       setBindPhone('');
       setBindCode('');
-      setMessage('手机号已绑定，课程资料已同步');
+      setPhoneEditorOpen(false);
+      setMessage(updated.mergedMember ? '手机号已绑定，账号已合并' : '手机号已保存');
     } catch (error: any) {
-      setMessage(error?.message || '手机号绑定失败，请稍后再试');
+      setPhoneFeedback(error?.message || '手机号保存失败，请稍后再试');
     } finally {
       setSaving(false);
     }
   };
 
   const handleSendBindCode = async () => {
+    const session = getStudentSession();
+    if (!session || session.id !== member.id || saving) return;
     if (!validPhoneInput(bindPhone, bindCountryCode)) {
-      setMessage('请输入正确的手机号');
+      setPhoneFeedback('请输入正确的手机号');
       return;
     }
     if (!bindCodeGuardRef.current.tryStart()) {
       const remaining = bindCodeGuardRef.current.remainingSeconds();
-      if (remaining > 0) setMessage(`操作过于频繁，请 ${remaining} 秒后重试`);
+      if (remaining > 0) setPhoneFeedback(`操作过于频繁，请 ${remaining} 秒后重试`);
       return;
     }
     setBindCodeSending(true);
-    setMessage('');
+    setPhoneFeedback('');
     try {
-      const result = await studentApi.sendCode(bindPhone, bindCountryCode);
+      await studentApi.sendProfilePhoneCode(bindPhone, bindCountryCode);
+      if (getStudentSession()?.id !== session.id) { bindCodeGuardRef.current.fail(); return; }
       bindCodeGuardRef.current.succeed();
       setBindCooldownSeconds(bindCodeGuardRef.current.remainingSeconds());
-      const devCode = result?.devCode || result?.code;
-      if (devCode) setBindCode(String(devCode));
-      setMessage(devCode ? `验证码：${devCode}` : '验证码已发送，请查收短信');
+      setPhoneFeedback('验证码已发送，请查收短信');
     } catch (error) {
       const retryAfter = smsRetryAfterSeconds(error);
       if (retryAfter > 0) {
@@ -549,7 +543,7 @@ export default function ProfilePage() {
       } else {
         bindCodeGuardRef.current.fail();
       }
-      setMessage(smsSendErrorMessage(error));
+      setPhoneFeedback(smsSendErrorMessage(error));
     } finally {
       setBindCodeSending(false);
     }
@@ -598,6 +592,177 @@ export default function ProfilePage() {
           ) : null}
           {copyStatus ? <p className="mt-3 text-xs text-[#8A6A32]" role="status">{copyStatus}</p> : null}
         </section>
+      </main>
+    );
+  }
+
+  if (editing) {
+    const digits = knownPhone.replace(/\D/g, '');
+    const maskedEditorPhone = digits.length >= 8 ? `${digits.slice(0, 3)}****${digits.slice(-4)}` : digits.replace(/./g, '*');
+    return (
+      <main className="min-h-dvh bg-[#F8F3EE] px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-5 text-[#202124] lg:pt-24">
+        <div className="mx-auto max-w-lg">
+          <header className="relative mb-6 flex min-h-11 items-center justify-center">
+            <Link href="/dashboard/profile" className="absolute left-0 grid size-11 place-items-center rounded-lg" aria-label="返回个人中心"><ChevronLeft /></Link>
+            <h1 className="text-balance text-2xl font-bold">个人资料</h1>
+          </header>
+          <form onSubmit={handleSubmit}>
+            <label className="mx-auto mb-6 flex w-fit cursor-pointer flex-col items-center gap-2 rounded-lg font-semibold text-[#9F1D20] focus-within:ring-2">
+              <span className="relative grid size-24 place-items-center rounded-full bg-[#F9EAEA] text-3xl">
+                {avatar ? <Image src={avatar} alt="" fill sizes="96px" className="rounded-full object-cover" unoptimized /> : displayName.slice(0, 1)}
+                <span className="absolute bottom-0 right-0 grid size-8 place-items-center rounded-full border-2 border-white bg-[#9F1D20] text-white"><Camera size={16} /></span>
+              </span>
+              更换头像
+              <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleAvatar} disabled={saving} />
+            </label>
+            <fieldset disabled={saving} className="min-w-0 space-y-4">
+              <section className="rounded-2xl bg-white px-4 py-3">
+                <h2 className="profile-edit-heading">基本资料</h2>
+                <label className="profile-edit-row">
+                  <span>姓名</span>
+                  <input value={member.wxName || member.wxNickname || member.name || ''} maxLength={60} required onChange={(e) => updateField('wxName', e.target.value)} />
+                </label>
+                <div className="profile-edit-row">
+                  <span>手机号</span>
+                  <button type="button" className="flex items-center gap-2 text-[#9F1D20]" aria-label={maskedEditorPhone ? `修改手机号 ${maskedEditorPhone}` : "绑定手机号"} aria-expanded={phoneEditorOpen} onClick={() => { setPhoneEditorOpen(!phoneEditorOpen); setPhoneFeedback(''); }}>
+                    <span>{maskedEditorPhone ? maskedEditorPhone + ' · 修改' : '绑定手机号'}</span>
+                    <ChevronDown size={16} aria-hidden="true" />
+                  </button>
+                </div>
+                {phoneEditorOpen && (
+                  <div className="space-y-2" onKeyDown={(event) => {
+                    if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+                      event.preventDefault();
+                      if (event.target.autocomplete === 'one-time-code') void handleBindPhone();
+                    }
+                  }}>
+                    <div className="flex gap-2">
+                      <select
+                        value={customDialCode ? 'other' : bindCountryCode}
+                        onChange={(event) => {
+                          const isOther = event.target.value === 'other';
+                          const nextCode = isOther ? '' : event.target.value;
+                          setCustomDialCode(isOther);
+                          setBindCountryCode(nextCode);
+                          setBindCode('');
+                          setBindPhone((current) => normalizeLocalPhoneInput(current, nextCode));
+                        }}
+                        className="w-[88px] shrink-0 rounded-xl border border-[#E8DDCB] bg-white px-2 py-2.5 text-sm outline-none focus:border-[#B99652]"
+                        aria-label="选择国家区号"
+                      >
+                        {PHONE_COUNTRIES.map((item) => (
+                          <option key={item.code} value={item.code}>
+                            {item.flag} {item.code} {item.name}
+                          </option>
+                        ))}
+                        <option value="other" label="🌐 其他">🌐 其他区号</option>
+                      </select>
+                      {customDialCode && (
+                        <input type="tel" aria-label="其他区号" placeholder="+62" maxLength={4}
+                          value={bindCountryCode} onChange={(event) => setBindCountryCode(event.target.value)}
+                          className="w-14 shrink-0 rounded-xl border border-[#E8DDCB] px-2 py-2.5" />
+                      )}
+                      <input
+                        type="tel"
+                        aria-label="新手机号"
+                        value={bindPhone}
+                        onChange={(event) => setBindPhone(normalizeLocalPhoneInput(event.target.value, bindCountryCode))}
+                        placeholder={bindCountryCode === '+86' ? '手机号' : '本地号码'}
+                        className="min-w-0 flex-1 rounded-xl border border-[#E8DDCB] px-3 py-2.5 outline-none focus:border-[#B99652]"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        aria-label="短信验证码"
+                        value={bindCode}
+                        onChange={(event) => setBindCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="短信验证码"
+                        className="min-w-0 flex-1 rounded-xl border border-[#E8DDCB] px-3 py-2.5 outline-none focus:border-[#B99652]"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSendBindCode}
+                        disabled={bindCodeSending || bindCooldownSeconds > 0}
+                        className="shrink-0 rounded-xl border border-[#B99652] px-3 py-2.5 text-sm font-semibold text-[#9A793D] disabled:opacity-60"
+                      >
+                        {bindCodeSending ? '发送中' : bindCooldownSeconds > 0 ? `${bindCooldownSeconds}秒` : '获取验证码'}
+                      </button>
+                    </div>
+                      <button
+                        type="button"
+                        onClick={handleBindPhone}
+                        disabled={saving || bindCodeSending}
+                        className="ml-auto block whitespace-nowrap rounded-xl bg-[#9F1D20] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                      >
+                        {saving ? '保存中' : phoneBound ? '确认修改' : '确认绑定'}
+                      </button>
+                    {phoneFeedback && <p className="text-sm text-[#616773]" role="status">{phoneFeedback}</p>}
+                  </div>
+                )}
+                <label className="profile-edit-row">
+                  <span>微信号</span>
+                  <input
+                    value={member.wxAccount || ''}
+                    onChange={(e) => updateField('wxAccount', e.target.value)}
+                    placeholder="未填写"
+                  />
+                </label>
+                <label className="profile-edit-row">
+                  <span>性别</span>
+                  <select value={member.gender || ''} onChange={(e) => updateField('gender', e.target.value)}>
+                    <option value="">未填写</option>
+                    <option value="女">女</option>
+                    <option value="男">男</option>
+                  </select>
+                </label>
+                <label className="profile-edit-row">
+                  <span>生日</span>
+                  <input type="date" value={member.birthday || ''} onChange={(e) => updateField('birthday', e.target.value)} />
+                </label>
+              </section>
+              <section className="rounded-2xl bg-white px-4 py-3">
+                <h2 className="profile-edit-heading">所在地</h2>
+                <label className="profile-edit-row">
+                  <span>国家/地区</span>
+                  <select value={member.country || '中国'} onChange={(e) => updateField('country', e.target.value)}>
+                    {countryOptions.map((country) => (
+                      <option key={country} value={country}>{country}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="profile-edit-row">
+                  <span>省份/地区</span>
+                  <select value={member.province || ''} onChange={(e) => updateField('province', e.target.value)}>
+                    <option value="">请选择</option>
+                    {provinceOptions.map((province) => (
+                      <option key={province} value={province}>{province}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="profile-edit-row">
+                  <span>城市</span>
+                  <select value={member.city || ''} onChange={(e) => updateField('city', e.target.value)}>
+                    <option value="">请选择</option>
+                    {cityOptions.map((city) => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="profile-edit-row">
+                  <span>地址</span>
+                  <input placeholder="填写详细地址" value={member.address || ''} onChange={(e) => updateField('address', e.target.value)} />
+                </label>
+              </section>
+              <button type="button" onClick={handleSyncWechatProfile} className="min-h-11 rounded-lg border border-[#D6ACAE] px-3 text-sm font-medium text-[#9F1D20]">微信资料同步</button>
+              <button type="button" onClick={handleWechatOAuth} className="ml-3 min-h-11 px-2 text-sm font-medium text-[#9F1D20]">{wechatBound ? '微信授权同步' : '绑定微信'}</button>
+              {message && <p className="text-sm text-[#9F1D20]" role="status">{message}</p>}
+              <button type="submit" className="block min-h-11 min-w-32 rounded-lg bg-[#9F1D20] px-5 text-sm font-semibold text-white disabled:opacity-60">{saving ? '处理中' : '保存资料'}</button>
+            </fieldset>
+          </form>
+        </div>
       </main>
     );
   }
@@ -681,68 +846,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {!phoneBound ? (
-          <form onSubmit={handleBindPhone} className="border-t border-[#F1E7D8] bg-white p-2 md:p-2.5 lg:rounded-2xl lg:border lg:border-[#E8DDCB] lg:p-4 lg:shadow-sm">
-            <div className="mb-1.5 flex items-start gap-2">
-              <Phone className="mt-0.5 h-5 w-5 shrink-0 text-[#B99652]" />
-              <div>
-                <h2 className="text-base font-bold">绑定手机号</h2>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <select
-                  value={bindCountryCode}
-                  onChange={(event) => {
-                    const nextCode = event.target.value;
-                    setBindCountryCode(nextCode);
-                    setBindPhone((current) => normalizeLocalPhoneInput(current, nextCode));
-                  }}
-                  className="w-[104px] shrink-0 rounded-xl border border-[#E8DDCB] bg-white px-2 py-2.5 text-sm outline-none focus:border-[#B99652]"
-                  aria-label="选择国家区号"
-                >
-                  {COUNTRY_CODES.map((item) => (
-                    <option key={item.code} value={item.code}>
-                      {item.code} {item.label}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="tel"
-                  value={bindPhone}
-                  onChange={(event) => setBindPhone(normalizeLocalPhoneInput(event.target.value, bindCountryCode))}
-                  placeholder={bindCountryCode === '+86' ? '手机号' : '本地号码'}
-                  className="min-w-0 flex-1 rounded-xl border border-[#E8DDCB] px-3 py-2.5 outline-none focus:border-[#B99652]"
-                />
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={bindCode}
-                  onChange={(event) => setBindCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="短信验证码"
-                  className="min-w-0 flex-1 rounded-xl border border-[#E8DDCB] px-3 py-2.5 outline-none focus:border-[#B99652]"
-                />
-                <button
-                  type="button"
-                  onClick={handleSendBindCode}
-                  disabled={bindCodeSending || bindCooldownSeconds > 0}
-                  className="shrink-0 rounded-xl border border-[#B99652] px-3 py-2.5 text-sm font-semibold text-[#9A793D] disabled:opacity-60"
-                >
-                  {bindCodeSending ? '发送中' : bindCooldownSeconds > 0 ? `${bindCooldownSeconds}秒` : '获取验证码'}
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="shrink-0 rounded-xl bg-[#9F1D20] px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-                >
-                  {saving ? '绑定中' : '确认绑定'}
-                </button>
-              </div>
-            </div>
-          </form>
-        ) : null}
+        {!phoneBound && <Link href={editPath} className="block border-t bg-white p-4 font-semibold text-[#9F1D20]">绑定手机号</Link>}
 
         </aside>
 
@@ -750,11 +854,9 @@ export default function ProfilePage() {
         <Link href="/shop/selection?orders=1" className="block border-b bg-white px-5 py-4 font-semibold">我的订单 <span className="ml-2 text-sm font-normal text-stone-500">课程、商品、支付与退款</span></Link>
         <section className="border-t border-[#F1E7D8] bg-transparent p-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-[#E8DDCB] lg:bg-white lg:shadow-sm">
           <div className="flex items-center bg-white">
-            <button
-              type="button"
-              onClick={() => setProfileOpen((value) => !value)}
+            <Link
+              href={editPath}
               className="flex min-w-0 flex-1 items-center px-3 py-1.5 text-left lg:px-6 lg:py-5"
-              aria-expanded={profileOpen}
             >
               <span className="flex min-w-0 items-center gap-2">
                 <UserRound className="h-5 w-5 shrink-0 text-[#B99652]" />
@@ -765,7 +867,7 @@ export default function ProfilePage() {
                   </span>
                 </span>
               </span>
-            </button>
+            </Link>
             {wechatBound ? (
               <span className="mr-1.5 inline-flex shrink-0 items-center gap-1 rounded-full bg-[#EAF7EA] px-2.5 py-1.5 text-xs font-semibold text-[#168315] lg:mr-3">
                 <Check className="h-3.5 w-3.5" />
@@ -780,124 +882,14 @@ export default function ProfilePage() {
                 绑定微信
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => setProfileOpen((value) => !value)}
-              className="mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#8A6A32] lg:mr-4"
-              aria-label={profileOpen ? '收起个人资料' : '展开个人资料'}
-              aria-expanded={profileOpen}
-            >
-              <ChevronDown className={`h-5 w-5 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
-            </button>
+            <Link href={editPath} className="mr-2 grid size-11 shrink-0 place-items-center text-[#8A6A32]" aria-label="打开个人资料">
+              <ChevronDown className="size-5 -rotate-90" />
+            </Link>
           </div>
 
           {message ? <p className="mt-0 bg-white px-3 py-1.5 text-sm text-[#9F1D20]">{message}</p> : null}
 
-          {profileOpen ? (
-            <form onSubmit={handleSubmit} className="mt-0 space-y-1.5 bg-white p-2 md:p-2.5 lg:space-y-5 lg:border-t lg:border-[#F1E7D8] lg:p-6">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-bold">个人资料</h2>
-                  <p className="mt-1 text-xs text-[#8A7A68]">
-                    {wechatBound ? '微信身份已绑定' : '尚未绑定微信身份'}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleWechatOAuth}
-                    className="rounded-full bg-[#F8F3EA] px-3 py-2 text-xs font-semibold text-[#8A6A32]"
-                  >
-                    {wechatBound ? '微信授权同步' : '绑定微信'}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#9F1D20] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                  >
-                    <Save className="h-4 w-4" />
-                    {saving ? '保存中' : '保存'}
-                  </button>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-1.5 md:gap-2 lg:gap-4">
-                <label className="min-w-0 space-y-1 text-sm font-semibold">
-                  <span>姓名</span>
-                  <input value={displayName} onChange={(e) => updateField('wxName', e.target.value)} className="min-w-0 w-full rounded-xl border border-[#E8DDCB] px-2.5 py-2.5 outline-none focus:border-[#B99652] sm:px-3" />
-                </label>
-                <label className="min-w-0 space-y-1 text-sm font-semibold">
-                  <span>手机号</span>
-                  <input value={knownPhone || ''} readOnly className="min-w-0 w-full rounded-xl border border-[#E8DDCB] bg-[#F8F3EA] px-2.5 py-2.5 text-[#8A7A68] sm:px-3" placeholder="未绑定手机号" />
-                </label>
-                <label className="col-span-2 space-y-1 text-sm font-semibold">
-                  <span>微信号</span>
-                  <input
-                    value={member.wxAccount || ''}
-                    onChange={(e) => updateField('wxAccount', e.target.value)}
-                    className="w-full rounded-xl border border-[#E8DDCB] px-2.5 py-2.5 outline-none focus:border-[#B99652] sm:px-3"
-                    placeholder="微信官方不会自动返回微信号，请手动填写"
-                  />
-                </label>
-                <label className="space-y-1 text-sm font-semibold">
-                  <span>性别</span>
-                  <select value={member.gender || ''} onChange={(e) => updateField('gender', e.target.value)} className="w-full rounded-xl border border-[#E8DDCB] px-2.5 py-2.5 outline-none focus:border-[#B99652] sm:px-3">
-                    <option value="">未填写</option>
-                    <option value="女">女</option>
-                    <option value="男">男</option>
-                  </select>
-                </label>
-                <label className="space-y-1 text-sm font-semibold">
-                  <span>生日</span>
-                  <input type="date" value={member.birthday || ''} onChange={(e) => updateField('birthday', e.target.value)} className="w-full rounded-xl border border-[#E8DDCB] px-2.5 py-2.5 outline-none focus:border-[#B99652] sm:px-3" />
-                </label>
-                <label className="space-y-1 text-sm font-semibold">
-                  <span>国家/地区</span>
-                  <select value={member.country || '中国'} onChange={(e) => updateField('country', e.target.value)} className="w-full rounded-xl border border-[#E8DDCB] px-2.5 py-2.5 outline-none focus:border-[#B99652] sm:px-3">
-                    {countryOptions.map((country) => (
-                      <option key={country} value={country}>{country}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="space-y-1 text-sm font-semibold">
-                  <span>省份/地区</span>
-                  <select value={member.province || ''} onChange={(e) => updateField('province', e.target.value)} className="w-full rounded-xl border border-[#E8DDCB] px-2.5 py-2.5 outline-none focus:border-[#B99652] sm:px-3">
-                    <option value="">请选择</option>
-                    {provinceOptions.map((province) => (
-                      <option key={province} value={province}>{province}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="space-y-1 text-sm font-semibold">
-                  <span>城市</span>
-                  <select value={member.city || ''} onChange={(e) => updateField('city', e.target.value)} className="w-full rounded-xl border border-[#E8DDCB] px-2.5 py-2.5 outline-none focus:border-[#B99652] sm:px-3">
-                    <option value="">请选择</option>
-                    {cityOptions.map((city) => (
-                      <option key={city} value={city}>{city}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="col-span-2 space-y-1 text-sm font-semibold">
-                  <span>地址</span>
-                  <input value={member.address || ''} onChange={(e) => updateField('address', e.target.value)} className="w-full rounded-xl border border-[#E8DDCB] px-2.5 py-2.5 outline-none focus:border-[#B99652] sm:px-3" />
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between gap-3 rounded-xl bg-[#F8F3EA] px-2.5 py-1.5 text-xs text-[#8A7A68]">
-                <span className="min-w-0 flex-1 break-words leading-5">
-                  {member.wxProfileSyncedAt ? `最近同步：${member.wxProfileSyncedAt}` : '个人姓名默认使用微信名，头像默认使用微信头像'}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleSyncWechatProfile}
-                  disabled={saving}
-                  className="shrink-0 rounded-full bg-[#9F1D20] px-3 py-1.5 font-semibold text-white disabled:opacity-60"
-                >
-                  {saving ? '同步中' : '同步资料'}
-                </button>
-              </div>
-            </form>
-          ) : null}
         </section>
 
         <section className="border-t border-[#F1E7D8] bg-white p-2 md:p-2.5 lg:rounded-2xl lg:border lg:border-[#E8DDCB] lg:p-6 lg:shadow-sm" id="online-courses">

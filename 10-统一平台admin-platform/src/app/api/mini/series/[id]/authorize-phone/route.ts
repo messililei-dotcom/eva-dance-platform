@@ -1,3 +1,4 @@
+import { findPhoneMembers } from '@/lib/server/event-phone-member';
 import { canManageMini, cleanText, jsonError, toPositiveInt, withDb } from '../../../_helpers';
 import { ensureAuthorizationAuditColumns, normalizePhoneIdentity, recordAuthorizationIncome } from '../../../../course/series/[id]/_authorization';
 import { reconcileMemberAuthorizations } from '@/lib/server/student-growth';
@@ -12,16 +13,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       ensureAuthorizationAuditColumns(db);
       const seriesId = toPositiveInt(routeParams.id);
       const phone = normalizePhoneIdentity(cleanText(body.phone));
-      if (!/^1\d{10}$/.test(phone)) return jsonError('请输入正确的手机号', 400);
-      let member = db.prepare(
-        `SELECT id, phone, name FROM Member
-         WHERE phone=? OR phone_national_number=?
-         ORDER BY CASE WHEN phone=? THEN 0 ELSE 1 END, id DESC
-         LIMIT 1`
-      ).get(phone, phone, phone);
+      if (!/^1[3-9]\d{9}$/.test(phone)) return jsonError('请输入正确的手机号', 400);
+      const matches = findPhoneMembers(db, phone);
+      if (matches.length > 1) return jsonError('手机号关联了多位学员，请先核实', 409);
+      let member = matches[0];
       let created = false;
       if (!member) {
-        const result = db.prepare(`INSERT INTO Member (name, phone, source, status, register_date, created_at) VALUES (?, ?, 'phone_auth', 'active', date('now','localtime'), datetime('now','localtime'))`).run(`手机学员${phone.slice(-4)}`, phone);
+        const result = db.prepare(`INSERT INTO Member (name, phone, source, status, register_date, created_at) VALUES (?, ?, 'phone_auth', 'active', date('now','localtime'), datetime('now','localtime'))`).run(`手机学员${phone.slice(-4)}`, `+86${phone}`);
         member = db.prepare('SELECT id, phone, name FROM Member WHERE id=?').get(result.lastInsertRowid);
         created = true;
         createWelcomeMessage(db, Number(member.id), String(member.name || ''));

@@ -1,3 +1,4 @@
+import { findPhoneMembers } from '@/lib/server/event-phone-member';
 import { cleanText, jsonError, toPositiveInt, withDb } from '../../../_helpers';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -7,11 +8,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return withDb((db) => {
       const seriesId = toPositiveInt(routeParams.id);
       const phone = cleanText(body.phone);
-      if (!/^1\d{10}$/.test(phone)) return jsonError('请输入正确的手机号', 400);
-      let member = db.prepare('SELECT id, phone, name FROM Member WHERE phone=?').get(phone);
+      if (!/^1[3-9]\d{9}$/.test(phone)) return jsonError('请输入正确的手机号', 400);
+      const matches = findPhoneMembers(db, phone);
+      if (matches.length > 1) return jsonError('手机号关联了多位学员，请先核实', 409);
+      let member = matches[0];
       let created = false;
       if (!member) {
-        const result = db.prepare(`INSERT INTO Member (name, phone, source, status, register_date, created_at) VALUES (?, ?, 'phone_auth', 'active', date('now','localtime'), datetime('now','localtime'))`).run(`手机学员${phone.slice(-4)}`, phone);
+        const result = db.prepare(`INSERT INTO Member (name, phone, source, status, register_date, created_at) VALUES (?, ?, 'phone_auth', 'active', date('now','localtime'), datetime('now','localtime'))`).run(`手机学员${phone.slice(-4)}`, `+86${phone}`);
         member = db.prepare('SELECT id, phone, name FROM Member WHERE id=?').get(result.lastInsertRowid);
         created = true;
       }

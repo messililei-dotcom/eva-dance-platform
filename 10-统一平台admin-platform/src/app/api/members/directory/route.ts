@@ -51,6 +51,7 @@ export async function GET(request: Request) {
         member.remark,
         CASE WHEN member.status='merged' THEN CAST(substr(member.remark, instr(member.remark, '[merged_into:') + 13) AS INTEGER) END AS mergedInto,
         COALESCE(NULLIF(member.phone, ''), member.phone_national_number, '') AS phone,
+        member.phone_country_code,
         COALESCE(member.level, '普通学员') AS level,
         COALESCE(member.status, 'active') AS status,
         COALESCE(member.country, '中国') AS country,

@@ -1,6 +1,6 @@
 'use client';
 
-import { clearStudentSession, preferredStudentName, saveStudentSession, STUDENT_AUTH_CHANGED_EVENT } from '@/lib/student-auth';
+import { clearStudentSession, getStudentSession, preferredStudentName, saveStudentSession, STUDENT_AUTH_CHANGED_EVENT } from '@/lib/student-auth';
 import { requestStudentJson, StudentConnectionError } from '@/lib/student-connection';
 import { extractStudentLoginPayload } from '@/lib/student-login-payload';
 import {
@@ -819,6 +819,16 @@ export const studentApi = {
     } catch {
       return saved;
     }
+  },
+  sendProfilePhoneCode: (phone: string, countryCode: string) =>
+    request('/member/phone', { method: 'POST', body: { action: 'send-code', phone, countryCode } }),
+  updateProfilePhone: async (phone: string, code: string, countryCode: string): Promise<{ phone: string; mergedMember?: StudentMember }> => {
+    const memberId = getStudentSession()?.id;
+    const data = unwrapData(await request('/member/phone', { method: 'POST', body: { phone, code, countryCode } }));
+    if (data.token && data.member && getStudentSession()?.id === memberId) {
+      return { phone: data.phone, mergedMember: saveSession(data.token, data.member) };
+    }
+    return { phone: data.phone };
   },
   bindPhone: async (phone: string, code: string, countryCode = '+86'): Promise<StudentMember> => {
     try {

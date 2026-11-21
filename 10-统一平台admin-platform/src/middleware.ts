@@ -201,7 +201,7 @@ export async function middleware(request: NextRequest) {
   if (apiPath.startsWith("/api/app/v1/")) return withRobotsHeader(NextResponse.next());
 
   // 公开端点放行
-  if (isPublicApiPath(apiPath) || (request.method === 'GET' && /^\/api\/mini\/events(?:\/[1-9][0-9]*(?:\/groups\/[1-9][0-9]*(?:\/players\/[1-9][0-9]*)?)?)?$/.test(apiPath))) {
+  if ((request.method === 'GET' && apiPath === '/api/mini/events/summary') || isPublicApiPath(apiPath) || (request.method === 'GET' && /^\/api\/mini\/events(?:\/[1-9][0-9]*(?:\/groups\/[1-9][0-9]*(?:\/players\/[1-9][0-9]*)?)?)?$/.test(apiPath))) {
     return withRobotsHeader(NextResponse.next());
   }
 

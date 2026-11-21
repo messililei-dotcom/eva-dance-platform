@@ -109,7 +109,7 @@ export function revokeAppSession(db: AdminDb, memberId: number, sessionId: strin
   if (!result.changes) throw new AppError('设备会话不存在', 404);
 }
 export function verifyAppSMS(db: AdminDb, phone: string, code: string, now = Date.now()) {
-  if (!/^1\d{10}$/.test(phone) || !/^\d{6}$/.test(code)) throw new AppError('请填写正确的手机号和6位验证码');
+  if (!/^(1[3-9]\d{9}|\+[1-9]\d{7,14})$/.test(phone) || !/^\d{6}$/.test(code)) throw new AppError('请填写正确的手机号和6位验证码');
   const key = hash(phone);
   const attempts = db.prepare('SELECT attempts,window_start FROM AppLoginAttempt WHERE phone_hash=?').get<{attempts:number;window_start:number}>(key);
   if (attempts && now - attempts.window_start < 10 * 60_000 && attempts.attempts >= 5) throw new AppError('验证次数较多，请10分钟后重试', 429);
@@ -145,7 +145,7 @@ export function revokeAppPassword(db: AdminDb, memberId: number, now = Date.now(
 }
 
 export function verifyAppPassword(db: AdminDb, phone: string, password: string, ip: string, now = Date.now()) {
-  if (!/^1\d{10}$/.test(phone) || password.length < 1 || password.length > 128) throw new AppError('手机号或密码不正确', 401);
+  if (!/^(1[3-9]\d{9}|\+[1-9]\d{7,14})$/.test(phone) || password.length < 1 || password.length > 128) throw new AppError('手机号或密码不正确', 401);
   // Persist throttling before verification, including failed and unknown-account requests.
   db.prepare('DELETE FROM AppPasswordAttempt WHERE window_start<?').run(now - 600000);
   for (const [key, limit] of [[hash('phone:' + phone), 5], [hash('ip:' + ip), 30]] as const) {
@@ -156,7 +156,10 @@ export function verifyAppPassword(db: AdminDb, phone: string, password: string, 
     db.prepare(`INSERT INTO AppPasswordAttempt(key_hash,attempts,window_start) VALUES(?,1,?)
       ON CONFLICT(key_hash) DO UPDATE SET attempts=attempts+1`).run(key, now);
   }
-  const members = db.prepare('SELECT id FROM Member WHERE phone=? LIMIT 2').all<{id:number}>(phone);
+  const domestic = /^1[3-9]\d{9}$/.test(phone);
+  const storedPhone = domestic ? `+86${phone}` : phone;
+  const members = db.prepare('SELECT id FROM Member WHERE phone IN (?,?,?) LIMIT 2')
+    .all<{ id: number }>(phone, storedPhone, storedPhone.slice(1));
   const memberId = members.length === 1 ? Number(members[0].id) : 0;
   const credential = db.prepare('SELECT * FROM AppPasswordCredential WHERE member_id=?').get<{salt:string;digest:string;expires_at:number;revoked_at:number|null}>(memberId);
   const valid = credential && /^[a-f0-9]{32}$/.test(credential.salt) && /^[a-f0-9]{64}$/.test(credential.digest);

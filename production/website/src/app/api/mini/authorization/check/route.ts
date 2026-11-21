@@ -1,3 +1,4 @@
+import { memberPhoneKeySql } from '@/lib/server/member-phone-sql';
 import { getMemberId, jsonError, toPositiveInt, withDb } from '../../_helpers';
 
 export async function GET(request: Request) {
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
       const auth = db.prepare(
         `SELECT * FROM CourseAuthorization
          WHERE series_id=? AND status='active'
-           AND (member_id=? OR (phone<>'' AND phone=?))
+           AND (member_id=? OR (phone<>'' AND ${memberPhoneKeySql('phone')}=(SELECT ${memberPhoneKeySql('bound.input')} FROM (SELECT ? AS input) bound)))
            AND (expire_at IS NULL OR expire_at > datetime('now','localtime'))
          LIMIT 1`
       ).get(seriesId, memberId, member?.phone || '');

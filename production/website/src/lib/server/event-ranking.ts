@@ -6,7 +6,7 @@ export function getRuleForGroup(db: any, groupId: number, ruleId?: number | null
   const explicitRuleId = Number(ruleId || group?.score_rule_id || 0);
   let row = explicitRuleId ? db.prepare('SELECT * FROM event_score_rules WHERE id = ?').get(explicitRuleId) : null;
   if (!row && group?.competition_id) {
-    const competitionRules = db.prepare('SELECT * FROM event_score_rules WHERE competition_id = ? ORDER BY id ASC').all(group.competition_id);
+    const competitionRules = db.prepare("SELECT * FROM event_score_rules WHERE competition_id = ? AND status != 'archived' ORDER BY id ASC").all(group.competition_id);
     if (competitionRules.length === 1) row = competitionRules[0];
     else if (competitionRules.length > 1) {
       row = {
@@ -83,7 +83,7 @@ export function recalculateGroupRankings(db: any, groupId: number) {
   const players = db.prepare(`
     SELECT p.*, COUNT(DISTINCT gj.judge_id) AS judge_count
     FROM event_players p
-    LEFT JOIN event_group_judges gj ON gj.group_id = p.group_id AND gj.status = 'active'
+    LEFT JOIN event_group_judges gj ON gj.group_id = p.group_id AND gj.status = 'active' AND gj.auth_enabled = 1 AND EXISTS (SELECT 1 FROM event_judges j WHERE j.id=gj.judge_id AND j.status='active' AND j.auth_enabled=1)
     WHERE p.group_id = ? AND p.audit_status != 'rejected' AND p.status NOT IN ('withdrawn','cancelled')
     GROUP BY p.id
     ORDER BY p.player_no ASC, p.id ASC
@@ -93,7 +93,7 @@ export function recalculateGroupRankings(db: any, groupId: number) {
     const scoreRows = db.prepare(`
       SELECT s.judge_id, s.calculated_score, s.criteria_scores_json, s.version, COALESCE(gj.weight, 1) AS weight
       FROM event_scores s
-      JOIN event_group_judges gj ON gj.group_id = s.group_id AND gj.judge_id = s.judge_id AND gj.status = 'active'
+      JOIN event_group_judges gj ON gj.group_id = s.group_id AND gj.judge_id = s.judge_id AND gj.status = 'active' AND gj.auth_enabled = 1 AND EXISTS (SELECT 1 FROM event_judges j WHERE j.id=gj.judge_id AND j.status='active' AND j.auth_enabled=1)
       WHERE s.group_id = ?
         AND s.player_id = ?
         AND s.score_status IN ('submitted', 'reviewed', 'published')
@@ -151,8 +151,9 @@ export function syncCompletedGroupPublication(db: any, groupId: number, updatedA
     LEFT JOIN event_rankings r ON r.group_id=p.group_id AND r.player_id=p.id
     WHERE p.group_id=? AND p.audit_status!='rejected'
       AND p.status NOT IN ('withdrawn','cancelled')`).all(groupId);
-  const judges = db.prepare(`SELECT DISTINCT judge_id FROM event_group_judges
-    WHERE group_id=? AND status='active'`).all(groupId);
+  const judges = db.prepare(`SELECT DISTINCT gj.judge_id FROM event_group_judges gj
+    JOIN event_judges j ON j.id=gj.judge_id
+    WHERE gj.group_id=? AND gj.status='active' AND gj.auth_enabled=1 AND j.status='active' AND j.auth_enabled=1`).all(groupId);
   const hasScore = db.prepare(`SELECT 1 FROM event_scores WHERE group_id=? AND player_id=? AND judge_id=?
     AND score_status IN ('submitted','reviewed','published') LIMIT 1`);
   const completed = players.filter((player: any) => player.manual_total != null ||
@@ -167,13 +168,18 @@ export function syncCompletedGroupPublication(db: any, groupId: number, updatedA
     published_score=calculated_score, updated_at=? WHERE group_id=? AND player_id=?
       AND score_status IN ('submitted','reviewed','published')
       AND EXISTS (SELECT 1 FROM event_group_judges gj WHERE gj.group_id=event_scores.group_id
-        AND gj.judge_id=event_scores.judge_id AND gj.status='active')`);
+        AND gj.judge_id=event_scores.judge_id AND gj.status='active' AND gj.auth_enabled=1
+        AND EXISTS (SELECT 1 FROM event_judges j WHERE j.id=gj.judge_id AND j.status='active' AND j.auth_enabled=1))`);
   players.forEach((player: any) => {
     if (readyIds.has(player.id)) {
       publish.run(updatedAt, updatedAt, groupId, player.id);
       publishScores.run(updatedAt, groupId, player.id);
     } else hide.run(updatedAt, groupId, player.id);
   });
-  if (!groupComplete) db.prepare(`UPDATE event_rankings SET rank_no=0 WHERE group_id=?`).run(groupId);
+  if (!groupComplete) {
+    db.prepare(`UPDATE event_rankings SET rank_no=0 WHERE group_id=?`).run(groupId);
+    // Changing the eligible judging panel must leave a path to submit missing scores.
+    db.prepare(`UPDATE event_groups SET scoring_status='unlocked' WHERE id=? AND scoring_status='locked'`).run(groupId);
+  }
   return groupComplete;
 }

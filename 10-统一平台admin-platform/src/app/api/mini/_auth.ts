@@ -1,3 +1,4 @@
+import { formatMemberPhoneForDisplay } from '@/lib/member-phone-display';
 import { findPhoneMembers, samePhoneIdentity } from '@/lib/server/event-phone-member';
 import type { AdminDb } from '@/lib/server/admin-db';
 import { cleanText, memberToken } from './_helpers';
@@ -362,6 +363,80 @@ function mergePhoneMemberIntoWechatMember(db: AdminDb, phoneMember: MemberRow, w
   return mergeMemberIntoTarget(db, phoneMember, wechatMember, phone, 'wechat_phone');
 }
 
+/** Both login identities must already be verified within the caller's write transaction. */
+export function mergeConfirmedProfilePhone(db: AdminDb, source: MemberRow, target: MemberRow, phone: string) {
+  const sourceId = Number(source.id), targetId = Number(target.id);
+  if (tableExists(db, 'MemberBadge')) {
+    db.prepare(`DELETE FROM MemberBadge WHERE member_id=? AND badge_id IN
+      (SELECT badge_id FROM MemberBadge WHERE member_id=?)`).run(sourceId, targetId);
+  }
+  const merged = mergeMemberIntoTarget(db, source, target, phone, 'mini_profile_phone');
+  const ownership = [
+    ['event_players', 'member_id'], ['event_players', 'submitted_by_member_id'], ['event_judges', 'member_id'],
+    ['event_registration_batches', 'member_id'], ['shop_online_orders', 'member_id'], ['shop_course_orders', 'member_id'],
+    ['OfflineEnrollment', 'member_id'], ['OfflineEntitlement', 'member_id'], ['OfflineBooking', 'member_id'],
+    ['OfflineAttendance', 'member_id'], ['exclusive_orders', 'bound_member_id'], ['exclusive_claims', 'member_id'],
+  ];
+  for (const [table, column] of ownership) {
+    if (tableColumns(db, table).has(column)) db.prepare(`UPDATE ${table} SET ${column}=? WHERE ${column}=?`).run(targetId, sourceId);
+  }
+  if (tableExists(db, 'MemberDeviceSession')) {
+    db.prepare("UPDATE MemberDeviceSession SET revoked_at_ms=?, revoke_reason='account_merged' WHERE member_id=? AND revoked_at_ms=0")
+      .run(Date.now(), sourceId);
+  }
+  db.prepare('UPDATE Member SET mini_login_retired=1 WHERE id=?').run(sourceId);
+  return merged;
+}
+
+/** Only called after an authenticated platform administrator explicitly confirms
+ * the current candidate set. A registration contact is not a verified login phone. */
+export function mergeConfirmedEventMembers(db: AdminDb, targetId: number, sourceIds: number[], importedName: string) {
+  if ((db as any).eventOwnerId || !(db as any).eventCanMergeMembers) throw new Error('当前账号不能合并全局人员档案，请联系平台管理员');
+  const name = cleanText(importedName);
+  if (!name || name.length > 120) throw new Error('请填写1至120个字符的选手姓名');
+  return db.transaction(() => {
+    let target = getMember(db, targetId);
+    if (!target || target.status === 'deleted' || target.merged_to_member_id) throw new Error('人员档案已变化，请重新核对');
+    for (const sourceId of sourceIds) {
+      const source = getMember(db, sourceId);
+      if (!source || source.status === 'deleted' || source.merged_to_member_id || sourceId === targetId) throw new Error('人员档案已变化，请重新核对');
+      const sameUnion = target.wx_unionid && target.wx_unionid === source.wx_unionid;
+      if ((target.wx_unionid && source.wx_unionid && target.wx_unionid !== source.wx_unionid)
+        || (target.wx_openid && source.wx_openid && target.wx_openid !== source.wx_openid && !sameUnion)) {
+        throw new Error('档案绑定了不同微信身份，不能在导入时合并，请先核实身份');
+      }
+      db.exec(`CREATE TABLE IF NOT EXISTS EventMemberMergeAudit (
+        id INTEGER PRIMARY KEY, actor_id INTEGER NOT NULL, target_id INTEGER NOT NULL, source_id INTEGER NOT NULL,
+        before_json TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`);
+      const snapshot = (m: MemberRow) => Object.fromEntries(['id', 'name', 'phone', 'phone_country_code', 'phone_national_number', 'status', 'merged_to_member_id'].map(key => [key, m[key] ?? null]));
+      db.prepare('INSERT INTO EventMemberMergeAudit(actor_id,target_id,source_id,before_json) VALUES(?,?,?,?)')
+        .run(Number((db as any).eventActorId || 0), targetId, sourceId, JSON.stringify({ target: snapshot(target), source: snapshot(source), importedName: name }));
+      const phoneFields = ['phone', 'phone_country_code', 'phone_national_number'].filter(key => tableColumns(db, 'Member').has(key));
+      const profilePhone = Object.fromEntries(phoneFields.map(key => [key, target![key] || source[key] || null]));
+      target = mergeMemberIntoTarget(db, source, target, '', 'event_import_confirmed');
+      // The login merge helper also fills phone fields; do not infer a country or
+      // login identity from an event contact (notably Malaysian local numbers).
+      if (phoneFields.length) db.prepare(`UPDATE Member SET ${phoneFields.map(key => `${key}=?`).join(',')} WHERE id=?`)
+        .run(...phoneFields.map(key => profilePhone[key]), targetId);
+      for (const table of ['event_players', 'event_judges', 'event_registration_batches', 'event_notices',
+        'OfflineEnrollment', 'OfflineEntitlement', 'OfflineBooking', 'OfflineAttendance', 'OfflineCheckinToken',
+        'shop_online_orders', 'shop_course_orders']) {
+        const cols = tableColumns(db, table);
+        // Keep historical contact, payment and scoring fields exactly as recorded.
+        for (const column of ['member_id', 'submitted_by_member_id']) if (cols.has(column)) {
+          db.prepare(`UPDATE ${table} SET ${column}=? WHERE ${column}=?`).run(targetId, sourceId);
+        }
+      }
+      target = getMember(db, targetId)!;
+    }
+    // Explicitly confirmed imports use the supplied name as the primary name.
+    // This shares the import transaction, so a failed registration restores it.
+    db.prepare('UPDATE Member SET name=? WHERE id=?').run(name, targetId);
+    return targetId;
+  })();
+}
+
 function transferWechatIdentity(db: AdminDb, target: MemberRow, source: MemberRow | null) {
   if (!source || !target || Number(source.id) === Number(target.id)) return;
 
@@ -407,7 +482,7 @@ export function serializeMember(member: MemberRow) {
   return {
     id: member.id,
     name: member.name,
-    phone: member.phone || '',
+    phone: formatMemberPhoneForDisplay(member.phone, member.phone_country_code),
     avatar_url: member.wx_avatar_url || member.avatar_url || '',
     wx_avatar_url: member.wx_avatar_url || member.avatar_url || '',
     wx_nickname: member.wx_nickname || '',
@@ -427,9 +502,11 @@ export function loginData(member: MemberRow) {
 }
 
 export function upsertPhoneMember(db: AdminDb, phone: string, options: { sourceMemberId?: unknown; source?: string } = {}) {
-  const normalizedPhone = phone.startsWith('+') ? phone : normalizePhoneIdentity(phone);
+  const normalizedPhone = formatMemberPhoneForDisplay(phone);
   const sourceMember = canonicalMember(db, getMember(db, options.sourceMemberId));
-  let phoneMember = (findPhoneMembers(db, phone)[0] as MemberRow | undefined) || null;
+  const matches = findPhoneMembers(db, phone);
+  if (matches.length > 1) throw new Error('手机号关联多位学员，请联系客服核实');
+  let phoneMember = (matches[0] as MemberRow | undefined) || null;
   phoneMember = canonicalMember(db, phoneMember);
 
   if (sourceMember && phoneMember && Number(phoneMember.id) !== Number(sourceMember.id)) {
@@ -463,10 +540,10 @@ export function upsertPhoneMember(db: AdminDb, phone: string, options: { sourceM
   if (sourceMember && (cleanText(sourceMember.wx_openid) || cleanText(sourceMember.wx_unionid))) {
     db.prepare(
       `UPDATE Member
-       SET phone=?, phone_national_number=CASE WHEN COALESCE(phone_national_number, '')='' THEN ? ELSE phone_national_number END,
+       SET phone=?,
            source=?, status='active'
        WHERE id=?`
-    ).run(normalizedPhone, normalizedPhone, options.source || 'mini_program', sourceMember.id);
+    ).run(normalizedPhone, options.source || 'mini_program', sourceMember.id);
     return getMember(db, sourceMember.id) || sourceMember;
   }
 

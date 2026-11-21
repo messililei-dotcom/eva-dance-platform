@@ -17,6 +17,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { platformAdapter } from '@/lib/adapters/platform';
+import { formatMemberPhoneForDisplay } from '@/lib/member-phone-display';
 import { formatPaymentAmount } from '@/lib/money-format';
 import { sortableColumns } from '@/lib/table-sort';
 import type { MemberProfile360 } from '@/types/domain';
@@ -73,6 +74,7 @@ export default function MemberDetailPage() {
   if (!data?.member?.id) return <Alert type="warning" message="学员不存在" showIcon />;
 
   const { member, summary } = data;
+  const phone = formatMemberPhoneForDisplay(member.phone, member.phone_country_code);
   const region = [member.country, member.province, member.city || member.foreignRegion].filter(Boolean).join(' / ') || '-';
   const totalFinance = Number(summary.totalIncome || 0) + Number(summary.financeIncome || 0) + Number(summary.financeOrderAmount || 0);
 
@@ -92,7 +94,7 @@ export default function MemberDetailPage() {
           <Col flex="auto">
             <Title level={3} style={{ margin: 0 }}>{member.name || '未知学员'}</Title>
             <Space wrap style={{ marginTop: 10 }}>
-              <Tag icon={<PhoneOutlined />}>{member.phone || '未绑定手机号'}</Tag>
+              <Tag icon={<PhoneOutlined />}>{phone || '未绑定手机号'}</Tag>
               <Tag icon={<UserOutlined />} color="magenta">{String(member.level || '普通学员').replace(/会员/g, '学员')}</Tag>
               {statusTag(member.status || 'active')}
               <Tag icon={<CalendarOutlined />}>{dateText(member.register_date || member.created_at)}</Tag>
@@ -123,7 +125,7 @@ export default function MemberDetailPage() {
                   <Card title="学员资料">
                     <Descriptions column={2} size="small">
                       <Descriptions.Item label="姓名">{member.name || '-'}</Descriptions.Item>
-                      <Descriptions.Item label="手机号">{member.phone || '-'}</Descriptions.Item>
+                      <Descriptions.Item label="手机号">{phone || '-'}</Descriptions.Item>
                       <Descriptions.Item label="性别">{member.gender || '-'}</Descriptions.Item>
                       <Descriptions.Item label="生日">{dateText(member.birthday)}</Descriptions.Item>
                       <Descriptions.Item label="等级">{String(member.level || '-').replace(/会员/g, '学员')}</Descriptions.Item>

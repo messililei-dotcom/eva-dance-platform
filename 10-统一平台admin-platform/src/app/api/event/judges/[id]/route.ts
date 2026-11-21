@@ -1,8 +1,13 @@
 import { duplicateJudge } from '@/lib/server/event-judge-duplicates';
-import { cleanText, readEventBody, hasAuth, jsonError, mapJudge, nowIso, toNumber, unauthorized, withRequestEventDb } from '../../_db';
+import { cleanText, readEventBody, hasAuth, jsonError, mapJudge, nowIso, toNumber, unauthorized, withRequestEventDb, recalculateGroupRankings } from '../../_db';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+function refreshJudgeGroups(db: any, judgeId: unknown) {
+  const groups = db.prepare('SELECT DISTINCT group_id FROM event_group_judges WHERE judge_id=?').all(judgeId);
+  for (const group of groups) recalculateGroupRankings(db, Number(group.group_id));
+}
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const routeParams = await params;
@@ -62,6 +67,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       nowIso(),
       routeParams.id,
     );
+    refreshJudgeGroups(db, routeParams.id);
     return Response.json({ success: true });
   }).immediate());
 }
@@ -74,11 +80,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const action = cleanText(body.action);
   if (!['enableAuth', 'disableAuth'].includes(action)) return jsonError('不支持的评委操作');
 
-  return withRequestEventDb(request, (db) => {
+  return withRequestEventDb(request, (db) => db.transaction(() => {
     db.prepare('UPDATE event_judges SET auth_enabled = ?, updated_at = ? WHERE id = ?')
       .run(action === 'enableAuth' ? 1 : 0, nowIso(), routeParams.id);
+    refreshJudgeGroups(db, routeParams.id);
     return Response.json({ success: true });
-  });
+  }).immediate());
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -94,6 +101,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const now = nowIso();
     db.prepare("UPDATE event_group_judges SET status='inactive',auth_enabled=0,updated_at=? WHERE judge_id=?").run(now, id);
     db.prepare("UPDATE event_judges SET status='deleted',auth_enabled=0,updated_at=? WHERE id=?").run(now, id);
+    refreshJudgeGroups(db, id);
     return Response.json({ success: true, message: '评委已删除，历史评分保留' });
   }).immediate());
 }

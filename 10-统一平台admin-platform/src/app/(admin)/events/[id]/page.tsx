@@ -1,16 +1,20 @@
 'use client';
+import { DEFAULT_SCORE_CRITERIA } from '@/lib/event-score-rules';
 import { NumericDateInput } from '@/components/numeric-date-input';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import EventMusicPlayer from '@/components/event-music-player';
+import EventImportIdentityModal from '@/components/event-import-identity-modal';
+import type { ImportIdentityConflict, ImportIdentityDecision } from '@/lib/event-import-identity';
 import EventPlayerProfileModal from '@/components/event-player-profile-modal';
 import EventRevenueModal from '@/components/event-revenue-modal';
 import EventMusicBoard from '@/components/event-music-board';
 import { useParams, useRouter } from 'next/navigation';
 import { validateImportWorkbook } from '@/lib/event-import-workbook';
 import readXlsxFile from 'read-excel-file/browser';
-import { parseImportRows, parseImportCsv, hasImportHeader, eventImportCsv, type ImportKind } from '@/lib/event-import-format';
+import type { SheetData } from 'write-excel-file/browser';
+import { parseImportRows, parseImportCsv, hasImportHeader, eventImportCsv, groupExportHeaders, type ImportKind } from '@/lib/event-import-format';
 import { memberOptionLabel, memberSearchText } from '@/lib/member-search';
 import {
   Alert,
@@ -30,6 +34,7 @@ import {
   Tabs,
   Tag,
   Upload,
+  theme,
 } from 'antd';
 import {
   AuditOutlined,
@@ -54,7 +59,7 @@ import {
   UserSwitchOutlined,
 } from '@ant-design/icons';
 import { Table } from '@/components/adaptive-table';
-import { api, eventApi } from '@/lib/api';
+import { api, eventApi, type RegistrationPaymentDetails } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { isPlatformOwner } from '@/lib/admin-feature-access';
 import { sortableColumns } from '@/lib/table-sort';
@@ -95,8 +100,12 @@ function statusTag(value: string, danger = false) {
   return <Tag color={color}>{statusText[value] || value || '-'}</Tag>;
 }
 
+function groupScoringLabel(value: string) {
+  return value === 'locked' ? '已锁定' : '可评分';
+}
+
 function lockTag(value: string) {
-  return value === 'locked' ? <Tag color="red">已锁定</Tag> : <Tag color="green">可评分</Tag>;
+  return <Tag color={value === 'locked' ? 'red' : 'green'}>{groupScoringLabel(value)}</Tag>;
 }
 
 function formatFinalScore(value: number | null | undefined, peerValues: Array<number | null | undefined> = []) {
@@ -200,6 +209,9 @@ export default function EventDetailPage() {
   const competitionId = Number(params.id);
   const router = useRouter();
   const { message, modal } = App.useApp();
+  const { token } = theme.useToken();
+  // Forms opened from group management are sibling dialogs at the default layer.
+  const groupWorkspaceZIndex = token.zIndexPopupBase - 1;
   const [competition, setCompetition] = useState<any>(null);
   const [groups, setGroups] = useState<any[]>([]);
   const [groupSortSaving, setGroupSortSaving] = useState(false);
@@ -217,9 +229,12 @@ export default function EventDetailPage() {
   const [memberSearching, setMemberSearching] = useState(false);
   const [paymentPlayer, setPaymentPlayer] = useState<any>(null);
   const paymentRequestVersion = useRef(0);
-  const [paymentRecords, setPaymentRecords] = useState<any[]>([]);
+  const paymentSubmitting = useRef(false);
+  const [paymentDetails, setPaymentDetails] = useState<RegistrationPaymentDetails | null>(null);
+  const [paymentLoadError, setPaymentLoadError] = useState('');
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [paymentForm] = Form.useForm();
+  const paymentKind = Form.useWatch<'charge' | 'refund'>('kind', paymentForm);
   const memberRequestRef = useRef<Promise<any[]> | null>(null);
   const [rules, setRules] = useState<any[]>([]);
   const [scores, setScores] = useState<any[]>([]);
@@ -256,10 +271,12 @@ export default function EventDetailPage() {
   const [batchJudgeEditModal, setBatchJudgeEditModal] = useState(false);
   const [batchPlayerText, setBatchPlayerText] = useState('');
   const [ruleModal, setRuleModal] = useState(false);
+  const [ruleSaving, setRuleSaving] = useState(false);
   const [assignModal, setAssignModal] = useState(false);
   const [assignBusy, setAssignBusy] = useState(false);
   const [assignGroupIds, setAssignGroupIds] = useState<number[]>([]);
-  const [assignJudgeIds, setAssignJudgeIds] = useState<number[]>([]);
+  const [selectedJudges, setSelectedJudges] = useState<Array<{ value: string; label: string }>>([]);
+  const [judgeLookup, setJudgeLookup] = useState<{ keyword: string; rows: Array<{ id: number; name: string; nickname?: string; phone_hint?: string }>; failed?: boolean } | null>(null);
   const [assignGroupSearch, setAssignGroupSearch] = useState('');
   const [assignJudgeSearch, setAssignJudgeSearch] = useState('');
   const [assignGroupSearchOpen, setAssignGroupSearchOpen] = useState(false);
@@ -275,6 +292,10 @@ export default function EventDetailPage() {
   const [entryImportRows, setEntryImportRows] = useState<any[]>([]);
   const [entryImportErrors, setEntryImportErrors] = useState<Array<{ row: number; message: string }>>([]);
   const [entryImportBusy, setEntryImportBusy] = useState(false);
+  const [entryExportBusy, setEntryExportBusy] = useState(false);
+  const entryExportSubmitting = useRef(false);
+  const [entryImportConflicts, setEntryImportConflicts] = useState<ImportIdentityConflict[]>([]);
+  const entryImportSubmitting = useRef(false);
   const [importRows, setImportRows] = useState<any[]>([]);
   const [groupImportErrors, setGroupImportErrors] = useState<Array<{ row: number; message: string }>>([]);
   const [importFileError, setImportFileError] = useState('');
@@ -286,6 +307,8 @@ export default function EventDetailPage() {
   const importReadVersion = useRef(0);
   const [groupForm] = Form.useForm();
   const [ruleForm] = Form.useForm();
+  const editingCriteria = Form.useWatch<{ name?: string; maxScore?: number | null }[]>('criteria', ruleForm);
+  const editingPoints = (editingCriteria || []).reduce((sum, row) => sum + Math.round(Number(row?.maxScore || 0) * 100), 0);
   const [playerForm] = Form.useForm();
   const selectedFeeGroup = Form.useWatch('groupId', playerForm);
   const [scoreForm] = Form.useForm();
@@ -397,9 +420,40 @@ export default function EventDetailPage() {
         judge.memberId ? `member:${judge.memberId}` : '',
         member ? memberSearchText(member) : '',
       ].filter(Boolean).join(' ').toLocaleLowerCase();
-      return { value: judge.id, label: judgeDisplayName(judge), searchText };
+      return { value: `judge:${judge.id}`, label: judgeDisplayName(judge), searchText, memberId: Number(judge.memberId) };
     });
   }, [judges, members]);
+  const judgeKeyword = assignJudgeSearch.trim();
+  const canLookupJudges = judgeKeyword.length >= 2 || /^\d$/.test(judgeKeyword);
+  useEffect(() => {
+    if (!assignModal || !canLookupJudges) {
+      setJudgeLookup(null);
+      return;
+    }
+    let active = true;
+    setJudgeLookup(null);
+    const timer = setTimeout(() => {
+      eventApi.listEventMembers({ competitionId, keyword: judgeKeyword, matchFor: 'judge' })
+        .then(rows => { if (active) setJudgeLookup({ keyword: judgeKeyword, rows }); })
+        .catch(() => { if (active) setJudgeLookup({ keyword: judgeKeyword, rows: [], failed: true }); });
+    }, 250);
+    return () => { active = false; clearTimeout(timer); };
+  }, [assignModal, canLookupJudges, competitionId, judgeKeyword]);
+
+  const judgeLookupResult = judgeLookup?.keyword === judgeKeyword ? judgeLookup : null;
+  const searchingJudges = canLookupJudges && !judgeLookupResult;
+  const judgesByMember = new Map(judgeSearchOptions.filter(option => option.memberId > 0).map(option => [option.memberId, option]));
+  const assignmentOptions = new Map<string, { value: string; label: string }>();
+  for (const option of judgeSearchOptions) {
+    if (option.searchText.includes(judgeKeyword.toLocaleLowerCase())) assignmentOptions.set(option.value, option);
+  }
+  for (const member of judgeLookupResult?.rows || []) {
+    const existing = judgesByMember.get(Number(member.id));
+    const value = existing?.value || `member:${member.id}`;
+    const label = [member.name || member.nickname || '未命名用户', member.nickname && member.nickname !== member.name ? member.nickname : '', member.phone_hint, `ID ${member.id}`].filter(Boolean).join(' · ');
+    assignmentOptions.set(value, { value, label });
+  }
+  const availableAssignmentOptions = [...assignmentOptions.values()].filter(option => !selectedJudges.some(selected => selected.value === option.value));
   const competitionRule = useMemo(() => {
     if (!rules.length) return null;
     if (rules.length === 1) return rules[0];
@@ -411,6 +465,14 @@ export default function EventDetailPage() {
       abnormalThreshold: Number(rules[0]?.abnormalThreshold || 15),
     };
   }, [competition?.name, rules]);
+  const ruleCriteria = useMemo(() => {
+    try {
+      const items = JSON.parse(competitionRule?.criteriaJson || '[]');
+      return Array.isArray(items) ? items as { id?: string; key?: string; name: string; maxScore?: number; score?: number }[] : [];
+    } catch {
+      return [];
+    }
+  }, [competitionRule?.criteriaJson]);
   const calculatedRankings = useMemo(() => {
     const grouped = new Map<string, any[]>();
     scores.forEach((item) => {
@@ -585,29 +647,50 @@ export default function EventDetailPage() {
   };
 
   const saveRule = async () => {
-    const values = await ruleForm.validateFields();
-    await eventApi.createScoreRule({
-      ...values,
-      competitionId,
-      totalScore: 10,
-      criteria: [],
-      abnormalThreshold: competitionRule?.abnormalThreshold ?? 15,
-      judgeAnonymous: competitionRule?.judgeAnonymous ?? false,
-    });
-    message.success('赛事评分规则已保存，所有组别统一使用');
-    setRuleModal(false);
-    ruleForm.resetFields();
-    load();
+    if (ruleSaving) return;
+    let values;
+    try {
+      values = await ruleForm.validateFields();
+    } catch {
+      return;
+    }
+    setRuleSaving(true);
+    try {
+      await eventApi.createScoreRule({
+        ...values,
+        competitionId,
+        totalScore: 10,
+        decimalPlaces: competitionRule?.decimalPlaces ?? 2,
+        publishMode: competitionRule?.publishMode ?? 'review_then_publish',
+        abnormalThreshold: competitionRule?.abnormalThreshold ?? 15,
+        judgeAnonymous: competitionRule?.judgeAnonymous ?? false,
+      });
+      message.success('赛事评分规则已保存');
+      setRuleModal(false);
+      ruleForm.resetFields();
+      void load();
+    } catch (error: any) {
+      message.error(error?.response?.data?.error || '保存评分规则失败，请重试');
+    } finally {
+      setRuleSaving(false);
+    }
   };
 
   const openRuleEditor = () => {
     ruleForm.resetFields();
-    ruleForm.setFieldsValue(competitionRule ? {
-      name: competitionRule.name,
-      dropHighLow: competitionRule.dropHighLow,
-    } : {
-      name: `${competition?.name || '赛事'}评分规则`,
-      dropHighLow: true,
+    const criteria = !competitionRule
+      ? DEFAULT_SCORE_CRITERIA.map(item => ({ ...item }))
+      : ruleCriteria.length
+        ? ruleCriteria.map((item, index) => ({
+            id: String(item.id ?? item.key ?? `${competitionRule.id}-${index}`),
+            name: item.name,
+            maxScore: item.maxScore ?? item.score,
+          }))
+        : [{ id: String(competitionRule.id), name: '评分总分', maxScore: 10 }];
+    ruleForm.setFieldsValue({
+      name: competitionRule?.name || `${competition?.name || '赛事'}评分规则`,
+      dropHighLow: competitionRule?.dropHighLow ?? true,
+      criteria,
     });
     setRuleModal(true);
   };
@@ -617,21 +700,29 @@ export default function EventDetailPage() {
       message.warning('请至少选择一个组别');
       return;
     }
-    if (!assignJudgeIds.length) {
+    if (!selectedJudges.length) {
       message.warning('请至少选择一名评委');
       return;
     }
     if (assignBusy) return;
     setAssignBusy(true);
     try {
-      const result = await eventApi.assignJudge({ groupIds: assignGroupIds, judgeIds: assignJudgeIds, competitionId });
+      const idsFor = (kind: string) => selectedJudges
+        .filter(option => option.value.startsWith(kind + ':'))
+        .map(option => Number(option.value.split(':')[1]));
+      const result = await eventApi.assignJudge({
+        groupIds: assignGroupIds,
+        judgeIds: idsFor('judge'),
+        memberIds: idsFor('member'),
+        competitionId,
+      });
       if (result.assigned === 0 && result.skipped) {
         message.warning(`所选评委已分配，已跳过 ${result.skipped} 条重复分配`);
       } else {
         message.success(`新增 ${result.assigned} 条评委分配，跳过 ${result.skipped || 0} 条重复分配`);
       }
       setAssignModal(false);
-      setAssignGroupIds([]); setAssignJudgeIds([]);
+      setAssignGroupIds([]); setSelectedJudges([]);
       setAssignGroupSearch(''); setAssignJudgeSearch('');
       setAssignGroupSearchOpen(false); setAssignJudgeSearchOpen(false);
       await load();
@@ -654,23 +745,52 @@ export default function EventDetailPage() {
 
   const paymentMethods: Record<string,string> = {wechat:'微信',alipay:'支付宝',bank:'银行转账',cash:'现金',other:'其他'};
   const showDate = (value: string) => value ? new Date(value).toLocaleString('zh-CN', {hour12:false}) : '未记录';
+  const paymentState = paymentDetails?.paymentState;
+  const selectedPayment = paymentKind && paymentState?.[paymentKind];
+  const paymentUnavailable = paymentState?.charge.unavailableReason && paymentState.refund.unavailableReason
+    ? (paymentState.paidAmount > 0 ? paymentState.refund.unavailableReason : paymentState.charge.unavailableReason)
+    : '';
   const openPayment = async (row: any) => {
+    if (paymentSubmitting.current) return;
     const version = ++paymentRequestVersion.current;
-    setPaymentPlayer(row); setPaymentRecords([]);
-    const now = new Date();
+    setPaymentPlayer(row);
+    setPaymentDetails(null);
+    setPaymentLoadError('');
     paymentForm.resetFields();
-    paymentForm.setFieldsValue({kind:'charge',amount:row.registrationFee,method:'wechat',paidAt:new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16),requestKey:crypto.randomUUID()});
-    try { const records = await eventApi.listRegistrationPayments(row.id); if (version === paymentRequestVersion.current) setPaymentRecords(records); } catch { if (version === paymentRequestVersion.current) message.error('缴费记录加载失败'); }
+    try {
+      const details = await eventApi.getRegistrationPayments(row.id);
+      if (version !== paymentRequestVersion.current) return;
+      const now = new Date();
+      paymentForm.setFieldsValue({
+        kind: details.paymentState.charge.unavailableReason ? undefined : 'charge',
+        method: 'wechat',
+        paidAt: new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+        requestKey: crypto.randomUUID(),
+      });
+      setPaymentDetails(details);
+    } catch (error: any) {
+      if (version === paymentRequestVersion.current) setPaymentLoadError(error?.response?.data?.error || '缴费记录加载失败');
+    }
+  };
+  const closePayment = () => {
+    if (paymentSubmitting.current) return;
+    paymentRequestVersion.current++;
+    setPaymentPlayer(null);
   };
   const savePayment = async () => {
-    const values = await paymentForm.validateFields();
+    if (!paymentPlayer || !paymentState || !selectedPayment || selectedPayment.unavailableReason || paymentSubmitting.current) return;
+    paymentSubmitting.current = true;
     setPaymentBusy(true);
     try {
-      await eventApi.recordRegistrationPayment(paymentPlayer.id, {...values,paidAt:new Date(values.paidAt).toISOString()});
+      const values = await paymentForm.validateFields().catch(() => null);
+      if (!values) return;
+      const paidAt = new Date(values.paidAt);
+      if (!Number.isFinite(paidAt.getTime())) { paymentForm.setFields([{ name: 'paidAt', errors: ['请填写有效的实际缴费或退款时间'] }]); return; }
+      await eventApi.recordRegistrationPayment(paymentPlayer.id, { ...values, amount: selectedPayment.amount, paidAt: paidAt.toISOString() });
       message.success(values.kind === 'refund' ? '退款记录已登记' : '缴费记录已登记');
       setPaymentPlayer(null); await load();
     } catch (error: any) { message.error(error?.response?.data?.error || '登记失败'); }
-    finally { setPaymentBusy(false); }
+    finally { paymentSubmitting.current = false; setPaymentBusy(false); }
   };
 
   const openPlayer = (row?: any) => {
@@ -968,19 +1088,24 @@ export default function EventDetailPage() {
   const parseGroupFile = (file: File) => readImportFile(file, 'groups');
   const openEntryImport = (kind: 'players' | 'judges') => { clearImportFile(); setEntryImportKind(kind); };
   const parseEntryFile = (file: File) => readImportFile(file, entryImportKind || 'players');
-  const importEntries = async () => {
+  const importEntries = async (decisions: ImportIdentityDecision[] = []) => {
+    if (entryImportSubmitting.current) return;
     if (importReading || importFileError || entryImportErrors.length) { message.warning('请先修正文件中的错误再导入'); return; }
     if (!entryImportKind || !entryImportRows.length) { message.warning('请先上传填写好的模板'); return; }
+    entryImportSubmitting.current = true;
     setEntryImportBusy(true);
     try {
-      const result = await (entryImportKind === 'players' ? eventApi.importPlayers : eventApi.importJudges)({ competitionId, rows: entryImportRows });
-      message.success(`新增 ${result.created}，更新 ${result.updated}${entryImportKind === 'judges' ? `，分配 ${result.assigned || 0}，已有分配 ${result.skipped || 0}` : ''}，错误 ${result.errors.length}`);
+      const result = await (entryImportKind === 'players' ? eventApi.importPlayers : eventApi.importJudges)({ competitionId, rows: entryImportRows, decisions });
+      if (result.conflicts?.length) { setEntryImportConflicts(result.conflicts); return; }
+      setEntryImportConflicts([]);
+      const summary = `新增 ${result.created}，更新 ${result.updated}${entryImportKind === 'judges' ? `，分配 ${result.assigned || 0}，已有分配 ${result.skipped || 0}` : `，跳过 ${result.skipped || 0} 行`}，错误 ${result.errors.length}`;
+      if (result.errors.length) message.warning(summary); else message.success(summary);
       setEntryImportErrors(result.errors);
       if (!result.errors.length) setEntryImportKind(null);
       setMembers([]);
       await load();
     } catch (error: any) { message.error(error?.response?.data?.error || error?.message || '导入失败'); }
-    finally { setEntryImportBusy(false); }
+    finally { entryImportSubmitting.current = false; setEntryImportBusy(false); }
   };
 
   const importGroups = async () => {
@@ -1141,12 +1266,12 @@ export default function EventDetailPage() {
   ]);
 
   const managedPlayerColumns = sortableColumns<any>([
-    { title: '选手', dataIndex: 'name', width: 130, fixed: 'left', render: (v: string, row: any) => <Link title="查看选手详情" href={`/events/players/${row.id}`}>{v}</Link> },
+    { title: '选手', dataIndex: 'name', width: 124, render: (v: string, row: any) => <Link title="查看选手详情" href={`/events/players/${row.id}`}>{v}</Link> },
     { title: '编号', dataIndex: 'programNumber', width: 115 },
     { title: '出场顺序', dataIndex: 'sequenceNo', width: 100, render: (v: number) => Number(v) > 0 ? v : <Tag>未安排</Tag> },
     { title: '手机号', dataIndex: 'phone', width: 120, render: (v: string) => v || '-' },
     { title: '机构', dataIndex: 'organization', width: 140, render: (v: string) => v || '-' },
-    { title: '音乐', dataIndex: 'musicName', width: 300, render: (_: any, row: any) => <EventMusicPlayer player={row} onUploaded={load} /> },
+    { title: '音乐', dataIndex: 'musicName', width: 260, render: (_: any, row: any) => <EventMusicPlayer player={row} onUploaded={load} /> },
     { title: '缴费', dataIndex: 'paidStatus', width: 90, render: (v: string) => statusTag(v) },
     {
       title: '评分',
@@ -1173,9 +1298,9 @@ export default function EventDetailPage() {
     },
     {
       title: '操作',
-      width: 270,
+      width: 210,
       render: (_: any, row: any) => (
-        <Space>
+        <Space size={[4, 4]} wrap>
           <Button size="small" icon={<EyeOutlined />} onClick={() => router.push(`/events/players/${row.id}`)}>详情</Button>
           <Button size="small" icon={<EditOutlined />} onClick={() => openPlayer(row)}>修改</Button>
           <Button size="small" icon={<DollarOutlined />} onClick={() => void openPayment(row)}>登记缴费</Button>
@@ -1243,7 +1368,7 @@ export default function EventDetailPage() {
 
   const addGroupJudges = (groupId: number) => {
     
-    setAssignGroupIds([groupId]); setAssignJudgeIds([]); setAssignGroupSearch(''); setAssignJudgeSearch('');
+    setAssignGroupIds([groupId]); setSelectedJudges([]); setAssignGroupSearch(''); setAssignJudgeSearch('');
     setAssignGroupSearchOpen(false); setAssignJudgeSearchOpen(false); setAssignModal(true);
   };
   const removeGroupJudges = async () => {
@@ -1277,13 +1402,58 @@ export default function EventDetailPage() {
     } catch (error: any) { message.error(error?.response?.data?.error || '通知发送失败，请重试'); }
     finally { setNoticeBusy(false); }
   };
-  const exportSection = (kind: ImportKind) => {
-    const rows = kind === 'groups' ? groups.filter(row => (!selectedGroupId || Number(row.id) === Number(selectedGroupId)) && matchesSection(row, 'groups')).map(row => ({ '序号': groupPositions.get(Number(row.id)), '组别名称': row.name, '报名费': row.registrationFee, '编码': row.code, '年龄段': row.ageRange, '舞种': row.danceType, '参赛形式': row.entryType, '人数上限': row.maxPlayers, '评分规则ID': row.scoreRuleId || '', '状态': row.status }))
-      : kind === 'players' ? visiblePlayers.map(row => ({ '报名编号': row.programNumber, '选手编号': row.contestantNumber, '组别名称': row.groupName, '选手姓名': row.name, '手机号': row.phone, '领队机构': row.organization, '领队老师': row.teacher, '节目名称': row.performanceTitle }))
-      : competitionJudgeAssignments.filter(row => (!selectedGroupId || Number(row.groupId) === Number(selectedGroupId)) && matchesSection(row, 'judges')).map((row, index) => ({ '序号': index + 1, '组别名称': row.groupName, '评委姓名': row.name, '手机号': row.phone, '所属机构': row.organization, '职称': row.title }));
+  const exportSection = async (kind: ImportKind) => {
+    if (kind === 'players') {
+      if (entryExportSubmitting.current) return;
+      if (!visiblePlayers.length) { message.info('当前筛选没有可导出的数据'); return; }
+      entryExportSubmitting.current = true; setEntryExportBusy(true);
+      try {
+        const blob = await eventApi.exportPlayers({ competitionId: Number(competitionId), ids: visiblePlayers.map(row => Number(row.id)) });
+        const url = URL.createObjectURL(blob), link = document.createElement('a');
+        link.href = url; link.download = `${(competition?.name || '赛事').replace(/[\\/:*?"<>|]/g, '_')}-报名表格.xlsx`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+        message.success(`已导出 ${visiblePlayers.length} 条报名，包含音乐和缴费明细`);
+      } catch (error: any) {
+        let detail = error?.response?.data;
+        if (detail instanceof Blob) { try { detail = JSON.parse(await detail.text()); } catch { detail = null; } }
+        message.error(detail?.error || error?.message || '导出失败，请重试');
+      } finally { entryExportSubmitting.current = false; setEntryExportBusy(false); }
+      return;
+    }
+    if (kind === 'groups') {
+      if (entryExportSubmitting.current) return;
+      const rows = groups.filter(row => (!selectedGroupId || Number(row.id) === Number(selectedGroupId)) && matchesSection(row, 'groups'));
+      if (!rows.length) { message.info('当前筛选没有可导出的数据'); return; }
+      entryExportSubmitting.current = true;
+      setEntryExportBusy(true);
+      try {
+        const { default: writeExcelFile } = await import('write-excel-file/browser');
+        const header = groupExportHeaders.map(value => ({ value, fontWeight: 'bold' as const, backgroundColor: '#F3F4F6' }));
+        const data: SheetData = [header, ...rows.map(row => [
+          groupPositions.get(Number(row.id)) ?? null,
+          { value: String(row.name ?? ''), type: String, wrap: true },
+          { value: Number(row.registrationFee ?? 0), format: '0.00' },
+          Number(row.playerCount ?? 0),
+          Number(row.judgeCount ?? 0),
+          groupScoringLabel(row.scoringStatus),
+        ])];
+        const filename = `${(competition?.name || '赛事').replace(/[\\/:*?"<>|\r\n]/g, '_')}-组别.xlsx`;
+        await writeExcelFile(data, {
+          sheet: '组别',
+          stickyRowsCount: 1,
+          columns: [10, 48, 14, 12, 12, 14].map(width => ({ width })),
+        }).toFile(filename);
+      } catch {
+        message.error('导出组别失败，请重试');
+      } finally {
+        entryExportSubmitting.current = false;
+        setEntryExportBusy(false);
+      }
+      return;
+    }
+    const rows = competitionJudgeAssignments.filter(row => (!selectedGroupId || Number(row.groupId) === Number(selectedGroupId)) && matchesSection(row, 'judges')).map((row, index) => ({ '序号': index + 1, '组别名称': row.groupName, '评委姓名': row.name, '手机号': row.phone, '所属机构': row.organization, '职称': row.title }));
     if (!rows.length) { message.info('当前筛选没有可导出的数据'); return; }
-    const url = URL.createObjectURL(new Blob([eventImportCsv(kind, rows, kind === 'players')], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a'); link.href = url; link.download = `${competition?.name || '赛事'}-${({ groups: '组别', players: '报名', judges: '评委' })[kind]}.csv`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const url = URL.createObjectURL(new Blob([eventImportCsv(kind, rows)], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a'); link.href = url; link.download = `${competition?.name || '赛事'}-评委.csv`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   const sectionToolbar = (section: string) => <div className={styles.sectionToolbar}>
     <Space wrap className={styles.sectionFilters}>
@@ -1311,12 +1481,12 @@ export default function EventDetailPage() {
         <Button type={judgeView === 'judges' ? 'primary' : 'default'} aria-pressed={judgeView === 'judges'} onClick={() => setJudgeView('judges')}>按评委显示</Button>
       </Space.Compact>}
       <Button icon={<ReloadOutlined />} onClick={() => void load()}>刷新</Button>
-      {['groups', 'players', 'judges'].includes(section) && <Button icon={<DownloadOutlined />} onClick={() => exportSection(section as ImportKind)}>导出当前筛选</Button>}
-      {section === 'groups' && <><Button icon={<PlusOutlined />} onClick={() => openGroupEditor()}>新建组别</Button><Button className="swod-import-button" icon={<FileExcelOutlined />} onClick={() => setImportModal(true)}>导入组别</Button></>}
-      {section === 'players' && <><Button icon={<PlusOutlined />} onClick={() => openPlayer()}>新建报名</Button><Button className="swod-import-button" icon={<FileExcelOutlined />} onClick={() => openEntryImport('players')}>导入报名</Button></>}
-      {section === 'judges' && <><Button className="swod-import-button" icon={<FileExcelOutlined />} onClick={() => openEntryImport('judges')}>导入评委</Button><Button type="primary" icon={<UserSwitchOutlined />} onClick={() => {
+      {['groups', 'players', 'judges'].includes(section) && <Button className={styles.transferButton} icon={<DownloadOutlined />} loading={section !== 'judges' && entryExportBusy} disabled={loading} onClick={() => void exportSection(section as ImportKind)}>导出表格</Button>}
+      {section === 'groups' && <><Button icon={<PlusOutlined />} onClick={() => openGroupEditor()}>新建组别</Button><Button className={styles.transferButton} icon={<FileExcelOutlined />} onClick={() => setImportModal(true)}>导入组别</Button></>}
+      {section === 'players' && <><Button icon={<PlusOutlined />} onClick={() => openPlayer()}>新建报名</Button><Button className={styles.transferButton} icon={<FileExcelOutlined />} onClick={() => openEntryImport('players')}>导入报名</Button></>}
+      {section === 'judges' && <><Button className={styles.transferButton} icon={<FileExcelOutlined />} onClick={() => openEntryImport('judges')}>导入评委</Button><Button type="primary" icon={<UserSwitchOutlined />} onClick={() => {
             setAssignGroupIds(selectedGroupId ? [selectedGroupId] : []);
-            setAssignJudgeIds([]);
+            setSelectedJudges([]);
             setAssignGroupSearch('');
             setAssignJudgeSearch('');
             setAssignGroupSearchOpen(false);
@@ -1425,21 +1595,22 @@ export default function EventDetailPage() {
         open={groupManageOpen}
         onCancel={() => setGroupManageOpen(false)}
         footer={null}
-        width="95vw"
-        styles={{ body: { maxHeight: '78vh', overflowY: 'auto' } }}
+        zIndex={groupWorkspaceZIndex}
+        className={styles.groupManageModal}
+        width="min(calc(100% - 32px), 1680px)"
       >
-        <Space direction="vertical" style={{ width: '100%' }} size={12}>
+        <div className={styles.groupManageStack}>
           <Alert
             type="info"
             showIcon
             message={`${selectedGroup?.name || '当前组别'} · 选手 ${groupPlayers.length} · 评委 ${groupJudges.length} · 评分 ${groupScoreSummaries.length}`}
           />
-          <Tabs items={[
+          <Tabs className={styles.groupManageTabs} items={[
             {
               key: 'players',
               label: `选手管理 (${groupPlayers.length})`,
               children: (
-                <Space direction="vertical" style={{ width: '100%' }} size={12}>
+                <div className={styles.groupManageStack}>
                   <Space wrap>
                     <Button type="primary" icon={<PlusOutlined />} onClick={() => openPlayer()}>新增选手</Button>
                     <Button icon={<PlusOutlined />} onClick={() => setBatchPlayerAddModal(true)}>批量添加</Button>
@@ -1448,7 +1619,7 @@ export default function EventDetailPage() {
                     <Button danger icon={<DeleteOutlined />} disabled={!selectedPlayerIds.length} onClick={() => deletePlayersInBatch()} aria-label="批量删除" title="批量删除"></Button>
                     <span style={{ color: '#6b7280' }}>已选 {selectedPlayerIds.length} 条</span>
                   </Space>
-                  <Table
+                  <Table className={styles.groupManageTable}
                     size="small"
                     rowKey="id"
                     loading={loading}
@@ -1459,23 +1630,23 @@ export default function EventDetailPage() {
                       onChange: (keys) => setSelectedPlayerIds(keys as Array<number | string>),
                     }}
                     pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: [20, 50, 100] }}
-                    scroll={{ x: 1100 }}
+                    scroll={{ x: 'max-content' }}
                   />
-                </Space>
+                </div>
               ),
             },
             {
               key: 'judges',
               label: `评委管理 (${groupJudges.length})`,
               children: (
-                <Space direction="vertical" style={{ width: '100%' }} size={12}>
+                <div className={styles.groupManageStack}>
                   <Space wrap>
                     <Button type="primary" icon={<PlusOutlined />} onClick={() => addGroupJudges(selectedGroupId!)}>添加评委</Button>
                     <Button icon={<EditOutlined />} disabled={!selectedJudgeIds.length} onClick={() => { batchJudgeForm.resetFields(); setBatchJudgeEditModal(true); }}>批量修改</Button>
                     <Button danger icon={<DeleteOutlined />} disabled={!selectedJudgeIds.length} onClick={() => deleteJudgesInBatch()} aria-label="批量移除" title="批量移除"></Button>
                     <span style={{ color: '#6b7280' }}>已选 {selectedJudgeIds.length} 名</span>
                   </Space>
-                  <Table
+                  <Table className={styles.groupManageTable}
                     size="small"
                     rowKey="judgeId"
                     columns={groupJudgeColumns}
@@ -1485,30 +1656,30 @@ export default function EventDetailPage() {
                       onChange: (keys) => setSelectedJudgeIds(keys as Array<number | string>),
                     }}
                     pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: [20, 50, 100] }}
-                    scroll={{ x: 600 }}
+                    scroll={{ x: 'max-content' }}
                   />
-                </Space>
+                </div>
               ),
             },
             {
               key: 'scoring',
               label: `评分 (${groupScoreSummaries.length})`,
               children: (
-                <Space direction="vertical" style={{ width: '100%' }} size={12}>
+                <div className={styles.groupManageStack}>
                   <Alert type="info" showIcon message="当前组别的评分记录；可在选手的评分管理中处理评分，旧版本和审计记录保留。" />
-                  <Table size="small" loading={boardLoading} columns={scoreColumns} dataSource={groupScoreSummaries} rowKey="key" pagination={{ pageSize: 20 }} scroll={{ x: 1100 }} />
-                </Space>
+                  <Table className={styles.groupManageTable} size="small" loading={boardLoading} columns={scoreColumns} dataSource={groupScoreSummaries} rowKey="key" pagination={{ pageSize: 20 }} scroll={{ x: 'max-content' }} />
+                </div>
               ),
             },
             {
               key: 'results',
               label: `结果公示 (${groupRankings.length})`,
-              children: <Space direction="vertical" style={{ width: '100%' }} size={12}>
+              children: <div className={styles.groupManageStack}>
                 {groupRankings.length ? <ResultGroupCard groupName={selectedGroup?.name || ''} rows={groupRankings} /> : <Empty description="当前组别暂无成绩" />}
-              </Space>,
+              </div>,
             },
           ]} />
-        </Space>
+        </div>
       </Modal>
 
       <Modal title="批量添加选手" open={batchPlayerAddModal} onCancel={() => setBatchPlayerAddModal(false)} onOk={addPlayersInBatch} width={720}>
@@ -1565,9 +1736,9 @@ export default function EventDetailPage() {
         </Form>
       </Modal>
 
-      <Modal title="导入组别" open={importModal} onCancel={() => { if (!groupImportBusy) { setImportModal(false); clearImportFile(); } }} confirmLoading={groupImportBusy} okButtonProps={{ className: "swod-import-button", disabled: importReading || !importRows.length || Boolean(importFileError) || groupImportErrors.length > 0 }} onOk={importGroups} width={680}>
+      <Modal className={styles.transferDialog} title="导入组别" open={importModal} onCancel={() => { if (!groupImportBusy) { setImportModal(false); clearImportFile(); } }} confirmLoading={groupImportBusy} okButtonProps={{ className: styles.transferConfirm, disabled: importReading || !importRows.length || Boolean(importFileError) || groupImportErrors.length > 0 }} onOk={importGroups} width={680}>
         <Space direction="vertical" style={{ width: '100%' }} size={12}>
-          <Alert type="info" showIcon message="模板列名：序号、组别名称、报名费。同名组别会更新，赛事内组别名称不能重复；金额支持 ¥ 和千位分隔，最多两位小数，空值为 0。序号须为整数；日期误填会提示。" action={<Button className={styles.templateDownload} icon={<DownloadOutlined style={{ fontSize: 18 }} />} href="/templates/event-group-import-v3.xlsx" download="赛事组别导入模板.xlsx">下载模板</Button>} />
+          <Alert type="info" showIcon message="必填：组别名称。同名组别会更新；序号填整数，报名费最多两位小数，留空为 0。" action={<Button className={styles.templateDownload} icon={<DownloadOutlined style={{ fontSize: 18 }} />} href="/templates/event-group-import-v3.xlsx" download="赛事组别导入模板.xlsx">下载模板</Button>} />
           <Upload.Dragger className={styles.groupImportUpload} accept=".xlsx,.csv" beforeUpload={parseGroupFile} maxCount={1} disabled={groupImportBusy} onRemove={() => { clearImportFile(); }}>
             <p className="ant-upload-drag-icon"><FileExcelOutlined /></p>
             <p className="ant-upload-text">点击或拖入 Excel/CSV 文件</p>
@@ -1582,11 +1753,12 @@ export default function EventDetailPage() {
         </Space>
       </Modal>
 
-      <Modal title={entryImportKind === 'players' ? '导入报名' : '导入评委'} open={Boolean(entryImportKind)} confirmLoading={entryImportBusy} okButtonProps={{ className: "swod-import-button", disabled: importReading || !entryImportRows.length || Boolean(importFileError) || entryImportErrors.length > 0 }} onCancel={() => { if (!entryImportBusy) { setEntryImportKind(null); clearImportFile(); } }} onOk={importEntries} width={800}>
+      {entryImportConflicts.length > 0 && <EventImportIdentityModal key={entryImportConflicts.map(item => item.key).join(',')} conflicts={entryImportConflicts} onCancel={() => setEntryImportConflicts([])} onComplete={decisions => { setEntryImportConflicts([]); void importEntries(decisions); }} />}
+      <Modal className={styles.transferDialog} title={entryImportKind === 'players' ? '导入报名' : '导入评委'} open={Boolean(entryImportKind)} confirmLoading={entryImportBusy} okButtonProps={{ className: styles.transferConfirm, disabled: importReading || !entryImportRows.length || Boolean(importFileError) || entryImportErrors.length > 0 }} onCancel={() => { if (!entryImportBusy) { setEntryImportConflicts([]); setEntryImportKind(null); clearImportFile(); } }} onOk={() => void importEntries()} width={800}>
         <Space direction="vertical" style={{ width: '100%' }} size={12}>
-          <Alert type="info" showIcon message={entryImportKind === 'players'
-            ? '组别名称、选手姓名、手机号必填；同类别下组别名称须与赛事组别一致。按手机号匹配数据库人员，未匹配自动新建；同组别内手机号相同会更新，新报名直接生效，默认为未缴费。'
-            : '模板列名：序号、组别名称、评委姓名、手机号、所属机构。组别名称、姓名、手机号必填；按手机号匹配，未匹配自动新建，并分配到填写的组别。同一评委分配多个组别请分行填写；请填写完整组别名称。重复分配会跳过，已有分配设置保持不变。'} action={<Button className={styles.templateDownload} icon={<DownloadOutlined style={{ fontSize: 18 }} />} href={entryImportKind === 'players' ? '/templates/event-player-import-v2.xlsx' : '/templates/event-judge-import-v3.xlsx'} download={entryImportKind === 'players' ? '赛事报名导入模板.xlsx' : '赛事评委导入模板.xlsx'}>下载模板</Button>} />
+          <Alert type="info" showIcon description="区号和手机号分列填写，例如区号填「中国大陆 +86」，手机号填「13800138000」。其他国家或地区请填写对应区号。旧表格没有区号列时仍可按原格式导入。" message={entryImportKind === 'players'
+            ? '必填：组别名称、选手姓名、手机号。组别名称须与赛事一致；同组同手机号会更新。档案冲突先确认，合并后用新姓名覆盖；选择否则跳过。新报名默认为未缴费。'
+            : '必填：组别名称、评委姓名、手机号。组别名称须与赛事一致；多个组别分行填写。按手机号匹配人员，未匹配则新建；重复分配会跳过。'} action={<Button className={styles.templateDownload} icon={<DownloadOutlined style={{ fontSize: 18 }} />} href={entryImportKind === 'players' ? '/templates/event-player-import-v3.xlsx' : '/templates/event-judge-import-v4.xlsx'} download={entryImportKind === 'players' ? '赛事报名导入模板.xlsx' : '赛事评委导入模板.xlsx'}>下载模板</Button>} />
           <Upload.Dragger key={entryImportKind || 'closed'} className={styles.groupImportUpload} accept=".xlsx,.csv" beforeUpload={parseEntryFile} maxCount={1} disabled={entryImportBusy} onRemove={() => { clearImportFile(); }}>
             <p className="ant-upload-drag-icon"><FileExcelOutlined /></p><p className="ant-upload-text">点击或拖入 Excel/CSV 文件</p>
           </Upload.Dragger>
@@ -1595,15 +1767,41 @@ export default function EventDetailPage() {
           {importFileError && <Alert type="error" showIcon message={importFileError} />}
           {importWarnings.map(warning => <Alert key={warning} type="warning" showIcon message={warning} />)}
           {entryImportRows.length > 0 && <span>共 {entryImportRows.length} 行待导入</span>}
-          <div className={styles.groupImportPreview}><Table size="small" pagination={false} rowKey={(_, index) => String(index)} dataSource={entryImportRows} locale={{ emptyText: '请先上传文件' }} scroll={{ x: 'max-content' }} columns={(entryImportRows.length ? Object.keys(entryImportRows[0]).filter(key => key !== '__sourceRow') : (entryImportKind === 'players' ? ['组别名称', '选手姓名', '手机号', '领队机构', '领队老师', '节目名称'] : ['序号', '组别名称', '评委姓名', '手机号', '所属机构'])).map(key => ({ title: key, dataIndex: key }))} /></div>
+          <div className={styles.groupImportPreview}><Table size="small" pagination={false} rowKey={(_, index) => String(index)} dataSource={entryImportRows} locale={{ emptyText: '请先上传文件' }} scroll={{ x: 'max-content' }} columns={(entryImportRows.length ? Object.keys(entryImportRows[0]).filter(key => key !== '__sourceRow') : (entryImportKind === 'players' ? ['组别名称', '选手姓名', '区号', '手机号', '领队机构', '领队老师', '节目名称'] : ['序号', '组别名称', '评委姓名', '区号', '手机号', '所属机构'])).map(key => ({ title: key, dataIndex: key }))} /></div>
           {entryImportErrors.length > 0 && <Alert type="warning" showIcon message={`有 ${entryImportErrors.length} 项错误，请修改文件后重新上传；若已提交导入，成功行已保存，重复导入会更新。`} description={<div style={{ maxHeight: 150, overflow: 'auto' }}>{entryImportErrors.map(error => <div key={error.row}>Excel 第 {error.row} 行：{error.message}</div>)}</div>} />}
         </Space>
       </Modal>
 
-      <Modal title="赛事评分规则" open={ruleModal} onCancel={() => setRuleModal(false)} onOk={saveRule} width={620}>
+      <Modal title="赛事评分规则" open={ruleModal} onCancel={() => setRuleModal(false)} onOk={saveRule} width={620} confirmLoading={ruleSaving} okButtonProps={{ disabled: editingPoints !== 1000 }} cancelButtonProps={{ disabled: ruleSaving }} maskClosable={!ruleSaving}>
         <Form form={ruleForm} layout="vertical">
-          <Alert style={{ marginBottom: 16 }} type="info" showIcon message="每个赛事固定使用一套评分规则，保存后该赛事全部组别统一生效。" />
+          <Alert style={{ marginBottom: 16 }} type="info" showIcon message="可调整评分项目和分值，分项满分合计必须为 10 分。已锁定且有评分的组别保留原规则。" />
           <Form.Item name="name" label="规则名称" rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.List name="criteria" rules={[{ validator: async (_, rows) => {
+            if (!rows?.length || editingPoints !== 1000) throw new Error('评分项目满分合计必须为 10 分');
+          } }]}>
+            {(fields, { add, remove }, { errors }) => <>
+              <Space wrap style={{ marginBottom: 12 }}>
+                <strong>评分项目</strong><Tag color={editingPoints === 1000 ? 'green' : 'orange'}>{editingPoints / 100} / 10 分</Tag>
+                <Button size="small" onClick={() => ruleForm.setFieldValue('criteria', DEFAULT_SCORE_CRITERIA.map(item => ({ ...item })))}>使用默认规则</Button>
+              </Space>
+              {fields.map(field => <Row key={field.key} gutter={8} wrap={false}>
+                <Form.Item name={[field.name, 'id']} hidden><Input /></Form.Item>
+                <Col flex="1 1 0">
+                  <Form.Item name={[field.name, 'name']} rules={[{ required: true, whitespace: true, message: '请输入项目名称' }]}>
+                    <Input aria-label={`项目 ${field.name + 1} 名称`} placeholder="项目名称" maxLength={60} />
+                  </Form.Item>
+                </Col>
+                <Col flex="96px">
+                  <Form.Item name={[field.name, 'maxScore']} rules={[{ required: true, type: 'number', min: 0.01, max: 10, message: '填写 0.01 至 10 分' }]}>
+                    <InputNumber aria-label={`项目 ${field.name + 1} 满分`} placeholder="满分" min={0.01} max={10} precision={2} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col><Button danger disabled={fields.length === 1} aria-label={`删除项目 ${field.name + 1}`} icon={<DeleteOutlined />} onClick={() => remove(field.name)} /></Col>
+              </Row>)}
+              <Form.ErrorList errors={errors} />
+              <Button type="dashed" block onClick={() => add({ id: crypto.randomUUID(), name: '', maxScore: null })} style={{ marginBottom: 16 }}>添加评分项目</Button>
+            </>}
+          </Form.List>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item label="总分" extra="固定为10分，不可修改">
@@ -1625,12 +1823,12 @@ export default function EventDetailPage() {
         </Form>
       </Modal>
 
-      <Modal title={<Space wrap><span>批量分配评委到组别</span><Button className="swod-import-button" size="small" icon={<FileExcelOutlined />} disabled={assignBusy} onClick={() => openEntryImport('judges')}>导入评委</Button></Space>} open={assignModal} onCancel={() => {
+      <Modal title={<Space wrap><span>批量分配评委到组别</span><Button className={styles.transferButton} size="small" icon={<FileExcelOutlined />} disabled={assignBusy} onClick={() => openEntryImport('judges')}>导入评委</Button></Space>} open={assignModal} onCancel={() => {
         if (assignBusy) return;
-        setAssignModal(false); setAssignGroupIds([]); setAssignJudgeIds([]);
+        setAssignModal(false); setAssignGroupIds([]); setSelectedJudges([]);
         setAssignGroupSearch(''); setAssignJudgeSearch('');
         setAssignGroupSearchOpen(false); setAssignJudgeSearchOpen(false);
-      }} onOk={saveAssignment} confirmLoading={assignBusy} okButtonProps={{ disabled: !assignGroupIds.length || !assignJudgeIds.length }} cancelButtonProps={{ disabled: assignBusy }} closable={!assignBusy} maskClosable={!assignBusy} width={900}>
+      }} onOk={saveAssignment} confirmLoading={assignBusy} okButtonProps={{ disabled: !assignGroupIds.length || !selectedJudges.length }} cancelButtonProps={{ disabled: assignBusy }} closable={!assignBusy} maskClosable={!assignBusy} width={900}>
         <Form layout="vertical">
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12}>
@@ -1657,34 +1855,43 @@ export default function EventDetailPage() {
                   onOpenChange={open => setAssignJudgeSearchOpen(open && Boolean(assignJudgeSearch.trim()))}
                   onFocus={() => { setAssignGroupSearchOpen(false); setAssignJudgeSearchOpen(Boolean(assignJudgeSearch.trim())); }}
                   onSearch={value => { setAssignJudgeSearch(value); setAssignJudgeSearchOpen(Boolean(value.trim())); }}
-                  onChange={values => setAssignJudgeIds(current => [...new Set([...current, ...values.map(Number)])])}
+                  onSelect={(_value, option) => setSelectedJudges(current =>
+                    current.some(item => item.value === option.value) ? current : [...current, option])}
                   onClear={() => { setAssignJudgeSearch(''); setAssignJudgeSearchOpen(false); }} filterOption={false}
-                  placeholder="搜索姓名、手机号、ID或微信信息" notFoundContent={assignJudgeSearch.trim() ? '没有未选择的匹配评委' : '请先输入搜索要素'}
-                  options={assignJudgeSearch.trim() ? judgeSearchOptions.filter(option => !assignJudgeIds.includes(Number(option.value)) && option.searchText.includes(assignJudgeSearch.trim().toLocaleLowerCase())) : []} />
+                  placeholder="搜索全站用户姓名、手机号、ID或微信昵称"
+                  loading={searchingJudges}
+                  notFoundContent={searchingJudges ? '正在搜索全站用户…' : judgeLookupResult?.failed ? '用户搜索失败，请重新输入重试' : canLookupJudges ? '没有未选择的匹配用户' : '请输入至少两个字符或完整用户 ID'}
+                  options={judgeKeyword ? availableAssignmentOptions : []} />
               </Form.Item>
-              <div style={{ marginBottom: 8 }}>已选评委（{assignJudgeIds.length}）</div>
+              <div style={{ marginBottom: 8 }}>已选评委（{selectedJudges.length}）</div>
               <div style={{ height: 240, overflowY: 'auto', border: '1px solid #d9d9d9', borderRadius: 8, padding: 8 }}>
-                {assignJudgeIds.length ? assignJudgeIds.map(id => <div key={id} style={{ marginBottom: 6 }}><Tag closable={!assignBusy} onClose={() => setAssignJudgeIds(current => current.filter(value => value !== id))} style={{ width: '100%', marginInlineEnd: 0, padding: '4px 8px' }}>{judgeDisplayName(judges.find(judge => Number(judge.id) === id) || {name:`评委 ${id}`})}</Tag></div>) : <span style={{ color: '#999' }}>搜索并选择的评委会显示在这里</span>}
+                {selectedJudges.length ? selectedJudges.map(option => <div key={option.value} style={{ marginBottom: 6 }}><Tag closable={!assignBusy} onClose={() => setSelectedJudges(current => current.filter(item => item.value !== option.value))} style={{ width: '100%', marginInlineEnd: 0, padding: '4px 8px' }}>{option.label}</Tag></div>) : <span style={{ color: '#999' }}>搜索并选择的评委会显示在这里</span>}
               </div>
             </Col>
           </Row>
         </Form>
       </Modal>
 
-      <Modal title={`报名收费登记：${paymentPlayer?.name || ''} · ${paymentPlayer?.groupName || ''}（报名${paymentPlayer?.id || ''}）`} open={!!paymentPlayer} onCancel={() => !paymentBusy && setPaymentPlayer(null)} onOk={savePayment} confirmLoading={paymentBusy} width={820} okText="保存登记">
+      <Modal title={`报名收费登记：${paymentPlayer?.name || ''} · ${paymentPlayer?.groupName || ''}（报名${paymentPlayer?.id || ''}）`} open={!!paymentPlayer} onCancel={closePayment} onOk={savePayment} confirmLoading={paymentBusy} width={820} okText="保存登记"
+        okButtonProps={{ disabled: !selectedPayment || Boolean(selectedPayment.unavailableReason) }}>
         <Alert type="info" showIcon message="每条报名对应一个组别，一次缴清报名费；登记实际已完成的收款或全额退款。" style={{marginBottom:16}} />
-        <div style={{marginBottom:16}}>报名费 ¥{Number(paymentPlayer?.registrationFee || 0).toFixed(2)}　实收 ¥{Number(paymentPlayer?.paidAmount || 0).toFixed(2)}　未缴 ¥{Number(paymentPlayer?.unpaidAmount || 0).toFixed(2)}</div>
-        <Form form={paymentForm} layout="vertical">
+        {paymentLoadError && <Alert type="error" showIcon message={paymentLoadError} action={<Button size="small" onClick={() => void openPayment(paymentPlayer)}>重试</Button>} style={{marginBottom:16}} />}
+        {paymentState && <div style={{marginBottom:16}}>报名费 ¥{paymentState.registrationFee.toFixed(2)}　实收 ¥{paymentState.paidAmount.toFixed(2)}　未缴 ¥{paymentState.unpaidAmount.toFixed(2)}</div>}
+        {paymentUnavailable && <Alert type="info" showIcon message={paymentUnavailable} style={{marginBottom:16}} />}
+        <Form form={paymentForm} layout="vertical" disabled={!paymentState || Boolean(paymentUnavailable) || paymentBusy}>
           <Form.Item name="requestKey" hidden><Input /></Form.Item>
           <Row gutter={16}>
-            <Col span={8}><Form.Item name="kind" label="登记类型" rules={[{required:true}]}><Select options={[{value:'charge',label:'登记缴费',disabled:Number(paymentPlayer?.paidAmount || 0)>0 || Number(paymentPlayer?.registrationFee || 0)<=0},{value:'refund',label:'登记退款',disabled:Number(paymentPlayer?.paidAmount || 0)<=0}]} onChange={kind => paymentForm.setFieldValue('amount',kind === 'refund' ? paymentPlayer.paidAmount : paymentPlayer.registrationFee)} /></Form.Item></Col>
-            <Col span={8}><Form.Item name="amount" label="金额" rules={[{required:true}]}><InputNumber disabled precision={2} style={{width:'100%'}} /></Form.Item></Col>
+            <Col span={8}><Form.Item name="kind" label="登记类型" rules={[{required:true}]}><Select placeholder="请选择登记类型" options={[
+              {value:'charge',label:'登记缴费',disabled:Boolean(paymentState?.charge.unavailableReason)},
+              {value:'refund',label:'登记退款',disabled:Boolean(paymentState?.refund.unavailableReason)},
+            ]} /></Form.Item></Col>
+            <Col span={8}><Form.Item label="金额" htmlFor="registration-payment-amount"><InputNumber id="registration-payment-amount" value={selectedPayment?.amount ?? null} disabled precision={2} style={{width:'100%'}} /></Form.Item></Col>
             <Col span={8}><Form.Item name="method" label="缴费方式" rules={[{required:true}]}><Select options={Object.entries(paymentMethods).map(([value,label]) => ({value,label}))} /></Form.Item></Col>
           </Row>
           <Form.Item name="paidAt" label="实际缴费 / 退款时间" rules={[{required:true}]}><NumericDateInput showTime /></Form.Item>
           <Form.Item name="remark" label="备注 / 收款凭据编号"><Input /></Form.Item>
         </Form>
-        <Table size="small" rowKey="id" dataSource={paymentRecords} pagination={false} scroll={{y:220}} columns={[
+        <Table size="small" rowKey="id" dataSource={paymentDetails?.data ?? []} loading={!!paymentPlayer && !paymentDetails && !paymentLoadError} pagination={false} scroll={{y:220}} columns={[
           {title:'类型',dataIndex:'kind',render:(v:string) => v === 'refund' ? '退款' : '缴费'},
           {title:'金额',dataIndex:'amount',render:(v:number) => `¥${Number(v).toFixed(2)}`},
           {title:'方式',dataIndex:'method',render:(v:string) => paymentMethods[v] || v},

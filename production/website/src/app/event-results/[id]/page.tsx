@@ -35,6 +35,7 @@ export default async function EventResults({ params, searchParams }: { params: P
       FROM event_rankings r JOIN event_groups g ON g.id=r.group_id JOIN event_players p ON p.id=r.player_id
       LEFT JOIN Member m ON m.id=p.member_id
       WHERE r.competition_id=? AND r.status='published' AND g.status='active'
+        AND g.competition_id=r.competition_id AND p.competition_id=r.competition_id AND p.group_id=g.id
         AND p.audit_status!='rejected' AND p.status NOT IN ('withdrawn','cancelled')
       ORDER BY g.sort_order,g.id,r.rank_no,p.id`).all<Result>(Number(id));
     const rows = data.map(r => ({ ...r, avatar_url: r.avatar_url || (legacyAvatars.players as Record<string,string>)[String(r.player_id)] || '' }));

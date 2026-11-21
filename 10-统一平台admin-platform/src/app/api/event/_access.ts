@@ -1,5 +1,6 @@
 import { openEventDb } from './_db';
 import { verifyLocalToken } from '../_local-auth';
+import { isPlatformSuperAdmin } from '@/lib/admin-feature-access';
 
 const bodies = new WeakMap<Request, any>();
 export async function readEventBody(request: Request) {
@@ -92,6 +93,7 @@ export function withRequestEventDb(request: Request, fn: (db: any) => any) {
   const db: any = openEventDb();
   try {
     db.eventActorId = actor.id;
+    db.eventCanMergeMembers = isPlatformSuperAdmin(actor);
     if (actor.role === 'event_admin') {
       const requestPath = new URL(request.url).pathname.replace(/^\/(local-api|legacy-student-api)/, '/api');
       if (request.method === 'POST' && ['/api/event/competitions', '/api/event/data-transfer'].includes(requestPath)) return denied();
@@ -107,7 +109,11 @@ export function withRequestEventDb(request: Request, fn: (db: any) => any) {
         if (!accessible(table, url.searchParams.get(field)) || !accessible(table, body[field])) return denied();
       }
       const arrays: Record<string, string> = { groupIds: 'event_groups', group_ids: 'event_groups', judgeIds: 'event_judges', judge_ids: 'event_judges', memberIds: 'Member', member_ids: 'Member', ids: path.includes('/players/') ? 'event_players' : '' };
-      for (const [field, table] of Object.entries(arrays)) if (table && Array.isArray(body[field]) && body[field].some((id: unknown) => !accessible(table, id))) return denied();
+      for (const [field, table] of Object.entries(arrays)) {
+        // This endpoint validates the selected groups before binding existing members.
+        if (request.method === 'POST' && path === '/api/event/group-judges' && table === 'Member') continue;
+        if (table && Array.isArray(body[field]) && body[field].some((id: unknown) => !accessible(table, id))) return denied();
+      }
       // Restore/import keeps ownership immutable and cannot claim existing data.
       if (path.endsWith('/data-transfer') && request.method === 'POST') {
         for (const table of ['event_competitions', 'event_judges']) {

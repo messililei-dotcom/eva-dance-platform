@@ -22,28 +22,47 @@
 .groupImportUpload :global(.ant-upload-btn) { padding: 10px 12px !important; }
 .groupImportUpload :global(.ant-upload-drag-container) { display: flex !important; align-items: center; justify-content: center; gap: 12px; }
 .groupImportUpload :global(.ant-upload-drag-icon), .groupImportUpload :global(.ant-upload-text) { margin: 0 !important; }
-.groupImportUpload :global(.ant-upload-drag-icon .anticon) { font-size: 28px !important; }
+.groupImportUpload :global(.ant-upload-drag-icon .anticon) { font-size: 22px !important; color: #64748b !important; }
 .groupImportPreview { max-height: min(45vh, 420px); overflow: auto; }
 .groupImportPreview :global(.ant-table-thead) { position: sticky; top: 0; z-index: 1; }
 .groupImportPreview :global(.ant-empty-normal) { margin: 12px 0; }
 
 .groupImportPreview :global(.ant-table-wrapper .ant-table-placeholder .ant-table-cell) { padding: 14px 12px !important; }
 
-.templateDownload:global(.ant-btn) {
-  color: #fff !important;
-  background: #15803d !important;
-  border-color: #15803d !important;
+.transferButton:global(.ant-btn), .templateDownload:global(.ant-btn) {
+  color: #334155 !important;
+  background: #fff !important;
+  border-color: #d1d5db !important;
+  box-shadow: none !important;
 }
-.templateDownload:global(.ant-btn):hover,
-.templateDownload:global(.ant-btn):active {
-  color: #fff !important;
-  background: #166534 !important;
-  border-color: #166534 !important;
+.transferButton:global(.ant-btn):not(:disabled):hover, .templateDownload:global(.ant-btn):not(:disabled):hover {
+  color: #1f2937 !important;
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
 }
-.templateDownload:global(.ant-btn):focus-visible {
-  outline: 3px solid #86efac;
+.transferButton:global(.ant-btn):focus-visible, .templateDownload:global(.ant-btn):focus-visible, .transferConfirm:global(.ant-btn):focus-visible {
+  outline: 2px solid #64748b;
   outline-offset: 2px;
 }
+.transferDialog .transferConfirm:global(.ant-btn.ant-btn-primary):not(:global(.ant-btn-background-ghost)) {
+  color: #fff !important;
+  background: #334155 !important;
+  border: 1px solid #334155 !important;
+  box-shadow: none !important;
+}
+.transferDialog .transferConfirm:global(.ant-btn.ant-btn-primary):not(:global(.ant-btn-background-ghost)):not(:disabled):hover {
+  background: #1f2937 !important;
+  border-color: #1f2937 !important;
+}
+.transferButton:global(.ant-btn):disabled, .transferDialog .transferConfirm:global(.ant-btn.ant-btn-primary):not(:global(.ant-btn-background-ghost)):disabled {
+  color: #9ca3af !important;
+  background: #f5f5f5 !important;
+  border-color: #e5e7eb !important;
+}
+.transferDialog :global(.ant-alert-info) { background: #f8fafc; border-color: #e5e7eb; }
+.transferDialog :global(.ant-alert-info .ant-alert-icon) { color: #64748b; }
+.groupImportPreview :global(.ant-table-thead .ant-table-cell) { background: #f3f4f6 !important; color: #334155; }
+.groupImportPreview :global(.ant-table-tbody .ant-table-row:hover .ant-table-cell) { background: #fafafa !important; }
 
 .judgeArrangementTable :global(.ant-table-cell) { vertical-align: middle; }
 .judgeGroupName { font-weight: 600; overflow-wrap: anywhere; }
@@ -100,3 +119,58 @@
 @media (max-width: 767px) { .resultGroupGrid { grid-template-columns: minmax(0, 1fr); } }
 
 .entryEditButton:global(.ant-btn) { height: auto; padding: 0; text-align: left; white-space: normal; }
+
+.groupManageModal:global(.ant-modal) {
+  top: clamp(16px, 5dvh, 48px);
+  padding-bottom: 0;
+}
+.groupManageModal :global(.ant-modal-content) {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 2 * clamp(16px, 5dvh, 48px));
+}
+.groupManageModal :global(.ant-modal-header) {
+  flex: none;
+  padding-inline-end: 28px;
+  overflow-wrap: anywhere;
+}
+.groupManageModal :global(.ant-modal-body) {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.groupManageStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  width: 100%;
+}
+.groupManageTabs,
+.groupManageTable {
+  min-width: 0;
+  max-width: 100%;
+}
+.groupManageTable :global(.ant-table-content) {
+  overflow-x: auto !important;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: #a1a8bb #f1f3f8;
+}
+.groupManageTable :global(.ant-pagination) { flex-wrap: wrap; }
+.groupManageModal .resultGroupCard { max-width: 100%; }
+
+@media (max-width: 767px) {
+  .groupManageModal:global(.ant-modal) { top: 0; }
+  .groupManageModal :global(.ant-modal-content) {
+    min-height: 0;
+    max-height: 100dvh;
+  }
+  .groupManageModal :global(.ant-modal-body) { max-height: none; }
+  .groupManageTabs :global(.ant-tabs-tab + .ant-tabs-tab) { margin-inline-start: 16px; }
+  .groupManageTable:global(.ant-table-wrapper) { overflow: visible; }
+  .groupManageTable :global(.ant-table) { min-width: 0; }
+  .groupManageTable :global(.ant-table-container) { overflow: visible; }
+  .groupManageTable :global(.ant-table-cell-fix-left),
+  .groupManageTable :global(.ant-table-cell-fix-right) { position: static !important; }
+}

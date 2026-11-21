@@ -1,3 +1,5 @@
+import { findPhoneMembers } from '@/lib/server/event-phone-member';
+import { formatMemberPhoneForDisplay } from '@/lib/member-phone-display';
 import { jsonError, withDb } from '../../_materials';
 import { authPayloadFromRequest, requirePermission } from '../../../training-db';
 import { authorizeMembers, normalizePhoneIdentity } from '../../series/[id]/_authorization';
@@ -29,14 +31,16 @@ export async function POST(request: Request) {
     return withDb(db => db.transaction(() => {
       // Validate every course and settlement before creating any account or grant.
       for (const row of allocations) authorizationFinancials(db, row.id, { ...row, sales });
+      const matches = memberId ? [] : findPhoneMembers(db, String(body.phone || ''));
+      if (matches.length > 1) return jsonError('手机号关联了多位学员，请先核实', 409);
       let member = memberId
         ? db.prepare('SELECT id,status FROM Member WHERE id=?').get<{id:number;status:string}>(memberId)
-        : db.prepare('SELECT id,status FROM Member WHERE phone=? OR phone_national_number=? ORDER BY CASE WHEN phone=? THEN 0 ELSE 1 END,id DESC LIMIT 1').get<{id:number;status:string}>(phone, phone, phone);
+        : matches[0];
       if (!member && memberId) throw new Error('学员不存在');
       if (member && ['deleted','merged'].includes(member.status)) throw new Error('请使用有效的学员主账号');
       if (!member) {
         const name = `手机学员${phone.slice(-4)}`;
-        const result = db.prepare("INSERT INTO Member(name,phone,source,status,register_date,created_at) VALUES(?,?,'phone_auth','active',date('now','localtime'),datetime('now','localtime'))").run(name,phone);
+        const result = db.prepare("INSERT INTO Member(name,phone,source,status,register_date,created_at) VALUES(?,?,'phone_auth','active',date('now','localtime'),datetime('now','localtime'))").run(name,formatMemberPhoneForDisplay(body.phone));
         member = {id:Number(result.lastInsertRowid),status:'active'};
         createWelcomeMessage(db, member.id, name);
       }

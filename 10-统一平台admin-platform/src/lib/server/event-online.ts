@@ -77,6 +77,42 @@ export function ensureDeletedRegistrationTables(db: any) {
  })();
 }
 
+type RegistrationPaymentKind = 'charge' | 'refund';
+const paymentOrderStatuses = {
+  charge: ['pending'],
+  refund: ['completed', 'refund_requested', 'refunding'],
+};
+
+function manualPaymentOption(db: AdminDb, player: Record<string, any>, kind: RegistrationPaymentKind) {
+  const amount = Math.round(Number((kind === 'charge' ? player.registration_fee : player.paid_amount) || 0) * 100) / 100;
+  let unavailableReason = '';
+  if (kind === 'charge') {
+    if (['cancelled', 'withdrawn'].includes(player.status)) unavailableReason = '已取消或退赛的报名不能登记缴费';
+    else if (player.audit_status === 'rejected' || player.status === 'rejected') unavailableReason = '审核驳回的报名不能登记缴费';
+    else if (amount <= 0) unavailableReason = '该报名无需缴费';
+    else if (Number(player.paid_amount || 0) !== 0 || ['paid', 'completed'].includes(player.paid_status)) unavailableReason = '该报名已有缴费记录';
+  } else if (amount <= 0) {
+    unavailableReason = '该报名没有可退金额';
+  }
+  if (!unavailableReason && eventPaymentOrder(db, Number(player.id), paymentOrderStatuses[kind])) {
+    unavailableReason = kind === 'charge' ? '该报名有待支付的在线订单，请在原在线订单中处理' : '该报名通过在线订单缴费，请在原在线订单中办理退款';
+  }
+  return { amount, unavailableReason };
+}
+
+export function registrationPaymentState(db: AdminDb, player: Record<string, any>) {
+  const charge = manualPaymentOption(db, player, 'charge');
+  const refund = manualPaymentOption(db, player, 'refund');
+  return {
+    registrationFee: charge.amount,
+    paidAmount: refund.amount,
+    unpaidAmount: Math.max(0, Math.round((charge.amount - refund.amount) * 100) / 100),
+    paidStatus: String(player.paid_status || 'unpaid'),
+    charge,
+    refund,
+  };
+}
+
 export function recordRegistrationPayment(db: any, playerId: number, body: any, onlineOrderId?: string) {
   const active = db.prepare('SELECT * FROM event_players WHERE id=?').get(playerId);
   const archived = !active && onlineOrderId ? db.prepare('SELECT * FROM event_deleted_registrations WHERE id=?').get(playerId) : undefined;
@@ -84,13 +120,15 @@ export function recordRegistrationPayment(db: any, playerId: number, body: any, 
   if (!player) throw new Error('报名不存在');
   const ledger = archived ? 'event_deleted_registration_payments' : 'event_registration_payments';
   const registrations = archived ? 'event_deleted_registrations' : 'event_players';
-  const kind = body.kind;
-  if (!['charge','refund'].includes(kind)) throw new Error('请选择缴费或退款登记');
-  const raw = Number(body.amount), cents = Math.round(raw * 100);
-  if (!Number.isFinite(raw) || cents <= 0 || Math.abs(raw * 100 - cents) > 0.000001) throw new Error('金额必须大于0且最多两位小数');
+  const kind: unknown = body?.kind;
+  if (kind !== 'charge' && kind !== 'refund') throw new Error('请选择缴费或退款登记');
+  const amount = body.amount;
+  const raw = typeof amount === 'number' || typeof amount === 'string' ? Number(amount) : NaN;
+  const cents = Math.round(raw * 100);
+  if (!Number.isSafeInteger(cents) || cents <= 0 || Math.abs(raw * 100 - cents) > 0.000001) throw new Error('金额必须大于0且最多两位小数');
   const key = String(body.requestKey || '').trim();
   if (!/^[a-zA-Z0-9-]{16,80}$/.test(key)) throw new Error('缺少有效的登记编号，请重新打开登记窗口');
-  const date = new Date(body.paidAt);
+  const date = new Date(typeof body.paidAt === 'string' ? body.paidAt : NaN);
   if (!Number.isFinite(date.getTime()) || date.getTime() > Date.now() + 60000) throw new Error('请填写有效的实际缴费或退款时间');
   const paidAt = date.toISOString(), method = String(body.method || '').trim(), remark = String(body.remark || '').trim();
   if (!['wechat','alipay','bank','cash','other'].includes(method)) throw new Error('请选择缴费方式');
@@ -99,8 +137,13 @@ export function recordRegistrationPayment(db: any, playerId: number, body: any, 
     if (prior.player_id !== playerId || prior.kind !== kind || Math.round(prior.amount*100) !== cents || prior.paid_at !== paidAt || prior.method !== method || prior.remark !== remark) throw new Error('登记编号已使用，请重新打开窗口');
     return { id: prior.id, repeated: true };
   }
-  const activeOrder = eventPaymentOrder(db, playerId, kind === 'charge' ? ['pending'] : ['completed', 'refund_requested', 'refunding']);
-  if (activeOrder && activeOrder.id !== onlineOrderId) throw new Error('请在原在线订单中处理缴费或退款');
+  if (onlineOrderId) {
+    const activeOrder = eventPaymentOrder(db, playerId, paymentOrderStatuses[kind]);
+    if (activeOrder && activeOrder.id !== onlineOrderId) throw new Error('请在原在线订单中处理缴费或退款');
+  } else {
+    const { unavailableReason } = manualPaymentOption(db, player, kind);
+    if (unavailableReason) throw new Error(unavailableReason);
+  }
   const collected = Math.round(Number(player.paid_amount || 0)*100), fee = Math.round(Number(player.registration_fee || 0)*100);
   if (kind === 'charge' && ['cancelled','withdrawn'].includes(player.status)) throw new Error('已取消报名不能登记缴费');
   if (kind === 'charge' && (collected !== 0 || cents !== fee)) throw new Error('单条报名须一次缴清该组别报名费，不支持分次缴费');

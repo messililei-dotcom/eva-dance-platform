@@ -118,6 +118,7 @@ export function memberAccountAvailable(db: AdminDb, id: number) {
     seen.add(id);
     const member = db.prepare('SELECT * FROM Member WHERE id=?').get<Record<string, any>>(id);
     if (!member) return false;
+    if (member.mini_login_retired) return false;
     if (table && db.prepare("SELECT id FROM AppDeletionRequest WHERE member_id=? AND status='pending'").get(id)) return false;
     const target = Number(member.merged_to_member_id || String(member.remark || '').match(/member_id\s*=\s*(\d+)/i)?.[1] || 0);
     if (!target) return !member.status || ['active','正常','enabled'].includes(member.status);
@@ -412,6 +413,13 @@ export function ensureMiniTables(db: AdminDb) {
     used INTEGER NOT NULL DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`).run();
+  db.exec(`CREATE TABLE IF NOT EXISTS MiniProfilePhoneCode (
+    member_id INTEGER PRIMARY KEY,
+    phone TEXT NOT NULL,
+    code TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0
+  )`);
   db.prepare(`CREATE TABLE IF NOT EXISTS CourseSeriesVisit (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     member_id INTEGER NOT NULL,
@@ -452,6 +460,8 @@ export function ensureMiniTables(db: AdminDb) {
   addColumn(db, 'CourseSeriesVisitLog', 'referrer_channel', "referrer_channel TEXT DEFAULT ''");
   addColumn(db, 'CourseSeriesVisitLog', 'referrer_url', "referrer_url TEXT DEFAULT ''");
   addColumn(db, 'CourseSeriesVisitLog', 'share_code', "share_code TEXT DEFAULT ''");
+  addColumn(db, 'Member', 'phone_country_code', 'phone_country_code TEXT');
+  addColumn(db, 'Member', 'phone_national_number', 'phone_national_number TEXT');
   addColumn(db, 'Member', 'wx_nickname', "wx_nickname TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_avatar_url', "wx_avatar_url TEXT DEFAULT ''");
   addColumn(db, 'Member', 'wx_openid', "wx_openid TEXT DEFAULT ''");
@@ -460,6 +470,7 @@ export function ensureMiniTables(db: AdminDb) {
   addColumn(db, 'Member', 'wx_session_updated_at', 'wx_session_updated_at DATETIME DEFAULT NULL');
   addColumn(db, 'Member', 'wx_profile_synced_at', 'wx_profile_synced_at DATETIME DEFAULT NULL');
   addColumn(db, 'Member', 'merged_to_member_id', 'merged_to_member_id INTEGER DEFAULT 0');
+  addColumn(db, 'Member', 'mini_login_retired', 'mini_login_retired INTEGER NOT NULL DEFAULT 0');
 
   // 性能索引
   db.exec("CREATE INDEX IF NOT EXISTS idx_study_note_member ON StudyNote(member_id, video_id, created_at)");
@@ -484,7 +495,7 @@ export function isMiniAdmin(db: AdminDb, memberId: unknown) {
   const id = toPositiveInt(memberId, 0);
   if (!id) return false;
   const phone = db.prepare('SELECT phone FROM Member WHERE id=?').get<{ phone?: string }>(id)?.phone;
-  return !!(phone && db.prepare("SELECT id FROM AdminUser WHERE phone=? AND status='active'").get(phone));
+  return !!(phone && db.prepare("SELECT id FROM AdminUser WHERE phone IN (?,?) AND status='active'").get(phone, phone.replace(/^\+86(?=1[3-9]\d{9}$)/, '')));
 }
 
 export function canManageMini(db: AdminDb, request: Request) {

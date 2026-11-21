@@ -1,11 +1,15 @@
+import { normalizeEventPhone, PHONE_COUNTRIES } from './event-phone';
+
 export type ImportKind = 'groups' | 'players' | 'judges';
 export type ImportIssue = { row: number; message: string };
 const columns: Record<ImportKind, string[]> = {
-  groups: ['序号', '组别名称', '报名费', '编码', '年龄段', '舞种', '参赛形式', '人数上限', '评分规则ID', '状态'],
-  players: ['组别名称', '选手姓名', '手机号', '领队机构', '领队老师', '节目名称'],
-  judges: ['序号', '组别名称', '评委姓名', '手机号', '所属机构', '职称'],
+  groups: ['序号', '组别名称', '报名费', '编码', '年龄段', '舞种', '参赛形式', '评分规则ID', '状态'],
+  players: ['组别名称', '选手姓名', '区号', '手机号', '领队机构', '领队老师', '节目名称'],
+  judges: ['序号', '组别名称', '评委姓名', '区号', '手机号', '所属机构', '职称'],
 };
-const aliases: Record<string, string> = { 组别: '组别名称', 排序: '序号', 手机号码: '手机号', 参赛曲目: '节目名称' };
+const groupExportOnlyColumns = ['选手数', '评委数', '评分状态'];
+export const groupExportHeaders = ['序号', '组别名称', '报名费', ...groupExportOnlyColumns];
+const aliases: Record<string, string> = { 组别: '组别名称', 排序: '序号', 手机号码: '手机号', 国家地区区号: '区号', '国家/地区区号': '区号', 国际区号: '区号', 参赛曲目: '节目名称' };
 export const requiredImportColumns: Record<ImportKind, string[]> = { groups: ['组别名称'], players: ['组别名称', '选手姓名', '手机号'], judges: ['组别名称', '评委姓名', '手机号'] };
 export function importText(value: unknown) {
   if (value instanceof Date) throw new Error('被 Excel 识别为日期，请将此列设为文本并重新填写');
@@ -48,19 +52,97 @@ export function importNumber(value: unknown, money = false, fallback = 0) {
   if (!Number.isSafeInteger(number)) throw new Error('必须为非负整数，不能是小数或超出安全精度');
   return number;
 }
-export function importPhone(value: unknown) {
-  let text = normalized(value);
+function importPhoneText(value: unknown) {
+  let text = normalized(value).replace(/[\u2010-\u2015\u2212]/g, '-').replace(/^'(?=[+\d(])/, '');
   if (/^[+-]?\d+(?:\.\d+)?[eE][+-]?\d+$/.test(text) || /^\d+\.0+$/.test(text) || typeof value === 'number') text = decimalText(value);
-  if (!/^[+\d][\d\s()+-]*$/.test(text)) throw new Error('手机号应为完整号码，不支持文字、小数或公式错误');
-  let digits = text.replace(/[\s()+-]/g, '');
+  if (!/^[+\d(][\d\s()+-]*$/.test(text)) throw new Error('手机号应为完整号码，不支持文字、小数或公式错误');
+  return text.replace(/[\s()-]/g, '');
+}
+
+export function importPhone(value: unknown) {
+  let digits = importPhoneText(value).replace(/\+/g, '');
   if (digits.length === 13 && digits.startsWith('86')) digits = digits.slice(2);
   if (!/^\d{6,20}$/.test(digits)) throw new Error('手机号应为 6～20 位完整号码，请核对科学计数法是否丢失精度');
   return digits;
 }
+
+function importDialCode(value: unknown) {
+  const text = normalized(value);
+  if (!text) return '';
+  const match = /^(?:([^\d+]+)\s*)?\+([1-9]\d{0,2})$/.exec(text);
+  if (/^[1-9]\d{0,2}$/.test(text)) return '+' + text;
+  if (!match) throw new Error('区号格式不正确，请填写如「中国大陆 +86」或「+86」');
+  const code = '+' + match[2];
+  const country = PHONE_COUNTRIES.find(item => item.name === match[1]?.trim());
+  if (country && country.code !== code) throw new Error('国家/地区名称与区号不一致');
+  return code;
+}
+
+export function importPhoneContact(value: unknown, dialCode: unknown) {
+  const countryCode = importDialCode(dialCode);
+  if (!countryCode) {
+    const phone = importPhone(value);
+    return { phone, countryCode, nationalNumber: phone };
+  }
+  const phone = importPhoneText(value);
+  const international = phone.replace(/^00/, '+');
+  if (international.startsWith('+') && !international.startsWith(countryCode)) {
+    throw new Error('手机号与填写的区号不一致');
+  }
+  const contact = normalizeEventPhone(phone, countryCode);
+  if (contact.countryCode !== countryCode) throw new Error('手机号与填写的区号不一致');
+  if (contact.phone.replace(/^\+/, '').length < 6) throw new Error('手机号位数不足');
+  return contact;
+}
+
+export function importJudgePhoneContact(value: unknown, dialCode?: unknown) {
+  const raw = importPhoneText(value).replace(/^00/, '+');
+  if (!/^\+?\d{6,15}$/.test(raw)) throw new Error('请填写完整手机号，国际区号只能放在开头');
+  const explicitCode = importDialCode(dialCode);
+  const knownCode = PHONE_COUNTRIES.filter(({ code }) => raw.startsWith(code))
+    .sort((a, b) => b.code.length - a.code.length)[0]?.code;
+  const inferredCode = knownCode
+    || (/^861[3-9]\d{9}$/.test(raw) ? '+86' : '')
+    || (/^1[3-9]\d{9}$/.test(raw) ? '+86' : '')
+    || (/^60(?:0)?1\d{8,9}$/.test(raw) ? '+60' : '')
+    || (/^(?:852|853|65)\d{8}$/.test(raw) ? '+' + raw.slice(0, raw.startsWith('65') ? 2 : 3) : '');
+  if (explicitCode && raw.startsWith('+') && inferredCode && inferredCode !== explicitCode) {
+    throw new Error('手机号与填写的区号不一致');
+  }
+  const code = explicitCode || inferredCode;
+  if (!code) {
+    if (raw.startsWith('+') && !/^\+[1-9]\d{7,14}$/.test(raw)) throw new Error('请填写正确的国际手机号');
+    return { phone: raw, countryCode: '', nationalNumber: raw };
+  }
+  return importPhoneContact(raw, code);
+}
+
+export function sameJudgePhone(left: unknown, right: unknown): boolean {
+  try {
+    const a = importJudgePhoneContact(left);
+    const b = importJudgePhoneContact(right);
+    if (a.phone === b.phone) return true;
+    const malaysia = a.countryCode === '+60' ? a : b.countryCode === '+60' ? b : undefined;
+    const local = malaysia === a ? b : a;
+    return Boolean(malaysia && !local.countryCode && local.phone === '0' + malaysia.nationalNumber);
+  } catch {
+    return false;
+  }
+}
+
+function normalizeImportPhoneFields(row: Record<string, unknown>, kind: 'players' | 'judges') {
+  if (!String(row['手机号'] ?? '').trim()) return;
+  const parse = kind === 'judges' ? importJudgePhoneContact : importPhoneContact;
+  const { countryCode, nationalNumber } = parse(row['手机号'], row['区号']);
+  if ('区号' in row || (kind === 'judges' && countryCode)) row['区号'] = countryCode;
+  row['手机号'] = nationalNumber;
+}
+
 export function normalizeImportField(column: string, value: unknown): unknown {
   if (column === '报名费') return importNumber(value, true);
-  if (['序号', '人数上限', '评分规则ID'].includes(column)) return importText(value) === '' ? '' : importNumber(value);
-  if (column === '手机号') return importPhone(value);
+  if (['序号', '评分规则ID'].includes(column)) return importText(value) === '' ? '' : importNumber(value);
+  if (column === '手机号') return importPhoneText(value);
+  if (column === '区号') return importDialCode(value);
   // Templates have no date columns. Never turn dates into timestamps or fees.
   return importText(value);
 }
@@ -71,6 +153,7 @@ export function normalizeImportRecord(item: Record<string, unknown>, kind: Impor
     if (columns[kind].includes(key)) result[key] = normalizeImportField(key, value);
   }
   for (const key of requiredImportColumns[kind]) if (!String(result[key] ?? '').trim()) throw new Error(`${key}不能为空`);
+  if (kind !== 'groups') normalizeImportPhoneFields(result, kind);
   return result;
 }
 export function hasImportHeader(raw: unknown[][], kind: ImportKind) {
@@ -82,17 +165,29 @@ export function parseImportRows(raw: unknown[][], kind: ImportKind) {
   const headers = raw[headerIndex].map(cell => { const key = normalized(cell); return aliases[key] || key; });
   const nonempty = headers.filter(Boolean);
   if (new Set(nonempty).size !== nonempty.length) throw new Error('表头有重复列（包括同义列），请删除重复列');
-  const unknown = nonempty.filter(key => !columns[kind].includes(key) && !(kind === 'players' && ['节目编号', '选手编号'].includes(key)));
+  const unknown = nonempty.filter(key => !columns[kind].includes(key)
+    && !(kind === 'groups' && (groupExportOnlyColumns.includes(key) || key === '人数上限'))
+    && !(kind === 'players' && ['节目编号', '选手编号'].includes(key)));
   const errors: ImportIssue[] = [], rows: Record<string, unknown>[] = [];
   raw.slice(headerIndex + 1).forEach((cells, index) => {
     if (!cells.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '')) return;
     const sourceRow = headerIndex + index + 2;
     const result: Record<string, unknown> = { __sourceRow: sourceRow };
+    let invalidContactCell = false;
     headers.forEach((key, column) => {
       if (!key || !columns[kind].includes(key)) return;
+      if (key === '手机号' && !String(cells[column] ?? '').trim()) return;
       try { result[key] = normalizeImportField(key, cells[column] ?? ''); }
-      catch (e: any) { result[key] = cells[column] instanceof Date ? (cells[column] as Date).toISOString().slice(0,10) : String(cells[column] ?? ''); errors.push({ row: sourceRow, message: `${key}：${e.message}` }); }
+      catch (e: any) {
+        invalidContactCell ||= key === '区号' || key === '手机号';
+        result[key] = cells[column] instanceof Date ? (cells[column] as Date).toISOString().slice(0,10) : String(cells[column] ?? '');
+        errors.push({ row: sourceRow, message: `${key}：${e.message}` });
+      }
     });
+    if (kind !== 'groups' && !invalidContactCell) {
+      try { normalizeImportPhoneFields(result, kind); }
+      catch (e: any) { errors.push({ row: sourceRow, message: `手机号：${e.message}` }); }
+    }
     requiredImportColumns[kind].forEach(key => { if (!String(result[key] ?? '').trim()) errors.push({ row: sourceRow, message: `${key}不能为空` }); });
     if (cells.some((cell, column) => !headers[column] && cell !== null && cell !== undefined && String(cell).trim() !== '')) errors.push({ row: sourceRow, message: '有数据列没有表头，请补充表头或删除该列' });
     rows.push(result);
@@ -122,10 +217,10 @@ export function importSourceRow(item: Record<string, unknown>, fallback: number)
   const row = Number(item?.__sourceRow); return Number.isSafeInteger(row) && row > 0 ? row : fallback;
 }
 
-// Export the same supported columns as import. Quote every cell and protect
-// spreadsheet formula prefixes without changing numbers or phone identifiers.
+// Quote every cell and protect spreadsheet formula prefixes without changing
+// numbers or phone identifiers.
 export function eventImportCsv(kind: ImportKind, rows: Record<string, unknown>[], includeEntryNumbers = false) {
-  const headers = kind === 'groups' ? ['序号', '组别名称', '报名费'] : kind === 'judges' ? ['序号', '组别名称', '评委姓名', '手机号', '所属机构'] : includeEntryNumbers ? ['节目编号', '选手编号', ...columns.players] : columns.players;
+  const headers = kind === 'groups' ? groupExportHeaders : kind === 'judges' ? ['序号', '组别名称', '评委姓名', '手机号', '所属机构'] : includeEntryNumbers ? ['节目编号', '选手编号', ...columns.players] : columns.players;
   const cell = (value: unknown) => {
     let text = String(value ?? '');
     if (/^[=+@-]/.test(text)) text = "'" + text;

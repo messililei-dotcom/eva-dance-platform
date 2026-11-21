@@ -72,8 +72,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       if (!title || title.length > 120) throw new MusicUploadError('请填写1至120字的节目名称');
       const music = form.get('musicFile') as File | null;
       const bytes = music ? Buffer.from(await music.arrayBuffer()) : null;
-      if (music && bytes) await validatePlayableMusic(music.name, bytes);
-      return { body, title, music, bytes };
+      const duration = music && bytes ? await validatePlayableMusic(music.name, bytes) : 0;
+      return { body, title, music, bytes, duration };
     }));
     const hash = batch ? createHash('sha256').update(JSON.stringify(entries.map(entry => entry.body))).digest('hex') : '';
     return withEventDb((db) => db.transaction(() => {
@@ -89,24 +89,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         batchId = Number(db.prepare('INSERT INTO event_registration_batches (member_id, competition_id, request_key, request_hash) VALUES (?,?,?,?)').run(memberId, routeParams.id, key, hash).lastInsertRowid);
       }
       const competition = db.prepare(`
-        SELECT id, name, registration_status, registration_start, registration_end, end_date
+        SELECT id, name, registration_status
         FROM event_competitions
         WHERE id=? AND status='published'
       `).get(routeParams.id);
       if (!competition) throw new MusicUploadError('赛事不存在或尚未发布', 404);
-      const now = Date.now();
-      const before = (value: string) => value && Date.parse(value) > now;
-      const after = (value: string) => value && Date.parse(value) < now;
-      if (competition.registration_status !== 'open' || before(competition.registration_start) ||
-        after(competition.registration_end) || after(competition.end_date)) {
-        throw new MusicUploadError('赛事报名尚未开放或已经结束', 409);
+      if (competition.registration_status !== 'open') {
+        throw new MusicUploadError('赛事当前未开放报名', 409);
       }
 
-      const registrations = entries.map(({ body, title, music, bytes }, index) => {
+      const registrations = entries.map(({ body, title, music, bytes, duration }, index) => {
         try {
           const groupId = toNumber(body.groupId ?? body.group_id);
           const group = db.prepare(
-            "SELECT id, max_players, registration_fee FROM event_groups WHERE id=? AND competition_id=? AND status='active'"
+            "SELECT id, registration_fee FROM event_groups WHERE id=? AND competition_id=? AND status='active'"
           ).get(groupId, routeParams.id);
           if (!group) throw new MusicUploadError('请选择有效的参赛组别');
 
@@ -127,13 +123,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
               AND status!='cancelled'
           `).all(routeParams.id, groupId, participantId, phone.replace(/\D/g, '')).find((row: any) => Number(row.member_id) === participantId || samePhoneIdentity(row.phone, phone));
           if (duplicate) throw new MusicUploadError('您已报名该赛事组别，可从个人中心继续缴费',409);
-
-          const groupCount = db.prepare(
-            "SELECT COUNT(*) AS count FROM event_players WHERE group_id=? AND status!='cancelled'"
-          ).get(groupId)?.count || 0;
-          if (group.max_players > 0 && groupCount >= group.max_players) {
-            throw new MusicUploadError('该组别报名人数已满',409);
-          }
 
 
           const result = db.prepare(`
@@ -164,10 +153,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           let musicFileId: number | null = null;
           if (music && bytes) {
             const stored = persistEventMusic(music.name, bytes); savedFile = stored.file;
-            const musicResult = db.prepare(`INSERT INTO event_music_files (competition_id,group_id,player_id,file_name,file_url,file_size,audit_status,uploaded_at,updated_at) VALUES (?,?,?,?,?,?,'pending',?,?)`).run(routeParams.id,groupId,result.lastInsertRowid,stored.name,stored.fileURL,bytes.length,nowIso(),nowIso());
+            const musicResult = db.prepare(`INSERT INTO event_music_files (competition_id,group_id,player_id,file_name,file_url,file_size,duration_seconds,audit_status,uploaded_at,updated_at) VALUES (?,?,?,?,?,?,?,'pending',?,?)`).run(routeParams.id,groupId,result.lastInsertRowid,stored.name,stored.fileURL,bytes.length,duration,nowIso(),nowIso());
             musicFileId = Number(musicResult.lastInsertRowid);
           }
-          db.prepare(`INSERT INTO event_performances (competition_id,group_id,player_id,title,music_file_id,status,updated_at) VALUES (?,?,?,?,?,'pending',?)`).run(routeParams.id,groupId,result.lastInsertRowid,title,musicFileId,nowIso());
+          db.prepare(`INSERT INTO event_performances (competition_id,group_id,player_id,title,music_file_id,duration_seconds,status,updated_at) VALUES (?,?,?,?,?,?,'pending',?)`).run(routeParams.id,groupId,result.lastInsertRowid,title,musicFileId,duration,nowIso());
           createPersonalMessage(db, memberId, {
             type: 'event',
             title: '赛事报名已提交',

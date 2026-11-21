@@ -1,3 +1,4 @@
+import { memberPhoneKeySql } from '@/lib/server/member-phone-sql';
 import fs from 'fs';
 import path from 'path';
 import { getAuthenticatedMemberId, jsonError, toPositiveInt, withDb } from '../../../_helpers';
@@ -86,7 +87,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       const member = db.prepare('SELECT phone FROM Member WHERE id=?').get<{ phone?: string }>(memberId);
       const auth = video.series_is_free || db.prepare(
         `SELECT id FROM CourseAuthorization
-         WHERE series_id=? AND status='active' AND (member_id=? OR (phone<>'' AND phone=?))
+         WHERE series_id=? AND status='active' AND (member_id=? OR (phone<>'' AND ${memberPhoneKeySql('phone')}=(SELECT ${memberPhoneKeySql('bound.input')} FROM (SELECT ? AS input) bound)))
            AND (expire_at IS NULL OR expire_at > datetime('now','localtime')) LIMIT 1`
       ).get(video.series_id, memberId, member?.phone || '');
       if (!auth) return jsonError('请先申请授权观看完整课程', 403);

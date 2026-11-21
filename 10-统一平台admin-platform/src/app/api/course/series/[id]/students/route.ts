@@ -1,3 +1,4 @@
+import { memberPhoneKeySql } from '@/lib/server/member-phone-sql';
 import { ensureAuthorizationCommissionColumns } from '@/lib/server/authorization-commission';
 import { jsonError, toPositiveInt, withDb } from '../../../_materials';
 import { requirePermission } from '../../../../training-db';
@@ -77,7 +78,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
              WHERE ca2.series_id=?
                AND (
                  ca2.member_id=m.id
-                 OR (COALESCE(ca2.phone, '')<>'' AND COALESCE(m.phone, '')<>'' AND ca2.phone=m.phone)
+                 OR (COALESCE(ca2.phone, '')<>'' AND COALESCE(m.phone, '')<>'' AND ${memberPhoneKeySql('ca2.phone')} = ${memberPhoneKeySql('m.phone')})
                  OR (COALESCE(ca2.wx_openid, '')<>'' AND ca2.wx_openid=COALESCE(m.wx_openid, ''))
                  OR (COALESCE(ca2.wx_unionid, '')<>'' AND ca2.wx_unionid=COALESCE(m.wx_unionid, ''))
                )

@@ -1,4 +1,4 @@
-import { cleanText, readEventBody, hasAuth, jsonError, nowIso, toNumber, unauthorized, withRequestEventDb } from '../_db';
+import { cleanText, readEventBody, hasAuth, jsonError, nowIso, toNumber, unauthorized, withRequestEventDb, recalculateGroupRankings } from '../_db';
 import { ensureJudgeForMember } from '@/lib/server/event-judge-member-sync';
 
 export const dynamic = 'force-dynamic';
@@ -89,6 +89,9 @@ export async function POST(request: Request) {
     const groupPlaceholders = uniqueGroupIds.map(() => '?').join(', ');
     const validGroupCount = Number((db.prepare(`SELECT COUNT(*) AS count FROM event_groups WHERE competition_id = ? AND id IN (${groupPlaceholders})`).get(competitionId, ...uniqueGroupIds) as any)?.count || 0);
     if (validGroupCount !== uniqueGroupIds.length) return jsonError('部分组别不存在或不属于当前赛事', 404);
+    if (memberIds.some(id => !db.prepare("SELECT id FROM main.Member WHERE id=? AND COALESCE(status,'active')!='deleted'").get(id))) {
+      return jsonError('部分所选用户不存在或已删除', 404);
+    }
     const statement = db.prepare(`
       INSERT INTO event_group_judges (
         competition_id, group_id, judge_id, role, weight, auth_enabled, status, updated_at
@@ -99,12 +102,13 @@ export async function POST(request: Request) {
     let assigned = 0;
     db.transaction(() => {
       memberIds.forEach((memberId) => {
+        if (db.eventOwnerId) db.prepare('INSERT OR IGNORE INTO temp.event_owned_members(id) VALUES (?)').run(memberId);
         const judge = ensureJudgeForMember(db, memberId);
         uniqueJudgeIds.push(Number(judge.id));
       });
       const finalJudgeIds = [...new Set(uniqueJudgeIds)];
       finalJudgeIds.forEach((id) => {
-        db.prepare("UPDATE event_judges SET auth_enabled=1, status='active', updated_at=? WHERE id=?").run(nowIso(), id);
+        db.prepare("UPDATE event_judges SET auth_enabled=1, status='active', updated_at=? WHERE id=? AND (COALESCE(auth_enabled,0)!=1 OR COALESCE(status,'')!='active')").run(nowIso(), id);
         uniqueGroupIds.forEach((currentGroupId) => {
           const result = statement.run(
             competitionId,
@@ -119,6 +123,12 @@ export async function POST(request: Request) {
           assigned += result.changes;
         });
       });
+      // POST may also reactivate an existing judge with other assigned groups.
+      const affected = new Set(uniqueGroupIds);
+      for (const id of finalJudgeIds) {
+        for (const row of db.prepare('SELECT DISTINCT group_id FROM event_group_judges WHERE judge_id=?').all(id)) affected.add(Number(row.group_id));
+      }
+      for (const id of affected) recalculateGroupRankings(db, id);
     })();
     const requested = uniqueGroupIds.length * [...new Set(uniqueJudgeIds)].length;
     return Response.json({ success: true, data: { assigned, skipped: requested - assigned } });
@@ -155,7 +165,7 @@ export async function PATCH(request: Request) {
   }
   if (!sets.length) return jsonError('请选择至少一项需要修改的内容');
 
-  return withRequestEventDb(request, (db) => {
+  return withRequestEventDb(request, (db) => db.transaction(() => {
     const placeholders = judgeIds.map(() => '?').join(', ');
     sets.push('updated_at = ?');
     values.push(nowIso(), competitionId, groupId, ...judgeIds);
@@ -164,8 +174,9 @@ export async function PATCH(request: Request) {
       SET ${sets.join(', ')}
       WHERE competition_id = ? AND group_id = ? AND judge_id IN (${placeholders})
     `).run(...values);
+    if (result.changes > 0) recalculateGroupRankings(db, groupId);
     return Response.json({ success: true, data: { updated: result.changes } });
-  });
+  }).immediate());
 }
 
 export async function DELETE(request: Request) {
@@ -177,12 +188,13 @@ export async function DELETE(request: Request) {
   const judgeIds = normalizeIds(body.judgeIds ?? body.judge_ids);
   if (!competitionId || !groupId || !judgeIds.length) return jsonError('缺少赛事、组别或评委ID');
 
-  return withRequestEventDb(request, (db) => {
+  return withRequestEventDb(request, (db) => db.transaction(() => {
     const placeholders = judgeIds.map(() => '?').join(', ');
     const result = db.prepare(`
       DELETE FROM event_group_judges
       WHERE competition_id = ? AND group_id = ? AND judge_id IN (${placeholders})
     `).run(competitionId, groupId, ...judgeIds);
+    if (result.changes > 0) recalculateGroupRankings(db, groupId);
     return Response.json({ success: true, data: { deleted: result.changes } });
-  });
+  }).immediate());
 }

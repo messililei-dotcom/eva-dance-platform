@@ -54,7 +54,7 @@ export const danceCollection: DanceItem[] = [
     title: '一千零一夜',
     subtitle: '经典曲目 Aif leila wa leila',
     description: '以经典东方舞曲目《一千零一夜》（Aif leila wa leila）为背景的成品舞，舞姿优雅神秘，讲述阿拉伯民间故事的浪漫与奇幻。',
-    image: '/images/courses/dance-collection/dance-collection-26.jpg',
+    image: '/images/courses/platform/course-cover-57a26cdcbfbf1ba9.webp',
     type: '经典成品舞',
     difficulty: '中级',
     instructor: '伊娃老师',

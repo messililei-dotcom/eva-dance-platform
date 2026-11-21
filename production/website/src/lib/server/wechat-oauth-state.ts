@@ -8,6 +8,7 @@ type WechatOAuthState = {
   mode: WechatOAuthMode;
   purpose: WechatOAuthPurpose;
   memberId: number;
+  sessionId?: string;
   handoffId?: string;
   ts: number;
 };
@@ -50,17 +51,20 @@ export function createWechatOAuthState(input: {
   mode: unknown;
   purpose?: unknown;
   memberId?: unknown;
+  sessionId?: unknown;
   handoffId?: unknown;
 }) {
   const purpose = normalizePurpose(input.purpose);
   const memberId = Number(input.memberId) || 0;
   if (purpose === 'bind' && memberId <= 0) throw new Error('绑定微信需要先登录');
   const handoffId = purpose === 'login' ? normalizeHandoffId(input.handoffId) : '';
+  const sessionId = purpose === 'bind' ? normalizeHandoffId(input.sessionId) : '';
   const payload = Buffer.from(JSON.stringify({
     next: normalizeNext(input.next),
     mode: normalizeMode(input.mode),
     purpose,
     memberId: purpose === 'bind' ? memberId : 0,
+    ...(sessionId ? { sessionId } : {}),
     ...(handoffId ? { handoffId } : {}),
     ts: Date.now(),
   } satisfies WechatOAuthState)).toString('base64url');
@@ -84,6 +88,8 @@ export function readWechatOAuthState(value: unknown): WechatOAuthState {
   };
   const handoffId = normalizeHandoffId(parsed.handoffId);
   if (handoffId) state.handoffId = handoffId;
+  const sessionId = state.purpose === 'bind' ? normalizeHandoffId(parsed.sessionId) : '';
+  if (sessionId) state.sessionId = sessionId;
   if (!state.ts || Math.abs(Date.now() - state.ts) > STATE_TTL_MS) {
     throw new Error('微信授权已超时，请重新操作');
   }

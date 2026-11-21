@@ -10,6 +10,7 @@ import { platformAdapter } from '@/lib/adapters/platform';
 import { getDefaultRegions } from '@/lib/regions';
 import api from '@/lib/api';
 import { getMemberIdentity, memberSearchText, shortWxId } from '@/lib/member-search';
+import { formatMemberPhoneForDisplay } from '@/lib/member-phone-display';
 import { formatPaymentAmount } from '@/lib/money-format';
 import { sortableColumns } from '@/lib/table-sort';
 import type { Member } from '@/types/domain';
@@ -131,7 +132,7 @@ export default function MembersPage() {
     const q = keyword.trim().toLowerCase();
     return members.filter(item => {
       if (item.status === 'merged' && activity !== 'merged') return false;
-      const matchKeyword = !q || `${memberSearchText(item)} ${item.city || ''} ${item.raw?.address || ''}`.includes(q);
+      const matchKeyword = !q || `${memberSearchText(item)} ${formatMemberPhoneForDisplay(item.phone, item.raw?.phone_country_code)} ${item.city || ''} ${item.raw?.address || ''}`.includes(q);
       const matchLevel = level === 'all' || item.level === level;
       const matchCity = city === 'all' || item.city === city;
       const matchActivity = activity === 'all'
@@ -166,7 +167,7 @@ export default function MembersPage() {
     setEditingMember(member);
     form.setFieldsValue({
       name: member.name,
-      phone: member.phone,
+      phone: formatMemberPhoneForDisplay(member.phone, raw.phone_country_code),
       gender: raw.gender || '女',
       birthday: toDatePickerValue(String(raw.birthday || '')),
       country: member.country || '中国',
@@ -234,7 +235,8 @@ export default function MembersPage() {
     try {
       const payload = {
         name: values.name.trim(),
-        phone: values.phone.trim(),
+        phone: editingMember && values.phone.trim() === formatMemberPhoneForDisplay(editingMember.phone, editingMember.raw?.phone_country_code)
+          ? editingMember.phone : values.phone.trim().replace(/^\+86(?=1[3-9]\d{9}$)/, ''),
         gender: values.gender,
         birthday: values.birthday ? values.birthday.format('YYYY-MM-DD') : '',
         register_date: values.register_date ? values.register_date.format('YYYY-MM-DD') : '',
@@ -363,7 +365,7 @@ export default function MembersPage() {
           size="small"
           adaptiveBottomGap={12}
           dataSource={filtered}
-          scroll={{ x: 1300 }}
+          scroll={{ x: 1188 }}
           pagination={{ pageSize: 20, showSizeChanger: true, showTotal: total => `共 ${total} 位学员` }}
           locale={{ emptyText: <Empty description="暂无学员数据" /> }}
           onRow={record => ({
@@ -383,16 +385,10 @@ export default function MembersPage() {
                   <Avatar size={32} src={memberAvatarSource(record) || undefined} style={{ background: 'linear-gradient(135deg,#F72A8A,#7C3AED)' }}>{record.name[0]}</Avatar>
                   <div className="members-student-info-text">
                     <Text strong>{record.name}</Text>
-                    <div><Text type="secondary"><PhoneOutlined /> {record.phone || '-'}</Text></div>
+                    <div><Text type="secondary"><PhoneOutlined /> {formatMemberPhoneForDisplay(record.phone, record.raw?.phone_country_code) || '-'}</Text></div>
                   </div>
                 </div>
               ),
-            },
-            {
-              title: 'Member ID',
-              dataIndex: 'id',
-              width: 112,
-              render: value => <Text copyable={{ text: String(value || '') }}>{value || '-'}</Text>,
             },
             {
               title: '微信ID',
@@ -565,7 +561,7 @@ export default function MembersPage() {
                   { pattern: INTERNATIONAL_PHONE_PATTERN, message: '请输入正确的手机号或国际电话' },
                 ]}
               >
-                <Input placeholder="如 13800138000 或 +1 555 123 4567" maxLength={24} />
+                <Input placeholder="如 +8613800138000 或 +601153270577" maxLength={24} />
               </Form.Item>
             </Col>
             <Col xs={12} sm={12}>

@@ -1,3 +1,5 @@
+import { memberPhoneKeySql } from '@/lib/server/member-phone-sql';
+import { formatMemberPhoneForDisplay } from '@/lib/member-phone-display';
 import { cleanText, hasAuth, openTrainingDb, syncMemberDenormalizedFields, today, unauthorized } from '../training-db';
 import { recalculateMemberGrowth } from '@/lib/server/student-growth';
 import { createWelcomeMessage } from '@/lib/server/inbox';
@@ -35,7 +37,7 @@ export async function GET(request: Request) {
           SELECT COALESCE(
                    NULLIF(member_id, 0),
                    (SELECT m0.id FROM Member m0
-                    WHERE COALESCE(orders.member_phone, '') <> '' AND orders.member_phone = m0.phone
+                    WHERE COALESCE(orders.member_phone, '') <> '' AND ${memberPhoneKeySql('orders.member_phone')} = ${memberPhoneKeySql('m0.phone')}
                     ORDER BY m0.id DESC LIMIT 1),
                    (SELECT m0.id FROM Member m0
                     WHERE COALESCE(orders.member_name, '') <> '' AND orders.member_name = m0.name
@@ -114,7 +116,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const name = cleanText(body.name);
   if (!name) return Response.json({ success: false, error: '请填写学员姓名' }, { status: 400 });
-  const phone = cleanText(body.phone);
+  const phone = formatMemberPhoneForDisplay(body.phone, body.countryCode);
 
   const db = openTrainingDb();
   try {

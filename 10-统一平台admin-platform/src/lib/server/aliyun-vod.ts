@@ -611,3 +611,29 @@ export async function getVodPlayUrl(videoId: string, formatPolicy: 'default' | '
     || options[0];
   return preferred?.url || '';
 }
+
+/** A download credential must never make an unencrypted or partial stream set eligible. */
+export function validateVodOfflineStreams(response: any) {
+  const streams = asArray<any>(response?.PlayInfoList?.PlayInfo);
+  if (response?.VideoBase?.Status !== 'Normal' || !streams.length || streams.some(stream =>
+    !stream || !['m3u8', 'mp4'].includes(String(stream.Format || '').toLowerCase()) ||
+    ![1, '1'].includes(stream.Encrypt))) {
+    throw new Error('本视频尚未完成安全加密处理，请先在线观看');
+  }
+}
+
+/** Only for the authenticated App cache gateway; never return source URLs or server keys. */
+export async function getVodDownloadPlayAuth(videoId: string, ttl = 300) {
+  if (!/^[a-fA-F0-9]{32}$/.test(videoId)) throw new Error('VOD ID 无效');
+  if (!Number.isFinite(ttl) || ttl < 100) throw new Error('VOD 缓存凭证有效期无效');
+  const seconds = Math.min(300, Math.floor(ttl));
+  // Multiple includes every completed stream, so clear streams cannot be hidden by a format filter.
+  const streams = await callVodRpc<any>('GetPlayInfo', { VideoId: videoId, ResultType: 'Multiple', AuthTimeout: seconds });
+  validateVodOfflineStreams(streams);
+  const response = await callVodRpc<any>('GetVideoPlayAuth', { VideoId: videoId, AuthInfoTimeout: seconds });
+  if (response?.VideoMeta?.Status !== 'Normal' || response?.VideoMeta?.VideoId !== videoId ||
+      typeof response.PlayAuth !== 'string' || !response.PlayAuth.trim()) {
+    throw new Error('VOD 媒资暂不可缓存');
+  }
+  return { play_auth: response.PlayAuth, expires_in: seconds, region: vodRegion() };
+}

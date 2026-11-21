@@ -13,9 +13,10 @@ async function main() {
     const member = db.prepare('SELECT id,phone,status,merged_to_member_id FROM Member WHERE id=?').get(id);
     if (!member) throw Error('Member required');
     if (!revoke) {
-      if (member.merged_to_member_id || !['active','正常','enabled'].includes(member.status) || !/^1\d{10}$/.test(member.phone)) throw Error('Active, unmerged phone member required');
+      const localPhone = String(member.phone || '').replace(/^\+86(?=1[3-9]\d{9}$)/, '');
+      if (member.merged_to_member_id || !['active','正常','enabled'].includes(member.status) || !/^1[3-9]\d{9}$/.test(localPhone)) throw Error('Active, unmerged phone member required');
       if (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='AppDeletionRequest'").get() && db.prepare("SELECT id FROM AppDeletionRequest WHERE member_id=? AND status='pending'").get(id)) throw Error('Deletion pending');
-      if (db.prepare('SELECT count(*) n FROM Member WHERE phone=?').get(member.phone).n !== 1) throw Error('Ambiguous phone identity');
+      if (db.prepare('SELECT count(*) n FROM Member WHERE phone IN (?,?,?)').get(localPhone, `+86${localPhone}`, `86${localPhone}`).n !== 1) throw Error('Ambiguous phone identity');
     }
     if (!apply) { console.log(JSON.stringify({ dryRun: true, revoke, memberId: id, phoneSuffix: String(member.phone || '').slice(-4), expiresDays: revoke ? null : days, grantsCourseRights: false, revokesExistingAppSessionsOnApply: true })); return; }
     if ((!revoke && !args.includes('--password-file')) || !args.includes('--backup-file')) throw Error('Password file and new backup path required');

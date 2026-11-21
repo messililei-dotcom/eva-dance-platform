@@ -901,7 +901,7 @@ export const courses: Course[] = [
     description: '经典曲目Afleilawalei，优雅沙龙风格，细腻情感表达',
     fullDescription: '《一千零一夜》Afleilawalei是一支经典曲目，节奏舒缓，情感细腻。本课程教授完整成品舞，重点培养学员的细腻情感表达、优雅肢体控制、小空间表演技巧。适合有一定基础、希望提升表演细腻度的学员。',
     price: 259,
-    image: '/images/courses/dance-collection/dance-collection-26.jpg',
+    image: '/images/courses/platform/course-cover-57a26cdcbfbf1ba9.webp',
     category: 'dance-collection',
     type: 'classic',
     instructor: '伊娃老师',

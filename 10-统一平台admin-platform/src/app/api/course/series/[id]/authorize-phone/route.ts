@@ -1,3 +1,5 @@
+import { findPhoneMembers } from '@/lib/server/event-phone-member';
+import { formatMemberPhoneForDisplay } from '@/lib/member-phone-display';
 import { authorizationFinancials } from '@/lib/server/authorization-commission';
 import { cleanText, jsonError, toPositiveInt, withDb } from '../../../_materials';
 import { authPayloadFromRequest, requirePermission } from '../../../../training-db';
@@ -32,18 +34,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
       const financial = authorizationFinancials(db, seriesId, body);
 
-      let member = db.prepare(
-        `SELECT id, phone, name, wx_openid, wx_unionid FROM Member
-         WHERE phone=? OR phone_national_number=?
-         ORDER BY CASE WHEN phone=? THEN 0 ELSE 1 END, id DESC
-         LIMIT 1`
-      ).get(normalizedPhone, normalizedPhone, normalizedPhone) as any;
+      const matches = findPhoneMembers(db, phone);
+      if (matches.length > 1) return jsonError('手机号关联了多位学员，请先核实', 409);
+      let member = matches[0];
       let created = false;
       if (!member) {
         const result = db.prepare(
           `INSERT INTO Member (name, phone, source, status, register_date, created_at)
            VALUES (?, ?, 'phone_auth', 'active', date('now','localtime'), datetime('now','localtime'))`
-        ).run(`手机学员${normalizedPhone.slice(-4)}`, normalizedPhone);
+        ).run(`手机学员${normalizedPhone.slice(-4)}`, formatMemberPhoneForDisplay(phone));
         member = db.prepare('SELECT id, phone, name, wx_openid, wx_unionid FROM Member WHERE id=?').get(result.lastInsertRowid);
         created = true;
         createWelcomeMessage(db, Number(member.id), String(member.name || ''));

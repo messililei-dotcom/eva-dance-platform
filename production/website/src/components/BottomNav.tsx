@@ -12,6 +12,7 @@ const items: {key:MobileTab;href:string;label:string;icon:typeof BookOpen}[] = [
 ];
 export default function BottomNav(){
   const pathname=usePathname() || '/';
+  if (pathname === '/dashboard/profile/edit') return null;
   if (/^\/courses\/[^/]+\/videos(?:\/|$)/.test(pathname)) return null;
   if (/^\/(?:events|events-news)\/[^/]+\/?$/.test(pathname)) return null;
   const active=activeMobileTab(pathname);

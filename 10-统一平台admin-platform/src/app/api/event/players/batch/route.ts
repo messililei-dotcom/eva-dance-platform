@@ -1,6 +1,6 @@
 import { deleteEventRegistrations } from '@/lib/server/event-registration-deletion';
 import { eventPaymentOrder } from '@/lib/server/event-online';
-import { cleanText, readEventBody, hasAuth, jsonError, nowIso, toNumber, unauthorized, withRequestEventDb } from '../../_db';
+import { cleanText, readEventBody, hasAuth, jsonError, nowIso, toNumber, unauthorized, withRequestEventDb, recalculateGroupRankings } from '../../_db';
 import { syncEventPlayerToMember } from '@/lib/server/event-member-sync';
 
 export const dynamic = 'force-dynamic';
@@ -179,6 +179,7 @@ export async function PATCH(request: Request) {
       SET ${sets.join(', ')}
       WHERE competition_id = ? AND group_id = ? AND id IN (${placeholders})
     `).run(...values);
+    if (result.changes > 0 && Object.prototype.hasOwnProperty.call(patch, 'status')) recalculateGroupRankings(db, groupId);
     return Response.json({ success: true, data: { updated: result.changes } });
   }).immediate());
 }

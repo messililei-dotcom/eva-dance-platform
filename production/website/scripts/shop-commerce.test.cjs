@@ -10,11 +10,11 @@ const Database = createRequire(path.join(admin, "package.json"))(
   "better-sqlite3",
 );
 const dir = fs.mkdtempSync(path.resolve(".shop-tests-"));
-for (const name of ["shop-core", "shop-payments", "shop-service", "shop-shipping", "exclusive-orders", "exclusive-refunds", "course-promotion", "event-online"]) {
+for (const name of ["shop-core", "shop-payments", "shop-service", "shop-shipping", "exclusive-orders", "exclusive-refunds", "course-promotion", "event-online", "event-phone-member", "member-phone-sql"]) {
   const source = fs.readFileSync(`src/lib/server/${name}.ts`, "utf8");
   fs.writeFileSync(
     path.join(dir, `${name}.js`),
-    ts.transpileModule(source, {
+    ts.transpileModule(source.replaceAll("@/lib/event-phone", "./event-phone"), {
       compilerOptions: {
         module: ts.ModuleKind.CommonJS,
         target: ts.ScriptTarget.ES2022,
@@ -23,6 +23,7 @@ for (const name of ["shop-core", "shop-payments", "shop-service", "shop-shipping
     }).outputText,
   );
 }
+fs.writeFileSync(path.join(dir, "event-phone.js"), ts.transpileModule(fs.readFileSync("src/lib/event-phone.ts", "utf8"), {compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022}}).outputText);
 fs.writeFileSync(
   path.join(dir, "admin-db.js"),
   "exports.openAdminDb=()=>global.__testShopDb;",

@@ -1,3 +1,4 @@
+import { DEFAULT_SCORE_CRITERIA } from '@/lib/event-score-rules';
 import { competitionOwner, saveCompetitionAdmins } from '../_competition-owner';
 import {
   cleanText,
@@ -61,10 +62,10 @@ export async function POST(request: Request) {
     const result = db.prepare(`
       INSERT INTO event_competitions (
         name, code, status, registration_status, registration_public, judge_scores_public, start_date, end_date,
-        registration_start, registration_end, location, organizer, description,
-        cover_url, max_players, registration_fee, created_by, owner_user_id, updated_at
+        location, organizer, description,
+        cover_url, registration_fee, created_by, owner_user_id, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       name,
       code,
@@ -74,19 +75,20 @@ export async function POST(request: Request) {
       body.judgeScoresPublic === true ? 1 : 0,
       cleanText(body.startDate ?? body.start_date),
       cleanText(body.endDate ?? body.end_date),
-      '',
-      '',
       cleanText(body.location),
       cleanText(body.organizer, '伊娃东方舞'),
       cleanText(body.description),
       cleanText(body.coverUrl ?? body.cover_url),
-      0,
       0,
       String(db.eventActorId || ''),
       owner.id,
       nowIso(),
     );
 
+    db.prepare(`
+      INSERT INTO event_score_rules (competition_id, name, total_score, criteria_json, drop_high_low, updated_at)
+      VALUES (?, ?, 10, ?, 1, ?)
+    `).run(result.lastInsertRowid, name + '评分规则', JSON.stringify(DEFAULT_SCORE_CRITERIA), nowIso());
     saveCompetitionAdmins(db, result.lastInsertRowid, body, owner);
     return Response.json({ success: true, data: { id: result.lastInsertRowid } });
   })());

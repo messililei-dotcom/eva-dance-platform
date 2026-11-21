@@ -12,6 +12,7 @@ import { PublicCourseRecord } from '@/lib/course-match';
 
 type PlatformOfflineCourse = Course & {
   platformCourseId?: number;
+  officialMatchKey?: string;
   legacyCourseId?: string;
   platformStatus?: string;
   remaining?: number;
@@ -131,6 +132,7 @@ export default function OfflineCoursesPage() {
           id: course.platformCourseId || course.id,
           name: course.title,
           officialCourseName: course.title,
+          officialMatchKey: course.officialMatchKey,
           type: course.type,
           subType: course.level,
           scheduleLabel: course.dateRange,

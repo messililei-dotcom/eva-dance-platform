@@ -23,6 +23,7 @@ export default function StudentSessionBootstrap() {
         cache: 'no-store',
       })
         .then(async (response) => {
+          if (getStudentSession()?.id !== current?.id) return null;
           if (response.status === 401) {
             if (active && current) clearStudentSession();
             return null;
@@ -31,7 +32,8 @@ export default function StudentSessionBootstrap() {
           return response.json();
         })
         .then((payload) => {
-          if (!active || !payload?.success || !payload?.data?.token || !payload?.data?.member?.id) return;
+          if (!active || getStudentSession()?.id !== current?.id
+            || !payload?.success || !payload?.data?.token || !payload?.data?.member?.id) return;
           const tokenId = parseMemberTokenMemberId(String(payload.data.token));
           const memberId = String(payload.data.member.id);
           if (tokenId && tokenId !== memberId) {

@@ -1,5 +1,6 @@
 'use client';
 import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from 'react';
+import RegistrationMusicPreview from './RegistrationMusicPreview';
 import { getStudentSession } from '@/lib/student-auth';
 
 const MAX_MUSIC_FILE_SIZE = 10 * 1024 * 1024;
@@ -8,6 +9,7 @@ const MUSIC_SIZE_ERROR = '音乐文件不能超过 10MB';
 export default function RegistrationMusicEditor({ playerId, initialTitle, onSaved }: { playerId: string; initialTitle: string; onSaved: (title: string) => void }) {
   const [title, setTitle] = useState(initialTitle);
   const [fileName, setFileName] = useState('');
+  const [musicVersion, setMusicVersion] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -50,11 +52,12 @@ export default function RegistrationMusicEditor({ playerId, initialTitle, onSave
   async function load() {
     const session = getStudentSession();
     if (!session) { setNotice('请先登录'); return; }
-    setLoading(true); setNotice('');
+    setLoading(true); setNotice(''); setFileName(''); setCanEdit(false);
     try {
       const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${session.token}` }, cache: 'no-store' });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || '音乐信息加载失败');
+      if (getStudentSession()?.token !== session.token) return;
       setTitle(result.data.performanceTitle); setFileName(result.data.fileName); setCanEdit(result.data.canEdit);
     } catch (error) { setNotice(error instanceof Error ? error.message : '加载失败，请重试'); }
     finally { setLoading(false); }
@@ -74,14 +77,15 @@ export default function RegistrationMusicEditor({ playerId, initialTitle, onSave
       const result = await response.json().catch(() => null);
       if (!response.ok || !result?.success) throw new Error(result?.error || '上传失败，请重试');
       if (fileInput.current) fileInput.current.value = '';
-      setFileName(result.data.fileName); setTitle(result.data.performanceTitle); setFile(null); onSaved(result.data.performanceTitle); setNotice('音乐已更新成功');
+      if (getStudentSession()?.token !== session.token) return;
+      setMusicVersion(value => value + 1); setFileName(result.data.fileName); setTitle(result.data.performanceTitle); setFile(null); onSaved(result.data.performanceTitle); setNotice('音乐已更新成功');
     } catch (error) { setUploadError(controller.signal.aborted ? '上传超时，请重新查看当前音乐后重试' : error instanceof Error ? error.message : '上传失败，请重试'); }
     finally { clearTimeout(timeout); setSaving(false); }
   }
-  return <details className="mt-3 border-t border-sand pt-3" onToggle={event => { if (event.currentTarget.open) void load(); }}>
-    <summary className="cursor-pointer py-2 text-sm font-semibold text-crimson">上传 / 更换参赛音乐</summary>
+  return <details className="mt-3 border-t border-sand pt-3" onToggle={event => { if (event.currentTarget.open) void load(); else event.currentTarget.querySelectorAll('audio').forEach(audio => audio.pause()); }}>
+    <summary className="cursor-pointer py-2 text-sm font-semibold text-crimson">试听 / 上传参赛音乐</summary>
     {loading ? <p role="status" className="py-3 text-sm">正在读取音乐信息…</p> : <>
-      <p className="my-2 break-words text-sm">当前音乐　{fileName || '未上传'}</p>
+      {fileName ? <RegistrationMusicPreview key={`${playerId}-${musicVersion}-${fileName}`} endpoint={endpoint} fileName={fileName} /> : <p className="my-2 text-sm">当前音乐　未上传</p>}
       {canEdit && <form onSubmit={save} className="space-y-3">
         <label className="block text-sm">节目（音乐）名字<input required maxLength={120} value={title} disabled={saving} onChange={event => setTitle(event.target.value)} className="mt-2 min-h-11 w-full rounded-lg border border-sand bg-white px-3 text-base text-text" /></label>
         <label className="block text-sm">选择新音乐<input required type="file" disabled={saving} ref={fileInput} onChange={selectMusic} className="mt-2 block max-w-full text-sm" /></label>

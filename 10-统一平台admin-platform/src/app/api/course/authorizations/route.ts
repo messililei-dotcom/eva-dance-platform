@@ -1,3 +1,4 @@
+import { memberPhoneKeySql } from '@/lib/server/member-phone-sql';
 import { resolveAuthorizationRate } from '@/lib/authorization-record-financials';
 import { DELETED_AUTHORIZATION_FINANCIAL_MARKER } from '@/lib/server/authorization-revenue';
 import { ensureAuthorizationCommissionColumns } from '@/lib/server/authorization-commission';
@@ -53,7 +54,7 @@ export async function GET(request: Request) {
                    NULLIF(ca.member_id, 0),
                    (SELECT m0.id
                     FROM Member m0
-                    WHERE (COALESCE(ca.phone, '') <> '' AND ca.phone = COALESCE(m0.phone, ''))
+                    WHERE (COALESCE(ca.phone, '') <> '' AND ${memberPhoneKeySql('ca.phone')} = ${memberPhoneKeySql('m0.phone')})
                        OR (COALESCE(ca.wx_openid, '') <> '' AND ca.wx_openid = COALESCE(m0.wx_openid, ''))
                        OR (COALESCE(ca.wx_unionid, '') <> '' AND ca.wx_unionid = COALESCE(m0.wx_unionid, ''))
                     ORDER BY m0.id DESC LIMIT 1)
